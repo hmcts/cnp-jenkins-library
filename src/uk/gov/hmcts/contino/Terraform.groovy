@@ -55,7 +55,7 @@ class Terraform implements Serializable {
   def apply(env){
 
     if (env.BRANCH_NAME == 'master' ) {
-      return step.sh("terraform apply -var 'env=${env}'")
+      return steps.sh("terraform apply -var 'env=${env}'")
     }
   }
 }
