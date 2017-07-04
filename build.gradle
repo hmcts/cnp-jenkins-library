@@ -1,10 +1,8 @@
 apply plugin: 'groovy'
 
 repositories {
-    maven {
-        url 'http://artifactory.reform.hmcts.net/artifactory/libs-release'
-    }
-    jcenter() // fallback for developers without access to Reform Artifactory
+
+    jcenter()
 }
 
 dependencies {
@@ -17,7 +15,7 @@ dependencies {
 sourceSets {
     main {
         groovy {
-            srcDirs = ['src', 'vars']
+            srcDirs = ['src']
         }
     }
     test {
