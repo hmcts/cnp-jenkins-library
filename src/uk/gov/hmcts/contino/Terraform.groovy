@@ -24,14 +24,14 @@ class Terraform implements Serializable {
    * @return
    */
   def init(env, state_store_resource_group, state_store_account, state_store_container ) {
-    steps.withCredentials([
+    return steps.withCredentials([
                         [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
                         [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
                         [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
                         [$class: 'StringBinding',credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
                         [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
 
-        return steps.sh("terraform init -backend-config \"storage_account_name=${state_store_account}\" -backend-config \"container_name=${state_store_container}\" -backend-config \"resource_group_name=${state_store_resource_group}\" -backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
+        steps.sh("terraform init -backend-config \"storage_account_name=${state_store_account}\" -backend-config \"container_name=${state_store_container}\" -backend-config \"resource_group_name=${state_store_resource_group}\" -backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
       }
   }
 
