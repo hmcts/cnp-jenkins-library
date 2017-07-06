@@ -47,7 +47,7 @@ class Terraform implements Serializable {
   private def init(env) {
 
     def stateStoreConfig = getStateStoreConfig(env)
-    steps.echo("${stateStoreConfig}")
+    steps.echo("${stateStoreConfig.storageAccount}")
 
       return runTerraformWithCreds("init -backend-config " +
         "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
@@ -75,7 +75,7 @@ class Terraform implements Serializable {
 
     setupTerraform()
 
-    println("Running terraform ${args}")
+    steps.echo("Running terraform ${args}")
 
     return steps.withCredentials([
       [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
