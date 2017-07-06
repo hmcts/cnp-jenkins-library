@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonSlurper
 import groovy.json.JsonSlurperClassic
 
 
@@ -27,9 +26,12 @@ class Terraform implements Serializable {
   def plan(env) {
     init(env)
     runTerraformWithCreds("get -update=true")
-    return runTerraformWithCreds("plan -var 'env=${env}' -var-file=${env}.tfvars")
+
+    return runTerraformWithCreds(configureArgs(env, "plan -var 'env=${env}'"))
 
   }
+
+
 
   /***
    * Run a Terraform apply, based on a previous apply
@@ -39,7 +41,7 @@ class Terraform implements Serializable {
   def apply(env) {
 
     if (steps.env.BRANCH_NAME == 'master') {
-      return runTerraformWithCreds("apply -var 'env=${env}' -var-file=${env}.tfvars")
+      return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}'"))
     }
   }
 
@@ -54,6 +56,13 @@ class Terraform implements Serializable {
       "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
 
 
+  }
+
+  private def configureArgs(env, args) {
+    if (steps.fileExists("${env}.tfvars")) {
+      args = "${args} var-file=${env}.tfvars"
+    }
+    return args
   }
 
   private def getStateStoreConfig(env) {
@@ -80,6 +89,7 @@ class Terraform implements Serializable {
       [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
       [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
       [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
+
 
       steps.sh("terraform ${args}")
     }
