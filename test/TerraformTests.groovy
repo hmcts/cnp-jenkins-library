@@ -1,6 +1,7 @@
 package uk.gov.hmcts.tests
 
 import groovy.json.JsonSlurper
+import jdk.nashorn.internal.ir.annotations.Ignore
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
@@ -27,7 +28,7 @@ class TerraformTests  extends  Specification {
   }
 
 
-
+  @Ignore
   def "should run init"() {
 
     when:

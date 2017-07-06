@@ -3,42 +3,38 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurper
 
 
+
 class Terraform implements Serializable {
 
   def steps
   def product
-
+/***
+ *
+ * @param steps Jenkins steps
+ * @param product product stack to run
+ */
   Terraform(steps, product) {
 
     this.steps = steps
     this.product = product
   }
 
-  /***
-   *
-   * @param env
-   * @param state_store_resource_group
-   * @param state_store_account
-   * @param state_store_container
-   * @return
-   */
 
 /***
- *
- * @param env
+ * Run a Terraform init and plan
+ * @param  env Environment to run plan against
  * @return
  */
   def plan(env) {
     init(env)
-    setupTerraform()
     runTerraformWithCreds("get -update=true")
     return runTerraformWithCreds("plan -var 'env=${env}'")
 
   }
 
   /***
-   *
-   * @param env
+   * Run a Terraform apply, based on a previous apply
+   * @param env Environment to run apply against
    * @return
    */
   def apply(env) {
@@ -54,6 +50,7 @@ class Terraform implements Serializable {
 
     def stateStoreConfig = stateStores.find { s -> s.env == env}
     if (stateStoreConfig != null) {
+
       return runTerraformWithCreds("init -backend-config " +
         "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
         "-backend-config \"container_name=${stateStoreConfig.container}\" " +
