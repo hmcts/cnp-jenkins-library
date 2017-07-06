@@ -1,9 +1,19 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonSlurper
+
+
 class Terraform implements Serializable {
 
   def steps
   def product
+
+  def stateStorage = [
+          "dev" : [
+                  resource_group: "",
+
+          ]
+  ]
 
 
   Terraform(steps, product){
@@ -20,10 +30,20 @@ class Terraform implements Serializable {
    * @param state_store_container
    * @return
    */
-  def init(env, state_store_resource_group, state_store_account, state_store_container ) {
+  def init(env) {
 
-    return runTerraformWithCreds("init -backend-config \"storage_account_name=${state_store_account}\" -backend-config \"container_name=${state_store_container}\" -backend-config \"resource_group_name=${state_store_resource_group}\" -backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
+    def stateStores =  new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/products.json'))
 
+    if(env in stateStores) {
+
+      def stateStoreConfig = stateStores[env]
+      def state_store_resource_group = stateStoreConfig["resourceGroup"]
+      def state_store_account = stateStoreConfig["storageAccount"]
+      def state_store_container = stateStoreConfig["container"]
+
+      return runTerraformWithCreds("init -backend-config \"storage_account_name=${state_store_account}\" -backend-config \"container_name=${state_store_container}\" -backend-config \"resource_group_name=${state_store_resource_group}\" -backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
+    }
+    error "$env does not have state storage configured"
   }
 
 
