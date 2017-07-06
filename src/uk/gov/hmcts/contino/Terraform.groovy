@@ -62,9 +62,12 @@ class Terraform implements Serializable {
 
 
     def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
-    steps.echo(stateStores)
+
+    steps.echo("${stateStores}")
+
     def stateStoreConfig = stateStores.find { s -> s.env == env }
-    steps.echo(stateStoreConfig)
+    steps.echo("${stateStoreConfig}")
+
     if(stateStoreConfig == null) {
       throw new Exception("State storage for ${env} not found. Is it configured?")
     }
