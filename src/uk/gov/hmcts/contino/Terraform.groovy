@@ -27,7 +27,7 @@ class Terraform implements Serializable {
   def plan(env) {
     init(env)
     runTerraformWithCreds("get -update=true")
-    return runTerraformWithCreds("plan -var 'env=${env}'")
+    return runTerraformWithCreds("plan -var 'env=${env}' -var-file=${env}.tfvars")
 
   }
 
@@ -39,7 +39,7 @@ class Terraform implements Serializable {
   def apply(env) {
 
     if (steps.env.BRANCH_NAME == 'master') {
-      return runTerraformWithCreds("apply -var 'env=${env}'")
+      return runTerraformWithCreds("apply -var 'env=${env}' -var-file=${env}.tfvars")
     }
   }
 
