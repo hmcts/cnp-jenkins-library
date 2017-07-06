@@ -47,7 +47,7 @@ class Terraform implements Serializable {
 
     def stateStoreConfig = getStateStoreConfig(env)
 
-    return runTerraformWithCreds("init -backend-config " +
+    return runTerraformWithCreds("init -reconfigure -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
