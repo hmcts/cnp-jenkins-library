@@ -6,6 +6,12 @@
     "container": "contino-moj-tfstate-container"
   },
   {
+    "env": "test",
+    "resourceGroup": "contino-moj-tf-state",
+    "storageAccount": "continomojtfstate",
+    "container": "contino-moj-tfstate-container"
+  },
+  {
     "env": "prod",
     "resourceGroup": "contino-moj-tf-state",
     "storageAccount": "continomojtfstate",
