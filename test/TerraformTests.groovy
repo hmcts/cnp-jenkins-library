@@ -26,15 +26,13 @@ class TerraformTests  extends  Specification {
     terraform = new Terraform(steps, "test")
 
   }
-
-
-  @Ignore
+ @Ignore
   def "should run init"() {
 
     when:
 
 
-      terraform.init("dev")
+      terraform.plan("dev")
 
     then:
 
