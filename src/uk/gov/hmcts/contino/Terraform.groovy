@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurper
 
 
-
 class Terraform implements Serializable {
 
   def steps
@@ -19,10 +18,9 @@ class Terraform implements Serializable {
     this.product = product
   }
 
-
 /***
  * Run a Terraform init and plan
- * @param  env Environment to run plan against
+ * @param env Environment to run plan against
  * @return
  */
   def plan(env) {
@@ -47,17 +45,13 @@ class Terraform implements Serializable {
   private def init(env) {
 
     def stateStoreConfig = getStateStoreConfig(env)
-    steps.echo("init -backend-config " +
+    steps.echo("${stateStoreConfig.storageAccount}")
+
+    return runTerraformWithCreds("init -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
       "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
-
-      return runTerraformWithCreds("init -backend-config " +
-        "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
-        "-backend-config \"container_name=${stateStoreConfig.container}\" " +
-        "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-        "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
 
 
   }
@@ -68,7 +62,7 @@ class Terraform implements Serializable {
 
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 
-    if(stateStoreConfig == null) {
+    if (stateStoreConfig == null) {
       throw new Exception("State storage for ${env} not found. Is it configured?")
     }
 
@@ -79,7 +73,7 @@ class Terraform implements Serializable {
 
     setupTerraform()
 
-    steps.echo("Running terraform ${args}")
+    println("Running terraform ${args}")
 
     return steps.withCredentials([
       [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
@@ -94,9 +88,10 @@ class Terraform implements Serializable {
   }
 
   private setupTerraform() {
-    def tfHome = this.steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
+    def tfHome = steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
 
-    this.steps.env.PATH = "${tfHome}:${this.steps.env.PATH}"
+    steps.env.PATH = "${tfHome}:${this.steps.env.PATH}"
+    steps.echo(steps.env.PATH)
 
   }
 }
