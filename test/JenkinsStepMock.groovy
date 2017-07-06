@@ -6,5 +6,10 @@ interface JenkinsStepMock {
   Object sh(String)
   Object tool(HashMap)
   HashMap getEnv()
-  Object withCredentials(ArrayList, closure)
+  String libraryResource(String)
+  Object withCredentials(ArrayList, Closure)
+
 }
+
+
+
