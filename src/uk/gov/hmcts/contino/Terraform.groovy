@@ -46,9 +46,9 @@ class Terraform implements Serializable {
 
   private def init(env) {
 
-    def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
+    def stateStoreConfig = getStateStoreConfig(env)
+    print(stateStoreConfig)
 
-    def stateStoreConfig = stateStores.find { s -> s.env == env}
     if (stateStoreConfig != null) {
 
       return runTerraformWithCreds("init -backend-config " +
@@ -61,9 +61,18 @@ class Terraform implements Serializable {
     throw new Exception("State storage for ${env} not found. Is it configured?")
   }
 
+  private def getStateStoreConfig(env) {
+    def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
+
+    def stateStoreConfig = stateStores.find { s -> s.env == env }
+    return stateStoreConfig
+  }
+
   private runTerraformWithCreds(args) {
 
     setupTerraform()
+
+    println("Running terraform ${args}")
 
     return steps.withCredentials([
       [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
