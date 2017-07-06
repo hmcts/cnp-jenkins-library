@@ -5,6 +5,7 @@ class Terraform implements Serializable {
   def steps
   def product
 
+
   Terraform(steps, product){
 
     this.steps = steps

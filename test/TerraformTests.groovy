@@ -10,28 +10,32 @@ class TerraformTests  extends  Specification {
 
   @Shared steps
   @Shared terraform
+  @Shared credentialsStep
 
 
 
   def setup() {
     steps = Mock(uk.gov.hmcts.tests.JenkinsStepMock)
+    credentialsStep = Mock(uk.gov.hmcts.tests.JenkinsCredentialsStepMock)
     steps.env >> [ "PATH" : ""]
-    def terr = {}
-    steps.withCredentials(_, _) >> terr
 
+    credentialsStep.withCredentials(_, _) >> {}
 
-    terraform = new Terraform(steps, "test")
+    terraform = new Terraform(steps, credentialsStep , "test")
 
   }
 
-  @Ignore("WIP")
+
+  @Ignore("can't test this with the anonymous function")
   def "should run init"() {
 
     when:
-       terraform.init("dev", "", "", "")
+
+
+      terraform.init("dev", "", "", "")
 
     then:
-      terr()
+
       1 * steps.sh(_)
 
 
