@@ -49,16 +49,13 @@ class Terraform implements Serializable {
     def stateStoreConfig = getStateStoreConfig(env)
     steps.echo(stateStoreConfig)
 
-    if (stateStoreConfig != null) {
-
       return runTerraformWithCreds("init -backend-config " +
         "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
         "-backend-config \"container_name=${stateStoreConfig.container}\" " +
         "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
         "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
-    }
 
-    throw new Exception("State storage for ${env} not found. Is it configured?")
+
   }
 
   private def getStateStoreConfig(env) {
@@ -68,6 +65,9 @@ class Terraform implements Serializable {
     steps.echo(stateStores)
     def stateStoreConfig = stateStores.find { s -> s.env == env }
     steps.echo(stateStoreConfig)
+    if(stateStoreConfig == null) {
+      throw new Exception("State storage for ${env} not found. Is it configured?")
+    }
     return stateStoreConfig
   }
 
