@@ -47,7 +47,7 @@ class Terraform implements Serializable {
   private def init(env) {
 
     def stateStoreConfig = getStateStoreConfig(env)
-    steps.echo(stateStoreConfig)
+    steps.echo("${stateStoreConfig}")
 
       return runTerraformWithCreds("init -backend-config " +
         "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
@@ -60,17 +60,14 @@ class Terraform implements Serializable {
 
   private def getStateStoreConfig(env) {
 
-
     def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
 
-    steps.echo("${stateStores}")
-
     def stateStoreConfig = stateStores.find { s -> s.env == env }
-    steps.echo("${stateStoreConfig}")
 
     if(stateStoreConfig == null) {
       throw new Exception("State storage for ${env} not found. Is it configured?")
     }
+
     return stateStoreConfig
   }
 
