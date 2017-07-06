@@ -73,7 +73,7 @@ class Terraform implements Serializable {
 
     setupTerraform()
 
-    println("Running terraform ${args}")
+    steps.echo("Running terraform ${args}")
 
     return steps.withCredentials([
       [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
