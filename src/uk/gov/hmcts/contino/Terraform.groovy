@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 
 class Terraform implements Serializable {
@@ -45,7 +46,6 @@ class Terraform implements Serializable {
   private def init(env) {
 
     def stateStoreConfig = getStateStoreConfig(env)
-    steps.echo("${stateStoreConfig.storageAccount}")
 
     return runTerraformWithCreds("init -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
@@ -58,7 +58,7 @@ class Terraform implements Serializable {
 
   private def getStateStoreConfig(env) {
 
-    def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
+    def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
 
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 
@@ -71,11 +71,8 @@ class Terraform implements Serializable {
 
   private runTerraformWithCreds(args) {
 
-    steps.echo("Running terraform ${args}")
-
     setupTerraform()
 
-    steps.echo("Running terraform ${args}")
 
     return steps.withCredentials([
       [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
