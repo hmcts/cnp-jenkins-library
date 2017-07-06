@@ -50,7 +50,7 @@ class Terraform implements Serializable {
 
   private def init(env) {
 
-    def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/products.json'))
+    def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
 
     if (env in stateStores) {
 
