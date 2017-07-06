@@ -52,16 +52,16 @@ class Terraform implements Serializable {
 
     def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
 
-    if (env in stateStores) {
-
-      def stateStoreConfig = stateStores[env]
-      def state_store_resource_group = stateStoreConfig["resourceGroup"]
-      def state_store_account = stateStoreConfig["storageAccount"]
-      def state_store_container = stateStoreConfig["container"]
-
-      return runTerraformWithCreds("init -backend-config \"storage_account_name=${state_store_account}\" -backend-config \"container_name=${state_store_container}\" -backend-config \"resource_group_name=${state_store_resource_group}\" -backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
+    def stateStoreConfig = stateStores.find { s -> s.env == env}
+    if (stateStoreConfig != null) {
+      return runTerraformWithCreds("init -backend-config " +
+        "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
+        "-backend-config \"container_name=${stateStoreConfig.container}\" " +
+        "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
+        "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
     }
-    error "$env does not have state storage configured"
+
+    throw new Exception("State storage for ${env} not found. Is it configured?")
   }
 
   private runTerraformWithCreds(args) {

@@ -1,13 +1,15 @@
-{
-  "dev" : {
-    "resourceGroup" : "contino-moj-tf-state",
-    "storageAccount" : "continomojtfstate",
+[
+  {
+    "env": "dev",
+    "resourceGroup": "contino-moj-tf-state",
+    "storageAccount": "continomojtfstate",
     "container": "contino-moj-tfstate-container"
   },
-
-  "prod" : {
-    "resourceGroup" : "contino-moj-tf-state",
-    "storageAccount" : "continomojtfstate",
+  {
+    "env": "prod",
+    "resourceGroup": "contino-moj-tf-state",
+    "storageAccount": "continomojtfstate",
     "container": "contino-moj-tfstate-container"
   }
-}
+]
+

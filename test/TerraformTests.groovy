@@ -1,5 +1,6 @@
 package uk.gov.hmcts.tests
 
+import groovy.json.JsonSlurper
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
@@ -16,23 +17,23 @@ class TerraformTests  extends  Specification {
 
   def setup() {
     steps = Mock(uk.gov.hmcts.tests.JenkinsStepMock)
-    credentialsStep = Mock(uk.gov.hmcts.tests.JenkinsCredentialsStepMock)
+    steps.libraryResource(_) >> new File("./resources/uk/gov/hmcts/contino/state-storage.json").text
     steps.env >> [ "PATH" : ""]
 
     credentialsStep.withCredentials(_, _) >> {}
 
-    terraform = new Terraform(steps, credentialsStep , "test")
+    terraform = new Terraform(steps, "test")
 
   }
 
 
-  @Ignore("can't test this with the anonymous function")
+
   def "should run init"() {
 
     when:
 
 
-      terraform.init("dev", "", "", "")
+      terraform.init("dev")
 
     then:
 
