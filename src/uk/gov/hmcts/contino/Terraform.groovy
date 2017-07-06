@@ -47,7 +47,7 @@ class Terraform implements Serializable {
   private def init(env) {
 
     def stateStoreConfig = getStateStoreConfig(env)
-    print(stateStoreConfig)
+    steps.echo(stateStoreConfig)
 
     if (stateStoreConfig != null) {
 
@@ -62,7 +62,7 @@ class Terraform implements Serializable {
   }
 
   private def getStateStoreConfig(env) {
-    print(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
+    steps.echo(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
     def stateStores = new JsonSlurper().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
 
     def stateStoreConfig = stateStores.find { s -> s.env == env }
