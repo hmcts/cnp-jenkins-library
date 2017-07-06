@@ -71,6 +71,8 @@ class Terraform implements Serializable {
 
   private runTerraformWithCreds(args) {
 
+    steps.echo("Running terraform ${args}")
+
     setupTerraform()
 
     steps.echo("Running terraform ${args}")
@@ -89,7 +91,7 @@ class Terraform implements Serializable {
 
   private setupTerraform() {
     def tfHome = steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
-
+    steps.echo(tfHome)
     steps.env.PATH = "${tfHome}:${this.steps.env.PATH}"
     steps.echo(steps.env.PATH)
 
