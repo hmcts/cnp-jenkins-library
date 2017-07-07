@@ -1,9 +1,8 @@
 package uk.gov.hmcts.tests
 
-import groovy.json.JsonSlurper
-import jdk.nashorn.internal.ir.annotations.Ignore
-import spock.lang.Ignore
+
 import spock.lang.Shared
+import spock.lang.Ignore
 import spock.lang.Specification
 import uk.gov.hmcts.contino.Terraform
 
@@ -26,7 +25,8 @@ class TerraformTests  extends  Specification {
     terraform = new Terraform(steps, "test")
 
   }
- @Ignore
+
+  @Ignore("WIP")
   def "should run init"() {
 
     when:
