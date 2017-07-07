@@ -17,10 +17,10 @@ class WebAppDeploy implements Serializable {
 
     return steps.withCredentials([
         steps.usernamePassword(credentialsId: 'WebAppDeployCredentials',
-        usernameVariable: 'GIT_DEPLOY_USERNAME',
-        passwordVariable: 'GIT_DEPLOY_PASSWORD')]) {
+        usernameVariable: 'GIT_USERNAME',
+        passwordVariable: 'GIT_PASSWORD')]) {
 
-      steps.sh("\"git remote add ${defaultRemote} \"https://$GIT_DEPLPOY_USERNAME:$GIT_DEPLPOY_PASSWORD@${product}-${env}.scm.${product}-${env}.p.azurewebsites.net/${product}-${env}.git\"")
+      steps.sh("\"git remote add ${defaultRemote} \"https://${GIT_USERNAME}:${GIT_PASSWORD}@${product}-${env}.scm.${product}-${env}.p.azurewebsites.net/${product}-${env}.git\"")
 
        teps.sh("git push ${defaultRemote} master")
     }
