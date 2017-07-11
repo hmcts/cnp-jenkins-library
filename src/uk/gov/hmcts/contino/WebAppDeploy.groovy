@@ -6,9 +6,11 @@ class WebAppDeploy implements Serializable {
   def steps
   def product
   def defaultRemote = "azure"
+  def app
 
-  WebAppDeploy(steps, product){
+  WebAppDeploy(steps, product, app){
 
+    this.app = app
     this.product = product
     this.steps = steps
   }
@@ -21,9 +23,8 @@ class WebAppDeploy implements Serializable {
           usernameVariable: 'GIT_USERNAME',
           passwordVariable: 'GIT_PASSWORD']]) {
 
-        steps.echo("${steps.env}")
-        steps.sh("git remote add ${defaultRemote} \"https://\$GIT_USERNAME:\$GIT_PASSWORD@${product}-${env}.scm.${product}-${env}.p.azurewebsites.net/${product}-${env}.git\"")
-
+        def appUrl = "{product}-${app}-${env}"
+        steps.sh("git remote add ${defaultRemote} \"https://\$GIT_USERNAME:\$GIT_PASSWORD@${appUrl}.scm.${appUrl}.p.azurewebsites.net/${appUrl}.git\"")
         steps.sh("git push ${defaultRemote} master")
     }
   }
