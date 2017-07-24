@@ -29,4 +29,23 @@ class WebAppDeploy implements Serializable {
         steps.sh("git push ${defaultRemote}-${env}  master")
     }
   }
+
+  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig) {
+
+    return steps.withCredentials(
+      [[$class: 'UsernamePasswordMultiBinding',
+        credentialsId: 'WebAppDeployCredentials',
+        usernameVariable: 'GIT_USERNAME',
+        passwordVariable: 'GIT_PASSWORD']]) {
+
+      def appUrl = "${product}-${app}-${env}"
+      steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
+      steps.sh("git checkout ${steps.env.BRANCH_NAME}")
+      steps.sh("git add  ${jarPath}")
+      steps.sh("git add  ${springConfigPath}")
+      steps.sh("git add  ${iisWebConfig}")
+      steps.sh("git commit -m 'Deploying ${steps.sh.env.BUILD_NUMBER}'")
+      steps.sh("git push ${defaultRemote}-${env}  master")
+    }
+  }
 }
