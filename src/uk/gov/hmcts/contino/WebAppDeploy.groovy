@@ -44,7 +44,9 @@ class WebAppDeploy implements Serializable {
       steps.sh("git add  ${jarPath}")
       steps.sh("git add  ${springConfigPath}")
       steps.sh("git add  ${iisWebConfig}")
-      steps.sh("git commit --author='jenkinsmoj <jenkinsmoj@contino.io>' -m 'Deploying ${steps.env.BUILD_NUMBER}'")
+      steps.sh("git config user.email 'jenkinsmoj@contino.io'")
+      steps.sh("git config user.name 'jenkinsmoj'")
+      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
       steps.sh("git push ${defaultRemote}-${env}  master")
     }
   }
