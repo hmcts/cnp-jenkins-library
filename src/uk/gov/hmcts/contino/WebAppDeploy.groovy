@@ -30,7 +30,7 @@ class WebAppDeploy implements Serializable {
     }
   }
 
-  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig) {
+  def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
 
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
@@ -44,7 +44,7 @@ class WebAppDeploy implements Serializable {
       steps.sh("git add  ${jarPath}")
       steps.sh("git add  ${springConfigPath}")
       steps.sh("git add  ${iisWebConfig}")
-      steps.sh("git commit -m 'Deploying ${steps.sh.env.BUILD_NUMBER}'")
+      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
       steps.sh("git push ${defaultRemote}-${env}  master")
     }
   }
