@@ -47,6 +47,7 @@ class WebAppDeploy implements Serializable {
       steps.sh("git config user.email 'jenkinsmoj@contino.io'")
       steps.sh("git config user.name 'jenkinsmoj'")
       steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
+      steps.sh("git pull ${steps.env.BRANCH_NAME}")
       steps.sh("git push ${defaultRemote}-${env}  master")
     }
   }
