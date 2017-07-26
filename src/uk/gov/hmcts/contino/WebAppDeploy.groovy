@@ -41,8 +41,10 @@ class WebAppDeploy implements Serializable {
       def appUrl = "${product}-${app}-${env}"
       steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
       steps.sh("git checkout ${steps.env.BRANCH_NAME}")
-      steps.sh("git add  ${jarPath}")
-      steps.sh("git add  ${springConfigPath}")
+      steps.sh("cp ${jarPath} .")
+      steps.sh("cp ${springConfigPath} .")
+      steps.sh("git add  ${jarPath##*/}")
+      steps.sh("git add  ${springConfigPath##*/}")
       steps.sh("git add  ${iisWebConfig}")
       steps.sh("git config user.email 'jenkinsmoj@contino.io'")
       steps.sh("git config user.name 'jenkinsmoj'")
