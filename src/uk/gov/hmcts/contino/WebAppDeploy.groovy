@@ -34,6 +34,9 @@ class WebAppDeploy implements Serializable {
         steps.sh("echo '/npm-debug.log*' >> .gitignore")
         steps.sh("echo 'jsconfig.json' >> .gitignore")
         steps.sh("echo '*.tmp' >> .gitignore")
+        steps.sh("echo '/node_modules/' >> .gitignore")
+        steps.sh("echo '/log/' >> .gitignore")
+        steps.sh("echo '/lib/' >> .gitignore")
         steps.sh("echo 'coverage' >> .gitignore")
         steps.sh("git add .")
 
