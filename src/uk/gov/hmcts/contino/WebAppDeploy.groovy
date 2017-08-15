@@ -66,7 +66,7 @@ class WebAppDeploy implements Serializable {
       steps.sh("GLOBIGNORE='.tmp_azure_jenkings:.git'; rm -rf *")
       steps.sh("cp .tmp_azure_jenkings/* .")
       steps.sh("rm -rf .tmp_azure_jenkings")
-      steps.sh("git add  .")
+      steps.sh("git add --all .")
 
       steps.sh("git config user.email 'jenkinsmoj@contino.io'")
       steps.sh("git config user.name 'jenkinsmoj'")
