@@ -63,7 +63,7 @@ class WebAppDeploy implements Serializable {
       steps.sh("cp ${jarPath} .tmp_azure_jenkings")
       steps.sh("cp  ${springConfigPath} .tmp_azure_jenkings")
       steps.sh("cp ${iisWebConfig} .tmp_azure_jenkings")
-      steps.sh("GLOBIGNORE='.tmp_azure_jenkings:.git'; rm -r *")
+      steps.sh("GLOBIGNORE='.tmp_azure_jenkings:.git'; rm -rf *")
       steps.sh("cp .tmp_azure_jenkings/* .")
       steps.sh("rm -rf .tmp_azure_jenkings")
       steps.sh("git add  .")
