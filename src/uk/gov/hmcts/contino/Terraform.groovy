@@ -39,15 +39,11 @@ class Terraform implements Serializable {
    * @return
    */
   def apply(env) {
-    if (steps.env.BRANCH_NAME == 'master') {
-      if (env == 'dev' || env == 'prod' || env == 'test') {
+    def isPresetEnvironment = env in ['dev', 'prod', 'test']
+    if ((isPresetEnvironment && steps.env.BRANCH_NAME == 'master') ||
+        (!isPresetEnvironment && steps.env.BRANCH_NAME != 'master'))
+    {
         return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}' -var 'name=${product}'"))
-      }
-    }
-    else {
-      if (env != 'dev' && env != 'prod' && env != 'test') {
-        return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}' -var 'name=${product}'"))
-      }
     }
   }
 
