@@ -50,11 +50,8 @@ class Terraform implements Serializable {
   private java.lang.Boolean canApply(env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
 
-    if ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
-        (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
-      return true
-    else
-      return false
+    return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
+            (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
   }
 
   private def init(env) {
