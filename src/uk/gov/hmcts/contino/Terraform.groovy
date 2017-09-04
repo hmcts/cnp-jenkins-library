@@ -41,7 +41,7 @@ class Terraform implements Serializable {
   def apply(env) {
 
     if (canApply(env))
-      return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}' -var 'name=${product}'")
+      return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}' -var 'name=${product}'"))
     else
       throw new Exception("Cannot apply for ${env}. You can only apply 'dev', 'test' or 'prod' on master branch or something else on other branch")
 
