@@ -63,8 +63,6 @@ class Terraform implements Serializable {
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
       "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
-
-
   }
 
   private def configureArgs(env, args) {
@@ -98,7 +96,6 @@ class Terraform implements Serializable {
         [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
         [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
         [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
-
 
         steps.sh("terraform ${args}")
       }
