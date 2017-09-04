@@ -1,7 +1,7 @@
 package uk.gov.hmcts.contino
 
-class BuildHelper extends Serialzable
-{
+class BuildHelper
+    implements Serializable {
 
   def steps
   def gitUrl
@@ -26,5 +26,6 @@ class BuildHelper extends Serialzable
     def lastTagSplitted = lastTagVersion.split(/\./)
     lastTagSplitted[lastTagSplitted.length - 1] = lastTagSplitted[lastTagSplitted.length - 1].toInteger() + 1
     return lastTagSplitted.join('.')
+
   }
 }
