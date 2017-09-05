@@ -11,7 +11,7 @@ class BuildHelper
     this.gitUrl = "${steps.GITHUB_PROTOCOL}://${steps.TOKEN}@${steps.GITHUB_REPO}"
   }
 
-  private void nextTagVersion() {
+  def nextTagVersion() {
     //Fetch all tags. They are not available due to shallow checkout in first step
     def fetchTags = steps.sh(script: "git fetch '${gitUrl}' --tags", returnStdout: true).split("\r?\n")
 
@@ -21,11 +21,11 @@ class BuildHelper
     println lines*/
 
     //meanwhile read tags this way:
-    def lastTagVersion = steps.sh(script: 'git describe --tags $(git rev-list --tags --max-count=1)', returnStdout: true)
+    lastTagVersion = steps.sh(script: 'git describe --tags $(git rev-list --tags --max-count=1)', returnStdout: true)
     println "Last tag version in repo: " + lastTagVersion
-    def lastTagSplitted = lastTagVersion.split(/\./)
+    lastTagSplitted = lastTagVersion.split(/\./)
     lastTagSplitted[lastTagSplitted.length - 1] = lastTagSplitted[lastTagSplitted.length - 1].toInteger() + 1
-    return lastTagSplitted.join('.')
 
+    return lastTagSplitted.join('.')
   }
 }
