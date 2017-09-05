@@ -10,7 +10,7 @@ class BuildUtils implements Serializable {
     this.gitUrl = "${steps.GITHUB_PROTOCOL}://${steps.TOKEN}@${steps.GITHUB_REPO}"
   }
 
-  def nextTagVersion() {
+  def nextTag() {
     //Fetch all tags. They are not available due to shallow checkout in first step
     steps.sh(script: "git fetch '${gitUrl}' --tags", returnStdout: true).split("\r?\n")
 
@@ -28,7 +28,7 @@ class BuildUtils implements Serializable {
     return lastTagSplitted.join('.')
   }
 
-  def tag(tag) {
+  def applyTag(tag) {
     String result = ""
     println("Step variable: "+ steps)
     if (steps.env.BRANCH_NAME == 'master' &&
