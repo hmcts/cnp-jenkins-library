@@ -3,9 +3,8 @@ package uk.gov.hmcts.contino
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
-import uk.gov.hmcts.contino.BuildHelper
 
-class BuildHelperTest extends Specification {
+class BuildUtilsTest extends Specification {
 
   @Shared steps
 
@@ -17,7 +16,7 @@ class BuildHelperTest extends Specification {
   def "NextTagVersion"() {
     given:
       steps.sh(_) >> "1.0.15"
-      BuildHelper builHelper = new BuildHelper(steps)
+      BuildUtils builHelper = new BuildUtils(steps)
 
     expect:
       builHelper.nextTagVersion() == "1.0.16"
@@ -31,7 +30,7 @@ class BuildHelperTest extends Specification {
       steps.sh(_) >> "1.0.15"
 
     and:
-      def builHelper = new BuildHelper(steps)
+      def builHelper = new BuildUtils(steps)
 
     expect:
       builHelper.tag("1.0.16").contains("1.0.16")

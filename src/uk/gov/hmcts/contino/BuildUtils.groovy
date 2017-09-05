@@ -1,11 +1,11 @@
 package uk.gov.hmcts.contino
 
-class BuildHelper implements Serializable {
+class BuildUtils implements Serializable {
 
   def steps
   def gitUrl
 
-  BuildHelper(steps){
+  BuildUtils(steps){
     this.steps = steps
     this.gitUrl = "${steps.GITHUB_PROTOCOL}://${steps.TOKEN}@${steps.GITHUB_REPO}"
   }
