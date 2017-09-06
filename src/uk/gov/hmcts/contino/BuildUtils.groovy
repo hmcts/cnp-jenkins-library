@@ -47,13 +47,13 @@ class BuildUtils implements Serializable {
   * running tests and removing the infratructure at the end
   */
   def moduleIntegrationTests() {
-    def RANDOM_STRING = RandomStringUtils.random(6, true, true)
+    String RANDOM_STRING = RandomStringUtils.random(6, true, true)
 
     return pipe.docker
         .image("contino/inspec-azure:latest")
         .inside("-e TF_VAR_random_name=inspec${RANDOM_STRING}") {
-      pipe.sh "echo $TF_VAR_random_name"
-      pipe.sh "export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME=\"$WORKSPACE\" && cd tests/int && kitchen test azure"
+      pipe.sh 'echo $TF_VAR_random_name'
+      pipe.sh 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE" && cd tests/int && kitchen test azure'
     }
   }
 
