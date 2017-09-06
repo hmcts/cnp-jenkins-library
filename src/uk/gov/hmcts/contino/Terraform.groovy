@@ -15,17 +15,14 @@ class Terraform implements Serializable {
   Terraform(steps, product) {
     this.steps = steps
     this.product = product
-    setupTerraform()
   }
 
   Terraform(jenkinsPipeline) {
     this.steps = jenkinsPipeline
-
-    def tfHome = this.steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
-    this.steps.env.PATH = "${tfHome}:${this.steps.env.PATH}"
   }
 
   def lint() {
+    setupTerraform()
     runTerraformWithCreds('fmt --diff=true > diff.out')
     steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true..." && cat diff.out ; fi'
     return runTerraformWithCreds('validate')
