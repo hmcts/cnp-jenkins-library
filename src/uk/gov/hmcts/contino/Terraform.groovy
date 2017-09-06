@@ -13,9 +13,20 @@ class Terraform implements Serializable {
  * @param product product stack to run
  */
   Terraform(steps, product) {
-
     this.steps = steps
     this.product = product
+    setupTerraform()
+  }
+
+  Terraform(jenkinsPipeline) {
+    this.steps = jenkinsPipeline
+    setupTerraform()
+  }
+
+  def lint() {
+    steps.sh 'terraform fmt --diff=true > diff.out'
+    steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true..." && cat diff.out && echo "Automatically applying fmt" && terraform fmt ; fi'
+    steps.sh 'terraform validate'
   }
 
 /***
@@ -24,14 +35,14 @@ class Terraform implements Serializable {
  * @return
  */
   def plan(env) {
+    if (this.product == null)
+      throw new Exception("'product' is null! Library can only run as module helper in this case!")
+
     init(env)
     runTerraformWithCreds("get -update=true")
 
     return runTerraformWithCreds(configureArgs(env, "plan -var 'env=${env}' -var 'name=${product}'"))
-
   }
-
-
 
   /***
    * Run a Terraform apply, based on a previous apply
@@ -39,12 +50,13 @@ class Terraform implements Serializable {
    * @return
    */
   def apply(env) {
-
-    if (canApply(env))
-      return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}' -var 'name=${product}'"))
+    if (canApply(env)) {
+      if (this.product == null)
+        throw new Exception("'product' is null! Library can only run as module helper in this case!")
+      return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
+    }
     else
       throw new Exception("Cannot apply for ${env}. You can only apply 'dev', 'test' or 'prod' on master branch or something else on other branch")
-
   }
 
   private java.lang.Boolean canApply(env) {
@@ -55,14 +67,15 @@ class Terraform implements Serializable {
   }
 
   private def init(env) {
-
+    if (this.product == null)
+      throw new Exception("'product' is null! Library can only run as module helper in this case!")
     def stateStoreConfig = getStateStoreConfig(env)
 
     return runTerraformWithCreds("init -reconfigure -backend-config " +
-      "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
-      "-backend-config \"container_name=${stateStoreConfig.container}\" " +
-      "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-      "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
+        "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
+        "-backend-config \"container_name=${stateStoreConfig.container}\" " +
+        "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
+        "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
   }
 
   private def configureArgs(env, args) {
@@ -73,9 +86,7 @@ class Terraform implements Serializable {
   }
 
   private def getStateStoreConfig(env) {
-
     def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
-
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 
     if (stateStoreConfig == null) {
@@ -86,27 +97,22 @@ class Terraform implements Serializable {
   }
 
   private runTerraformWithCreds(args) {
-
-    setupTerraform()
-
     return steps.ansiColor('xterm') {
       steps.withCredentials([
-        [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
-        [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
-        [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
-        [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
-        [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
+          [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
+          [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
+          [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
+          [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
+          [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
 
         steps.sh("terraform ${args}")
       }
     }
-
   }
 
   private setupTerraform() {
     def tfHome = steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
-
     steps.env.PATH = "${tfHome}:${this.steps.env.PATH}"
-
   }
+
 }
