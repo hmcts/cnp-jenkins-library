@@ -9,7 +9,7 @@ class Terraform implements Serializable {
   def product
 /***
  *
- * @param steps Jenkins steps
+ * @param steps Jenkins pipe
  * @param product product stack to run
  */
   Terraform(steps, product) {
