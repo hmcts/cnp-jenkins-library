@@ -26,7 +26,7 @@ class Terraform implements Serializable {
   def lint() {
     steps.sh 'terraform fmt --diff=true > diff.out'
     steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true..." && cat diff.out && echo "Automatically applying fmt" && terraform fmt ; fi'
-    steps.sh 'terraform validate'
+    return steps.sh('terraform validate')
   }
 
 /***
