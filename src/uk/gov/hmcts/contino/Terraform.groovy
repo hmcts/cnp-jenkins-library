@@ -9,7 +9,7 @@ class Terraform implements Serializable {
   def product
 /***
  *
- * @param steps Jenkins steps
+ * @param steps Jenkins pipe
  * @param product product stack to run
  */
   Terraform(steps, product) {
@@ -40,9 +40,18 @@ class Terraform implements Serializable {
    */
   def apply(env) {
 
-    if (steps.env.BRANCH_NAME == 'master') {
+    if (canApply(env))
       return runTerraformWithCreds(configureArgs(env,"apply -var 'env=${env}' -var 'name=${product}'"))
-    }
+    else
+      throw new Exception("Cannot apply for ${env}. You can only apply 'dev', 'test' or 'prod' on master branch or something else on other branch")
+
+  }
+
+  private java.lang.Boolean canApply(env) {
+    def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
+
+    return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
+            (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
   }
 
   private def init(env) {
@@ -54,8 +63,6 @@ class Terraform implements Serializable {
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
       "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
-
-
   }
 
   private def configureArgs(env, args) {
@@ -89,7 +96,6 @@ class Terraform implements Serializable {
         [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
         [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
         [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
-
 
         steps.sh("terraform ${args}")
       }
