@@ -20,7 +20,9 @@ class Terraform implements Serializable {
 
   Terraform(jenkinsPipeline) {
     this.steps = jenkinsPipeline
-    setupTerraform()
+
+    def tfHome = this.steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
+    this.steps.env.PATH = "${tfHome}:${this.steps.env.PATH}"
   }
 
   def lint() {
