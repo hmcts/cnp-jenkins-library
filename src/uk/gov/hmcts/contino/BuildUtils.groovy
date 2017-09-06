@@ -38,8 +38,10 @@ class BuildUtils implements Serializable {
       result = "Tagging with version: " + tag
       pipe.sh("git tag -a $tag -m \"Jenkins\"")
       pipe.sh("git push '${gitUrl}' --tags")
-    } else
+    }
+    else
       result = "No tagging done! Available tag is: " + tag
+
     return result
   }
 
@@ -62,7 +64,7 @@ class BuildUtils implements Serializable {
     return pipe.docker
         .image('contino/inspec-azure:latest')
         .inside() {
-      pipe.sh "export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME=\"$WORKSPACE\" && inspec exec test/integration/default"
+      pipe.sh 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE" && inspec exec test/integration/default'
     }
   }
 
