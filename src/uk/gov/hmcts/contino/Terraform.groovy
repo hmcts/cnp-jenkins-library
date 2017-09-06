@@ -19,10 +19,10 @@ class Terraform implements Serializable {
 
   Terraform(jenkinsPipeline) {
     this.steps = jenkinsPipeline
+    setupTerraform()
   }
 
   def lint() {
-    setupTerraform()
     runTerraformWithCreds('fmt --diff=true > diff.out')
     steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true..." && cat diff.out ; fi'
     return runTerraformWithCreds('validate')
