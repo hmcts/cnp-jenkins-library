@@ -19,12 +19,11 @@ class Terraform implements Serializable {
 
   Terraform(jenkinsPipeline) {
     this.steps = jenkinsPipeline
-    setupTerraform()
   }
 
   def lint() {
     runTerraformWithCreds('fmt --diff=true > diff.out')
-    steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true..." && cat diff.out ; fi'
+    steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
     return runTerraformWithCreds('validate')
   }
 
@@ -96,6 +95,7 @@ class Terraform implements Serializable {
   }
 
   private runTerraformWithCreds(args) {
+    setupTerraform()
     return steps.ansiColor('xterm') {
       steps.withCredentials([
           [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
@@ -110,6 +110,9 @@ class Terraform implements Serializable {
   }
 
   private setupTerraform() {
+    // this doesn't work ran in the constructor!
+    // These steps are supposed to be run when a jenkins runner is already allocated hence
+    // each function that needs invoking terraform should setup the env first
     def tfHome = steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
     steps.env.PATH = "${tfHome}:${steps.env.PATH}"
   }
