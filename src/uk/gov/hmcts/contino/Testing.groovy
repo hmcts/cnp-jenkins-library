@@ -21,7 +21,12 @@ class Testing implements Serializable {
     return runWithDocker("cd tests/int && kitchen test azure", [TF_VAR_random_name:"inspec${RANDOM_STRING}"])
   }
 
-  private void runWithDocker(String command, envVars=[:]) {
+  /* Running integration tests for a project only using Inspec on existing infrastructure */
+  def projectRegressionTests() {
+    return runWithDocker("inspec exec test/integration/default")
+  }
+
+  private runWithDocker(String command, envVars=[:]) {
     return pipe.docker
         .image("contino/inspec-azure:latest")
         .inside(envVars.collect( { /-e $it.key=$it.value/ } ).join(" ")) {
@@ -29,11 +34,6 @@ class Testing implements Serializable {
         pipe.sh 'echo '+ envVars.keySet().collect({ /$it=$$it/ }).join(" ")
       pipe.sh PREPARE_ENVIRONMENT " && "+ command
     }
-  }
-
-  /* Running integration tests for a project only using Inspec on existing infrastructure */
-  def projectRegressionTests() {
-    return runWithDocker("inspec exec test/integration/default")
   }
 
 }

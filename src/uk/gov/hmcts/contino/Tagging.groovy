@@ -44,5 +44,5 @@ class Tagging implements Serializable {
 
     return result
   }
-  
+
 }
