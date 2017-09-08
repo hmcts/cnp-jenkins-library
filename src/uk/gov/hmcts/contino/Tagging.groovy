@@ -1,12 +1,12 @@
 package uk.gov.hmcts.contino
 import org.apache.commons.lang3.RandomStringUtils
 
-class BuildUtils implements Serializable {
+class Tagging implements Serializable {
 
   def pipe
   def gitUrl
 
-  BuildUtils(pipe){
+  Tagging(pipe){
     this.pipe = pipe
     this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
   }
@@ -44,28 +44,5 @@ class BuildUtils implements Serializable {
 
     return result
   }
-
-  /* Running integration tests for a module with Chef Kitchen, spinning up temporary infrastructure
-  * running tests and removing the infratructure at the end
-  */
-  def moduleIntegrationTests() {
-    String RANDOM_STRING = RandomStringUtils.random(6, true, true)
-
-    return pipe.docker
-        .image("contino/inspec-azure:latest")
-        .inside("-e TF_VAR_random_name=inspec${RANDOM_STRING}") {
-      pipe.sh 'echo $TF_VAR_random_name'
-      pipe.sh 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE" && cd tests/int && kitchen test azure'
-    }
-  }
-
-  /* Running integration tests for a project only using Inspec on existing infrastructure */
-  def projectRegressionTests() {
-    return pipe.docker
-        .image('contino/inspec-azure:latest')
-        .inside() {
-      pipe.sh 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE" && inspec exec test/integration/default'
-    }
-  }
-
+  
 }

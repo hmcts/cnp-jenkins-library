@@ -1,10 +1,9 @@
 package uk.gov.hmcts.contino
 
-import org.spockframework.builder.BuilderHelper
 import spock.lang.Shared
 import spock.lang.Specification
 
-class BuildUtilsTest extends Specification {
+class TaggingTest extends Specification {
 
   @Shared
       pipeline
@@ -25,7 +24,7 @@ class BuildUtilsTest extends Specification {
     pipeline.env >> [ "BRANCH_NAME": branch, "PATH" : "" ]
     pipeline.currentBuild >>  [ "currentResult" : buildStatus, "result":buildStatus ]
     pipeline.sh(_) >> { cmd -> cmd.toString().contains("describe") ? "1.0.15" : "" }
-    return new BuildUtils(pipeline)
+    return new Tagging(pipeline)
   }
 
   def "SUCCESSFUL build on 'master' branch"() {
