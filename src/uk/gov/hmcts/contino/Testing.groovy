@@ -3,7 +3,7 @@ import org.apache.commons.lang3.RandomStringUtils
 
 class Testing implements Serializable {
 
-  public static final String PREPARE_ENVIRONMENT = 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE"'
+  private String PREPARE_ENVIRONMENT = 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE"'
   def pipe
   def gitUrl
 
@@ -32,7 +32,7 @@ class Testing implements Serializable {
         .inside(envVars.collect( { /-e $it.key=$it.value/ } ).join(" ")) {
       if (!envVars.empty)
         pipe.sh 'echo '+ envVars.keySet().collect({ /$it=$$it/ }).join(" ")
-      pipe.sh PREPARE_ENVIRONMENT " && "+ command
+      pipe.sh(PREPARE_ENVIRONMENT + " && " + command)
     }
   }
 

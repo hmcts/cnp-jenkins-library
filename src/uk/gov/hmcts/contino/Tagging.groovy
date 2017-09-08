@@ -1,5 +1,4 @@
 package uk.gov.hmcts.contino
-import org.apache.commons.lang3.RandomStringUtils
 
 class Tagging implements Serializable {
 
