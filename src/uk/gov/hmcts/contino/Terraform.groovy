@@ -57,7 +57,7 @@ class Terraform implements Serializable {
       throw new Exception("Cannot apply for '${env}'. You can only apply 'dev', 'test' or 'prod' on master branch or something else on other branch")
   }
 
-  private java.lang.Boolean canApply(env) {
+  private java.lang.Boolean canApply(String env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
     steps.sh("echo canApply: on branch: '${steps.env.BRANCH_NAME}'; env: '${env}'; decision: ${envAllowedOnMasterBranchOnly}")
     return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
