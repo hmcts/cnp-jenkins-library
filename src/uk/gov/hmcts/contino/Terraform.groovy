@@ -100,6 +100,10 @@ class Terraform implements Serializable {
     return stateStoreConfig
   }
 
+  void logMessage(GString gString) {
+    steps.sh("echo $gString")
+  }
+
   private runTerraformWithCreds(args) {
     setupTerraform()
     return steps.ansiColor('xterm') {
