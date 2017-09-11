@@ -97,7 +97,7 @@ class Terraform implements Serializable {
     }*/
     logMessage("Using following stateStores=$stateStores")
 
-    return stateStoreConfig
+    return stateStores
   }
 
   void logMessage(GString gString) {
