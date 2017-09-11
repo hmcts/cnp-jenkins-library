@@ -14,6 +14,8 @@ interface JenkinsStepMock {
   String libraryResource(String)
   Object withCredentials(ArrayList, Closure)
 
+  Object ansiColor(String, Closure)
+  Object fileExists(String)
 }
 
 

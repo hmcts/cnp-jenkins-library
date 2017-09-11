@@ -1,11 +1,11 @@
 package uk.gov.hmcts.contino
 
-class BuildUtils implements Serializable {
+class Tagging implements Serializable {
 
   def pipe
   def gitUrl
 
-  BuildUtils(pipe){
+  Tagging(pipe){
     this.pipe = pipe
     this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
   }
@@ -37,8 +37,11 @@ class BuildUtils implements Serializable {
       result = "Tagging with version: " + tag
       pipe.sh("git tag -a $tag -m \"Jenkins\"")
       pipe.sh("git push '${gitUrl}' --tags")
-    } else
+    }
+    else
       result = "No tagging done! Available tag is: " + tag
+
     return result
   }
+
 }
