@@ -27,8 +27,8 @@ class Terraform implements Serializable {
     return runTerraformWithCreds('validate')
   }
 
-  def show() {
-    return runTerraformWithCreds("show")
+  def show(env) {
+    return runTerraformWithCreds("show ${env}.tfvars")
   }
 
 /***
