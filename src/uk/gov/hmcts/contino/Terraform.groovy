@@ -59,7 +59,7 @@ class Terraform implements Serializable {
 
   private java.lang.Boolean canApply(String env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
-    steps.sh("echo 'canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}'")
+    logMessage("canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
     return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
             (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
   }
@@ -90,18 +90,13 @@ class Terraform implements Serializable {
     } else
       throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
 
-    /*def stateStoreConfig = stateStores.find { s -> s.env == env }
-
-    if (stateStoreConfig == null) {
-      throw new Exception("State storage for ${env} not found. Is it configured?")
-    }*/
     logMessage("Using following stateStores=$stateStores")
 
     return stateStores
   }
 
   void logMessage(GString gString) {
-    steps.sh("echo $gString")
+    steps.sh("echo -e '\\e[34m$gString'")
   }
 
   private runTerraformWithCreds(args) {

@@ -18,7 +18,7 @@ class Testing implements Serializable {
   def moduleIntegrationTests() {
     String RANDOM_STRING = RandomStringUtils.random(6, true, true)
 
-    return runWithDocker("cd tests/int && kitchen test azure", [TF_VAR_random_name:"inspec${RANDOM_STRING}"])
+    return runWithDocker("cd tests/int && kitchen test azure", [TF_VAR_random_name:"inspec${RANDOM_STRING}", TF_VAR_branch_name:pipe.env.BRANCH_NAME])
   }
 
   /* Running integration tests for a project only using Inspec on existing infrastructure */
