@@ -27,10 +27,6 @@ class Terraform implements Serializable {
     return runTerraformWithCreds('validate')
   }
 
-  def show(env) {
-    return runTerraformWithCreds("show ${env}.tfvars")
-  }
-
 /***
  * Run a Terraform init and plan
  * @param env Environment to run plan against
