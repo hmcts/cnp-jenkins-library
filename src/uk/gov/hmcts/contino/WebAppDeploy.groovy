@@ -27,11 +27,11 @@ class WebAppDeploy implements Serializable {
   def getComputeFor(env){
     return "core-compute-sample-dev" 
   }
-  def deploy(env){
+  def deployNodeJs(env){
     return deploy(env, getComputeFor(env))
   }
 
-  def deploy(env, hostingEnv) {
+  def deployJs(env, hostingEnv) {
 
     return steps.withCredentials(
         [[$class: 'UsernamePasswordMultiBinding',
