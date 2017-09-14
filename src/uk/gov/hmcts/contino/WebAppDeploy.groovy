@@ -62,7 +62,7 @@ class WebAppDeploy implements Serializable {
 
         steps.sh("git config user.email 'jenkinsmoj@contino.io'")
         steps.sh("git config user.name 'jenkinsmoj'")
-        steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
+        steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
         steps.sh("git push ${defaultRemote}-${env}  master -f")
     }
   }
@@ -99,7 +99,7 @@ class WebAppDeploy implements Serializable {
 
       steps.sh("git config user.email '" + GIT_EMAIL + "'")
       steps.sh("git config user.name '" + GIT_USER + "'")
-      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
+      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
       steps.sh("git push ${defaultRemote}-${env}  master -f")
     }
   }
