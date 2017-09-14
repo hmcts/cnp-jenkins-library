@@ -3,6 +3,8 @@ package uk.gov.hmcts.contino
 
 class WebAppDeploy implements Serializable {
 
+  public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
+  public static final java.lang.String GIT_USER = "jenkinsmoj"
   def steps
   def product
   def defaultRemote = "azure"
@@ -15,7 +17,25 @@ class WebAppDeploy implements Serializable {
     this.steps = steps
   }
 
-  def deploy(env, hostingEnv) {
+  /*
+
+  */
+  def healthCheck(env) {
+
+    def computeCluster = getComputeFor(env)
+    def healthCheckUrl = "http://${product}-${app}-${env}.${computeCluster}.p.azurewebsites.net/health"
+    return steps.sh("curl -vf ${healthCheckUrl}")
+  }
+
+  private def getComputeFor(env){
+    return "core-compute-sample-dev"
+  }
+
+  def deployNodeJS(env){
+    return deployNodeJS(env, getComputeFor(env))
+  }
+
+  def deployNodeJS(env, hostingEnv) {
 
     return steps.withCredentials(
         [[$class: 'UsernamePasswordMultiBinding',
@@ -42,9 +62,13 @@ class WebAppDeploy implements Serializable {
 
         steps.sh("git config user.email 'jenkinsmoj@contino.io'")
         steps.sh("git config user.name 'jenkinsmoj'")
-        steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
+        steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
         steps.sh("git push ${defaultRemote}-${env}  master -f")
     }
+  }
+
+  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig){
+    return deployJavaWebApp(env, getComputeFor(env), jarPath, springConfigPath, iisWebConfig)
   }
 
   def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
@@ -55,23 +79,34 @@ class WebAppDeploy implements Serializable {
         usernameVariable: 'GIT_USERNAME',
         passwordVariable: 'GIT_PASSWORD']]) {
 
+      def tempDir = ".tmp_azure_jenkings"
+
       def appUrl = "${product}-${app}-${env}"
+
       steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
       steps.sh("git checkout ${steps.env.BRANCH_NAME}")
 
-      steps.sh("mkdir .tmp_azure_jenkings")
-      steps.sh("cp ${jarPath} .tmp_azure_jenkings")
-      steps.sh("cp  ${springConfigPath} .tmp_azure_jenkings")
-      steps.sh("cp ${iisWebConfig} .tmp_azure_jenkings")
-      steps.sh("GLOBIGNORE='.tmp_azure_jenkings:.git'; rm -rf *")
-      steps.sh("cp .tmp_azure_jenkings/* .")
-      steps.sh("rm -rf .tmp_azure_jenkings")
+      steps.sh("mkdir ${tempDir}")
+
+      checkAndCopy(jarPath, tempDir)
+      checkAndCopy(springConfigPath, tempDir)
+      checkAndCopy(iisWebConfig, tempDir)
+
+      steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
+      steps.sh("cp ${tempDir}/* .")
+      steps.sh("rm -rf ${tempDir}")
       steps.sh("git add --all .")
 
-      steps.sh("git config user.email 'jenkinsmoj@contino.io'")
-      steps.sh("git config user.name 'jenkinsmoj'")
-      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
+      steps.sh("git config user.email '" + GIT_EMAIL + "'")
+      steps.sh("git config user.name '" + GIT_USER + "'")
+      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
       steps.sh("git push ${defaultRemote}-${env}  master -f")
+    }
+  }
+
+  private def checkAndCopy(filePath, destinationDir) {
+    if (fileExists(filePath)) {
+      steps.sh("cp  ${filePath} " + destinationDir)
     }
   }
 }

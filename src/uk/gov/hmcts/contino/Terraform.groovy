@@ -52,8 +52,7 @@ class Terraform implements Serializable {
       if (this.product == null)
         throw new Exception("'product' is null! Library can only run as module helper in this case!")
       return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
-    }
-    else
+    } else
       throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
@@ -61,7 +60,7 @@ class Terraform implements Serializable {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
     logMessage("canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
     return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
-            (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
+      (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
   }
 
   private def init(env) {
@@ -70,10 +69,10 @@ class Terraform implements Serializable {
     def stateStoreConfig = getStateStoreConfig(env)
 
     return runTerraformWithCreds("init -reconfigure -backend-config " +
-        "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
-        "-backend-config \"container_name=${stateStoreConfig.container}\" " +
-        "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-        "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
+      "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
+      "-backend-config \"container_name=${stateStoreConfig.container}\" " +
+      "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
+      "-backend-config \"key=${this.product}/${env}/terraform.tfstate\"")
   }
 
   private def configureArgs(env, args) {
@@ -89,9 +88,10 @@ class Terraform implements Serializable {
 
     if (stateStoreConfig == null)
       stateStoreConfig = stateStores.find { s -> s.env == "dev" }
+
     logMessage("Using following stateStores=$stateStoreConfig")
 
-    return stateStores
+    return stateStoreConfig
   }
 
   void logMessage(GString gString) {
