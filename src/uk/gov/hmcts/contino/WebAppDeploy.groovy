@@ -15,6 +15,22 @@ class WebAppDeploy implements Serializable {
     this.steps = steps
   }
 
+  /*
+
+  */
+  def healthCheck(env) {
+    def computeCluster = getComputeFor(env)
+    SMOKETEST_URL = "http://${product}-${app}-${env}.${computeCluster}.p.azurewebsites.net/health"
+    return sh "curl -vf $SMOKETEST_URL"
+  }
+
+  def getComputeFor(env){
+    return "core-compute-sample-dev" 
+  }
+  def deploy(env){
+    return deploy(env, getComputeFor(env))
+  }
+
   def deploy(env, hostingEnv) {
 
     return steps.withCredentials(
@@ -45,6 +61,10 @@ class WebAppDeploy implements Serializable {
         steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}'")
         steps.sh("git push ${defaultRemote}-${env}  master -f")
     }
+  }
+
+  def deployJavaWebApp(env){
+    return deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig)
   }
 
   def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
