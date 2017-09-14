@@ -21,9 +21,10 @@ class WebAppDeploy implements Serializable {
 
   */
   def healthCheck(env) {
-    def computeCluster = getComputeFor(env)
-    SMOKETEST_URL = "http://${product}-${app}-${env}.${computeCluster}.p.azurewebsites.net/health"
-    return sh "curl -vf $SMOKETEST_URL"
+
+    computeCluster = getComputeFor(env)
+    healthCheckUrl = "http://${product}-${app}-${env}.${computeCluster}.p.azurewebsites.net/health"
+    return steps.sh("curl -vf ${healthCheckUrl}")
   }
 
   private def getComputeFor(env){
