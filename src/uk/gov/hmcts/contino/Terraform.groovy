@@ -101,13 +101,17 @@ class Terraform implements Serializable {
   private runTerraformWithCreds(args) {
     setupTerraform()
     return steps.ansiColor('xterm') {
-      steps.withCredentials([
-        [$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
-        [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
-        [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
-        [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
-        [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID']]) {
-
+      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
+          [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
+          [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
+          [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
+          [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID'],
+          [$class: 'StringBinding', credentialsId: 'kitchen_github', variable: 'TOKEN'],
+          [$class: 'StringBinding', credentialsId: 'kitchen_github', variable: 'TF_VAR_token'],
+          [$class: 'StringBinding', credentialsId: 'kitchen_client_secret', variable: 'AZURE_CLIENT_SECRET'],
+          [$class: 'StringBinding', credentialsId: 'kitchen_tenant_id', variable: 'AZURE_TENANT_ID'],
+          [$class: 'StringBinding', credentialsId: 'kitchen_subscription_id', variable: 'AZURE_SUBSCRIPTION_ID'],
+          [$class: 'StringBinding', credentialsId: 'kitchen_client_id', variable: 'AZURE_CLIENT_ID']]) {
         steps.sh("terraform ${args}")
       }
     }
