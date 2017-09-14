@@ -54,12 +54,12 @@ class Terraform implements Serializable {
       return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
     }
     else
-      throw new Exception("Cannot apply for ${env}. You can only apply 'dev', 'test' or 'prod' on master branch or something else on other branch")
+      throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
-  private java.lang.Boolean canApply(env) {
+  private java.lang.Boolean canApply(String env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
-
+    logMessage("canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
     return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
             (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
   }
@@ -87,11 +87,15 @@ class Terraform implements Serializable {
     def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 
-    if (stateStoreConfig == null) {
-      throw new Exception("State storage for ${env} not found. Is it configured?")
-    }
+    if (stateStoreConfig == null)
+      stateStoreConfig = stateStores.find { s -> s.env == "dev" }
+    logMessage("Using following stateStores=$stateStoreConfig")
 
-    return stateStoreConfig
+    return stateStores
+  }
+
+  void logMessage(GString gString) {
+    steps.sh("echo -e '\\e[34m$gString'")
   }
 
   private runTerraformWithCreds(args) {
