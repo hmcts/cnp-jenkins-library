@@ -14,7 +14,7 @@ class TerraformTests extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock)
-    steps.libraryResource(_) >> new File("./resources/uk/gov/hmcts/contino/state-storage-template.json").text
+    steps.libraryResource(_) >> new File("./resources/uk/gov/hmcts/contino/state-storage.json").text
     steps.env >> ["PATH": ""]
 //    steps.ansiColor(_, _) >> { format, closure -> println "Format: "+ format+ "; Chained command"+ closure.metaClass.classNode.getDeclaredMethods("doCall")[0].code.text  }
 
@@ -44,17 +44,17 @@ class TerraformTests extends Specification {
     steps.env.BRANCH_NAME = 'some_branch'
 
     when:
-    terraform.plan("dev")
+    terraform.apply("dev")
     then:
     thrown(Exception)
 
     when:
-    terraform.plan("test")
+    terraform.apply("test")
     then:
     thrown(Exception)
 
     when:
-    terraform.plan("prod")
+    terraform.apply("prod")
     then:
     thrown(Exception)
 

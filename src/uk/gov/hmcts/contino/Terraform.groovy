@@ -84,13 +84,12 @@ class Terraform implements Serializable {
   }
 
   private def getStateStoreConfig(env) {
-    def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
-    if (canApply(env)) {
-      stateStores += ['env': env]
-    } else
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+    def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
+    def stateStoreConfig = stateStores.find { s -> s.env == env }
 
-    logMessage("Using following stateStores=$stateStores")
+    if (stateStoreConfig == null)
+      stateStoreConfig = stateStores.find { s -> s.env == "dev" }
+    logMessage("Using following stateStores=$stateStoreConfig")
 
     return stateStores
   }
