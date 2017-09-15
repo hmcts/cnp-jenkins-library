@@ -67,8 +67,8 @@ class WebAppDeploy implements Serializable {
     }
   }
 
-  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig){
-    return deployJavaWebApp(env, getComputeFor(env), jarPath, springConfigPath, iisWebConfig)
+  def deployJavaWebApp(env, jarPath, iisWebConfig){
+    return deployJavaWebApp(env, getComputeFor(env), jarPath, null, iisWebConfig)
   }
 
   def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
@@ -105,7 +105,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def checkAndCopy(filePath, destinationDir) {
-    if (steps.fileExists(filePath)) {
+    if (filePath && steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
     }
   }
