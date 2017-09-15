@@ -105,7 +105,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def checkAndCopy(filePath, destinationDir) {
-    if (fileExists(filePath)) {
+    if (steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
     }
   }
