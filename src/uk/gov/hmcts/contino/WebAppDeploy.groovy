@@ -24,7 +24,7 @@ class WebAppDeploy implements Serializable {
 
     def computeCluster = getComputeFor(env)
     def healthCheckUrl = "http://${product}-${app}-${env}.${computeCluster}.p.azurewebsites.net/health"
-    return steps.sh("curl -vf ${healthCheckUrl}")
+    return steps.sh("curl --max-time 200 -vf ${healthCheckUrl}")
   }
 
   private def getComputeFor(env){
@@ -67,8 +67,8 @@ class WebAppDeploy implements Serializable {
     }
   }
 
-  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig){
-    return deployJavaWebApp(env, getComputeFor(env), jarPath, springConfigPath, iisWebConfig)
+  def deployJavaWebApp(env, jarPath, iisWebConfig){
+    return deployJavaWebApp(env, getComputeFor(env), jarPath, null, iisWebConfig)
   }
 
   def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
@@ -105,7 +105,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def checkAndCopy(filePath, destinationDir) {
-    if (fileExists(filePath)) {
+    if (filePath && steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
     }
   }
