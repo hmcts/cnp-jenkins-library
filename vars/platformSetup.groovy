@@ -3,7 +3,6 @@ def call(body) {
   def config = [:]
   body.resolveStrategy = Closure.DELEGATE_FIRST
   body.delegate = config
-  body()
 
   // now build, based on the configuration provided
   ansiColor('xterm') {
@@ -24,4 +23,7 @@ def call(body) {
       sh "echo 'Reform Platform Pipeline Initialized...'"
     }
   }
+
+  body()
+
 }
