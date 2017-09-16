@@ -2,7 +2,12 @@ import groovy.json.JsonSlurperClassic
 
 class terraform implements Serializable {
 
-  def product
+  def pipeHandle
+
+  def terraform(pipelineHandle) {
+    this.pipeHandle = pipelineHandle
+    sh "echo 'terraform constructor: pipeHandle initialised with ${pipeHandle}'"
+  }
 
   def lint() {
     sh 'terraform fmt --diff=true > diff.out'
@@ -11,7 +16,7 @@ class terraform implements Serializable {
   }
 
   def plan(env) {
-    if (product == null)
+    if (pipeHandle.product == null)
       throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
     def stateStoreConfig = getStateStoreConfig(env)
@@ -20,10 +25,10 @@ class terraform implements Serializable {
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-      "-backend-config \"key=${product}/${env}/terraform.tfstate\""
+      "-backend-config \"key=${pipeHandle.product}/${env}/terraform.tfstate\""
 
     sh "terraform get -update=true"
-    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${product}'"))
+    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${pipeHandle.product}'"))
   }
 
   private def getStateStoreConfig(env) {
