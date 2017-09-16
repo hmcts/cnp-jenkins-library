@@ -32,7 +32,7 @@ class terraform implements Serializable {
   }
 
   private def getStateStoreConfig(env) {
-    def stateStores = new JsonSlurperClassic().parseText(libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
+    def stateStores = new JsonSlurperClassic().parseText(pipeHandle.libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
     if (canApply(env)) {
       stateStores += ['env': env]
     } else
