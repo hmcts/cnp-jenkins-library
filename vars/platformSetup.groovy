@@ -1,8 +1,8 @@
 def call(body) {
   // evaluate the body block, and collect configuration into the object
-  def config = [:]
+  /*def config = [:]
   body.resolveStrategy = Closure.DELEGATE_FIRST
-  body.delegate = config
+  body.delegate = config*/
 
   // now build, based on the configuration provided
   ansiColor('xterm') {
@@ -21,7 +21,7 @@ def call(body) {
                      string(credentialsId: 'kitchen_client_id', variable: 'AZURE_CLIENT_ID')]) {
 
       sh "echo 'Reform Platform Pipeline Initialized...'"
-      body()
+      body.call()
     }
   }
 
