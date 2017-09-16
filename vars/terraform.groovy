@@ -1,5 +1,4 @@
 def call(String command) {
-
-  sh("terraform ${args}")
-
+  sh "echo 'terraform line 1'"
+  sh "terraform ${args}"
 }
