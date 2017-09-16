@@ -2,6 +2,8 @@ import groovy.json.JsonSlurperClassic
 
 class terraform implements Serializable {
 
+  def product
+
   def lint() {
     sh 'terraform fmt --diff=true > diff.out'
     sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
