@@ -6,8 +6,7 @@ def call(body) {
 
   // now build, based on the configuration provided
   ansiColor('xterm') {
-    def tfHome = steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
-    env.PATH = "${tfHome}:${env.PATH}"
+    terraformSetup()
 
     withCredentials([string(credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'),
                      string(credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'),

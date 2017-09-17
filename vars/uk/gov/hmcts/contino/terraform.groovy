@@ -1,4 +1,4 @@
-//package uk.gov.hmcts.contino
+package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
 
 class terraform implements Serializable {
