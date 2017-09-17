@@ -5,7 +5,7 @@ class terraform implements Serializable {
 
   private steps
 
-  def ini(productName, pipelineHandler) {
+  def ini(pipelineHandler) {
     this.steps = pipelineHandler
     steps.sh "echo 'product=${productName}'"
   }
@@ -61,6 +61,22 @@ class terraform implements Serializable {
     }
     return args
   }
+
+  /***
+   * Run a Terraform apply, based on a previous apply
+   * @param envName Environment to run apply against
+   * @return
+   */
+  def apply(envName) {
+    if (canApply(envName)) {
+      if (steps.product == null)
+        throw new Exception("'product' variable was not defined! Cannot apply without a product name")
+      steps.sh "terraform " + configureArgs(envName, "apply -var 'env=${envName}' -var 'name=${steps.product}'")
+    } else
+      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. " +
+        "['dev', 'test', 'prod'] are reserved for master branch, try other name")
+  }
+
 }
 
 /*
