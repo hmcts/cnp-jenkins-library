@@ -1,16 +1,13 @@
-package uk.gov.hmcts.contino
-
+//package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
 
 class terraform implements Serializable {
 
   private steps
-  private String product
 
-  def init(productName, pipelineHandler) {
+  def ini(productName, pipelineHandler) {
     this.steps = pipelineHandler
-    this.product = productName
-    sh "echo 'product=${productName}; product name from pipeline: ${steps.product}'"
+    sh "echo 'product=${productName}'"
   }
 
   def lint() {
