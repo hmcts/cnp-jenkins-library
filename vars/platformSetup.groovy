@@ -1,4 +1,3 @@
-@Library('Infrastructure@different-approach') _
 def call(body) {
   // evaluate the body block, and collect configuration into the object
   /*def config = [:]
@@ -7,6 +6,8 @@ def call(body) {
 
   // now build, based on the configuration provided
   ansiColor('xterm') {
+//    @Library('Infrastructure@different-approach') _
+    library 'Infrastructure@different-approach'
     terraformSetup()
     terraform ini
 
