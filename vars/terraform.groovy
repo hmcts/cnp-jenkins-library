@@ -7,50 +7,50 @@ class terraform implements Serializable {
 
   def ini(productName, pipelineHandler) {
     this.steps = pipelineHandler
-    sh "echo 'product=${productName}'"
+    steps.sh "echo 'product=${productName}'"
   }
 
   def lint() {
-    sh 'terraform fmt --diff=true > diff.out'
-    sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
-    sh 'terraform validate'
+    steps.sh 'terraform fmt --diff=true > diff.out'
+    steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
+    steps.sh 'terraform validate'
   }
 
-  def plan(env) {
+  def plan(envName) {
     if (steps.env.product == null)
       throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
-    def stateStoreConfig = getStateStoreConfig(env)
+    def stateStoreConfig = getStateStoreConfig(envName)
 
-    sh "terraform init -reconfigure -backend-config " +
+    steps.sh "terraform init -reconfigure -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-      "-backend-config \"key=${steps.env.product}/${env}/terraform.tfstate\""
+      "-backend-config \"key=${steps.env.product}/${envName}/terraform.tfstate\""
 
-    sh "terraform get -update=true"
-    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${steps.env.product}'"))
+    steps.sh "terraform get -update=true"
+    steps.sh("terraform " + configureArgs(envName, "plan -var 'env=${envName}' -var 'name=${steps.env.product}'"))
   }
 
-  private def getStateStoreConfig(env) {
-    def stateStores = new JsonSlurperClassic().parseText(libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
-    if (canApply(env)) {
-      stateStores += ['env': env]
+  private def getStateStoreConfig(envName) {
+    def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
+    if (canApply(envName)) {
+      stateStores += ['env': envName]
     } else
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
 
   }
 
-  private java.lang.Boolean canApply(String env) {
-    def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
-    sh("echo 'canApply: on branch: ${env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}'")
-    return ((envAllowedOnMasterBranchOnly && env.BRANCH_NAME == 'master') ||
-      (!envAllowedOnMasterBranchOnly && env.BRANCH_NAME != 'master'))
+  private java.lang.Boolean canApply(String envName) {
+    def envAllowedOnMasterBranchOnly = envName in ['dev', 'prod', 'test']
+    steps.sh("echo 'canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${envName}; allowed: ${envAllowedOnMasterBranchOnly}'")
+    return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
+      (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
   }
 
-  private def configureArgs(env, args) {
-    if (fileExists("${env}.tfvars")) {
-      args = "${args} var-file=${env}.tfvars"
+  private def configureArgs(envName, args) {
+    if (fileExists("${envName}.tfvars")) {
+      args = "${args} var-file=${envName}.tfvars"
     }
     return args
   }
