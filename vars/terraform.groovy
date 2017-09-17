@@ -1,8 +1,10 @@
+package uk.gov.hmcts.contino
+
 import groovy.json.JsonSlurperClassic
 
 class terraform implements Serializable {
 
-  def pipeHandle
+  private String steps
 
   def lint() {
     sh 'terraform fmt --diff=true > diff.out'
@@ -11,7 +13,7 @@ class terraform implements Serializable {
   }
 
   def plan(env) {
-    if (pipeHandle.product == null)
+    if (steps.product == null)
       throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
     def stateStoreConfig = getStateStoreConfig(env)
@@ -20,14 +22,14 @@ class terraform implements Serializable {
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-      "-backend-config \"key=${pipeHandle.product}/${env}/terraform.tfstate\""
+      "-backend-config \"key=${steps.product}/${env}/terraform.tfstate\""
 
     sh "terraform get -update=true"
-    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${pipeHandle.product}'"))
+    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${steps.product}'"))
   }
 
   private def getStateStoreConfig(env) {
-    def stateStores = new JsonSlurperClassic().parseText(pipeHandle.libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
+    def stateStores = new JsonSlurperClassic().parseText(libraryResource('uk/gov/hmcts/contino/state-storage-template.json'))
     if (canApply(env)) {
       stateStores += ['env': env]
     } else
