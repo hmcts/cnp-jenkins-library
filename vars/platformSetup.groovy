@@ -1,3 +1,4 @@
+@Library('Infrastructure@different-approach') _
 def call(body) {
   // evaluate the body block, and collect configuration into the object
   /*def config = [:]
@@ -7,6 +8,7 @@ def call(body) {
   // now build, based on the configuration provided
   ansiColor('xterm') {
     terraformSetup()
+    terraform ini
 
     withCredentials([string(credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'),
                      string(credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'),
