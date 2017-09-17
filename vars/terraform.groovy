@@ -7,7 +7,6 @@ class terraform implements Serializable {
 
   def ini(pipelineHandler) {
     this.steps = pipelineHandler
-    steps.sh "echo 'product=${productName}'"
   }
 
   def lint() {
