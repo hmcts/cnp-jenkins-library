@@ -4,11 +4,6 @@ class terraform implements Serializable {
 
   def pipeHandle
 
-  def terraform(pipelineHandle) {
-    this.pipeHandle = pipelineHandle
-    sh "echo 'terraform constructor: pipeHandle initialised with ${pipeHandle}'"
-  }
-
   def lint() {
     sh 'terraform fmt --diff=true > diff.out'
     sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
