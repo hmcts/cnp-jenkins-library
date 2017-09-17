@@ -56,7 +56,7 @@ class terraform implements Serializable {
   }
 
   private def configureArgs(envName, args) {
-    if (fileExists("${envName}.tfvars")) {
+    if (steps.fileExists("${envName}.tfvars")) {
       args = "${args} var-file=${envName}.tfvars"
     }
     return args
