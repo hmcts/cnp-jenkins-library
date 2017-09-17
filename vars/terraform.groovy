@@ -4,7 +4,14 @@ import groovy.json.JsonSlurperClassic
 
 class terraform implements Serializable {
 
-  private String steps
+  private steps
+  private String product
+
+  def init(productName, pipelineHandler) {
+    this.steps = pipelineHandler
+    this.product = productName
+    sh "echo 'product=${productName}; product name from pipeline: ${steps.product}'"
+  }
 
   def lint() {
     sh 'terraform fmt --diff=true > diff.out'
