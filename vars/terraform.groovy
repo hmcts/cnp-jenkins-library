@@ -39,6 +39,13 @@ class terraform implements Serializable {
     } else
       throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
 
+    logMessage("Using following stateStores=$stateStores")
+
+    return stateStores
+  }
+
+  void logMessage(GString gString) {
+    steps.sh("echo $gString")
   }
 
   private java.lang.Boolean canApply(String envName) {
