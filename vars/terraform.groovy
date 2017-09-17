@@ -13,7 +13,7 @@ class terraform implements Serializable {
   }
 
   def plan(env) {
-    if (steps.product == null)
+    if (steps.env.product == null)
       throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
     def stateStoreConfig = getStateStoreConfig(env)
@@ -22,10 +22,10 @@ class terraform implements Serializable {
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-      "-backend-config \"key=${steps.product}/${env}/terraform.tfstate\""
+      "-backend-config \"key=${steps.env.product}/${env}/terraform.tfstate\""
 
     sh "terraform get -update=true"
-    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${steps.product}'"))
+    sh("terraform " + configureArgs(env, "plan -var 'env=${env}' -var 'name=${steps.env.product}'"))
   }
 
   private def getStateStoreConfig(env) {
