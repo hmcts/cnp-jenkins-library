@@ -1,6 +1,0 @@
-{
-  "resourceGroup": "contino-moj-tf-state",
-  "storageAccount": "continomojtfstate",
-  "container": "contino-moj-tfstate-container"
-}
-
