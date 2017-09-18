@@ -39,15 +39,13 @@ class terraform implements Serializable {
       if (stateStoreConfig==null && steps.env.BRANCH_NAME != 'master') {
         stateStoreConfig = stateStores.find { s -> s.env == 'default' }
         stateStoreConfig.env = envName
+        logMessage("Using following stateStores=$stateStores")
+        return stateStoreConfig
       }
       else
         throw new Exception("State storage for ${env} not found. Is it configured?")
     } else
       throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
-
-    logMessage("Using following stateStores=$stateStores")
-
-    return stateStores
   }
 
   void logMessage(GString gString) {
