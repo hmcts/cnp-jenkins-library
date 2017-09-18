@@ -55,7 +55,7 @@ class terraform implements Serializable {
   }
 
   void logMessage(GString gString) {
-    steps.sh("echo $gString")
+    steps.sh("echo -e '\\e[1m\\e[34m${gString}'")
   }
 
   private java.lang.Boolean canApply(String envName) {

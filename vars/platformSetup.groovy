@@ -20,7 +20,10 @@ def call(body) {
                      string(credentialsId: 'kitchen_client_id', variable: 'AZURE_CLIENT_ID')]) {
 
       sh "echo 'Reform Platform Pipeline Initialized...'"
-      body.call()
+
+      withEnv(["GIT_COMMITTER_NAME=jenkinsmoj", "GIT_COMMITTER_EMAIL=jenkinsmoj@contino.io"]) {
+        body.call()
+      }
     }
   }
 
