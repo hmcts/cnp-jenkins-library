@@ -2,27 +2,37 @@ apply plugin: 'groovy'
 
 repositories {
 
-    jcenter()
+  jcenter()
+  maven {
+    url 'https://repo.jenkins-ci.org/public/'
+  }
 }
 
 dependencies {
-    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.9'
-    compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.12'
-    //used for generating RandomStrings
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+  compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.9'
+  compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.12'
+  //used for generating RandomStrings
+  compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+  compile 'org.jenkins-ci.plugins:job-dsl-core:1.65'
 
-    testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
+  testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
 }
 
 sourceSets {
-    main {
-        groovy {
-            srcDirs = ['src']
-        }
+  jobs {
+    groovy {
+      srcDirs 'jobs'
+      compileClasspath += main.compileClasspath
     }
-    test {
-        groovy {
-            srcDirs = ['test']
-        }
+  }
+  main {
+    groovy {
+      srcDirs = ['src']
     }
+  }
+  test {
+    groovy {
+      srcDirs = ['test']
+    }
+  }
 }
