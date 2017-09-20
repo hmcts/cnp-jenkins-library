@@ -3,7 +3,7 @@ package uk.gov.hmcts.contino
 class Tagging implements Serializable {
 
   def pipe
-  def gitUrl
+  String gitUrl
 
   Tagging(pipe){
     this.pipe = pipe

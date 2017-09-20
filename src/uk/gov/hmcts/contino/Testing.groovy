@@ -5,16 +5,13 @@ class Testing implements Serializable {
 
   private String PREPARE_ENVIRONMENT = 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE"'
   def pipe
-  def String gitUrl
 
   Testing(pipe){
     this.pipe = pipe
-    this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
   }
 
   Testing(pipe, String gitUrl){
     this.pipe = pipe
-    this.gitUrl = gitUrl
   }
 
   def unitTest() {

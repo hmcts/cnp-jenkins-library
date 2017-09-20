@@ -21,6 +21,9 @@ def call(body) {
 
       sh "echo 'Reform Platform Pipeline Initialized...'"
 
+      if (env.GITHUB_PROTOCOL==null)
+        env.GITHUB_PROTOCOL="https"
+
       withEnv(["GIT_COMMITTER_NAME=jenkinsmoj", "GIT_COMMITTER_EMAIL=jenkinsmoj@contino.io"]) {
         body.call()
       }
