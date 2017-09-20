@@ -7,13 +7,9 @@ class Tagging implements Serializable {
 
   Tagging(pipe){
     this.pipe = pipe
-    //this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
+    this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
   }
 
-  def gitUrl() {
-    this.gitUrl = this.pipe.sh(returnStdout: true, script: "git config --get remote.origin.url").trim()
-  }
-  
   def nextTag() {
     //Fetch all tags. They are not available due to shallow checkout in first step
     pipe.sh(script: "git fetch '${gitUrl}' --tags", returnStdout: true).split("\r?\n")
