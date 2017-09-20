@@ -3,11 +3,11 @@ package uk.gov.hmcts.contino
 class Tagging implements Serializable {
 
   def pipe
-  def gitUrl
+  String gitUrl
 
   Tagging(pipe){
     this.pipe = pipe
-    this.gitUrl = pipe.sh(returnStdout: true, script: "git config --get remote.origin.url").trim()
+    this.gitUrl = this.pipe.sh(returnStdout: true, script: "git config --get remote.origin.url").trim()
     //this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
   }
 
