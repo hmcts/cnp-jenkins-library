@@ -23,7 +23,7 @@ class Testing implements Serializable {
   * running tests and removing the infratructure at the end
   */
   def moduleIntegrationTests() {
-    String RANDOM_STRING = RandomStringUtils.random(6, true, true)
+    String RANDOM_STRING = RandomStringUtils.random(6, true, true).toLowerCase()
     def envSuffix = (pipe.env.BRANCH_NAME == 'master') ? 'dev' : pipe.env.BRANCH_NAME
 
     return runWithDocker("cd tests/int && kitchen test azure",
