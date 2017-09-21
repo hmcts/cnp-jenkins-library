@@ -22,13 +22,14 @@ class Testing implements Serializable {
   /* Running integration tests for a module with Chef Kitchen, spinning up temporary infrastructure
   * running tests and removing the infratructure at the end
   */
-  def moduleIntegrationTests() {
-    String RANDOM_STRING = RandomStringUtils.random(6, true, true).toLowerCase()
+  def moduleIntegrationTests(String command="", envVars=[:]) {
+    String RANDOM_STRING = RandomStringUtils.random(6, true, true)
+
     def envSuffix = (pipe.env.BRANCH_NAME == 'master') ? 'dev' : pipe.env.BRANCH_NAME
 
-    return runWithDocker("cd tests/int && kitchen test azure",
-                         [TF_VAR_random_name:"inspec-${envSuffix}-${RANDOM_STRING.toLowerCase()}",
-                          TF_VAR_branch_name:pipe.env.BRANCH_NAME])
+    return runWithDocker(command.empty ? "cd tests/int && kitchen test azure": customCommand,
+                         envVars? envVars : [TF_VAR_random_name:"inspec-${envSuffix}-${RANDOM_STRING.toLowerCase()}",
+                                             TF_VAR_branch_name:pipe.env.BRANCH_NAME])
   }
 
   /* Running integration tests for a project only using Inspec on existing infrastructure */
