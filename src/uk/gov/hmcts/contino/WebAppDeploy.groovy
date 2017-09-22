@@ -31,6 +31,13 @@ class WebAppDeploy implements Serializable {
     return "core-compute-sample-dev"
   }
 
+  def deployStaticSite(env, dir){
+
+    steps.dir(dir)
+    steps.sh("git init")
+    return deployNodeJS(env)
+  }
+
   def deployNodeJS(env){
     return deployNodeJS(env, getComputeFor(env))
   }
