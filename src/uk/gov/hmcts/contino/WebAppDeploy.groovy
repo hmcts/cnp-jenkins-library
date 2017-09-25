@@ -33,9 +33,24 @@ class WebAppDeploy implements Serializable {
 
   def deployStaticSite(env, dir){
    return steps.dir(dir) {
-     steps.sh("git init")
-     steps.sh("git checkout -b ${steps.env.BRANCH_NAME}")
-     return deployNodeJS(env)
+
+
+     steps.withCredentials(
+       [[$class: 'UsernamePasswordMultiBinding',
+         credentialsId: 'WebAppDeployCredentials',
+         usernameVariable: 'GIT_USERNAME',
+         passwordVariable: 'GIT_PASSWORD']]) {
+
+       def appUrl = "${product}-${app}-${env}"
+       steps.sh("git init")
+       steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
+       steps.sh("git checkout-b ${steps.env.BRANCH_NAME}")
+       steps.sh("git add .")
+       steps.sh("git config user.email 'jenkinsmoj@contino.io'")
+       steps.sh("git config user.name 'jenkinsmoj'")
+       steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
+       steps.sh("git push ${defaultRemote}-${env}  master -f")
+     }
    }
   }
 
