@@ -32,11 +32,11 @@ class WebAppDeploy implements Serializable {
   }
 
   def deployStaticSite(env, dir){
+   return steps.dir(dir) {
+     steps.sh("git init")
 
-    steps.sh("cd ${dir}")
-    steps.sh("git init")
-
-    return deployNodeJS(env)
+     return deployNodeJS(env)
+   }
   }
 
   def deployNodeJS(env){
