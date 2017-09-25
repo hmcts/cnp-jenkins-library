@@ -42,6 +42,7 @@ class WebAppDeploy implements Serializable {
          passwordVariable: 'GIT_PASSWORD']]) {
 
        def appUrl = "${product}-${app}-${env}"
+       def hostingEnv = getComputeFor(env)
        steps.sh("git init")
        steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
        steps.sh("git checkout -b ${steps.env.BRANCH_NAME}")
