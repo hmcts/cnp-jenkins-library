@@ -20,10 +20,24 @@ class TaggingTest extends Specification {
       util.nextTag() == "1.0.16"
   }
 
-  def buildUtilFactory(String branch, String buildStatus) {
+  def "Default next tag should be 0.1.0 if no previous tags"() {
+    when:
+      def util = buildUtilFactory("master", "SUCCESS", "")
+    then:
+      util.nextTag() == "0.1.0"
+  }
+
+  def buildUtilFactory(String branch, String buildStatus, String lastTag = "1.0.15") {
     pipeline.env >> [ "BRANCH_NAME": branch, "PATH" : "" ]
     pipeline.currentBuild >>  [ "currentResult" : buildStatus, "result":buildStatus ]
-    pipeline.sh(_) >> { cmd -> cmd.toString().contains("describe") ? "1.0.15" : "" }
+    pipeline.sh(_) >> { cmd ->
+      if (cmd.toString().contains("git describe"))
+        lastTag
+      else if (cmd.toString().contains("git tag --list"))
+        lastTag
+      else
+        ""
+    }
     return new Tagging(pipeline)
   }
 
