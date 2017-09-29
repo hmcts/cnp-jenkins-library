@@ -5,6 +5,7 @@ class WebAppDeploy implements Serializable {
 
   public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final java.lang.String GIT_USER = "jenkinsmoj"
+  public static final String SERVICE_HOST_SUFFIX = "p.azurewebsites.net"
   def steps
   def product
   def defaultRemote = "azure"
@@ -17,23 +18,15 @@ class WebAppDeploy implements Serializable {
     this.steps = steps
   }
 
-  /*
-
-  */
   def healthCheck(env) {
 
-    def computeCluster = getComputeFor(env)
-    def healthCheckUrl = "http://${product}-${app}-${env}.${computeCluster}.p.azurewebsites.net/health"
+    def serviceUrl = getServiceUrl(env)
+    def healthCheckUrl = "${serviceUrl}/health"
     return steps.sh("curl --max-time 200 -vf ${healthCheckUrl}")
-  }
-
-  private def getComputeFor(env){
-    return "core-compute-sample-dev"
   }
 
   def deployStaticSite(env, dir){
    return steps.dir(dir) {
-
 
      steps.withCredentials(
        [[$class: 'UsernamePasswordMultiBinding',
@@ -41,16 +34,11 @@ class WebAppDeploy implements Serializable {
          usernameVariable: 'GIT_USERNAME',
          passwordVariable: 'GIT_PASSWORD']]) {
 
-       def appUrl = "${product}-${app}-${env}"
-       def hostingEnv = getComputeFor(env)
        steps.sh("git init")
-       steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
        steps.sh("git checkout -b ${steps.env.BRANCH_NAME}")
        steps.sh("git add .")
-       steps.sh("git config user.email 'jenkinsmoj@contino.io'")
-       steps.sh("git config user.name 'jenkinsmoj'")
-       steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
-       steps.sh("git push ${defaultRemote}-${env}  master -f")
+
+       pushToService(product, app, env)
      }
    }
   }
@@ -68,7 +56,6 @@ class WebAppDeploy implements Serializable {
           passwordVariable: 'GIT_PASSWORD']]) {
 
         def appUrl = "${product}-${app}-${env}"
-        steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
         steps.sh("git checkout ${steps.env.BRANCH_NAME}")
 
         steps.sh("rm .gitignore")
@@ -84,10 +71,7 @@ class WebAppDeploy implements Serializable {
         steps.sh("echo 'coverage' >> .gitignore")
         steps.sh("git add .")
 
-        steps.sh("git config user.email 'jenkinsmoj@contino.io'")
-        steps.sh("git config user.name 'jenkinsmoj'")
-        steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
-        steps.sh("git push ${defaultRemote}-${env}  master -f")
+        pushToService(product, app, env)
     }
   }
 
@@ -105,9 +89,7 @@ class WebAppDeploy implements Serializable {
 
       def tempDir = ".tmp_azure_jenkings"
 
-      def appUrl = "${product}-${app}-${env}"
 
-      steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${appUrl}.scm.${hostingEnv}.p.azurewebsites.net/${appUrl}.git\"")
       steps.sh("git checkout ${steps.env.BRANCH_NAME}")
 
       steps.sh("mkdir ${tempDir}")
@@ -121,10 +103,7 @@ class WebAppDeploy implements Serializable {
       steps.sh("rm -rf ${tempDir}")
       steps.sh("git add --all .")
 
-      steps.sh("git config user.email '" + GIT_EMAIL + "'")
-      steps.sh("git config user.name '" + GIT_USER + "'")
-      steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
-      steps.sh("git push ${defaultRemote}-${env}  master -f")
+      pushToService(product, app, env)
     }
   }
 
@@ -133,4 +112,49 @@ class WebAppDeploy implements Serializable {
       steps.sh("cp  ${filePath} " + destinationDir)
     }
   }
+
+  private def getServiceDeploymentHost(product, app, env) {
+    def serviceName = getServiceName(product, app, env)
+    def hostingEnv = getComputeFor(env)
+    return "${serviceName}.scm.${hostingEnv}.${SERVICE_HOST_SUFFIX}"
+  }
+
+  private def getServiceHost(product, app, env) {
+    def computeCluster = getComputeFor(env)
+    return "${getServiceName(product, app, env)}.${computeCluster}.${SERVICE_HOST_SUFFIX}"
+  }
+
+  private def getServiceName(product, app, env) {
+    return "${product}-${app}-${env}"
+  }
+
+  private def getServiceUrl(product, app, env) {
+    "http://${getServiceHost(product, app, env)}"
+  }
+
+  private def getComputeFor(env){
+    return "core-compute-sample-dev"
+  }
+
+  private def gitPushToService(serviceDeploymentHost, serviceName, env) {
+    steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
+    steps.sh("git push ${defaultRemote}-${env}  master -f")
+  }
+
+  private def configureGit() {
+    steps.sh("git config user.email '${GIT_EMAIL}'")
+    steps.sh("git config user.name '${GIT_USER}'")
+    steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
+  }
+
+  private def pushToService(product, app, env) {
+
+    configureGit()
+
+    def serviceName = getServiceName(product, app, env)
+    def serviceDeploymentHost = getServiceDeploymentHost(product, app, env)
+
+    gitPushToService(serviceDeploymentHost, serviceName, env)
+  }
+
 }
