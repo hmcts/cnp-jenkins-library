@@ -121,10 +121,8 @@ class Terraform implements Serializable {
   }
 
   private setupTerraform() {
-    // this doesn't work ran in the constructor!
-    // These steps are supposed to be run when a jenkins runner is already allocated hence
-    // each function that needs invoking terraform should setup the env first
-    def tfHome = steps.tool name: 'Terraform', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
+    // The tool name refers to the label in the Custom Tool Installation on Jenkins
+    def tfHome = steps.tool name: 'Terraform 10', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
     steps.env.PATH = "${tfHome}:${steps.env.PATH}"
   }
 
