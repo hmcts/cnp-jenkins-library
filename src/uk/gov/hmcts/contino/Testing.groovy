@@ -39,7 +39,7 @@ class Testing implements Serializable {
 
   private runWithDocker(String command, envVars=[:]) {
     return pipe.docker
-        .image("contino/inspec-azure:latest")
+        .image("contino/azkitchentdi:latest")
         .inside(envVars.collect( { /-e $it.key=$it.value/ } ).join(" ")) {
       pipe.sh(PREPARE_ENVIRONMENT + " && " + command)
     }
