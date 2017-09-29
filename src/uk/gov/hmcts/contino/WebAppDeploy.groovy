@@ -1,6 +1,8 @@
 package uk.gov.hmcts.contino
 
-
+/**
+ * Deploys Web Applications to Web App Services
+ */
 class WebAppDeploy implements Serializable {
 
   public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
@@ -18,6 +20,11 @@ class WebAppDeploy implements Serializable {
     this.steps = steps
   }
 
+  /**
+   * Performs a healthcheck on the service on @env. Assumes that the service exposes a /health endpoint
+   * @param env
+   * @return
+   */
   def healthCheck(env) {
 
     def serviceUrl = getServiceUrl(env)
@@ -25,6 +32,12 @@ class WebAppDeploy implements Serializable {
     return steps.sh("curl --max-time 200 -vf ${healthCheckUrl}")
   }
 
+  /**
+   * Deploys the static website in @dir to @env
+   * @param env
+   * @param dir
+   * @return
+   */
   def deployStaticSite(env, dir){
    return steps.dir(dir) {
 
@@ -43,9 +56,21 @@ class WebAppDeploy implements Serializable {
    }
   }
 
+  /**
+   * Deploys a NodeJs app to @env
+   * @param env
+   * @return
+   */
   def deployNodeJS(env){
     return deployNodeJS(env, getComputeFor(env))
   }
+
+  /**
+   * Deploys a NodeJs app to @env and to the cluster @hostingEnv
+   * @param env
+   * @param hostingEnv
+   * @return
+   */
 
   def deployNodeJS(env, hostingEnv) {
 
@@ -75,9 +100,26 @@ class WebAppDeploy implements Serializable {
     }
   }
 
+  /**
+   * Deploys a Java Web Ppp. Expects a self hosted Jar
+   * @param env
+   * @param jarPath
+   * @param iisWebConfig
+   * @return
+   */
   def deployJavaWebApp(env, jarPath, iisWebConfig){
     return deployJavaWebApp(env, getComputeFor(env), jarPath, null, iisWebConfig)
   }
+
+  /**
+   * Deploys a Java Web Ppp. Expects a self hosted Jar
+   * @param env
+   * @param hostingEnv
+   * @param jarPath
+   * @param springConfigPath
+   * @param iisWebConfig
+   * @return
+   */
 
   def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
 
