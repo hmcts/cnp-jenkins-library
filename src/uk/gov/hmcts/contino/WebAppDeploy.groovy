@@ -157,7 +157,7 @@ class WebAppDeploy implements Serializable {
    * @return
    */
   def getServiceUrl(product, app, env) {
-    "http://${getServiceHost(product, app, env)}"
+    return "http://${getServiceHost(product, app, env)}"
   }
 
   private def checkAndCopy(filePath, destinationDir) {
