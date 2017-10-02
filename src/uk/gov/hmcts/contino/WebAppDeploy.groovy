@@ -161,7 +161,7 @@ class WebAppDeploy implements Serializable {
   }
 
   def getServiceUrl(env) {
-    return "http://${getServiceHost(this.product, this.app, env)}"
+    return getServiceUrl(this.product, this.app, env)
   }
 
 
