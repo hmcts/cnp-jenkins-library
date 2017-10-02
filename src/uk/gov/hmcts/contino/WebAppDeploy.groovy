@@ -27,7 +27,7 @@ class WebAppDeploy implements Serializable {
    */
   def healthCheck(env) {
 
-    def serviceUrl = getServiceUrl(env)
+    def serviceUrl = getServiceUrl(product, app, env)
     def healthCheckUrl = "${serviceUrl}/health"
     return steps.sh("curl --max-time 200 -vf ${healthCheckUrl}")
   }
