@@ -149,6 +149,17 @@ class WebAppDeploy implements Serializable {
     }
   }
 
+  /***
+   * Gets the service url
+   * @param product
+   * @param app
+   * @param env
+   * @return
+   */
+  def getServiceUrl(product, app, env) {
+    "http://${getServiceHost(product, app, env)}"
+  }
+
   private def checkAndCopy(filePath, destinationDir) {
     if (filePath && steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
@@ -170,9 +181,7 @@ class WebAppDeploy implements Serializable {
     return "${product}-${app}-${env}"
   }
 
-  private def getServiceUrl(product, app, env) {
-    "http://${getServiceHost(product, app, env)}"
-  }
+
 
   private def getComputeFor(env){
     return "core-compute-sample-dev"
