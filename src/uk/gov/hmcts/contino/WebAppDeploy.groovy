@@ -160,6 +160,11 @@ class WebAppDeploy implements Serializable {
     return "http://${getServiceHost(product, app, env)}"
   }
 
+  def getServiceUrl(env) {
+    return "http://${getServiceHost(this.product, this.app, env)}"
+  }
+
+
   private def checkAndCopy(filePath, destinationDir) {
     if (filePath && steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
