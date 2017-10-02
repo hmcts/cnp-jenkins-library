@@ -137,7 +137,7 @@ class WebAppDeploy implements Serializable {
       steps.sh("mkdir ${tempDir}")
 
       checkAndCopy(jarPath, tempDir)
-      checkAndCopy(springConfigPath, tempDir, false)
+      checkAndCopy(springConfigPath, tempDir)
       checkAndCopy(iisWebConfig, tempDir)
 
       steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
@@ -165,13 +165,11 @@ class WebAppDeploy implements Serializable {
   }
 
 
-  private def checkAndCopy(filePath, destinationDir, failIfMissing = true) {
+  private def checkAndCopy(filePath, destinationDir) {
     if (filePath && steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
     }
-    if(failIfMissing){
-      throw new Exception("${filePath} is missing. could not copy to ${destinationDir}")
-    }
+
   }
 
   private def getServiceDeploymentHost(product, app, env) {
