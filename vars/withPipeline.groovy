@@ -2,7 +2,7 @@ import uk.gov.hmcts.contino.*
 
 def call(steps, String type, String product, Closure body) {
 
-  def builders = [java: new GradleBuilder()]
+  def builders = [java: new GradleBuilder(steps)]
 
   def deployers = [java: new WebAppDeploy(steps, product, "recipe-backend")]
 
