@@ -2,6 +2,12 @@ package uk.gov.hmcts.contino
 
 class GradleBuilder implements Builder, Serializable {
 
+  def steps
+
+  GradleBuilder(steps) {
+    this.steps = steps
+  }
+
   def build() {
     gradle "build"
   }
@@ -11,6 +17,6 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def gradle(task) {
-    sh "./gradlew ${task}"
+    steps.sh("./gradlew ${task}")
   }
 }
