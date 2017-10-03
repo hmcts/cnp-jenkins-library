@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class GradleBuilder implements Builder {
+class GradleBuilder implements Builder, Serializable {
 
   def build() {
     gradle "build"
