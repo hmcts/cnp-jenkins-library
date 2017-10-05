@@ -16,6 +16,6 @@ public class NodeDeployer implements Deployer, Serializable {
   }
 
   def getServiceUrl(String env) {
-    return deployer.getServiceUrl()
+    return deployer.getServiceUrl(env)
   }
 }
