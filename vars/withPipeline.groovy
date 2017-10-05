@@ -13,11 +13,18 @@ def call(String type, String product, String app, Closure body) {
 
   def builder = pipelineType.builder
 
+  def pl = new Pipeline()
+
+  body.call(pl)
+
   node {
 
     stage('Checkout') {
       deleteDir()
       checkout scm
+      if (pl.afterCheckout) {
+        pl.afterCheckout.call()
+      }
     }
 
     stage("Build") {
