@@ -4,7 +4,7 @@ def call(String type, String product, String app, Closure body) {
 
   def pipelineTypes = [
     java: new SpringBootPipelineType(this, product, app),
-    node: new NodePipelineType(this, product, app)
+    nodejs: new NodePipelineType(this, product, app)
   ]
 
   def pipelineType = pipelineTypes.get(type)
@@ -19,6 +19,7 @@ def call(String type, String product, String app, Closure body) {
       deleteDir()
       checkout scm
     }
+    
     stage("Build") {
       builder.build()
       stash name: product, includes: "build/libs/*.jar"
