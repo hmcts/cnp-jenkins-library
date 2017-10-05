@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class JavaDeployer implements Deployer {
+class JavaDeployer implements Deployer, Serializable {
 
   WebAppDeploy deployer
 

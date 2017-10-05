@@ -19,7 +19,7 @@ def call(String type, String product, String app, Closure body) {
       deleteDir()
       checkout scm
     }
-    
+
     stage("Build") {
       builder.build()
       stash name: product, includes: "build/libs/*.jar"

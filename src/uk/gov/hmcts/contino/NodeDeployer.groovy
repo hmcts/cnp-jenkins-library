@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino;
 
-public class NodeDeployer implements Deployer {
+public class NodeDeployer implements Deployer, Serializable {
   WebAppDeploy deployer
 
   NodeDeployer(steps, product, app) {
