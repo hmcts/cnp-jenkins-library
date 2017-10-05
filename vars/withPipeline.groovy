@@ -22,7 +22,6 @@ def call(String type, String product, String app, Closure body) {
 
     stage("Build") {
       builder.build()
-      stash name: product, includes: "build/libs/*.jar"
     }
 
     stage("Test") {
@@ -37,7 +36,6 @@ def call(String type, String product, String app, Closure body) {
 
     }
     stage('Deploy Dev') {
-      unstash product
       deployer.deploy('dev')
       deployer.healthCheck('dev')
     }
@@ -50,7 +48,6 @@ def call(String type, String product, String app, Closure body) {
     }
 
     stage('Deploy Prod') {
-      unstash product
       deployer.deploy('prod')
       deployer.healthCheck('prod')
     }

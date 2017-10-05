@@ -3,13 +3,16 @@ package uk.gov.hmcts.contino
 class GradleBuilder implements Builder, Serializable {
 
   def steps
+  def product
 
-  GradleBuilder(steps) {
+  GradleBuilder(steps, product) {
     this.steps = steps
+    this.product = product
   }
 
   def build() {
     gradle("build")
+    steps.stash(name: product, includes: "build/libs/*.jar")
   }
 
   def test() {
