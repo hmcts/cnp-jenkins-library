@@ -25,7 +25,7 @@ class YarnBuilder implements Builder, Serializable {
 
   def yarn(task){
     def node = steps.tool(name: 'Node-8', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation')
-    env.PATH = "${node}/bin:${env.PATH}"
+    steps.env.PATH = "${node}/bin:${steps.env.PATH}"
     steps.sh("yarn ${task}")
   }
 }
