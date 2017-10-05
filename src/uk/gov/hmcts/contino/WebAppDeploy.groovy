@@ -113,7 +113,7 @@ class WebAppDeploy implements Serializable {
 
       steps.sh("mkdir ${tempDir}")
 
-      copy('/build/libs/*.jar', tempDir)
+      copy('build/libs/*.jar', tempDir)
       checkAndCopy('web.config', tempDir)
 
       steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
