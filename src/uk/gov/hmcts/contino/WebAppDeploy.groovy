@@ -100,6 +100,9 @@ class WebAppDeploy implements Serializable {
     }
   }
 
+  def deployJavaWebApp(env) {
+  }
+
   /**
    * Deploys a Java Web Ppp. Expects a self hosted Jar
    * @param env
@@ -108,7 +111,7 @@ class WebAppDeploy implements Serializable {
    * @return
    */
   def deployJavaWebApp(env, jarPath, iisWebConfig){
-    return deployJavaWebApp(env, getComputeFor(env), jarPath, null, iisWebConfig)
+    return deployJavaWebApp(env, jarPath, null, iisWebConfig)
   }
 
   /**
@@ -121,7 +124,7 @@ class WebAppDeploy implements Serializable {
    * @return
    */
 
-  def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
+  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig) {
 
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',

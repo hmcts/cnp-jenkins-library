@@ -1,14 +1,17 @@
 import uk.gov.hmcts.contino.*
 
-def call(steps, String type, String product, Closure body) {
+def call(String type, String product, String app, Closure body) {
 
-  def builders = [java: new GradleBuilder(steps)]
+  def pipelineTypes = [
+    java: new SpringBootPipelineType(this, product, app),
+    node: new NodePipelineType(this, product, app)
+  ]
 
-  def deployers = [java: new WebAppDeploy(steps, product, "recipe-backend")]
+  def pipelineType = pipelineTypes.get(type)
 
-  def deployer = deployers.get(type)
+  def deployer = pipelineType.deployer
 
-  def builder = builders.get(type)
+  def builder = pipelineType.builder
 
   node {
 
@@ -34,24 +37,28 @@ def call(steps, String type, String product, Closure body) {
     }
     stage('Deploy Dev') {
       unstash product
-      deployer.deployJavaWebApp('dev', 'build/libs/moj-rhubarb-recipes-service-0.0.1.jar', 'web.config')
+      deployer.deploy('dev')
       deployer.healthCheck('dev')
     }
 
     stage('Smoke Tests - Dev'){
     }
+
     stage("OWASP") {
 
     }
 
     stage('Deploy Prod') {
       unstash product
-      deployer.deployJavaWebApp('prod', 'build/libs/moj-rhubarb-recipes-service-0.0.1.jar', 'web.config')
+      deployer.deploy('prod')
       deployer.healthCheck('prod')
     }
-    stage('Smoke Tests - Prod'){
-    }
 
+    stage('Smoke Tests - Prod'){
+      withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]){
+        builder.smokeTest()
+      }
+    }
 
   }
 

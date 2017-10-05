@@ -9,14 +9,18 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def build() {
-    gradle "build"
+    gradle("build")
   }
 
   def test() {
-    gradle "test"
+    gradle("test")
   }
 
-  def gradle(task) {
+  def smokeTest() {
+
+  }
+
+  def gradle(String task) {
     steps.sh("./gradlew ${task}")
   }
 }
