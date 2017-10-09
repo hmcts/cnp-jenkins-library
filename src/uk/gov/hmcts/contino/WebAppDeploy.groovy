@@ -100,6 +100,32 @@ class WebAppDeploy implements Serializable {
     }
   }
 
+  def deployJavaWebApp(env) {
+    return steps.withCredentials(
+      [[$class: 'UsernamePasswordMultiBinding',
+        credentialsId: 'WebAppDeployCredentials',
+        usernameVariable: 'GIT_USERNAME',
+        passwordVariable: 'GIT_PASSWORD']]) {
+
+      def tempDir = ".tmp_azure_jenkings"
+
+      steps.sh("git checkout ${steps.env.BRANCH_NAME}")
+
+      steps.sh("mkdir ${tempDir}")
+
+      copy('build/libs/*.jar', tempDir)
+      checkAndCopy('web.config', tempDir)
+
+      steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
+      steps.sh("cp ${tempDir}/* .")
+      steps.sh("rm -rf ${tempDir}")
+      steps.sh("git add --all .")
+
+      pushToService(product, app, env)
+    }
+
+  }
+
   /**
    * Deploys a Java Web Ppp. Expects a self hosted Jar
    * @param env
@@ -108,7 +134,7 @@ class WebAppDeploy implements Serializable {
    * @return
    */
   def deployJavaWebApp(env, jarPath, iisWebConfig){
-    return deployJavaWebApp(env, getComputeFor(env), jarPath, null, iisWebConfig)
+    return deployJavaWebApp(env, jarPath, null, iisWebConfig)
   }
 
   /**
@@ -121,7 +147,7 @@ class WebAppDeploy implements Serializable {
    * @return
    */
 
-  def deployJavaWebApp(env, hostingEnv, jarPath, springConfigPath, iisWebConfig) {
+  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig) {
 
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
@@ -164,6 +190,9 @@ class WebAppDeploy implements Serializable {
     return getServiceUrl(this.product, this.app, env)
   }
 
+  private def copy(filePath, destinationDir) {
+    steps.sh("cp ${filePath} ${destinationDir}")
+  }
 
   private def checkAndCopy(filePath, destinationDir) {
     if (filePath && steps.fileExists(filePath)) {
