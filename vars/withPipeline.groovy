@@ -1,21 +1,29 @@
 import uk.gov.hmcts.contino.*
 
-def call(String type, String product, String app, Closure body) {
+def call(type, String product, String app, Closure body) {
 
   def pipelineTypes = [
     java: new SpringBootPipelineType(this, product, app),
     nodejs: new NodePipelineType(this, product, app)
   ]
 
-  def pipelineType = pipelineTypes.get(type)
+  PipelineType pipelineType
 
-  def deployer = pipelineType.deployer
+  if (type instanceof PipelineType) {
+    pipelineType = type
+  } else {
+    pipelineType = pipelineTypes.get(type)
+  }
 
-  def builder = pipelineType.builder
+  assert pipelineType != null
+
+  Deployer deployer = pipelineType.deployer
+
+  Builder builder = pipelineType.builder
 
   def pl = new Pipeline()
 
-  body.call(pl)
+  body.delegate = pl
 
   node {
 
