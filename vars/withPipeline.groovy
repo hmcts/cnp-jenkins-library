@@ -21,7 +21,7 @@ def call(type, String product, String app, Closure body) {
 
   Builder builder = pipelineType.builder
 
-  def pl = new Pipeline()
+  def pl = new PipelineCallbacks()
 
   body.delegate = pl
   body.call() // register callbacks
@@ -29,11 +29,9 @@ def call(type, String product, String app, Closure body) {
   node {
 
     stage('Checkout') {
-      deleteDir()
-      checkout scm
-
-      if (pl.afterCheckoutBody != null) {
-        pl.afterCheckoutBody.call()
+      pl.callAround('checkout') {
+        deleteDir()
+        checkout scm
       }
     }
 
@@ -52,12 +50,15 @@ def call(type, String product, String app, Closure body) {
       }
 
     }
+
     stage('Deploy Dev') {
-      deployer.deploy('dev')
-      deployer.healthCheck('dev')
+      pl.callAround('deploy:dev') {
+        deployer.deploy('dev')
+        deployer.healthCheck('dev')
+      }
     }
 
-    stage('Smoke Tests - Dev'){
+    stage('Smoke Tests - Dev') {
     }
 
     stage("OWASP") {
