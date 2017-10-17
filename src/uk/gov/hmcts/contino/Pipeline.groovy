@@ -4,7 +4,7 @@ class Pipeline {
 
   Closure afterCheckoutBody
 
-  def afterCheckout(Closure afterCheckoutBody) {
+  void afterCheckout(Closure afterCheckoutBody) {
     this.afterCheckoutBody = afterCheckoutBody
   }
 }

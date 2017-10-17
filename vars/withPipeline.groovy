@@ -30,8 +30,9 @@ def call(type, String product, String app, Closure body) {
     stage('Checkout') {
       deleteDir()
       checkout scm
-      if (pl.afterCheckout) {
-        pl.afterCheckout.call()
+
+      if (pl.afterCheckoutBody != null) {
+        pl.afterCheckoutBody.call()
       }
     }
 
