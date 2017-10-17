@@ -24,6 +24,7 @@ def call(type, String product, String app, Closure body) {
   def pl = new Pipeline()
 
   body.delegate = pl
+  body.call() // register callbacks
 
   node {
 
