@@ -32,7 +32,7 @@ class PipelineCallbacks implements Serializable {
 
   private def nullSafeCall(String key) {
     def body = bodies.get(key)
-    if (body) {
+    if (body != null) {
       body.call()
     }
   }
