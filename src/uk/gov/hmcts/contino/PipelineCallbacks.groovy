@@ -9,19 +9,19 @@ class PipelineCallbacks implements Serializable {
   }
 
   void before(String stage, Closure body) {
-    bodies.put("before:${stage}", body)
+    bodies.put('before:' + stage, body)
   }
 
   void after(String stage, Closure body) {
-    bodies.put("after:${stage}", body)
+    bodies.put('after:' + stage, body)
   }
 
   void callAfter(String stage) {
-    nullSafeCall("after:${stage}")
+    nullSafeCall('after:' + stage)
   }
 
   void callBefore(String stage) {
-    nullSafeCall("before:${stage}")
+    nullSafeCall('before:' + stage)
   }
 
   void callAround(String stage, Closure body) {
