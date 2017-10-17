@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class Pipeline {
+class Pipeline implements Serializable {
 
   public Closure afterCheckoutBody
 
