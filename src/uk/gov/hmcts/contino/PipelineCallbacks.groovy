@@ -4,6 +4,10 @@ class PipelineCallbacks implements Serializable {
 
   Map<String, Closure> bodies = new HashMap<>()
 
+  void afterCheckout(Closure body) {
+    after('checkout', body)
+  }
+
   void before(String stage, Closure body) {
     bodies.put("before:${stage}", body)
   }
