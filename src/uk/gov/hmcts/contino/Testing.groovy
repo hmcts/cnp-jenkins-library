@@ -28,7 +28,7 @@ class Testing implements Serializable {
     def envSuffix = (pipe.env.BRANCH_NAME == 'master') ? 'dev' : pipe.env.BRANCH_NAME
 
     return runWithDocker(command? command : "cd tests/int && kitchen test azure",
-                         envVars? envVars : [TF_VAR_random_name:"inspec-${envSuffix}-${RANDOM_STRING.toLowerCase()}",
+                         envVars? envVars : [TF_VAR_random_name:"tmp${RANDOM_STRING.toLowerCase()}",
                                              TF_VAR_branch_name:pipe.env.BRANCH_NAME])
   }
 
