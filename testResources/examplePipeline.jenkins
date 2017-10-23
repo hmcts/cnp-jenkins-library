@@ -1,0 +1,15 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def mockPipelineType = new uk.gov.hmcts.contino.MockPipelineType()
+
+def product = "product"
+
+def app = "app"
+
+
+
+withPipeline(mockPipelineType, product, app) {
+
+}

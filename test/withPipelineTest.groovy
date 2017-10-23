@@ -7,28 +7,34 @@ import org.junit.Test
 
 class withPipelineTest extends BasePipelineTest {
 
-  String sharedLibs = new File("/Users/neilri/dev/git/contino/moj-jenkins-library")
+  // get the 'project' directory
+  String projectDir = (new File(this.getClass().getResource("examplePipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
 
   @Override
   @Before
   void setUp() {
 
     super.setUp()
+    binding.setVariable("scm", null)
   }
 
   @Test
   void test1() {
+
     def library = library()
       .name('Infrastructure')
-      .targetPath(sharedLibs)
-      .retriever(projectSource(sharedLibs))
+      .targetPath(projectDir)
+      .retriever(projectSource(projectDir))
       .defaultVersion("master")
       .allowOverride(true)
       .implicit(false)
       .build()
     helper.registerSharedLibrary(library)
     helper.registerAllowedMethod("deleteDir", {})
-    loadScript("test/examplePipeline.jenkins")
+    helper.registerAllowedMethod("stash", [Map.class], {})
+    helper.registerAllowedMethod("unstash", [String.class], {})
+    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], {})
+    loadScript("testResources/examplePipeline.jenkins")
     printCallStack()
   }
 
