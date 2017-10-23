@@ -35,5 +35,8 @@ sourceSets {
     groovy {
       srcDirs = ['test']
     }
+    resources {
+      srcDirs = ['testResources']
+    }
   }
 }
