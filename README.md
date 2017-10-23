@@ -24,10 +24,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * Checkout
 * Build
 * Unit Test
+* Security Checks
 * Lint (nodejs only)
 * Sonar Scan
-* Security Checks
-* NSP
 * Deploy Dev
 * Smoke Tests - Dev
 * OWASP
@@ -56,11 +55,16 @@ def app = "recipe-backend" // must match infrastructure module name
 withPipeline(type, product, app) {
 }
 ```
+
+#### Security Checks
+
+Calls `yarn test:smoke` so this command must be implemented in package.json
+
 #### Smoke tests
 
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
 This should, ideally, check the entire happy path of the application. Currently, the pipeline only supports Yarn to run smoketests and will call `yarn test:smoke`
-so this mus be implemented as a command in package.json. The pipeline exposes the appropriate application URL in the
+so this must be implemented as a command in package.json. The pipeline exposes the appropriate application URL in the
 `SMOKETEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
 called after each deployment to each environment.
 
@@ -73,6 +77,7 @@ You can use the `before(stage)` and `after(stage)` within the `withPipeline` blo
  * checkout
  * build
  * test
+ * securitychecks
  * sonarscan
  * deploy:dev
  * smoketest:dev

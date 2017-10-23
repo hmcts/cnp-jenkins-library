@@ -4,4 +4,5 @@ interface Builder {
   def build()
   def test()
   def smokeTest()
+  def securityCheck()
 }

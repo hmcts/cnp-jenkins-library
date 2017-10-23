@@ -15,4 +15,9 @@ class MockBuilder implements Builder, Serializable {
   def smokeTest() {
     return null
   }
+
+  @Override
+  def securityCheck() {
+    return null
+  }
 }
