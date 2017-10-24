@@ -23,6 +23,10 @@ class GradleBuilder implements Builder, Serializable {
 
   }
 
+  def securityCheck() {
+
+  }
+
   def gradle(String task) {
     steps.sh("./gradlew ${task}")
   }

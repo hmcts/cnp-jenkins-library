@@ -47,14 +47,15 @@ def call(type, String product, String app, Closure body) {
       }
     }
 
-    stage("Sonar Scan") {
-      pl.callAround('sonarscan') {
-
+    stage("Security Checks") {
+      pl.callAround('securitychecks') {
+        builder.securityCheck()
       }
     }
 
-    stage("Security Checks") {
-      stage("NSP") {
+    stage("Sonar Scan") {
+      pl.callAround('sonarscan') {
+
       }
     }
 
