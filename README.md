@@ -58,7 +58,7 @@ withPipeline(type, product, app) {
 
 #### Security Checks
 
-Calls `yarn test:smoke` so this command must be implemented in package.json
+Calls `yarn test:nsp` so this command must be implemented in package.json
 
 #### Smoke tests
 
@@ -81,7 +81,7 @@ You can use the `before(stage)` and `after(stage)` within the `withPipeline` blo
  * sonarscan
  * deploy:dev
  * smoketest:dev
- * deploy:rod
+ * deploy:prod
  * smoketest:prod
 
 E.g.
