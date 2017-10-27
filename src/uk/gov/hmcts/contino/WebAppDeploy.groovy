@@ -94,8 +94,8 @@ class WebAppDeploy implements Serializable {
         steps.sh("echo '/log/' >> .gitignore")
         steps.sh("echo '/lib/' >> .gitignore")
         steps.sh("echo 'coverage' >> .gitignore")
-        steps.sh("echo ${steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')} >> deploy.cmd")
-        steps.sh("echo ${steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deployment.txt')} >> .deployment")
+        steps.writeFile("deploy.cmd", steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd'))
+        steps.writeFile(".deployment", steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deployment.txt'))
         steps.sh("git add .")
 
         pushToService(product, app, env)
