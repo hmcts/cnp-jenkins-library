@@ -12,6 +12,11 @@ class terraform implements Serializable {
   def lint() {
     steps.sh 'terraform fmt --diff=true > diff.out'
     steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
+    steps.sh "terraform init -reconfigure -backend-config " +
+      "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
+      "-backend-config \"container_name=${stateStoreConfig.container}\" " +
+      "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
+      "-backend-config \"key=${steps.product}/${envName}/terraform.tfstate\""
     steps.sh 'terraform validate'
   }
 
