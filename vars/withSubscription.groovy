@@ -1,6 +1,6 @@
 import groovy.json.JsonSlurperClassic
 
-def call(servicePrincipal, vaultName) {
+def call(String servicePrincipal, String vaultName, Clojure body) {
 
   withCredentials([azureServicePrincipal(servicePrincipal)]) {
 
@@ -8,6 +8,8 @@ def call(servicePrincipal, vaultName) {
     //resp = sh(script: "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID", returnStdout: true).trim()
     secrets = new JsonSlurperClassic().parseText(resp)
     echo "TOKEN: '${secrets}'"
+
+    body.call()
 
   }
 
