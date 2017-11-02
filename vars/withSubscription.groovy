@@ -1,6 +1,6 @@
 import groovy.json.JsonSlurperClassic
 
-def call(String servicePrincipal, String vaultName, Clojure body) {
+def call(String servicePrincipal, String vaultName, Closure body) {
 
   withCredentials([azureServicePrincipal(servicePrincipal)]) {
 
