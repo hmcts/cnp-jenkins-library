@@ -1,46 +1,77 @@
 import uk.gov.hmcts.contino.*
 
-def call(String type, String product, String app, Closure body) {
+def call(type, String product, String app, Closure body) {
 
   def pipelineTypes = [
     java: new SpringBootPipelineType(this, product, app),
     nodejs: new NodePipelineType(this, product, app)
   ]
 
-  def pipelineType = pipelineTypes.get(type)
+  PipelineType pipelineType
 
-  def deployer = pipelineType.deployer
+  if (type instanceof PipelineType) {
+    pipelineType = type
+  } else {
+    pipelineType = pipelineTypes.get(type)
+  }
 
-  def builder = pipelineType.builder
+  assert pipelineType != null
+
+  Deployer deployer = pipelineType.deployer
+
+  Builder builder = pipelineType.builder
+
+  def pl = new PipelineCallbacks()
+
+  body.delegate = pl
+  body.call() // register callbacks
 
   node {
 
     stage('Checkout') {
-      deleteDir()
-      checkout scm
+      pl.callAround('checkout') {
+        deleteDir()
+        checkout scm
+      }
     }
 
     stage("Build") {
-      builder.build()
+      pl.callAround('build') {
+        builder.build()
+      }
     }
 
     stage("Test") {
-      builder.test()
-    }
-    stage("Sonar Scan"){
-
-    }
-    stage("Security Checks" ){
-      stage("NSP") {
+      pl.callAround('test') {
+        builder.test()
       }
-
     }
+
+    stage("Security Checks") {
+      pl.callAround('securitychecks') {
+        builder.securityCheck()
+      }
+    }
+
+    stage("Sonar Scan") {
+      pl.callAround('sonarscan') {
+
+      }
+    }
+
     stage('Deploy Dev') {
-      deployer.deploy('dev')
-      deployer.healthCheck('dev')
+      pl.callAround('deploy:dev') {
+        deployer.deploy('dev')
+        deployer.healthCheck('dev')
+      }
     }
 
-    stage('Smoke Tests - Dev'){
+    stage('Smoke Tests - Dev') {
+      withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
+        pl.callAround('smoketest:dev') {
+          builder.smokeTest()
+        }
+      }
     }
 
     stage("OWASP") {
@@ -48,13 +79,17 @@ def call(String type, String product, String app, Closure body) {
     }
 
     stage('Deploy Prod') {
-      deployer.deploy('prod')
-      deployer.healthCheck('prod')
+      pl.callAround('deploy:prod') {
+        deployer.deploy('prod')
+        deployer.healthCheck('prod')
+      }
     }
 
-    stage('Smoke Tests - Prod'){
-      withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]){
-        builder.smokeTest()
+    stage('Smoke Tests - Prod') {
+      withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+        pl.callAround('smoketest:prod') {
+          builder.smokeTest()
+        }
       }
     }
 

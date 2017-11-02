@@ -24,10 +24,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * Checkout
 * Build
 * Unit Test
+* Security Checks
 * Lint (nodejs only)
 * Sonar Scan
-* Security Checks
-* NSP
 * Deploy Dev
 * Smoke Tests - Dev
 * OWASP
@@ -45,7 +44,7 @@ properties(
    pipelineTriggers([[$class: 'GitHubPushTrigger']])]
 )
 
-@Library("Infrastructure@opinionated-pipeline")
+@Library("Infrastructure")
 
 def type = "java"          // supports "java" and "nodejs"
 
@@ -54,6 +53,48 @@ def product = "rhubarb"
 def app = "recipe-backend" // must match infrastructure module name
 
 withPipeline(type, product, app) {
+}
+```
+
+#### Security Checks
+
+Calls `yarn test:nsp` so this command must be implemented in package.json
+
+#### Smoke tests
+
+To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
+This should, ideally, check the entire happy path of the application. Currently, the pipeline only supports Yarn to run smoketests and will call `yarn test:smoke`
+so this must be implemented as a command in package.json. The pipeline exposes the appropriate application URL in the
+`SMOKETEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
+called after each deployment to each environment.
+
+#### Extending the opinionated pipeline
+
+It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
+
+You can use the `before(stage)` and `after(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are
+
+ * checkout
+ * build
+ * test
+ * securitychecks
+ * sonarscan
+ * deploy:dev
+ * smoketest:dev
+ * deploy:prod
+ * smoketest:prod
+
+E.g.
+
+```
+withPipeline(type, product, app) {
+  after('checkout') {
+    echo 'Checked out'
+  }
+  
+  before('deploy:prod') {
+    input 'Are you sure you want to deploy to production?'
+  }
 }
 ```
 
