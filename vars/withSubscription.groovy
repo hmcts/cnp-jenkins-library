@@ -4,9 +4,10 @@ def call(String servicePrincipal, String vaultName, Closure body) {
 
   withCredentials([azureServicePrincipal(servicePrincipal)]) {
 
-//    resp = sh(script: "az keyvault secret list --vault-name '${vaultName}'", returnStdout: true).trim()
+    resp = sh(script: "az keyvault secret list --vault-name '${vaultName}'", returnStdout: true).trim()
     //resp = sh(script: "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID", returnStdout: true).trim()
-
+    echo "returned: $resp"
+/*
     def varName = 'tenant-id'
     def subscription = 'nonprod'
     if (env == 'prod')
@@ -15,6 +16,7 @@ def call(String servicePrincipal, String vaultName, Closure body) {
     resp = steps.sh(script: "az keyvault secret show --vault-name 'jenkins-vault' --name ${subscription}-${varName}", returnStdout: true).trim()
     secrets = new JsonSlurperClassic().parseText(resp)
     echo "TOKEN: '${secrets}'"
+*/
 
     body.call()
 
