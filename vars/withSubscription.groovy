@@ -1,28 +1,38 @@
+#!groovy
 import groovy.json.JsonSlurperClassic
 
-def call(String servicePrincipal, String vaultName, String secretName, Closure body) {
+def call(String servicePrincipal, String vaultName, Closure body) {
 
   withCredentials([azureServicePrincipal(servicePrincipal)]) {
+    sh 'az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
+    sh 'az account set --subscription $AZURE_SUBSCRIPTION_ID'
 
-    //resp = sh(script: "az keyvault secret list --vault-name '${vaultName}'", returnStdout: true).trim()
-    //resp = sh(script: "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID", returnStdout: true).trim()
-    //resp = sh(script: "az keyvault secret list --vault-name '${vaultName}'", returnStdout: true).trim()
-    resp = steps.sh(script: "az keyvault secret show --vault-name '${vaultName}' --name ${secretName}", returnStdout: true).trim()
+    def resp = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'terraform-creds'", returnStdout: true).trim()
     secrets = new JsonSlurperClassic().parseText(resp)
-    echo "TOKEN: '${secrets}'"
+    echo "TOKEN: '${secrets}'; Type: ${secrets.getClass()}"
+
+    values = new JsonSlurperClassic().parseText(secrets.value)
+    echo "Values: '${values}'; Type: ${values.getClass()}"
+
+    echo "terraform_creds extracted: v1= $values.azure_subscription; v2=$azure_client_id; v3=$azure_client_secret; v4=$azure_tenant_id"
+
+    env.ARM_CLIENT_ID = values.azure_client_id
+    env.ARM_CLIENT_SECRET = values.azure_client_secret
+    env.ARM_TENANT_ID = values.azure_tenant_id
+    env.ARM_SUBSCRIPTION_ID = values.azure_subscription
+
+    env.TOKEN = env.ARM_TENANT_ID
+    env.TF_VAR_token = env.ARM_TENANT_ID
+
+    env.TF_VAR_secret_access_key = env.ARM_CLIENT_SECRET
+    env.TF_VAR_tenant_id = env.ARM_TENANT_ID
+    env.TF_VAR_subscription_id = env.ARM_SUBSCRIPTION_ID
+    env.TF_VAR_client_id = env.ARM_CLIENT_ID
+
+    echo "$env"
 
     body.call()
 
   }
-
-//  steps.withCredentials([azureServicePrincipal('jenkinsSP')]) {
-//    def subscription = 'nonprod'
-//    if (env == 'prod')
-//      subscription = 'prod'
-//
-//    resp = steps.sh(script: "az keyvault secret show --vault-name 'jenkins-vault' --name ${subscription}-${varName}", returnStdout: true).trim()
-//    secret = new JsonSlurperClassic().parseText(resp)
-//  }
-//  return secret.value
 
 }
