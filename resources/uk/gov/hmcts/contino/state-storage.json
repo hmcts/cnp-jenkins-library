@@ -13,9 +13,9 @@
   },
   {
     "env": "prod",
-    "resourceGroup": "contino-moj-tf-state",
-    "storageAccount": "continomojtfstate",
-    "container": "contino-moj-tfstate-container"
+    "resourceGroup": "mgmt-state-store-prd",
+    "storageAccount": "mgmtstatestoreprd",
+    "container": "mgmtstatestorecontainerprd"
   },
   {
     "env": "default",
