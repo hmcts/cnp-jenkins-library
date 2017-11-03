@@ -19,6 +19,9 @@ class YarnBuilder implements Builder, Serializable {
     yarn("test:a11y")
   }
 
+  def sonarScan() {
+  }
+
   def smokeTest() {
     yarn("test:smoke")
   }
