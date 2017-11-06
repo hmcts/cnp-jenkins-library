@@ -5,7 +5,7 @@ def call(String appName) {
   String pfxPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
   domain=appName
 
-  result = sh """
+  result = sh script: """
 #!/bin/bash
 
 echo "Creating Self-Signed cert for $domain"
