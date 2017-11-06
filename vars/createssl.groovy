@@ -8,5 +8,5 @@ def call(String appName) {
   def functions = libraryResource 'uk/gov/hmcts/contino/create-cert.sh'
   writeFile file: 'create-cert.sh', text: functions
 
-  result = sh script: "bash create-cert.sh ${product} ${pfxPass}"
+  result = sh "bash create-cert.sh ${product} ${pfxPass}"
 }
