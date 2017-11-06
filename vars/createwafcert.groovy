@@ -8,4 +8,6 @@ def call(String appName) {
   writeFile file: 'createwafcert.sh', text: functions
 
   result = sh "bash createwafcert.sh ${pfxPass}"
+
+  sh "export TF_VAR_pxfPass=${pfxPass}"
 }
