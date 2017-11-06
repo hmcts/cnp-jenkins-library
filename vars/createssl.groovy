@@ -11,7 +11,7 @@ def call(String appName) {
 echo "Creating Self-Signed cert for $domain"
 
 
-cat > $domain.conf <<-EOF
+cat > ${domain}.conf <<-EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -32,17 +32,17 @@ subjectAltName = @alt_names
 DNS.1 = scm.commonNameVar.service.internal
 EOF
 
-sed -i "s/commonNameVar/$domain/g" $domain.conf
+sed -i "s/commonNameVar/${domain}/g" ${domain}.conf
 
-openssl req -new -sha256 -nodes -out \\*.$domain.csr -newkey rsa:2048 -keyout \\*.$domain.key -config <( cat $domain.conf )
+openssl req -new -sha256 -nodes -out \\*.${domain}.csr -newkey rsa:2048 -keyout \\*.${domain}.key -config <( cat ${domain}.conf )
 
-openssl x509 -req -in \\*.$domain.csr -signkey \\*.$domain.key -out $domain.cer
+openssl x509 -req -in \\*.${domain}.csr -signkey \\*.${domain}.key -out ${domain}.cer
 
-openssl pkcs12 -export -in $domain.cer -inkey \\*.$domain.key -out $domain.pfx -password pass:$pfxPass
+openssl pkcs12 -export -in ${domain}.cer -inkey \\*.${domain}.key -out ${domain}.pfx -password pass:$pfxPass
 
-rm -f \\*.$domain.key \\*.$domain.csr $domain.conf
+rm -f \\*.${domain}.key \\*.${domain}.csr ${domain}.conf
 
-az keyvault certificate import --vault-name infra-vault -n $domain -f $domain.pfx --password $pfxPass
+az keyvault certificate import --vault-name infra-vault -n ${domain} -f ${domain}.pfx --password $pfxPass
 """, returnStatus: true
   //script: libraryResource('uk/gov/hmcts/contino/create-cert'), returnStatus: true
   echo "Script return status: $result"
