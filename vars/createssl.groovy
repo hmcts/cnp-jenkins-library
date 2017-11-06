@@ -49,7 +49,7 @@ openssl pkcs12 -export -in ${domain}.cer -inkey ${domain}.key -out ${domain}.pfx
 rm -f ${domain}.key ${domain}.csr ${domain}.conf
 
 az keyvault certificate import --vault-name infra-vault -n ${domain} -f ${domain}.pfx --password $pfxPass
-""", returnStatus: true
+"""
   //script: libraryResource('uk/gov/hmcts/contino/create-cert'), returnStatus: true
   echo "Script return status: $result"
 }
