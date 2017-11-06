@@ -35,7 +35,7 @@ EOF
 
 sed -i "s/commonNameVar/${domain}/g" ${domain}.conf
 
-openssl req -new -sha256 -nodes -out \\*.${domain}.csr -newkey rsa:2048 -keyout \\*.${domain}.key -config <( cat ${domain}.conf )
+openssl req -new -sha256 -nodes -out \\*.${domain}.csr -newkey rsa:2048 -keyout \\*.${domain}.key -config < cat ${domain}.conf
 
 openssl x509 -req -in \\*.${domain}.csr -signkey \\*.${domain}.key -out ${domain}.cer
 
