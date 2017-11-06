@@ -23,6 +23,13 @@ class YarnBuilder implements Builder, Serializable {
     steps.withSonarQubeEnv("SonarQube") {
       yarn("sonar-scan")
     }
+
+    steps.timeout(time: 10, unit: 'MINUTES') { // Just in case something goes wrong, pipeline will be killed after a timeout
+      def qg = steps.waitForQualityGate()
+      if (qg.status != 'OK') {
+        steps.error "Pipeline aborted due to quality gate failure: ${qg.status}"
+      }
+    }
   }
 
   def smokeTest() {
