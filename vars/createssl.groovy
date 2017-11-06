@@ -7,6 +7,7 @@ def call(String appName) {
 
   result = sh script: """
 #!/bin/bash
+set +x
 
 echo "Creating Self-Signed cert for $domain"
 
