@@ -9,5 +9,6 @@ def call(String appName) {
 
   result = sh "bash createwafcert.sh ${pfxPass}"
 
-  sh "export TF_VAR_pxfPass=${pfxPass}"
+  sh "echo pxfPass=${pfxPass} >> terraform.tfvars"
+
 }
