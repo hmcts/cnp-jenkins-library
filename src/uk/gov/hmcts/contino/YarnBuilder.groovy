@@ -19,6 +19,12 @@ class YarnBuilder implements Builder, Serializable {
     yarn("test:a11y")
   }
 
+  def sonarScan() {
+    steps.withSonarQubeEnv("SonarQube") {
+      yarn("sonar-scan")
+    }
+  }
+
   def smokeTest() {
     yarn("test:smoke")
   }

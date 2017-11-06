@@ -12,6 +12,11 @@ class MockBuilder implements Builder, Serializable {
   }
 
   @Override
+  def sonarScan() {
+    return null
+  }
+
+  @Override
   def smokeTest() {
     return null
   }

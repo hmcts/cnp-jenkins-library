@@ -19,6 +19,14 @@ class GradleBuilder implements Builder, Serializable {
     gradle("test")
   }
 
+  def sonarScan() {
+    steps.withSonarQubeEnv("SonarQube") {
+      // requires SonarQube Scanner for Gradle 2.1+
+      // It's important to add --info because of SONARJNKNS-281
+      gradle("--info sonarqube")
+    }
+  }
+
   def smokeTest() {
 
   }

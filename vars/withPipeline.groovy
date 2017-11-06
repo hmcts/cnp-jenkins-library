@@ -55,7 +55,7 @@ def call(type, String product, String app, Closure body) {
 
     stage("Sonar Scan") {
       pl.callAround('sonarscan') {
-
+        builder.sonarScan();
       }
     }
 
