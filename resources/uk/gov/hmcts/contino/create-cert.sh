@@ -1,7 +1,7 @@
 #!/bin/bash
 
 domain=$1
-pxfPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
+pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
 
 echo "Creating Self-Signed cert for $domain"
 

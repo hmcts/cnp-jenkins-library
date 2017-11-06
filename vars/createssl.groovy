@@ -5,11 +5,8 @@ def call(String appName) {
   String pfxPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
   domain=appName
 
-
   def functions = libraryResource 'uk/gov/hmcts/contino/create-cert.sh'
   writeFile file: 'create-cert.sh', text: functions
 
-  result = sh script: "bash -c create-sh.sh ${appName} ${pfxPass}"
-
-  echo "Script return status: $result"
+  result = sh script: "bash create-cert.sh ${product} ${pfxPass}"
 }
