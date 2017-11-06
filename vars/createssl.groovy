@@ -33,6 +33,10 @@ subjectAltName = @alt_names
 DNS.1 = scm.commonNameVar.service.internal
 EOF
 
+pwd
+ls
+cat ${domain}.conf
+
 sed -i "s/commonNameVar/${domain}/g" ${domain}.conf
 
 openssl req -new -sha256 -nodes -out \\*.${domain}.csr -newkey rsa:2048 -keyout \\*.${domain}.key -config < cat ${domain}.conf
