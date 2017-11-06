@@ -26,7 +26,7 @@ class GradleBuilder implements Builder, Serializable {
       gradle("--info sonarqube")
     }
 
-    steps.timeout(time: 10, unit: 'MINUTES') { // Just in case something goes wrong, pipeline will be killed after a timeout
+    steps.timeout(time: 30, unit: 'SECONDS') { // Just in case something goes wrong, pipeline will be killed after a timeout
       def qg = steps.waitForQualityGate()
       if (qg.status != 'OK') {
         steps.error "Pipeline aborted due to quality gate failure: ${qg.status}"
