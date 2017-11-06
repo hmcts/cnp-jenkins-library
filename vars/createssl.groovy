@@ -2,12 +2,11 @@ import uk.gov.hmcts.contino.*
 
 def call(String appName) {
   echo "Running SSL certificate creation script"
-  String pxfPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
+  String pfxPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
+  domain=appName
+
   result = sh """
 #!/bin/bash
-
-domain="${appName}"
-pxfPass="${pxfPass}" #\$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
 
 echo "Creating Self-Signed cert for $domain"
 
