@@ -9,7 +9,7 @@ C=UK
 ST=
 O=
 localityName=LONDON
-commonName=*.hmcts.net
+commonName=*.trafficmanager.net
 organizationalUnitName=Engineering
 emailAddress=support@moj
 "
