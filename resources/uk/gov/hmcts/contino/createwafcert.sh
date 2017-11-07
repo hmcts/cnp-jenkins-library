@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-pfxPass=$2
+pfxPass=$1
 
 
 # Set our CSR variables
