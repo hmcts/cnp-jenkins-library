@@ -2,14 +2,11 @@ import uk.gov.hmcts.contino.*
 
 def call(String appName) {
   echo "Running SSL certificate creation script"
-  String pfxPass = "FddsD35272"//org.apache.commons.lang.RandomStringUtils.random(9, true, true)
+  String pfxPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
   env.TF_VAR_pfxPass="${pfxPass}"
   def functions = libraryResource 'uk/gov/hmcts/contino/createwafcert.sh'
   writeFile file: 'createwafcert.sh', text: functions
 
   result = sh "bash createwafcert.sh ${pfxPass}"
 
-  //sh "echo pfxPass=${pfxPass} >> terraform.tfvars"
-
-  //sh "sed -i 's/${pfxPass}/\"${pfxPass}\"/g' terraform.tfvars"
 }
