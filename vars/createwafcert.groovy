@@ -11,5 +11,5 @@ def call(String appName) {
 
   sh "echo pfxPass=${pfxPass} >> terraform.tfvars"
 
-  sh "sed -i s/${pfxPass}/\"${pfxPass}\"/g terraform.tfvars"
+  sh "sed -i 's/${pfxPass}/\"${pfxPass}\"/g' terraform.tfvars"
 }
