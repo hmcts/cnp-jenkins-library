@@ -7,7 +7,7 @@ def call(String appName) {
   def functions = libraryResource 'uk/gov/hmcts/contino/createwafcert.sh'
   writeFile file: 'createwafcert.sh', text: functions
 
-  result = sh "bash createwafcert.sh ${pfxPass}"
+  result = sh "bash createwafcert.sh ${pfxPass}1"
 
   sh "echo pfxPass=${pfxPass} >> terraform.tfvars"
 
