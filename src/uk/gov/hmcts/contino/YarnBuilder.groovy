@@ -20,15 +20,20 @@ class YarnBuilder implements Builder, Serializable {
   }
 
   def sonarScan() {
-    steps.withSonarQubeEnv("SonarQube") {
-      yarn("sonar-scan")
-    }
-
-    steps.timeout(time: 1, unit: 'SECOND') { // Just in case something goes wrong, pipeline will be killed after a timeout
-      def qg = steps.waitForQualityGate()
-      if (qg.status != 'OK') {
-        steps.error "Pipeline aborted due to quality gate failure: ${qg.status}"
+    if (steps.respondsTo('withSonarQubeEnv')) {
+      steps.withSonarQubeEnv("SonarQube") {
+        yarn("sonar-scan")
       }
+
+      steps.timeout(time: 1, unit: 'SECOND') { // Just in case something goes wrong, pipeline will be killed after a timeout
+        def qg = steps.waitForQualityGate()
+        if (qg.status != 'OK') {
+          steps.error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        }
+      }
+    }
+    else {
+      steps.echo "Sonarqube plugin not installed. Unable to run static analysis."
     }
   }
 
