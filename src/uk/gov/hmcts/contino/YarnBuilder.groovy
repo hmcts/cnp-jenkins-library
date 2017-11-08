@@ -33,7 +33,7 @@ class YarnBuilder implements Builder, Serializable {
       }
     }
     else {
-      steps.echo "Sonarqube plugin not installed. Unable to run static analysis."
+      steps.echo "Sonarqube plugin not installed. Skipping static analysis."
     }
   }
 
