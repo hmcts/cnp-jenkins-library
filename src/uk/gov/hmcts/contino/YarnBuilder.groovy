@@ -20,7 +20,7 @@ class YarnBuilder implements Builder, Serializable {
   }
 
   def sonarScan() {
-    if (steps.respondsTo('withSonarQubeEnv')) {
+    if (steps.metaClass.respondsTo('withSonarQubeEnv')) {
       steps.withSonarQubeEnv("SonarQube") {
         yarn("sonar-scan")
       }
