@@ -2,6 +2,8 @@
 
 domain=$1
 pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
+gw=$3
+rg=$3
 
 echo "Creating Self-Signed cert for $domain"
 
@@ -38,3 +40,5 @@ openssl pkcs12 -export -in $domain.cer -inkey \*.$domain.key -out $domain.pfx -p
 rm -f \*.$domain.key \*.$domain.csr $domain.conf
 
 az keyvault certificate import --vault-name infra-vault -n $domain -f $domain.pfx --password $pfxPass
+
+az network application-gateway auth-cert create --cert-file ./$domain.cer --gateway-name $gw --name $domain --resource-group $rg
