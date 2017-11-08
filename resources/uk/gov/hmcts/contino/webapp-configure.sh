@@ -23,11 +23,11 @@ L=LONDON
 O=MOJ
 OU=Engineering
 emailAddress=support@moj
-CN = commonNameVar.service.internal
+CN = commonNameVar.service.consul
 [ req_ext ]
 subjectAltName = @alt_names
 [ alt_names ]
-DNS.1 = scm.commonNameVar.service.internal
+DNS.1 = commonNameVar.scm.service.consul
 EOF
 
 sed -i "s/commonNameVar/$domain/g" $domain.conf
