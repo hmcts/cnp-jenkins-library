@@ -2,6 +2,9 @@
 
 domain=$1
 pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
+gw=$3
+rg=$3
+ilb=$4
 
 echo "Creating Self-Signed cert for $domain"
 
@@ -20,11 +23,11 @@ L=LONDON
 O=MOJ
 OU=Engineering
 emailAddress=support@moj
-CN = commonNameVar.service.internal
+CN = commonNameVar.service.consul
 [ req_ext ]
 subjectAltName = @alt_names
 [ alt_names ]
-DNS.1 = scm.commonNameVar.service.internal
+DNS.1 = commonNameVar.scm.service.consul
 EOF
 
 sed -i "s/commonNameVar/$domain/g" $domain.conf
@@ -38,3 +41,21 @@ openssl pkcs12 -export -in $domain.cer -inkey \*.$domain.key -out $domain.pfx -p
 rm -f \*.$domain.key \*.$domain.csr $domain.conf
 
 az keyvault certificate import --vault-name infra-vault -n $domain -f $domain.pfx --password $pfxPass
+
+# whitelist app at appGw
+az network application-gateway auth-cert create --cert-file ./$domain.cer --gateway-name $gw --name $domain --resource-group $rg
+
+#get ip of consul
+consul=$(az vmss nic list --resource-group $rg --vmss-name consul-server --query "[0].ipConfigurations[0].privateIpAddress")
+
+# Create 2 consul entries (service + scm)
+sed -i -e "s/serviceId/$domain/g" consul.json
+sed -i -e "s/serviceName/$domain/g" consul.json
+sed -i -e "s/aseIlb/$consul/g" consul.json
+
+curl --request PUT --data @consul.json http://$consul:8500/v1/agent/service/register
+
+sed -i -e "s/$domain/scm/g" consul.json
+sed -i -e "s/\[\]/\[$domain\]/g" consul.json
+
+curl --request PUT --data @consul.json http://$consul:8500/v1/agent/service/register
