@@ -6,7 +6,7 @@ package uk.gov.hmcts.contino
 class WebAppDeploy implements Serializable {
 
   public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
-  public static final java.lang.String GIT_USER = "jenkinsmoj"
+  public static final java.lang.String GIT_USER = "moj-jenkins-user"
   public static final String SERVICE_HOST_SUFFIX = "p.azurewebsites.net"
   def steps
   def product

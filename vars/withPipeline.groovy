@@ -27,8 +27,8 @@ def call(type, String product, String app, Closure body) {
   body.call() // register callbacks
 
   node {
-    platformSetup {
-      withSubscription("jenkinsServicePrincipal", "infra-vault") {
+//    platformSetup {
+//      withSubscription("jenkinsServicePrincipal", "infra-vault") {
         stage('Checkout') {
           pl.callAround('checkout')
           deleteDir()
@@ -96,5 +96,5 @@ def call(type, String product, String app, Closure body) {
 //        }
       }
     }
-  }
-}
+//  }
+//}
