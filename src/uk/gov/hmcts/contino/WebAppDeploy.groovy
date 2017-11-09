@@ -202,12 +202,12 @@ class WebAppDeploy implements Serializable {
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
     def hostingEnv = getComputeFor(env)
-    return "${serviceName}.scm.${hostingEnv}.${SERVICE_HOST_SUFFIX}"
+    return "${serviceName}.scm.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceHost(product, app, env) {
     def computeCluster = getComputeFor(env)
-    return "${getServiceName(product, app, env)}.${computeCluster}.${SERVICE_HOST_SUFFIX}"
+    return "${getServiceName(product, app, env)}.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceName(product, app, env) {
@@ -217,7 +217,7 @@ class WebAppDeploy implements Serializable {
 
 
   private def getComputeFor(env){
-    return "" //"core-compute-prod"
+    return "core-compute-prod"
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
