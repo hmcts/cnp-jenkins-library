@@ -30,7 +30,6 @@ def call(type, String product, String app, Closure body) {
 //    platformSetup {
 //      withSubscription("jenkinsServicePrincipal", "infra-vault") {
         stage('Checkout') {
-          pl.callAround('checkout')
           deleteDir()
           git([url   : 'git@github.com:contino/moj-rhubarb-recipes-service',
                branch: 'master'])
