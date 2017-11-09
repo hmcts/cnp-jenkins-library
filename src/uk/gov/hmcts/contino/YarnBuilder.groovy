@@ -20,10 +20,7 @@ class YarnBuilder implements Builder, Serializable {
   }
 
   def sonarScan() {
-    def plugins = Jenkins.instance.getPluginManager().getPlugins()
-    plugins.find { it.getShortName() == 'sonar' }
-
-    if (plugins.find { it.getShortName() == 'sonar' } != null) {
+    if (steps.metaClass.respondsTo(steps, 'withSonarQubeEnv', String)) {
       steps.withSonarQubeEnv("SonarQube") {
         yarn("sonar-scan")
       }
