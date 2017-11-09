@@ -20,12 +20,9 @@ class YarnBuilder implements Builder, Serializable {
   }
 
   def sonarScan() {
-    def plugins = Jenkins.instance.getPluginManager().getPlugins()
-    plugins.find { it.getShortName() == 'sonar' }
-
-    if (plugins.find { it.getShortName() == 'sonar' } != null) {
-      steps.withSonarQubeEnv("SonarQube") {
-        yarn("sonar-scan")
+    if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
+      steps.withSonarQubeEnv('SonarQube') {
+        yarn('sonar-scan')
       }
 
       steps.timeout(time: 1, unit: 'SECOND') { // Just in case something goes wrong, pipeline will be killed after a timeout
@@ -36,7 +33,7 @@ class YarnBuilder implements Builder, Serializable {
       }
     }
     else {
-      steps.echo "Sonarqube plugin not installed. Skipping static analysis."
+      steps.echo 'Sonarqube plugin not installed. Skipping static analysis.'
     }
   }
 
