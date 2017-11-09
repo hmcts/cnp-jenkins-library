@@ -20,7 +20,7 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def sonarScan() {
-    if (steps.metaClass.respondsTo('withSonarQubeEnv')) {
+    if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
       steps.withSonarQubeEnv("SonarQube") {
         // requires SonarQube Scanner for Gradle 2.1+
         // It's important to add --info because of SONARJNKNS-281
