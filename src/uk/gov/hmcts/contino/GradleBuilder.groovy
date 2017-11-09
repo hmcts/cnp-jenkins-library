@@ -20,10 +20,23 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def sonarScan() {
-    steps.withSonarQubeEnv("SonarQube") {
-      // requires SonarQube Scanner for Gradle 2.1+
-      // It's important to add --info because of SONARJNKNS-281
-      gradle("--info sonarqube")
+    if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
+      steps.withSonarQubeEnv("SonarQube") {
+        // requires SonarQube Scanner for Gradle 2.1+
+        // It's important to add --info because of SONARJNKNS-281
+        gradle("--info sonarqube")
+      }
+
+      steps.timeout(time: 30, unit: 'SECONDS') {
+        // Just in case something goes wrong, pipeline will be killed after a timeout
+        def qg = steps.waitForQualityGate()
+        if (qg.status != 'OK') {
+          steps.error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        }
+      }
+    }
+    else {
+      steps.echo "Sonarqube plugin not installed. Skipping static analysis."
     }
   }
 
