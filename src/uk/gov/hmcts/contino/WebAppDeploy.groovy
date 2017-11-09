@@ -7,7 +7,7 @@ class WebAppDeploy implements Serializable {
 
   public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final java.lang.String GIT_USER = "moj-jenkins-user"
-  public static final String SERVICE_HOST_SUFFIX = "p.azurewebsites.net"
+  public static final String SERVICE_HOST_SUFFIX = "service.consul"
   def steps
   def product
   def defaultRemote = "azure"
@@ -217,12 +217,12 @@ class WebAppDeploy implements Serializable {
 
 
   private def getComputeFor(env){
-    return "core-compute-sample-dev"
+    return "" //"core-compute-prod"
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
     steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
-    steps.sh("git push ${defaultRemote}-${env}  master -f")
+    steps.sh("git push ${defaultRemote}-${env} master -f")
   }
 
   private def configureGit() {
