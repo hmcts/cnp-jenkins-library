@@ -20,8 +20,6 @@ def call(String servicePrincipal, String vaultName, Closure body) {
       values = new JsonSlurperClassic().parseText(secrets.value)
       echo "Values: '${values}'; Type: ${values.getClass()}"
 
-      echo "terraform_creds extracted: v1= $values.azure_subscription; v2=$azure_client_id; v3=$azure_client_secret; v4=$azure_tenant_id"
-                  
       env.AZURE_CLIENT_ID = values.azure_client_id
       env.AZURE_CLIENT_SECRET = values.azure_client_secret
       env.AZURE_TENANT_ID = values.azure_tenant_id
