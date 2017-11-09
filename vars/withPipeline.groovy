@@ -55,11 +55,11 @@ def call(type, String product, String app, Closure body) {
           }
         }
 
-        stage("Sonar Scan") {
-          pl.callAround('sonarscan') {
-
-          }
-        }
+//        stage("Sonar Scan") {
+//          pl.callAround('sonarscan') {
+//
+//          }
+//        }
 
         stage('Deploy Dev') {
           pl.callAround('deploy:dev') {
