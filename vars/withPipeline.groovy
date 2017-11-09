@@ -79,10 +79,10 @@ def call(type, String product, String app, Closure body) {
 //
 //        }
 
-        stage('Deploy Prod') {
-          pl.callAround('deploy:prod') {
-            deployer.deploy('prod')
-            deployer.healthCheck('prod')
+        stage('Deploy Default') {
+          pl.callAround('deploy:default') {
+            deployer.deploy('default')
+            deployer.healthCheck('default')
           }
         }
 
