@@ -43,17 +43,17 @@ def call(type, String product, String app, Closure body) {
           }
         }
 
-        stage("Test") {
-          pl.callAround('test') {
-            builder.test()
-          }
-        }
-
-        stage("Security Checks") {
-          pl.callAround('securitychecks') {
-            builder.securityCheck()
-          }
-        }
+//        stage("Test") {
+//          pl.callAround('test') {
+//            builder.test()
+//          }
+//        }
+//
+//        stage("Security Checks") {
+//          pl.callAround('securitychecks') {
+//            builder.securityCheck()
+//          }
+//        }
 
 //        stage("Sonar Scan") {
 //          pl.callAround('sonarscan') {
@@ -61,24 +61,24 @@ def call(type, String product, String app, Closure body) {
 //          }
 //        }
 
-        stage('Deploy Dev') {
-          pl.callAround('deploy:dev') {
-            deployer.deploy('dev')
-            deployer.healthCheck('dev')
-          }
-        }
+//        stage('Deploy Dev') {
+//          pl.callAround('deploy:dev') {
+//            deployer.deploy('dev')
+//            deployer.healthCheck('dev')
+//          }
+//        }
 
-        stage('Smoke Tests - Dev') {
-          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
-            pl.callAround('smoketest:dev') {
-              builder.smokeTest()
-            }
-          }
-        }
+//        stage('Smoke Tests - Dev') {
+//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
+//            pl.callAround('smoketest:dev') {
+//              builder.smokeTest()
+//            }
+//          }
+//        }
 
-        stage("OWASP") {
-
-        }
+//        stage("OWASP") {
+//
+//        }
 
         stage('Deploy Prod') {
           pl.callAround('deploy:prod') {
@@ -87,13 +87,13 @@ def call(type, String product, String app, Closure body) {
           }
         }
 
-        stage('Smoke Tests - Prod') {
-          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-            pl.callAround('smoketest:prod') {
-              builder.smokeTest()
-            }
-          }
-        }
+//        stage('Smoke Tests - Prod') {
+//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//            pl.callAround('smoketest:prod') {
+//              builder.smokeTest()
+//            }
+//          }
+//        }
       }
     }
   }
