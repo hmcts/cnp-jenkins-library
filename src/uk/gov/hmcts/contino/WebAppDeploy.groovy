@@ -103,7 +103,11 @@ class WebAppDeploy implements Serializable {
   }
 
   def deployJavaWebApp(env) {
-    return {
+    return steps.withCredentials(
+      [[$class: 'UsernamePasswordMultiBinding',
+        credentialsId: 'jenkins-github-api-token',
+        usernameVariable: 'GIT_USERNAME',
+        passwordVariable: 'GIT_PASSWORD']]) {
 
       def tempDir = ".tmp_azure_jenkings"
 
