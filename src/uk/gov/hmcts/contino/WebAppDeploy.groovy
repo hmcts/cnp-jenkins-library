@@ -7,7 +7,7 @@ class WebAppDeploy implements Serializable {
 
   public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final java.lang.String GIT_USER = "moj-jenkins-user"
-  public static final String SERVICE_HOST_SUFFIX = "internal"
+  public static final String SERVICE_HOST_SUFFIX = "core-compute-prod-internal"
   def steps
   def product
   def defaultRemote = "azure"
