@@ -7,7 +7,7 @@ class WebAppDeploy implements Serializable {
 
   public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final java.lang.String GIT_USER = "moj-jenkins-user"
-  public static final String SERVICE_HOST_SUFFIX = "service.consul"
+  public static final String SERVICE_HOST_SUFFIX = "core-compute-prod.internal"
   def steps
   def product
   def defaultRemote = "azure"
@@ -206,12 +206,12 @@ class WebAppDeploy implements Serializable {
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
     def hostingEnv = getComputeFor(env)
-    return "${serviceName}.scm.${SERVICE_HOST_SUFFIX}"
+    return "${serviceName}.scm.service.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceHost(product, app, env) {
     def computeCluster = getComputeFor(env)
-    return "${getServiceName(product, app, env)}.${SERVICE_HOST_SUFFIX}"
+    return "${getServiceName(product, app, env)}.service.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceName(product, app, env) {
@@ -225,8 +225,8 @@ class WebAppDeploy implements Serializable {
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
-    steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
-    steps.sh("git push ${defaultRemote}-${env} master -f")
+    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://rhubarb-deployer:${steps.env.Deployer_Pass}@${serviceDeploymentHost}/${serviceName}.git\"")
+    steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} master -f")
   }
 
   private def configureGit() {
