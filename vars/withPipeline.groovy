@@ -31,9 +31,9 @@ def call(type, String product, String app, Closure body) {
 //      withSubscription("jenkinsServicePrincipal", "infra-vault") {
         stage('Checkout') {
           deleteDir()
-          git([url   : 'git@github.com:contino/moj-rhubarb-recipes-service',
-               branch: 'master'])
-
+          /*git([url   : 'git@github.com:contino/moj-rhubarb-recipes-service',
+               branch: 'master'])*/
+          checkout scm
         }
 
         stage("Build") {
