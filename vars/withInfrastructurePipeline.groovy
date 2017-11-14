@@ -5,13 +5,6 @@ def call(String product) {
   def terraform = new Terraform(this, product)
   node {
     stage('Checkout') {
-      def secrets = [
-        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'prod-client-id', envVariable: 'AZURE_CLIENT_ID']
-      ]
-
-      wrap([$class: 'AzureKeyVaultBuildWrapper', azureKeyVaultSecrets: secrets]) {
-        sh 'echo CLIENT_ID: $AZURE_CLIENT_ID'
-      }
       deleteDir()
       checkout scm
     }
