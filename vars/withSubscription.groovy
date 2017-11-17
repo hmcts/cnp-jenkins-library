@@ -38,10 +38,7 @@ def call(String servicePrincipalCredId, String vaultName, String env, Closure bo
                "TF_VAR_token=${values.azure_tenant_id}",
                // other variables
                "TOKEN=${values.azure_tenant_id}" ]) {
-
-        sh "env"
         body.call()
       }
-      sh "env"
     }
 }
