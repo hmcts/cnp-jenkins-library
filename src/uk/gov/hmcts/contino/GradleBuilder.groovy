@@ -19,6 +19,10 @@ class GradleBuilder implements Builder, Serializable {
     gradle("test")
   }
 
+  def sonarScan() {
+      gradle("--info sonarqube")
+  }
+
   def smokeTest() {
 
   }

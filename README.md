@@ -3,7 +3,7 @@
 ## How is this used?
 Code in this library are loaded at runtime by Jenkins.
 Jenkins is already configured to point to this repository
-See [Jenkins Shared Librareis](https://jenkins.io/doc/book/pipeline/shared-libraries/)
+See [Jenkins Shared Libraries](https://jenkins.io/doc/book/pipeline/shared-libraries/)
 
 In your pipeline, import this library.
 
