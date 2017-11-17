@@ -27,12 +27,10 @@ def call(type, String product, String app, Closure body) {
   body.call() // register callbacks
 
   node {
-//    platformSetup {
-//      withSubscription("jenkinsServicePrincipal", "infra-vault") {
+   platformSetup {
+     withSubscription("jenkinsServicePrincipal", "infra-vault") {
         stage('Checkout') {
           deleteDir()
-          /*git([url   : 'git@github.com:contino/moj-rhubarb-recipes-service',
-               branch: 'master'])*/
           checkout scm
         }
 
@@ -42,42 +40,42 @@ def call(type, String product, String app, Closure body) {
           }
         }
 
-//        stage("Test") {
-//          pl.callAround('test') {
-//            builder.test()
-//          }
-//        }
-//
-//        stage("Security Checks") {
-//          pl.callAround('securitychecks') {
-//            builder.securityCheck()
-//          }
-//        }
+       stage("Test") {
+         pl.callAround('test') {
+           builder.test()
+         }
+       }
 
-//        stage("Sonar Scan") {
-//          pl.callAround('sonarscan') {
-//
-//          }
-//        }
+       stage("Security Checks") {
+         pl.callAround('securitychecks') {
+           builder.securityCheck()
+         }
+       }
 
-//        stage('Deploy Dev') {
-//          pl.callAround('deploy:dev') {
-//            deployer.deploy('dev')
-//            deployer.healthCheck('dev')
-//          }
-//        }
+       stage("Sonar Scan") {
+         pl.callAround('sonarscan') {
 
-//        stage('Smoke Tests - Dev') {
-//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
-//            pl.callAround('smoketest:dev') {
-//              builder.smokeTest()
-//            }
-//          }
-//        }
+         }
+       }
 
-//        stage("OWASP") {
-//
-//        }
+       stage('Deploy Dev') {
+         pl.callAround('deploy:dev') {
+           deployer.deploy('dev')
+           deployer.healthCheck('dev')
+         }
+       }
+
+       stage('Smoke Tests - Dev') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
+           pl.callAround('smoketest:dev') {
+             builder.smokeTest()
+           }
+         }
+       }
+
+       stage("OWASP") {
+
+       }
 
         stage('Deploy Default') {
           pl.callAround('deploy:default') {
@@ -86,14 +84,14 @@ def call(type, String product, String app, Closure body) {
           }
         }
 
-//        stage('Smoke Tests - Prod') {
-//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-//            pl.callAround('smoketest:prod') {
-//              builder.smokeTest()
-//            }
-//          }
-//        }
+       stage('Smoke Tests - Prod') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+           pl.callAround('smoketest:prod') {
+             builder.smokeTest()
+           }
+         }
+       }
       }
     }
-//  }
-//}
+ }
+}
