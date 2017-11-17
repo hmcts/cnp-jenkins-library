@@ -26,16 +26,18 @@ def call(String servicePrincipalCredId, String vaultName, String env, Closure bo
                "AZURE_TENANT_ID=${values.azure_tenant_id}",
                "AZURE_SUBSCRIPTION_ID=${values.azure_subscription}",
                // Terraform env variables
-               "ARM_CLIENT_ID=${env.AZURE_CLIENT_ID}",
-               "ARM_CLIENT_SECRET=${env.AZURE_CLIENT_SECRET}",
-               "ARM_TENANT_ID=${env.AZURE_TENANT_ID}",
-               "ARM_SUBSCRIPTION_ID=${env.AZURE_SUBSCRIPTION_ID}",
-               "TOKEN=${env.ARM_TENANT_ID}",
-               "TF_VAR_token=${env.ARM_TENANT_ID}",
-               "TF_VAR_secret_access_key=${env.ARM_CLIENT_SECRET}",
-               "TF_VAR_tenant_id=${env.ARM_TENANT_ID}",
-               "TF_VAR_subscription_id=${env.ARM_SUBSCRIPTION_ID}",
-               "TF_VAR_client_id=${env.ARM_CLIENT_ID}"]) {
+               "ARM_CLIENT_ID=${values.azure_client_id}",
+               "ARM_CLIENT_SECRET=${values.azure_client_secret}",
+               "ARM_TENANT_ID=${values.azure_tenant_id}",
+               "ARM_SUBSCRIPTION_ID=${values.azure_subscription}",
+               // Terraform input variables
+               "TF_VAR_client_id=${values.azure_client_id}",
+               "TF_VAR_secret_access_key=${values.azure_client_secret}",
+               "TF_VAR_tenant_id=${values.azure_tenant_id}",
+               "TF_VAR_subscription_id=${values.azure_subscription}",
+               "TF_VAR_token=${values.azure_tenant_id}",
+               // other variables
+               "TOKEN=${values.azure_tenant_id}" ]) {
 
         sh "env"
         body.call()
