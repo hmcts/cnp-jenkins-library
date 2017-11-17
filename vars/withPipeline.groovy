@@ -60,7 +60,7 @@ def call(type, String product, String app, Closure body) {
             builder.sonarScan();
           }
 
-          timeout(time: 30, unit: 'SECONDS') {
+          timeout(time: 1, unit: 'MINUTES') {
             def qg = steps.waitForQualityGate()
             if (qg.status != 'OK') {
               error "Pipeline aborted due to quality gate failure: ${qg.status}"
