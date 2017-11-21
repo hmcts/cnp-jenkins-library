@@ -113,7 +113,7 @@ class Terraform implements Serializable {
     return steps.ansiColor('xterm') {
       steps.withCredentials([[$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
           [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
-          [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
+          [$class: 'StringBinding', credentialsId: 'hmcts_github', variable: 'TOKEN'],
           [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
           [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID'],
           [$class: 'StringBinding', credentialsId: 'kitchen_github', variable: 'TOKEN'],
