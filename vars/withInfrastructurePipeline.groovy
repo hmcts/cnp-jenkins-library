@@ -1,39 +1,50 @@
 import uk.gov.hmcts.contino.Terraform
 
-def call(String product) {
+def call(String product, String slackChannel) {
+  try {
 
-  def terraform = new Terraform(this, product)
-  node {
-    stage('Checkout') {
-      deleteDir()
-      checkout scm
-    }
-    lock("${product}-dev") {
-
-      stage("Terraform Plan - Dev") {
-
-        terraform.plan("dev")
-
+    def terraform = new Terraform(this, product)
+    node {
+      stage('Checkout') {
+        deleteDir()
+        checkout scm
       }
-      stage("Terraform Apply - Dev") {
+      lock("${product}-dev") {
 
-        terraform.apply("dev")
+        stage("Terraform Plan - Dev") {
 
-      }
-    }
-    if (env.BRANCH_NAME == 'master') {
-      lock("${product}-prod") {
-        stage('Terraform Plan - Prod') {
-
-          terraform.plan("prod")
+          terraform.plan("dev")
 
         }
-        stage('Terraform Apply - Prod') {
+        stage("Terraform Apply - Dev") {
 
-          terraform.apply("prod")
+          terraform.apply("dev")
 
         }
       }
+      if (env.BRANCH_NAME == 'master') {
+        lock("${product}-prod") {
+          stage('Terraform Plan - Prod') {
+
+            terraform.plan("prod")
+
+          }
+          stage('Terraform Apply - Prod') {
+
+            terraform.apply("prod")
+
+          }
+        }
+      }
     }
+  } catch(err) {
+    if (channel) {
+      notifyBuildFailure channel: channel
+    }
+    throw err
+  }
+
+  if (channel) {
+    notifyBuildFixed channel: channel
   }
 }
