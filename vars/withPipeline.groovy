@@ -1,4 +1,10 @@
-def call(type, String product, String app, Closure body, String slackChannel) {
+def call(Map args = [:]) {
+  def type = args.type
+  def product = args.product
+  def app = args.app
+  def body = args.body
+  def slackChannel = args.slackChannel
+
   try {
 
     def pipelineTypes = [
@@ -105,7 +111,7 @@ def call(type, String product, String app, Closure body, String slackChannel) {
       }
 
     }
-  } catch(err) {
+  } catch (err) {
     if (channel) {
       notifyBuildFailure channel: slackChannel
     }

@@ -1,6 +1,9 @@
 import uk.gov.hmcts.contino.Terraform
 
-def call(String product, String slackChannel) {
+def call(Map args = [:]) {
+  def product = args.product
+  def slackChannel = args.slackChannel
+
   try {
 
     def terraform = new Terraform(this, product)
@@ -39,12 +42,12 @@ def call(String product, String slackChannel) {
     }
   } catch(err) {
     if (channel) {
-      notifyBuildFailure channel: channel
+      notifyBuildFailure channel: slackChannel
     }
     throw err
   }
 
   if (channel) {
-    notifyBuildFixed channel: channel
+    notifyBuildFixed channel: slackChannel
   }
 }
