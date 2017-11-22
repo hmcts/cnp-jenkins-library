@@ -1,10 +1,9 @@
 import uk.gov.hmcts.contino.*
 
-def call(Map args = [:]) {
+def call(Map args = [:], Closure body) {
   def type = args.type
   def product = args.product
   def app = args.app
-  def body = args.body
   def slackChannel = args.slackChannel
 
   try {
