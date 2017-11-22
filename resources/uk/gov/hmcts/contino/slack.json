@@ -1,0 +1,48 @@
+{
+  "users": [
+    {
+      "github": "dharmendrak",
+      "slack": "dharmendrak"
+    },
+    {
+      "github": "pragnesh-patel",
+      "slack": "ppatel"
+    },
+    {
+      "github": "rlewan",
+      "slack": "rafall"
+    },
+    {
+      "github": "geeksoft",
+      "slack": "damiand"
+    },
+    {
+      "github": "yarpo",
+      "slack": "patrykj"
+    },
+    {
+      "github": "rattur",
+      "slack": "ranjitr"
+    },
+    {
+      "github": "robertparkinson",
+      "slack": "robertp"
+    },
+    {
+      "github": "sabahirfan",
+      "slack": "sabah.irfan"
+    },
+    {
+      "github": "singh-surjeet",
+      "slack": "surjeets"
+    },
+    {
+      "github": "timja-kainos",
+      "slack": "timj"
+    },
+    {
+      "github": "vianvi",
+      "slack": "vivek"
+    }
+  ]
+}

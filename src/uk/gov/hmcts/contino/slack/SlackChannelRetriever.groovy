@@ -23,7 +23,7 @@ class SlackChannelRetriever {
     }
 
     SlackMapping[] slackUserConfig = new JsonSlurperClassic()
-      .parseText(steps.libraryResource('uk/gov/hmcts/slack.json')).users
+      .parseText(steps.libraryResource('uk/gov/hmcts/contino/slack.json')).users
 
     SlackMapping mappedUser = slackUserConfig.find { user -> user.github == changeAuthor }
     if (mappedUser != null) {
