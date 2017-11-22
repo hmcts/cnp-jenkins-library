@@ -22,5 +22,12 @@
     "resourceGroup": "mgmt-state-store-prd",
     "storageAccount": "mgmtstatestoreprd",
     "container": "mgmtstatestorecontainerprd"
+  },
+  {
+    "env": "prd",
+    "resourceGroup": "mgmt-state-store-prd",
+    "storageAccount": "mgmtstatestoreprd",
+    "container": "mgmtstatestorecontainerprd"
   }
+
 ]

@@ -10,7 +10,7 @@ class WebAppDeploy implements Serializable {
   public static final String SERVICE_HOST_SUFFIX = "core-compute-prod.internal"
   def steps
   def product
-  def defaultRemote = "azure"
+  def defaultRemote = "azurerm"
   def app
 
   WebAppDeploy(steps, product, app){

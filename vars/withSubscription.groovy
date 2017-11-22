@@ -1,10 +1,10 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
 
-def call(String servicePrincipalCredId, String vaultName, String env, Closure body) {
+def call(String env, Closure body) {
 
   withCredentials([azureServicePrincipal(
-    credentialsId: servicePrincipalCredId,
+    credentialsId: "jenkinsServicePrincipal",
     subscriptionIdVariable: 'JENKINS_SUBSCRIPTION_ID',
     clientIdVariable: 'JENKINS_CLIENT_ID',
     clientSecretVariable: 'JENKINS_CLIENT_SECRET',
@@ -14,12 +14,13 @@ def call(String servicePrincipalCredId, String vaultName, String env, Closure bo
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
       def cred_by_env_name = (env == 'prod') ? "prod-creds" : "nonprod-creds"
-      def resp = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$cred_by_env_name'", returnStdout: true).trim()
+      def resp = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
       secrets = new JsonSlurperClassic().parseText(resp)
-      echo "TOKEN: '${secrets}'; Type: ${secrets.getClass()}"
+      echo "=== you are building with $cred_by_env_name subscription credentials ==="
+      //echo "TOKEN: '${secrets}'; Type: ${secrets.getClass()}"
 
       values = new JsonSlurperClassic().parseText(secrets.value)
-      echo "Values: '${values}'; Type: ${values.getClass()}"
+      //echo "Values: '${values}'; Type: ${values.getClass()}"
 
       withEnv(["AZURE_CLIENT_ID=${values.azure_client_id}",
                "AZURE_CLIENT_SECRET=${values.azure_client_secret}",
