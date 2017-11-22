@@ -113,13 +113,13 @@ def call(Map args = [:], Closure body) {
 
     }
   } catch (err) {
-    if (channel) {
+    if (slackChannel) {
       notifyBuildFailure channel: slackChannel
     }
     throw err
   }
 
-  if (channel) {
+  if (slackChannel) {
     notifyBuildFixed channel: slackChannel
   }
 }
