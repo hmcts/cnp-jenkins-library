@@ -41,13 +41,13 @@ def call(Map args = [:]) {
       }
     }
   } catch(err) {
-    if (channel) {
+    if (slackChannel) {
       notifyBuildFailure channel: slackChannel
     }
     throw err
   }
 
-  if (channel) {
+  if (slackChannel) {
     notifyBuildFixed channel: slackChannel
   }
 }
