@@ -1,3 +1,5 @@
+import uk.gov.hmcts.contino.*
+
 def call(Map args = [:]) {
   def type = args.type
   def product = args.product
