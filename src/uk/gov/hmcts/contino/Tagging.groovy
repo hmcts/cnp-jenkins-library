@@ -5,7 +5,7 @@ class Tagging implements Serializable {
   def pipe
   String gitUrl
 
-  Tagging(pipe){
+  Tagging(pipe) {
     this.pipe = pipe
     this.gitUrl = "${pipe.GITHUB_PROTOCOL}://${pipe.TOKEN}@${pipe.GITHUB_REPO}"
   }
@@ -32,7 +32,7 @@ class Tagging implements Serializable {
 
   def nextTag() {
     String lastTagVersion = lastTag()
-    String result = ""
+    String result
     if (lastTagVersion) {
       String[] lastTagSplitted = lastTagVersion.split(/\./)
       lastTagSplitted[lastTagSplitted.length - 1] = lastTagSplitted[lastTagSplitted.length - 1].toInteger() + 1
@@ -46,7 +46,7 @@ class Tagging implements Serializable {
   }
 
   def applyTag(tag) {
-    String result = ""
+    String result
     println("BRANCH_NAME: "+ pipe.env.BRANCH_NAME+ "; currentBuild.currentResult: "+ pipe.currentBuild.currentResult)
     if (pipe.env.BRANCH_NAME == 'master' &&
         pipe.currentBuild.currentResult == 'SUCCESS')
