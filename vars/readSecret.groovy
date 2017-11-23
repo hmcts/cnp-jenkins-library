@@ -16,7 +16,7 @@ def call(String secretName) {
       //def cred_by_env_name = (env == 'prod') ? "prod-creds" : "nonprod-creds"
       def resp = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$secretName'", returnStdout: true).trim()
       secrets = new JsonSlurperClassic().parseText(resp)
-      return new JsonSlurperClassic().parseText(secret.value)
+      return new JsonSlurperClassic().parseText(secrets.value)
 
       //Secrets loos like this: {"rg_name": "mgmt-state-store", "sa_name": "mgmtstatestore", "sa_container_name": "mgmtstatestorecontainer"}
     }
