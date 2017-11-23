@@ -72,16 +72,27 @@ def call(type, String product, String app, Closure body) {
          }
        }
 
-       stage('Deploy Dev') {
-         pl.callAround('deploy:dev') {
-           deployer.deploy('dev')
-           deployer.healthCheck('dev')
+       folderExists('infrastructure') {
+         dir('infrastructure') {
+           stage('Infrastructure Plan - AAT') {
+
+           }
+           stage('Infrastructure Build - AAT') {
+
+           }
          }
        }
 
-       stage('Smoke Tests - Dev') {
-         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
-           pl.callAround('smoketest:dev') {
+       stage('Deploy AAT') {
+         pl.callAround('deploy:aat') {
+           deployer.deploy('aat')
+           deployer.healthCheck('aat')
+         }
+       }
+
+       stage('Smoke Tests - AAT') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('aat')}"]) {
+           pl.callAround('smoketest:aat') {
              builder.smokeTest()
            }
          }

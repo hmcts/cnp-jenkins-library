@@ -1,0 +1,15 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "product"
+
+def app = "app"
+
+folderExists('testResources') {
+  echo "Folder exists"
+}
+
+folderExists('no-folder') {
+  echo "Shouldn't see this"
+}
