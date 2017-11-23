@@ -2,7 +2,7 @@ import uk.gov.hmcts.contino.Terraform
 
 def call(String product) {
 
-  def terraform = new Terraform(this, product)
+  Terraform terraform = new Terraform(this, product)
   node {
     stage('Checkout') {
       deleteDir()
@@ -15,13 +15,14 @@ def call(String product) {
         terraform.plan("dev")
 
       }
-      stage("Terraform Apply - Dev") {
 
-        terraform.apply("dev")
-
+      onMaster {
+        stage("Terraform Apply - Dev") {
+          terraform.apply("dev")
+        }
       }
     }
-    if (env.BRANCH_NAME == 'master') {
+    onMaster {
       lock("${product}-prod") {
         stage('Terraform Plan - Prod') {
 

@@ -56,8 +56,15 @@ class Terraform implements Serializable {
       throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
-  private java.lang.Boolean canApply(String env) {
-    def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
+  private Boolean canPlan(String env) {
+    def envAllowedOnMasterBranchOnly = env in ['test', 'prod']
+    logMessage("canPlan: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
+    return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
+      (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
+  }
+
+  private Boolean canApply(String env) {
+    def envAllowedOnMasterBranchOnly = env in ['dev', 'test', 'prod']
     logMessage("canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
     return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
       (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
@@ -84,8 +91,8 @@ class Terraform implements Serializable {
 
   private def getStateStoreConfig(env) {
     def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
-    if (!canApply(env))
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+    if (!canPlan(env))
+      throw new Exception("You cannot plan for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['test', 'prod'] are reserved for master branch, try other name")
 
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 
@@ -106,7 +113,7 @@ class Terraform implements Serializable {
     return steps.ansiColor('xterm') {
       steps.withCredentials([[$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
           [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
-          [$class: 'StringBinding', credentialsId: 'contino_github', variable: 'TOKEN'],
+          [$class: 'StringBinding', credentialsId: 'hmcts_github', variable: 'TOKEN'],
           [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
           [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID'],
           [$class: 'StringBinding', credentialsId: 'kitchen_github', variable: 'TOKEN'],
