@@ -19,11 +19,12 @@ def call(String secretName) {
       parsedSecret = new JsonSlurperClassic().parseText(secret)
       echo "$parsedSecret"
 
+      echo "Setting subscription back to $env.ARM_SUBSCRIPTION_ID for Azure CLI"
+      sh 'az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID'
+      sh 'az account set --subscription $ARM_SUBSCRIPTION_ID'
+
       return new JsonSlurperClassic().parseText(parsedSecret.value)
     }
 
-  echo "Setting subscription back to $env.ARM_SUBSCRIPTION_ID for Azure CLI"
-  sh 'az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID'
-  sh 'az account set --subscription $ARM_SUBSCRIPTION_ID'
 
 }
