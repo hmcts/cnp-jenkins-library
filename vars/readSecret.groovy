@@ -13,7 +13,7 @@ def call(String secretName) {
       sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
-      def secret = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$secretName'", returnStdout: true).trim()
+      def secret = sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$secretName'", returnStdout: true).trim()
       parsedSecret = new JsonSlurperClassic().parseText(secret)
       echo "$parsedSecret"
 

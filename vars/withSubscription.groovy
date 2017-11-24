@@ -14,7 +14,7 @@ def call(String env, Closure body) {
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
       def cred_by_env_name = (env == 'prod') ? "prod-creds" : "nonprod-creds"
-      def resp = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
+      def resp = sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
       secrets = new JsonSlurperClassic().parseText(resp)
       echo "=== you are building with $cred_by_env_name subscription credentials ==="
       //echo "TOKEN: '${secrets}'; Type: ${secrets.getClass()}"

@@ -24,7 +24,7 @@ fi
 # check if the storage account exists. Creates it if not.
 if  ! "$(az group exists --name $__rg)" ; then
 
-    __isCreated="$(az group create --name $__rg --location $__location --output json | jq -r .properties.provisioningState)"
+    __isCreated="$(az group create --name $__rg --location $__location --output tsv --query properties.provisioningState)"
 
     if [ "${__isCreated}" == "Succeeded" ] ; then
         echo "The resource $__rg has been created with no error"
@@ -37,18 +37,18 @@ else
 fi
 
 
-__saState="$(az storage account show --name $__sa --resource-group $__rg --output json | jq -r .provisioningState)"
+__saState="$(az storage account show --name $__sa --resource-group $__rg --output tsv --query provisioningState)"
 
 if [ -z "${__saState}" ] ; then
     # create a new storage account
-        # check if the storage account name s a valid format
-    __saCheck="$(az storage account check-name --name $__sa --output json )"
+    # check if the storage account name s a valid format
+    __saCheck="$(az storage account check-name --name $__sa --output tsv)"
 
-    __isAvailable=`echo "${__saCheck}" | jq -r .nameAvailable`
-    __message=`echo "${__saCheck}" | jq -r .message`
-    __reason=`echo "${__saCheck}" | jq -r .reason`
+    __isAvailable="$(echo $__saCheck | cut -f2 -d ' ')"
+    __message="$(echo $__saCheck | cut -f1 -d ' ')"
+    __reason="$(echo $__saCheck | cut -f3 -d ' ')"
 
-    if [ "$__isAvailable" = "true" ] ; then
+    if [ "${__isAvailable,,}" = "true" ] ; then
        az storage account create --name $__sa \
           --resource-group $__rg \
           --sku Standard_LRS \
@@ -64,12 +64,12 @@ else
     echo "The storage account $__sa in the resource group $__rg already exists."
 fi
 
-__sa_key="$(az storage account keys list --account-name $__sa --resource-group $__rg --output json | jq -r '.[1].value')"
+__sa_key="$(az storage account keys list --account-name $__sa --resource-group $__rg --output tsv --query '[1].value')"
 
 # check if the storage account doesn't exists
-__saContExists="$(az storage container exists --account-name $__sa --account-key $__sa_key --name $__container | jq -r .exists)"
+__saContExists="$(az storage container exists --account-name $__sa --account-key $__sa_key --name $__container --query exists)"
 
-if [ "$__saContExists" = "false" ] ; then
+if [ "${__saContExists,,}" = "false" ] ; then
     az storage container create --name $__container \
          --account-key $__sa_key \
          --account-name $__sa \
