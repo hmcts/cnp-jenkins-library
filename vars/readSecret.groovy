@@ -1,5 +1,5 @@
 #!groovy
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 def call(String secretName) {
 
@@ -14,9 +14,9 @@ def call(String secretName) {
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
       def secret = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$secretName'", returnStdout: true).trim()
-      parsedSecret = new JsonSlurper().parseText(secret)
+      parsedSecret = new JsonSlurperClassic().parseText(secret)
       echo "$parsedSecret"
 
-      return new JsonSlurper().parseText(parsedSecret.value)
+      return new JsonSlurperClassic().parseText(parsedSecret.value)
     }
 }

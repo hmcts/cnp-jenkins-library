@@ -1,5 +1,5 @@
 #!groovy
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 def call(String env, Closure body) {
 
@@ -15,11 +15,11 @@ def call(String env, Closure body) {
 
       def cred_by_env_name = (env == 'prod') ? "prod-creds" : "nonprod-creds"
       def resp = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
-      secrets = new JsonSlurper().parseText(resp)
+      secrets = new JsonSlurperClassic().parseText(resp)
       echo "=== you are building with $cred_by_env_name subscription credentials ==="
       //echo "TOKEN: '${secrets}'; Type: ${secrets.getClass()}"
 
-      values = new JsonSlurper().parseText(secrets.value)
+      values = new JsonSlurperClassic().parseText(secrets.value)
       //echo "Values: '${values}'; Type: ${values.getClass()}"
 
       withEnv(["AZURE_CLIENT_ID=${values.azure_client_id}",
