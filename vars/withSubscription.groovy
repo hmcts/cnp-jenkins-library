@@ -39,6 +39,8 @@ def call(String env, Closure body) {
                "TF_VAR_token=${values.azure_tenant_id}",
                // other variables
                "TOKEN=${values.azure_tenant_id}" ]) {
+        echo "Setting Azure CLI to run on $cred_by_env_name subscription"
+        sh "az account set --subscription $values.azure_subscription"
         body.call()
       }
     }
