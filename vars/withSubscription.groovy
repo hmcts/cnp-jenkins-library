@@ -22,10 +22,6 @@ def call(String env, Closure body) {
       values = new JsonSlurperClassic().parseText(secrets.value)
       //echo "Values: '${values}'; Type: ${values.getClass()}"
 
-      echo "Setting Azure CLI to run on $cred_by_env_name subscription"
-      sh "az login --service-principal -u ${values.azure_client_id} -p ${values.azure_client_secret} -t ${values.azure_tenant_id}"
-      sh "az account set --subscription ${values.azure_subscription}"
-
       withEnv(["AZURE_CLIENT_ID=${values.azure_client_id}",
                "AZURE_CLIENT_SECRET=${values.azure_client_secret}",
                "AZURE_TENANT_ID=${values.azure_tenant_id}",
@@ -43,6 +39,11 @@ def call(String env, Closure body) {
                "TF_VAR_token=${values.azure_tenant_id}",
                // other variables
                "TOKEN=${values.azure_tenant_id}" ]) {
+
+        echo "Setting Azure CLI to run on $cred_by_env_name subscription"
+        sh 'az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID'
+        sh 'az account set --subscription $ARM_SUBSCRIPTION_ID'
+
         body.call()
       }
     }
