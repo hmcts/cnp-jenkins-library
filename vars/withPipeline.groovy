@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.*
 def call(type, String product, String app, Closure body) {
 
   def pipelineTypes = [
-    java: new SpringBootPipelineType(this, product, app),
+    java  : new SpringBootPipelineType(this, product, app),
     nodejs: new NodePipelineType(this, product, app)
   ]
 
@@ -27,34 +27,33 @@ def call(type, String product, String app, Closure body) {
   body.call() // register callbacks
 
   node {
+   platformSetup {
+     withSubscription("jenkinsServicePrincipal", "infra-vault") {
+        stage('Checkout') {
+          deleteDir()
+          checkout scm
+        }
 
-    stage('Checkout') {
-      pl.callAround('checkout') {
-        deleteDir()
-        checkout scm
-      }
-    }
+        stage("Build") {
+          pl.callAround('build') {
+            builder.build()
+          }
+        }
 
-    stage("Build") {
-      pl.callAround('build') {
-        builder.build()
-      }
-    }
+       stage("Test") {
+         pl.callAround('test') {
+           builder.test()
+         }
+       }
 
-    stage("Test") {
-      pl.callAround('test') {
-        builder.test()
-      }
-    }
+       stage("Security Checks") {
+         pl.callAround('securitychecks') {
+           builder.securityCheck()
+         }
+       }
 
-    stage("Security Checks") {
-      pl.callAround('securitychecks') {
-        builder.securityCheck()
-      }
-    }
-
-    stage("Sonar Scan") {
-      pl.callAround('sonarscan') {
+       stage("Sonar Scan") {
+         pl.callAround('sonarscan') {
         if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
           withSonarQubeEnv("SonarQube") {
             builder.sonarScan();
@@ -70,43 +69,43 @@ def call(type, String product, String app, Closure body) {
         else {
           echo "Sonarqube plugin not installed. Skipping static analysis."
         }
-      }
-    }
+         }
+       }
 
-    stage('Deploy Dev') {
-      pl.callAround('deploy:dev') {
-        deployer.deploy('dev')
-        deployer.healthCheck('dev')
-      }
-    }
+       stage('Deploy Dev') {
+         pl.callAround('deploy:dev') {
+           deployer.deploy('dev')
+           deployer.healthCheck('dev')
+         }
+       }
 
-    stage('Smoke Tests - Dev') {
-      withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
-        pl.callAround('smoketest:dev') {
-          builder.smokeTest()
+       stage('Smoke Tests - Dev') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
+           pl.callAround('smoketest:dev') {
+             builder.smokeTest()
+           }
+         }
+       }
+
+       stage("OWASP") {
+
+       }
+
+        stage('Deploy Default') {
+          pl.callAround('deploy:default') {
+            deployer.deploy('default')
+            deployer.healthCheck('default')
+          }
         }
+
+       stage('Smoke Tests - Prod') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+           pl.callAround('smoketest:prod') {
+             builder.smokeTest()
+           }
+         }
+       }
       }
     }
-
-    stage("OWASP") {
-
-    }
-
-    stage('Deploy Prod') {
-      pl.callAround('deploy:prod') {
-        deployer.deploy('prod')
-        deployer.healthCheck('prod')
-      }
-    }
-
-    stage('Smoke Tests - Prod') {
-      withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-        pl.callAround('smoketest:prod') {
-          builder.smokeTest()
-        }
-      }
-    }
-
-  }
-
+ }
 }
