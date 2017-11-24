@@ -11,7 +11,7 @@ def call(String env) {
   sa_name= __statestore.sa_name+ env
   sacontainer_name = __statestore.sa_container_name+ env
 
-  sh "bash stateStoreInit.sh $sa_rg_name $sa_name $sacontainer_name uksouth"
+  sh "bash stateStoreInit.sh $__rg $sa_name $sacontainer_name $__location"
   echo "$result"
 
   //  check if the storage account exists. Creates it if not.
