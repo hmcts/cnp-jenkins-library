@@ -19,9 +19,9 @@
   },
   {
     "env": "default",
-    "resourceGroup": "mgmt-state-store-prd",
-    "storageAccount": "mgmtstatestoreprd",
-    "container": "mgmtstatestorecontainerprd"
+    "resourceGroup": "mgmt-state-store-nonprod",
+    "storageAccount": "mgmtstatestorenonprd",
+    "container": "mgmtstatestorecontainernonprd"
   },
   {
     "env": "prd",
