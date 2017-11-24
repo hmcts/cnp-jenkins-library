@@ -12,6 +12,4 @@ def call(String env) {
   sacontainer_name = __statestore.sa_container_name+ env
 
   sh "bash stateStoreInit.sh $__rg $sa_name $sacontainer_name $__location"
-  echo "$result"
-
 }
