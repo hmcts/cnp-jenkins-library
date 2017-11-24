@@ -21,10 +21,10 @@ class Terraform implements Serializable {
     this.steps = jenkinsPipeline
   }
 
-  def lint() {
-    runTerraformWithCreds('fmt --diff=true > diff.out')
+  def lint(env) {
+    runTerraformWithCreds(env, 'fmt --diff=true > diff.out')
     steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
-    return runTerraformWithCreds('validate')
+    return runTerraformWithCreds(env, 'validate')
   }
 
 /***
@@ -37,9 +37,9 @@ class Terraform implements Serializable {
       throw new Exception("'product' is null! Library can only run as module helper in this case!")
 
     init(env)
-    runTerraformWithCreds("get -update=true")
+    runTerraformWithCreds(env, "get -update=true")
 
-    return runTerraformWithCreds(configureArgs(env, "plan -var 'env=${env}' -var 'name=${product}'"))
+    return runTerraformWithCreds(env, configureArgs(env, "plan -var 'env=${env}' -var 'name=${product}'"))
   }
 
   /***
@@ -51,7 +51,7 @@ class Terraform implements Serializable {
     if (canApply(env)) {
       if (this.product == null)
         throw new Exception("'product' is null! Library can only run as module helper in this case!")
-      return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
+      return runTerraformWithCreds(env, configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
     } else
       throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
@@ -137,4 +137,3 @@ class Terraform implements Serializable {
   }
 
 }
-

@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.*
+import groovy.json.JsonSlurper
 
 def call(String appName) {
 
@@ -16,4 +17,3 @@ def call(String appName) {
 
   result = sh "bash webapp-configure.sh ${appName} ${pfxPass} core-infra-${platform} ${internalip}"
 }
-
