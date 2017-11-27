@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino.slack
 
-import groovy.json.JsonSlurperClassic;
+import com.cloudbees.groovy.cps.NonCPS
+import groovy.json.JsonSlurperClassic
 
 class SlackChannelRetriever {
 
@@ -17,6 +18,7 @@ class SlackChannelRetriever {
    * @param changeAuthor the change author.
    * @return a channel to notify
    */
+  @NonCPS
   String retrieve(String channel, String changeAuthor) {
     if (changeAuthor == null || changeAuthor.empty) {
       return channel
