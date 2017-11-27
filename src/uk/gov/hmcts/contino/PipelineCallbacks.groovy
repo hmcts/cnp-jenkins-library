@@ -41,7 +41,7 @@ class PipelineCallbacks implements Serializable {
   void onSuccess(Closure body) {
     bodies.put('onSuccess', body)
   }
-  
+
   String enableSlackNotifications(String slackChannel) {
     return slackChannel
   }
