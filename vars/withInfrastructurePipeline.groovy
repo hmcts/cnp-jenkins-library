@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.Terraform
 
 def call(String product) {
-  def slackChannel = '#cmc-tech-notification'
+  def slackChannel = '@timj'
 
   try {
 
