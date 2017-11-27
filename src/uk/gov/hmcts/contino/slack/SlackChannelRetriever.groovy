@@ -22,8 +22,10 @@ class SlackChannelRetriever {
       return channel
     }
 
+    def response = steps.httpRequest url: "https://raw.githubusercontent.com/hmcts/github-slack-user-mappings/master/slack.json", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
+
     SlackMapping[] slackUserConfig = new JsonSlurperClassic()
-      .parseText(steps.libraryResource('uk/gov/hmcts/contino/slack.json')).users
+      .parseText(response).users
 
     SlackMapping mappedUser = slackUserConfig.find { user -> user.github == changeAuthor }
     if (mappedUser != null) {
