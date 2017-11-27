@@ -30,6 +30,14 @@ class PipelineCallbacks implements Serializable {
     callAfter(stage)
   }
 
+  void onFailure() {
+    nullSafeCall('onFailure')
+  }
+
+  void onSuccess() {
+    nullSafeCall('onSuccess')
+  }
+
   private def nullSafeCall(String key) {
     def body = bodies.get(key)
     if (body != null) {

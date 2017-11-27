@@ -1,12 +1,9 @@
 import uk.gov.hmcts.contino.*
 
-def call(Map args = [:], Closure body) {
-  def type = args.type
-  def product = args.product
-  def app = args.app
-  def slackChannel = args.slackChannel
+def call(type, String product, String app, Closure body) {
 
   try {
+    String slackChannel = null
 
     def pipelineTypes = [
       java  : new SpringBootPipelineType(this, product, app),
@@ -116,10 +113,14 @@ def call(Map args = [:], Closure body) {
     if (slackChannel) {
       notifyBuildFailure channel: slackChannel
     }
+
+    pl.onFailure()
     throw err
   }
 
   if (slackChannel) {
     notifyBuildFixed channel: slackChannel
   }
+
+  pl.onSuccess()
 }
