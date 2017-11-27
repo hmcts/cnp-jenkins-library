@@ -1,3 +1,5 @@
+import uk.gov.hmcts.contino.*
+
 def call(type, String product, String app, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, app),
