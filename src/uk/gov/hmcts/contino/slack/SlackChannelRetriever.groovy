@@ -25,7 +25,7 @@ class SlackChannelRetriever implements Serializable {
     def response = steps.httpRequest url: "https://raw.githubusercontent.com/hmcts/github-slack-user-mappings/master/slack.json", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
 
     SlackMapping[] slackUserConfig = new JsonSlurperClassic()
-      .parseText(response).users
+      .parseText(response.content).users
 
     SlackMapping mappedUser = slackUserConfig.find { user -> user.github == changeAuthor }
     if (mappedUser != null) {
