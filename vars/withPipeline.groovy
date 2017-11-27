@@ -27,8 +27,7 @@ def call(type, String product, String app, Closure body) {
   body.call() // register callbacks
 
   node {
-   platformSetup {
-     withSubscription("jenkinsServicePrincipal", "infra-vault") {
+    platformSetup {
         stage('Checkout') {
           deleteDir()
           checkout scm
@@ -116,7 +115,6 @@ def call(type, String product, String app, Closure body) {
            }
          }
        }
-      }
     }
- }
+  }
 }
