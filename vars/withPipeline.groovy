@@ -71,13 +71,19 @@ def call(type, String product, String app, Closure body) {
          }
        }
 
-       folderExists('/infrastructure') {
-         dir('/infrastructure') {
-           stage('Infrastructure Plan - AAT') {
-
+       stage('Infrastructure Plan - AAT') {
+         sh "pwd"
+         folderExists('/infrastructure') {
+           dir('/infrastructure') {
+             sh "pwd"
            }
-           stage('Infrastructure Build - AAT') {
-
+         }
+       }
+       stage('Infrastructure Build - AAT') {
+         sh "pwd"
+         folderExists('/infrastructure') {
+           dir('/infrastructure') {
+             sh "pwd"
            }
          }
        }
