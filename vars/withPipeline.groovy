@@ -1,32 +1,31 @@
-import uk.gov.hmcts.contino.*
-
 def call(type, String product, String app, Closure body) {
+  def pipelineTypes = [
+    java  : new SpringBootPipelineType(this, product, app),
+    nodejs: new NodePipelineType(this, product, app)
+  ]
+
+  PipelineType pipelineType
+
+  if (type instanceof PipelineType) {
+    pipelineType = type
+  } else {
+    pipelineType = pipelineTypes.get(type)
+  }
+
+  assert pipelineType != null
+
+  Deployer deployer = pipelineType.deployer
+
+  Builder builder = pipelineType.builder
+
+  def pl = new PipelineCallbacks()
+
+  body.delegate = pl
+  body.call() // register callbacks
+
   String slackChannel = '#cmc-tech-notification'
+
   try {
-    def pipelineTypes = [
-      java  : new SpringBootPipelineType(this, product, app),
-      nodejs: new NodePipelineType(this, product, app)
-    ]
-
-    PipelineType pipelineType
-
-    if (type instanceof PipelineType) {
-      pipelineType = type
-    } else {
-      pipelineType = pipelineTypes.get(type)
-    }
-
-    assert pipelineType != null
-
-    Deployer deployer = pipelineType.deployer
-
-    Builder builder = pipelineType.builder
-
-    def pl = new PipelineCallbacks()
-
-    body.delegate = pl
-    body.call() // register callbacks
-
     node {
       stage('Checkout') {
         pl.callAround('checkout') {
