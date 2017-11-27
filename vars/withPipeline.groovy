@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.*
 def call(type, String product, String app, Closure body) {
 
   try {
-    String slackChannel = null
+    String slackChannel = '#cmc-tech-notification'
 
     def pipelineTypes = [
       java  : new SpringBootPipelineType(this, product, app),
