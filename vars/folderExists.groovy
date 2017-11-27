@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.FileSystems
+
 /*
  * folderExists
  *
@@ -8,7 +11,7 @@
  * }
  */
 def call(String folderPath, Closure block) {
-  if (Files.exists(folderPath)) {
+  if (Files.exists(FileSystems.getDefault().getPath(folderPath))) {
     return block.call()
   }
 }

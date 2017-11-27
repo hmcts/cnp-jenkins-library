@@ -1,7 +1,9 @@
 import org.junit.Before
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
+import static com.lesfurets.jenkins.unit.MethodCall.callArgsToString
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
+import static org.assertj.core.api.Assertions.*
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import org.junit.Test
 
@@ -14,10 +16,6 @@ class folderExistsTest extends BasePipelineTest {
   @Before
   void setUp() {
     super.setUp()
-  }
-
-  @Test
-  void test1() {
 
     def library = library()
       .name('Infrastructure')
@@ -30,6 +28,24 @@ class folderExistsTest extends BasePipelineTest {
     helper.registerSharedLibrary(library)
     loadScript("testResources/folderExistsTestPipeline.jenkins")
     printCallStack()
+  }
+
+  @Test
+  void testBlockIsCalledIfDirectoryExists() {
+    assertThat(helper.callStack.findAll { call ->
+        call.methodName == "echo"
+    }.any { call ->
+        callArgsToString(call).contains("OK - Folder exists")
+    }).isTrue()
+  }
+
+  @Test
+  void testBlockIsNotCalledIfDirectoryDoesntExist() {
+    assertThat(helper.callStack.findAll { call ->
+        call.methodName == "echo"
+    }.any { call ->
+        callArgsToString(call).contains("ERROR - Folder doesn't exist")
+    }).isFalse()
   }
 
 }

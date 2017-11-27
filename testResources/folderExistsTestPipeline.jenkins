@@ -7,9 +7,9 @@ def product = "product"
 def app = "app"
 
 folderExists('testResources') {
-  echo "Folder exists"
+  echo "OK - Folder exists"
 }
 
 folderExists('no-folder') {
-  echo "Shouldn't see this"
+  echo "ERROR - Folder doesn't exist"
 }
