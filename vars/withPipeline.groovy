@@ -71,8 +71,8 @@ def call(type, String product, String app, Closure body) {
          }
        }
 
-       folderExists('infrastructure') {
-         dir('infrastructure') {
+       folderExists('/infrastructure') {
+         dir('/infrastructure') {
            stage('Infrastructure Plan - AAT') {
 
            }
