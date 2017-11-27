@@ -11,7 +11,7 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def build() {
-    gradle("build")
+    gradle("build -x test")
     steps.stash(name: product, includes: "build/libs/*.jar")
   }
 
