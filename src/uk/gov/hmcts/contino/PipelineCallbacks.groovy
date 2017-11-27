@@ -30,12 +30,20 @@ class PipelineCallbacks implements Serializable {
     callAfter(stage)
   }
 
-  void onFailure() {
-    nullSafeCall('onFailure')
+  void call(String callback) {
+    nullSafeCall(callback)
   }
 
-  void onSuccess() {
-    nullSafeCall('onSuccess')
+  void onFailure(Closure body) {
+    bodies.put('onFailure', body)
+  }
+
+  void onSuccess(Closure body) {
+    bodies.put('onSuccess', body)
+  }
+  
+  String enableSlackNotifications(String slackChannel) {
+    return slackChannel
   }
 
   private def nullSafeCall(String key) {

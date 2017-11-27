@@ -114,7 +114,7 @@ def call(type, String product, String app, Closure body) {
       notifyBuildFailure channel: slackChannel
     }
 
-    pl.onFailure()
+    pl.call('onFailure')
     throw err
   }
 
@@ -122,5 +122,5 @@ def call(type, String product, String app, Closure body) {
     notifyBuildFixed channel: slackChannel
   }
 
-  pl.onSuccess()
+  pl.call('onSuccess')
 }
