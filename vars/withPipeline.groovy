@@ -25,8 +25,6 @@ def call(type, String product, String app, Closure body) {
   body.delegate = pl
   body.call() // register callbacks
 
-  String slackChannel = '#cmc-tech-notification'
-
   try {
     node {
       stage('Checkout') {
@@ -109,16 +107,16 @@ def call(type, String product, String app, Closure body) {
 
     }
   } catch (err) {
-    if (slackChannel) {
-      notifyBuildFailure channel: slackChannel
+    if (pl.slackChannel) {
+      notifyBuildFailure channel: pl.slackChannel
     }
 
     pl.call('onFailure')
     throw err
   }
 
-  if (slackChannel) {
-    notifyBuildFixed channel: slackChannel
+  if (pl.slackChannel) {
+    notifyBuildFixed channel: pl.slackChannel
   }
 
   pl.call('onSuccess')

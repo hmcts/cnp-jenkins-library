@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 class PipelineCallbacks implements Serializable {
 
   Map<String, Closure> bodies = new HashMap<>()
+  String slackChannel
 
   void afterCheckout(Closure body) {
     after('checkout', body)
@@ -42,8 +43,8 @@ class PipelineCallbacks implements Serializable {
     bodies.put('onSuccess', body)
   }
 
-  String enableSlackNotifications(String slackChannel) {
-    return slackChannel
+  void enableSlackNotifications(String slackChannel) {
+    this.slackChannel = slackChannel
   }
 
   private def nullSafeCall(String key) {
