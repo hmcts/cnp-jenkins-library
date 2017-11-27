@@ -5,15 +5,15 @@ package uk.gov.hmcts.contino
  */
 class WebAppDeploy implements Serializable {
 
-  public static final java.lang.String GIT_EMAIL = "jenkinsmoj@contino.io"
-  public static final java.lang.String GIT_USER = "jenkinsmoj"
+  public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
+  public static final String GIT_USER = "jenkinsmoj"
   public static final String SERVICE_HOST_SUFFIX = "p.azurewebsites.net"
   def steps
   def product
   def defaultRemote = "azure"
   def app
 
-  WebAppDeploy(steps, product, app){
+  WebAppDeploy(steps, product, app) {
 
     this.app = app
     this.product = product

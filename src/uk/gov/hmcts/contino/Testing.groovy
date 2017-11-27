@@ -6,11 +6,11 @@ class Testing implements Serializable {
   private String PREPARE_ENVIRONMENT = 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE"'
   def pipe
 
-  Testing(pipe){
+  Testing(pipe) {
     this.pipe = pipe
   }
 
-  Testing(pipe, String gitUrl){
+  Testing(pipe, String gitUrl) {
     this.pipe = pipe
   }
 

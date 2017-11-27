@@ -23,7 +23,7 @@ node {
     }
   } catch (err) {
     slackSend(
-      channel: '#contino',
+      channel: '#cnp-build-status',
       color: 'danger',
       message: "${env.JOB_NAME}: <${env.BUILD_URL}console|Build ${env.BUILD_DISPLAY_NAME}> has FAILED")
     throw err
