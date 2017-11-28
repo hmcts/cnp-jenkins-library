@@ -26,6 +26,7 @@ class folderExistsTest extends BasePipelineTest {
       .implicit(false)
       .build()
     helper.registerSharedLibrary(library)
+    helper.registerAllowedMethod('sh', [Map.class], { m -> return projectDir })
     loadScript("testResources/folderExistsTestPipeline.jenkins")
     printCallStack()
   }
