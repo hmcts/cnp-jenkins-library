@@ -11,15 +11,8 @@ import java.nio.file.FileSystems
  * }
  */
 def call(String folderPath, Closure block) {
-  sh "pwd"
-  sh "ls -l"
-  def localPath = sh(script: "pwd", returnStdout: true).trim()
-  echo "${localPath}"
-  echo "${pwd}"
-  def path = FileSystems.getDefault().getPath(localPath, folderPath)
-  echo "${path.toUri()}"
+  def path = FileSystems.getDefault().getPath(sh(script: "pwd", returnStdout: true).trim(), folderPath)
   if (Files.exists(path)) {
-    echo "In block"
     return block.call()
   }
 }
