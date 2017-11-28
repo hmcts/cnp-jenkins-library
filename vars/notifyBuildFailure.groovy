@@ -23,9 +23,6 @@ def call(Map args = [:]) {
     channel = new SlackChannelRetriever(this).retrieve(args.channel as String, changeAuthor)
   }
 
-  echo 'using channel: ' + channel
-  echo 'change author: ' + changeAuthor
-
   try {
     slackSend(
       channel: channel,
