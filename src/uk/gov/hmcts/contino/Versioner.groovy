@@ -22,7 +22,7 @@ EOF
 mkdir -p src/main/resources/META-INF
 echo "allprojects { task printVersionInit { doLast { println project.version } } }" > init.gradle
 
-tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
+tee src/main/resources/META-INF/build-info.properties <<EOF
 build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
 build.number=${BUILD_NUMBER}
 build.commit=$(git rev-parse HEAD)
