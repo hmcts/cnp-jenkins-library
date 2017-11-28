@@ -3,18 +3,16 @@ package uk.gov.hmcts.contino;
 class YarnBuilder implements Builder, Serializable {
 
   def steps
-  Versioner versioner
 
   YarnBuilder(steps) {
     this.steps = steps
-    this.versioner = new Versioner(steps)
   }
 
   def build() {
     yarn("install")
     yarn("lint")
 
-    versioner.addNodeVersionInfo()
+    addVersionInfo()
   }
 
   def test() {
@@ -33,6 +31,17 @@ class YarnBuilder implements Builder, Serializable {
 
   def securityCheck() {
     yarn("test:nsp")
+  }
+
+  @Override
+  def addVersionInfo() {
+    steps.sh '''tee version <<EOF
+version: $(node -pe 'require("./package.json").version')
+build: ${BUILD_NUMBER}
+commit: $(git rev-parse HEAD)
+date: $(date)
+EOF
+    '''
   }
 
   def yarn(task){

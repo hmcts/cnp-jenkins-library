@@ -4,16 +4,14 @@ class GradleBuilder implements Builder, Serializable {
 
   def steps
   def product
-  Versioner versioner
 
   GradleBuilder(steps, product) {
     this.steps = steps
     this.product = product
-    this.versioner = new Versioner(steps)
   }
 
   def build() {
-    versioner.addJavaVersionInfo()
+    addVersionInfo()
     gradle("build")
     steps.stash(name: product, includes: "build/libs/*.jar")
   }
@@ -32,6 +30,22 @@ class GradleBuilder implements Builder, Serializable {
 
   def securityCheck() {
 
+  }
+
+  @Override
+  def addVersionInfo() {
+    steps.sh '''
+mkdir -p src/main/resources/META-INF
+echo "allprojects { task printVersionInit { doLast { println project.version } } }" > init.gradle
+
+tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
+build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
+build.number=${BUILD_NUMBER}
+build.commit=$(git rev-parse HEAD)
+build.date=$(date)
+EOF
+
+'''
   }
 
   def gradle(String task) {
