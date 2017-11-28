@@ -4,13 +4,16 @@ class GradleBuilder implements Builder, Serializable {
 
   def steps
   def product
+  Versioner versioner
 
   GradleBuilder(steps, product) {
     this.steps = steps
     this.product = product
+    this.versioner = new Versioner(steps)
   }
 
   def build() {
+    versioner.addJavaVersionInfo()
     gradle("build")
     steps.stash(name: product, includes: "build/libs/*.jar")
   }

@@ -3,14 +3,18 @@ package uk.gov.hmcts.contino;
 class YarnBuilder implements Builder, Serializable {
 
   def steps
+  Versioner versioner
 
   YarnBuilder(steps) {
     this.steps = steps
+    this.versioner = new Versioner(steps)
   }
 
   def build() {
     yarn("install")
     yarn("lint")
+
+    versioner.addNodeVersionInfo()
   }
 
   def test() {
