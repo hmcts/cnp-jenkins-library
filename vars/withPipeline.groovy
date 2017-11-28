@@ -2,7 +2,7 @@ import uk.gov.hmcts.contino.*
 
 def call(type, String product, String app, Closure body) {
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, app),
+    java: new SpringBootPipelineType(this, product, app),
     nodejs: new NodePipelineType(this, product, app)
   ]
 
