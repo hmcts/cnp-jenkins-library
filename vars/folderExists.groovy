@@ -11,8 +11,7 @@ import java.nio.file.FileSystems
  * }
  */
 def call(String folderPath, Closure block) {
-  def path = FileSystems.getDefault().getPath(sh(script: "pwd", returnStdout: true).trim(), folderPath)
-  if (Files.exists(path)) {
+  if (Files.exists(FileSystems.getDefault().getPath(sh(script: "pwd", returnStdout: true).trim(), folderPath))) {
     return block.call()
   }
 }
