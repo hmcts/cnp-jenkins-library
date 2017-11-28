@@ -12,7 +12,10 @@ import java.nio.file.FileSystems
  */
 def call(String folderPath, Closure block) {
   sh "pwd"
-  if (Files.exists(FileSystems.getDefault().getPath(folderPath))) {
+  sh "ls -l"
+  def path = FileSystems.getDefault().getPath(folderPath)
+  echo "${path}"
+  if (Files.exists(path)) {
     return block.call()
   }
 }
