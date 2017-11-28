@@ -14,8 +14,9 @@ def call(String folderPath, Closure block) {
   sh "pwd"
   sh "ls -l"
   def path = FileSystems.getDefault().getPath(folderPath)
-  echo "${path}"
+  echo "${path.toUri()}"
   if (Files.exists(path)) {
+    echo "In block"
     return block.call()
   }
 }
