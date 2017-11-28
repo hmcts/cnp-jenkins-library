@@ -13,7 +13,7 @@ import java.nio.file.FileSystems
 def call(String folderPath, Closure block) {
   sh "pwd"
   sh "ls -l"
-  def localPath = sh(script = "pwd", returnStdout = true).trim()
+  def localPath = sh(script: "pwd", returnStdout: true).trim()
   echo "${localPath}"
   echo "${pwd}"
   def path = FileSystems.getDefault().getPath(localPath, folderPath)
