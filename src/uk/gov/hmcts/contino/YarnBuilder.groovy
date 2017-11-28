@@ -11,6 +11,8 @@ class YarnBuilder implements Builder, Serializable {
   def build() {
     yarn("install")
     yarn("lint")
+
+    addVersionInfo()
   }
 
   def test() {
@@ -29,6 +31,17 @@ class YarnBuilder implements Builder, Serializable {
 
   def securityCheck() {
     yarn("test:nsp")
+  }
+
+  @Override
+  def addVersionInfo() {
+    steps.sh '''tee version <<EOF
+version: $(node -pe 'require("./package.json").version')
+build: ${BUILD_NUMBER}
+commit: $(git rev-parse HEAD)
+date: $(date)
+EOF
+    '''
   }
 
   def yarn(task){
