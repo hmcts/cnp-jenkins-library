@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino.slack
 
-class SlackMapping {
+class SlackUserMapping {
 
   String github
   String slack
