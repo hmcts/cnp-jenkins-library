@@ -72,12 +72,17 @@ def call(type, String product, String app, Closure body) {
        }
 
        folderExists('infrastructure') {
-         dir('infrastructure') {
-           stage('Infrastructure Plan - AAT') {
-             sh "pwd"
-           }
-           stage('Infrastructure Build - AAT') {
-             sh "pwd"
+         def terraform = new Terraform(this, "${product}-${app}")
+         withSubscription('aat') {
+           dir('infrastructure') {
+             lock("${product}-aat") {
+               stage('Infrastructure Plan - AAT') {
+                 terraform.plan('aat')
+               }
+               stage('Infrastructure Build - AAT') {
+                 terraform.apply('aat')
+               }
+             }
            }
          }
        }
