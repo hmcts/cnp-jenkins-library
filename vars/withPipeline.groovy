@@ -26,8 +26,9 @@ def call(type, String product, String app, Closure body) {
   body.delegate = pl
   body.call() // register callbacks
 
-  node {
-    platformSetup {
+  try {
+    node {
+      platformSetup {
         stage('Checkout') {
           deleteDir()
           checkout scm
@@ -106,9 +107,9 @@ def call(type, String product, String app, Closure body) {
 
        }
 
-        stage('Deploy Default') {
-          pl.callAround('deploy:default') {
-            deployer.deploy('default')
+       stage('Deploy Default') {
+         pl.callAround('deploy:default') {
+           deployer.deploy('default')
             deployer.healthCheck('default')
           }
         }
@@ -120,6 +121,20 @@ def call(type, String product, String app, Closure body) {
            }
          }
        }
+     }
+   }
+ } catch (err) {
+    if (pl.slackChannel) {
+      notifyBuildFailure channel: pl.slackChannel
     }
+
+    pl.call('onFailure')
+    throw err
   }
+
+  if (pl.slackChannel) {
+    notifyBuildFixed channel: pl.slackChannel
+  }
+
+  pl.call('onSuccess')
 }
