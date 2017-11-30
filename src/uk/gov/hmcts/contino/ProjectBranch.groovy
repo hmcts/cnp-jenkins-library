@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class ProjectBranch {
+class ProjectBranch implements Serializable {
 
   String branchName
 
