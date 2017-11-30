@@ -40,36 +40,36 @@ def call(type, String product, String app, Closure body) {
         }
       }
 
-//      stage("Test") {
-//        pl.callAround('test') {
-//          builder.test()
-//        }
-//      }
-//
-//      stage("Security Checks") {
-//        pl.callAround('securitychecks') {
-//          builder.securityCheck()
-//        }
-//      }
-//
-//      stage("Sonar Scan") {
-//        pl.callAround('sonarscan') {
-//          if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
-//            withSonarQubeEnv("SonarQube") {
-//              builder.sonarScan();
-//            }
-//
-//            timeout(time: 1, unit: 'MINUTES') {
-//              def qg = steps.waitForQualityGate()
-//              if (qg.status != 'OK') {
-//                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-//              }
-//            }
-//          } else {
-//            echo "Sonarqube plugin not installed. Skipping static analysis."
-//          }
-//        }
-//      }
+      stage("Test") {
+        pl.callAround('test') {
+          builder.test()
+        }
+      }
+
+      stage("Security Checks") {
+        pl.callAround('securitychecks') {
+          builder.securityCheck()
+        }
+      }
+
+      stage("Sonar Scan") {
+        pl.callAround('sonarscan') {
+          if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
+            withSonarQubeEnv("SonarQube") {
+              builder.sonarScan();
+            }
+
+            timeout(time: 1, unit: 'MINUTES') {
+              def qg = steps.waitForQualityGate()
+              if (qg.status != 'OK') {
+                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+              }
+            }
+          } else {
+            echo "Sonarqube plugin not installed. Skipping static analysis."
+          }
+        }
+      }
 
       onMaster {
         stage('Deploy Dev') {
