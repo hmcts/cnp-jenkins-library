@@ -21,7 +21,7 @@ def call(String product) {
 
       }
     }
-    if (env.BRANCH_NAME == 'master') {
+    onMaster {
       lock("${product}-prod") {
         stage('Terraform Plan - Prod') {
 

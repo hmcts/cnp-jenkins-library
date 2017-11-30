@@ -5,9 +5,11 @@ class Testing implements Serializable {
 
   private String PREPARE_ENVIRONMENT = 'export PATH=$PATH:/usr/local/bundle/bin:/usr/local/bin && export HOME="$WORKSPACE"'
   def pipe
+  def branch
 
   Testing(pipe) {
     this.pipe = pipe
+    this.branch = new ProjectBranch("${pipe.env.BRANCH_NAME}")
   }
 
   Testing(pipe, String gitUrl) {
@@ -25,11 +27,11 @@ class Testing implements Serializable {
   def moduleIntegrationTests(String command="", envVars=[:]) {
     String RANDOM_STRING = RandomStringUtils.random(6, true, true)
 
-    def envSuffix = (pipe.env.BRANCH_NAME == 'master') ? 'dev' : pipe.env.BRANCH_NAME
+    def envSuffix = branch.isMaster() ? 'dev' : "${branch}"
 
     return runWithDocker(command? command : "cd tests/int && kitchen test azure",
                          envVars? envVars : [TF_VAR_random_name:"tmp${RANDOM_STRING.toLowerCase()}",
-                                             TF_VAR_branch_name:pipe.env.BRANCH_NAME])
+                                             TF_VAR_branch_name:"${branch}"])
   }
 
   /* Running integration tests for a project only using Inspec on existing infrastructure */

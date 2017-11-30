@@ -7,6 +7,7 @@ class Terraform implements Serializable {
 
   def steps
   def product
+  def branch
 /***
  *
  * @param steps Jenkins pipe
@@ -15,6 +16,7 @@ class Terraform implements Serializable {
   Terraform(steps, product) {
     this.steps = steps
     this.product = product
+    this.branch = new ProjectBranch("${steps.env.BRANCH_NAME}")
   }
 
   Terraform(jenkinsPipeline) {
@@ -53,14 +55,14 @@ class Terraform implements Serializable {
         throw new Exception("'product' is null! Library can only run as module helper in this case!")
       return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
     } else
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
   private Boolean canApply(String env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
-    logMessage("canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
-    return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
-      (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
+    logMessage("canApply: on branch: ${branch}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
+    return ((envAllowedOnMasterBranchOnly && branch.isMaster) ||
+      (!envAllowedOnMasterBranchOnly && !branch.isMaster))
   }
 
   private def init(env) {
@@ -85,7 +87,7 @@ class Terraform implements Serializable {
   private def getStateStoreConfig(env) {
     def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
     if (!canApply(env))
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
 
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 
