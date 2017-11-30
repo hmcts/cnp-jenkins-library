@@ -11,12 +11,16 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def build() {
-    gradle("build -x test")
+    gradle("bootRepackage")
     steps.stash(name: product, includes: "build/libs/*.jar")
   }
 
   def test() {
-    gradle("test")
+    try {
+      gradle("check")
+    } finally {
+      junit 'build/test-results/**/*.xml'
+    }
   }
 
   def sonarScan() {
