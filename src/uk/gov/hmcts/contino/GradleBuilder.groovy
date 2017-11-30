@@ -20,7 +20,7 @@ class GradleBuilder implements Builder, Serializable {
     try {
       gradle("check")
     } finally {
-      junit 'build/test-results/**/*.xml'
+      steps.junit 'build/test-results/**/*.xml'
     }
   }
 
