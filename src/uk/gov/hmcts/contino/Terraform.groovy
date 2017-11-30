@@ -61,8 +61,8 @@ class Terraform implements Serializable {
   private Boolean canApply(String env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
     logMessage("canApply: on branch: ${branch}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
-    return ((envAllowedOnMasterBranchOnly && branch.isMaster) ||
-      (!envAllowedOnMasterBranchOnly && !branch.isMaster))
+    return ((envAllowedOnMasterBranchOnly && branch.isMaster()) ||
+      (!envAllowedOnMasterBranchOnly && !branch.isMaster()))
   }
 
   private def init(env) {

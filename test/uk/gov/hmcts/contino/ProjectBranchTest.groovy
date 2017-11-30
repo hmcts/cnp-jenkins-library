@@ -52,4 +52,15 @@ class ProjectBranchTest extends Specification {
     !branch.isPR()
   }
 
+  def "toString should return given branch name"() {
+    given:
+    def branch = new ProjectBranch('whatever')
+
+    when:
+    def name = branch.toString()
+
+    then:
+    name == 'whatever'
+  }
+
 }

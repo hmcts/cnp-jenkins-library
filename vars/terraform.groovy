@@ -8,7 +8,7 @@ class terraform implements Serializable {
   private ProjectBranch branch
 
   def ini(pipelineHandler) {
-    this.branch = new ProjectBranch("${pipelineHandler.env.PROJECT_BRANCH}")
+    this.branch = new ProjectBranch("${pipelineHandler.env.BRANCH_NAME}")
     this.steps = pipelineHandler
   }
 
@@ -62,7 +62,7 @@ class terraform implements Serializable {
 
   private Boolean canApply(String envName) {
     def envAllowedOnMasterBranchOnly = envName in ['dev', 'prod', 'test']
-    steps.sh("echo 'canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${envName}; allowed: ${envAllowedOnMasterBranchOnly}'")
+    steps.sh("echo 'canApply: on branch: ${branch}; env: ${envName}; allowed: ${envAllowedOnMasterBranchOnly}'")
     return ((envAllowedOnMasterBranchOnly && branch.isMaster()) ||
       (!envAllowedOnMasterBranchOnly && !branch.isMaster()))
   }
@@ -85,7 +85,7 @@ class terraform implements Serializable {
         throw new Exception("'product' variable was not defined! Cannot apply without a product name")
       steps.sh "terraform " + configureArgs(envName, "apply -var 'env=${envName}' -var 'name=${steps.product}'")
     } else
-      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. " +
+      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${branch}'. " +
         "['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
