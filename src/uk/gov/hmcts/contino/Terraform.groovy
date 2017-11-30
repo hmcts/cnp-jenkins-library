@@ -55,12 +55,12 @@ class Terraform implements Serializable {
         throw new Exception("'product' is null! Library can only run as module helper in this case!")
       return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
     } else
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch.branchName}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
   private Boolean canApply(String env) {
     def envAllowedOnMasterBranchOnly = env in ['dev', 'prod', 'test']
-    logMessage("canApply: on branch: ${branch}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
+    logMessage("canApply: on branch: ${branch.branchName}; env: ${env}; allowed: ${envAllowedOnMasterBranchOnly}")
     return ((envAllowedOnMasterBranchOnly && branch.isMaster()) ||
       (!envAllowedOnMasterBranchOnly && !branch.isMaster()))
   }
@@ -87,7 +87,7 @@ class Terraform implements Serializable {
   private def getStateStoreConfig(env) {
     def stateStores = new JsonSlurperClassic().parseText(steps.libraryResource('uk/gov/hmcts/contino/state-storage.json'))
     if (!canApply(env))
-      throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch.branchName}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
 
     def stateStoreConfig = stateStores.find { s -> s.env == env }
 

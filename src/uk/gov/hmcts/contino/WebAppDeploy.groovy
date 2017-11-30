@@ -49,7 +49,7 @@ class WebAppDeploy implements Serializable {
          passwordVariable: 'GIT_PASSWORD']]) {
 
        steps.sh("git init")
-       steps.sh("git checkout -b ${branch}")
+       steps.sh("git checkout -b ${branch.branchName}")
        steps.sh("git add .")
 
        pushToService(product, app, env)
@@ -82,7 +82,7 @@ class WebAppDeploy implements Serializable {
           passwordVariable: 'GIT_PASSWORD']]) {
 
         def appUrl = "${product}-${app}-${env}"
-        steps.sh("git checkout ${branch}")
+        steps.sh("git checkout ${branch.branchName}")
 
         steps.sh("rm .gitignore")
         steps.sh("echo 'test/*' > .gitignore")
@@ -112,7 +112,7 @@ class WebAppDeploy implements Serializable {
 
       def tempDir = ".tmp_azure_jenkings"
 
-      steps.sh("git checkout ${branch}")
+      steps.sh("git checkout ${branch.branchName}")
 
       steps.sh("mkdir ${tempDir}")
 
@@ -161,7 +161,7 @@ class WebAppDeploy implements Serializable {
       def tempDir = ".tmp_azure_jenkings"
 
 
-      steps.sh("git checkout ${branch}")
+      steps.sh("git checkout ${branch.branchName}")
 
       steps.sh("mkdir ${tempDir}")
 

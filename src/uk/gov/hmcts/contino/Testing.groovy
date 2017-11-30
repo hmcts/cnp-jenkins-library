@@ -27,11 +27,11 @@ class Testing implements Serializable {
   def moduleIntegrationTests(String command="", envVars=[:]) {
     String RANDOM_STRING = RandomStringUtils.random(6, true, true)
 
-    def envSuffix = branch.isMaster() ? 'dev' : "${branch}"
+    def envSuffix = branch.isMaster() ? 'dev' : "${branch.branchName}"
 
     return runWithDocker(command? command : "cd tests/int && kitchen test azure",
                          envVars? envVars : [TF_VAR_random_name:"tmp${RANDOM_STRING.toLowerCase()}",
-                                             TF_VAR_branch_name:"${branch}"])
+                                             TF_VAR_branch_name:"${branch.branchName}"])
   }
 
   /* Running integration tests for a project only using Inspec on existing infrastructure */
