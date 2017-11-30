@@ -16,9 +16,4 @@ class ProjectBranch implements Serializable {
     branchName.startsWith('PR')
   }
 
-  @Override
-  String toString() {
-    return branchName
-  }
-
 }
