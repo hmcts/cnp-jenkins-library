@@ -12,7 +12,7 @@ class GradleBuilder implements Builder, Serializable {
 
   def build() {
     addVersionInfo()
-    gradle("bootRepackage")
+    gradle("assemble")
     steps.stash(name: product, includes: "build/libs/*.jar")
   }
 
