@@ -226,6 +226,8 @@ class WebAppDeploy implements Serializable {
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
+    steps.sh("Hi rafal")
+    steps.sh("echo ${branch}")
     steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
     steps.sh("echo '>>> push command will be: git push ${defaultRemote}-${env} ${branch} -f'")
     steps.sh("git push ${defaultRemote}-${env} ${branch} -f")
