@@ -31,7 +31,7 @@ class WebAppDeploy implements Serializable {
     def serviceUrl = getServiceUrl(product, app, env)
     def healthCheckUrl = "${serviceUrl}/health"
 
-    steps.retryAndSleep(sleepDuration = 10, maxRetries = 10) {
+    steps.retryAndSleep(sleepDuration: 10, maxRetries: 10) {
       steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         consoleLogResponseBody: true,
