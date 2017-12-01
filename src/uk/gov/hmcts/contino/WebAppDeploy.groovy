@@ -30,7 +30,32 @@ class WebAppDeploy implements Serializable {
 
     def serviceUrl = getServiceUrl(product, app, env)
     def healthCheckUrl = "${serviceUrl}/health"
-    return steps.sh("curl --max-time 200 -vf ${healthCheckUrl}")
+
+    int maxRetries = 6
+    int retryCounter = 0
+    int sleepDuration = 10
+
+    steps.retry(maxRetries) {
+      try {
+        steps.echo "Attempt number: " + (1 + retryCounter)
+        steps.httpRequest(
+          acceptType: 'APPLICATION_JSON',
+          consoleLogResponseBody: true,
+          contentType: 'APPLICATION_JSON',
+          timeout: 10,
+          url: healthCheckUrl,
+          validResponseCodes: '200:299'
+        )
+      } catch (InterruptedException err) { // Aborted builds throw a subclass of this, lets not retry aborted build
+        throw err
+      } catch(Exception err) {
+        ++retryCounter
+        if (retryCounter < maxRetries) {
+          steps.sleep sleepDuration
+        }
+        throw err
+      }
+    }
   }
 
   /**
