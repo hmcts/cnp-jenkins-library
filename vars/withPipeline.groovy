@@ -27,18 +27,18 @@ def call(type, String product, String app, Closure body) {
 
   try {
     node {
-      stage('Checkout') {
-        pl.callAround('checkout') {
-          deleteDir()
-          checkout scm
-        }
-      }
+//      stage('Checkout') {
+//        pl.callAround('checkout') {
+//          deleteDir()
+//          checkout scm
+//        }
+//      }
 
-      stage("Build") {
-        pl.callAround('build') {
-          builder.build()
-        }
-      }
+//      stage("Build") {
+//        pl.callAround('build') {
+//          builder.build()
+//        }
+//      }
 
 //      stage("Test") {
 //        pl.callAround('test') {
@@ -74,7 +74,7 @@ def call(type, String product, String app, Closure body) {
       onMaster {
         stage('Deploy Dev') {
           pl.callAround('deploy:dev') {
-            deployer.deploy('dev')
+//            deployer.deploy('dev')
             deployer.healthCheck('dev')
           }
         }

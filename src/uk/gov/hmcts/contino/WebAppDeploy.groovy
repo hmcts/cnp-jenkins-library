@@ -29,7 +29,8 @@ class WebAppDeploy implements Serializable {
   def healthCheck(env) {
 
     def serviceUrl = getServiceUrl(product, app, env)
-    def healthCheckUrl = "${serviceUrl}/health"
+//    def healthCheckUrl = "${serviceUrl}/health"
+    def healthCheckUrl = "http://cmc-claim-store-dev.core-compute-sample-dev.p.azurewebsites.net/health"
 
     steps.retryAndSleep(sleepDuration: 10, maxRetries: 10) {
       steps.httpRequest(
