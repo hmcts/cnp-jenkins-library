@@ -39,6 +39,8 @@ class WebAppDeploy implements Serializable {
     int sleepDuration = 10
     int maxRetries = 10
 
+    int retryCounter = 0
+
     steps.retry(maxRetries) {
       steps.echo "Attempt number: " + (1 + retryCounter)
 
