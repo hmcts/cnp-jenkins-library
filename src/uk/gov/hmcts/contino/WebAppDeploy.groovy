@@ -31,7 +31,7 @@ class WebAppDeploy implements Serializable {
     def serviceUrl = getServiceUrl(product, app, env)
     def healthCheckUrl = "${serviceUrl}/health"
 
-    int maxRetries = 6
+    int maxRetries = 10
     int retryCounter = 0
     int sleepDuration = 10
 
