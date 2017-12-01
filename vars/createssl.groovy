@@ -1,7 +1,9 @@
 import uk.gov.hmcts.contino.*
 import groovy.json.JsonSlurper
 
-def call(String appName) {
+def call(String appName, String platform) {
+
+
 
   def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F&client_id=$ARM_CLIENT_ID&client_secret=$ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$ARM_TENANT_ID/oauth2/token"
   TOKEN = new JsonSlurper().parseText(response.content).access_token
