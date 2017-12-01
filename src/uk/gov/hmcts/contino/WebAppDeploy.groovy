@@ -45,7 +45,8 @@ class WebAppDeploy implements Serializable {
         consoleLogResponseBody: true,
         contentType: 'APPLICATION_JSON',
         timeout: 10,
-        url: healthCheckUrl
+        url: healthCheckUrl,
+        validResponseCodes: '200:599'
       )
 
       if (response.status > 300) {
