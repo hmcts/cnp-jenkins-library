@@ -24,9 +24,9 @@ def call(Map<String, Integer> args, Closure body) {
       steps.echo "Attempt number: " + (1 + retryCounter)
       body.call()
     } catch(err) {
-      echo err.getClass().getName()
+      echo err.getCause().getClass().getName()
 
-      +retryCounter
+      ++retryCounter
       if (retryCounter < maxRetries) {
         steps.sleep sleepDuration
       }
