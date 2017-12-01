@@ -16,14 +16,12 @@ class TerraformTests extends Specification {
     steps = Mock(JenkinsStepMock)
     steps.libraryResource(_) >> new File("./resources/uk/gov/hmcts/contino/state-storage.json").text
     steps.env >> ["PATH": ""]
-//    steps.ansiColor(_, _) >> { format, closure -> println "Format: "+ format+ "; Chained command"+ closure.metaClass.classNode.getDeclaredMethods("doCall")[0].code.text  }
-
-    terraform = new Terraform(steps, "test")
   }
 
   def "should run init on master branch with [dev, test, prod] env"() {
     given:
     steps.env.BRANCH_NAME = 'master'
+    terraform = new Terraform(steps, "test")
 
     when:
     terraform.plan("dev")
@@ -42,6 +40,7 @@ class TerraformTests extends Specification {
   def "should not run init on other branch with [dev, test, prod] env"() {
     given:
     steps.env.BRANCH_NAME = 'some_branch'
+    terraform = new Terraform(steps, "test")
 
     when:
     terraform.apply("dev")

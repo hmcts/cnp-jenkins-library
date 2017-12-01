@@ -1,4 +1,6 @@
-/*
+import uk.gov.hmcts.contino.ProjectBranch
+
+/**
  * onPR
  *
  * Runs the block of code if the current branch is not master
@@ -8,8 +10,7 @@
  * }
  */
 def call(block) {
-  if (env.BRANCH_NAME != 'master') {
+  if (new ProjectBranch(env.BRANCH_NAME).isPR()) {
     return block.call()
   }
 }
-
