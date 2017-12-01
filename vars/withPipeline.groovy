@@ -1,7 +1,11 @@
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.Deployer
+import uk.gov.hmcts.contino.NodePipelineType
+import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.SpringBootPipelineType
 
 def call(type, String product, String app, Closure body) {
-
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, app),
     nodejs: new NodePipelineType(this, product, app)
@@ -31,8 +35,10 @@ def call(type, String product, String app, Closure body) {
       platformSetup {
         withSubscription("jenkinsServicePrincipal", "infra-vault") {
           stage('Checkout') {
-            deleteDir()
-            checkout scm
+            pl.callAround('checkout') {
+              deleteDir()
+              checkout scm
+            }
           }
 
           stage("Build") {
@@ -105,6 +111,7 @@ def call(type, String product, String app, Closure body) {
               }
             }
           }
+
         }
       }
     }
