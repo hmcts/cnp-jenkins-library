@@ -1,9 +1,5 @@
 package uk.gov.hmcts.contino
 
-class HealthCheckException extends RuntimeException {
-
-}
-
 /**
  * Deploys Web Applications to Web App Services
  */
@@ -49,8 +45,7 @@ class WebAppDeploy implements Serializable {
         consoleLogResponseBody: true,
         contentType: 'APPLICATION_JSON',
         timeout: 10,
-        url: healthCheckUrl,
-        validResponseCodes: '200:599'
+        url: healthCheckUrl
       )
 
       if (response.status > 300) {
@@ -58,6 +53,7 @@ class WebAppDeploy implements Serializable {
         if (retryCounter < maxRetries) {
           steps.sleep sleepDuration
         }
+        echo "Service isn’t healthy, will retry up to ${maxRetries} times"
         throw new RuntimeException()
       }
     }
