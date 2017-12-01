@@ -17,5 +17,5 @@ def call(String appName, String platform) {
   def functions = libraryResource 'uk/gov/hmcts/contino/webapp-configure.sh'
   writeFile file: 'webapp-configure.sh', text: functions
 
-  result = sh "bash webapp-configure.sh ${appName} ${pfxPass} core-infra-${platform} ${internalip}"
+  result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass}"
 }
