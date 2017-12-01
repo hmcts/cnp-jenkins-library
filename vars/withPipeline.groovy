@@ -73,7 +73,7 @@ def call(type, String product, String app, Closure body) {
        }
 
        folderExists('infrastructure') {
-         def terraform = new Terraform(this, "${product}-${app}")
+         terraform.ini("${product}-${app}", this)
          withSubscription('aat') {
            dir('infrastructure') {
              lock("${product}-aat") {

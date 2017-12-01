@@ -5,7 +5,12 @@ class terraform implements Serializable {
 
   private steps
 
-  def ini(pipelineHandler) {
+  private product
+
+  def ini(product, pipelineHandler) {
+    if (product == null)
+      throw new Exception("'product' variable was not defined! Cannot plan without a product name")
+    this.product = product
     this.steps = pipelineHandler
   }
 
@@ -15,8 +20,6 @@ class terraform implements Serializable {
   }
 
   def plan(envName) {
-    if (steps.product == null)
-      throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
     def stateStoreConfig = getStateStoreConfig(envName)
 
@@ -24,10 +27,10 @@ class terraform implements Serializable {
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
-      "-backend-config \"key=${steps.product}/${envName}/terraform.tfstate\""
+      "-backend-config \"key=${product}/${envName}/terraform.tfstate\""
 
     steps.sh "terraform get -update=true"
-    steps.sh("terraform " + configureArgs(envName, "plan -var 'env=${envName}' -var 'name=${steps.product}'"))
+    steps.sh("terraform " + configureArgs(envName, "plan -var 'env=${envName}' -var 'name=${product}'"))
   }
 
   private def getStateStoreConfig(envName) {
@@ -78,9 +81,7 @@ class terraform implements Serializable {
    */
   def apply(envName) {
     if (canApply(envName)) {
-      if (steps.product == null)
-        throw new Exception("'product' variable was not defined! Cannot apply without a product name")
-      steps.sh "terraform " + configureArgs(envName, "apply -var 'env=${envName}' -var 'name=${steps.product}'")
+      steps.sh "terraform " + configureArgs(envName, "apply -var 'env=${envName}' -var 'name=${product}'")
     } else
       throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. " +
         "['dev', 'test', 'prod'] are reserved for master branch, try other name")
