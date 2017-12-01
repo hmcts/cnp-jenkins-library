@@ -1,5 +1,9 @@
 package uk.gov.hmcts.contino
 
+class HealthCheckException extends RuntimeException {
+
+}
+
 /**
  * Deploys Web Applications to Web App Services
  */
@@ -32,15 +36,27 @@ class WebAppDeploy implements Serializable {
 //    def healthCheckUrl = "${serviceUrl}/health"
     def healthCheckUrl = "http://cmc-claim-store-dev.core-compute-sample-dev.p.azurewebsites.net/health"
 
-    steps.retryAndSleep(sleepDuration: 10, maxRetries: 10) {
-      steps.httpRequest(
+    int sleepDuration = 10
+    int maxRetries = 10
+
+    steps.retry(maxRetries) {
+
+      def response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         consoleLogResponseBody: true,
         contentType: 'APPLICATION_JSON',
         timeout: 10,
         url: healthCheckUrl,
-        validResponseCodes: '200:299'
+        validResponseCodes: '200:599'
       )
+
+      if (response.statusCode > 300) {
+        ++retryCounter
+        if (retryCounter < maxRetries) {
+          steps.sleep sleepDuration
+        }
+        throw new RuntimeException()
+      }
     }
   }
 
