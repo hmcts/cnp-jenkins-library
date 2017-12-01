@@ -40,6 +40,7 @@ class WebAppDeploy implements Serializable {
     int maxRetries = 10
 
     steps.retry(maxRetries) {
+      steps.echo "Attempt number: " + (1 + retryCounter)
 
       def response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
@@ -50,7 +51,7 @@ class WebAppDeploy implements Serializable {
         validResponseCodes: '200:599'
       )
 
-      if (response.statusCode > 300) {
+      if (response.status > 300) {
         ++retryCounter
         if (retryCounter < maxRetries) {
           steps.sleep sleepDuration
