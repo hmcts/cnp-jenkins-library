@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.*
 import groovy.json.JsonSlurper
 
-def call(String appName, String platform) {
+def call(String platform) {
 
 
 
@@ -14,8 +14,8 @@ def call(String appName, String platform) {
   echo "Running SSL certificate creation script"
   String pfxPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
 
-  def functions = libraryResource 'uk/gov/hmcts/contino/webapp-configure.sh'
-  writeFile file: 'webapp-configure.sh', text: functions
+  def functions = libraryResource 'uk/gov/hmcts/contino/ilbSSL.sh'
+  writeFile file: 'ilbSSL.sh', text: functions
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass}"
 }
