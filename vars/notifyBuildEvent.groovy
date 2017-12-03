@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
+import uk.gov.hmcts.contino.ProjectBranch
 
 /**
  * Send build notification
@@ -25,7 +26,7 @@ def call(Map args = [:]) {
   String changeAuthor = env.CHANGE_AUTHOR
 
   String channel
-  if (env.BRANCH_NAME == 'master') {
+  if (new ProjectBranch(env.BRANCH_NAME).isMaster()) {
     channel = args.channel
   } else {
     channel = new SlackChannelRetriever(this).retrieve(args.channel as String, changeAuthor)
