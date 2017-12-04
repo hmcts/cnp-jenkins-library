@@ -2,7 +2,7 @@
 
 domain=$1
 pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
-
+platform=$3
 
 echo "Creating Self-Signed cert for $domain"
 
@@ -43,3 +43,6 @@ rm -f $domain.key $domain.csr $domain.conf
 
 # whitelist app at appGw
 #az network application-gateway auth-cert create --cert-file ./$domain.cer --gateway-name $domain --name $domain --resource-group $domain
+az keyvault certificate import --vault-name ${platform}-infra-vault -n $domain -f $domain.pfx --password $pfxPass
+
+az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
