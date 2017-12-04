@@ -19,5 +19,9 @@ def call(String platform) {
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform}"
 
-  env.TF_VAR_thumbprint = sh "az keyvault certificate show --vault-name ${platform}-infra-vault --name core-infra-${platform} --query x509Thumbprint --output tsv"
+  sh "az keyvault certificate show --vault-name ${platform}-infra-vault --name core-infra-${platform} --query x509Thumbprint --output tsv > thumb.txt"
+
+  thumbprint = readFile 'thumb.txt'
+
+  env.TF_VAR_thumbprint = "${thumbprint}"
 }
