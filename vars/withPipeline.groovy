@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.*
+import groovy.json.JsonSlurperClassic
 
 def call(type, String product, String app, Closure body) {
 
