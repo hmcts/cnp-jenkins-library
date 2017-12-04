@@ -75,9 +75,9 @@ def call(type, String product, String app, Closure body) {
 
        folderExists('infrastructure') {
          terraform.ini("${product}-${app}", this)
-         withSubscription('test') {
+         withSubscription('nonprod') {
            dir('infrastructure') {
-             lock("${product}-test") {
+             lock("${product}-${app}-nonprod") {
                stage('getIlbIp') {
                  def envSuffix = 'nonprod'
                  def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F&client_id=$ARM_CLIENT_ID&client_secret=$ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$ARM_TENANT_ID/oauth2/token"
@@ -87,27 +87,27 @@ def call(type, String product, String app, Closure body) {
                  println internalip
                  env.TF_VAR_ilbIp = internalip
                }
-               stage('Infrastructure Plan - test') {
-                 terraform.plan('test')
+               stage('Infrastructure Plan - nonprod') {
+                 terraform.plan('nonprod')
                }
-               stage('Infrastructure Build - test') {
-                 terraform.apply('test')
+               stage('Infrastructure Build - nonprod') {
+                 terraform.apply('nonprod')
                }
              }
            }
          }
        }
 
-       stage('Deploy test') {
-         pl.callAround('deploy:test') {
-           deployer.deploy('test')
-           deployer.healthCheck('test')
+       stage('Deploy nonprod') {
+         pl.callAround('deploy:nonprod') {
+           deployer.deploy('nonprod')
+           deployer.healthCheck('nonprod')
          }
        }
 
-       stage('Smoke Tests - test') {
-         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('test')}"]) {
-           pl.callAround('smoketest:test') {
+       stage('Smoke Tests - nonprod') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+           pl.callAround('smoketest:nonprod') {
              builder.smokeTest()
            }
          }
