@@ -18,4 +18,6 @@ def call(String platform) {
   writeFile file: 'ilbSSL.sh', text: functions
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform}"
+
+  env.TF_VAR_thumbprint = sh "az keyvault certificate show --vault-name ${platform}-infra-vault --name core-infra-${platform} --query x509Thumbprint --output tsv"
 }
