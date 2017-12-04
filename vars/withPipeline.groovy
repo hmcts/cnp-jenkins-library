@@ -74,30 +74,39 @@ def call(type, String product, String app, Closure body) {
 
        folderExists('infrastructure') {
          terraform.ini("${product}-${app}", this)
-         withSubscription('aat') {
+         withSubscription('test') {
            dir('infrastructure') {
-             lock("${product}-aat") {
-               stage('Infrastructure Plan - AAT') {
-                 terraform.plan('aat')
+             lock("${product}-test") {
+               stage('getIlbIp') {
+                 def envSuffix = 'test'
+                 def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F&client_id=$ARM_CLIENT_ID&client_secret=$ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$ARM_TENANT_ID/oauth2/token"
+                 TOKEN = new JsonSlurperClassic().parseText(response.content).access_token
+                 def vip = httpRequest httpMode: 'GET', customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]], url: "https://management.azure.com/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/core-infra-$envSuffix/providers/Microsoft.Web/hostingEnvironments/core-compute-$envSuffix/capacities/virtualip?api-version=2016-09-01"
+                 def internalip = new JsonSlurperClassic().parseText(vip.content).internalIpAddress
+                 println internalip
+                 env.TF_VAR_ilbIp = internalip
                }
-               stage('Infrastructure Build - AAT') {
-                 terraform.apply('aat')
+               stage('Infrastructure Plan - test') {
+                 terraform.plan('test')
+               }
+               stage('Infrastructure Build - test') {
+                 terraform.apply('test')
                }
              }
            }
          }
        }
 
-       stage('Deploy AAT') {
-         pl.callAround('deploy:aat') {
-           deployer.deploy('aat')
-           deployer.healthCheck('aat')
+       stage('Deploy test') {
+         pl.callAround('deploy:test') {
+           deployer.deploy('test')
+           deployer.healthCheck('test')
          }
        }
 
-       stage('Smoke Tests - AAT') {
-         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('aat')}"]) {
-           pl.callAround('smoketest:aat') {
+       stage('Smoke Tests - test') {
+         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('test')}"]) {
+           pl.callAround('smoketest:test') {
              builder.smokeTest()
            }
          }
