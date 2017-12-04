@@ -6,7 +6,7 @@ pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
 
 echo "Creating Self-Signed cert for $domain"
 
-
+echo "workspace for script = ${WORKSPACE}
 cat > $domain.conf <<-EOF
 [req]
 default_bits = 2048
