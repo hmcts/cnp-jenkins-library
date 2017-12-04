@@ -18,4 +18,9 @@ def call(String platform) {
   writeFile file: 'ilbSSL.sh', text: functions
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass}"
+
+  sh "az keyvault certificate import --vault-name infra-vault -n core-infra-${platform} -f core-infra-${platform}.pfx --password $pfxPass"
+
+  sh"az network application-gateway auth-cert create --cert-file core-infra-${platform}.cer --gateway-name core-infra-${platform} --name core-infra-${platform} --resource-group core-infra-${platform}"
+
 }

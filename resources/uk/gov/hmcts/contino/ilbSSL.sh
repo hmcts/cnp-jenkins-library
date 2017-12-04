@@ -39,7 +39,7 @@ openssl pkcs12 -export -in $domain.cer -inkey $domain.key -out $domain.pfx -pass
 
 rm -f $domain.key $domain.csr $domain.conf
 
-az keyvault certificate import --vault-name infra-vault -n $domain -f $domain.pfx --password $pfxPass
+#az keyvault certificate import --vault-name infra-vault -n $domain -f $domain.pfx --password $pfxPass
 
 # whitelist app at appGw
-az network application-gateway auth-cert create --cert-file ./$domain.cer --gateway-name $domain --name $domain --resource-group $domain
+#az network application-gateway auth-cert create --cert-file ./$domain.cer --gateway-name $domain --name $domain --resource-group $domain
