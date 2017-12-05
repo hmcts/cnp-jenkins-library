@@ -25,4 +25,5 @@ def call(String platform) {
 
   env.TF_VAR_certificateThumbprint = "${thumbprint}"
   env.TF_VAR_certificateName = "core-infra-${platform}"
+  sh "env"
 }
