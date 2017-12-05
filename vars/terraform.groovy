@@ -22,8 +22,6 @@ class terraform implements Serializable {
       throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
     def stateStoreConfig = getStateStoreConfig(envName)
-    logMessage("env")
-    logMessage("az account show")
     steps.sh "terraform init -reconfigure -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
