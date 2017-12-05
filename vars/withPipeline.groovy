@@ -1,7 +1,11 @@
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.Deployer
+import uk.gov.hmcts.contino.NodePipelineType
+import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.SpringBootPipelineType
 
 def call(type, String product, String app, Closure body) {
-
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, app),
     nodejs: new NodePipelineType(this, product, app)
@@ -26,86 +30,105 @@ def call(type, String product, String app, Closure body) {
   body.delegate = pl
   body.call() // register callbacks
 
-  node {
-   platformSetup {
-     withSubscription("jenkinsServicePrincipal", "infra-vault") {
-        stage('Checkout') {
-          deleteDir()
-          checkout scm
-        }
-
-        stage("Build") {
-          pl.callAround('build') {
-            builder.build()
-          }
-        }
-
-       stage("Test") {
-         pl.callAround('test') {
-           builder.test()
-         }
-       }
-
-       stage("Security Checks") {
-         pl.callAround('securitychecks') {
-           builder.securityCheck()
-         }
-       }
-
-       stage("Sonar Scan") {
-         pl.callAround('sonarscan') {
-        if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
-          withSonarQubeEnv("SonarQube") {
-            builder.sonarScan();
-          }
-
-          timeout(time: 1, unit: 'MINUTES') {
-            def qg = steps.waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+  try {
+    node {
+      platformSetup {
+        withSubscription("jenkinsServicePrincipal", "infra-vault") {
+          stage('Checkout') {
+            pl.callAround('checkout') {
+              deleteDir()
+              checkout scm
             }
           }
-        }
-        else {
-          echo "Sonarqube plugin not installed. Skipping static analysis."
-        }
-         }
-       }
 
-       stage('Deploy Dev') {
-         pl.callAround('deploy:dev') {
-           deployer.deploy('dev')
-           deployer.healthCheck('dev')
-         }
-       }
+          stage("Build") {
+            pl.callAround('build') {
+              builder.build()
+            }
+          }
 
-       stage('Smoke Tests - Dev') {
-         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
-           pl.callAround('smoketest:dev') {
-             builder.smokeTest()
-           }
-         }
-       }
+          stage("Test") {
+            pl.callAround('test') {
+              builder.test()
+            }
+          }
 
-       stage("OWASP") {
+          stage("Security Checks") {
+            pl.callAround('securitychecks') {
+              builder.securityCheck()
+            }
+          }
 
-       }
+          stage("Sonar Scan") {
+            pl.callAround('sonarscan') {
+              if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
+                withSonarQubeEnv("SonarQube") {
+                  builder.sonarScan();
+                }
 
-        stage('Deploy Default') {
-          pl.callAround('deploy:default') {
-            deployer.deploy('default')
-            deployer.healthCheck('default')
+                timeout(time: 1, unit: 'MINUTES') {
+                  def qg = steps.waitForQualityGate()
+                  if (qg.status != 'OK') {
+                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                  }
+                }
+              } else {
+                echo "Sonarqube plugin not installed. Skipping static analysis."
+              }
+            }
+          }
+
+          onMaster {
+            stage('Deploy Dev') {
+              pl.callAround('deploy:dev') {
+                deployer.deploy('dev')
+                deployer.healthCheck('dev')
+              }
+            }
+
+            stage('Smoke Tests - Dev') {
+              withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('dev')}"]) {
+                pl.callAround('smoketest:dev') {
+                  builder.smokeTest()
+                }
+              }
+            }
+
+            stage("OWASP") {
+
+            }
+
+            stage('Deploy Default') {
+              pl.callAround('deploy:default') {
+                deployer.deploy('default')
+                deployer.healthCheck('default')
+              }
+            }
+
+            stage('Smoke Tests - Prod') {
+              withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+                pl.callAround('smoketest:prod') {
+                  builder.smokeTest()
+                }
+              }
+            }
+
           }
         }
-
-       stage('Smoke Tests - Prod') {
-         withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-           pl.callAround('smoketest:prod') {
-             builder.smokeTest()
-           }
-         }
-       }
       }
     }
- }
+  } catch (err) {
+    if (pl.slackChannel) {
+      notifyBuildFailure channel: pl.slackChannel
+    }
+
+    pl.call('onFailure')
+    throw err
+  }
+
+  if (pl.slackChannel) {
+    notifyBuildFixed channel: pl.slackChannel
+  }
+
+  pl.call('onSuccess')
 }

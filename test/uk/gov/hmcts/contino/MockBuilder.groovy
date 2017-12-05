@@ -25,4 +25,9 @@ class MockBuilder implements Builder, Serializable {
   def securityCheck() {
     return null
   }
+
+  @Override
+  def addVersionInfo() {
+    return null
+  }
 }

@@ -1,11 +1,14 @@
 package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
+import uk.gov.hmcts.contino.ProjectBranch
 
 class terraform implements Serializable {
 
   private steps
+  private ProjectBranch branch
 
   def ini(pipelineHandler) {
+    this.branch = new ProjectBranch("${pipelineHandler.env.BRANCH_NAME}")
     this.steps = pipelineHandler
   }
 
@@ -40,7 +43,7 @@ class terraform implements Serializable {
         logMessage("Using following stateStores=$stateStores")
         return stateStoreConfig
       }
-      else if (stateStoreConfig == null && steps.env.BRANCH_NAME != 'master') {
+      else if (stateStoreConfig == null && branch.isMaster()) {
         stateStoreConfig = stateStores.find { s -> s.env == 'default' }
         stateStoreConfig.env = envName
         logMessage("Using following stateStores=$stateStores")
@@ -50,7 +53,7 @@ class terraform implements Serializable {
         throw new Exception("State storage for ${envName} not found. Is it configured?")
     }
     else
-      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${branch.branchName}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 
   void logMessage(GString gString) {
@@ -59,9 +62,9 @@ class terraform implements Serializable {
 
   private Boolean canApply(String envName) {
     def envAllowedOnMasterBranchOnly = envName in ['dev', 'prod', 'test']
-    steps.sh("echo 'canApply: on branch: ${steps.env.BRANCH_NAME}; env: ${envName}; allowed: ${envAllowedOnMasterBranchOnly}'")
-    return ((envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME == 'master') ||
-      (!envAllowedOnMasterBranchOnly && steps.env.BRANCH_NAME != 'master'))
+    steps.sh("echo 'canApply: on branch: ${branch.branchName}; env: ${envName}; allowed: ${envAllowedOnMasterBranchOnly}'")
+    return ((envAllowedOnMasterBranchOnly && branch.isMaster()) ||
+      (!envAllowedOnMasterBranchOnly && !branch.isMaster()))
   }
 
   private def configureArgs(envName, args) {
@@ -82,7 +85,7 @@ class terraform implements Serializable {
         throw new Exception("'product' variable was not defined! Cannot apply without a product name")
       steps.sh "terraform " + configureArgs(envName, "apply -var 'env=${envName}' -var 'name=${steps.product}'")
     } else
-      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${steps.env.BRANCH_NAME}'. " +
+      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${branch.branchName}'. " +
         "['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
 

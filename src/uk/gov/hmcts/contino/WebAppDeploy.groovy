@@ -13,12 +13,13 @@ class WebAppDeploy implements Serializable {
   def product
   def defaultRemote = "azurerm"
   def app
+  def branch
 
   WebAppDeploy(steps, product, app) {
-
     this.app = app
     this.product = product
     this.steps = steps
+    this.branch = new ProjectBranch("${steps.env.BRANCH_NAME}")
   }
 
   /**
@@ -30,7 +31,33 @@ class WebAppDeploy implements Serializable {
 
     def serviceUrl = getServiceUrl(product, app, env)
     def healthCheckUrl = "${serviceUrl}/health"
-    return steps.sh("curl --max-time 200 -vf ${healthCheckUrl}")
+
+    int sleepDuration = 10
+    int maxRetries = 10
+
+    int retryCounter = 0
+
+    steps.retry(maxRetries) {
+      steps.echo "Attempt number: " + (1 + retryCounter)
+
+      def response = steps.httpRequest(
+        acceptType: 'APPLICATION_JSON',
+        consoleLogResponseBody: true,
+        contentType: 'APPLICATION_JSON',
+        timeout: 10,
+        url: healthCheckUrl,
+        validResponseCodes: '200:599'
+      )
+
+      if (response.status > 300) {
+        ++retryCounter
+        if (retryCounter < maxRetries) {
+          steps.sleep sleepDuration
+        }
+        steps.echo "Service isn’t healthy, will retry up to ${maxRetries} times"
+        throw new RuntimeException()
+      }
+    }
   }
 
   /**
@@ -49,7 +76,7 @@ class WebAppDeploy implements Serializable {
          passwordVariable: 'GIT_PASSWORD']]) {
 
        steps.sh("git init")
-       steps.sh("git checkout -b ${steps.env.BRANCH_NAME}")
+       steps.sh("git checkout -b ${branch.branchName}")
        steps.sh("git add .")
 
        pushToService(product, app, env)
@@ -82,7 +109,7 @@ class WebAppDeploy implements Serializable {
           passwordVariable: 'GIT_PASSWORD']]) {
 
         def appUrl = "${product}-${app}-${env}"
-        steps.sh("git checkout ${steps.env.BRANCH_NAME}")
+        steps.sh("git checkout ${branch.branchName}")
 
         steps.sh("rm .gitignore")
         steps.sh("echo 'test/*' > .gitignore")
@@ -112,7 +139,7 @@ class WebAppDeploy implements Serializable {
 
       def tempDir = ".tmp_azure_jenkings"
 
-      steps.sh("git checkout ${steps.env.BRANCH_NAME}")
+      steps.sh("git checkout ${branch.branchName}")
 
       steps.sh("mkdir ${tempDir}")
 
@@ -161,7 +188,7 @@ class WebAppDeploy implements Serializable {
       def tempDir = ".tmp_azure_jenkings"
 
 
-      steps.sh("git checkout ${steps.env.BRANCH_NAME}")
+      steps.sh("git checkout ${branch.branchName}")
 
       steps.sh("mkdir ${tempDir}")
 
@@ -227,7 +254,7 @@ class WebAppDeploy implements Serializable {
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
     steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://rhubarb-deployer:${steps.env.Deployer_Pass}@${serviceDeploymentHost}/${serviceName}.git\"")
-    steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} master -f")
+    steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
 
   private def configureGit() {

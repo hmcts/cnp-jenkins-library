@@ -7,6 +7,10 @@ properties(
    ])]
 )
 
+@Library('Infrastructure') _
+
+def channel = '#cnp-build-status'
+
 node {
   try {
     stage('Checkout') {
@@ -22,10 +26,8 @@ node {
       sh "./gradlew test"
     }
   } catch (err) {
-    slackSend(
-      channel: '#cnp-build-status',
-      color: 'danger',
-      message: "${env.JOB_NAME}: <${env.BUILD_URL}console|Build ${env.BUILD_DISPLAY_NAME}> has FAILED")
+    notifyBuildFailure channel: channel
     throw err
   }
+  notifyBuildFixed channel: channel
 }

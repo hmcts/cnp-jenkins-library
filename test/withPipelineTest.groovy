@@ -34,6 +34,7 @@ class withPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("stash", [Map.class], {})
     helper.registerAllowedMethod("unstash", [String.class], {})
     helper.registerAllowedMethod("withEnv", [List.class, Closure.class], {})
+    helper.registerAllowedMethod("ansiColor", [String, Closure], {})
     loadScript("testResources/examplePipeline.jenkins")
     printCallStack()
   }
