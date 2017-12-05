@@ -17,13 +17,10 @@ def call(String platform) {
   def functions = libraryResource 'uk/gov/hmcts/contino/ilbSSL.sh'
   writeFile file: 'ilbSSL.sh', text: functions
 
-  sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
-
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform}"
 
-  sh "az keyvault certificate show --vault-name infra-vault --name core-infra-${platform} --query x509Thumbprint --output tsv > thumb.txt"
+  sh "az keyvault certificate show --vault-name app-vault --name core-infra-${platform} --query x509Thumbprint --output tsv > thumb.txt"
 
-  sh "az account set --subscription $ARM_SUBSCRIPTION_ID"
   thumbprint = readFile 'thumb.txt'
 
   env.TF_VAR_certificateThumbprint = "${thumbprint}"
