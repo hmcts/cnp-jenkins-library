@@ -24,6 +24,12 @@
     "container": "mgmtstatestorecontainernonprod"
   },
   {
+    "env": "aat",
+    "resourceGroup": "mgmt-state-store-aat",
+    "storageAccount": "mgmtstatestoreaat",
+    "container": "mgmtstatestorecontaineraat"
+  },
+  {
     "env": "prd",
     "resourceGroup": "mgmt-state-store-prd",
     "storageAccount": "mgmtstatestoreprd",
