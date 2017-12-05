@@ -16,6 +16,7 @@ class withPipelineTest extends BasePipelineTest {
 
     super.setUp()
     binding.setVariable("scm", null)
+    binding.setVariable( "env", [BRANCH_NAME: "master"])
   }
 
   @Test
