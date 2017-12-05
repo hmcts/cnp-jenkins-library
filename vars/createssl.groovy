@@ -23,5 +23,6 @@ def call(String platform) {
 
   thumbprint = readFile 'thumb.txt'
 
-  env.TF_VAR_thumbprint = "${thumbprint}"
+  env.TF_VAR_certificateThumbprint = "${thumbprint}"
+  env.TF_VAR_certificateName = "core-infra-${platform}"
 }
