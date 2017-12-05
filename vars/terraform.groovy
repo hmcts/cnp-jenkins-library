@@ -22,8 +22,8 @@ class terraform implements Serializable {
       throw new Exception("'product' variable was not defined! Cannot plan without a product name")
 
     def stateStoreConfig = getStateStoreConfig(envName)
-    steps.sh "env"
-    steps.sh "az account show"
+    logMessage("env")
+    logMessage("az account show")
     steps.sh "terraform init -reconfigure -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
@@ -54,7 +54,7 @@ class terraform implements Serializable {
         throw new Exception("State storage for ${envName} not found. Is it configured?")
     }
     else
-      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${branch.branchName}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
+      throw new Exception("You cannot apply for Environment: '${envName}' on branch '${branch.branchName}'. ['dev', 'test', 'prod', 'aat'] are reserved for master branch, try other name")
   }
 
   void logMessage(GString gString) {
@@ -62,7 +62,7 @@ class terraform implements Serializable {
   }
 
   private Boolean canApply(String envName) {
-    def envAllowedOnMasterBranchOnly = envName in ['dev', 'prod', 'test']
+    def envAllowedOnMasterBranchOnly = envName in ['dev', 'prod', 'test', 'aat']
     steps.sh("echo 'canApply: on branch: ${branch.branchName}; env: ${envName}; allowed: ${envAllowedOnMasterBranchOnly}'")
     return ((envAllowedOnMasterBranchOnly && branch.isMaster()) ||
       (!envAllowedOnMasterBranchOnly && !branch.isMaster()))
@@ -87,7 +87,7 @@ class terraform implements Serializable {
       steps.sh "terraform " + configureArgs(envName, "apply -var 'env=${envName}' -var 'name=${steps.product}'")
     } else
       throw new Exception("You cannot apply for Environment: '${envName}' on branch '${branch.branchName}'. " +
-        "['dev', 'test', 'prod'] are reserved for master branch, try other name")
+        "['dev', 'test', 'prod', 'aat'] are reserved for master branch, try other name")
   }
 
 }
