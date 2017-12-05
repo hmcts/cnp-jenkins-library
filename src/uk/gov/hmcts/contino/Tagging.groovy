@@ -47,8 +47,9 @@ class Tagging implements Serializable {
 
   def applyTag(tag) {
     String result
-    println("BRANCH_NAME: "+ pipe.env.BRANCH_NAME+ "; currentBuild.currentResult: "+ pipe.currentBuild.currentResult)
-    if (pipe.env.BRANCH_NAME == 'master' &&
+    def branch = new ProjectBranch(pipe.env.BRANCH_NAME)
+    println("BRANCH_NAME: " + branch + "; currentBuild.currentResult: " + pipe.currentBuild.currentResult)
+    if (branch.isMaster() &&
         pipe.currentBuild.currentResult == 'SUCCESS')
     {
       result = "Tagging with version: " + tag
