@@ -39,6 +39,7 @@ def call(String env, Closure body) {
                "TF_VAR_token=${values.azure_tenant_id}",
                // other variables
                "TOKEN=${values.azure_tenant_id}" ]) {
+        sh 'az account set --subscription $AZURE_SUBSCRIPTION_ID'
         sh 'az account show'
         body.call()
       }
