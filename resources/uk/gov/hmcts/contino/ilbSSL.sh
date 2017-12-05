@@ -43,6 +43,6 @@ rm -f $domain.key $domain.csr $domain.conf
 
 # whitelist app at appGw
 #az network application-gateway auth-cert create --cert-file ./$domain.cer --gateway-name $domain --name $domain --resource-group $domain
-az keyvault certificate import --vault-name ${platform}-infra-vault -n $domain -f $domain.pfx --password $pfxPass
+az keyvault certificate import --vault-name infra-vault -n $domain -f $domain.pfx --password $pfxPass
 
 az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
