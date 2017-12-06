@@ -13,14 +13,14 @@ class GradleBuilder implements Builder, Serializable {
   def build() {
     addVersionInfo()
     gradle("assemble")
-    steps.stash(name: product, includes: "build/libs/*.jar")
+    steps.stash(name: product, includes: "**/libs/*.jar")
   }
 
   def test() {
     try {
       gradle("check")
     } finally {
-      steps.junit 'build/test-results/**/*.xml'
+      steps.junit '**/test-results/**/*.xml'
     }
   }
 
