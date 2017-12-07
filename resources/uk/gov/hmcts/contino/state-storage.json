@@ -1,21 +1,15 @@
 [
   {
     "env": "dev",
-    "resourceGroup": "mgmt-state-store-prd",
-    "storageAccount": "mgmtstatestoreprd",
-    "container": "mgmtstatestorecontainerprd"
+    "resourceGroup": "mgmt-state-store-dev",
+    "storageAccount": "mgmtstatestoredev",
+    "container": "mgmtstatestorecontainerdev"
   },
   {
     "env": "test",
-    "resourceGroup": "mgmt-state-store-nonprod",
-    "storageAccount": "mgmtstatestorenonprod",
-    "container": "mgmtstatestorecontainernonprod"
-  },
-  {
-    "env": "aat",
-    "resourceGroup": "mgmt-state-store-nonprod",
-    "storageAccount": "mgmtstatestorenonprod",
-    "container": "mgmtstatestorecontainernonprod"
+    "resourceGroup": "mgmt-state-store-test",
+    "storageAccount": "mgmtstatestoretest",
+    "container": "mgmtstatestorecontainertest"
   },
   {
     "env": "prod",
@@ -28,6 +22,12 @@
     "resourceGroup": "mgmt-state-store-nonprod",
     "storageAccount": "mgmtstatestorenonprod",
     "container": "mgmtstatestorecontainernonprod"
+  },
+  {
+    "env": "aat",
+    "resourceGroup": "mgmt-state-store-aat",
+    "storageAccount": "mgmtstatestoreaat",
+    "container": "mgmtstatestorecontaineraat"
   },
   {
     "env": "prd",

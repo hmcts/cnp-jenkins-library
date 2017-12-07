@@ -30,7 +30,6 @@ class terraform implements Serializable {
   def plan(envName) {
 
     def stateStoreConfig = getStateStoreConfig(envName)
-
     steps.sh "terraform init -reconfigure -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
