@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.*
 
-def call(String appName) {
+def call() {
   echo "Running SSL certificate creation script"
   String pfxPass = org.apache.commons.lang.RandomStringUtils.random(9, true, true)
   env.TF_VAR_pfxPass="${pfxPass}"
