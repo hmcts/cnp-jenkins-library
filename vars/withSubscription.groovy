@@ -42,8 +42,8 @@ def call(String env, Closure body) {
                "TOKEN=${values.azure_tenant_id}"]) {
 
         echo "Setting Azure CLI to run on $cred_by_env_name subscription"
-        sh "az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID"
-        sh "az account set --subscription $ARM_SUBSCRIPTION_ID"
+        sh 'az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID'
+        sh 'az account set --subscription $ARM_SUBSCRIPTION_ID'
 
         body.call()
       }
