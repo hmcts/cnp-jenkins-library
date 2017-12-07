@@ -126,11 +126,11 @@ def call(type, String product, String app, Closure body) {
 
           folderExists('infrastructure') {
             terraform.ini("${product}-${app}", this)
-            withSubscription('prod') {
+            withSubscription('prd') {
               dir('infrastructure') {
                 lock("${product}-${app}-prod") {
                   stage('getIlbIp') {
-                    def envSuffix = 'prod'
+                    def envSuffix = 'prd'
                     def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F&client_id=$ARM_CLIENT_ID&client_secret=$ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$ARM_TENANT_ID/oauth2/token"
                     TOKEN = new JsonSlurperClassic().parseText(response.content).access_token
                     def vip = httpRequest httpMode: 'GET', customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]], url: "https://management.azure.com/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/core-infra-$envSuffix/providers/Microsoft.Web/hostingEnvironments/core-compute-$envSuffix/capacities/virtualip?api-version=2016-09-01"
@@ -139,10 +139,10 @@ def call(type, String product, String app, Closure body) {
                     env.TF_VAR_ilbIp = internalip
                   }
                   stage('Infrastructure Plan - prod') {
-                    terraform.plan('prod')
+                    terraform.plan('prd')
                   }
                   stage('Infrastructure Build - prod') {
-                    terraform.apply('prod')
+                    terraform.apply('prd')
                   }
                 }
               }
@@ -150,15 +150,15 @@ def call(type, String product, String app, Closure body) {
           }
 
           stage('Deploy Prod') {
-            pl.callAround('deploy:prod') {
-              deployer.deploy('prod')
-              deployer.healthCheck('prod')
+            pl.callAround('deploy:prd') {
+              deployer.deploy('prd')
+              deployer.healthCheck('prd')
             }
           }
 
           stage('Smoke Tests - Prod') {
-            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-              pl.callAround('smoketest:prod') {
+            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prd')}"]) {
+              pl.callAround('smoketest:prd') {
                 builder.smokeTest()
               }
             }
