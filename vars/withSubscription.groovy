@@ -2,19 +2,20 @@
 import groovy.json.JsonSlurperClassic
 
 def call(String env, Closure body) {
-
   withCredentials([azureServicePrincipal(
     credentialsId: "jenkinsServicePrincipal",
     subscriptionIdVariable: 'JENKINS_SUBSCRIPTION_ID',
     clientIdVariable: 'JENKINS_CLIENT_ID',
     clientSecretVariable: 'JENKINS_CLIENT_SECRET',
-    tenantIdVariable: 'JENKINS_TENANT_ID')])
-    {
+    tenantIdVariable: 'JENKINS_TENANT_ID')]) {
+
+    ansiColor('xterm') {
+
       sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
       def cred_by_env_name = (env == 'prod') ? "prod-creds" : "nonprod-creds"
-      def resp = steps.sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
+      def resp = sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
       secrets = new JsonSlurperClassic().parseText(resp)
       echo "=== you are building with $cred_by_env_name subscription credentials ==="
       //echo "TOKEN: '${secrets}'; Type: ${secrets.getClass()}"
@@ -38,8 +39,14 @@ def call(String env, Closure body) {
                "TF_VAR_subscription_id=${values.azure_subscription}",
                "TF_VAR_token=${values.azure_tenant_id}",
                // other variables
-               "TOKEN=${values.azure_tenant_id}" ]) {
+               "TOKEN=${values.azure_tenant_id}"]) {
+
+        echo "Setting Azure CLI to run on $cred_by_env_name subscription"
+        sh "az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID"
+        sh "az account set --subscription $ARM_SUBSCRIPTION_ID"
+
         body.call()
       }
     }
+  }
 }
