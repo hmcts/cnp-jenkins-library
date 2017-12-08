@@ -106,7 +106,7 @@ class Terraform implements Serializable {
   private runTerraformWithCreds(env, args) {
     setupTerraform()
     return steps.ansiColor('xterm') {
-      steps.withCredentials([azureServicePrincipal('jenkinsSP')]) {
+      steps.withCredentials([steps.azureServicePrincipal('jenkinsSP')]) {
         def subscription = 'nonprod'
         if (env == 'prod')
           subscription = 'prod'
