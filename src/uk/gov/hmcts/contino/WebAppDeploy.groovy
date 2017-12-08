@@ -6,11 +6,12 @@ package uk.gov.hmcts.contino
 class WebAppDeploy implements Serializable {
 
   public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
-  public static final String GIT_USER = "jenkinsmoj"
-  public static final String SERVICE_HOST_SUFFIX = "p.azurewebsites.net"
+  public static final String GIT_USER = "moj-jenkins-user"
+  public static final String SERVICE_HOST_SUFFIX = "internal"
+
   def steps
   def product
-  def defaultRemote = "azure"
+  def defaultRemote = "azurerm"
   def app
   def branch
 
@@ -132,7 +133,7 @@ class WebAppDeploy implements Serializable {
   def deployJavaWebApp(env) {
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
-        credentialsId: 'WebAppDeployCredentials',
+        credentialsId: 'jenkins-github-api-token',
         usernameVariable: 'GIT_USERNAME',
         passwordVariable: 'GIT_PASSWORD']]) {
 
@@ -233,12 +234,12 @@ class WebAppDeploy implements Serializable {
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
     def hostingEnv = getComputeFor(env)
-    return "${serviceName}.scm.${hostingEnv}.${SERVICE_HOST_SUFFIX}"
+    return "${serviceName}.scm.service.core-compute-${env}.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceHost(product, app, env) {
     def computeCluster = getComputeFor(env)
-    return "${getServiceName(product, app, env)}.${computeCluster}.${SERVICE_HOST_SUFFIX}"
+    return "${getServiceName(product, app, env)}.service.core-compute-${env}.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceName(product, app, env) {
@@ -248,12 +249,12 @@ class WebAppDeploy implements Serializable {
 
 
   private def getComputeFor(env){
-    return "core-compute-sample-dev"
+    return "core-compute-prod"
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
-    steps.sh("git remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
-    steps.sh("git push ${defaultRemote}-${env} HEAD:master -f")
+    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://rhubarb-deployer:${steps.env.Deployer_Pass}@${serviceDeploymentHost}/${serviceName}.git\"")
+    steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
 
   private def configureGit() {

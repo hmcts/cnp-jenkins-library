@@ -31,7 +31,7 @@ and NodeJS applications. The pipeline contains the following stages:
 * Smoke Tests - Dev
 * OWASP
 * Deploy Prod
-* Smoke Tests - Prod
+* Smoke Tests - Production
 
 In this version, Java apps must be use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
