@@ -62,6 +62,7 @@ public class MetricsPublisher implements Serializable {
   @NonCPS
   private def generateCommandString() {
     def metrics = collectMetrics()
+    steps.echo collectMetrics()
     def json = JsonOutput.toJson(metrics)
 
     def data = json.toString()
