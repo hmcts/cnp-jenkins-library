@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
+import uk.gov.hmcts.contino.MetricsPublisher
 
 def call(type, String product, String app, Closure body) {
   def pipelineTypes = [
@@ -22,8 +23,9 @@ def call(type, String product, String app, Closure body) {
   assert pipelineType != null
 
   Deployer deployer = pipelineType.deployer
-
   Builder builder = pipelineType.builder
+  
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this.env, currentBuild)
 
   def pl = new PipelineCallbacks()
 
@@ -164,6 +166,7 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onFailure')
+    metricsPublisher.publish();
     throw err
   }
 
@@ -172,4 +175,5 @@ def call(type, String product, String app, Closure body) {
   }
 
   pl.call('onSuccess')
+  metricsPublisher.publish();
 }
