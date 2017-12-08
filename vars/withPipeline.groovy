@@ -166,7 +166,7 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onFailure')
-    metricsPublisher.publish();
+    metricsPublisher.publish()
     throw err
   }
 
@@ -175,5 +175,5 @@ def call(type, String product, String app, Closure body) {
   }
 
   pl.call('onSuccess')
-  metricsPublisher.publish();
+  metricsPublisher.publish()
 }

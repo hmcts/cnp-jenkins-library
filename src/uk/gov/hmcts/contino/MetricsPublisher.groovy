@@ -61,7 +61,8 @@ public class MetricsPublisher implements Serializable {
 
   @NonCPS
   private def generateCommandString() {
-    def json = JsonOutput.toJson(collectMetrics())
+    def metrics = collectMetrics()
+    def json = JsonOutput.toJson(metrics)
 
     def data = json.toString()
     return "curl -i -v -XPOST -H 'Content-Type: application/json' --max-time 10 '${cosmosDbUrl}' --data '${data}'"
