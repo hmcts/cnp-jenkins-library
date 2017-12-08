@@ -11,15 +11,16 @@ public class MetricsPublisher implements Serializable {
   def cosmosDbUrl
   def buildStartTimeMillis
 
-  MetricsPublisher(env, currentBuild, cosmosDbUrl) {
-    this.env = env
+  MetricsPublisher(steps, currentBuild, cosmosDbUrl) {
+    this.steps = steps
+    this.env = steps.env
     this.currentBuild = currentBuild
     this.cosmosDbUrl = cosmosDbUrl
     this.buildStartTimeMillis = currentBuild?.startTimeInMillis
   }
 
-  MetricsPublisher(env, currentBuild) {
-    this(env, currentBuild, defaultCosmosDbUrl)
+  MetricsPublisher(steps, currentBuild) {
+    this(steps, currentBuild, defaultCosmosDbUrl)
   }
 
   @NonCPS

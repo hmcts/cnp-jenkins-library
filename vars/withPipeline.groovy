@@ -24,8 +24,8 @@ def call(type, String product, String app, Closure body) {
 
   Deployer deployer = pipelineType.deployer
   Builder builder = pipelineType.builder
-  
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this.env, currentBuild)
+
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild)
 
   def pl = new PipelineCallbacks()
 

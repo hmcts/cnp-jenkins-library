@@ -1,13 +1,23 @@
 package uk.gov.hmcts.contino
 
+import spock.lang.Shared
 import spock.lang.Specification
 import static org.assertj.core.api.Assertions.*
 
 class MetricsPublisherTests extends Specification {
 
+  @Shared
+    stubSteps
+
+  def setup() {
+    stubSteps = Stub(JenkinsStepMock.class)
+    stubSteps.env >> [BRANCH_NAME: "master"]
+    stubSteps.currentBuild >>  []
+    }
+
   def "generates a curl command sending a POST"() {
     when:
-    def metricsPublisher = new MetricsPublisher([BRANCH_NAME:"master"], [])
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
     def commandString = metricsPublisher.generateCommandString()
 
     then:
@@ -17,7 +27,7 @@ class MetricsPublisherTests extends Specification {
 
   def "generates a curl command setting JSON content type"() {
     when:
-    def metricsPublisher = new MetricsPublisher([BRANCH_NAME:"master"], [])
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
     def commandString = metricsPublisher.generateCommandString()
 
     then:
@@ -27,7 +37,7 @@ class MetricsPublisherTests extends Specification {
 
   def "collects build metrics"() {
     when:
-    def metricsPublisher = new MetricsPublisher([BRANCH_NAME:"master"], [])
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
     def metricsMap = metricsPublisher.collectMetrics()
 
     then:
