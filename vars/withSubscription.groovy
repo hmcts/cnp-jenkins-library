@@ -1,7 +1,7 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
 
-def call(String env, Closure body) {
+def call(String environment, Closure body) {
   withCredentials([azureServicePrincipal(
     credentialsId: "jenkinsServicePrincipal",
     subscriptionIdVariable: 'JENKINS_SUBSCRIPTION_ID',
@@ -14,8 +14,8 @@ def call(String env, Closure body) {
       sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
-      env.SUBSCRIPTION_SUFFIX = (env == 'prod') ? 'prod' : 'nonprod'
-      def cred_by_env_name = env.SUBSCRIPTION_SUFFIX+ "-creds"
+      env.SUBSCRIPTION_SUFFIX = (environment == 'prod') ? 'prod' : 'nonprod'
+      def cred_by_env_name = "$env.SUBSCRIPTION_SUFFIX-creds"
 
       def resp = sh(script: "az keyvault secret show --vault-name 'infra-vault' --name '$cred_by_env_name'", returnStdout: true).trim()
       secrets = new JsonSlurperClassic().parseText(resp)
