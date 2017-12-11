@@ -5,13 +5,13 @@ def info(message) {
 }
 
 def warning(message) {
-  ansiColor {
+  ansiColor('xterm') {
     echo "\\e[35mWARNING: ${message}\\e[0m"
   }
 }
 
 def error(message) {
-  ansiColor {
+  ansiColor('xterm') {
     echo "\\e[31mERROR: ${message}\\e[0m"
   }
 }
