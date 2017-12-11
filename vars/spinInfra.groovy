@@ -31,46 +31,46 @@ def call(productName, environment, subscription = "nonprod", planOnly = false, C
   if (!config.containsKey("planOnly"))
     config.planOnly = false
 */
-  env.ENVIRONMENT = environment
+  withEnv(["ENVIRONMENT=$environment", "SUBSCRIPTION=$subscription"]) {
 
-  withSubscription(subscription) {
+    withSubscription(subscription) {
 
-    stage("Check/Init state store '-${environment}' in '${subscription}'") {
-      stateStoreInit(environment)
-    }
+      stage("Check/Init state store '-${environment}' in '${subscription}'") {
+        stateStoreInit(environment)
+      }
 
-    body.call()
+      body.call()
 
-    lock("${productName}-${environment}") {
-      stage("Plan ${productName}-${environment} in ${subscription}") {
-        if (env.STORE_rg_name_template != null &&
-          env.STORE_sa_name_template != null &&
-          env.STORE_sa_container_name_template != null)
-        {
-          log.warning("Using following stateStore={" +
-            "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
-            "'sa_name': '${env.STORE_sa_name_template}-${environment}', " +
-            "'sa_container_name': '${env.STORE_sa_container_name_template}-${environment}'}")
-        } else
-          throw new Exception("State store name details not found in environment variables?")
+      lock("${productName}-${environment}") {
+        stage("Plan ${productName}-${environment} in ${subscription}") {
+          if (env.STORE_rg_name_template != null &&
+            env.STORE_sa_name_template != null &&
+            env.STORE_sa_container_name_template != null) {
+            log.warning("Using following stateStore={" +
+              "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
+              "'sa_name': '${env.STORE_sa_name_template}-${environment}', " +
+              "'sa_container_name': '${env.STORE_sa_container_name_template}-${environment}'}")
+          } else
+            throw new Exception("State store name details not found in environment variables?")
 
-        sh "terraform init -reconfigure -backend-config " +
-          "\"storage_account_name=${env.STORE_sa_name_template}-${environment}\" " +
-          "-backend-config \"container_name=${STORE_sa_container_name_template}-${environment}\" " +
-          "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${environment}\" " +
-          "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
+          sh "terraform init -reconfigure -backend-config " +
+            "\"storage_account_name=${env.STORE_sa_name_template}-${environment}\" " +
+            "-backend-config \"container_name=${STORE_sa_container_name_template}-${environment}\" " +
+            "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${environment}\" " +
+            "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 
-        sh "terraform get -update=true"
-        sh "terraform plan -var 'env=${environment}' -var 'name=${productName}'" +
-          (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+          sh "terraform get -update=true"
+          sh "terraform plan -var 'env=${environment}' -var 'name=${productName}'" +
+            (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
 
-        if (!planOnly) {
-          stage("Apply ${productName}-${environment} in ${subscription}") {
-            sh "terraform apply -var 'env=${environment}' -var 'name=${productName}'" +
-              (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
-          }
-        } else
-          log.warning "Skipping apply due to planOnly flag set"
+          if (!planOnly) {
+            stage("Apply ${productName}-${environment} in ${subscription}") {
+              sh "terraform apply -var 'env=${environment}' -var 'name=${productName}'" +
+                (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+            }
+          } else
+            log.warning "Skipping apply due to planOnly flag set"
+        }
       }
     }
   }
