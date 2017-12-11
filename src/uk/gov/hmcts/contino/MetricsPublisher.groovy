@@ -72,6 +72,10 @@ public class MetricsPublisher implements Serializable {
   def publish() {
     def commandString = generateCommandString()
     steps.echo commandString
-    steps.sh script: "${commandString}", returnStdout: true
+    try {
+      steps.sh script: "${commandString}", returnStdout: true
+    } catch (err) {
+      steps.echo "Unable to log metrics '${err.message}'"
+    }
   }
 }
