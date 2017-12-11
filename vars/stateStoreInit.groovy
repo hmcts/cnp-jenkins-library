@@ -2,6 +2,7 @@
 import uk.gov.hmcts.contino.*
 
 //can be run only inside withSubscription
+@nonCPS
 def call(String environment) {
   stage("Check/Init state store for env '${environment}'") {
     def functions = libraryResource 'uk/gov/hmcts/contino/stateStoreInit.sh'
