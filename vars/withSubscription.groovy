@@ -50,7 +50,7 @@ def call(String subscription, Closure body) {
 
         echo "Setting Azure CLI to run on $subscription subscription account"
         sh "az login --service-principal -u $subscriptionCredValues.azure_client_id -p $subscriptionCredValues.azure_client_secret -t $subscriptionCredValues.azure_tenant_id"
-        sh "az account set --subscription $subscriptionCredValues.azure_subscription_id"
+        sh "az account set --subscription $subscriptionCredValues.azure_subscription"
 
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
 
