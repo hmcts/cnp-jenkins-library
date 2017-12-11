@@ -1,6 +1,8 @@
-package uk.gov.hmcts.contino;
+package uk.gov.hmcts.contino
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+import java.security.InvalidKeyException
 import com.cloudbees.groovy.cps.NonCPS
-import groovy.json.JsonOutput;
 
 public class MetricsPublisher implements Serializable {
 
@@ -60,19 +62,50 @@ public class MetricsPublisher implements Serializable {
   }
 
   @NonCPS
+  private def generateAuthToken(verb, resourceType, resourceLink) {
+    assert env.COSMOSDB_TOKEN_TYPE != null || env.COSMOSDB_TOKEN_VERSION != null || env.COSMOSDB_TOKEN_KEY != null
+
+    def tokenType = env.COSMOSDB_TOKEN_TYPE
+    def tokenVersion = env.COSMOSDB_TOKEN_VERSION
+    def tokenKey = new String(env.COSMOSDB_TOKEN_KEY.decodeBase64())
+
+    def stringToSign = verb.toLowerCase() + "\n" + resourceType.toLowerCase() + "\n" + resourceLink + "\n" + Date.toString().toLowerCase() + "\n" + "" + "\n"
+    def hash = hmacSHA256(tokenKey, stringToSign)
+    def hashSignature = hash.encodeBase64().toString()
+    return "type=${tokenType}&ver=${tokenVersion}&sig=${hashSignature}"
+  }
+
+  static def hmacSHA256(String secretKey, String data) {
+    try {
+      Mac mac = Mac.getInstance("HmacSHA256")
+      SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256")
+      mac.init(secretKeySpec)
+      byte[] digest = mac.doFinal(data.getBytes())
+      return digest
+    } catch (InvalidKeyException e) {
+      throw new RuntimeException("Invalid key exception while converting to HMac SHA256")
+    }
+  }
+
+  @NonCPS
   private def generateCommandString() {
 //    def metrics = collectMetrics()
 //    steps.echo collectMetrics()
 //    def json = JsonOutput.toJson(metrics)
 //
 //    def data = json.toString()
-    return "curl -i -v -XPOST -H 'Content-Type: application/json' --fail --max-time 10 '${cosmosDbUrl}' --data '{branch_name=chris-test}'"
+    def verb = 'POST'
+    def resourceType = "docs"
+    def resourceLink = "/dbs/tempdb/colls/tempcoll/docs"
+    def authToken = generateAuthToken(verb, resourceType, resourceLink)
+    return "curl -i -v -X${verb} -H 'Content-Type: application/json' -H 'Authorization: ${authToken}' --fail --max-time 10 " +
+      "--data '{branch_name=chris-test}' '${cosmosDbUrl}${resourceLink}'"
   }
 
   def publish() {
-    def commandString = generateCommandString()
-    steps.echo commandString
     try {
+      def commandString = generateCommandString()
+      steps.echo commandString
       steps.sh script: "${commandString}", returnStdout: true
     } catch (err) {
       steps.echo "Unable to log metrics '${err.message}'"
