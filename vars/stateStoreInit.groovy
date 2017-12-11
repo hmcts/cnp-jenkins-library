@@ -1,7 +1,7 @@
 #!groovy
 
 //can be run only inside withSubscription
-def call(String environment) {
+def call(environment) {
   stage("Check/Init state store for env '${environment}'") {
     def functions = libraryResource 'uk/gov/hmcts/contino/stateStoreInit.sh'
     writeFile file: 'stateStoreInit.sh', text: functions
@@ -13,6 +13,6 @@ def call(String environment) {
     sacontainer_name = "${env.STORE_sa_container_name_template}${environment}"
 
     echo "before running bash"
-    result = sh "bash stateStoreInit.sh $__rg $sa_name $sacontainer_name $__location"
+//    result = sh "bash stateStoreInit.sh $__rg $sa_name $sacontainer_name $__location"
   }
 }
