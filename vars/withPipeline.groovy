@@ -170,10 +170,12 @@ def call(type, String product, String app, Closure body) {
     throw err
   }
 
-  if (pl.slackChannel) {
-    notifyBuildFixed channel: pl.slackChannel
-  }
+  node {
+    if (pl.slackChannel) {
+      notifyBuildFixed channel: pl.slackChannel
+    }
 
-  pl.call('onSuccess')
-  metricsPublisher.publish()
+    pl.call('onSuccess')
+    metricsPublisher.publish()
+  }
 }
