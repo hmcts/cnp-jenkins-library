@@ -38,7 +38,6 @@ def call(productName, environment, subscription = "nonprod", planOnly = false, C
       stateStoreInit(environment)
     }
 
-    body.delegate=this
     body.call()
 
     lock("${productName}-${environment}") {
