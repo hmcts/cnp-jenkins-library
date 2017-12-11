@@ -33,9 +33,7 @@ def call(productName, environment, planOnly = false, subscription = "nonprod") {
 */
   withSubscription(subscription) {
 
-    stage("Check/Init state store '-${environment}' in '${subscription}'") {
-      stateStoreInit(environment)
-    }
+    stateStoreInit(environment)
 
     lock("${productName}-${environment}") {
       stage("Plan ${productName}-${environment} in ${subscription}") {
