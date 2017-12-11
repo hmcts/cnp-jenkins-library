@@ -62,7 +62,7 @@ def call(productName, environment, planOnly = false, subscription = "nonprod") {
 
         if (!planOnly) {
           stage("Apply ${productName}-${environment} in ${subscription}") {
-            sh "terraform apply -var 'env=${environment}' -var 'name=${productName}'" +
+            sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}'" +
               (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
           }
         } else
