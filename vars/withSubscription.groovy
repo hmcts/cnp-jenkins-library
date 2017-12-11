@@ -53,7 +53,7 @@ def call(String subscription, Closure body) {
         sh "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID"
         sh "az account set --subscription $AZURE_SUBSCRIPTION_ID"
 
-        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"|sort'
+        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
 
         body.call()
       }
