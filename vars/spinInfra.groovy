@@ -18,6 +18,7 @@ def call(Closure body) {
   body.delegate = config
 //  body()
 
+  echo "${config}"
   if (!config.containsKey("productName"))
     throw new Exception("You have not specified a productName therefore not sure what to build! Stopping execution...")
   if (!config.containsKey("environment"))
