@@ -63,8 +63,6 @@ public class MetricsPublisher implements Serializable {
 
   @NonCPS
   private def generateAuthToken(verb, resourceType, resourceLink) {
-    assert env.COSMOSDB_TOKEN_TYPE != null || env.COSMOSDB_TOKEN_VERSION != null || env.COSMOSDB_TOKEN_KEY != null
-
     def tokenType = env.COSMOSDB_TOKEN_TYPE
     def tokenVersion = env.COSMOSDB_TOKEN_VERSION
     def tokenKey = new String(env.COSMOSDB_TOKEN_KEY.decodeBase64())
@@ -103,6 +101,11 @@ public class MetricsPublisher implements Serializable {
   }
 
   def publish() {
+    if (env.COSMOSDB_TOKEN_TYPE == null || env.COSMOSDB_TOKEN_VERSION == null || env.COSMOSDB_TOKEN_KEY == null) {
+      steps.echo "Set the following environment variables to enable metrics publishing: 'COSMOSDB_TOKEN_TYPE', 'COSMOSDB_TOKEN_VERSION', 'COSMOSDB_TOKEN_KEY'"
+      return
+    }
+    
     try {
       def commandString = generateCommandString()
       steps.echo commandString
