@@ -4,7 +4,7 @@ import groovy.json.JsonOutput;
 
 public class MetricsPublisher implements Serializable {
 
-  private final static String defaultCosmosDbUrl = 'http://build.documents.azure.com'
+  private final static String defaultCosmosDbUrl = 'https://build.documents.azure.com'
   def steps
   def env
   def currentBuild
