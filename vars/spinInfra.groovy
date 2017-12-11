@@ -11,7 +11,7 @@
 // @param planOnly
 //        will only run terraform plan, apply will be skipped
 //        Default: false
-def call(productName, environment, subscription = "nonprod", planOnly = false) {
+def call(productName, environment, planOnly = false, subscription = "nonprod") {
 /* will try to make it work with parameters defined at the beginning of the closure for cleaner parametrisation
 
 // evaluate the body block, and collect configuration into the object
@@ -31,9 +31,6 @@ def call(productName, environment, subscription = "nonprod", planOnly = false) {
   if (!config.containsKey("planOnly"))
     config.planOnly = false
 */
-  env.ENVIRONMENT = environment
-  env.SUBSCRIPTION = subscription
-
   withSubscription(subscription) {
 
     stage("Check/Init state store '-${environment}' in '${subscription}'") {
@@ -43,9 +40,8 @@ def call(productName, environment, subscription = "nonprod", planOnly = false) {
     lock("${productName}-${environment}") {
       stage("Plan ${productName}-${environment} in ${subscription}") {
         if (env.STORE_rg_name_template != null &&
-          env.STORE_sa_name_template != null &&
-          env.STORE_sa_container_name_template != null)
-        {
+            env.STORE_sa_name_template != null &&
+            env.STORE_sa_container_name_template != null) {
           log.warning("Using following stateStore={" +
             "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
             "'sa_name': '${env.STORE_sa_name_template}${environment}', " +
