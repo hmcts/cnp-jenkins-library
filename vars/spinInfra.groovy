@@ -31,6 +31,7 @@ def call(productName, environment, subscription = "nonprod", planOnly = false, C
   if (!config.containsKey("planOnly"))
     config.planOnly = false
 */
+  env.ENVIRONMENT = environment
 
   withSubscription(subscription) {
 
