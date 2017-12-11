@@ -11,14 +11,15 @@
 // @param planOnly
 //        will only run terraform plan, apply will be skipped
 //        Default: false
-def call(Closure body) {
-  // evaluate the body block, and collect configuration into the object
+def call(String productName, String environment, String subscription = "nonprod", Boolean planOnly = false, Closure body) {
+/* will try to make it work with parameters defined at the beginning of the closure for cleaner parametrisation
+
+// evaluate the body block, and collect configuration into the object
   def config = [:]
   body.resolveStrategy = Closure.DELEGATE_FIRST
   body.delegate = config
-//  body()
+  body()
 
-  echo "${config}"
   if (!config.containsKey("productName"))
     throw new Exception("You have not specified a productName therefore not sure what to build! Stopping execution...")
   if (!config.containsKey("environment"))
@@ -29,40 +30,41 @@ def call(Closure body) {
   //default planOnly = false
   if (!config.containsKey("planOnly"))
     config.planOnly = false
+*/
 
-  withSubscription(config.subscription) {
+  withSubscription(subscription) {
 
-    stage("Check/Init state store '-${config.environment}' in '${config.subscription}'") {
-      stateStoreInit(config.environment)
+    stage("Check/Init state store '-${environment}' in '${subscription}'") {
+      stateStoreInit(environment)
     }
 
-    body()
+//    body()
 
-    lock("${config.productName}-${config.environment}") {
-      stage("Plan ${config.productName}-${config.environment} in ${config.subscription}") {
+    lock("${productName}-${environment}") {
+      stage("Plan ${productName}-${environment} in ${subscription}") {
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
           env.STORE_sa_container_name_template != null) {
           log.warning("Using following stateStore={" +
-            "'rg_name': '${env.STORE_rg_name_template}-${config.environment}', " +
-            "'sa_name': '${env.STORE_sa_name_template}-${config.environment}', " +
-            "'sa_container_name': '${env.STORE_sa_container_name_template}-${config.environment}'}")
+            "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
+            "'sa_name': '${env.STORE_sa_name_template}-${environment}', " +
+            "'sa_container_name': '${env.STORE_sa_container_name_template}-${environment}'}")
         } else
           throw new Exception("State store name details not found in environment variables?")
 
         sh "terraform init -reconfigure -backend-config " +
-          "\"storage_account_name=${env.STORE_sa_name_template}-${config.environment}\" " +
-          "-backend-config \"container_name=${STORE_sa_container_name_template}-${config.environment}\" " +
-          "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${config.environment}\" " +
-          "-backend-config \"key=${config.productName}/${config.environment}/terraform.tfstate\""
+          "\"storage_account_name=${env.STORE_sa_name_template}-${environment}\" " +
+          "-backend-config \"container_name=${STORE_sa_container_name_template}-${environment}\" " +
+          "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${environment}\" " +
+          "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 
         sh "terraform get -update=true"
-        sh "terraform plan -var 'env=${config.environment}' -var 'name=${config.productName}'" +
-          (fileExists("${config.environment}.tfvars") ? " var-file=${config.environment}.tfvars" : "")
+        sh "terraform plan -var 'env=${environment}' -var 'name=${productName}'" +
+          (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
 
-        if (!config.planOnly) {
-          sh "terraform apply -var 'env=${config.environment}' -var 'name=${config.productName}'" +
-            (fileExists("${config.environment}.tfvars") ? " var-file=${config.environment}.tfvars" : "")
+        if (!planOnly) {
+          sh "terraform apply -var 'env=${environment}' -var 'name=${productName}'" +
+            (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
         } else
           log.warning "Skipping apply due to planOnly flag set"
       }
