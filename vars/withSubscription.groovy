@@ -19,9 +19,11 @@ def call(String subscription, Closure body) {
 
       def subscriptionCredsjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-creds' --query value -o tsv", returnStdout: true).trim()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
+      echo "$subscriptionCredValues"
 
       def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
+      echo "$subscriptionCredValues"
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
