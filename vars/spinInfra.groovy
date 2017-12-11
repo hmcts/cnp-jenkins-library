@@ -11,7 +11,7 @@
 // @param planOnly
 //        will only run terraform plan, apply will be skipped
 //        Default: false
-def call(String productName, String environment, String subscription = "nonprod", Boolean planOnly = false, Closure body) {
+def call(productName, environment, subscription = "nonprod", planOnly = false, Closure body) {
 /* will try to make it work with parameters defined at the beginning of the closure for cleaner parametrisation
 
 // evaluate the body block, and collect configuration into the object
@@ -63,8 +63,10 @@ def call(String productName, String environment, String subscription = "nonprod"
           (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
 
         if (!planOnly) {
-          sh "terraform apply -var 'env=${environment}' -var 'name=${productName}'" +
-            (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+          stage("Apply ${productName}-${environment} in ${subscription}") {
+            sh "terraform apply -var 'env=${environment}' -var 'name=${productName}'" +
+              (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+          }
         } else
           log.warning "Skipping apply due to planOnly flag set"
       }
