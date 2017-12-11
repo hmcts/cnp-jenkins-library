@@ -31,6 +31,7 @@ def call(productName, environment, planOnly = false, subscription = "nonprod") {
   if (!config.containsKey("planOnly"))
     config.planOnly = false
 */
+  echo "Subscription: $subscription"
   withSubscription(subscription) {
 
     stateStoreInit(environment)
