@@ -38,7 +38,7 @@ def call(productName, environment, subscription = "nonprod", planOnly = false, C
       stateStoreInit(environment)
     }
 
-    body.resolveStrategy = Closure.DELEGATE_FIRST
+    body.delegate=this
     body.call()
 
     lock("${productName}-${environment}") {
