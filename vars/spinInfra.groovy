@@ -11,7 +11,7 @@
 // @param planOnly
 //        will only run terraform plan, apply will be skipped
 //        Default: false
-def call(productName, environment, subscription = "nonprod", planOnly = false, Closure body) {
+def call(productName, environment, subscription = "nonprod", planOnly = false) {
 /* will try to make it work with parameters defined at the beginning of the closure for cleaner parametrisation
 
 // evaluate the body block, and collect configuration into the object
@@ -33,15 +33,12 @@ def call(productName, environment, subscription = "nonprod", planOnly = false, C
 */
   env.ENVIRONMENT = environment
   env.SUBSCRIPTION = subscription
-  def cl = body
 
   withSubscription(subscription) {
 
     stage("Check/Init state store '-${environment}' in '${subscription}'") {
       stateStoreInit(environment)
     }
-
-    cl.call()
 
     lock("${productName}-${environment}") {
       stage("Plan ${productName}-${environment} in ${subscription}") {
