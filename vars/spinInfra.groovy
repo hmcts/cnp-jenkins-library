@@ -45,7 +45,8 @@ def call(productName, environment, subscription = "nonprod", planOnly = false, C
       stage("Plan ${productName}-${environment} in ${subscription}") {
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
-          env.STORE_sa_container_name_template != null) {
+          env.STORE_sa_container_name_template != null)
+        {
           log.warning("Using following stateStore={" +
             "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
             "'sa_name': '${env.STORE_sa_name_template}-${environment}', " +

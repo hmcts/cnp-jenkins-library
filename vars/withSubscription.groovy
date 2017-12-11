@@ -19,11 +19,9 @@ def call(String subscription, Closure body) {
 
       def subscriptionCredsjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-creds' --query value -o tsv", returnStdout: true).trim()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
-      echo "$subscriptionCredValues"
 
       def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
-      echo "$stateStoreCfgValues"
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
@@ -44,13 +42,13 @@ def call(String subscription, Closure body) {
                "TF_VAR_token=${subscriptionCredValues.azure_tenant_id}",
                // other variables
                "TOKEN=${subscriptionCredValues.azure_tenant_id}",
-               "STORE_rg_name_template='${stateStoreCfgValues.rg_name}'",
-               "STORE_sa_name_template='${stateStoreCfgValues.sa_name}'",
-               "STORE_sa_container_name_template='${stateStoreCfgValues.sa_container_name}'"]) {
+               "STORE_rg_name_template=${stateStoreCfgValues.rg_name}",
+               "STORE_sa_name_template=${stateStoreCfgValues.sa_name}",
+               "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}"]) {
 
         echo "Setting Azure CLI to run on $subscription subscription account"
-        sh "az login --service-principal -u $subscriptionCredValues.azure_client_id -p $subscriptionCredValues.azure_client_secret -t $subscriptionCredValues.azure_tenant_id"
-        sh "az account set --subscription $subscriptionCredValues.azure_subscription"
+        sh "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID"
+        sh "az account set --subscription $AZURE_SUBSCRIPTION_ID"
 
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
 
