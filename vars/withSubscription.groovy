@@ -44,13 +44,12 @@ def call(String subscription, Closure body) {
                "TOKEN=${subscriptionCredValues.azure_tenant_id}",
                "STORE_rg_name_template=${stateStoreCfgValues.rg_name}",
                "STORE_sa_name_template=${stateStoreCfgValues.sa_name}",
-               "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}"]) {
-
+               "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}",
+               "SUBSCRIPTION_NAME=$subscription"])
+      {
         echo "Setting Azure CLI to run on $subscription subscription account"
         sh "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID"
         sh "az account set --subscription $AZURE_SUBSCRIPTION_ID"
-
-        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
 
         body.call()
       }
