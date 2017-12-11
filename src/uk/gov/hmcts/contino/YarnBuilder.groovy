@@ -37,7 +37,7 @@ class YarnBuilder implements Builder, Serializable {
   def addVersionInfo() {
     steps.sh '''tee version <<EOF
 version: $(node -pe 'require("./package.json").version')
-build: ${BUILD_NUMBER}
+number: ${BUILD_NUMBER}
 commit: $(git rev-parse HEAD)
 date: $(date)
 EOF
