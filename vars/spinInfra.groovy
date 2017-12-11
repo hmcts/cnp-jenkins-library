@@ -53,6 +53,8 @@ def call(productName, environment, subscription = "nonprod", planOnly = false) {
         } else
           throw new Exception("State store name details not found in environment variables?")
 
+        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"|sort'
+
         sh "terraform init -reconfigure -backend-config " +
           "\"storage_account_name=${env.STORE_sa_name_template}${environment}\" " +
           "-backend-config \"container_name=${STORE_sa_container_name_template}${environment}\" " +

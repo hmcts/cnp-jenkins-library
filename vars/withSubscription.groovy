@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 
 def call(String subscription, Closure body) {
+  echo "Subscription: $subscription, Closure: $body"
   ansiColor('xterm') {
     withCredentials([azureServicePrincipal(
       credentialsId: "jenkinsServicePrincipal",
@@ -16,6 +17,8 @@ def call(String subscription, Closure body) {
       def vaultName = "infra-vault"
       if (subscription == "sandbox")
         vaultName = "contino-devops"
+
+      echo "Subscription: $subscription, Closure: $body"
 
       def subscriptionCredsjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-creds' --query value -o tsv", returnStdout: true).trim()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
@@ -50,7 +53,7 @@ def call(String subscription, Closure body) {
         sh "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID"
         sh "az account set --subscription $AZURE_SUBSCRIPTION_ID"
 
-        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
+        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"|sort'
 
         body.call()
       }
