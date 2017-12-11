@@ -38,7 +38,7 @@ def call(String productName, String environment, String subscription = "nonprod"
       stateStoreInit(environment)
     }
 
-//    body()
+    body.call()
 
     lock("${productName}-${environment}") {
       stage("Plan ${productName}-${environment} in ${subscription}") {
