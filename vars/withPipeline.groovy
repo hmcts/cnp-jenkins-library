@@ -166,7 +166,9 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onFailure')
-    metricsPublisher.publish()
+    withCredentials([secretText(credentialsId: 'COSMOSDB_TOKEN_KEY')]) {
+      metricsPublisher.publish()
+    }
     throw err
   }
 
@@ -176,6 +178,8 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onSuccess')
-    metricsPublisher.publish()
+    withCredentials([secretText(credentialsId: 'COSMOSDB_TOKEN_KEY')]) {
+      metricsPublisher.publish()
+    }
   }
 }
