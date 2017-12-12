@@ -48,7 +48,7 @@ class MetricsPublisherTests extends Specification {
   def "creates Authorization header value containing token type, version and signature"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    def authToken = metricsPublisher.generateAuthToken('POST', 'resourceType', 'resourceLink', 'dateString', stubSteps.env.COSMOSDB_TOKEN_TYPE, stubSteps.env.COSMOSDB_TOKEN_VERSION, stubSteps.env.COSMOSDB_TOKEN_KEY)
+    def authToken = metricsPublisher.generateAuthToken('POST', 'resourceType', 'resourceLink', 'dateString', 'master', '1.0', stubSteps.env.COSMOSDB_TOKEN_KEY)
 
     then:
     assertThat(authToken.toString()).startsWith("type%3Dmaster%26ver%3D1.0%26sig%3DZ35HOnYA9ountdb%2B8xwjo7rFYbGt3MY3aBO8%2FPRIAvA%3D")

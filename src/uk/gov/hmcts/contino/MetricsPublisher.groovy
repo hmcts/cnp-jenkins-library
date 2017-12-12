@@ -74,24 +74,27 @@ class MetricsPublisher implements Serializable {
     steps.echo 'Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign)
 
     def decodedKey = tokenKey.decodeBase64()
-    def hash = "hash"
-//    def hash = hmacSHA256(decodedKey, stringToSign)
-    def base64Hash = DatatypeConverter.printBase64Binary(hash)
+    steps.echo "decodedKey: ${decodedKey}"
+    def hash = hmacSHA256(decodedKey, stringToSign)
+    steps.echo "hash: ${hash}"
+    def base64Hash = Base64.getEncoder().encodeToString(hash)
+    steps.echo "base64Hash: ${base64Hash}"
 
     def authToken = "type=${tokenType}&ver=${tokenVersion}&sig=${base64Hash}"
+    steps.echo "authToken: ${authToken}"
     return  URLEncoder.encode(authToken, 'UTF-8')
   }
 
-  static def hmacSHA256(secretKey, data) {
-    try {
-      Mac mac = Mac.getInstance('HmacSHA256')
-      SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, 'HmacSHA256')
-      mac.init(secretKeySpec)
-      byte[] digest = mac.doFinal(data.getBytes())
-      return digest
-    } catch (InvalidKeyException e) {
-      throw new RuntimeException("Invalid key exception while converting to HMac SHA256")
-    }
+  @NonCPS
+private def hmacSHA256(secretKey, data) {
+    Mac mac = Mac.getInstance('HmacSHA256')
+  steps.echo 'After mac'
+  SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, 'HmacSHA256')
+  steps.echo 'After secretkeyspec'
+    mac.init(secretKeySpec)
+    byte[] digest = mac.doFinal(data.getBytes())
+  steps.echo 'After digest'
+    return digest
   }
 
   @NonCPS
