@@ -72,8 +72,8 @@ class WebAppDeploy implements Serializable {
      steps.withCredentials(
        [[$class: 'UsernamePasswordMultiBinding',
          credentialsId: 'WebAppDeployCredentials',
-         usernameVariable: 'GIT_USERNAME',
-         passwordVariable: 'GIT_PASSWORD']]) {
+         usernameVariable: 'WEBAPP_DEPLOY_USERNAME',
+         passwordVariable: 'WEBAPP_DEPLOY_PASSWORD']]) {
 
        steps.sh("git init")
        steps.sh("git checkout -b ${branch.branchName}")
@@ -105,8 +105,8 @@ class WebAppDeploy implements Serializable {
     return steps.withCredentials(
         [[$class: 'UsernamePasswordMultiBinding',
           credentialsId: 'WebAppDeployCredentials',
-          usernameVariable: 'GIT_USERNAME',
-          passwordVariable: 'GIT_PASSWORD']]) {
+          usernameVariable: 'WEBAPP_DEPLOY_USERNAME',
+          passwordVariable: 'WEBAPP_DEPLOY_PASSWORD']]) {
 
         def appUrl = "${product}-${app}-${env}"
         steps.sh("git checkout ${branch.branchName}")
@@ -182,8 +182,8 @@ class WebAppDeploy implements Serializable {
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
         credentialsId: 'WebAppDeployCredentials',
-        usernameVariable: 'GIT_USERNAME',
-        passwordVariable: 'GIT_PASSWORD']]) {
+        usernameVariable: 'WEBAPP_DEPLOY_USERNAME',
+        passwordVariable: 'WEBAPP_DEPLOY_PASSWORD']]) {
 
       def tempDir = ".tmp_azure_jenkings"
 
@@ -253,7 +253,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
-    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://rhubarb-deployer:${steps.env.Deployer_Pass}@${serviceDeploymentHost}/${serviceName}.git\"")
+    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://${steps.env.WEBAPP_DEPLOY_USERNAME}:${steps.env.WEBAPP_DEPLOY_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
 
