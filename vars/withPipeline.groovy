@@ -166,7 +166,7 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onFailure')
-    withCredentials([string(credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'TOKEN')]) {
+    withCredentials([string(credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY')]) {
       metricsPublisher.publish()
     }
     throw err
@@ -178,7 +178,7 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onSuccess')
-    withCredentials([string(credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'TOKEN')]) {
+    withCredentials([string(credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY')]) {
       metricsPublisher.publish()
     }
   }
