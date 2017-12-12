@@ -69,13 +69,13 @@ class MetricsPublisher implements Serializable {
   }
 
   @NonCPS
-  private static
-  def generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey) {
+  private def generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey) {
     def stringToSign = verb.toLowerCase() + "\n" + resourceType.toLowerCase() + "\n" + resourceLink + "\n" + formattedDate.toLowerCase() + "\n" + "" + "\n"
-    Console.println('Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign))
+    steps.echo 'Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign)
 
     def decodedKey = tokenKey.decodeBase64()
-    def hash = hmacSHA256(decodedKey, stringToSign)
+    def hash = "hash"
+//    def hash = hmacSHA256(decodedKey, stringToSign)
     def base64Hash = DatatypeConverter.printBase64Binary(hash)
 
     def authToken = "type=${tokenType}&ver=${tokenVersion}&sig=${base64Hash}"
@@ -101,7 +101,7 @@ class MetricsPublisher implements Serializable {
     def tokenKey = env.COSMOSDB_TOKEN_KEY
 
 //    def metrics = collectMetrics()
-//    steps.echo collectMetrics()
+//    steps.echo metrics()
 //    def json = JsonOutput.toJson(metrics)
 //
 //    def data = json.toString()
@@ -110,10 +110,10 @@ class MetricsPublisher implements Serializable {
     def resourceLink = "dbs/tempdb/colls/tempcoll"
     def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
 
-    def authToken = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
+    def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
 
-    return "curl -i -v -X${verb} -H 'Content-Type: application/json' -H 'Authorization: ${authToken}' -H 'x-ms-version: 2017-02-22' " +
-      "-H 'x-ms-date: ${formattedDate}' --max-time 10 --data '{id=${UUID.randomUUID().toString()}, branch_name=chris-test}' '${cosmosDbUrl}${resourceLink}/${resourceType}'"
+    return "curl -i -v -X${verb} -H 'Content-Type: application/json' -H 'Authorization: ${authHeaderValue}' -H 'x-ms-version: 2017-02-22' " +
+      "-H 'x-ms-date: ${formattedDate}' --max-time 10 --data '{id=${UUID.randomUUID().toString()}, branch_name=chris-test}' '${cosmosDbUrl}${resourceLink}/${resourceType}'".toString()
   }
 
   def publish() {
@@ -123,11 +123,11 @@ class MetricsPublisher implements Serializable {
     }
 
     try {
-      def commandString = generateCommandString()
-      steps.echo commandString
+      def commandString = generateCommandString().toString()
+      steps.echo "${commandString}"
       steps.sh script: "${commandString}", returnStdout: true
     } catch (err) {
-      steps.echo "Unable to log metrics '${err.message}'"
+      steps.echo "Unable to log metrics '${err}'"
     }
   }
 }
