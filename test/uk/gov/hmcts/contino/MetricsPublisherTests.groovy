@@ -13,8 +13,6 @@ class MetricsPublisherTests extends Specification {
     stubSteps = Stub(JenkinsStepMock.class)
     stubSteps.currentBuild >>  []
     stubSteps.env >> [BRANCH_NAME: "master",
-                      COSMOSDB_TOKEN_TYPE: "master",
-                      COSMOSDB_TOKEN_VERSION: "1.2",
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw=="]
     }
 
@@ -47,21 +45,13 @@ class MetricsPublisherTests extends Specification {
     assertThat(metricsMap).contains(entry("branch_name", "master"))
   }
 
-  def "creates Authorization header value containing token type and version"() {
+  def "creates Authorization header value containing token type, version and signature"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    def authToken = metricsPublisher.generateAuthToken(stubSteps.env.COSMOSDB_TOKEN_TYPE, stubSteps.env.COSMOSDB_TOKEN_VERSION, stubSteps.env.COSMOSDB_TOKEN_KEY).toString()
+    def authToken = metricsPublisher.generateAuthToken('POST', 'resourceType', 'resourceLink', 'dateString', stubSteps.env.COSMOSDB_TOKEN_TYPE, stubSteps.env.COSMOSDB_TOKEN_VERSION, stubSteps.env.COSMOSDB_TOKEN_KEY)
 
     then:
-    assertThat(authToken).startsWith("type=master&ver=1.2&sig=")
+    assertThat(authToken.toString()).startsWith("type%3Dmaster%26ver%3D1.0%26sig%3DZ35HOnYA9ountdb%2B8xwjo7rFYbGt3MY3aBO8%2FPRIAvA%3D")
   }
 
-  def "creates Authorization header value containing expected token signature"() {
-    when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    def authToken = metricsPublisher.generateAuthToken(stubSteps.env.COSMOSDB_TOKEN_TYPE, stubSteps.env.COSMOSDB_TOKEN_VERSION, stubSteps.env.COSMOSDB_TOKEN_KEY).toString()
-
-    then:
-    assertThat(authToken).contains("sig=Uq6Ylg1zIxj1QEq3D8Pblf6Ps5KrFsJ95aiZNK2VYA0=")
-  }
 }
