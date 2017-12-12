@@ -53,18 +53,4 @@ class MetricsPublisherTests extends Specification {
     then:
     assertThat(authToken.toString()).startsWith("type%3Dmaster%26ver%3D1.0%26sig%3DZ35HOnYA9ountdb%2B8xwjo7rFYbGt3MY3aBO8%2FPRIAvA%3D")
   }
-
-  def "blah"() {
-    when:
-    stubSteps = Stub(JenkinsStepMock.class)
-    stubSteps.currentBuild >>  []
-    stubSteps.env >> [BRANCH_NAME: "master",
-                      COSMOSDB_TOKEN_KEY: "k4ts6nzjfNMbWeacOgxA3NtcrcdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw=="]
-
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    metricsPublisher.publish()
-
-    then:
-    true
-  }
 }
