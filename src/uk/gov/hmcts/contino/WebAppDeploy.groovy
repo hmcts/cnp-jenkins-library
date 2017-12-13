@@ -253,8 +253,10 @@ class WebAppDeploy implements Serializable {
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
-    steps.echo(steps.env.GIT_USERNAME)
-    steps.echo(steps.env.GIT_PASSWORD)
+    steps.sh('echo $GIT_USERNAME')
+    steps.sh('echo $GIT_PASSWORD')
+    steps.sh("echo ${steps.env.GIT_USERNAME}")
+    steps.sh("echo ${steps.env.GIT_PASSWORD}")
     steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://rhubarb-deployer:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
