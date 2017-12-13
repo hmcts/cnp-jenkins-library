@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonOutput
 import groovy.json.StringEscapeUtils
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -32,7 +33,7 @@ class MetricsPublisher implements Serializable {
   @NonCPS
   private def collectMetrics() {
     return [
-      id: UUID.randomUUID().toString(),
+      id         : UUID.randomUUID().toString(),
       branch_name: env.BRANCH_NAME
 //      change_id: env.CHANGE_ID,
 //      change_url: env.CHANGE_URL,
@@ -63,7 +64,7 @@ class MetricsPublisher implements Serializable {
 //      current_build_previous_build: currentBuild.previousBuild.number,
 //      current_build_next_build: currentBuild.nextBuild.number,
 //      current_build_absolute_url: currentBuild.absoluteUrl
-  ]
+    ]
   }
 
   @NonCPS
@@ -76,11 +77,11 @@ class MetricsPublisher implements Serializable {
     def base64Hash = Base64.getEncoder().encodeToString(hash)
 
     def authToken = "type=${tokenType}&ver=${tokenVersion}&sig=${base64Hash}"
-    return  URLEncoder.encode(authToken, 'UTF-8')
+    return URLEncoder.encode(authToken, 'UTF-8')
   }
 
   @NonCPS
-private def hmacSHA256(secretKey, data) {
+  private def hmacSHA256(secretKey, data) {
     Mac mac = Mac.getInstance('HmacSHA256')
     SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, 'HmacSHA256')
     mac.init(secretKeySpec)
@@ -95,12 +96,10 @@ private def hmacSHA256(secretKey, data) {
     }
 
     try {
-      //    def metrics = collectMetrics()
-//    steps.echo metrics()
-//    def json = JsonOutput.toJson(metrics)
-//
-//    def data = json.toString()
-      def data = "{\"id\":\"${UUID.randomUUID().toString()}\", \"branch_name\":\"chris-test\"}"
+      def metrics = collectMetrics()
+      def json = JsonOutput.toJson(metrics)
+      def data = json.toString()
+//      def data = "{\"id\":\"${UUID.randomUUID().toString()}\", \"branch_name\":\"chris-test\"}"
       steps.echo "Request Body: ${data}"
 
       def verb = 'POST'
@@ -112,7 +111,7 @@ private def hmacSHA256(secretKey, data) {
       def tokenKey = env.COSMOSDB_TOKEN_KEY
 
       def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
-      steps.echo "${authHeaderValue}"
+      steps.echo "Auth Header: ${authHeaderValue}"
 
       steps.httpRequest httpMode: "${verb}",
         requestBody: "${data}",
