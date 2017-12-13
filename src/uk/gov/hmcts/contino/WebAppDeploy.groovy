@@ -133,7 +133,7 @@ class WebAppDeploy implements Serializable {
   def deployJavaWebApp(env) {
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
-        credentialsId: 'jenkins-github-api-token',
+        credentialsId: 'WebAppDeployCredentials',
         usernameVariable: 'GIT_USERNAME',
         passwordVariable: 'GIT_PASSWORD']]) {
 
@@ -253,7 +253,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {
-    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://rhubarb-deployer:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
+    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
 
