@@ -3,8 +3,6 @@ package uk.gov.hmcts.contino
 import groovy.json.StringEscapeUtils
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import javax.xml.bind.DatatypeConverter
-import java.security.InvalidKeyException
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -74,49 +72,20 @@ class MetricsPublisher implements Serializable {
     steps.echo 'Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign)
 
     def decodedKey = tokenKey.decodeBase64()
-    steps.echo "decodedKey: ${decodedKey}"
     def hash = hmacSHA256(decodedKey, stringToSign)
-    steps.echo "hash: ${hash}"
     def base64Hash = Base64.getEncoder().encodeToString(hash)
-    steps.echo "base64Hash: ${base64Hash}"
 
     def authToken = "type=${tokenType}&ver=${tokenVersion}&sig=${base64Hash}"
-    steps.echo "authToken: ${authToken}"
     return  URLEncoder.encode(authToken, 'UTF-8')
   }
 
   @NonCPS
 private def hmacSHA256(secretKey, data) {
     Mac mac = Mac.getInstance('HmacSHA256')
-  steps.echo 'After mac'
-  SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, 'HmacSHA256')
-  steps.echo 'After secretkeyspec'
+    SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, 'HmacSHA256')
     mac.init(secretKeySpec)
     byte[] digest = mac.doFinal(data.getBytes())
-  steps.echo 'After digest'
     return digest
-  }
-
-  @NonCPS
-  private def generateCommandString() {
-    def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
-    def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
-    def tokenKey = env.COSMOSDB_TOKEN_KEY
-
-//    def metrics = collectMetrics()
-//    steps.echo metrics()
-//    def json = JsonOutput.toJson(metrics)
-//
-//    def data = json.toString()
-    def verb = 'POST'
-    def resourceType = "docs"
-    def resourceLink = "dbs/tempdb/colls/tempcoll"
-    def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
-
-    def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
-
-    return "curl -i -v -X${verb} -H 'Content-Type: application/json' -H 'Authorization: ${authHeaderValue}' -H 'x-ms-version: 2017-02-22' " +
-      "-H 'x-ms-date: ${formattedDate}' --max-time 10 --data '{id=${UUID.randomUUID().toString()}, branch_name=chris-test}' '${cosmosDbUrl}${resourceLink}/${resourceType}'".toString()
   }
 
   def publish() {
@@ -126,9 +95,35 @@ private def hmacSHA256(secretKey, data) {
     }
 
     try {
-      def commandString = generateCommandString().toString()
-      steps.echo "${commandString}"
-      steps.sh script: "${commandString}", returnStdout: true
+      //    def metrics = collectMetrics()
+//    steps.echo metrics()
+//    def json = JsonOutput.toJson(metrics)
+//
+//    def data = json.toString()
+      def data = "{\"id\":\"${UUID.randomUUID().toString()}\", \"branch_name\":\"chris-test\"}"
+      steps.echo "Request Body: ${data}"
+
+      def verb = 'POST'
+      def resourceType = "docs"
+      def resourceLink = "dbs/tempdb/colls/tempcoll"
+      def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
+      def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
+      def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
+      def tokenKey = env.COSMOSDB_TOKEN_KEY
+
+      def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
+      steps.echo "${authHeaderValue}"
+
+      steps.httpRequest httpMode: "${verb}",
+        requestBody: "${data}",
+        contentType: 'APPLICATION_JSON',
+        consoleLogResponseBody: true,
+        url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
+        customHeaders: [
+          [name: 'Authorization', value: "${authHeaderValue}"],
+          [name: 'x-ms-version', value: '2017-02-22'],
+          [name: 'x-ms-date', value: "${formattedDate}"],
+        ]
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
     }
