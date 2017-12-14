@@ -89,39 +89,41 @@ class MetricsPublisher implements Serializable {
   }
 
   def publish() {
-    if (env.COSMOSDB_TOKEN_KEY == null) {
-      steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
-      return
-    }
+    steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
+      if (env.COSMOSDB_TOKEN_KEY == null) {
+        steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
+        return
+      }
 
-    try {
-      def metrics = collectMetrics()
-      def data = JsonOutput.toJson(metrics).toString()
-      steps.echo "Request Body: ${data}"
+      try {
+        def metrics = collectMetrics()
+        def data = JsonOutput.toJson(metrics).toString()
+        steps.echo "Request Body: ${data}"
 
-      def verb = 'POST'
-      def resourceType = "docs"
-      def resourceLink = "dbs/tempdb/colls/tempcoll"
-      def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
-      def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
-      def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
-      def tokenKey = env.COSMOSDB_TOKEN_KEY
+        def verb = 'POST'
+        def resourceType = "docs"
+        def resourceLink = "dbs/tempdb/colls/tempcoll"
+        def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
+        def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
+        def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
+        def tokenKey = env.COSMOSDB_TOKEN_KEY
 
-      def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
-      steps.echo "Auth Header: ${authHeaderValue}"
+        def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
+        steps.echo "Auth Header: ${authHeaderValue}"
 
-      steps.httpRequest httpMode: "${verb}",
-        requestBody: "${data}",
-        contentType: 'APPLICATION_JSON',
-        consoleLogResponseBody: true,
-        url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
-        customHeaders: [
-          [name: 'Authorization', value: "${authHeaderValue}"],
-          [name: 'x-ms-version', value: '2017-02-22'],
-          [name: 'x-ms-date', value: "${formattedDate}"],
-        ]
-    } catch (err) {
-      steps.echo "Unable to log metrics '${err}'"
+        steps.httpRequest httpMode: "${verb}",
+          requestBody: "${data}",
+          contentType: 'APPLICATION_JSON',
+          consoleLogResponseBody: true,
+          url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
+          customHeaders: [
+            [name: 'Authorization', value: "${authHeaderValue}"],
+            [name: 'x-ms-version', value: '2017-02-22'],
+            [name: 'x-ms-date', value: "${formattedDate}"],
+          ]
+      } catch (err) {
+        steps.echo "Unable to log metrics '${err}'"
+      }
     }
   }
 }
