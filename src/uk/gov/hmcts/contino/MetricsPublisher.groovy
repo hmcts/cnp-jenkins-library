@@ -62,7 +62,6 @@ class MetricsPublisher implements Serializable {
       current_build_duration       : currentBuild.duration,
       current_build_duration_string: currentBuild.durationString,
       current_build_previous_build : currentBuild.previousBuild.number,
-      current_build_next_build     : currentBuild.nextBuild.number,
       current_build_absolute_url   : currentBuild.absoluteUrl
     ]
   }
