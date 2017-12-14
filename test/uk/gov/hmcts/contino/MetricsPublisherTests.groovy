@@ -10,30 +10,34 @@ class MetricsPublisherTests extends Specification {
     stubSteps
 
   def setup() {
-    stubSteps = Stub(JenkinsStepMock.class)
+    stubSteps = Mock(JenkinsStepMock.class)
     stubSteps.currentBuild >>  []
     stubSteps.env >> [BRANCH_NAME: "master",
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw=="]
     }
 
-  def "generates a curl command sending a POST"() {
+  def "generates a http request setting JSON content type"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    def commandString = metricsPublisher.generateCommandString()
+    metricsPublisher.publish()
 
     then:
-    assertThat(commandString.toString()).startsWith("curl")
-                                        .contains("XPOST")
+    1 * stubSteps.httpRequest({
+      it.containsKey("contentType")
+      it.containsValue("APPLICATION_JSON")
+    })
   }
 
-  def "generates a curl command setting JSON content type"() {
+  def "generates a http request sending required headers"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    def commandString = metricsPublisher.generateCommandString()
+    metricsPublisher.publish()
 
     then:
-    assertThat(commandString.toString()).startsWith("curl")
-                                        .contains("Content-Type: application/json")
+    1 * stubSteps.httpRequest({
+      it.containsKey("customHeaders")
+//      it["customHeaders"].contains(entry("name", "x-ms-version"))
+    })
   }
 
   def "collects build metrics"() {
