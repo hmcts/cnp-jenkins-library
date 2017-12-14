@@ -27,7 +27,7 @@ def call(type, String product, String app, Closure body) {
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild)
 
-  def pl = new PipelineCallbacks()
+  def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
   body.call() // register callbacks
@@ -166,7 +166,6 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onFailure')
-    metricsPublisher.publish()
     throw err
   }
 
@@ -176,6 +175,5 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onSuccess')
-    metricsPublisher.publish()
   }
 }

@@ -46,7 +46,7 @@ class MetricsPublisherTests extends Specification {
   def "collects build metrics"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
-    def metricsMap = metricsPublisher.collectMetrics()
+    def metricsMap = metricsPublisher.collectMetrics('current stepName')
 
     then:
     assertThat(metricsMap).contains(entry("branch_name", "master"))

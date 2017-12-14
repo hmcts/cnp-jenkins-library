@@ -34,7 +34,7 @@ class MetricsPublisher implements Serializable {
   }
 
   @NonCPS
-  private def collectMetrics() {
+  private def collectMetrics(currentStepName) {
     return [
       branch_name                  : env.BRANCH_NAME,
       change_id                    : env.CHANGE_ID,
@@ -56,6 +56,7 @@ class MetricsPublisher implements Serializable {
       build_url                    : env.BUILD_URL,
       job_url                      : env.JOB_URL,
       current_build_number         : currentBuild.number,
+      current_step_name            : currentStepName,
       current_build_result         : currentBuild.result,
       current_build_current_result : currentBuild.currentResult,
       current_build_display_name   : currentBuild.displayName,
@@ -90,7 +91,7 @@ class MetricsPublisher implements Serializable {
     return digest
   }
 
-  def publish() {
+  def publish(currentStepName) {
     steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
       if (env.COSMOSDB_TOKEN_KEY == null) {
         steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
@@ -98,7 +99,7 @@ class MetricsPublisher implements Serializable {
       }
 
       try {
-        def metrics = collectMetrics()
+        def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
         steps.echo "Request Body: ${data}"
 
