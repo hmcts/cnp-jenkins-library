@@ -12,22 +12,25 @@ import com.cloudbees.groovy.cps.NonCPS
 class MetricsPublisher implements Serializable {
 
   private final static String defaultCosmosDbUrl = 'https://build.documents.azure.com/'
+  private final static String defaultCollectionLink = 'dbs/jenkins-sandbox/colls/pipeline-metrics'
   def steps
   def env
   def currentBuild
   def cosmosDbUrl
   def buildStartTimeMillis
+  def resourceLink
 
-  MetricsPublisher(steps, currentBuild, cosmosDbUrl) {
+  MetricsPublisher(steps, currentBuild, cosmosDbUrl, collectionLink) {
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
     this.cosmosDbUrl = cosmosDbUrl
     this.buildStartTimeMillis = currentBuild?.startTimeInMillis
+    this.resourceLink = collectionLink
   }
 
   MetricsPublisher(steps, currentBuild) {
-    this(steps, currentBuild, defaultCosmosDbUrl)
+    this(steps, currentBuild, defaultCosmosDbUrl, defaultCollectionLink)
   }
 
   @NonCPS
@@ -67,7 +70,7 @@ class MetricsPublisher implements Serializable {
   }
 
   @NonCPS
-  private def generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey) {
+  private def generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey) {
     def stringToSign = verb.toLowerCase() + "\n" + resourceType.toLowerCase() + "\n" + resourceLink + "\n" + formattedDate.toLowerCase() + "\n" + "" + "\n"
     steps.echo 'Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign)
 
@@ -102,13 +105,12 @@ class MetricsPublisher implements Serializable {
 
         def verb = 'POST'
         def resourceType = "docs"
-        def resourceLink = "dbs/jenkins-sandbox/colls/pipeline-metrics"
         def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
         def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
         def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
         def tokenKey = env.COSMOSDB_TOKEN_KEY
 
-        def authHeaderValue = generateAuthToken(verb, resourceType, resourceLink, formattedDate, tokenType, tokenVersion, tokenKey)
+        def authHeaderValue = generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey)
         steps.echo "Auth Header: ${authHeaderValue}"
 
         steps.httpRequest httpMode: "${verb}",
