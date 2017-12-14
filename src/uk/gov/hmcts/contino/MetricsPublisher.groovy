@@ -36,7 +36,6 @@ class MetricsPublisher implements Serializable {
   @NonCPS
   private def collectMetrics() {
     return [
-      id                           : UUID.randomUUID().toString(),
       branch_name                  : env.BRANCH_NAME,
       change_id                    : env.CHANGE_ID,
       change_url                   : env.CHANGE_URL,
