@@ -89,7 +89,7 @@ class MetricsPublisher implements Serializable {
   }
 
   def publish() {
-    steps.withCredentials([$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']) {
+    steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
       if (env.COSMOSDB_TOKEN_KEY == null) {
         steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
         return
@@ -102,7 +102,7 @@ class MetricsPublisher implements Serializable {
 
         def verb = 'POST'
         def resourceType = "docs"
-        def resourceLink = "dbs/tempdb/colls/tempcoll"
+        def resourceLink = "dbs/jenkins-sandbox/colls/pipeline-metrics"
         def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
         def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
         def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
