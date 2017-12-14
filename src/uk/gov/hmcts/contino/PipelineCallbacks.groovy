@@ -20,11 +20,11 @@ class PipelineCallbacks implements Serializable {
 
   void after(String stage, Closure body) {
     bodies.put('after:' + stage, body)
-    metricsPublisher.publish('stage')
   }
 
   void callAfter(String stage) {
     nullSafeCall('after:' + stage)
+    metricsPublisher.publish(stage)
   }
 
   void callBefore(String stage) {

@@ -169,11 +169,9 @@ def call(type, String product, String app, Closure body) {
     throw err
   }
 
-  node {
-    if (pl.slackChannel) {
-      notifyBuildFixed channel: pl.slackChannel
-    }
-
-    pl.call('onSuccess')
+  if (pl.slackChannel) {
+    notifyBuildFixed channel: pl.slackChannel
   }
+
+  pl.call('onSuccess')
 }

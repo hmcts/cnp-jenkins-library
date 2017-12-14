@@ -11,7 +11,6 @@ import com.cloudbees.groovy.cps.NonCPS
 
 class MetricsPublisher implements Serializable {
 
-//  private final static String defaultCosmosDbUrl = 'https://build.documents.azure.com/'
   private final static String defaultCosmosDbUrl = 'https://e520fc7bdb51bf9c.documents.azure.com:/'
   private final static String defaultCollectionLink = 'dbs/jenkins-sandbox/colls/pipeline-metrics'
   def steps
@@ -37,7 +36,7 @@ class MetricsPublisher implements Serializable {
   @NonCPS
   private def collectMetrics(currentStepName) {
     return [
-      id                           : "Fish",
+      id                           : "${UUID.randomUUID().toString()}",
       branch_name                  : env.BRANCH_NAME,
       change_id                    : env.CHANGE_ID,
       change_url                   : env.CHANGE_URL,
@@ -110,8 +109,7 @@ class MetricsPublisher implements Serializable {
         def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
         def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
         def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
-        def tokenKey = 'KNPiR07j27zhqq62BjAkBaZIxrufg3AXsGViP7LW6reEVPtrtOVKWlgfh1fUOM2lZWxUJhGgkJlHYqvx1ZEBEg=='
-//        def tokenKey = env.COSMOSDB_TOKEN_KEY
+        def tokenKey = env.COSMOSDB_TOKEN_KEY
 
         def authHeaderValue = generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey)
         steps.echo "Auth Header: ${authHeaderValue}"
