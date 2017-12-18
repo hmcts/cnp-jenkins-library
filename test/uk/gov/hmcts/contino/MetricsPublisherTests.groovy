@@ -12,7 +12,7 @@ class MetricsPublisherTests extends Specification {
 
   def setup() {
     stubSteps = Mock(JenkinsStepMock.class)
-    stubSteps.currentBuild >>  []
+    stubSteps.currentBuild >>  ["timeInMillis" : 1513613748925]
     stubSteps.env >> [BRANCH_NAME: "master",
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw=="]
     }
@@ -50,6 +50,7 @@ class MetricsPublisherTests extends Specification {
 
     then:
     assertThat(metricsMap).contains(entry("branch_name", "master"))
+    assertThat(metricsMap).contains(entry("current_build_scheduled_time", "2017-12-18T16:15:48Z"))
   }
 
   def "creates Authorization header value containing token type, version and signature"() {

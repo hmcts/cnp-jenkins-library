@@ -163,7 +163,7 @@ def call(type, String product, String app, Closure body) {
       }
     }
   } catch (err) {
-    env.currentBuild.result = "FAILURE"
+    currentBuild.result = "FAILURE"
     if (pl.slackChannel) {
       notifyBuildFailure channel: pl.slackChannel
     }

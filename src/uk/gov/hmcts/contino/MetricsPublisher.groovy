@@ -35,6 +35,8 @@ class MetricsPublisher implements Serializable {
 
   @NonCPS
   private def collectMetrics(currentStepName) {
+    def dateBuildScheduled = new Date(currentBuild.timeInMillis as long)
+
     return [
       id                           : "${UUID.randomUUID().toString()}",
       branch_name                  : env.BRANCH_NAME,
@@ -54,7 +56,7 @@ class MetricsPublisher implements Serializable {
       current_build_current_result : currentBuild.currentResult,
       current_build_display_name   : currentBuild.displayName,
       current_build_id             : currentBuild.id,
-      current_build_time_in_millis : currentBuild.timeInMillis,
+      current_build_scheduled_time : dateBuildScheduled?.format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
       current_build_duration       : currentBuild.duration,
       current_build_duration_string: currentBuild.durationString,
       current_build_previous_build : currentBuild.previousBuild?.number,
