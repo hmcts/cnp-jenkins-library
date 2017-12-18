@@ -29,6 +29,13 @@ def call(type, String product, String app, Closure body) {
 
   def pl = new PipelineCallbacks(metricsPublisher)
 
+  onFailure {
+
+  }
+  onSuccess {
+
+  }
+
   body.delegate = pl
   body.call() // register callbacks
 
@@ -166,6 +173,9 @@ def call(type, String product, String app, Closure body) {
     }
 
     pl.call('onFailure')
+    node {
+      metricsPublisher.publish('onFailure')
+    }
     throw err
   }
 
@@ -174,4 +184,7 @@ def call(type, String product, String app, Closure body) {
   }
 
   pl.call('onSuccess')
+  node {
+    metricsPublisher.publish('onSuccess')
+  }
 }
