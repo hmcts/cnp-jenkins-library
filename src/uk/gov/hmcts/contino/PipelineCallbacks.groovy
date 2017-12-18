@@ -5,8 +5,10 @@ class PipelineCallbacks implements Serializable {
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
   private MetricsPublisher metricsPublisher
+  private steps
 
-  PipelineCallbacks(MetricsPublisher metricsPublisher) {
+  PipelineCallbacks(steps, MetricsPublisher metricsPublisher) {
+    this.steps = steps
     this.metricsPublisher = metricsPublisher
   }
 
@@ -35,6 +37,9 @@ class PipelineCallbacks implements Serializable {
     callBefore(stage)
     try {
       body.call()
+    } catch (err) {
+      steps.currentBuild.result = "FAILURE"
+      throw err
     } finally {
       callAfter(stage)
     }

@@ -27,7 +27,7 @@ def call(type, String product, String app, Closure body) {
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild)
 
-  def pl = new PipelineCallbacks(metricsPublisher)
+  def pl = new PipelineCallbacks(this, metricsPublisher)
 
   body.delegate = pl
   body.call() // register callbacks
@@ -64,25 +64,19 @@ def call(type, String product, String app, Closure body) {
 
         stage("Sonar Scan") {
           pl.callAround('sonarscan') {
-            try {
-
-              if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
-                withSonarQubeEnv("SonarQube") {
-                  builder.sonarScan()
-                }
-
-                timeout(time: 5, unit: 'MINUTES') {
-                  def qg = steps.waitForQualityGate()
-                  if (qg.status != 'OK') {
-                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                  }
-                }
-              } else {
-                echo "Sonarqube plugin not installed. Skipping static analysis."
+            if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
+              withSonarQubeEnv("SonarQube") {
+                builder.sonarScan()
               }
-            } catch(err) {
-              currentBuild.result = "FAILURE"
-              throw err
+
+              timeout(time: 5, unit: 'MINUTES') {
+                def qg = steps.waitForQualityGate()
+                if (qg.status != 'OK') {
+                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                }
+              }
+            } else {
+              echo "Sonarqube plugin not installed. Skipping static analysis."
             }
           }
         }

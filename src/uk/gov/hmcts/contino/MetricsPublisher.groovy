@@ -17,7 +17,6 @@ class MetricsPublisher implements Serializable {
   def env
   def currentBuild
   def cosmosDbUrl
-  def buildStartTimeMillis
   def resourceLink
 
   MetricsPublisher(steps, currentBuild, cosmosDbUrl, collectionLink) {
@@ -25,7 +24,6 @@ class MetricsPublisher implements Serializable {
     this.env = steps.env
     this.currentBuild = currentBuild
     this.cosmosDbUrl = cosmosDbUrl
-    this.buildStartTimeMillis = currentBuild?.startTimeInMillis
     this.resourceLink = collectionLink
   }
 
