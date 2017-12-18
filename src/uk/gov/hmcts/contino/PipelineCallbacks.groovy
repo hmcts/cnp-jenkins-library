@@ -16,7 +16,7 @@ class PipelineCallbacks implements Serializable {
     }
   }
 
-    void afterCheckout(Closure body) {
+  void afterCheckout(Closure body) {
     after('checkout', body)
   }
 
