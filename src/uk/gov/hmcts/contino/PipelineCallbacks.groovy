@@ -8,6 +8,12 @@ class PipelineCallbacks implements Serializable {
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
+    onFailure {
+      metricsPublisher.publish('onFailure')
+    }
+    onSuccess {
+      metricsPublisher.publish('onSuccess')
+    }
   }
 
     void afterCheckout(Closure body) {
@@ -43,12 +49,10 @@ class PipelineCallbacks implements Serializable {
 
   void onFailure(Closure body) {
     bodies.put('onFailure', body)
-    metricsPublisher.publish('onFailure')
   }
 
   void onSuccess(Closure body) {
     bodies.put('onSuccess', body)
-    metricsPublisher.publish('onSuccess')
   }
 
   void enableSlackNotifications(String slackChannel) {
