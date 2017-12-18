@@ -96,7 +96,7 @@ class MetricsPublisher implements Serializable {
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
-        steps.echo "Request Body: ${data}"
+//        steps.echo "Request Body: ${data}"
 
         def verb = 'POST'
         def resourceType = "docs"
@@ -106,12 +106,13 @@ class MetricsPublisher implements Serializable {
         def tokenKey = env.COSMOSDB_TOKEN_KEY
 
         def authHeaderValue = generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey)
-        steps.echo "Auth Header: ${authHeaderValue}"
+//        steps.echo "Auth Header: ${authHeaderValue}"
 
         steps.httpRequest httpMode: "${verb}",
           requestBody: "${data}",
           contentType: 'APPLICATION_JSON',
           consoleLogResponseBody: true,
+          quiet: true,
           url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
           customHeaders: [
             [name: 'Authorization', value: "${authHeaderValue}"],
