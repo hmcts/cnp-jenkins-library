@@ -23,11 +23,8 @@ class PipelineCallbacks implements Serializable {
   }
 
   void callAfter(String stage) {
-    try {
-      nullSafeCall('after:' + stage)
-    } finally {
-      metricsPublisher.publish(stage)
-    }
+    nullSafeCall('after:' + stage)
+    metricsPublisher.publish(stage)
   }
 
   void callBefore(String stage) {
@@ -36,8 +33,11 @@ class PipelineCallbacks implements Serializable {
 
   void callAround(String stage, Closure body) {
     callBefore(stage)
-    body.call()
-    callAfter(stage)
+    try {
+      body.call()
+    } finally {
+      callAfter(stage)
+    }
   }
 
   void call(String callback) {
