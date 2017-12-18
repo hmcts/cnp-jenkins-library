@@ -8,12 +8,6 @@ class PipelineCallbacks implements Serializable {
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
-    onFailure {
-      metricsPublisher.publish('onFailure')
-    }
-    onSuccess {
-      metricsPublisher.publish('onSuccess')
-    }
   }
 
   void afterCheckout(Closure body) {
