@@ -32,6 +32,8 @@ def call(type, String product, String app, Closure body) {
   body.delegate = pl
   body.call() // register callbacks
 
+  currentBuild.result = "SUCCESS"
+
   try {
     node {
       platformSetup {
@@ -64,10 +66,10 @@ def call(type, String product, String app, Closure body) {
           pl.callAround('sonarscan') {
             if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
               withSonarQubeEnv("SonarQube") {
-                builder.sonarScan();
+                builder.sonarScan()
               }
 
-              timeout(time: 1, unit: 'MINUTES') {
+              timeout(time: 5, unit: 'MINUTES') {
                 def qg = steps.waitForQualityGate()
                 if (qg.status != 'OK') {
                   error "Pipeline aborted due to quality gate failure: ${qg.status}"
@@ -161,13 +163,14 @@ def call(type, String product, String app, Closure body) {
       }
     }
   } catch (err) {
+    env.currentBuild.result = "FAILURE"
     if (pl.slackChannel) {
       notifyBuildFailure channel: pl.slackChannel
     }
 
     pl.call('onFailure')
     node {
-      metricsPublisher.publish('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
     }
     throw err
   }
@@ -178,6 +181,6 @@ def call(type, String product, String app, Closure body) {
 
   pl.call('onSuccess')
   node {
-    metricsPublisher.publish('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

@@ -50,6 +50,7 @@ class MetricsPublisher implements Serializable {
       job_url                      : env.JOB_URL,
       current_build_number         : currentBuild.number,
       current_step_name            : currentStepName,
+      current_build_result         : currentBuild.result,
       current_build_current_result : currentBuild.currentResult,
       current_build_display_name   : currentBuild.displayName,
       current_build_id             : currentBuild.id,
