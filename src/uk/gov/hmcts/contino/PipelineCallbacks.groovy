@@ -5,10 +5,8 @@ class PipelineCallbacks implements Serializable {
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
   private MetricsPublisher metricsPublisher
-  private steps
 
-  PipelineCallbacks(steps, MetricsPublisher metricsPublisher) {
-    this.steps = steps
+  PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
   }
 
@@ -38,7 +36,7 @@ class PipelineCallbacks implements Serializable {
     try {
       body.call()
     } catch (err) {
-      steps.currentBuild.result = "FAILURE"
+      call('onStageFailure')
       throw err
     } finally {
       callAfter(stage)
@@ -47,6 +45,10 @@ class PipelineCallbacks implements Serializable {
 
   void call(String callback) {
     nullSafeCall(callback)
+  }
+
+  void onStageFailure(Closure body) {
+    bodies.put('onStageFailure', body)
   }
 
   void onFailure(Closure body) {

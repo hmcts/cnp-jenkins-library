@@ -26,12 +26,14 @@ def call(type, String product, String app, Closure body) {
   Builder builder = pipelineType.builder
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild)
-
-  def pl = new PipelineCallbacks(this, metricsPublisher)
+  def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
   body.call() // register callbacks
 
+  pl.onStageFailure() {
+    currentBuild.result = "FAILURE"
+  }
   currentBuild.result = "SUCCESS"
 
   try {
