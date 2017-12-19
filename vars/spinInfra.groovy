@@ -8,7 +8,7 @@
         will only run terraform plan, apply will be skipped
         Default: false
 */
-def call(productName, environment, planOnly = false) {
+def call(productName, subscription, planOnly = false) {
 /*  //TODO: make it work with optoinal parameters for planOnly
   // evaluate the body block, and collect configuration into the object
   def config = [:]
@@ -30,37 +30,36 @@ def call(productName, environment, planOnly = false) {
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
 
-  def subscription = env.SUBSCRIPTION_NAME
-  stateStoreInit(environment)
+  stateStoreInit(subscription)
 
-  lock("${productName}-${environment}") {
-    stage("Plan ${productName}-${environment} in ${subscription}") {
+  lock("${productName}-${subscription}") {
+    stage("Plan ${productName}-${subscription} in ${subscription}") {
       if (env.STORE_rg_name_template != null &&
         env.STORE_sa_name_template != null &&
         env.STORE_sa_container_name_template != null) {
         log.warning("Using following stateStore={" +
-          "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
-          "'sa_name': '${env.STORE_sa_name_template}${environment}', " +
-          "'sa_container_name': '${env.STORE_sa_container_name_template}${environment}'}")
+          "'rg_name': '${env.STORE_rg_name_template}-${subscription}', " +
+          "'sa_name': '${env.STORE_sa_name_template}${subscription}', " +
+          "'sa_container_name': '${env.STORE_sa_container_name_template}${subscription}'}")
       } else
         throw new Exception("State store name details not found in environment variables?")
 
       sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
 
       sh "terraform init -reconfigure -backend-config " +
-        "\"storage_account_name=${env.STORE_sa_name_template}${environment}\" " +
-        "-backend-config \"container_name=${STORE_sa_container_name_template}${environment}\" " +
-        "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${environment}\" " +
-        "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
+        "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
+        "-backend-config \"container_name=${STORE_sa_container_name_template}${subscription}\" " +
+        "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
+        "-backend-config \"key=${productName}/${subscription}/terraform.tfstate\""
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}'" +
-        (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+      sh "terraform plan -var 'env=${subscription}' -var 'name=${productName}'" +
+        (fileExists("${subscription}.tfvars") ? " var-file=${subscription}.tfvars" : "")
 
       if (!planOnly) {
-        stage("Apply ${productName}-${environment} in ${subscription}") {
-          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}'" +
-            (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+        stage("Apply ${productName}-${subscription} in ${subscription}") {
+          sh "terraform apply -auto-approve -var 'env=${subscription}' -var 'name=${productName}'" +
+            (fileExists("${subscription}.tfvars") ? " var-file=${subscription}.tfvars" : "")
         }
       } else
         log.warning "Skipping apply due to planOnly flag set"
