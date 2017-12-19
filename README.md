@@ -50,9 +50,9 @@ def type = "java"          // supports "java" and "nodejs"
 
 def product = "rhubarb"
 
-def app = "recipe-backend" // must match infrastructure module name
+def component = "recipe-backend" // must match infrastructure module name
 
-withPipeline(type, product, app) {
+withPipeline(type, product, component) {
 }
 ```
 
@@ -87,7 +87,7 @@ You can use the `before(stage)` and `after(stage)` within the `withPipeline` blo
 E.g.
 
 ```
-withPipeline(type, product, app) {
+withPipeline(type, product, component) {
   after('checkout') {
     echo 'Checked out'
   }

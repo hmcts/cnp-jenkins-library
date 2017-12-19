@@ -6,10 +6,10 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
 
-def call(type, String product, String app, Closure body) {
+def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, app),
-    nodejs: new NodePipelineType(this, product, app)
+    java  : new SpringBootPipelineType(this, product, component),
+    nodejs: new NodePipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
@@ -130,10 +130,10 @@ def call(type, String product, String app, Closure body) {
           }
 
           folderExists('infrastructure') {
-            terraform.ini("${product}-${app}", this)
+            terraform.ini("${product}-${component}", this)
             withSubscription('prod') {
               dir('infrastructure') {
-                lock("${product}-${app}-prod") {
+                lock("${product}-${component}-prod") {
                   withIlbIp('prod') {
                     stage('Infrastructure Plan - prod') {
                       terraform.plan('prod')
