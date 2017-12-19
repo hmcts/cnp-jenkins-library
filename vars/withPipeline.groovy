@@ -62,7 +62,7 @@ def call(type, String product, String app, Closure body) {
 
         stage("Sonar Scan") {
           pl.callAround('sonarscan') {
-            if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' } != null) {
+            if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' && it.isEnabled() } != null) {
               withSonarQubeEnv("SonarQube") {
                 builder.sonarScan();
               }
