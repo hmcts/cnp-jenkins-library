@@ -18,8 +18,12 @@ class MetricsPublisher implements Serializable {
   def currentBuild
   def cosmosDbUrl
   def resourceLink
+  def product
+  def component
 
-  MetricsPublisher(steps, currentBuild, cosmosDbUrl, collectionLink) {
+  MetricsPublisher(steps, currentBuild, product, component, cosmosDbUrl, collectionLink) {
+    this.product = product
+    this.component = component
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
@@ -27,8 +31,8 @@ class MetricsPublisher implements Serializable {
     this.resourceLink = collectionLink
   }
 
-  MetricsPublisher(steps, currentBuild) {
-    this(steps, currentBuild, defaultCosmosDbUrl, defaultCollectionLink)
+  MetricsPublisher(steps, currentBuild, product, component) {
+    this(steps, currentBuild, product, component, defaultCosmosDbUrl, defaultCollectionLink)
   }
 
   @NonCPS
@@ -37,6 +41,8 @@ class MetricsPublisher implements Serializable {
 
     return [
       id                           : "${UUID.randomUUID().toString()}",
+      product                      : product,
+      component                    : component,
       branch_name                  : env.BRANCH_NAME,
       build_number                 : env.BUILD_NUMBER,
       build_id                     : env.BUILD_ID,
