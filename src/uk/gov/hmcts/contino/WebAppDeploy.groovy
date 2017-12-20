@@ -8,6 +8,7 @@ class WebAppDeploy implements Serializable {
   public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final String GIT_USER = "jenkinsmoj"
   public static final String SERVICE_HOST_SUFFIX = "p.azurewebsites.net"
+  public static final String DEPLOYMENT_SLOT_SUFFIX = "-staging"
   def steps
   def product
   def defaultRemote = "azure"
@@ -233,7 +234,7 @@ class WebAppDeploy implements Serializable {
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
     def hostingEnv = getComputeFor(env)
-    return "${serviceName}.scm.${hostingEnv}.${SERVICE_HOST_SUFFIX}"
+    return "${serviceName}${DEPLOYMENT_SLOT_SUFFIX}.scm.${hostingEnv}.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceHost(product, app, env) {
