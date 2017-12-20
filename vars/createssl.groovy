@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.*
 import groovy.json.JsonSlurper
 
-def call(String platform) {
+def call(String platform, String subscription) {
 
 
 
@@ -17,9 +17,9 @@ def call(String platform) {
   def functions = libraryResource 'uk/gov/hmcts/contino/ilbSSL.sh'
   writeFile file: 'ilbSSL.sh', text: functions
 
-  result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform}"
+  result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform} ${subscription}"
 
-  sh "az keyvault certificate show --vault-name app-vault --name core-infra-${platform} --query x509Thumbprint --output tsv > thumb.txt"
+  sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509Thumbprint --output tsv > thumb.txt"
 
   thumbprint = readFile 'thumb.txt'
 

@@ -3,7 +3,7 @@ import groovy.json.JsonSlurperClassic
 
 def call(String secretName) {
 
-  echo 'Attempting secret read ... current subscription: $ARM_SUBSCRIPTION_ID'
+  echo "Attempting secret read ... current subscription: $ARM_SUBSCRIPTION_ID"
 
   withCredentials([azureServicePrincipal(
     credentialsId: "jenkinsServicePrincipal",

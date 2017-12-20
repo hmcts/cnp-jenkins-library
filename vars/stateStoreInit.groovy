@@ -1,15 +1,17 @@
+#!groovy
 import uk.gov.hmcts.contino.*
 
-def call(String env) {
+//can be run only inside withSubscription
+def call(String environment, String subscription) {
+  stage("Check/Init state store for env '${environment}'") {
+    def functions = libraryResource 'uk/gov/hmcts/contino/stateStoreInit.sh'
+    writeFile file: 'stateStoreInit.sh', text: functions
 
-  def functions = libraryResource 'uk/gov/hmcts/contino/stateStoreInit.sh'
-  writeFile file: 'stateStoreInit.sh', text: functions
+    __location = 'uksouth'
+    __rg = "${env.STORE_rg_name_template}-${subscription}"
+    sa_name = "${env.STORE_sa_name_template}${subscription}"
+    sacontainer_name = "${env.STORE_sa_container_name_template}${environment}"
 
-  __statestore= readSecret("cfg-state-store")
-  __location = 'uksouth'
-  __rg= __statestore.rg_name+ "-"+ env
-  sa_name= __statestore.sa_name+ env
-  sacontainer_name = __statestore.sa_container_name+ env
-
-  sh "bash stateStoreInit.sh $__rg $sa_name $sacontainer_name $__location"
+    sh "bash stateStoreInit.sh $__rg $sa_name $sacontainer_name $__location"
+  }
 }

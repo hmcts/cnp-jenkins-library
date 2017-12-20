@@ -4,6 +4,7 @@ __rg=$1
 __sa=$2
 __container=$3
 __location=$4
+__subscription=$5
 
 if [ -z $__rg ]; then
     fail "Resource Group name not provided!"
@@ -44,6 +45,7 @@ if [ -z "${__saState}" ] ; then
     # check if the storage account name s a valid format
     __saCheck="$(az storage account check-name --name $__sa --output tsv)"
 
+# TODO These checks must be reviewed for when the sa is NOT available
     __isAvailable="$(echo $__saCheck | cut -f2 -d ' ')"
     __message="$(echo $__saCheck | cut -f1 -d ' ')"
     __reason="$(echo $__saCheck | cut -f3 -d ' ')"
