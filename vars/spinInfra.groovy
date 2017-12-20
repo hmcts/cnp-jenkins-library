@@ -13,7 +13,7 @@ def call(productName, environment, planOnly = false, subscription) {
         env.STORE_sa_name_template != null &&
         env.STORE_sa_container_name_template != null) {
         log.warning("Using following stateStore={" +
-          "'rg_name': '${env.STORE_rg_name_template}-${environment}', " +
+          "'rg_name': '${env.STORE_rg_name_template}-${subscription}', " +
           "'sa_name': '${env.STORE_sa_name_template}${subscription}', " +
           "'sa_container_name': '${env.STORE_sa_container_name_template}${environment}'}")
       } else
@@ -24,7 +24,7 @@ def call(productName, environment, planOnly = false, subscription) {
       sh "terraform init -reconfigure -backend-config " +
         "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
         "-backend-config \"container_name=${STORE_sa_container_name_template}${environment}\" " +
-        "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${environment}\" " +
+        "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
         "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 
       sh "terraform get -update=true"

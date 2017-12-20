@@ -8,7 +8,7 @@ def call(String environment, String subscription) {
     writeFile file: 'stateStoreInit.sh', text: functions
 
     __location = 'uksouth'
-    __rg = "${env.STORE_rg_name_template}-${environment}"
+    __rg = "${env.STORE_rg_name_template}-${subscription}"
     sa_name = "${env.STORE_sa_name_template}${subscription}"
     sacontainer_name = "${env.STORE_sa_container_name_template}${environment}"
 
