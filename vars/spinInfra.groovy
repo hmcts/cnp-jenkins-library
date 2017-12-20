@@ -28,12 +28,12 @@ def call(productName, environment, planOnly = false, subscription) {
         "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}'" +
+      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
         (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}'" +
+          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
             (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
         }
       } else
