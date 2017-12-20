@@ -17,34 +17,33 @@ class MetricsPublisher implements Serializable {
   def env
   def currentBuild
   def cosmosDbUrl
-  def buildStartTimeMillis
   def resourceLink
+  def product
+  def component
 
-  MetricsPublisher(steps, currentBuild, cosmosDbUrl, collectionLink) {
+  MetricsPublisher(steps, currentBuild, product, component, cosmosDbUrl, collectionLink) {
+    this.product = product
+    this.component = component
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
     this.cosmosDbUrl = cosmosDbUrl
-    this.buildStartTimeMillis = currentBuild?.startTimeInMillis
     this.resourceLink = collectionLink
   }
 
-  MetricsPublisher(steps, currentBuild) {
-    this(steps, currentBuild, defaultCosmosDbUrl, defaultCollectionLink)
+  MetricsPublisher(steps, currentBuild, product, component) {
+    this(steps, currentBuild, product, component, defaultCosmosDbUrl, defaultCollectionLink)
   }
 
   @NonCPS
   private def collectMetrics(currentStepName) {
+    def dateBuildScheduled = new Date(currentBuild.timeInMillis as long)
+
     return [
       id                           : "${UUID.randomUUID().toString()}",
+      product                      : product,
+      component                    : component,
       branch_name                  : env.BRANCH_NAME,
-      change_id                    : env.CHANGE_ID,
-      change_url                   : env.CHANGE_URL,
-      change_title                 : env.CHANGE_TITLE,
-      change_author                : env.CHANGE_AUTHOR,
-      change_author_display_name   : env.CHANGE_AUTHOR_DISPLAY_NAME,
-      change_author_email          : env.CHANGE_AUTHOR_EMAIL,
-      change_target                : env.CHANGE_TARGET,
       build_number                 : env.BUILD_NUMBER,
       build_id                     : env.BUILD_ID,
       build_display_name           : env.BUILD_DISPLAY_NAME,
@@ -53,7 +52,6 @@ class MetricsPublisher implements Serializable {
       build_tag                    : env.BUILD_TAG,
       node_name                    : env.NODE_NAME,
       node_labels                  : env.NODE_LABELS,
-      workspace                    : env.WORKSPACE,
       build_url                    : env.BUILD_URL,
       job_url                      : env.JOB_URL,
       current_build_number         : currentBuild.number,
@@ -62,7 +60,7 @@ class MetricsPublisher implements Serializable {
       current_build_current_result : currentBuild.currentResult,
       current_build_display_name   : currentBuild.displayName,
       current_build_id             : currentBuild.id,
-      current_build_time_in_millis : currentBuild.timeInMillis,
+      current_build_scheduled_time : dateBuildScheduled?.format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
       current_build_duration       : currentBuild.duration,
       current_build_duration_string: currentBuild.durationString,
       current_build_previous_build : currentBuild.previousBuild?.number,
@@ -102,7 +100,7 @@ class MetricsPublisher implements Serializable {
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
-        steps.echo "Request Body: ${data}"
+        steps.echo "Publishing Metric data: '${data}'"
 
         def verb = 'POST'
         def resourceType = "docs"
@@ -112,12 +110,11 @@ class MetricsPublisher implements Serializable {
         def tokenKey = env.COSMOSDB_TOKEN_KEY
 
         def authHeaderValue = generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey)
-        steps.echo "Auth Header: ${authHeaderValue}"
 
         steps.httpRequest httpMode: "${verb}",
           requestBody: "${data}",
           contentType: 'APPLICATION_JSON',
-          consoleLogResponseBody: true,
+          quiet: true,
           url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
           customHeaders: [
             [name: 'Authorization', value: "${authHeaderValue}"],

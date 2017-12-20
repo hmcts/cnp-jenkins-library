@@ -6,10 +6,10 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
 
-def call(type, String product, String app, Closure body) {
+def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, app),
-    nodejs: new NodePipelineType(this, product, app)
+    java  : new SpringBootPipelineType(this, product, component),
+    nodejs: new NodePipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
@@ -25,12 +25,16 @@ def call(type, String product, String app, Closure body) {
   Deployer deployer = pipelineType.deployer
   Builder builder = pipelineType.builder
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild)
-
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
   body.call() // register callbacks
+
+  pl.onStageFailure() {
+    currentBuild.result = "FAILURE"
+  }
+  currentBuild.result = "SUCCESS"
 
   try {
     node {
@@ -64,10 +68,10 @@ def call(type, String product, String app, Closure body) {
           pl.callAround('sonarscan') {
             if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' && it.isEnabled() } != null) {
               withSonarQubeEnv("SonarQube") {
-                builder.sonarScan();
+                builder.sonarScan()
               }
 
-              timeout(time: 1, unit: 'MINUTES') {
+              timeout(time: 5, unit: 'MINUTES') {
                 def qg = steps.waitForQualityGate()
                 if (qg.status != 'OK') {
                   error "Pipeline aborted due to quality gate failure: ${qg.status}"
@@ -126,10 +130,10 @@ def call(type, String product, String app, Closure body) {
           }
 
           folderExists('infrastructure') {
-            terraform.ini("${product}-${app}", this)
+            terraform.ini("${product}-${component}", this)
             withSubscription('prod') {
               dir('infrastructure') {
-                lock("${product}-${app}-prod") {
+                lock("${product}-${component}-prod") {
                   withIlbIp('prod') {
                     stage('Infrastructure Plan - prod') {
                       terraform.plan('prod')
@@ -161,13 +165,14 @@ def call(type, String product, String app, Closure body) {
       }
     }
   } catch (err) {
+    currentBuild.result = "FAILURE"
     if (pl.slackChannel) {
       notifyBuildFailure channel: pl.slackChannel
     }
 
     pl.call('onFailure')
     node {
-      metricsPublisher.publish('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
     }
     throw err
   }
@@ -178,6 +183,6 @@ def call(type, String product, String app, Closure body) {
 
   pl.call('onSuccess')
   node {
-    metricsPublisher.publish('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

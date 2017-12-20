@@ -33,12 +33,22 @@ class PipelineCallbacks implements Serializable {
 
   void callAround(String stage, Closure body) {
     callBefore(stage)
-    body.call()
-    callAfter(stage)
+    try {
+      body.call()
+    } catch (err) {
+      call('onStageFailure')
+      throw err
+    } finally {
+      callAfter(stage)
+    }
   }
 
   void call(String callback) {
     nullSafeCall(callback)
+  }
+
+  void onStageFailure(Closure body) {
+    bodies.put('onStageFailure', body)
   }
 
   void onFailure(Closure body) {

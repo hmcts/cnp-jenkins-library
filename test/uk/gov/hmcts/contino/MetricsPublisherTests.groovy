@@ -12,7 +12,7 @@ class MetricsPublisherTests extends Specification {
 
   def setup() {
     stubSteps = Mock(JenkinsStepMock.class)
-    stubSteps.currentBuild >>  []
+    stubSteps.currentBuild >>  ["timeInMillis" : 1513613748925]
     stubSteps.env >> [BRANCH_NAME: "master",
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw=="]
     }
@@ -20,7 +20,7 @@ class MetricsPublisherTests extends Specification {
   @Ignore("Figure out how to make this work since pushing down the withCredentials into publish()")
   def "generates a http request setting JSON content type"() {
     when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
     metricsPublisher.publish()
 
     then:
@@ -33,7 +33,7 @@ class MetricsPublisherTests extends Specification {
   @Ignore("Figure out how to make this work since pushing down the withCredentials into publish()")
   def "generates a http request sending required headers"() {
     when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
     metricsPublisher.publish()
 
     then:
@@ -45,16 +45,19 @@ class MetricsPublisherTests extends Specification {
 
   def "collects build metrics"() {
     when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
     def metricsMap = metricsPublisher.collectMetrics('current stepName')
 
     then:
+    assertThat(metricsMap).contains(entry("component", "testComponent"))
+    assertThat(metricsMap).contains(entry("product", "testProduct"))
     assertThat(metricsMap).contains(entry("branch_name", "master"))
+    assertThat(metricsMap).contains(entry("current_build_scheduled_time", "2017-12-18T16:15:48Z"))
   }
 
   def "creates Authorization header value containing token type, version and signature"() {
     when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild)
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
     def authToken = metricsPublisher.generateAuthToken('POST', 'resourceType', 'dateString', 'master', '1.0', stubSteps.env.COSMOSDB_TOKEN_KEY)
 
     then:
