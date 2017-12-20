@@ -23,10 +23,10 @@ class Terraform implements Serializable {
     this.steps = jenkinsPipeline
   }
 
-  def lint() {
-    runTerraformWithCreds('fmt --diff=true > diff.out')
+  def lint(env) {
+    runTerraformWithCreds(env, 'fmt --diff=true > diff.out')
     steps.sh 'if [ ! -s diff.out ]; then echo "Initial Linting OK ..."; else echo "Linting errors found while running terraform fmt --diff=true... Applying terraform fmt first" && cat diff.out &&  terraform fmt; fi'
-    return runTerraformWithCreds('validate')
+    return runTerraformWithCreds(env, 'validate')
   }
 
 /***
@@ -39,9 +39,9 @@ class Terraform implements Serializable {
       throw new Exception("'product' is null! Library can only run as module helper in this case!")
 
     init(env)
-    runTerraformWithCreds("get -update=true")
+    runTerraformWithCreds(env, "get -update=true")
 
-    return runTerraformWithCreds(configureArgs(env, "plan -var 'env=${env}' -var 'name=${product}'"))
+    return runTerraformWithCreds(env, configureArgs(env, "plan -var 'env=${env}' -var 'name=${product}'"))
   }
 
   /***
@@ -53,7 +53,7 @@ class Terraform implements Serializable {
     if (canApply(env)) {
       if (this.product == null)
         throw new Exception("'product' is null! Library can only run as module helper in this case!")
-      return runTerraformWithCreds(configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
+      return runTerraformWithCreds(env, configureArgs(env, "apply -var 'env=${env}' -var 'name=${product}'"))
     } else
       throw new Exception("You cannot apply for Environment: '${env}' on branch '${branch.branchName}'. ['dev', 'test', 'prod'] are reserved for master branch, try other name")
   }
@@ -70,7 +70,7 @@ class Terraform implements Serializable {
       throw new Exception("'product' is null! Library can only run as module helper in this case!")
     def stateStoreConfig = getStateStoreConfig(env)
 
-    return runTerraformWithCreds("init -reconfigure -backend-config " +
+    return runTerraformWithCreds(env, "init -reconfigure -backend-config " +
       "\"storage_account_name=${stateStoreConfig.storageAccount}\" " +
       "-backend-config \"container_name=${stateStoreConfig.container}\" " +
       "-backend-config \"resource_group_name=${stateStoreConfig.resourceGroup}\" " +
@@ -103,22 +103,33 @@ class Terraform implements Serializable {
     steps.sh("echo -e '\\e[34m$gString'")
   }
 
-  private runTerraformWithCreds(args) {
+  private runTerraformWithCreds(env, args) {
     setupTerraform()
     return steps.ansiColor('xterm') {
-      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'sp_password', variable: 'ARM_CLIENT_SECRET'],
-          [$class: 'StringBinding', credentialsId: 'tenant_id', variable: 'ARM_TENANT_ID'],
-          [$class: 'StringBinding', credentialsId: 'subscription_id', variable: 'ARM_SUBSCRIPTION_ID'],
-          [$class: 'StringBinding', credentialsId: 'object_id', variable: 'ARM_CLIENT_ID'],
-          [$class: 'StringBinding', credentialsId: 'kitchen_github', variable: 'TOKEN'],
-          [$class: 'StringBinding', credentialsId: 'kitchen_github', variable: 'TF_VAR_token'],
-          [$class: 'StringBinding', credentialsId: 'kitchen_client_secret', variable: 'AZURE_CLIENT_SECRET'],
-          [$class: 'StringBinding', credentialsId: 'kitchen_tenant_id', variable: 'AZURE_TENANT_ID'],
-          [$class: 'StringBinding', credentialsId: 'kitchen_subscription_id', variable: 'AZURE_SUBSCRIPTION_ID'],
-          [$class: 'StringBinding', credentialsId: 'kitchen_client_id', variable: 'AZURE_CLIENT_ID']]) {
+      steps.withCredentials([steps.azureServicePrincipal('jenkinsSP')]) {
+        def subscription = 'nonprod'
+        if (env == 'prod')
+          subscription = 'prod'
+
+        steps.env.ARM_CLIENT_ID = getSecretValue("${subscription}-client-id")
+        steps.env.ARM_CLIENT_SECRET = getSecretValue("${subscription}-client-secret")
+        steps.env.ARM_TENANT_ID = getSecretValue("${subscription}-tenant-id")
+        steps.env.ARM_SUBSCRIPTION_ID = getSecretValue("${subscription}-subscription-id")
+
+        steps.env.AZURE_CLIENT_ID = steps.env.ARM_CLIENT_ID
+        steps.env.AZURE_CLIENT_SECRET = steps.env.ARM_CLIENT_SECRET
+        steps.env.AZURE_TENANT_ID = steps.env.ARM_TENANT_ID
+        steps.env.AZURE_SUBSCRIPTION_ID = steps.env.ARM_SUBSCRIPTION_ID
+
         steps.sh("terraform ${args}")
       }
     }
+  }
+
+  private String getSecretValue(var) {
+    resp = steps.sh(script: "az keyvault secret show --vault-name 'jenkins-vault' --name ${var}", returnStdout: true).trim()
+    secret = new JsonSlurperClassic().parseText(resp)
+    return secret.value
   }
 
   private setupTerraform() {

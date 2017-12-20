@@ -9,10 +9,12 @@ interface JenkinsStepMock {
   HashMap getCurrentBuild()
 
   Object sh(String)
+  Object echo(String)
   Object git(Map params)
   Object tool(HashMap)
   String libraryResource(String)
   Object withCredentials(ArrayList, Closure)
+  Object httpRequest(LinkedHashMap)
 
   Object ansiColor(String, Closure)
   Object fileExists(String)

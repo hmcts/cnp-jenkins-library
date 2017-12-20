@@ -4,6 +4,11 @@ class PipelineCallbacks implements Serializable {
 
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
+  private MetricsPublisher metricsPublisher
+
+  PipelineCallbacks(MetricsPublisher metricsPublisher) {
+    this.metricsPublisher = metricsPublisher
+  }
 
   void afterCheckout(Closure body) {
     after('checkout', body)
@@ -19,6 +24,7 @@ class PipelineCallbacks implements Serializable {
 
   void callAfter(String stage) {
     nullSafeCall('after:' + stage)
+    metricsPublisher.publish(stage)
   }
 
   void callBefore(String stage) {
@@ -27,12 +33,22 @@ class PipelineCallbacks implements Serializable {
 
   void callAround(String stage, Closure body) {
     callBefore(stage)
-    body.call()
-    callAfter(stage)
+    try {
+      body.call()
+    } catch (err) {
+      call('onStageFailure')
+      throw err
+    } finally {
+      callAfter(stage)
+    }
   }
 
   void call(String callback) {
     nullSafeCall(callback)
+  }
+
+  void onStageFailure(Closure body) {
+    bodies.put('onStageFailure', body)
   }
 
   void onFailure(Closure body) {

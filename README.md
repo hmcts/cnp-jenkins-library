@@ -31,7 +31,7 @@ and NodeJS applications. The pipeline contains the following stages:
 * Smoke Tests - Dev
 * OWASP
 * Deploy Prod
-* Smoke Tests - Prod
+* Smoke Tests - Production
 
 In this version, Java apps must be use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
@@ -50,9 +50,9 @@ def type = "java"          // supports "java" and "nodejs"
 
 def product = "rhubarb"
 
-def app = "recipe-backend" // must match infrastructure module name
+def component = "recipe-backend" // must match infrastructure module name
 
-withPipeline(type, product, app) {
+withPipeline(type, product, component) {
 }
 ```
 
@@ -87,7 +87,7 @@ You can use the `before(stage)` and `after(stage)` within the `withPipeline` blo
 E.g.
 
 ```
-withPipeline(type, product, app) {
+withPipeline(type, product, component) {
   after('checkout') {
     echo 'Checked out'
   }
