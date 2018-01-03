@@ -38,6 +38,8 @@ def call(type, String product, String component, Closure body) {
 
   try {
     node {
+      env.PATH = "$env.PATH:/usr/local/bin"
+      
       stage('Checkout') {
         pl.callAround('checkout') {
           deleteDir()
