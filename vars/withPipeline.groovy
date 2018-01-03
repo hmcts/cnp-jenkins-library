@@ -38,127 +38,102 @@ def call(type, String product, String component, Closure body) {
 
   try {
     node {
-      platformSetup {
-        stage('Checkout') {
-          pl.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
+      stage('Checkout') {
+        pl.callAround('checkout') {
+          deleteDir()
+          checkout scm
         }
+      }
 
-        stage("Build") {
-          pl.callAround('build') {
-            builder.build()
-          }
+      stage("Build") {
+        pl.callAround('build') {
+          builder.build()
         }
+      }
 
-        stage("Test") {
-          pl.callAround('test') {
-            builder.test()
-          }
+      stage("Test") {
+        pl.callAround('test') {
+          builder.test()
         }
+      }
 
-        stage("Security Checks") {
-          pl.callAround('securitychecks') {
-            builder.securityCheck()
-          }
+      stage("Security Checks") {
+        pl.callAround('securitychecks') {
+          builder.securityCheck()
         }
+      }
 
-        stage("Sonar Scan") {
-          pl.callAround('sonarscan') {
-            if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' && it.isActive() } != null) {
-              withSonarQubeEnv("SonarQube") {
-                builder.sonarScan()
-              }
-
-              timeout(time: 5, unit: 'MINUTES') {
-                def qg = steps.waitForQualityGate()
-                if (qg.status != 'OK') {
-                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                }
-              }
-            } else {
-              echo "Sonarqube plugin not installed. Skipping static analysis."
+      stage("Sonar Scan") {
+        pl.callAround('sonarscan') {
+          if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' && it.isActive() } != null) {
+            withSonarQubeEnv("SonarQube") {
+              builder.sonarScan()
             }
+
+            timeout(time: 5, unit: 'MINUTES') {
+              def qg = steps.waitForQualityGate()
+              if (qg.status != 'OK') {
+                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+              }
+            }
+          } else {
+            echo "Sonarqube plugin not installed. Skipping static analysis."
           }
         }
+      }
 
-        onMaster {
+      onMaster {
 /*
-          folderExists('infrastructure') {
-            terraform.ini("${product}-${app}", this)
-            withSubscription('nonprod') {
-              dir('infrastructure') {
-                lock("${product}-${app}-nonprod") {
-                  stage('getIlbIp') {
-                    def envSuffix = 'nonprod'
-                    def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F&client_id=$ARM_CLIENT_ID&client_secret=$ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$ARM_TENANT_ID/oauth2/token"
-                    TOKEN = new JsonSlurperClassic().parseText(response.content).access_token
-                    def vip = httpRequest httpMode: 'GET', customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]], url: "https://management.azure.com/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/core-infra-$envSuffix/providers/Microsoft.Web/hostingEnvironments/core-compute-$envSuffix/capacities/virtualip?api-version=2016-09-01"
-                    def internalip = new JsonSlurperClassic().parseText(vip.content).internalIpAddress
-                    println internalip
-                    env.TF_VAR_ilbIp = internalip
-                  }
-                  stage('Infrastructure Plan - nonprod') {
-                    terraform.plan('nonprod')
-                  }
-                  stage('Infrastructure Build - nonprod') {
-                    terraform.apply('nonprod')
-                  }
-                }
+        folderExists('infrastructure') {
+          withSubscription('nonprod') {
+            dir('infrastructure') {
+              withIlbIp('nonprod') {
+                spinInfra("${product}-${component}", 'nonprod', false, 'nonprod')
               }
             }
           }
+        }
 
-          stage('Deploy nonprod') {
-            pl.callAround('deploy:nonprod') {
-              deployer.deploy('nonprod')
-              deployer.healthCheck('nonprod')
+        stage('Deploy nonprod') {
+          pl.callAround('deploy:nonprod') {
+            deployer.deploy('nonprod')
+            deployer.healthCheck('nonprod')
+          }
+        }
+
+        stage('Smoke Tests - nonprod') {
+          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+            pl.callAround('smoketest:nonprod') {
+              builder.smokeTest()
             }
           }
-
-          stage('Smoke Tests - nonprod') {
-            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
-              pl.callAround('smoketest:nonprod') {
-                builder.smokeTest()
-              }
-            }
-          }
+        }
 */
-          stage("OWASP") {
+        stage("OWASP") {
 
-          }
+        }
 
-          folderExists('infrastructure') {
-            terraform.ini("${product}-${component}", this)
-            withSubscription('prod') {
-              dir('infrastructure') {
-                lock("${product}-${component}-prod") {
-                  withIlbIp('prod') {
-                    stage('Infrastructure Plan - prod') {
-                      terraform.plan('prod')
-                    }
-                    stage('Infrastructure Build - prod') {
-                      terraform.apply('prod')
-                    }
-                  }
-                }
+        folderExists('infrastructure') {
+          withSubscription('prod') {
+            dir('infrastructure') {
+              withIlbIp('prod') {
+                spinInfra("${product}-${component}", 'prod', false, 'prod')
               }
             }
           }
+        }
 
-          stage('Deploy Prod') {
-            pl.callAround('deploy:prod') {
-              deployer.deploy('prod')
-              deployer.healthCheck('prod')
-            }
+        stage('Deploy Prod') {
+          pl.callAround('deploy:prod') {
+            deployer.deploy('prod')
+            deployer.healthCheck('prod')
           }
+        }
 
-          stage('Smoke Tests - Prod') {
-            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-              pl.callAround('smoketest:prod') {
-                builder.smokeTest()
-              }
+        stage('Smoke Tests - Prod') {
+          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+            pl.callAround('smoketest:prod') {
+              builder.smokeTest()
             }
           }
         }
