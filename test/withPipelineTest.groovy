@@ -3,6 +3,7 @@ import org.junit.Before
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import uk.gov.hmcts.contino.MockJenkins
 import org.junit.Test
 
 class withPipelineTest extends BasePipelineTest {
@@ -17,6 +18,7 @@ class withPipelineTest extends BasePipelineTest {
     super.setUp()
     binding.setVariable("scm", null)
     binding.setVariable("env", [BRANCH_NAME:"master"])
+    binding.setVariable( "Jenkins", [instance: new MockJenkins()])
   }
 
   @Test
@@ -37,6 +39,7 @@ class withPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withEnv", [List.class, Closure.class], {})
     helper.registerAllowedMethod("ansiColor", [String, Closure], {})
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure], {})
+    helper.registerAllowedMethod("sh", [Map.class], { return "" })
     loadScript("testResources/examplePipeline.jenkins")
     printCallStack()
   }

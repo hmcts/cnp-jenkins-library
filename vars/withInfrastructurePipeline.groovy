@@ -1,38 +1,14 @@
-import uk.gov.hmcts.contino.Terraform
 
-def call(String product) {
+def call(String product, String environment, String subscription) {
 
-  def terraform = new Terraform(this, product)
   node {
     stage('Checkout') {
       deleteDir()
       checkout scm
     }
-    lock("${product}-dev") {
-
-      stage("Terraform Plan - Dev") {
-
-        terraform.plan("dev")
-
-      }
-      stage("Terraform Apply - Dev") {
-
-        terraform.apply("dev")
-
-      }
-    }
-    onMaster {
-      lock("${product}-prod") {
-        stage('Terraform Plan - Prod') {
-
-          terraform.plan("prod")
-
-        }
-        stage('Terraform Apply - Prod') {
-
-          terraform.apply("prod")
-
-        }
+    withSubscription(subscription) {
+      withIlbIp(environment) {
+        spinInfra(product, environment, false, subscription)
       }
     }
   }

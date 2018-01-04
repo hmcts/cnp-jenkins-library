@@ -39,7 +39,7 @@ def call(type, String product, String component, Closure body) {
   try {
     node {
       env.PATH = "$env.PATH:/usr/local/bin"
-      
+
       stage('Checkout') {
         pl.callAround('checkout') {
           deleteDir()
@@ -67,7 +67,7 @@ def call(type, String product, String component, Closure body) {
 
       stage("Sonar Scan") {
         pl.callAround('sonarscan') {
-          if (Jenkins.instance.getPluginManager().getPlugins().find { it.getShortName() == 'sonar' && it.isActive() } != null) {
+          pluginActive('sonar') {
             withSonarQubeEnv("SonarQube") {
               builder.sonarScan()
             }
@@ -78,8 +78,6 @@ def call(type, String product, String component, Closure body) {
                 error "Pipeline aborted due to quality gate failure: ${qg.status}"
               }
             }
-          } else {
-            echo "Sonarqube plugin not installed. Skipping static analysis."
           }
         }
       }
