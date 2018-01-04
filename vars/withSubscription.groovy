@@ -23,6 +23,8 @@ def call(String subscription, Closure body) {
       def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
 
+      def vnetiprange = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'vnet-iprange' --query value -o tsv", returnStdout: true).trim()
+
       log.warning "=== you are building with $subscription subscription credentials ==="
 
       withEnv(["AZURE_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
@@ -45,7 +47,8 @@ def call(String subscription, Closure body) {
                "STORE_rg_name_template=${stateStoreCfgValues.rg_name}",
                "STORE_sa_name_template=${stateStoreCfgValues.sa_name}",
                "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}",
-               "SUBSCRIPTION_NAME=$subscription"])
+               "SUBSCRIPTION_NAME=$subscription",
+               "TF_VAR_vnetiprange=$vnetiprange"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
         sh 'az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
