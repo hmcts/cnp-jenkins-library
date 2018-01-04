@@ -15,7 +15,7 @@ def call(String subscription, Closure body) {
 
       def vaultName = "infra-vault"
       if (subscription == "sandbox")
-        vaultName = "contino-devops"
+        vaultName = "infra-vault-sandbox" //"contino-devops"
 
       def subscriptionCredsjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-creds' --query value -o tsv", returnStdout: true).trim()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
