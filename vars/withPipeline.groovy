@@ -83,7 +83,7 @@ def call(type, String product, String component, Closure body) {
       }
 
       onMaster {
-/*
+
         folderExists('infrastructure') {
           withSubscription('nonprod') {
             dir('infrastructure') {
@@ -108,7 +108,7 @@ def call(type, String product, String component, Closure body) {
             }
           }
         }
-*/
+
         stage("OWASP") {
 
         }
