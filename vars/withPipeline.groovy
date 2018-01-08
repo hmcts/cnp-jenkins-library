@@ -83,7 +83,7 @@ def call(type, String product, String component, Closure body) {
       }
 
       onMaster {
-/*
+
         folderExists('infrastructure') {
           withSubscription('nonprod') {
             dir('infrastructure') {
@@ -108,35 +108,35 @@ def call(type, String product, String component, Closure body) {
             }
           }
         }
-*/
+
         stage("OWASP") {
 
         }
 
-        folderExists('infrastructure') {
-          withSubscription('prod') {
-            dir('infrastructure') {
-              withIlbIp('prod') {
-                spinInfra("${product}-${component}", 'prod', false, 'prod')
-              }
-            }
-          }
-        }
-
-        stage('Deploy Prod') {
-          pl.callAround('deploy:prod') {
-            deployer.deploy('prod')
-            deployer.healthCheck('prod')
-          }
-        }
-
-        stage('Smoke Tests - Prod') {
-          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
-            pl.callAround('smoketest:prod') {
-              builder.smokeTest()
-            }
-          }
-        }
+//        folderExists('infrastructure') {
+//          withSubscription('prod') {
+//            dir('infrastructure') {
+//              withIlbIp('prod') {
+//                spinInfra("${product}-${component}", 'prod', false, 'prod')
+//              }
+//            }
+//          }
+//        }
+//
+//        stage('Deploy Prod') {
+//          pl.callAround('deploy:prod') {
+//            deployer.deploy('prod')
+//            deployer.healthCheck('prod')
+//          }
+//        }
+//
+//        stage('Smoke Tests - Prod') {
+//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//            pl.callAround('smoketest:prod') {
+//              builder.smokeTest()
+//            }
+//          }
+//        }
       }
     }
   } catch (err) {
