@@ -25,5 +25,7 @@ def call(String platform, String subscription) {
 
   env.TF_VAR_certificateThumbprint = "${thumbprint}"
   env.TF_VAR_certificateName = "core-infra-${platform}"
+  env.TF_VAR_pfxBlobString = readFile('base64.txt').trim()
   sh "env"
+
 }
