@@ -19,9 +19,9 @@ def call(String platform, String subscription) {
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform} ${subscription}"
 
-  sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumb.txt"
+  sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumbhex.txt"
 
-  thumbprint = readFile('thumb.txt').trim()
+  thumbprint = readFile('thumbhex.txt')
 
   env.TF_VAR_certificateThumbprint = "${thumbprint}"
   env.TF_VAR_certificateName = "core-infra-${platform}"
