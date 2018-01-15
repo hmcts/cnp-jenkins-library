@@ -19,7 +19,7 @@ def call(String platform, String subscription) {
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform} ${subscription}"
 
-  sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509Thumbprint --output tsv > thumb.txt"
+  sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumb.txt"
 
   thumbprint = readFile 'thumb.txt'
 
