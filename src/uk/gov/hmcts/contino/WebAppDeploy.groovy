@@ -71,7 +71,7 @@ class WebAppDeploy implements Serializable {
 
      steps.withCredentials(
        [[$class: 'UsernamePasswordMultiBinding',
-         credentialsId: 'WebAppDeployCredentials',
+         credentialsId: 'WebAppDeployCredentials-' + env,
          usernameVariable: 'GIT_USERNAME',
          passwordVariable: 'GIT_PASSWORD']]) {
 
@@ -104,7 +104,7 @@ class WebAppDeploy implements Serializable {
 
     return steps.withCredentials(
         [[$class: 'UsernamePasswordMultiBinding',
-          credentialsId: 'WebAppDeployCredentials',
+          credentialsId: 'WebAppDeployCredentials-' + env,
           usernameVariable: 'GIT_USERNAME',
           passwordVariable: 'GIT_PASSWORD']]) {
 
