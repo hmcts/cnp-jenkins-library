@@ -48,4 +48,3 @@ az network application-gateway auth-cert create --cert-file $domain.cer --gatewa
 a=$(cat ./"${domain.pfx}")
 echo -n $a | base64 > base64.txt
 
-export TF_VAR_testThumbrpint=$(az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv)
