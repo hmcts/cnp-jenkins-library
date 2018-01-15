@@ -19,11 +19,11 @@ def call(String platform, String subscription) {
 
   result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform} ${subscription}"
 
-  //sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumbhex.txt"
+  sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumbhex.txt"
   sh "echo 'this is output of thumb.txt' && cat thumbhex.txt"
- // thumbprinthex = readFile('thumbhex.txt')
+  thumbprinthex = readFile('thumbhex.txt')
 
-  //env.TF_VAR_certificateThumbprint = "${thumbprinthex}"
+  env.TF_VAR_certificateThumbprint = "${thumbprinthex}"
   env.TF_VAR_certificateName = "core-infra-${platform}"
   env.TF_VAR_pfxBlobString = readFile('base64.txt')//.trim()
   env.TF_VAR_password = "${pfxPass}"
