@@ -21,7 +21,7 @@ def call(String platform, String subscription) {
 
   sh "az keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumbhex.txt"
   sh "echo 'this is output of thumb.txt' && cat thumbhex.txt"
-  thumbprinthex = readFile('thumbhex.txt').trim()
+  thumbprinthex = readFile('thumbhex.txt').getText('UTF-8')
 
   env.TF_VAR_certificateThumbprint = "${thumbprinthex}"
   env.TF_VAR_certificateName = "core-infra-${platform}"
