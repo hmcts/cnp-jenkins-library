@@ -1,7 +1,7 @@
 #!groovy
 
 def info(message) {
-  echo "INFO: ${message}"
+  echo "\u001B[34mINFO: ${message}\u001B[0m"
 }
 
 def warning(message) {

@@ -32,7 +32,7 @@ class WebAppDeploy implements Serializable {
     def serviceUrl = getServiceUrl(product, app, env)
     def healthCheckUrl = "${serviceUrl}/health"
 
-    int sleepDuration = 10
+    int sleepDuration = 60
     int maxRetries = 10
 
     int retryCounter = 0
@@ -133,7 +133,7 @@ class WebAppDeploy implements Serializable {
   def deployJavaWebApp(env) {
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
-        credentialsId: 'WebAppDeployCredentials-' + env,
+        credentialsId: 'WebAppDeployCredentials',
         usernameVariable: 'GIT_USERNAME',
         passwordVariable: 'GIT_PASSWORD']]) {
 
@@ -249,7 +249,7 @@ class WebAppDeploy implements Serializable {
 
 
   private def getComputeFor(env){
-    return "core-compute-prod"
+    return "core-compute-${env}"
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {

@@ -1,0 +1,61 @@
+#!groovy
+@Library('pipeline') _
+
+properties([
+    parameters([
+        string(name: 'ENVIRONMENT', defaultValue: 'dev', description: 'Suffix for resources created'),
+        choice(name: 'SUBSCRIPTION', choices: 'sandbox\nnonprod\nprod', description: 'Azure subscriptions available to build in'),
+        string(name: 'NETNUM', description: 'Network slice to allocate to core-infrastructure'),
+        booleanParam(name: 'PLAN_ONLY', defaultValue: false, description: 'set to true for skipping terraform apply')
+    ])
+])
+
+//running from another Jenkins file:
+//   run(name: 'runname', projectName: 'moj-core-compute', description: '', filter: 'COMPLETED')
+
+node {
+  log.info("Starting core-infrastructure build job...")
+  //build core infra
+  build job: 'contino/moj-core-infrastructure/master',
+      parameters: [string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
+                   string(name: 'SUBSCRIPTION', value: params.SUBSCRIPTION),
+                   string(name: 'NETNUM', value: params.NETNUM),
+                   booleanParam(name: 'PLAN_ONLY', value: params.PLAN_ONLY)]
+
+  log.info("Starting core-compute build job...")
+  //build core compute
+  build job: 'contino/moj-core-compute/master',
+      parameters: [//string(name: 'PRODUCT_NAME', value: String.valueOf('core-compute')),
+                   string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
+                   string(name: 'SUBSCRIPTION', value: params.SUBSCRIPTION),
+                   booleanParam(name: 'PLAN_ONLY', value: params.PLAN_ONLY)]
+
+  //deploy rhubarb
+  build job: 'contino/moj-rhubarb-recipes-service/master',
+      parameters: [string(name: 'PRODUCT_NAME', value: 'rhubarb'),
+                   string(name: 'APP', value: 'recipe-backend'),
+                   string(name: 'TYPE', value: 'java'),
+                   string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
+                   string(name: 'SUBSCRIPTION', value: params.SUBSCRIPTION)]
+
+  //deploy rhubarb
+  build job: 'contino/moj-rhubarb-frontend/master',
+      parameters: [string(name: 'PRODUCT_NAME', value: 'rhubarb'),
+                   string(name: 'APP', value: 'frontend'),
+                   string(name: 'TYPE', value: 'nodejs'),
+                   string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
+                   string(name: 'SUBSCRIPTION', value: params.SUBSCRIPTION)]
+/*
+  parallel {
+
+    build job: 'contino/moj-rhubarb-frontend/parametrised',
+        parameters: [string(name: 'PRODUCT_NAME', value: String.valueOf('rhubarb')),
+                     string(name: 'ENV_NAME', value: environmnent)]
+
+    build job: 'contino/moj-rhubarb-recipes-service/parametrised',
+        parameters: [string(name: 'PRODUCT_NAME', value: String.valueOf('rhubarb')),
+                     string(name: 'ENV_NAME', value: environmnent)]
+  }
+*/
+
+}

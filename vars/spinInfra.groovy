@@ -1,6 +1,7 @@
 #!groovy
 
 def call(productName, environment, planOnly = false, subscription) {
+  log.info "Building with following input parameters: productName='$productName'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
