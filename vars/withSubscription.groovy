@@ -25,7 +25,7 @@ def call(String subscription, Closure body) {
       def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
 
-      def vnetiprange = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'vnet-iprange' --query value -o tsv", returnStdout: true).trim()
+      def vnetiprange = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-root-vnet-cidr' --query value -o tsv", returnStdout: true).trim()
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
