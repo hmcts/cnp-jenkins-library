@@ -1,5 +1,5 @@
 #!groovy
-@Library('pipeline') _
+@Library('Infrastructure@infra-pipeline') _
 
 properties([
     parameters([
@@ -31,7 +31,7 @@ node {
                    booleanParam(name: 'PLAN_ONLY', value: params.PLAN_ONLY)]
 
   //deploy rhubarb
-  build job: 'contino/moj-rhubarb-recipes-service/master',
+  build job: 'contino/moj-rhubarb-recipes-service/support-sandbox-and-prod-pipelines',
       parameters: [string(name: 'PRODUCT_NAME', value: 'rhubarb'),
                    string(name: 'APP', value: 'recipe-backend'),
                    string(name: 'TYPE', value: 'java'),
