@@ -133,7 +133,7 @@ class WebAppDeploy implements Serializable {
   def deployJavaWebApp(env) {
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
-        credentialsId: 'WebAppDeployCredentials',
+        credentialsId: 'WebAppDeployCredentials-' + env,
         usernameVariable: 'GIT_USERNAME',
         passwordVariable: 'GIT_PASSWORD']]) {
 

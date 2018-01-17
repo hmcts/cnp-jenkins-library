@@ -10,7 +10,6 @@ class ProjectBranch implements Serializable {
 
   boolean isMaster() {
     branchName == 'master' ||
-    branchName.startsWith('cnp-') ||
     branchName == 'cnp'
   }
 

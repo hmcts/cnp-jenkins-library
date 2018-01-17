@@ -6,7 +6,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
 
-def call(type, String product, String component, String environment, String subscription, Closure body) {
+def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component)
@@ -53,19 +53,19 @@ def call(type, String product, String component, String environment, String subs
         }
       }
 
-      /*stage("Test") {
+      stage("Test") {
         pl.callAround('test') {
           builder.test()
         }
-      }*/
+      }
 
-      /*stage("Security Checks") {
+      stage("Security Checks") {
         pl.callAround('securitychecks') {
           builder.securityCheck()
         }
-      }*/
+      }
 
-      /*stage("Sonar Scan") {
+      stage("Sonar Scan") {
         pl.callAround('sonarscan') {
           pluginActive('sonar') {
             withSonarQubeEnv("SonarQube") {
@@ -80,40 +80,64 @@ def call(type, String product, String component, String environment, String subs
             }
           }
         }
-      }*/
+      }
 
-//      onMaster {
+      onMaster {
 
         folderExists('infrastructure') {
-          withSubscription(subscription) {
+          withSubscription('nonprod') {
             dir('infrastructure') {
-              withIlbIp(environment) {
-                spinInfra("${product}-${component}", environment, false, subscription)
+              withIlbIp('nonprod') {
+                spinInfra("${product}-${component}", 'nonprod', false, 'nonprod')
               }
             }
           }
         }
 
-        stage("Deploy $environment") {
-          pl.callAround("deploy:$environment") {
-            deployer.deploy(environment)
-            deployer.healthCheck(environment)
+        stage('Deploy nonprod') {
+          pl.callAround('deploy:nonprod') {
+            deployer.deploy('nonprod')
+            deployer.healthCheck('nonprod')
           }
         }
 
-        /*stage('Smoke Tests - snonprod') {
-          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('snonprod')}"]) {
-            pl.callAround('smoketest:snonprod') {
+        stage('Smoke Tests - nonprod') {
+          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+            pl.callAround('smoketest:nonprod') {
               builder.smokeTest()
             }
           }
-        }*/
+        }
 
-        /*stage("OWASP") {
+        stage("OWASP") {
 
-        }*/
+        }
 
-//      }
+//        folderExists('infrastructure') {
+//          withSubscription('prod') {
+//            dir('infrastructure') {
+//              withIlbIp('prod') {
+//                spinInfra("${product}-${component}", 'prod', false, 'prod')
+//              }
+//            }
+//          }
+//        }
+//
+//        stage('Deploy Prod') {
+//          pl.callAround('deploy:prod') {
+//            deployer.deploy('prod')
+//            deployer.healthCheck('prod')
+//          }
+//        }
+//
+//        stage('Smoke Tests - Prod') {
+//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//            pl.callAround('smoketest:prod') {
+//              builder.smokeTest()
+//            }
+//          }
+//        }
+      }
     }
   } catch (err) {
     currentBuild.result = "FAILURE"
