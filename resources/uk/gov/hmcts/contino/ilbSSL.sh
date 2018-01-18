@@ -42,4 +42,11 @@ rm -f $domain.key $domain.csr $domain.conf
 
 az keyvault certificate import --vault-name app-vault-${subscription} -n $domain -f $domain.pfx --password $pfxPass
 
+#to be put back in
 az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
+
+# get base64 representation of pfx file and write to file
+a=$(cat ./"${domain.pfx}")
+echo -n $a | base64 > base64.txt
+truncate -s -1 base64.txt
+
