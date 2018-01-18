@@ -10,13 +10,10 @@ properties([
     ])
 ])
 
-//running from another Jenkins file:
-//   run(name: 'runname', projectName: 'moj-core-compute', description: '', filter: 'COMPLETED')
-
 node {
   log.info("Starting core-infrastructure build job...")
   //build core infra
-  build job: 'contino/moj-core-infrastructure/master',
+  build job: 'contino/moj-core-infrastructure/backtoinfralib',
       parameters: [string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
                    string(name: 'SUBSCRIPTION', value: params.SUBSCRIPTION),
                    string(name: 'NETNUM', value: params.NETNUM),
@@ -31,7 +28,7 @@ node {
                    booleanParam(name: 'PLAN_ONLY', value: params.PLAN_ONLY)]
 
   //deploy rhubarb
-  build job: 'contino/moj-rhubarb-recipes-service/support-sandbox-and-prod-pipelines',
+  build job: 'contino/moj-rhubarb-recipes-service/master',
       parameters: [string(name: 'PRODUCT_NAME', value: 'rhubarb'),
                    string(name: 'APP', value: 'recipe-backend'),
                    string(name: 'TYPE', value: 'java'),
