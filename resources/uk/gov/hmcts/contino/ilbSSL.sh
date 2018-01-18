@@ -47,4 +47,5 @@ az network application-gateway auth-cert create --cert-file $domain.cer --gatewa
 # get base64 representation of pfx file and write to file
 a=$(cat ./"${domain.pfx}")
 echo -n $a | base64 > base64.txt
+truncate -s -1 base64.txt
 
