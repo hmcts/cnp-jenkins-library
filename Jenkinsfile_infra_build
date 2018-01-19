@@ -21,7 +21,7 @@ node {
 
   log.info("Starting core-compute build job...")
   //build core compute
-  build job: 'contino/moj-core-compute/master',
+  build job: 'contino/moj-core-compute/backtoinfralib',
       parameters: [//string(name: 'PRODUCT_NAME', value: String.valueOf('core-compute')),
                    string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
                    string(name: 'SUBSCRIPTION', value: params.SUBSCRIPTION),
