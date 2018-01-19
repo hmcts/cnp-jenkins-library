@@ -29,8 +29,8 @@ subjectAltName = @alt_names
 DNS.1 = *.scm.service.commonNameVar.internal
 
 EOF
-
-sed -i "s/commonNameVar/$domain/g" $domain.conf
+commonName=core-compute-$platform
+sed -i "s/commonNameVar/$commonName/g" $domain.conf
 
 openssl req -new -sha256 -nodes -out $domain.csr -newkey rsa:2048 -keyout $domain.key -config <( cat $domain.conf )
 
