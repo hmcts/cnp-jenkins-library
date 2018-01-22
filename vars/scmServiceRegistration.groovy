@@ -60,6 +60,7 @@ def call(environment) {
 
   def responsefarmsbody = new JsonSlurper().parseText(responsefarms.body().string())
   List serverfarmslist = responsefarmsbody.value
+  println serverfarmslist
 
 // Get list of webapps using the ServerFarms list
 
@@ -72,6 +73,7 @@ def call(environment) {
     }
   }
 
+  println webapps
 // Get ILB internal IP address
 
   Request requestilbip = new Request.Builder()
