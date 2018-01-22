@@ -68,6 +68,7 @@ def call(environment) {
     it.each {
       k, v -> if (k == "name") {
         webapps << v
+        webapps << v + "-staging"
       }
     }
   }
