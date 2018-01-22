@@ -60,7 +60,6 @@ def call(environment) {
 
   def responsefarmsbody = new JsonSlurper().parseText(responsefarms.body().string())
   List serverfarmslist = responsefarmsbody.value
-  println serverfarmslist
 
 // Get list of webapps using the ServerFarms list
 
@@ -73,7 +72,6 @@ def call(environment) {
     }
   }
 
-  println webapps
 // Get ILB internal IP address
 
   Request requestilbip = new Request.Builder()
@@ -108,7 +106,7 @@ def call(environment) {
 
   def scm = new ConsulRecord(ID: 'scm', Name: 'scm', Tags: webapps, Address: ilbinternalip, Port: 443 )
   def scmjson = new JsonBuilder(scm).toString()
-  println scmjson
+  println("Preparing and sending scm consul record: " + scmjson)
 
 // Update the scm record in consul
 
