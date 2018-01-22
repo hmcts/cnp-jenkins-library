@@ -29,6 +29,10 @@ class YarnBuilder implements Builder, Serializable {
     yarn("test:smoke")
   }
 
+  def e2eTest() {
+    yarn("test:e2e")
+  }
+
   def securityCheck() {
     yarn("test:nsp")
   }

@@ -22,6 +22,11 @@ class MockBuilder implements Builder, Serializable {
   }
 
   @Override
+  def e2eTest(){
+    return null
+  }
+
+  @Override
   def securityCheck() {
     return null
   }

@@ -32,6 +32,10 @@ class GradleBuilder implements Builder, Serializable {
 
   }
 
+  def e2eTest() {
+
+  }
+
   def securityCheck() {
 
   }
