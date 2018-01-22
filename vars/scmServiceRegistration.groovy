@@ -106,6 +106,7 @@ def call(environment) {
 
   def scm = new ConsulRecord(ID: 'scm', Name: 'scm', Tags: webapps, Address: ilbinternalip, Port: 443 )
   def scmjson = new JsonBuilder(scm).toString()
+  println scmjson
 
 // Update the scm record in consul
 
