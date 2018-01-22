@@ -67,7 +67,7 @@ def call(environment) {
   List webapps = []
   serverfarmslist.each {
     it.each {
-      k, v -> if (k == "Name") {
+      k, v -> if (k == "name") {
         webapps << v
       }
     }
