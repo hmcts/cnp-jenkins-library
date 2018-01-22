@@ -89,6 +89,7 @@ def call(type, String product, String component, Closure body) {
             dir('infrastructure') {
               withIlbIp('nonprod') {
                 spinInfra("${product}-${component}", 'nonprod', false, 'nonprod')
+                scmServiceRegistration('nonprod')
               }
             }
           }
