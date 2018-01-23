@@ -33,7 +33,7 @@ class WebAppDeploy implements Serializable {
     def healthCheckUrl = "${serviceUrl}/health"
 
     int sleepDuration = 10
-    int maxRetries = 10
+    int maxRetries = 50
 
     int retryCounter = 0
 
@@ -249,7 +249,7 @@ class WebAppDeploy implements Serializable {
 
 
   private def getComputeFor(env){
-    return "core-compute-prod"
+    return "core-compute-${env}"
   }
 
   private def gitPushToService(serviceDeploymentHost, serviceName, env) {

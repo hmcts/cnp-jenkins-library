@@ -17,13 +17,15 @@ def call(String subscription, Closure body) {
       if (subscription == "sandbox")
         vaultName = "infra-vault-sandbox" //"contino-devops"
 
+      log.info "using $vaultName"
+
       def subscriptionCredsjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-creds' --query value -o tsv", returnStdout: true).trim()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
 
       def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
 
-      def vnetiprange = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'vnet-iprange' --query value -o tsv", returnStdout: true).trim()
+      def vnetiprange = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-root-vnet-cidr' --query value -o tsv", returnStdout: true).trim()
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
