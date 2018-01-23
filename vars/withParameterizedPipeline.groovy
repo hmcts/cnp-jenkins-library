@@ -53,42 +53,12 @@ def call(type, String product, String component, String environment, String subs
         }
       }
 
-      /*stage("Test") {
-        pl.callAround('test') {
-          builder.test()
-        }
-      }*/
-
-      /*stage("Security Checks") {
-        pl.callAround('securitychecks') {
-          builder.securityCheck()
-        }
-      }*/
-
-      /*stage("Sonar Scan") {
-        pl.callAround('sonarscan') {
-          pluginActive('sonar') {
-            withSonarQubeEnv("SonarQube") {
-              builder.sonarScan()
-            }
-
-            timeout(time: 5, unit: 'MINUTES') {
-              def qg = steps.waitForQualityGate()
-              if (qg.status != 'OK') {
-                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-              }
-            }
-          }
-        }
-      }*/
-
-//      onMaster {
-
         folderExists('infrastructure') {
           withSubscription(subscription) {
             dir('infrastructure') {
               withIlbIp(environment) {
                 spinInfra("${product}-${component}", environment, false, subscription)
+                scmServiceRegistration(environment)
               }
             }
           }
@@ -101,19 +71,6 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
-        /*stage('Smoke Tests - snonprod') {
-          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('snonprod')}"]) {
-            pl.callAround('smoketest:snonprod') {
-              builder.smokeTest()
-            }
-          }
-        }*/
-
-        /*stage("OWASP") {
-
-        }*/
-
-//      }
     }
   } catch (err) {
     currentBuild.result = "FAILURE"
