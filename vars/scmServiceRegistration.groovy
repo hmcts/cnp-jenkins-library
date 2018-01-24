@@ -4,6 +4,8 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import okhttp3.OkHttpClient
+import okhttp3.OkHttpClient.Builder
+import java.util.concurrent.TimeUnit
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.MediaType
@@ -33,7 +35,11 @@ def call(environment) {
 
 // Get Auth Token
   println "Getting access token from management.azure.com ..."
-  OkHttpClient client = new OkHttpClient()
+  OkHttpClient client = new OkHttpClient.Builder()
+    .connectTimeout(60, TimeUnit.SECONDS)
+    .writeTimeout(60, TimeUnit.SECONDS)
+    .readTimeout(60, TimeUnit.SECONDS)
+    .build()
 
   MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
   RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + env.ARM_CLIENT_SECRET)
