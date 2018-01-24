@@ -29,7 +29,10 @@ class ConsulRecord {
 
 def call(environment) {
 
+  println "Registering application to the scm service"
+
 // Get Auth Token
+  println "Getting access token from management.azure.com ..."
   OkHttpClient client = new OkHttpClient()
 
   MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
@@ -48,7 +51,7 @@ def call(environment) {
   def authtoken = responsebody.access_token
 
 // Get ServerFarms list
-
+  println "Getting a list of the current apps deployed ..."
   Request requestfarms = new Request.Builder()
     .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environment + "/serverfarms?api-version=2016-09-01")
     .get()
@@ -74,7 +77,7 @@ def call(environment) {
   }
 
 // Get ILB internal IP address
-
+  println "Getting the ILB internal IP address ..."
   Request requestilbip = new Request.Builder()
     .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environment + "/capacities/virtualip?api-version=2016-09-01")
     .get()
@@ -89,7 +92,7 @@ def call(environment) {
 
 
 // Get details about the consul vm scale set i.e. IP address
-
+  println "Getting consul's IP address ..."
   Request requestvmss = new Request.Builder()
     .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
     .get()
@@ -101,7 +104,7 @@ def call(environment) {
 
   def consulvmscaleset = new JsonSlurper().parseText(responsevmss.body().string())
   String consulapiaddr = consulvmscaleset.value[0].properties.ipConfigurations[0].properties.privateIPAddress
-
+  println "Consul IP address is: " + consulapiaddr
 
 // Build json payload for scm record
 
