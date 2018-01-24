@@ -22,7 +22,7 @@ class MockBuilder implements Builder, Serializable {
   }
 
   @Override
-  def e2eTest(){
+  def functionalTest(){
     return null
   }
 
