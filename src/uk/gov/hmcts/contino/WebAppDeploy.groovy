@@ -8,6 +8,7 @@ class WebAppDeploy implements Serializable {
   public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final String GIT_USER = "moj-jenkins-user"
   public static final String SERVICE_HOST_SUFFIX = "internal"
+  public static final String DEPLOYMENT_SLOT_SUFFIX = "-staging"
 
   def steps
   def product
@@ -234,7 +235,7 @@ class WebAppDeploy implements Serializable {
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
     def hostingEnv = getComputeFor(env)
-    return "${serviceName}.scm.service.core-compute-${env}.${SERVICE_HOST_SUFFIX}"
+    return "${serviceName}${DEPLOYMENT_SLOT_SUFFIX}.scm.service.core-compute-${env}.${SERVICE_HOST_SUFFIX}"
   }
 
   private def getServiceHost(product, app, env) {
