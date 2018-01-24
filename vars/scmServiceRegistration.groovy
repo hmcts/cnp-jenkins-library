@@ -34,7 +34,7 @@ def call(environment) {
 
 // Get Auth Token
   println "Getting access token from management.azure.com ..."
-  OkHttpClient client = new OkHttpClient().Builder()
+  OkHttpClient client = new OkHttpClient.Builder()
     .connectTimeout(10, TimeUnit.SECONDS)
     .writeTimeout(10, TimeUnit.SECONDS)
     .readTimeout(30, TimeUnit.SECONDS)
