@@ -111,6 +111,14 @@ def call(type, String product, String component, Closure body) {
             }
           }
 
+        stage('Functional Tests - nonprod') {
+          withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+            pl.callAround('functionaltest:nonprod') {
+              builder.functionalTest()
+            }
+          }
+        }
+
           stage("OWASP") {
 
           }
