@@ -36,9 +36,9 @@ def call(environment) {
 // Get Auth Token
   println "Getting access token from management.azure.com ..."
   OkHttpClient client = new OkHttpClient.Builder()
-    .connectTimeout(60, TimeUnit.SECONDS)
-    .writeTimeout(60, TimeUnit.SECONDS)
-    .readTimeout(60, TimeUnit.SECONDS)
+    .connectTimeout(90, TimeUnit.SECONDS)
+    .writeTimeout(90, TimeUnit.SECONDS)
+    .readTimeout(90, TimeUnit.SECONDS)
     .build()
 
   MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
