@@ -36,83 +36,84 @@ def call(type, String product, String component, Closure body) {
   }
   currentBuild.result = "SUCCESS"
 
-  try {
-    node {
-      env.PATH = "$env.PATH:/usr/local/bin"
+  timestamps {
+    try {
+      node {
+        env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
-        pl.callAround('checkout') {
-          deleteDir()
-          checkout scm
-        }
-      }
-
-      stage("Build") {
-        pl.callAround('build') {
-          builder.build()
-        }
-      }
-
-      stage("Test") {
-        pl.callAround('test') {
-          builder.test()
-        }
-      }
-
-      stage("Security Checks") {
-        pl.callAround('securitychecks') {
-          builder.securityCheck()
-        }
-      }
-
-      stage("Sonar Scan") {
-        pl.callAround('sonarscan') {
-          pluginActive('sonar') {
-            withSonarQubeEnv("SonarQube") {
-              builder.sonarScan()
-            }
-
-            timeout(time: 5, unit: 'MINUTES') {
-              def qg = steps.waitForQualityGate()
-              if (qg.status != 'OK') {
-                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-              }
-            }
+        stage('Checkout') {
+          pl.callAround('checkout') {
+            deleteDir()
+            checkout scm
           }
         }
-      }
 
-      onMaster {
+        stage("Build") {
+          pl.callAround('build') {
+            builder.build()
+          }
+        }
 
-        folderExists('infrastructure') {
-          withSubscription('nonprod') {
-            dir('infrastructure') {
-              withIlbIp('nonprod') {
-                spinInfra("${product}-${component}", 'nonprod', false, 'nonprod')
-                scmServiceRegistration('nonprod')
+        stage("Test") {
+          pl.callAround('test') {
+            builder.test()
+          }
+        }
+
+        stage("Security Checks") {
+          pl.callAround('securitychecks') {
+            builder.securityCheck()
+          }
+        }
+
+        stage("Sonar Scan") {
+          pl.callAround('sonarscan') {
+            pluginActive('sonar') {
+              withSonarQubeEnv("SonarQube") {
+                builder.sonarScan()
+              }
+
+              timeout(time: 5, unit: 'MINUTES') {
+                def qg = steps.waitForQualityGate()
+                if (qg.status != 'OK') {
+                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                }
               }
             }
           }
         }
 
-        stage('Deploy nonprod') {
-          pl.callAround('deploy:nonprod') {
-            deployer.deploy('nonprod')
-            deployer.healthCheck('nonprod')
-          }
-        }
+        onMaster {
 
-        stage('Smoke Tests - nonprod') {
-          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
-            pl.callAround('smoketest:nonprod') {
-              builder.smokeTest()
+          folderExists('infrastructure') {
+            withSubscription('nonprod') {
+              dir('infrastructure') {
+                withIlbIp('nonprod') {
+                  spinInfra("${product}-${component}", 'nonprod', false, 'nonprod')
+                  scmServiceRegistration('nonprod')
+                }
+              }
             }
           }
-        }
 
-        stage("OWASP") {
+          stage('Deploy nonprod') {
+            pl.callAround('deploy:nonprod') {
+              deployer.deploy('nonprod')
+              deployer.healthCheck('nonprod')
+            }
+          }
 
-        }
+          stage('Smoke Tests - nonprod') {
+            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+              pl.callAround('smoketest:nonprod') {
+                builder.smokeTest()
+              }
+            }
+          }
+
+          stage("OWASP") {
+
+          }
 
 //        folderExists('infrastructure') {
 //          withSubscription('prod') {
@@ -138,27 +139,28 @@ def call(type, String product, String component, Closure body) {
 //            }
 //          }
 //        }
+        }
       }
+    } catch (err) {
+      currentBuild.result = "FAILURE"
+      if (pl.slackChannel) {
+        notifyBuildFailure channel: pl.slackChannel
+      }
+
+      pl.call('onFailure')
+      node {
+        metricsPublisher.publish('Pipeline Failed')
+      }
+      throw err
     }
-  } catch (err) {
-    currentBuild.result = "FAILURE"
+
     if (pl.slackChannel) {
-      notifyBuildFailure channel: pl.slackChannel
+      notifyBuildFixed channel: pl.slackChannel
     }
 
-    pl.call('onFailure')
+    pl.call('onSuccess')
     node {
-      metricsPublisher.publish('Pipeline Failed')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
-    throw err
-  }
-
-  if (pl.slackChannel) {
-    notifyBuildFixed channel: pl.slackChannel
-  }
-
-  pl.call('onSuccess')
-  node {
-    metricsPublisher.publish('Pipeline Succeeded')
   }
 }
