@@ -36,22 +36,23 @@ def call(type, String product, String component, String environment, String subs
   }
   currentBuild.result = "SUCCESS"
 
-  try {
-    node {
-      env.PATH = "$env.PATH:/usr/local/bin"
+  timestamps {
+    try {
+      node {
+        env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
-        pl.callAround('checkout') {
-          deleteDir()
-          checkout scm
+        stage('Checkout') {
+          pl.callAround('checkout') {
+            deleteDir()
+            checkout scm
+          }
         }
-      }
 
-      stage("Build") {
-        pl.callAround('build') {
-          builder.build()
+        stage("Build") {
+          pl.callAround('build') {
+            builder.build()
+          }
         }
-      }
 
         folderExists('infrastructure') {
           withSubscription(subscription) {
@@ -71,26 +72,27 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
+      }
+    } catch (err) {
+      currentBuild.result = "FAILURE"
+      if (pl.slackChannel) {
+        notifyBuildFailure channel: pl.slackChannel
+      }
+
+      pl.call('onFailure')
+      node {
+        metricsPublisher.publish('Pipeline Failed')
+      }
+      throw err
     }
-  } catch (err) {
-    currentBuild.result = "FAILURE"
+
     if (pl.slackChannel) {
-      notifyBuildFailure channel: pl.slackChannel
+      notifyBuildFixed channel: pl.slackChannel
     }
 
-    pl.call('onFailure')
+    pl.call('onSuccess')
     node {
-      metricsPublisher.publish('Pipeline Failed')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
-    throw err
-  }
-
-  if (pl.slackChannel) {
-    notifyBuildFixed channel: pl.slackChannel
-  }
-
-  pl.call('onSuccess')
-  node {
-    metricsPublisher.publish('Pipeline Succeeded')
   }
 }
