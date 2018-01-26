@@ -22,7 +22,7 @@ class withPipelineTest extends BasePipelineTest {
   }
 
   @Test
-  void test1() {
+  void PipelineBuildsSuccesfully() {
 
     def library = library()
       .name('Infrastructure')
@@ -40,6 +40,7 @@ class withPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("ansiColor", [String, Closure], {})
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure], {})
     helper.registerAllowedMethod("sh", [Map.class], { return "" })
+    helper.registerAllowedMethod("timestamps", [Closure], { println 'Printing timestamp' })
     loadScript("testResources/examplePipeline.jenkins")
     printCallStack()
   }
