@@ -106,7 +106,7 @@ def call(type, String product, String component, Closure body) {
           stage('Smoke Tests - nonprod') {
             withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
               pl.callAround('smoketest:nonprod') {
-                echo "Using TEST_URL: '$TEST_URL'"
+                echo "Setting TEST_URL: '$TEST_URL'"
                 builder.smokeTest()
               }
             }
@@ -115,7 +115,7 @@ def call(type, String product, String component, Closure body) {
         stage('Functional Tests - nonprod') {
           withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
             pl.callAround('functionaltest:nonprod') {
-              echo "Using TEST_URL: '$TEST_URL'"
+              echo "Setting TEST_URL: '$TEST_URL'"
               builder.functionalTest()
             }
           }
@@ -144,11 +144,20 @@ def call(type, String product, String component, Closure body) {
 //
 //        stage('Smoke Tests - Prod') {
 //          withEnv(["TEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//          echo "Setting TEST_URL: '$TEST_URL'"
 //            pl.callAround('smoketest:prod') {
 //              builder.smokeTest()
 //            }
 //          }
 //        }
+//          stage('Functional Tests - nonprod') {
+//            withEnv(["TEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//              pl.callAround('functionaltest:nonprod') {
+//                echo "Setting TEST_URL: '$TEST_URL'"
+//                builder.functionalTest()
+//              }
+//            }
+//          }
         }
       }
     } catch (err) {
