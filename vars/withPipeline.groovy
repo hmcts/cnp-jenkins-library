@@ -96,18 +96,24 @@ def call(type, String product, String component, Closure body) {
             }
           }
 
-          stage('Deploy nonprod') {
+          stage('Deploy nonprod-staging') {
             pl.callAround('deploy:nonprod') {
               deployer.deploy('nonprod')
               deployer.healthCheck('nonprod')
             }
           }
 
-          stage('Smoke Tests - nonprod') {
+          stage('Smoke Tests - nonprod-staging') {
             withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
               pl.callAround('smoketest:nonprod') {
                 builder.smokeTest()
               }
+            }
+          }
+
+          stage('Promote nonprod-staging -> nonprod') {
+            withSubscription('nonprod') {
+              sh "az webapp deployment slot swap --name \"${product}-${component}-${env}\" --resource-group \"${product}-${component}-${env}\" --slot staging --target-slot production"
             }
           }
 
