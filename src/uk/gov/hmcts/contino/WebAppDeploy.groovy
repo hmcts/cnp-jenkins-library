@@ -234,7 +234,7 @@ class WebAppDeploy implements Serializable {
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
     def serviceDomain = getServiceDomain(env)
-    return "${serviceName}.scm.${serviceDomain}"
+    return "${serviceName}-staging.scm.${serviceDomain}"
   }
 
   private def getServiceHost(product, app, env) {
