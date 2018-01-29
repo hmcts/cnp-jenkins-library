@@ -113,7 +113,7 @@ def call(type, String product, String component, Closure body) {
 
           stage('Promote nonprod-staging -> nonprod') {
             withSubscription('nonprod') {
-              sh "az webapp deployment slot swap --name \"${product}-${component}-${env}\" --resource-group \"${product}-${component}-${env}\" --slot staging --target-slot production"
+              sh "az webapp deployment slot swap --name \"${product}-${component}-nonprod\" --resource-group \"${product}-${component}-nonprod\" --slot staging --target-slot production"
             }
           }
 
