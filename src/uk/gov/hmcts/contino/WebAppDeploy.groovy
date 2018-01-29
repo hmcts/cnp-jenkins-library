@@ -130,6 +130,11 @@ class WebAppDeploy implements Serializable {
     }
   }
 
+  /**
+   * Deploys a Java Web App. Expects a self hosted Jar
+   * @param env
+   * @return
+   */
   def deployJavaWebApp(env) {
     return steps.withCredentials(
       [[$class: 'UsernamePasswordMultiBinding',
@@ -137,7 +142,7 @@ class WebAppDeploy implements Serializable {
         usernameVariable: 'GIT_USERNAME',
         passwordVariable: 'GIT_PASSWORD']]) {
 
-      def tempDir = ".tmp_azure_jenkings"
+      def tempDir = ".tmp_azure_jenkins"
 
       steps.sh("git checkout ${branch.branchName}")
 
@@ -152,56 +157,8 @@ class WebAppDeploy implements Serializable {
       steps.sh("git add --all .")
 
       pushToService(product, app, env)
-    }
 
-  }
-
-  /**
-   * Deploys a Java Web Ppp. Expects a self hosted Jar
-   * @param env
-   * @param jarPath
-   * @param iisWebConfig
-   * @return
-   */
-  def deployJavaWebApp(env, jarPath, iisWebConfig){
-    return deployJavaWebApp(env, jarPath, null, iisWebConfig)
-  }
-
-  /**
-   * Deploys a Java Web Ppp. Expects a self hosted Jar
-   * @param env
-   * @param hostingEnv
-   * @param jarPath
-   * @param springConfigPath
-   * @param iisWebConfig
-   * @return
-   */
-
-  def deployJavaWebApp(env, jarPath, springConfigPath, iisWebConfig) {
-
-    return steps.withCredentials(
-      [[$class: 'UsernamePasswordMultiBinding',
-        credentialsId: 'WebAppDeployCredentials',
-        usernameVariable: 'GIT_USERNAME',
-        passwordVariable: 'GIT_PASSWORD']]) {
-
-      def tempDir = ".tmp_azure_jenkings"
-
-
-      steps.sh("git checkout ${branch.branchName}")
-
-      steps.sh("mkdir ${tempDir}")
-
-      checkAndCopy(jarPath, tempDir)
-      checkAndCopy(springConfigPath, tempDir)
-      checkAndCopy(iisWebConfig, tempDir)
-
-      steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
-      steps.sh("cp ${tempDir}/* .")
-      steps.sh("rm -rf ${tempDir}")
-      steps.sh("git add --all .")
-
-      pushToService(product, app, env)
+      steps.sh('git reset HEAD')
     }
   }
 
@@ -260,7 +217,7 @@ class WebAppDeploy implements Serializable {
   private def configureGit() {
     steps.sh("git config user.email '${GIT_EMAIL}'")
     steps.sh("git config user.name '${GIT_USER}'")
-    steps.sh("git commit -m 'Deploying ${steps.env.BUILD_NUMBER}' --allow-empty")
+    steps.sh("git commit -m 'Deploying Build #${steps.env.BUILD_NUMBER}' --allow-empty")
   }
 
   private def pushToService(product, app, env) {
