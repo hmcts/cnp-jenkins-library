@@ -66,22 +66,22 @@ def call(type, String product, String component, Closure body) {
           }
         }
 
-        stage("Sonar Scan") {
-          pl.callAround('sonarscan') {
-            pluginActive('sonar') {
-              withSonarQubeEnv("SonarQube") {
-                builder.sonarScan()
-              }
-
-              timeout(time: 5, unit: 'MINUTES') {
-                def qg = steps.waitForQualityGate()
-                if (qg.status != 'OK') {
-                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                }
-              }
-            }
-          }
-        }
+        // stage("Sonar Scan") {
+        //   pl.callAround('sonarscan') {
+        //     pluginActive('sonar') {
+        //       withSonarQubeEnv("SonarQube") {
+        //         builder.sonarScan()
+        //       }
+        //
+        //       timeout(time: 5, unit: 'MINUTES') {
+        //         def qg = steps.waitForQualityGate()
+        //         if (qg.status != 'OK') {
+        //           error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //         }
+        //       }
+        //     }
+        //   }
+        // }
 
         onMaster {
 
