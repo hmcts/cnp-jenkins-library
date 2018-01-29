@@ -65,7 +65,7 @@ Calls `yarn test:nsp` so this command must be implemented in package.json
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
 This should, ideally, check the entire happy path of the application. Currently, the pipeline only supports Yarn to run smoketests and will call `yarn test:smoke`
 so this must be implemented as a command in package.json. The pipeline exposes the appropriate application URL in the
-`SMOKETEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
+`TEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
 called after each deployment to each environment.
 
 #### Extending the opinionated pipeline
