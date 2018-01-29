@@ -104,7 +104,7 @@ def call(type, String product, String component, Closure body) {
           }
 
           stage('Smoke Tests - nonprod') {
-            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+            withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
               pl.callAround('smoketest:nonprod') {
                 builder.smokeTest()
               }
@@ -133,7 +133,7 @@ def call(type, String product, String component, Closure body) {
 //        }
 //
 //        stage('Smoke Tests - Prod') {
-//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//          withEnv(["TEST_URL=${deployer.getServiceUrl('prod')}"]) {
 //            pl.callAround('smoketest:prod') {
 //              builder.smokeTest()
 //            }
