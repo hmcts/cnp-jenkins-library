@@ -66,22 +66,22 @@ def call(type, String product, String component, Closure body) {
           }
         }
 
-        // stage("Sonar Scan") {
-        //   pl.callAround('sonarscan') {
-        //     pluginActive('sonar') {
-        //       withSonarQubeEnv("SonarQube") {
-        //         builder.sonarScan()
-        //       }
-        //
-        //       timeout(time: 5, unit: 'MINUTES') {
-        //         def qg = steps.waitForQualityGate()
-        //         if (qg.status != 'OK') {
-        //           error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //         }
-        //       }
-        //     }
-        //   }
-        // }
+        stage("Sonar Scan") {
+          pl.callAround('sonarscan') {
+            pluginActive('sonar') {
+              withSonarQubeEnv("SonarQube") {
+                builder.sonarScan()
+              }
+
+              timeout(time: 5, unit: 'MINUTES') {
+                def qg = steps.waitForQualityGate()
+                if (qg.status != 'OK') {
+                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                }
+              }
+            }
+          }
+        }
 
         onMaster {
 
@@ -104,7 +104,7 @@ def call(type, String product, String component, Closure body) {
           }
 
           stage('Smoke Tests - nonprod-staging') {
-            withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+            withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
               pl.callAround('smoketest:nonprod') {
                 builder.smokeTest()
               }
@@ -139,7 +139,7 @@ def call(type, String product, String component, Closure body) {
 //        }
 //
 //        stage('Smoke Tests - Prod') {
-//          withEnv(["SMOKETEST_URL=${deployer.getServiceUrl('prod')}"]) {
+//          withEnv(["TEST_URL=${deployer.getServiceUrl('prod')}"]) {
 //            pl.callAround('smoketest:prod') {
 //              builder.smokeTest()
 //            }
