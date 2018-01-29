@@ -158,7 +158,7 @@ class WebAppDeploy implements Serializable {
 
       pushToService(product, app, env)
 
-      steps.sh('git reset HEAD')
+      steps.sh('git reset --hard HEAD~1')
     }
   }
 
