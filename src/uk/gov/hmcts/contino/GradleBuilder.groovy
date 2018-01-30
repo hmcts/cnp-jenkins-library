@@ -29,7 +29,11 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def smokeTest() {
-
+    try {
+      gradle("--info smoke")
+    } finally {
+      steps.junit '**/test-results/**/*.xml'
+    }
   }
 
   def functionalTest() {
