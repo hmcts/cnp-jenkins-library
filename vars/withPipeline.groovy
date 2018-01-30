@@ -106,7 +106,17 @@ def call(type, String product, String component, Closure body) {
           stage('Smoke Tests - nonprod-staging') {
             withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
               pl.callAround('smoketest:nonprod') {
+                echo "Using TEST_URL: '$TEST_URL'"
                 builder.smokeTest()
+              }
+            }
+          }
+
+          stage('Functional Tests - nonprod-staging') {
+            withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+              pl.callAround('functionaltest:nonprod') {
+                echo "Using TEST_URL: '$TEST_URL'"
+                builder.functionalTest()
               }
             }
           }

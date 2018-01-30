@@ -18,7 +18,7 @@ class GradleBuilder implements Builder, Serializable {
 
   def test() {
     try {
-      gradle("check")
+      gradle("--info check")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -30,6 +30,14 @@ class GradleBuilder implements Builder, Serializable {
 
   def smokeTest() {
 
+  }
+
+  def functionalTest() {
+    try {
+      gradle("--info functional")
+    } finally {
+      steps.junit '**/test-results/**/*.xml'
+    }
   }
 
   def securityCheck() {

@@ -68,6 +68,8 @@ so this must be implemented as a command in package.json. The pipeline exposes t
 `TEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
 called after each deployment to each environment.
 
+The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
+
 #### Extending the opinionated pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
