@@ -51,7 +51,7 @@ def call(String subscription, Closure body) {
                "STORE_sa_name_template=${stateStoreCfgValues.sa_name}",
                "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}",
                "SUBSCRIPTION_NAME=$subscription",
-               "DCD_JENKINS_OBJECT_ID=$dcdJenkinsObjectId",
+               "TF_VAR_jenkins_AAD_objectId=$dcdJenkinsObjectId",
                "TF_VAR_vnetiprange=$vnetiprange"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
