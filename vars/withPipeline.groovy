@@ -85,76 +85,53 @@ def call(type, String product, String component, Closure body) {
 
         onMaster {
 
-          folderExists('infrastructure') {
-            withSubscription('nonprod') {
-              dir('infrastructure') {
-                withIlbIp('nonprod') {
-                  spinInfra("${product}-${component}", 'nonprod', false, 'nonprod')
-                  scmServiceRegistration('nonprod')
+          def subscription = 'nonprod'
+          def environment = 'nonprod'
+
+          stage("Build Infrastructure - ${environment}") {
+            folderExists('infrastructure') {
+              withSubscription(subscription) {
+                dir('infrastructure') {
+                  withIlbIp(environment) {
+                    spinInfra("${product}-${component}", environment, false, subscription)
+                    scmServiceRegistration(environment)
+                  }
                 }
               }
             }
           }
 
-          stage('Deploy - nonprod (staging slot)') {
-            pl.callAround('deploy:nonprod') {
-              deployer.deploy('nonprod')
-              deployer.healthCheck('nonprod')
+          stage("Deploy - ${environment} (staging slot)") {
+            pl.callAround("deploy:${environment}") {
+              deployer.deploy(environment)
+              deployer.healthCheck(environment)
             }
           }
 
-          stage('Smoke Test - nonprod (staging slot)') {
-            withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
-              pl.callAround('smoketest:nonprod') {
+          stage("Smoke Test - ${environment} (staging slot)") {
+            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+              pl.callAround('smoketest:${environment}') {
                 echo "Using TEST_URL: '$TEST_URL'"
                 builder.smokeTest()
               }
             }
           }
 
-          stage('Functional Test - nonprod (staging slot)') {
-            withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
-              pl.callAround('functionaltest:nonprod') {
+          stage("Functional Test - ${environment} (staging slot)") {
+            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+              pl.callAround('functionaltest:${environment}') {
                 echo "Using TEST_URL: '$TEST_URL'"
                 builder.functionalTest()
               }
             }
           }
 
-          stage('Promote - nonprod (staging -> production slot)') {
-            withSubscription('nonprod') {
-              sh "az webapp deployment slot swap --name \"${product}-${component}-nonprod\" --resource-group \"${product}-${component}-nonprod\" --slot staging --target-slot production"
+          stage("Promote - ${environment} (staging -> production slot)") {
+            withSubscription(subscription) {
+              sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
             }
           }
 
-          stage("OWASP") {
-
-          }
-
-//        folderExists('infrastructure') {
-//          withSubscription('prod') {
-//            dir('infrastructure') {
-//              withIlbIp('prod') {
-//                spinInfra("${product}-${component}", 'prod', false, 'prod')
-//              }
-//            }
-//          }
-//        }
-//
-//        stage('Deploy Prod') {
-//          pl.callAround('deploy:prod') {
-//            deployer.deploy('prod')
-//            deployer.healthCheck('prod')
-//          }
-//        }
-//
-//        stage('Smoke Tests - Prod') {
-//          withEnv(["TEST_URL=${deployer.getServiceUrl('prod')}"]) {
-//            pl.callAround('smoketest:prod') {
-//              builder.smokeTest()
-//            }
-//          }
-//        }
         }
       }
     } catch (err) {
