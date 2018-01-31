@@ -25,7 +25,7 @@ def call(String subscription, Closure body) {
       def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
 
-      def vnetiprange = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-root-vnet-cidr' --query value -o tsv", returnStdout: true).trim()
+      def root_address_space = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-root-vnet-cidr' --query value -o tsv", returnStdout: true).trim()
       def dcdJenkinsObjectId = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'jenkins-object-id' --query value -o tsv", returnStdout: true).trim()
 
       log.warning "=== you are building with $subscription subscription credentials ==="
@@ -52,7 +52,7 @@ def call(String subscription, Closure body) {
                "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}",
                "SUBSCRIPTION_NAME=$subscription",
                "TF_VAR_jenkins_AAD_objectId=$dcdJenkinsObjectId",
-               "TF_VAR_vnetiprange=$vnetiprange"])
+               "TF_VAR_root_address_space=$root_address_space"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
         sh 'az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
