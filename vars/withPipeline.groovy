@@ -96,14 +96,14 @@ def call(type, String product, String component, Closure body) {
             }
           }
 
-          stage('Deploy nonprod') {
+          stage('Deploy - nonprod (staging slot)') {
             pl.callAround('deploy:nonprod') {
               deployer.deploy('nonprod')
               deployer.healthCheck('nonprod')
             }
           }
 
-          stage('Smoke Tests - nonprod') {
+          stage('Smoke Test - nonprod (staging slot)') {
             withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
               pl.callAround('smoketest:nonprod') {
                 echo "Using TEST_URL: '$TEST_URL'"
@@ -112,14 +112,20 @@ def call(type, String product, String component, Closure body) {
             }
           }
 
-        stage('Functional Tests - nonprod') {
-          withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
-            pl.callAround('functionaltest:nonprod') {
-              echo "Using TEST_URL: '$TEST_URL'"
-              builder.functionalTest()
+          stage('Functional Test - nonprod (staging slot)') {
+            withEnv(["TEST_URL=${deployer.getServiceUrl('nonprod')}"]) {
+              pl.callAround('functionaltest:nonprod') {
+                echo "Using TEST_URL: '$TEST_URL'"
+                builder.functionalTest()
+              }
             }
           }
-        }
+
+          stage('Promote - nonprod (staging -> production slot)') {
+            withSubscription('nonprod') {
+              sh "az webapp deployment slot swap --name \"${product}-${component}-nonprod\" --resource-group \"${product}-${component}-nonprod\" --slot staging --target-slot production"
+            }
+          }
 
           stage("OWASP") {
 

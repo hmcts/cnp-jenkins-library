@@ -190,20 +190,24 @@ class WebAppDeploy implements Serializable {
 
   private def getServiceDeploymentHost(product, app, env) {
     def serviceName = getServiceName(product, app, env)
-    def hostingEnv = getComputeFor(env)
-    return "${serviceName}.scm.service.core-compute-${env}.${SERVICE_HOST_SUFFIX}"
+    def serviceDomain = getServiceDomain(env)
+    return "${serviceName}-staging.scm.${serviceDomain}"
   }
 
   private def getServiceHost(product, app, env) {
-    def computeCluster = getComputeFor(env)
-    return "${getServiceName(product, app, env)}.service.core-compute-${env}.${SERVICE_HOST_SUFFIX}"
+    def serviceName = getServiceName(product, app, env)
+    def serviceDomain = getServiceDomain(env)
+    return "${serviceName}-staging.${serviceDomain}"
   }
 
   private def getServiceName(product, app, env) {
     return "${product}-${app}-${env}"
   }
 
-
+  private def getServiceDomain(env) {
+    def compute = getComputeFor(env)
+    return "service.${compute}.${SERVICE_HOST_SUFFIX}"
+  }
 
   private def getComputeFor(env){
     return "core-compute-${env}"
