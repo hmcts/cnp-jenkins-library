@@ -5,13 +5,15 @@ public class NodePipelineType implements PipelineType, Serializable {
   def product
   def app
 
+  Builder builder
+  Deployer deployer
+
   NodePipelineType(steps, product, app) {
     this.steps = steps
     this.product = product
     this.app = app
+
+    builder = new YarnBuilder(steps)
+    deployer = new NodeDeployer(steps, product, app)
   }
-
-  Builder builder = new YarnBuilder(steps)
-
-  Deployer deployer = new NodeDeployer(steps, product, app)
 }
