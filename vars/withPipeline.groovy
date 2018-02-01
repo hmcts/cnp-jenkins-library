@@ -39,7 +39,19 @@ def call(type, String product, String component, Closure body) {
         sectionBuildAndTest(pipelineType.builder)
 
         onMaster {
-          stagesDeployToEnvironment(pipelineType.deployer, 'nonprod', 'nonprod', product, component)
+          stagesDeployToEnvironment(
+            deployer: pipelineType.deployer,
+            subscription:'nonprod',
+            environment:'nonprod',
+            product: product,
+            component: component)
+
+          stagesDeployToEnvironment(
+            deployer: pipelineType.deployer,
+            subscription:'prod',
+            environment:'prod',
+            product: product,
+            component: component)
         }
       }
     } catch (err) {

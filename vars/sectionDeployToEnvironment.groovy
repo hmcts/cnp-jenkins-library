@@ -1,7 +1,13 @@
 #!groovy
 import uk.gov.hmcts.contino.Deployer
 
-def call(Deployer deployer, String subscription, String environment, String product, String component) {
+def call(params) {
+  Deployer deployer = params.deployer
+  def subscription = params.subscription
+  def environment = params.environment
+  def product = params.product
+  def component = params.component
+
   stage("Build Infrastructure - ${environment}") {
     folderExists('infrastructure') {
       withSubscription(subscription) {
