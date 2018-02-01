@@ -39,14 +39,14 @@ def call(type, String product, String component, Closure body) {
         sectionBuildAndTest(pipelineType.builder)
 
         onMaster {
-          stagesDeployToEnvironment(
+          sectionDeployToEnvironment(
             deployer: pipelineType.deployer,
             subscription:'nonprod',
             environment:'nonprod',
             product: product,
             component: component)
 
-          stagesDeployToEnvironment(
+          sectionDeployToEnvironment(
             deployer: pipelineType.deployer,
             subscription:'prod',
             environment:'prod',

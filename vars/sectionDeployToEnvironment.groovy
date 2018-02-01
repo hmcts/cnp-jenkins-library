@@ -37,11 +37,13 @@ def call(params) {
     }
   }
 
-  stage("Functional Test - ${environment} (staging slot)") {
-    withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-      pl.callAround('functionaltest:${environment}') {
-        echo "Using TEST_URL: '$TEST_URL'"
-        builder.functionalTest()
+  onAATEnvironment(environment) {
+    stage("Functional Test - ${environment} (staging slot)") {
+      withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+        pl.callAround('functionaltest:${environment}') {
+          echo "Using TEST_URL: '$TEST_URL'"
+          builder.functionalTest()
+        }
       }
     }
   }
