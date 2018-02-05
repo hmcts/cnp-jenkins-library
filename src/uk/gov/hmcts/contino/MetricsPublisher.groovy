@@ -11,8 +11,6 @@ import com.cloudbees.groovy.cps.NonCPS
 
 class MetricsPublisher implements Serializable {
 
-  private final static String defaultCosmosDbUrl = 'https://e520fc7bdb51bf9c.documents.azure.com:/'
-  private final static String defaultCollectionLink = 'dbs/jenkins-sandbox/colls/pipeline-metrics'
   def steps
   def env
   def currentBuild
@@ -32,7 +30,9 @@ class MetricsPublisher implements Serializable {
   }
 
   MetricsPublisher(steps, currentBuild, product, component) {
-    this(steps, currentBuild, product, component, defaultCosmosDbUrl, defaultCollectionLink)
+    // the following default string literals were stored as private static final fields but had to be moved here because
+    // we ran into compilation issues on Jenkins because it interfered and wrapped them in instance method calls
+    this(steps, currentBuild, product, component, 'https://e520fc7bdb51bf9c.documents.azure.com:/', 'dbs/jenkins-sandbox/colls/pipeline-metrics')
   }
 
   @NonCPS
