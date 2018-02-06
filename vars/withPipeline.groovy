@@ -50,7 +50,7 @@ def call(type, String product, String component, Closure body) {
 
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
-            deployer: pipelineType.deployer,
+            pipelineType: pipelineType,
             subscription: subscription,
             environment:environment,
             product: product,
@@ -58,7 +58,7 @@ def call(type, String product, String component, Closure body) {
 
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
-            deployer: pipelineType.deployer,
+            pipelineType: pipelineType,
             subscription:'prod',
             environment:'prod',
             product: product,

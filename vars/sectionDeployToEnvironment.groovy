@@ -1,14 +1,19 @@
 #!groovy
+import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
-  Deployer deployer = params.deployer
+  PipelineType pipelineType = params.pipelineType
   def subscription = params.subscription
   def environment = params.environment
   def product = params.product
   def component = params.component
+
+  Builder builder = pipelineType.builder
+  Deployer deployer = pipelineType.deployer
 
   stage("Build Infrastructure - ${environment}") {
     folderExists('infrastructure') {
