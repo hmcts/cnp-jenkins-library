@@ -1,7 +1,9 @@
 #!groovy
 import uk.gov.hmcts.contino.Deployer
+import uk.gov.hmcts.contino.PipelineCallbacks
 
 def call(params) {
+  PipelineCallbacks pl = params.pipelineCallbacks
   Deployer deployer = params.deployer
   def subscription = params.subscription
   def environment = params.environment

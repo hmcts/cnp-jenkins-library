@@ -1,7 +1,8 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.PipelineCallbacks
 
-def call(Builder builder) {
+def call(PipelineCallbacks pl, Builder builder) {
   stage('Checkout') {
     pl.callAround('checkout') {
       deleteDir()

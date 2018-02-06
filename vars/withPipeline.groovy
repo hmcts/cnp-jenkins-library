@@ -36,10 +36,11 @@ def call(type, String product, String component, Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        sectionBuildAndTest(pipelineType.builder)
+        sectionBuildAndTest(pl, pipelineType.builder)
 
         onMaster {
           sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
             deployer: pipelineType.deployer,
             subscription:'nonprod',
             environment:'nonprod',
@@ -47,6 +48,7 @@ def call(type, String product, String component, Closure body) {
             component: component)
 
           sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
             deployer: pipelineType.deployer,
             subscription:'prod',
             environment:'prod',
