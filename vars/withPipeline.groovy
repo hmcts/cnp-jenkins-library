@@ -89,7 +89,7 @@ def call(type, String product, String component, Closure body) {
           if (env.NONPROD_SUBSCRIPTION) {
             subscription = env.NONPROD_SUBSCRIPTION
           }
-          def environment = 'nonprod'
+          def environment = 'aat'
           if (env.NONPROD_ENVIRONMENT) {
             environment = env.NONPROD_ENVIRONMENT
           }
