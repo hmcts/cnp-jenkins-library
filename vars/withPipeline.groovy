@@ -39,11 +39,20 @@ def call(type, String product, String component, Closure body) {
         sectionBuildAndTest(pl, pipelineType.builder)
 
         onMaster {
+          def subscription = 'nonprod'
+          if (env.NONPROD_SUBSCRIPTION) {
+            subscription = env.NONPROD_SUBSCRIPTION
+          }
+          def environment = 'aat'
+          if (env.NONPROD_ENVIRONMENT) {
+            environment = env.NONPROD_ENVIRONMENT
+          }
+
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             deployer: pipelineType.deployer,
-            subscription:'nonprod',
-            environment:'nonprod',
+            subscription: subscription,
+            environment:environment,
             product: product,
             component: component)
 
@@ -54,8 +63,8 @@ def call(type, String product, String component, Closure body) {
             environment:'prod',
             product: product,
             component: component)
+          }
         }
-      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {
