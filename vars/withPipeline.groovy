@@ -1,5 +1,3 @@
-import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
@@ -22,9 +20,6 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  Deployer deployer = pipelineType.deployer
-  Builder builder = pipelineType.builder
-
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pl = new PipelineCallbacks(metricsPublisher)
 
@@ -41,50 +36,9 @@ def call(type, String product, String component, Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        stage('Checkout') {
-          pl.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
-        }
-
-        stage("Build") {
-          pl.callAround('build') {
-            builder.build()
-          }
-        }
-
-        stage("Test") {
-          pl.callAround('test') {
-            builder.test()
-          }
-        }
-
-        stage("Security Checks") {
-          pl.callAround('securitychecks') {
-            builder.securityCheck()
-          }
-        }
-
-        stage("Sonar Scan") {
-          pl.callAround('sonarscan') {
-            pluginActive('sonar') {
-              withSonarQubeEnv("SonarQube") {
-                builder.sonarScan()
-              }
-
-              timeout(time: 5, unit: 'MINUTES') {
-                def qg = steps.waitForQualityGate()
-                if (qg.status != 'OK') {
-                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                }
-              }
-            }
-          }
-        }
+        sectionBuildAndTest(pl, pipelineType.builder)
 
         onMaster {
-
           def subscription = 'nonprod'
           if (env.NONPROD_SUBSCRIPTION) {
             subscription = env.NONPROD_SUBSCRIPTION
@@ -94,52 +48,23 @@ def call(type, String product, String component, Closure body) {
             environment = env.NONPROD_ENVIRONMENT
           }
 
-          stage("Build Infrastructure - ${environment}") {
-            folderExists('infrastructure') {
-              withSubscription(subscription) {
-                dir('infrastructure') {
-                  withIlbIp(environment) {
-                    spinInfra("${product}-${component}", environment, false, subscription)
-                    scmServiceRegistration(environment)
-                  }
-                }
-              }
-            }
-          }
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription,
+            environment:environment,
+            product: product,
+            component: component)
 
-          stage("Deploy - ${environment} (staging slot)") {
-            pl.callAround("deploy:${environment}") {
-              deployer.deploy(environment)
-              deployer.healthCheck(environment)
-            }
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription:'prod',
+            environment:'prod',
+            product: product,
+            component: component)
           }
-
-          stage("Smoke Test - ${environment} (staging slot)") {
-            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-              pl.callAround('smoketest:${environment}') {
-                echo "Using TEST_URL: '$TEST_URL'"
-                builder.smokeTest()
-              }
-            }
-          }
-
-          stage("Functional Test - ${environment} (staging slot)") {
-            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-              pl.callAround('functionaltest:${environment}') {
-                echo "Using TEST_URL: '$TEST_URL'"
-                builder.functionalTest()
-              }
-            }
-          }
-
-          stage("Promote - ${environment} (staging -> production slot)") {
-            withSubscription(subscription) {
-              sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
-            }
-          }
-
         }
-      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {

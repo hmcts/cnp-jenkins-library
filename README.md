@@ -29,7 +29,6 @@ and NodeJS applications. The pipeline contains the following stages:
 * Sonar Scan
 * Deploy Dev
 * Smoke Tests - Dev
-* OWASP
 * Deploy Prod
 * Smoke Tests - Production
 
