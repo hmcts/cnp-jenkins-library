@@ -63,10 +63,11 @@ def call(type, String product, String component, String environment, String subs
               }
             }
           }
-        }
-
-        stage("DB Migration - ${environment}") {
-          builder.dbMigrate(tfOutput.vaultName.value)
+          if (pl.migrateDb) {
+            stage("DB Migration - ${environment}") {
+              builder.dbMigrate(tfOutput.vaultName.value)
+            }
+          }
         }
 
         stage("Deploy $environment") {

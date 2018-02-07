@@ -4,6 +4,7 @@ class PipelineCallbacks implements Serializable {
 
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
+  boolean migrateDb
   private MetricsPublisher metricsPublisher
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
@@ -61,6 +62,10 @@ class PipelineCallbacks implements Serializable {
 
   void enableSlackNotifications(String slackChannel) {
     this.slackChannel = slackChannel
+  }
+
+  void enableDbMigration(boolean migrateDb) {
+    this.migrateDb = migrateDb
   }
 
   private def nullSafeCall(String key) {
