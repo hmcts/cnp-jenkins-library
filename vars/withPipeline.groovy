@@ -40,10 +40,6 @@ def call(type, String product, String component, Closure body) {
 
         sectionBuildAndTest(pl, pipelineType.builder)
 
-
-        // We want to be able to run the same code below and let the particular jenkins installation override
-        // the names for what is a nonprod sub & env and prod sub & env
-
         onMaster {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
