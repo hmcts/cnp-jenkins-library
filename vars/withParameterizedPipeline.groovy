@@ -58,9 +58,14 @@ def call(type, String product, String component, String environment, String subs
           withSubscription(subscription) {
             dir('infrastructure') {
               withIlbIp(environment) {
-                spinInfra("${product}-${component}", environment, false, subscription)
+                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
                 scmServiceRegistration(environment)
               }
+            }
+          }
+          if (pl.migrateDb) {
+            stage("DB Migration - ${environment}") {
+              builder.dbMigrate(tfOutput.vaultName.value)
             }
           }
         }

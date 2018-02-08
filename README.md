@@ -99,6 +99,11 @@ withPipeline(type, product, component) {
 }
 ```
 
+## Application specific infrastructure
+It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
+
+In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
+
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
 
