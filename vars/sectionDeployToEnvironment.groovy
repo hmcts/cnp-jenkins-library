@@ -11,7 +11,6 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
-  def vaultSecrets = params.vaultSecrets
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
@@ -42,24 +41,20 @@ def call(params) {
 //  }
 
   stage("Smoke Test - ${environment} (staging slot)") {
-    wrap([$class: 'VaultBuildWrapper', vaultSecrets: vaultSecrets]) {
-      withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-        pl.callAround('smoketest:${environment}') {
-          echo "Using TEST_URL: '$TEST_URL'"
-          builder.smokeTest()
-        }
+    withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+      pl.callAround('smoketest:${environment}') {
+        echo "Using TEST_URL: '$TEST_URL'"
+        builder.smokeTest()
       }
     }
   }
 
   onAATEnvironment(environment) {
     stage("Functional Test - ${environment} (staging slot)") {
-      wrap([$class: 'VaultBuildWrapper', vaultSecrets: vaultSecrets]) {
-        withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-          pl.callAround('functionaltest:${environment}') {
-            echo "Using TEST_URL: '$TEST_URL'"
-            builder.functionalTest()
-          }
+      withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+        pl.callAround('functionaltest:${environment}') {
+          echo "Using TEST_URL: '$TEST_URL'"
+          builder.functionalTest()
         }
       }
     }

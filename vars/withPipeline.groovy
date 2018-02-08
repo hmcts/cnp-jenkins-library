@@ -34,39 +34,39 @@ def call(type, String product, String component, Closure body) {
   timestamps {
     try {
       node {
-        env.PATH = "$env.PATH:/usr/local/bin"
+        wrap([$class: 'VaultBuildWrapper', vaultSecrets: pl.vaultSecrets]) {
+          env.PATH = "$env.PATH:/usr/local/bin"
 
-//        sectionBuildAndTest(pl, pipelineType.builder)
+          //        sectionBuildAndTest(pl, pipelineType.builder)
 
-        onMaster {
-          def subscription = 'nonprod'
-          if (env.NONPROD_SUBSCRIPTION) {
-            subscription = env.NONPROD_SUBSCRIPTION
-          }
-          def environment = 'aat'
-          if (env.NONPROD_ENVIRONMENT) {
-            environment = env.NONPROD_ENVIRONMENT
-          }
+          onMaster {
+            def subscription = 'nonprod'
+            if (env.NONPROD_SUBSCRIPTION) {
+              subscription = env.NONPROD_SUBSCRIPTION
+            }
+            def environment = 'aat'
+            if (env.NONPROD_ENVIRONMENT) {
+              environment = env.NONPROD_ENVIRONMENT
+            }
 
-          sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
-            pipelineType: pipelineType,
-            subscription: subscription,
-            environment:environment,
-            vaultSecrets: pl.vaultSecrets,
-            product: product,
-            component: component)
+            sectionDeployToEnvironment(
+              pipelineCallbacks: pl,
+              pipelineType: pipelineType,
+              subscription: subscription,
+              environment: environment,
+              product: product,
+              component: component)
 
-          sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
-            pipelineType: pipelineType,
-            subscription:'prod',
-            environment:'prod',
-            vaultSecrets: pl.vaultSecrets,
-            product: product,
-            component: component)
+            sectionDeployToEnvironment(
+              pipelineCallbacks: pl,
+              pipelineType: pipelineType,
+              subscription: 'prod',
+              environment: 'prod',
+              product: product,
+              component: component)
           }
         }
+      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {
