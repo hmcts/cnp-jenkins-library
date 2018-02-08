@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
 
-def call(type, String product, String component, Map<String, Object> vaultSecrets = [:], Closure body) {
+def call(type, String product, String component, List<Map<String, Object>> vaultSecrets = [], Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component)
