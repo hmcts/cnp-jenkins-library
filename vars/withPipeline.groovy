@@ -3,6 +3,8 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.contino.Environment
 
 def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
@@ -38,29 +40,24 @@ def call(type, String product, String component, Closure body) {
 
         sectionBuildAndTest(pl, pipelineType.builder)
 
-        onMaster {
-          def subscription = 'nonprod'
-          if (env.NONPROD_SUBSCRIPTION) {
-            subscription = env.NONPROD_SUBSCRIPTION
-          }
-          def environment = 'aat'
-          if (env.NONPROD_ENVIRONMENT) {
-            environment = env.NONPROD_ENVIRONMENT
-          }
 
+        // We want to be able to run the same code below and let the particular jenkins installation override
+        // the names for what is a nonprod sub & env and prod sub & env
+
+        onMaster {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
-            subscription: subscription,
-            environment:environment,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
             product: product,
             component: component)
 
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
-            subscription:'prod',
-            environment:'prod',
+            subscription: subscription.prodName,
+            environment: environment.prodName,
             product: product,
             component: component)
           }
