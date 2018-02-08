@@ -16,30 +16,30 @@ def call(params) {
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
-//  stage("Build Infrastructure - ${environment}") {
-//    folderExists('infrastructure') {
-//      withSubscription(subscription) {
-//        dir('infrastructure') {
-//          withIlbIp(environment) {
-//            tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
-//            scmServiceRegistration(environment)
-//          }
-//        }
-//      }
-//      if (pl.migrateDb) {
-//        stage("DB Migration - ${environment}") {
-//          builder.dbMigrate(tfOutput.vaultName.value)
-//        }
-//      }
-//    }
-//  }
-//
-//  stage("Deploy - ${environment} (staging slot)") {
-//    pl.callAround("deploy:${environment}") {
-//      deployer.deploy(environment)
-//      deployer.healthCheck(environment)
-//    }
-//  }
+  stage("Build Infrastructure - ${environment}") {
+    folderExists('infrastructure') {
+      withSubscription(subscription) {
+        dir('infrastructure') {
+          withIlbIp(environment) {
+            tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+            scmServiceRegistration(environment)
+          }
+        }
+      }
+      if (pl.migrateDb) {
+        stage("DB Migration - ${environment}") {
+          builder.dbMigrate(tfOutput.vaultName.value)
+        }
+      }
+    }
+  }
+
+  stage("Deploy - ${environment} (staging slot)") {
+    pl.callAround("deploy:${environment}") {
+      deployer.deploy(environment)
+      deployer.healthCheck(environment)
+    }
+  }
 
   stage("Smoke Test - ${environment} (staging slot)") {
     wrap([$class: 'VaultBuildWrapper', vaultSecrets: vaultSecrets]) {
