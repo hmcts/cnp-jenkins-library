@@ -37,7 +37,7 @@ def call(type, String product, String component, Closure body) {
         wrap([$class: 'VaultBuildWrapper', vaultSecrets: pl.vaultSecrets]) {
           env.PATH = "$env.PATH:/usr/local/bin"
 
-          //        sectionBuildAndTest(pl, pipelineType.builder)
+          sectionBuildAndTest(pl, pipelineType.builder)
 
           onMaster {
             def subscription = 'nonprod'
