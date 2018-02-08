@@ -37,9 +37,14 @@ def call(productName, environment, planOnly = false, subscription) {
         stage("Apply ${productName}-${environment} in ${environment}") {
           sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
             (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
-          result = sh(script: "terraform output -json", returnStdout: true).trim()
-          parseResult = new JsonSlurperClassic().parseText(result)
-          log.info("returning parsed JSON terraform output: ${parseResult}")
+          parseResult = ""
+          try {
+            result = sh(script: "terraform output -json", returnStdout: true).trim()
+            parseResult = new JsonSlurperClassic().parseText(result)
+            log.info("returning parsed JSON terraform output: ${parseResult}")
+          } catch (Exception) {
+            log.info("terraform output command failed! Assuming there was no result...")
+          }
           return parseResult
         }
       } else
