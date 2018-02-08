@@ -4,6 +4,7 @@ class PipelineCallbacks implements Serializable {
 
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
+  List<Map<String, Object>> vaultSecrets = []
   private MetricsPublisher metricsPublisher
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
@@ -61,6 +62,10 @@ class PipelineCallbacks implements Serializable {
 
   void enableSlackNotifications(String slackChannel) {
     this.slackChannel = slackChannel
+  }
+
+  void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
+    this.vaultSecrets = vaultSecrets
   }
 
   private def nullSafeCall(String key) {
