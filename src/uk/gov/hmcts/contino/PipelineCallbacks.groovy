@@ -68,10 +68,6 @@ class PipelineCallbacks implements Serializable {
     this.migrateDb = true
   }
 
-  void disableDbMigration() {
-    this.migrateDb = false
-  }
-
   private def nullSafeCall(String key) {
     def body = bodies.get(key)
     if (body != null) {
