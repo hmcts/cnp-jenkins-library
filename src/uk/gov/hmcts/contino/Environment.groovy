@@ -4,7 +4,7 @@ class Environment implements Serializable {
   def final nonProdName
   def final prodName
 
-  Environment(Map<String, String> env) {
+  Environment(Object env) {
     Objects.requireNonNull(env)
 
     nonProdName = env.NONPROD_ENVIRONMENT_NAME ?: 'aat'
