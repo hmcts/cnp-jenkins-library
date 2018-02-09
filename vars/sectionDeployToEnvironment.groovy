@@ -49,7 +49,7 @@ def call(params) {
     }
   }
 
-  onNonProdEnvironment(environment) {
+  onAATEnvironment(environment) {
     stage("Functional Test - ${environment} (staging slot)") {
       withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
         pl.callAround('functionaltest:${environment}') {
