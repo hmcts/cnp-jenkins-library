@@ -14,11 +14,23 @@ def call(PipelineCallbacks pl, Builder builder) {
     pl.callAround('build') {
       builder.build()
     }
+    timeout(time: 5, unit: 'MINUTES') {
+      def qg = steps.waitForQualityGate()
+      if (qg.status != 'OK') {
+        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+      }
+    }
   }
 
   stage("Test") {
     pl.callAround('test') {
       builder.test()
+    }        
+    timeout(time: 5, unit: 'MINUTES') {
+      def qg = steps.waitForQualityGate()
+      if (qg.status != 'OK') {
+        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+      }
     }
   }
 
