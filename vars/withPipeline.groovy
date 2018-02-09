@@ -33,6 +33,8 @@ def call(type, String product, String component, Closure body) {
   }
   currentBuild.result = "SUCCESS"
 
+  Subscription subscription = new Subscription(env)
+
   timestamps {
     try {
       node {
