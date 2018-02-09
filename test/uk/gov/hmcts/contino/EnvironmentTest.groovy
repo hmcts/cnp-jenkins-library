@@ -12,51 +12,35 @@ class EnvironmentTest extends Specification {
     thrown(NullPointerException)
   }
 
-  def "isProduction should return true when environment is 'prod'"() {
+  def "Defaults to 'prod' for prod env when prod environment var override not set"() {
     when:
-    def environment = new Environment('prod')
+    def environment = new Environment(["unusedVar": "unused"])
 
     then:
-    environment.isProduction()
+    assert environment.prodName == "prod"
   }
 
-  def "isProduction should return true when environment is 'sprod'"() {
+  def "Defaults to 'aat' for nonprod env when nonProd environment var override not set"() {
     when:
-    def environment = new Environment('sprod')
+    def environment = new Environment(["unusedVar": "unused"])
 
     then:
-    environment.isProduction()
+    assert environment.nonProdName == "aat"
   }
 
-  def "isProduction should return false when environment is not 'prod' or 'sprod'"() {
+  def "Overrides prod env name when environment var override is set"() {
     when:
-    def environment = new Environment('nonprod')
+    def environment = new Environment(["PROD_ENVIRONMENT_NAME": "sprod"])
 
     then:
-    !environment.isProduction()
+    assert environment.prodName == "sprod"
   }
 
-  def "isAATEnvironment should return true when environment is 'aat'"() {
+  def "Overrides nonProd env name when environment var override is set"() {
     when:
-    def environment = new Environment('aat')
+    def environment = new Environment(["NONPROD_ENVIRONMENT_NAME": "saat"])
 
     then:
-    environment.isAATEnvironment()
-  }
-
-  def "isAATEnvironment should return true when environment is  'saat'"() {
-    when:
-    def environment = new Environment('saat')
-
-    then:
-    environment.isAATEnvironment()
-  }
-
-  def "isAATEnvironment should return false when environment is neither 'aat' or 'saat'"() {
-    when:
-    def environment = new Environment('nonprod')
-
-    then:
-    !environment.isAATEnvironment()
+    assert environment.nonProdName == "saat"
   }
 }
