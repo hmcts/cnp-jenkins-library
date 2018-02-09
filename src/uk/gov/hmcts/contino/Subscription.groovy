@@ -4,7 +4,7 @@ class Subscription implements Serializable {
   def final nonProdName
   def final prodName
 
-  Subscription(Map<String, String> env) {
+  Subscription(Object env) {
     Objects.requireNonNull(env)
 
     nonProdName = env.NONPROD_SUBSCRIPTION_NAME ?: 'nonprod'
