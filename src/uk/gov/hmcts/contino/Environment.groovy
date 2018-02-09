@@ -1,19 +1,13 @@
 package uk.gov.hmcts.contino
 
 class Environment implements Serializable {
-  def nonProdName = 'aat'
-  def prodName = 'prod'
+  def final nonProdName
+  def final prodName
 
   Environment(Map<String, String> env) {
     Objects.requireNonNull(env)
 
-    if (env.NONPROD_ENVIRONMENT_NAME) {
-      nonProdName = env.NONPROD_ENVIRONMENT_NAME
-    }
-
-    if (env.PROD_ENVIRONMENT_NAME) {
-      prodName = env.PROD_ENVIRONMENT_NAME
-    }
+    nonProdName = env.NONPROD_ENVIRONMENT_NAME ?: 'aat'
+    prodName = env.PROD_ENVIRONMENT_NAME ?: 'prod'
   }
-
 }
