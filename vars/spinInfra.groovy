@@ -27,7 +27,8 @@ def call(productName, environment, planOnly = false, subscription) {
         "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
         "-backend-config \"container_name=${STORE_sa_container_name_template}${environment}\" " +
         "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
-        "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
+        "-backend-config \"key=${productName}/${environment}/terraform.tfstate\"" +
+        (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       sh "terraform get -update=true"
       sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
