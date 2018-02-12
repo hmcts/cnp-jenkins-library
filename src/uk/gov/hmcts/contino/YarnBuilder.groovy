@@ -29,10 +29,10 @@ class YarnBuilder implements Builder, Serializable {
     try {
       yarn("test:smoke")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: './output/smoke-result.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.png'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.html'
+      steps.junit allowEmptyResults: true, testResults: './smoke-output/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*.png'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*.html'
     }
   }
 
@@ -40,10 +40,10 @@ class YarnBuilder implements Builder, Serializable {
     try {
       yarn("test:functional")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: './output/functional-result.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.png'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.html'
+      steps.junit allowEmptyResults: true, testResults: './functional-output/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*.png'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*.html'
     }
   }
 
