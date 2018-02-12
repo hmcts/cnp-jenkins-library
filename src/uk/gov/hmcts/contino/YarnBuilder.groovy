@@ -30,9 +30,7 @@ class YarnBuilder implements Builder, Serializable {
       yarn("test:smoke")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './smoke-output/*result.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*.png'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*.html'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*'
     }
   }
 
@@ -41,9 +39,7 @@ class YarnBuilder implements Builder, Serializable {
       yarn("test:functional")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './functional-output/*result.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*.png'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*.html'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*'
     }
   }
 
