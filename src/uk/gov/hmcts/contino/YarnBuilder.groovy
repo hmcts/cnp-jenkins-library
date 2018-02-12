@@ -26,11 +26,25 @@ class YarnBuilder implements Builder, Serializable {
   }
 
   def smokeTest() {
-    yarn("test:smoke")
+    try {
+      yarn("test:smoke")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: './output/smoke-result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.png'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.html'
+    }
   }
 
   def functionalTest() {
-    yarn("test:functional")
+    try {
+      yarn("test:functional")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: './output/functional-result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.png'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*.html'
+    }
   }
 
   def securityCheck() {
