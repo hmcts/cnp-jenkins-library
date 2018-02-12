@@ -31,12 +31,12 @@ def call(productName, environment, planOnly = false, subscription) {
 
       sh "terraform get -update=true"
       sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
-        (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+        (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
           sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
-            (fileExists("${environment}.tfvars") ? " var-file=${environment}.tfvars" : "")
+            (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
           parseResult = ""
           try {
             result = sh(script: "terraform output -json", returnStdout: true).trim()
