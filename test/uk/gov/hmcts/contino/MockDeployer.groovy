@@ -7,12 +7,12 @@ class MockDeployer implements Deployer, Serializable {
   }
 
   @Override
-  def healthCheck(String env) {
+  def healthCheck(String env, String slot) {
     return null
   }
 
   @Override
-  def getServiceUrl(String env) {
+  def getServiceUrl(String env, String slot) {
     return null
   }
 }
