@@ -19,11 +19,11 @@ node {
     }
 
     stage('Build') {
-      sh "./gradlew clean build -x test"
+      sh "./gradlew --info clean build -x test"
     }
 
     stage('Test') {
-      sh "./gradlew test"
+      sh "./gradlew --info test"
     }
   } catch (err) {
     notifyBuildFailure channel: channel
