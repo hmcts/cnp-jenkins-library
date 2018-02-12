@@ -64,5 +64,15 @@ def call(params) {
     withSubscription(subscription) {
       sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
     }
+    deployer.healthCheck(environment, "production")
+  }
+
+  stage("Smoke Test - ${environment} (production slot)") {
+    withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "production")}"]) {
+      pl.callAround('smokeTest:${environment}') {
+        echo "Using TEST_URL: '$TEST_URL'"
+        builder.smokeTest()
+      }
+    }
   }
 }
