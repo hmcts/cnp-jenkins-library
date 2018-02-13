@@ -77,20 +77,22 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
-        stage("Smoke test - ${environment}") {
-          withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-            pl.callAround('smoketest:${environment}') {
-              echo "Using TEST_URL: '$TEST_URL'"
-              builder.smokeTest()
+        wrap([$class: 'AzureKeyVaultBuildWrapper', azureKeyVaultSecrets: pl.vaultSecrets]) {
+          stage("Smoke test - ${environment}") {
+            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+              pl.callAround('smoketest:${environment}') {
+                echo "Using TEST_URL: '$TEST_URL'"
+                builder.smokeTest()
+              }
             }
           }
-        }
 
-        stage("Functional Test - ${environment}") {
-          withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-            pl.callAround('functionaltest:${environment}') {
-              echo "Using TEST_URL: '$TEST_URL'"
-              builder.functionalTest()
+          stage("Functional Test - ${environment}") {
+            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+              pl.callAround('functionaltest:${environment}') {
+                echo "Using TEST_URL: '$TEST_URL'"
+                builder.functionalTest()
+              }
             }
           }
         }
