@@ -49,7 +49,7 @@ class GradleBuilder implements Builder, Serializable {
     try {
       gradle("-DdependencyCheck.failBuild=true dependencyCheck")
     } finally {
-      steps.junit 'build/reports/dependency-check-report.html'
+      steps.archiveArtifacts 'build/reports/dependency-check-report.html'
     }
 
   }
