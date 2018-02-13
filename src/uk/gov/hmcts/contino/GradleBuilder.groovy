@@ -46,6 +46,12 @@ class GradleBuilder implements Builder, Serializable {
 
   def securityCheck() {
 
+    try {
+      gradle("-DdependencyCheck.failBuild=true dependencyCheck")
+    } finally {
+      steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+    }
+
   }
 
   @Override
