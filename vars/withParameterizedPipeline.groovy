@@ -48,36 +48,40 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
-//        stage("Build") {
-//          pl.callAround('build') {
-//            builder.build()
-//          }
-//        }
-//
-//        folderExists('infrastructure') {
-//          withSubscription(subscription) {
-//            dir('infrastructure') {
-//              withIlbIp(environment) {
-//                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
-//                scmServiceRegistration(environment)
-//              }
-//            }
-//          }
-//          if (pl.migrateDb) {
-//            stage("DB Migration - ${environment}") {
-//              builder.dbMigrate(tfOutput.vaultName.value)
-//            }
-//          }
-//        }
-//
-//        stage("Deploy $environment") {
-//          pl.callAround("deploy:$environment") {
-//            deployer.deploy(environment)
-//            deployer.healthCheck(environment)
-//          }
-//        }
+        stage("Build") {
+          pl.callAround('build') {
+            builder.build()
+          }
+        }
 
-        wrap([$class: 'AzureKeyVaultBuildWrapper', azureKeyVaultSecrets: pl.vaultSecrets]) {
+        folderExists('infrastructure') {
+          withSubscription(subscription) {
+            dir('infrastructure') {
+              withIlbIp(environment) {
+                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+                scmServiceRegistration(environment)
+              }
+            }
+          }
+          if (pl.migrateDb) {
+            stage("DB Migration - ${environment}") {
+              builder.dbMigrate(tfOutput.vaultName.value)
+            }
+          }
+        }
+
+        stage("Deploy $environment") {
+          pl.callAround("deploy:$environment") {
+            deployer.deploy(environment)
+            deployer.healthCheck(environment)
+          }
+        }
+
+        wrap([
+          $class: 'AzureKeyVaultBuildWrapper',
+          keyVaultURLOverride: tfOutput?.vault-url?.value,
+          azureKeyVaultSecrets: pl.vaultSecrets
+        ]) {
           sh 'echo ">>> Listing injected secrets"'
           sh 'echo $AAT_TEST_USER_USERNAME'
           sh 'echo $AAT_TEST_USER_PASSWORD'
