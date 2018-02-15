@@ -79,7 +79,7 @@ def call(type, String product, String component, String environment, String subs
 
         wrap([
           $class: 'AzureKeyVaultBuildWrapper',
-          keyVaultURLOverride: tfOutput?.vault-uri?.value,
+          keyVaultURLOverride: tfOutput?.vaultUri?.value,
           azureKeyVaultSecrets: pl.vaultSecrets
         ]) {
           sh 'echo ">>> Listing injected secrets"'
