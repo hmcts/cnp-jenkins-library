@@ -81,7 +81,7 @@ def call(type, String product, String component, String environment, String subs
           sh 'echo ">>> Listing injected secrets"'
           sh 'echo $AAT_TEST_USER_USERNAME'
           sh 'echo $AAT_TEST_USER_PASSWORD'
-          sh 'echo AAT_TEST_USER_EMAIL_PATTERN'
+          sh 'echo $AAT_TEST_USER_EMAIL_PATTERN'
           stage("Smoke test - ${environment}") {
             withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
               pl.callAround('smoketest:${environment}') {
