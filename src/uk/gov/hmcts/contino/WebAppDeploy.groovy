@@ -27,9 +27,9 @@ class WebAppDeploy implements Serializable {
    * @param env
    * @return
    */
-  def healthCheck(env) {
+  def healthCheck(env, slot) {
 
-    def serviceUrl = getServiceUrl(product, app, env)
+    def serviceUrl = getServiceUrl(product, app, env, slot)
     def healthCheckUrl = "${serviceUrl}/health"
 
     int sleepDuration = 10
@@ -168,14 +168,15 @@ class WebAppDeploy implements Serializable {
    * @param product
    * @param app
    * @param env
+   * @param slot
    * @return
    */
-  def getServiceUrl(product, app, env) {
-    return "https://${getServiceHost(product, app, env)}"
+  def getServiceUrl(product, app, env, slot) {
+    return "https://${getServiceHost(product, app, env, slot)}"
   }
 
-  def getServiceUrl(env) {
-    return getServiceUrl(this.product, this.app, env)
+  def getServiceUrl(env, slot) {
+    return getServiceUrl(this.product, this.app, env, slot)
   }
 
   private def copy(filePath, destinationDir) {
@@ -186,7 +187,6 @@ class WebAppDeploy implements Serializable {
     if (filePath && steps.fileExists(filePath)) {
       steps.sh("cp  ${filePath} " + destinationDir)
     }
-
   }
 
   private def getServiceDeploymentHost(product, app, env) {
@@ -195,10 +195,15 @@ class WebAppDeploy implements Serializable {
     return "${serviceName}-staging.scm.${serviceDomain}"
   }
 
-  private def getServiceHost(product, app, env) {
+  private def getServiceHost(product, app, env, slot) {
     def serviceName = getServiceName(product, app, env)
     def serviceDomain = getServiceDomain(env)
-    return "${serviceName}-staging.${serviceDomain}"
+    def slotString = ""
+
+    if (slot != "production")
+      slotString = "-${slot}"
+
+    return "${serviceName}${slotString}.${serviceDomain}"
   }
 
   private def getServiceName(product, app, env) {

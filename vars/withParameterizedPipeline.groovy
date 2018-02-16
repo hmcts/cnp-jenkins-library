@@ -73,7 +73,7 @@ def call(type, String product, String component, String environment, String subs
         stage("Deploy $environment") {
           pl.callAround("deploy:$environment") {
             deployer.deploy(environment)
-            deployer.healthCheck(environment)
+            deployer.healthCheck(environment, "staging")
           }
         }
 
