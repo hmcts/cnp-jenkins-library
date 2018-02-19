@@ -43,7 +43,7 @@ def call(params) {
   wrap([
     $class              : 'AzureKeyVaultBuildWrapper',
     azureKeyVaultSecrets: pl.vaultSecrets,
-    keyVaultURLOverride : tfOutput?.vaultUri?.value
+    keyVaultURLOverride : 'https://cmc-claim-store-saat.vault.azure.net/'
   ]) {
     echo ">>> Vault URI ${tfOutput?.vaultUri?.value}"
     sh 'echo ">>> Listing injected secrets"'
@@ -52,7 +52,7 @@ def call(params) {
     sh 'echo $AAT_TEST_USER_PASSWORD'
     sh 'echo $AAT_TEST_USER_EMAIL_PATTERN'
     echo pl.vaultSecrets.toString()
-    
+
     return
 
     stage("Smoke Test - ${environment} (staging slot)") {
