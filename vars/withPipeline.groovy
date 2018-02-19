@@ -39,30 +39,28 @@ def call(type, String product, String component, Closure body) {
   timestamps {
     try {
       node {
-        wrap([$class: 'VaultBuildWrapper', vaultSecrets: pl.vaultSecrets]) {
-          env.PATH = "$env.PATH:/usr/local/bin"
+        env.PATH = "$env.PATH:/usr/local/bin"
 
-          sectionBuildAndTest(pl, pipelineType.builder)
+        sectionBuildAndTest(pl, pipelineType.builder)
 
-          onMaster {
-            sectionDeployToEnvironment(
-              pipelineCallbacks: pl,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              environment: environment.nonProdName,
-              product: product,
-              component: component)
+        onMaster {
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component)
 
-            sectionDeployToEnvironment(
-              pipelineCallbacks: pl,
-              pipelineType: pipelineType,
-              subscription: subscription.prodName,
-              environment: environment.prodName,
-              product: product,
-              component: component)
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.prodName,
+            environment: environment.prodName,
+            product: product,
+            component: component)
           }
         }
-      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {

@@ -81,11 +81,9 @@ def call(type, String product, String component, String environment, String subs
           wrap([
             $class: 'AzureKeyVaultBuildWrapper',
             keyVaultURLOverride: tfOutput?.vaultUri?.value,
-            applicationIDOverride: env.TF_VAR_jenkins_AAD_objectId,
             azureKeyVaultSecrets: pl.vaultSecrets
           ]) {
             echo ">>> Vault URI ${tfOutput?.vaultUri?.value}"
-            echo ">>> TF_VAR_jenkins_AAD_objectId ${env.TF_VAR_jenkins_AAD_objectId}"
             sh 'echo ">>> Listing injected secrets"'
             sh 'echo $AAT_TEST_USER_USERNAME'
             sh 'echo $AAT_TEST_USER_PASSWORD'
