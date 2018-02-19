@@ -46,11 +46,11 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
-        stage("Build") {
-          pl.callAround('build') {
-            builder.build()
-          }
-        }
+//        stage("Build") {
+//          pl.callAround('build') {
+//            builder.build()
+//          }
+//        }
 
         sectionDeployToEnvironment(
           pipelineCallbacks: pl,

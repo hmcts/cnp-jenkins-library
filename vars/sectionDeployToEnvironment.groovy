@@ -45,6 +45,13 @@ def call(params) {
     keyVaultURLOverride : tfOutput?.vaultUri?.value,
     azureKeyVaultSecrets: pl.vaultSecrets
   ]) {
+    echo ">>> Vault URI ${tfOutput?.vaultUri?.value}"
+    echo ">>> TF_VAR_jenkins_AAD_objectId ${env.TF_VAR_jenkins_AAD_objectId}"
+    sh 'echo ">>> Listing injected secrets"'
+    sh 'echo $AAT_TEST_USER_USERNAME'
+    sh 'echo $AAT_TEST_USER_PASSWORD'
+    sh 'echo $AAT_TEST_USER_EMAIL_PATTERN'
+
     stage("Smoke Test - ${environment} (staging slot)") {
       withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
         pl.callAround('smoketest:${environment}') {
