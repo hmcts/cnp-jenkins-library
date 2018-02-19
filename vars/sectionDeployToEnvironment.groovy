@@ -42,8 +42,8 @@ def call(params) {
 
   wrap([
     $class              : 'AzureKeyVaultBuildWrapper',
-    keyVaultURLOverride : tfOutput?.vaultUri?.value,
-    azureKeyVaultSecrets: pl.vaultSecrets
+    azureKeyVaultSecrets: pl.vaultSecrets,
+    keyVaultURLOverride : tfOutput?.vaultUri?.value
   ]) {
     stage("Smoke Test - ${environment} (staging slot)") {
       withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
