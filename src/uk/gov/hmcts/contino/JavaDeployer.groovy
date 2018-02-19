@@ -17,11 +17,11 @@ class JavaDeployer implements Deployer, Serializable {
     deployer.deployJavaWebApp(env)
   }
 
-  def healthCheck(String env) {
-    deployer.healthCheck(env)
+  def healthCheck(String env, String slot) {
+    deployer.healthCheck(env, slot)
   }
 
-  def getServiceUrl(String env) {
-    return deployer.getServiceUrl(env)
+  def getServiceUrl(String env, String slot) {
+    return deployer.getServiceUrl(env, slot)
   }
 }
