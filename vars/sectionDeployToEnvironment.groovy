@@ -45,7 +45,7 @@ def call(params) {
     azureKeyVaultSecrets: pl.vaultSecrets,
     keyVaultURLOverride : 'https://cmc-claim-store-saat.vault.azure.net/'
   ]) {
-//    echo ">>> Vault URI ${tfOutput?.vaultUri?.value}"
+    echo ">>> Vault URI ${tfOutput?.vaultUri?.value}"
     sh 'echo ">>> Listing injected secrets"'
     sh 'echo $pl.vaultSecrets'
     sh 'echo $AAT_TEST_USER_USERNAME'
