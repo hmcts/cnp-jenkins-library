@@ -40,38 +40,44 @@ def call(params) {
     }
   }
 
-  stage("Smoke Test - ${environment} (staging slot)") {
-    withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
-      pl.callAround('smoketest:${environment}') {
-        echo "Using TEST_URL: '$TEST_URL'"
-        builder.smokeTest()
-      }
-    }
-  }
-
-  onAATEnvironment(environment) {
-    stage("Functional Test - ${environment} (staging slot)") {
+  wrap([
+    $class              : 'AzureKeyVaultBuildWrapper',
+    keyVaultURLOverride : tfOutput?.vaultUri?.value,
+    azureKeyVaultSecrets: pl.vaultSecrets
+  ]) {
+    stage("Smoke Test - ${environment} (staging slot)") {
       withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
-        pl.callAround('functionalTest:${environment}') {
+        pl.callAround('smoketest:${environment}') {
           echo "Using TEST_URL: '$TEST_URL'"
-          builder.functionalTest()
+          builder.smokeTest()
         }
       }
     }
-  }
 
-  stage("Promote - ${environment} (staging -> production slot)") {
-    withSubscription(subscription) {
-      sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+    onAATEnvironment(environment) {
+      stage("Functional Test - ${environment} (staging slot)") {
+        withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
+          pl.callAround('functionalTest:${environment}') {
+            echo "Using TEST_URL: '$TEST_URL'"
+            builder.functionalTest()
+          }
+        }
+      }
     }
-    deployer.healthCheck(environment, "production")
-  }
 
-  stage("Smoke Test - ${environment} (production slot)") {
-    withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "production")}"]) {
-      pl.callAround('smokeTest:${environment}') {
-        echo "Using TEST_URL: '$TEST_URL'"
-        builder.smokeTest()
+    stage("Promote - ${environment} (staging -> production slot)") {
+      withSubscription(subscription) {
+        sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+      }
+      deployer.healthCheck(environment, "production")
+    }
+
+    stage("Smoke Test - ${environment} (production slot)") {
+      withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "production")}"]) {
+        pl.callAround('smokeTest:${environment}') {
+          echo "Using TEST_URL: '$TEST_URL'"
+          builder.smokeTest()
+        }
       }
     }
   }
