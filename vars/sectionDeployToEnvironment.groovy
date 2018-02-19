@@ -52,8 +52,6 @@ def call(params) {
     sh 'echo $AAT_TEST_USER_PASSWORD'
     sh 'echo $AAT_TEST_USER_EMAIL_PATTERN'
     echo pl.vaultSecrets.toString()
-    
-    return
 
     stage("Smoke Test - ${environment} (staging slot)") {
       withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
