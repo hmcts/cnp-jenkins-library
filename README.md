@@ -11,7 +11,7 @@ In your pipeline, import this library.
   @Library('Infrastructure')
 ```
 
-To refer to a branch use 
+To refer to a branch use
 ```groovy
 @Library('Infrastructure@<branch-name>')
 ```
@@ -55,6 +55,35 @@ withPipeline(type, product, component) {
 }
 ```
 
+#### Slack notifications on failure / fixed
+To enable slack notifications when the build fails or is fixed add the following:
+```groovy
+withPipeline(type, product, component) {
+  enableSlackNotifications('#my-team-builds')
+}
+```
+
+#### Secrets for functional / smoke testing
+If your tests need secrets to run, e.g. a smoke test user for production then:
+```groovy
+List<LinkedHashMap<String, Object>> secrets = [
+  secret('secretNameInVault', 'theEnvVarYouWantToBeSet')
+]
+
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [ $class: 'AzureKeyVaultSecret',
+    secretType: 'Secret',
+    name: secretName,
+    version: '',
+    envVariable: envVar
+  ]
+}
+
+withPipeline(type, product, component) {
+  loadVaultSecrets(secrets)
+}
+```
+
 #### Security Checks
 
 Calls `yarn test:nsp` so this command must be implemented in package.json
@@ -87,14 +116,14 @@ You can use the `before(stage)` and `after(stage)` within the `withPipeline` blo
 
 E.g.
 
-```
+```groovy
 withPipeline(type, product, component) {
   after('checkout') {
     echo 'Checked out'
   }
-  
-  before('deploy:prod') {
-    input 'Are you sure you want to deploy to production?'
+
+  after('build') {
+    sh 'yarn setup'
   }
 }
 ```
@@ -109,8 +138,8 @@ This is a Groovy project, and gradle is used to build and test.
 
 Run
 ```bash
-gradle build
-gradle test
+$ ./gradlew build
+$ ./gradlew test
 ```
 
 ## Contributing
