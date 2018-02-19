@@ -14,7 +14,7 @@ class JavaDeployer implements Deployer, Serializable {
 
   def deploy(String env) {
 //    steps.unstash(product)
-//    deployer.deployJavaWebApp(env)
+    deployer.deployJavaWebApp(env)
   }
 
   def healthCheck(String env, String slot) {
