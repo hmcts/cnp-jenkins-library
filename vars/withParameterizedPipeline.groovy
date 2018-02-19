@@ -77,26 +77,34 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
-        withKeyVaultSecrets(tfOutput?.vaultName?.value, pl.vaultSecrets) {
-          echo ">>> Vault name ${tfOutput?.vaultName?.value}"
-          sh 'echo ">>> Listing injected secrets"'
-          sh 'echo $AAT_TEST_USER_USERNAME'
-          sh 'echo $AAT_TEST_USER_PASSWORD'
-          sh 'echo $AAT_TEST_USER_EMAIL_PATTERN'
-          stage("Smoke test - ${environment}") {
-            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-              pl.callAround('smoketest:${environment}') {
-                echo "Using TEST_URL: '$TEST_URL'"
-                builder.smokeTest()
+        withSubscription(subscription) {
+          wrap([
+            $class: 'AzureKeyVaultBuildWrapper',
+            keyVaultURLOverride: tfOutput?.vaultUri?.value,
+            applicationIDOverride: env.TF_VAR_jenkins_AAD_objectId,
+            azureKeyVaultSecrets: pl.vaultSecrets
+          ]) {
+            echo ">>> Vault URI ${tfOutput?.vaultUri?.value}"
+            echo ">>> TF_VAR_jenkins_AAD_objectId ${env.TF_VAR_jenkins_AAD_objectId}"
+            sh 'echo ">>> Listing injected secrets"'
+            sh 'echo $AAT_TEST_USER_USERNAME'
+            sh 'echo $AAT_TEST_USER_PASSWORD'
+            sh 'echo $AAT_TEST_USER_EMAIL_PATTERN'
+            stage("Smoke test - ${environment}") {
+              withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+                pl.callAround('smoketest:${environment}') {
+                  echo "Using TEST_URL: '$TEST_URL'"
+                  builder.smokeTest()
+                }
               }
             }
-          }
 
-          stage("Functional Test - ${environment}") {
-            withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
-              pl.callAround('functionaltest:${environment}') {
-                echo "Using TEST_URL: '$TEST_URL'"
-                builder.functionalTest()
+            stage("Functional Test - ${environment}") {
+              withEnv(["TEST_URL=${deployer.getServiceUrl(environment)}"]) {
+                pl.callAround('functionaltest:${environment}') {
+                  echo "Using TEST_URL: '$TEST_URL'"
+                  builder.functionalTest()
+                }
               }
             }
           }
