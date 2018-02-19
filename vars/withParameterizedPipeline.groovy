@@ -65,7 +65,7 @@ def call(type, String product, String component, String environment, String subs
           }
           if (pl.migrateDb) {
             stage("DB Migration - ${environment}") {
-              builder.dbMigrate(tfOutput.vaultName.value)
+              builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
             }
           }
         }
