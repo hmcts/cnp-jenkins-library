@@ -8,6 +8,7 @@ class AngularBuilder extends YarnBuilder {
 
   @Override
   def build() {
+    println "!!! inside build"
     super.build()
 
     yarn("build:ssr")
