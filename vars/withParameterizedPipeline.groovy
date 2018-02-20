@@ -80,6 +80,7 @@ def call(type, String product, String component, String environment, String subs
         stage("Promote - ${environment} (staging -> production slot)") {
           withSubscription(subscription) {
             sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+            deployer.healthCheck(environment, "production")
           }
         }
 
