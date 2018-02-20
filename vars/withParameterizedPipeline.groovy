@@ -51,9 +51,7 @@ def call(type, String product, String component, String environment, String subs
         }
 
         stage("Build") {
-          println "!!!! About to build"
           pl.callAround('build') {
-            println "!!!! Builder: " + builder.getClass().getName()
             builder.build()
           }
         }

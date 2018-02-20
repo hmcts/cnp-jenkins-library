@@ -13,7 +13,6 @@ class AngularBuilder implements Builder, Serializable {
 
   @Override
   def build() {
-    println "!!! inside build"
     builder.build()
     builder.yarn("build:ssr")
   }
