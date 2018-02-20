@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.AngularUniversalPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
@@ -9,7 +10,8 @@ import uk.gov.hmcts.contino.Environment
 def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component)
+    nodejs: new NodePipelineType(this, product, component),
+    angularuniversal: new AngularUniversalPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
