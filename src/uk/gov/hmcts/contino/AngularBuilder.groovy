@@ -1,6 +1,6 @@
-package uk.gov.hmcts.contino
+package uk.gov.hmcts.contino;
 
-class AngularBuilder extends YarnBuilder {
+public class AngularBuilder extends YarnBuilder {
 
   AngularBuilder(steps) {
     super(steps)
