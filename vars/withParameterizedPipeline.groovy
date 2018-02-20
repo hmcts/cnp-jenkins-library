@@ -27,7 +27,7 @@ def call(type, String product, String component, String environment, String subs
   Deployer deployer = pipelineType.deployer
   Builder builder = pipelineType.builder
 
-  println "!!!! Deployer: " + deployer.getClass().getName()
+  println "!!!! Builder: " + builder.getClass().getName()
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pl = new PipelineCallbacks(metricsPublisher)
