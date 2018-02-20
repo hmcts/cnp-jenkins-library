@@ -1,7 +1,6 @@
 package uk.gov.hmcts.contino
 
-
-public class AngularUniversalPipelineType  implements PipelineType, Serializable {
+public class AngularPipelineType implements PipelineType, Serializable {
   def steps
   def product
   def app
@@ -9,12 +8,12 @@ public class AngularUniversalPipelineType  implements PipelineType, Serializable
   Builder builder
   Deployer deployer
 
-  AngularUniversalPipelineType(steps, product, app) {
+  AngularPipelineType(steps, product, app) {
     this.steps = steps
     this.product = product
     this.app = app
 
-    builder = new AngularUniversalBuilder(steps)
+    builder = new AngularBuilder(steps)
     deployer = new NodeDeployer(steps, product, app)
   }
 }

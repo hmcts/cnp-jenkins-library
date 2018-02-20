@@ -1,9 +1,8 @@
 package uk.gov.hmcts.contino
 
+class AngularBuilder extends YarnBuilder {
 
-class AngularUniversalBuilder extends YarnBuilder {
-
-  AngularUniversalBuilder(steps) {
+  AngularBuilder(steps) {
     super(steps)
   }
 
