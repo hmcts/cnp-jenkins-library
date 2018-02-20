@@ -14,6 +14,6 @@ public class AngularPipelineType implements PipelineType, Serializable {
     this.app = app
 
     builder = new AngularBuilder(steps)
-    deployer = new NodeDeployer(steps, product, app)
+    deployer = new StaticSiteDeployer(steps, product, app, 'dist')
   }
 }
