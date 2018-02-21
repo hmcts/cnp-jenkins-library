@@ -59,7 +59,6 @@ def call(type, String product, String component, String environment, String subs
           environment: environment,
           product: product,
           component: component)
-
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

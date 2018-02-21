@@ -74,12 +74,12 @@ EOF
     steps.sh("./gradlew ${task}")
   }
 
-  def dbMigrate(String vaultName) {
-    def dbName = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'recipe-backend-POSTGRES-DATABASE' --query value -o tsv", returnStdout: true).trim()
-    def dbHost = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'recipe-backend-POSTGRES-HOST' --query value -o tsv", returnStdout: true).trim()
-    def dbPass = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'recipe-backend-POSTGRES-PASS' --query value -o tsv", returnStdout: true).trim()
-    def dbPort = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'recipe-backend-POSTGRES-PORT' --query value -o tsv", returnStdout: true).trim()
-    def dbUser = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'recipe-backend-POSTGRES-USER' --query value -o tsv", returnStdout: true).trim()
+  def dbMigrate(String vaultName, String microserviceName) {
+    def dbName = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-DATABASE' --query value -o tsv", returnStdout: true).trim()
+    def dbHost = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-HOST' --query value -o tsv", returnStdout: true).trim()
+    def dbPass = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PASS' --query value -o tsv", returnStdout: true).trim()
+    def dbPort = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PORT' --query value -o tsv", returnStdout: true).trim()
+    def dbUser = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv", returnStdout: true).trim()
 
     gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
   }

@@ -27,7 +27,7 @@ def call(params) {
       }
       if (pl.migrateDb) {
         stage("DB Migration - ${environment}") {
-          builder.dbMigrate(tfOutput.vaultName.value)
+          builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
         }
       }
     }
