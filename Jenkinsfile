@@ -31,5 +31,3 @@ node {
   }
   notifyBuildFixed channel: channel
 }
-
-// test
