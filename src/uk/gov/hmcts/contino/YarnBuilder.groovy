@@ -59,8 +59,6 @@ EOF
   }
 
   def yarn(task){
-    def node = steps.tool(name: 'Node-8', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation')
-    steps.env.PATH = "${node}/bin:${steps.env.PATH}"
     steps.sh("yarn ${task}")
   }
 }
