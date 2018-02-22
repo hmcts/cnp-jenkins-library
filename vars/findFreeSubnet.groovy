@@ -18,10 +18,18 @@ def call(subscription) {
   subnetsList = list.collect { it.toString() }
   echo "All possible subnets list: $subnetsList"
 
-  if (subscription.equalsIgnoreCase("sandbox"))
-    chosenIP = (subnetsList[15..-1] - ipList)[0]
-  else
-    chosenIP = (subnetsList[3..14] - ipList)[0]
+  def chosenIP
+  switch (subscription) {
+    case 'prod':
+      chosenIP = (subnetsList[0..2] - ipList)[0]
+      break
+    case 'nonprod':
+      chosenIP = (subnetsList[3..14] - ipList)[0]
+      break
+    case 'sandbox':
+      chosenIP = (subnetsList[15..-1] - ipList)[0]
+      break
+  }
 
   if (chosenIP != [])
     return chosenIP
