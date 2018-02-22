@@ -21,7 +21,7 @@ def call(subscription) {
   subnetsList = []
   list.each { it -> subnetsList.add(it.toString()) }
 
-  if (forSubscription.equalsIgnoreCase("sandbox"))
+  if (subscription.equalsIgnoreCase("sandbox"))
     chosenIP = (subnetsList[15..-1]-ipList)[0]
   else
     chosenIP = (subnetsList[3..14]-ipList)[0]
