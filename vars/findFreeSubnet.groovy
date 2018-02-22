@@ -12,14 +12,12 @@ def call(subscription) {
   //result = sh(script: "az network vnet list --query '[].[name,addressSpace.addressPrefixes,subnets[*].addressPrefix,dhcpOptions.dnsServers[*]]' -o json", returnStdout: true).trim()
   result = sh(script: "az network vnet list --query '[].[name,addressSpace.addressPrefixes]' -o json", returnStdout: true).trim()
   vnetList = new JsonSlurperClassic().parseText(result)
-  echo "Existing subnetworks: ${vnetList.each { vnet -> println(vnet) }}"
+  echo "Existing subnetworks in current environment: ${vnetList.join("\n")}"
 
-  ipList=[]
-  vnetList.each { vnet -> ipList.add(vnet[1][0]) }
+  ipList = vnetList.collect { it[1][0] }
 
   list = getSubnetsList(env.TF_VAR_root_address_space, 6)
-  subnetsList = []
-  list.each { it -> subnetsList.add(it.toString()) }
+  subnetsList = list.collect { it.toString() }
 
   if (subscription.equalsIgnoreCase("sandbox"))
     chosenIP = (subnetsList[15..-1]-ipList)[0]
@@ -40,15 +38,15 @@ def getSubnetsList(String rootSubnet, newbits) {
       list.add(addr)
       hostMask = list[-1].getNetwork().getHostMask(list[-1].getNetworkPrefixLength())
       broadcastAddress = list[-1].bitwiseOr(hostMask)
-      println("Subnet: ${list[-1]}")
-      println("Network Mask: ${list[-1].getNetwork().getNetworkMask(list[-1].getPrefixLength(),false)}")
-      println("Wildcard: $hostMask")
-      println("Broadcast: $broadcastAddress")
-      println("-------------")
+      echo.info("Subnet: ${list[-1]}\n" +
+        "Network Mask: ${list[-1].getNetwork().getNetworkMask(list[-1].getPrefixLength(),false)}\n" +
+        "Wildcard: $hostMask\n" +
+        "Broadcast: $broadcastAddress\n" +
+        "-------------")
 
       nextAddress = new IPv4Address(broadcastAddress.getValue()+1, list[-1].getPrefixLength())
       if (rootNet.contains(nextAddress)) {
-        println("$rootNet contains $nextAddress")
+        echo.info("$rootNet contains $nextAddress")
         getNext(nextAddress.setPrefixLength(list[-1].getPrefixLength()), rootNet, list)
       }
       else
@@ -56,7 +54,7 @@ def getSubnetsList(String rootSubnet, newbits) {
     }
 
   rSubnet = new IPAddressString(rootSubnet).getAddress()
-  println("$rootSubnet can be split in ${Math.pow(2,newbits)} subnets of class /${rSubnet.getPrefixLength()+newbits}")
+  echo.info("$rootSubnet can be split in ${Math.pow(2,newbits)} subnets of class /${rSubnet.getPrefixLength()+newbits}")
   return getNext(rSubnet.setPrefixLength(rSubnet.getPrefixLength()+newbits), rSubnet, list)
 }
 
