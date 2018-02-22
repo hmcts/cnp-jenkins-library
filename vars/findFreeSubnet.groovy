@@ -16,18 +16,20 @@ def call(subscription) {
 
   list = getSubnetsList(env.TF_VAR_root_address_space, 6)
   subnetsList = list.collect { it.toString() }
-  echo "All possible subnets list: $subnetsList"
 
   def chosenIP
   switch (subscription) {
     case 'prod':
       chosenIP = (subnetsList[0..2] - ipList)[0]
+      echo "All $subscription subnets list: ${subnetsList[0..2]}"
       break
     case 'nonprod':
       chosenIP = (subnetsList[3..14] - ipList)[0]
+      echo "All $subscription subnets list: ${subnetsList[3..14]}"
       break
     case 'sandbox':
       chosenIP = (subnetsList[15..-1] - ipList)[0]
+      echo "All $subscription subnets list: ${subnetsList[15..-1]}"
       break
   }
 
