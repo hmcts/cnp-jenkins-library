@@ -20,9 +20,9 @@ def call(subscription) {
   subnetsList = list.collect { it.toString() }
 
   if (subscription.equalsIgnoreCase("sandbox"))
-    chosenIP = (subnetsList[15..-1]-ipList)[0]
+    chosenIP = (subnetsList[15..-1] - ipList)[0]
   else
-    chosenIP = (subnetsList[3..14]-ipList)[0]
+    chosenIP = (subnetsList[3..14] - ipList)[0]
 
   if (chosenIP != [])
     return chosenIP
@@ -38,7 +38,7 @@ def getSubnetsList(String rootSubnet, newbits) {
       list.add(addr)
       hostMask = list[-1].getNetwork().getHostMask(list[-1].getNetworkPrefixLength())
       broadcastAddress = list[-1].bitwiseOr(hostMask)
-      echo.info("Subnet: ${list[-1]}\n" +
+      println("Subnet: ${list[-1]}\n" +
         "Network Mask: ${list[-1].getNetwork().getNetworkMask(list[-1].getPrefixLength(),false)}\n" +
         "Wildcard: $hostMask\n" +
         "Broadcast: $broadcastAddress\n" +
@@ -46,7 +46,7 @@ def getSubnetsList(String rootSubnet, newbits) {
 
       nextAddress = new IPv4Address(broadcastAddress.getValue()+1, list[-1].getPrefixLength())
       if (rootNet.contains(nextAddress)) {
-        echo.info("$rootNet contains $nextAddress")
+        println("$rootNet contains $nextAddress")
         getNext(nextAddress.setPrefixLength(list[-1].getPrefixLength()), rootNet, list)
       }
       else
@@ -54,7 +54,7 @@ def getSubnetsList(String rootSubnet, newbits) {
     }
 
   rSubnet = new IPAddressString(rootSubnet).getAddress()
-  echo.info("$rootSubnet can be split in ${Math.pow(2,newbits)} subnets of class /${rSubnet.getPrefixLength()+newbits}")
+  println("$rootSubnet can be split in ${Math.pow(2,newbits)} subnets of class /${rSubnet.getPrefixLength()+newbits}")
   return getNext(rSubnet.setPrefixLength(rSubnet.getPrefixLength()+newbits), rSubnet, list)
 }
 
