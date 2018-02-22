@@ -7,10 +7,18 @@ import inet.ipaddr.ipv4.*
 
 import groovy.json.JsonSlurperClassic
 
-def call(subscription) {
+/*
+  subnet 0-14 for prod & nonprod subscriptions
+    slice 0 - management vnet
+    slice 1 - prod environment
+    slice 2 - nonprod environment
+    anything else automatically selected from free slices 3-14
+  subnet 15-end for sandbox subscription
+*/
+def call(String subscription, String environment) {
   result = sh(script: "az network vnet list --query '[].[name,addressSpace.addressPrefixes]' -o json", returnStdout: true).trim()
   vnetList = new JsonSlurperClassic().parseText(result)
-  echo "Existing subnetworks in current environment: ${vnetList.join("\n")}"
+  log.info("Existing subnetworks in current environment: ${vnetList.join("\n")}")
 
   ipList = vnetList.collect { it[1][0] }
 
@@ -20,23 +28,28 @@ def call(subscription) {
   def chosenIP
   switch (subscription) {
     case 'prod':
-      chosenIP = (subnetsList[0..2] - ipList)[0]
-      echo "All $subscription subnets list: ${subnetsList[0..2]}"
+      chosenIP = subnetsList[1]
       break
     case 'nonprod':
-      chosenIP = (subnetsList[3..14] - ipList)[0]
-      echo "All $subscription subnets list: ${subnetsList[3..14]}"
+      if (environment.equalsIgnoreCase("aat"))
+        chosenIP = subnetsList[2]
+      else
+        chosenIP = (subnetsList[3..14] - ipList)[0]
+      echo "List of all possible subnets for $subscription: ${subnetsList[2..14]}"
       break
     case 'sandbox':
       chosenIP = (subnetsList[15..-1] - ipList)[0]
-      echo "All $subscription subnets list: ${subnetsList[15..-1]}"
+      echo "List of all possible subnets for $subscription: ${subnetsList[15..-1]}"
       break
   }
 
-  if (chosenIP != [])
+  if (ipList.contains(chosenIP))
+    log.warning("${subnetsList[1]} already in use!")
+
+  if (chosenIP != null)
     return chosenIP
   else
-    throw new Exception("Could not find unused subnetwork!")
+    throw new Exception("Could not find a free subnetwork!")
 }
 
 def getSubnetsList(String rootSubnet, newbits) {
