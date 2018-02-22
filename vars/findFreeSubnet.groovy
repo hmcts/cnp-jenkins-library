@@ -2,7 +2,8 @@
 //@Grab(group='commons-net', module='commons-net', version='3.6')
 @Grab(group='com.github.seancfoley', module='ipaddress', version='4.1.0')
 
-import org.apache.commons.net.util.*
+import inet.ipaddr.*
+import inet.ipaddr.ipv4.*
 
 import groovy.json.JsonSlurperClassic
 
