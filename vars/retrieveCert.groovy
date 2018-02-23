@@ -14,14 +14,6 @@ def call(String environment) {
     {
       sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
-
-      // Setting environment vars consumed by TF
-      sh "az keyvault certificate show --vault-name infra-vault-${environment} --name ${environment} --query x509ThumbprintHex --output tsv > thumbhex.txt"
-      env.TF_VAR_certificateThumbprint = readFile('thumbhex.txt')
-      env.TF_VAR_certificateName = "${environment}"
-      // if(["sandbox","saat","sprod"]).contains("${environment}"){
-      //   env.TF_VAR_vaultName = "infra-vault-sandbox"
-      // }
       if("${environment}" == "aat"){
         env.TF_VAR_vaultName = "infra-vault-nonprod"
       }
@@ -31,6 +23,13 @@ def call(String environment) {
       else{
         env.TF_VAR_vaultName = "infra-vault-sandbox"
       }
+      // Setting environment vars consumed by TF
+      sh "az keyvault certificate show --vault-name infra-vault-$TF_VAR_vaultName --name ${environment} --query x509ThumbprintHex --output tsv > thumbhex.txt"
+      env.TF_VAR_certificateThumbprint = readFile('thumbhex.txt')
+      env.TF_VAR_certificateName = "${environment}"
+      // if(["sandbox","saat","sprod"]).contains("${environment}"){
+      //   env.TF_VAR_vaultName = "infra-vault-sandbox"
+      // }
       echo "Setting subscription back to $env.ARM_SUBSCRIPTION_ID for Azure CLI"
       sh 'az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET -t $ARM_TENANT_ID'
       sh 'az account set --subscription $ARM_SUBSCRIPTION_ID'
