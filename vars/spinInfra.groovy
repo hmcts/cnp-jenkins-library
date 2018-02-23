@@ -37,7 +37,7 @@ def call(productName, environment, planOnly = false, subscription) {
         stage("Apply ${productName}-${environment} in ${environment}") {
           sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
-          parseResult = ""
+          parseResult = null
           try {
             result = sh(script: "terraform output -json", returnStdout: true).trim()
             parseResult = new JsonSlurperClassic().parseText(result)

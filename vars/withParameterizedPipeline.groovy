@@ -1,11 +1,10 @@
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.Deployer
+import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
-import uk.gov.hmcts.contino.MetricsPublisher
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   def pipelineTypes = [
@@ -24,7 +23,6 @@ def call(type, String product, String component, String environment, String subs
 
   assert pipelineType != null
 
-  Deployer deployer = pipelineType.deployer
   Builder builder = pipelineType.builder
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
@@ -56,35 +54,13 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
-        folderExists('infrastructure') {
-          withSubscription(subscription) {
-            dir('infrastructure') {
-              withIlbIp(environment) {
-                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
-                scmServiceRegistration(environment)
-              }
-            }
-          }
-          if (pl.migrateDb) {
-            stage("DB Migration - ${environment}") {
-              builder.dbMigrate(tfOutput.vaultName.value)
-            }
-          }
-        }
-
-        stage("Deploy $environment") {
-          pl.callAround("deploy:$environment") {
-            deployer.deploy(environment)
-            deployer.healthCheck(environment, "staging")
-          }
-        }
-
-        stage("Promote - ${environment} (staging -> production slot)") {
-          withSubscription(subscription) {
-            sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
-          }
-        }
-
+        sectionDeployToEnvironment(
+          pipelineCallbacks: pl,
+          pipelineType: pipelineType,
+          subscription: subscription,
+          environment: environment,
+          product: product,
+          component: component)
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
