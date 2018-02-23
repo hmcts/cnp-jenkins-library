@@ -77,7 +77,7 @@ class WebAppDeploy implements Serializable {
          passwordVariable: 'GIT_PASSWORD']]) {
 
        steps.sh("git init")
-       steps.sh("git checkout -b ${branch.branchName}")
+       steps.sh("git checkout -B ${branch.branchName}")
        steps.writeFile file: 'deploy.cmd', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')
        steps.writeFile file: '.deployment', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/.deployment')
        steps.sh("git add .")
