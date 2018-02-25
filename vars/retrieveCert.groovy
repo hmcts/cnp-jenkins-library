@@ -21,7 +21,7 @@ def call(String environment) {
         env.TF_VAR_vaultName = "infra-vault"
       }
       else{
-        env.TF_VAR_vaultName = "infra-vault-sandbox"
+        env.TF_VAR_vaultName = "infra-vault-${environment}"
       }
       // Setting environment vars consumed by TF
       sh "az keyvault certificate show --vault-name $TF_VAR_vaultName --name ${environment} --query x509ThumbprintHex --output tsv > thumbhex.txt"
