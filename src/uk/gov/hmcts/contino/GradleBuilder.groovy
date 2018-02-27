@@ -30,7 +30,9 @@ class GradleBuilder implements Builder, Serializable {
 
   def smokeTest() {
     try {
-      gradle("--info clean smoke")
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      gradle("--info --rerun-tasks smoke")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -38,7 +40,9 @@ class GradleBuilder implements Builder, Serializable {
 
   def functionalTest() {
     try {
-      gradle("--info clean functional")
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      gradle("--info --rerun-tasks functional")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
