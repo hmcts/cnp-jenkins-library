@@ -70,7 +70,7 @@ def call(params) {
 
       stage("Promote - ${environment} (staging -> production slot)") {
         withSubscription(subscription) {
-          sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+          sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
         }
         deployer.healthCheck(environment, "production")
       }
