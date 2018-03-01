@@ -16,9 +16,10 @@ def call(String subscription, Closure body) {
       az 'login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       az 'account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
-      def vaultName = "infra-vault"
-      if (subscription == "sandbox")
-        vaultName = "infra-vault-sandbox" //"contino-devops"
+      //make sure infra-vault is only used for prod & nonprod
+      def vaultName = "infra-vault-sandbox"
+      if (subscription in ["prod", "nonprod"])
+        vaultName = "infra-vault"
 
       log.info "using $vaultName"
 
