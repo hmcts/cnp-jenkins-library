@@ -49,7 +49,7 @@ def call(String subscription, String environment) {
     log.warning("${subnetsList[1]} already in use!")
 
   if (chosenIP != null)
-    return chosenIP
+    return [chosenIP, subnetsList.findIndexValues { it.equalsIgnoreCase(chosenIP) }[0] ]
   else
     throw new Exception("Could not find a free subnetwork!")
 }
