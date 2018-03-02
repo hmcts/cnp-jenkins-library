@@ -15,9 +15,11 @@ class MetricsPublisherTests extends Specification {
     stubSteps.currentBuild >>  ["timeInMillis" : 1513613748925]
     stubSteps.env >> [BRANCH_NAME: "master",
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw=="]
+
+    def closure
+    stubSteps.withCredentials(_, { closure = it }) >> { closure.call() }
     }
 
-  @Ignore("Figure out how to make this work since pushing down the withCredentials into publish()")
   def "generates a http request setting JSON content type"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
@@ -30,7 +32,6 @@ class MetricsPublisherTests extends Specification {
     })
   }
 
-  @Ignore("Figure out how to make this work since pushing down the withCredentials into publish()")
   def "generates a http request sending required headers"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
@@ -38,8 +39,10 @@ class MetricsPublisherTests extends Specification {
 
     then:
     1 * stubSteps.httpRequest({
-      it.containsKey("customHeaders") &&
-      it["customHeaders"].contains(entry("name", "x-ms-version"))
+      it.containsKey("customHeaders")  &&
+      it["customHeaders"]["name"].contains("Authorization") &&
+      it["customHeaders"]["name"].contains("x-ms-version") &&
+      it["customHeaders"]["name"].contains("x-ms-date")
     })
   }
 
