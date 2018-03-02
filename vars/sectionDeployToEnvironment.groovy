@@ -24,10 +24,10 @@ def call(params) {
             scmServiceRegistration(environment)
           }
         }
-      }
-      if (pl.migrateDb) {
-        stage("DB Migration - ${environment}") {
-          builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+        if (pl.migrateDb) {
+          stage("DB Migration - ${environment}") {
+            builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+          }
         }
       }
     }
