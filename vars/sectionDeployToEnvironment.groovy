@@ -19,15 +19,19 @@ def call(params) {
     folderExists('infrastructure') {
       withSubscription(subscription) {
         dir('infrastructure') {
-          withIlbIp(environment) {
-            tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
-            scmServiceRegistration(environment)
+          pl.callAround("buildinfra:${environment}") {
+            withIlbIp(environment) {
+              tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+              scmServiceRegistration(environment)
+            }
           }
         }
       }
       if (pl.migrateDb) {
         stage("DB Migration - ${environment}") {
-          builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+          pl.callAround("dbmigrate:${environment}") {
+            builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+          }
         }
       }
     }
@@ -50,7 +54,7 @@ def call(params) {
     ]) {
       stage("Smoke Test - ${environment} (staging slot)") {
         withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
-          pl.callAround('smoketest:${environment}') {
+          pl.callAround("smoketest:${environment}") {
             echo "Using TEST_URL: '$TEST_URL'"
             builder.smokeTest()
           }
@@ -60,7 +64,7 @@ def call(params) {
       onAATEnvironment(environment) {
         stage("Functional Test - ${environment} (staging slot)") {
           withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "staging")}"]) {
-            pl.callAround('functionalTest:${environment}') {
+            pl.callAround("functionalTest:${environment}") {
               echo "Using TEST_URL: '$TEST_URL'"
               builder.functionalTest()
             }
@@ -70,14 +74,16 @@ def call(params) {
 
       stage("Promote - ${environment} (staging -> production slot)") {
         withSubscription(subscription) {
-          sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+          pl.callAround("promote:${environment}") {
+            sh "az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+            deployer.healthCheck(environment, "production")
+          }
         }
-        deployer.healthCheck(environment, "production")
       }
 
       stage("Smoke Test - ${environment} (production slot)") {
         withEnv(["TEST_URL=${deployer.getServiceUrl(environment, "production")}"]) {
-          pl.callAround('smokeTest:${environment}') {
+          pl.callAround("smokeTest:${environment}") {
             echo "Using TEST_URL: '$TEST_URL'"
             builder.smokeTest()
           }

@@ -61,6 +61,6 @@ class MetricsPublisherTests extends Specification {
     def authToken = metricsPublisher.generateAuthToken('POST', 'resourceType', 'dateString', 'master', '1.0', stubSteps.env.COSMOSDB_TOKEN_KEY)
 
     then:
-    assertThat(authToken.toString()).startsWith("type%3Dmaster%26ver%3D1.0%26sig%3DFUL70fm2xCq5y16AEdDwjEkqDLCV6%2But%2FJv4xMEPwp8%3D")
+    assertThat(authToken.toString()).startsWith("type%3Dmaster%26ver%3D1.0%26sig%3DE8C%2B5%2FWJCxBhvvXtPyvh%2Fy27UB3T%2F1Hm7zyBfRO8h5M%3D")
   }
 }
