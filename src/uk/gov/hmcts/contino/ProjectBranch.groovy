@@ -18,7 +18,7 @@ class ProjectBranch implements Serializable {
   }
 
   boolean isDemo() {
-    branchName.startsWith('demo')
+    branchName == 'demo'
   }
 
 }
