@@ -26,11 +26,11 @@ def call(params) {
             }
           }
         }
-      }
-      if (pl.migrateDb) {
-        stage("DB Migration - ${environment}") {
-          pl.callAround("dbmigrate:${environment}") {
-            builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+        if (pl.migrateDb) {
+          stage("DB Migration - ${environment}") {
+            pl.callAround("dbmigrate:${environment}") {
+              builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+            }
           }
         }
       }
