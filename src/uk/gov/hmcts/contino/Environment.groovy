@@ -9,5 +9,6 @@ class Environment implements Serializable {
 
     nonProdName = env.NONPROD_ENVIRONMENT_NAME ?: 'aat'
     prodName = env.PROD_ENVIRONMENT_NAME ?: 'prod'
+    demoName = env.DEMO_ENVIRONMENT_NAME ?: 'demo'
   }
 }
