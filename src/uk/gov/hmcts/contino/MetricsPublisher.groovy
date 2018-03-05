@@ -65,8 +65,6 @@ class MetricsPublisher implements Serializable {
   @NonCPS
   private def generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey) {
     def stringToSign = verb.toLowerCase() + "\n" + resourceType.toLowerCase() + "\n" + resourceLink + "\n" + formattedDate.toLowerCase() + "\n" + "" + "\n"
-    steps.echo 'Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign)
-
     def decodedKey = tokenKey.decodeBase64()
     def hash = hmacSHA256(decodedKey, stringToSign)
     def base64Hash = Base64.getEncoder().encodeToString(hash)
@@ -94,7 +92,7 @@ class MetricsPublisher implements Serializable {
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
-        steps.echo "Publishing Metric data: '${data}'"
+        steps.echo "Publishing Metrics data."
 
         def verb = 'POST'
         def resourceType = "docs"
