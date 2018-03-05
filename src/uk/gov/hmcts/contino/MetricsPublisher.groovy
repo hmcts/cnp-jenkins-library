@@ -19,20 +19,14 @@ class MetricsPublisher implements Serializable {
   def product
   def component
 
-  MetricsPublisher(steps, currentBuild, product, component, cosmosDbUrl, collectionLink) {
+  MetricsPublisher(steps, currentBuild, product, component) {
     this.product = product
     this.component = component
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = cosmosDbUrl
-    this.resourceLink = collectionLink
-  }
-
-  MetricsPublisher(steps, currentBuild, product, component) {
-    // the following default string literals were stored as private static final fields but had to be moved here because
-    // we ran into compilation issues on Jenkins because it interfered and wrapped them in instance method calls
-    this(steps, currentBuild, product, component, 'https://e520fc7bdb51bf9c.documents.azure.com:/', 'dbs/jenkins/colls/pipeline-metrics')
+    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://4fa5c8bd24e757ba.documents.azure.com/'
+    this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/pipeline-metrics'
   }
 
   @NonCPS
