@@ -16,7 +16,9 @@ import groovy.json.JsonSlurperClassic
   subnet 15-end for sandbox subscription
 */
 def call(String subscription, String environment) {
-  result = sh(script: "az network vnet list --query '[].[name,addressSpace.addressPrefixes]' -o json", returnStdout: true).trim()
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+
+  result = az "network vnet list --query '[].[name,addressSpace.addressPrefixes]' -o json"
   vnetList = new JsonSlurperClassic().parseText(result)
   log.info("Existing subnetworks in current environment: ${vnetList.join("\n")}")
 
@@ -47,7 +49,7 @@ def call(String subscription, String environment) {
     log.warning("${subnetsList[1]} already in use!")
 
   if (chosenIP != null)
-    return chosenIP
+    return [chosenIP, subnetsList.findIndexValues { it.equalsIgnoreCase(chosenIP) }[0] ]
   else
     throw new Exception("Could not find a free subnetwork!")
 }

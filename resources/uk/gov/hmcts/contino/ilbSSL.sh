@@ -40,10 +40,10 @@ openssl pkcs12 -export -in $domain.cer -inkey $domain.key -out $domain.pfx -pass
 
 rm -f $domain.key $domain.csr $domain.conf
 
-az keyvault certificate import --vault-name app-vault-${subscription} -n $domain -f $domain.pfx --password $pfxPass
+env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate import --vault-name app-vault-${subscription} -n $domain -f $domain.pfx --password $pfxPass
 
 #to be put back in
-az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
+env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
 
 # get base64 representation of pfx file and write to file
 a=$(cat ./$domain.pfx)
