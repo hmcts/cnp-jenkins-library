@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 class Environment implements Serializable {
   def final nonProdName
   def final prodName
+  def final demoName
 
   Environment(Object env) {
     Objects.requireNonNull(env)

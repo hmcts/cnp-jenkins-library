@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 class Subscription implements Serializable {
   def final nonProdName
   def final prodName
+  def final demoName
 
   Subscription(Object env) {
     Objects.requireNonNull(env)
