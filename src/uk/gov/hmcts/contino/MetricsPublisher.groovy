@@ -106,7 +106,7 @@ class MetricsPublisher implements Serializable {
         steps.httpRequest httpMode: "${verb}",
           requestBody: "${data}",
           contentType: 'APPLICATION_JSON',
-          quiet: true,
+          quiet: false,
           url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
           customHeaders: [
             [name: 'Authorization', value: "${authHeaderValue}"],
