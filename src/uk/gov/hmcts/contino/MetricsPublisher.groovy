@@ -17,7 +17,6 @@ class MetricsPublisher implements Serializable {
   def resourceLink
   def product
   def component
-  DateTimeFormatter RFC1123_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
 
   MetricsPublisher(steps, currentBuild, product, component) {
     this.product = product
@@ -96,7 +95,7 @@ class MetricsPublisher implements Serializable {
 
         def verb = 'POST'
         def resourceType = "docs"
-        def formattedDate = RFC1123_DATE_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC))
+        def formattedDate = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'").format(ZonedDateTime.now(ZoneOffset.UTC)) // must stay on 1 line to avoid serialisation
         def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
         def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
         def tokenKey = env.COSMOSDB_TOKEN_KEY
