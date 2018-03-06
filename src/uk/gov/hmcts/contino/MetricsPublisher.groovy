@@ -1,13 +1,12 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonOutput
-import groovy.json.StringEscapeUtils
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import java.time.Instant
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import com.cloudbees.groovy.cps.NonCPS
 
 class MetricsPublisher implements Serializable {
 
@@ -89,6 +88,7 @@ class MetricsPublisher implements Serializable {
           steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
           return
         }
+        DateTimeFormatter RFC1123_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
@@ -96,7 +96,7 @@ class MetricsPublisher implements Serializable {
 
         def verb = 'POST'
         def resourceType = "docs"
-        def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
+        def formattedDate = RFC1123_DATE_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC))
         def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
         def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
         def tokenKey = env.COSMOSDB_TOKEN_KEY
