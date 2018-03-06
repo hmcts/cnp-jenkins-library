@@ -52,7 +52,7 @@ class MetricsPublisherTests extends Specification {
     metricsPublisher.publish()
 
     then:
-    1 * stubSteps.httpRequest({ it.url == "https://pipeline-metrics.documents.azure.com:443/dbs/jenkins/colls/pipeline-metrics/docs" })
+    1 * stubSteps.httpRequest({ it.url == "https://pipeline-metrics.documents.azure.com/dbs/jenkins/colls/pipeline-metrics/docs" })
   }
 
   def "collects build metrics"() {

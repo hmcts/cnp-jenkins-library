@@ -25,7 +25,7 @@ class MetricsPublisher implements Serializable {
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com:443/'
+    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com/'
     this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/pipeline-metrics'
   }
 
