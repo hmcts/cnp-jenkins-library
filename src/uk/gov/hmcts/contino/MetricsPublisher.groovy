@@ -17,6 +17,7 @@ class MetricsPublisher implements Serializable {
   def resourceLink
   def product
   def component
+  DateTimeFormatter RFC1123_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
 
   MetricsPublisher(steps, currentBuild, product, component) {
     this.product = product
@@ -88,7 +89,6 @@ class MetricsPublisher implements Serializable {
           steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
           return
         }
-        DateTimeFormatter RFC1123_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
