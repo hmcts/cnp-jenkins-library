@@ -56,7 +56,8 @@ class WebAppDeploy implements Serializable {
         if (retryCounter < maxRetries) {
           steps.sleep sleepDuration
         }
-        steps.error "Service isn’t healthy, will retry up to ${maxRetries} times"
+        steps.echo "Service isn’t healthy, will retry up to ${maxRetries} times"
+        throw new RuntimeException()
       }
     }
   }
