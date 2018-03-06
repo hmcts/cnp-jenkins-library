@@ -206,8 +206,6 @@ class WebAppDeploy implements Serializable {
     def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
     def result = az "webapp deployment list-publishing-profiles --name ${serviceName} --slot staging --resource-group ${serviceName} --query \"[?publishMethod=='MSDeploy'].{publishUrl:publishUrl,userName:userName,userPWD:userPWD}|[0]\""
     def profile = new JsonSlurperClassic().parseText(result)
-    steps.echo(result)
-    steps.echo(profile.userName)
 
     steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} 'https://${profile.userName}:${profile.userPWD}@${profile.publishUrl}/${serviceName}.git'")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
