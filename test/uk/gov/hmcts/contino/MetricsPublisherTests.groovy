@@ -46,6 +46,15 @@ class MetricsPublisherTests extends Specification {
     })
   }
 
+  def "sends to the expected url"() {
+    when:
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
+    metricsPublisher.publish()
+
+    then:
+    1 * stubSteps.httpRequest({ it.url == "https://pipeline-metrics.documents.azure.com/dbs/jenkins/colls/pipeline-metrics/docs" })
+  }
+
   def "collects build metrics"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
