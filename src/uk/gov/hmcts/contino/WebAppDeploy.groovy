@@ -208,7 +208,7 @@ class WebAppDeploy implements Serializable {
     steps.echo(result)
     steps.echo(profile.userName)
 
-    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://${profile.userName}:${profile.userPWD}@${profile.publishUrl}/${serviceName}.git\"")
+    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} 'https://${profile.userName}:${profile.userPWD}@${profile.publishUrl}/${serviceName}.git'")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
 
