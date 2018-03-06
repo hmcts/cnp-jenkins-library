@@ -24,9 +24,9 @@ def call(String environment) {
         env.TF_VAR_vaultName = "infra-vault-${environment}"
       }
       // Setting environment vars consumed by TF
-      sh "az keyvault certificate show --vault-name $TF_VAR_vaultName --name ${environment} --query x509ThumbprintHex --output tsv > thumbhex.txt"
+      sh "az keyvault certificate show --vault-name $TF_VAR_vaultName --name core-compute-${environment} --query x509ThumbprintHex --output tsv > thumbhex.txt"
       env.TF_VAR_certificateThumbprint = readFile('thumbhex.txt')
-      env.TF_VAR_certificateName = "${environment}"
+      env.TF_VAR_certificateName = "core-compute-${environment}"
       // if(["sandbox","saat","sprod"]).contains("${environment}"){
       //   env.TF_VAR_vaultName = "infra-vault-sandbox"
       // }
