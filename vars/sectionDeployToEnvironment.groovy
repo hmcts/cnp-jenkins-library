@@ -38,9 +38,11 @@ def call(params) {
   }
 
   stage("Deploy - ${environment} (staging slot)") {
-    pl.callAround("deploy:${environment}") {
-      deployer.deploy(environment)
-      deployer.healthCheck(environment, "staging")
+    withSubscription(subscription) {
+      pl.callAround("deploy:${environment}") {
+        deployer.deploy(environment)
+        deployer.healthCheck(environment, "staging")
+      }
     }
   }
 

@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonSlurperClassic
+
 /**
  * Deploys Web Applications to Web App Services
  */
@@ -28,7 +30,6 @@ class WebAppDeploy implements Serializable {
    * @return
    */
   def healthCheck(env, slot) {
-
     def serviceUrl = getServiceUrl(product, app, env, slot)
     def healthCheckUrl = "${serviceUrl}/health"
 
@@ -68,23 +69,15 @@ class WebAppDeploy implements Serializable {
    * @return
    */
   def deployStaticSite(env, dir){
-   return steps.dir(dir) {
+    return steps.dir(dir) {
+      steps.sh("git init")
+      steps.sh("git checkout -B ${branch.branchName}")
+      steps.writeFile file: 'deploy.cmd', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')
+      steps.writeFile file: '.deployment', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/.deployment')
+      steps.sh("git add .")
 
-     steps.withCredentials(
-       [[$class: 'UsernamePasswordMultiBinding',
-         credentialsId: 'WebAppDeployCredentials-' + env,
-         usernameVariable: 'GIT_USERNAME',
-         passwordVariable: 'GIT_PASSWORD']]) {
-
-       steps.sh("git init")
-       steps.sh("git checkout -B ${branch.branchName}")
-       steps.writeFile file: 'deploy.cmd', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')
-       steps.writeFile file: '.deployment', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/.deployment')
-       steps.sh("git add .")
-
-       pushToService(product, app, env)
-     }
-   }
+      pushToService(product, app, env)
+    }
   }
 
   /**
@@ -104,33 +97,24 @@ class WebAppDeploy implements Serializable {
    */
 
   def deployNodeJS(env, hostingEnv) {
+    steps.sh("git checkout ${branch.branchName}")
 
-    return steps.withCredentials(
-        [[$class: 'UsernamePasswordMultiBinding',
-          credentialsId: 'WebAppDeployCredentials-' + env,
-          usernameVariable: 'GIT_USERNAME',
-          passwordVariable: 'GIT_PASSWORD']]) {
+    steps.sh("rm .gitignore")
+    steps.sh("echo 'test/*' > .gitignore")
+    steps.sh("echo '.sonar/' >> .gitignore")
+    steps.sh("echo '.sonarlint/' >> .gitignore")
+    steps.sh("echo '/npm-debug.log*' >> .gitignore")
+    steps.sh("echo 'jsconfig.json' >> .gitignore")
+    steps.sh("echo '*.tmp' >> .gitignore")
+    steps.sh("echo '/node_modules/' >> .gitignore")
+    steps.sh("echo '/log/' >> .gitignore")
+    steps.sh("echo '/lib/' >> .gitignore")
+    steps.sh("echo 'coverage' >> .gitignore")
+    steps.writeFile file: 'deploy.cmd', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')
+    steps.writeFile file: '.deployment', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/.deployment')
+    steps.sh("git add .")
 
-        def appUrl = "${product}-${app}-${env}"
-        steps.sh("git checkout ${branch.branchName}")
-
-        steps.sh("rm .gitignore")
-        steps.sh("echo 'test/*' > .gitignore")
-        steps.sh("echo '.sonar/' >> .gitignore")
-        steps.sh("echo '.sonarlint/' >> .gitignore")
-        steps.sh("echo '/npm-debug.log*' >> .gitignore")
-        steps.sh("echo 'jsconfig.json' >> .gitignore")
-        steps.sh("echo '*.tmp' >> .gitignore")
-        steps.sh("echo '/node_modules/' >> .gitignore")
-        steps.sh("echo '/log/' >> .gitignore")
-        steps.sh("echo '/lib/' >> .gitignore")
-        steps.sh("echo 'coverage' >> .gitignore")
-        steps.writeFile file: 'deploy.cmd', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')
-        steps.writeFile file: '.deployment', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/.deployment')
-        steps.sh("git add .")
-
-        pushToService(product, app, env)
-    }
+    return pushToService(product, app, env)
   }
 
   /**
@@ -139,30 +123,23 @@ class WebAppDeploy implements Serializable {
    * @return
    */
   def deployJavaWebApp(env) {
-    return steps.withCredentials(
-      [[$class: 'UsernamePasswordMultiBinding',
-        credentialsId: 'WebAppDeployCredentials-' + env,
-        usernameVariable: 'GIT_USERNAME',
-        passwordVariable: 'GIT_PASSWORD']]) {
+    def tempDir = ".tmp_azure_jenkins"
 
-      def tempDir = ".tmp_azure_jenkins"
+    steps.sh("git checkout ${branch.branchName}")
 
-      steps.sh("git checkout ${branch.branchName}")
+    steps.sh("mkdir ${tempDir}")
 
-      steps.sh("mkdir ${tempDir}")
+    copy('build/libs/*.jar', tempDir)
+    checkAndCopy('web.config', tempDir)
 
-      copy('build/libs/*.jar', tempDir)
-      checkAndCopy('web.config', tempDir)
+    steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
+    steps.sh("cp ${tempDir}/* .")
+    steps.sh("rm -rf ${tempDir}")
+    steps.sh("git add --all .")
 
-      steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
-      steps.sh("cp ${tempDir}/* .")
-      steps.sh("rm -rf ${tempDir}")
-      steps.sh("git add --all .")
+    pushToService(product, app, env)
 
-      pushToService(product, app, env)
-
-      steps.sh('git reset --hard HEAD~1')
-    }
+    return steps.sh('git reset --hard HEAD~1')
   }
 
   /***
@@ -191,12 +168,6 @@ class WebAppDeploy implements Serializable {
     }
   }
 
-  private def getServiceDeploymentHost(product, app, env) {
-    def serviceName = getServiceName(product, app, env)
-    def serviceDomain = getServiceDomain(env)
-    return "${serviceName}-staging.scm.${serviceDomain}"
-  }
-
   private def getServiceHost(product, app, env, slot) {
     def serviceName = getServiceName(product, app, env)
     def serviceDomain = getServiceDomain(env)
@@ -221,11 +192,6 @@ class WebAppDeploy implements Serializable {
     return "core-compute-${env}"
   }
 
-  private def gitPushToService(serviceDeploymentHost, serviceName, env) {
-    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} \"https://${steps.env.GIT_USERNAME}:${steps.env.GIT_PASSWORD}@${serviceDeploymentHost}/${serviceName}.git\"")
-    steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
-  }
-
   private def configureGit() {
     steps.sh("git config user.email '${GIT_EMAIL}'")
     steps.sh("git config user.name '${GIT_USER}'")
@@ -233,13 +199,16 @@ class WebAppDeploy implements Serializable {
   }
 
   private def pushToService(product, app, env) {
-
     configureGit()
 
     def serviceName = getServiceName(product, app, env)
-    def serviceDeploymentHost = getServiceDeploymentHost(product, app, env)
 
-    gitPushToService(serviceDeploymentHost, serviceName, env)
+    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
+    def result = az "webapp deployment list-publishing-profiles --name ${serviceName} --slot staging --resource-group ${serviceName} --query \"[?publishMethod=='MSDeploy'].{publishUrl:publishUrl,userName:userName,userPWD:userPWD}|[0]\""
+    def profile = new JsonSlurperClassic().parseText(result)
+
+    steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} 'https://${profile.userName}:${profile.userPWD}@${profile.publishUrl}/${serviceName}.git'")
+    steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
 
 }

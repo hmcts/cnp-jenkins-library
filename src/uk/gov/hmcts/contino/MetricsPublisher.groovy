@@ -1,13 +1,12 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonOutput
-import groovy.json.StringEscapeUtils
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import java.time.Instant
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import com.cloudbees.groovy.cps.NonCPS
 
 class MetricsPublisher implements Serializable {
 
@@ -25,7 +24,7 @@ class MetricsPublisher implements Serializable {
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com:443/'
+    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com/'
     this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/pipeline-metrics'
   }
 
@@ -92,21 +91,23 @@ class MetricsPublisher implements Serializable {
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
-        steps.echo "Publishing Metrics data."
+        steps.echo "Publishing Metrics data"
 
         def verb = 'POST'
         def resourceType = "docs"
-        def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
+        def formattedDate = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'").format(ZonedDateTime.now(ZoneOffset.UTC)) // must stay on 1 line to avoid serialisation
         def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
         def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
         def tokenKey = env.COSMOSDB_TOKEN_KEY
 
         def authHeaderValue = generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey)
+        //steps.echo "Auth Header: " + authHeaderValue
 
         steps.httpRequest httpMode: "${verb}",
           requestBody: "${data}",
           contentType: 'APPLICATION_JSON',
           quiet: true,
+          consoleLogResponseBody: false,
           url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
           customHeaders: [
             [name: 'Authorization', value: "${authHeaderValue}"],
