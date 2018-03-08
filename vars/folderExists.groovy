@@ -13,7 +13,7 @@ import java.nio.file.FileSystems
 def call(String folderPath, Closure block) {
   def localPath = sh(script: 'pwd', returnStdout: true).trim()
 
-  path = FileSystems.getDefault().getPath(localPath, folderPath)
+  path = FileSystems.getDefault().getPath(localPath, folderPath).toString()
   log.info("looking for path: $path")
   if (fileExists(path))
     return block.call()
