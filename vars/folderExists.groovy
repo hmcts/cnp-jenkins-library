@@ -12,9 +12,14 @@ import java.nio.file.FileSystems
  */
 def call(String folderPath, Closure block) {
   def localPath = sh(script: 'pwd', returnStdout: true).trim()
-  if (Files.exists(FileSystems.getDefault().getPath(localPath, folderPath))) {
+
+  path = FileSystems.getDefault().getPath(localPath, folderPath)
+  log.info("looking for path: $path")
+  if (fileExists(path))
     return block.call()
-  }
+  /*if (Files.exists(FileSystems.getDefault().getPath(localPath, folderPath))) {
+    return block.call()
+  }*/
   else
     log.info("$folderPath not found => There is no infrastructure to build")
 }
