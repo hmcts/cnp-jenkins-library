@@ -8,6 +8,14 @@ repositories {
   }
 }
 
+configurations {
+  ivy
+}
+
+tasks.withType(GroovyCompile) {
+  groovyClasspath += configurations.ivy
+}
+
 dependencies {
   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.9'
   compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.12'
@@ -15,7 +23,8 @@ dependencies {
   compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
   compile 'org.jenkins-ci.plugins:job-dsl-core:1.65'
   compile 'com.microsoft.azure:azure-documentdb:1.15.2'
-  compile 'org.apache.ivy:ivy:2.4.0'
+
+  ivy "org.apache.ivy:ivy:2.3.0"
 
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
   testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.0'
@@ -29,6 +38,7 @@ sourceSets {
       compileClasspath += main.compileClasspath
     }
   }
+
   main {
     groovy {
       srcDirs = ['src']
