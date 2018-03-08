@@ -15,4 +15,6 @@ def call(String folderPath, Closure block) {
   if (Files.exists(FileSystems.getDefault().getPath(localPath, folderPath))) {
     return block.call()
   }
+  else
+    log.info("$folderPath not found => There is no infrastructure to build")
 }
