@@ -100,13 +100,12 @@ call :SelectNodeVersion
 :: 3. Install Yarn
 echo Verifying Yarn Install.
 call :ExecuteCmd !NPM_CMD! install yarn -g
-call :ExecuteCmd set PATH=%PATH%;%appdata%\npm\
 
 :: 4. Install Yarn packages
 echo Installing Yarn Packages.
 IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
   pushd "%DEPLOYMENT_TARGET%"
-  call :ExecuteCmd yarn install --production --force --pure-lockfile --verbose
+  call :ExecuteCmd "%appdata%\npm\yarn" install --production --force --pure-lockfile --verbose
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
