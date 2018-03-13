@@ -50,11 +50,13 @@ class GradleBuilder implements Builder, Serializable {
 
   def securityCheck() {
 
-    // try {
-    //   gradle("-DdependencyCheck.failBuild=true dependencyCheck")
-    // } finally {
-    //   steps.archiveArtifacts 'build/reports/dependency-check-report.html'
-    // }
+    try {
+       def owaspUser = az "keyvault secret show --vault-name 'https://infra-vault.vault.azure.net/' --name 'OWASPDb-Account' --query value -o tsv"
+       def owaspPassword = az "keyvault secret show --vault-name 'https://infra-vault.vault.azure.net/' --name 'OWASPDb-Password' --query value -o tsv"      
+       gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspUser}@owaspdependencycheck;password=${owaspPassword};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspUser}' -DdependencyCheck.data.password='${owaspPassword}' dependencyCheck")
+     } finally {
+       steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+     }
 
   }
 
