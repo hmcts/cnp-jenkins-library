@@ -7,7 +7,7 @@ class WebAppDeploy implements Serializable {
 
   public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final String GIT_USER = "moj-jenkins-user"
-  public static final String SERVICE_HOST_SUFFIX = "internal"
+  public static final String SERVICE_HOST_SUFFIX = "platform.hmcts.net"
 
   def steps
   def product
