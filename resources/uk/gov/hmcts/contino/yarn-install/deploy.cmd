@@ -101,6 +101,8 @@ call :SelectNodeVersion
 echo Verifying Yarn Install.
 call :ExecuteCmd !NPM_CMD! install --global yarn
 
+set PATH=%PATH%;%appdata%\npm
+
 :: 4. Install Yarn packages
 echo Installing Yarn Packages.
 IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
