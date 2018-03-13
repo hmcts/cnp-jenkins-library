@@ -99,7 +99,7 @@ call :SelectNodeVersion
 
 :: 3. Install Yarn
 echo Verifying Yarn Install.
-call :ExecuteCmd !NPM_CMD! install yarn -g
+call :ExecuteCmd !NPM_CMD! install --global yarnpkg
 
 :: 4. Install Yarn packages
 echo Installing Yarn Packages.
