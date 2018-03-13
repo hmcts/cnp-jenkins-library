@@ -15,6 +15,7 @@ class MetricsPublisher implements Serializable {
   def resourceLink
   def product
   def component
+  def correlationId
 
   MetricsPublisher(steps, currentBuild, product, component) {
     this.product = product
@@ -24,6 +25,7 @@ class MetricsPublisher implements Serializable {
     this.currentBuild = currentBuild
     this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com/'
     this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/pipeline-metrics'
+    this.correlationId = UUID.randomUUID()
   }
 
   @NonCPS
@@ -32,6 +34,7 @@ class MetricsPublisher implements Serializable {
 
     return [
       id                           : "${UUID.randomUUID().toString()}",
+      correlation_id               : "${correlationId.toString()}",
       product                      : product,
       component                    : component,
       branch_name                  : env.BRANCH_NAME,
