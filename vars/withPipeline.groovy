@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
@@ -9,7 +10,8 @@ import uk.gov.hmcts.contino.Environment
 def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component)
+    nodejs: new NodePipelineType(this, product, component),
+    angular: new AngularPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
@@ -60,7 +62,17 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
           }
+
+        onDemo {
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.demoName,
+            environment: environment.demoName,
+            product: product,
+            component: component)
         }
+      }  
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {

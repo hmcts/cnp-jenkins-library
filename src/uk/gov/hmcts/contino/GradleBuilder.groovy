@@ -30,7 +30,9 @@ class GradleBuilder implements Builder, Serializable {
 
   def smokeTest() {
     try {
-      gradle("--info smoke")
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      gradle("--info --rerun-tasks smoke")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -38,7 +40,9 @@ class GradleBuilder implements Builder, Serializable {
 
   def functionalTest() {
     try {
-      gradle("--info functional")
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      gradle("--info --rerun-tasks functional")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -75,11 +79,14 @@ EOF
   }
 
   def dbMigrate(String vaultName, String microserviceName) {
-    def dbName = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-DATABASE' --query value -o tsv", returnStdout: true).trim()
-    def dbHost = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-HOST' --query value -o tsv", returnStdout: true).trim()
-    def dbPass = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PASS' --query value -o tsv", returnStdout: true).trim()
-    def dbPort = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PORT' --query value -o tsv", returnStdout: true).trim()
-    def dbUser = steps.sh(script: "az keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv", returnStdout: true).trim()
+
+    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
+
+    def dbName = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-DATABASE' --query value -o tsv"
+    def dbHost = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-HOST' --query value -o tsv"
+    def dbPass = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PASS' --query value -o tsv"
+    def dbPort = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PORT' --query value -o tsv"
+    def dbUser = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv"
 
     gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
   }

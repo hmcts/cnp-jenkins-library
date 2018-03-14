@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 
 def call(String subscription, Closure body) {
+
   ansiColor('xterm') {
     withCredentials([azureServicePrincipal(
       credentialsId: "jenkinsServicePrincipal",
@@ -10,23 +11,21 @@ def call(String subscription, Closure body) {
       clientSecretVariable: 'JENKINS_CLIENT_SECRET',
       tenantIdVariable: 'JENKINS_TENANT_ID')]) {
 
-      sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
-      sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
+      def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-      def vaultName = "infra-vault"
-      if (subscription == "sandbox")
-        vaultName = "infra-vault-sandbox" //"contino-devops"
+      az 'login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
+      az 'account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
-      log.info "using $vaultName"
+      log.info "using ${env.INFRA_VAULT_NAME}"
 
-      def subscriptionCredsjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-creds' --query value -o tsv", returnStdout: true).trim()
+      def subscriptionCredsjson = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name '$subscription-creds' --query value -o tsv".toString()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
 
-      def stateStoreCfgjson = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-state-store' --query value -o tsv", returnStdout: true).trim()
+      def stateStoreCfgjson = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'cfg-state-store' --query value -o tsv".toString()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
 
-      def root_address_space = sh(script: "az keyvault secret show --vault-name '$vaultName' --name 'cfg-root-vnet-cidr' --query value -o tsv", returnStdout: true).trim()
-      def dcdJenkinsObjectId = sh(script: "az keyvault secret show --vault-name '$vaultName' --name '$subscription-jenkins-object-id' --query value -o tsv", returnStdout: true).trim()
+      def root_address_space = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'cfg-root-vnet-cidr' --query value -o tsv".toString()
+      def dcdJenkinsObjectId = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name '$subscription-jenkins-object-id' --query value -o tsv".toString()
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
@@ -55,8 +54,8 @@ def call(String subscription, Closure body) {
                "TF_VAR_root_address_space=$root_address_space"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
-        sh 'az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
-        sh 'az account set --subscription $AZURE_SUBSCRIPTION_ID'
+        az 'login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
+        az 'account set --subscription $AZURE_SUBSCRIPTION_ID'
 
         body.call()
       }

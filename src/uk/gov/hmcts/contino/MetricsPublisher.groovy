@@ -1,13 +1,10 @@
 package uk.gov.hmcts.contino
+@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
 
-import groovy.json.JsonOutput
-import groovy.json.StringEscapeUtils
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import com.cloudbees.groovy.cps.NonCPS
+import com.microsoft.azure.documentdb.Document
+import com.microsoft.azure.documentdb.DocumentClient
+import groovy.json.JsonOutput
 
 class MetricsPublisher implements Serializable {
 
@@ -18,21 +15,17 @@ class MetricsPublisher implements Serializable {
   def resourceLink
   def product
   def component
+  def correlationId
 
-  MetricsPublisher(steps, currentBuild, product, component, cosmosDbUrl, collectionLink) {
+  MetricsPublisher(steps, currentBuild, product, component) {
     this.product = product
     this.component = component
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = cosmosDbUrl
-    this.resourceLink = collectionLink
-  }
-
-  MetricsPublisher(steps, currentBuild, product, component) {
-    // the following default string literals were stored as private static final fields but had to be moved here because
-    // we ran into compilation issues on Jenkins because it interfered and wrapped them in instance method calls
-    this(steps, currentBuild, product, component, 'https://e520fc7bdb51bf9c.documents.azure.com:/', 'dbs/jenkins-sandbox/colls/pipeline-metrics')
+    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com/'
+    this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/pipeline-metrics'
+    this.correlationId = UUID.randomUUID()
   }
 
   @NonCPS
@@ -41,6 +34,7 @@ class MetricsPublisher implements Serializable {
 
     return [
       id                           : "${UUID.randomUUID().toString()}",
+      correlation_id               : "${correlationId.toString()}",
       product                      : product,
       component                    : component,
       branch_name                  : env.BRANCH_NAME,
@@ -64,30 +58,9 @@ class MetricsPublisher implements Serializable {
       current_build_duration       : currentBuild.duration,
       current_build_duration_string: currentBuild.durationString,
       current_build_previous_build : currentBuild.previousBuild?.number,
-      current_build_absolute_url   : currentBuild.absoluteUrl
+      current_build_absolute_url   : currentBuild.absoluteUrl,
+      stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
     ]
-  }
-
-  @NonCPS
-  private def generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey) {
-    def stringToSign = verb.toLowerCase() + "\n" + resourceType.toLowerCase() + "\n" + resourceLink + "\n" + formattedDate.toLowerCase() + "\n" + "" + "\n"
-    steps.echo 'Signed payload: ' + StringEscapeUtils.escapeJava(stringToSign)
-
-    def decodedKey = tokenKey.decodeBase64()
-    def hash = hmacSHA256(decodedKey, stringToSign)
-    def base64Hash = Base64.getEncoder().encodeToString(hash)
-
-    def authToken = "type=${tokenType}&ver=${tokenVersion}&sig=${base64Hash}"
-    return URLEncoder.encode(authToken, 'UTF-8')
-  }
-
-  @NonCPS
-  private def hmacSHA256(secretKey, data) {
-    Mac mac = Mac.getInstance('HmacSHA256')
-    SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, 'HmacSHA256')
-    mac.init(secretKeySpec)
-    byte[] digest = mac.doFinal(data.getBytes())
-    return digest
   }
 
   def publish(currentStepName) {
@@ -98,29 +71,14 @@ class MetricsPublisher implements Serializable {
           return
         }
 
+        def client = new DocumentClient(cosmosDbUrl, env.COSMOSDB_TOKEN_KEY, null, null)
+
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
-        steps.echo "Publishing Metric data: '${data}'"
+        steps.echo "Publishing Metrics data"
 
-        def verb = 'POST'
-        def resourceType = "docs"
-        def formattedDate = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.now())
-        def tokenType = env.COSMOSDB_TOKEN_TYPE ?: 'master'
-        def tokenVersion = env.COSMOSDB_TOKEN_VERSION ?: '1.0'
-        def tokenKey = env.COSMOSDB_TOKEN_KEY
-
-        def authHeaderValue = generateAuthToken(verb, resourceType, formattedDate, tokenType, tokenVersion, tokenKey)
-
-        steps.httpRequest httpMode: "${verb}",
-          requestBody: "${data}",
-          contentType: 'APPLICATION_JSON',
-          quiet: true,
-          url: "${cosmosDbUrl}${resourceLink}/${resourceType}",
-          customHeaders: [
-            [name: 'Authorization', value: "${authHeaderValue}"],
-            [name: 'x-ms-version', value: '2017-02-22'],
-            [name: 'x-ms-date', value: "${formattedDate}"],
-          ]
+        Document documentDefinition = new Document(data)
+        client.createDocument(resourceLink, documentDefinition, null, false)
       }
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
