@@ -34,7 +34,6 @@ dependencies {
   testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.0'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
   
-  classpath group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.2.jre8'
 }
 
 sourceSets {
