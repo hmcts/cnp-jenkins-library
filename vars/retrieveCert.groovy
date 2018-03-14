@@ -14,14 +14,11 @@ def call(String environment) {
     {
       sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
-      if("${environment}" == "aat"){
-        env.TF_VAR_vaultName = "infra-vault-nonprod"
-      }
-      else if("${environment}" == "prod"){
-        env.TF_VAR_vaultName = "infra-vault"
+      if("${environment}" == "sandbox"){
+        env.TF_VAR_vaultName = "infra-vault-sandbox"
       }
       else{
-        env.TF_VAR_vaultName = "infra-vault-${environment}"
+        env.TF_VAR_vaultName = "infra-vault"
       }
       // Setting environment vars consumed by TF
       sh "az keyvault certificate show --vault-name $TF_VAR_vaultName --name core-compute-${environment} --query x509ThumbprintHex --output tsv > thumbhex.txt"
