@@ -14,7 +14,7 @@ def call(String environment) {
     {
       sh 'az login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
       sh 'az account set --subscription $JENKINS_SUBSCRIPTION_ID'
-      if("${environment}" == "sandbox"){
+      if("${subscription}" == "sandbox"){
         env.TF_VAR_vaultName = "infra-vault-sandbox"
       }
       else{
