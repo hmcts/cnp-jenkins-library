@@ -1,0 +1,5 @@
+initscript {
+    dependencies {
+        classpath group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '6.2.2.jre8'
+    }
+}
