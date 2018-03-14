@@ -189,7 +189,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def getComputeFor(env){
-    return "core-compute-${env}"
+    return "${env}.platform.hmcts"
   }
 
   private def configureGit() {
