@@ -18,7 +18,6 @@ def testEnv(String testUrl, tfOutput, block) {
   }
 }
 
-
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
   PipelineType pipelineType = params.pipelineType
