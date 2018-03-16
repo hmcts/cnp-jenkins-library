@@ -4,6 +4,7 @@ class GradleBuilder implements Builder, Serializable {
 
   def steps
   def product
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
   GradleBuilder(steps, product) {
     this.steps = steps
@@ -50,11 +51,13 @@ class GradleBuilder implements Builder, Serializable {
 
   def securityCheck() {
 
-    // try {
-    //   gradle("-DdependencyCheck.failBuild=true dependencyCheck")
-    // } finally {
-    //   steps.archiveArtifacts 'build/reports/dependency-check-report.html'
-    // }
+    try {
+       def owaspUser = az "keyvault secret show --vault-name 'https://infra-vault.vault.azure.net/' --name 'OWASPDb-Account' --query value -o tsv"
+       def owaspPassword = az "keyvault secret show --vault-name 'https://infra-vault.vault.azure.net/' --name 'OWASPDb-Password' --query value -o tsv"      
+       gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspUser}@owaspdependencycheck;password=${owaspPassword};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspUser}' -DdependencyCheck.data.password='${owaspPassword}' dependencyCheck")
+     } finally {
+       steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+     }
 
   }
 
@@ -79,8 +82,6 @@ EOF
   }
 
   def dbMigrate(String vaultName, String microserviceName) {
-
-    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
 
     def dbName = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-DATABASE' --query value -o tsv"
     def dbHost = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-HOST' --query value -o tsv"
