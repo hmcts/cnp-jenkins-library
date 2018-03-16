@@ -1,12 +1,4 @@
 #!groovy
-properties(
-  [[$class: 'GithubProjectProperty', projectUrlStr: 'http://git.reform/contino/jenkins-library/'],
-   pipelineTriggers([
-     [$class: 'GitHubPushTrigger'],
-     [$class: 'hudson.triggers.TimerTrigger', spec  : 'H 1 * * *']
-   ])]
-)
-
 @Library('Infrastructure') _
 
 def channel = '#cnp-build-status'
