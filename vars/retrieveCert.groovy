@@ -1,4 +1,5 @@
 #!groovy
+/* Must be used inside a withSubscription block */
 def call(String environment) {
 
   echo "Retrieving certificate for ${environment} from vault"
