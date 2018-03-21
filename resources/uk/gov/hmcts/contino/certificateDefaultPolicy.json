@@ -1,0 +1,46 @@
+{
+  "issuerParameters": {
+    "name": "Self"
+  },
+  "keyProperties": {
+    "exportable": true,
+    "keySize": 2048,
+    "keyType": "RSA",
+    "reuseKey": false
+  },
+  "lifetimeActions": [
+    {
+      "action": {
+        "actionType": "AutoRenew"
+      },
+      "trigger": {
+        "lifetimePercentage": 10
+      }
+    }
+  ],
+  "secretProperties": {
+    "contentType": "application/x-pkcs12"
+  },
+  "x509CertificateProperties": {
+    "keyUsage": [
+      "cRLSign",
+      "dataEncipherment",
+      "digitalSignature",
+      "keyEncipherment",
+      "keyAgreement",
+      "keyCertSign"
+    ],
+    "subject": "CN=platform.hmcts.net",
+    "subjectAlternativeNames": {
+      "dnsNames": [
+        "*.ssl.platform.hmcts.net",
+        "*.service.ssl.platform.hmcts.net",
+        "*.scm.service.ssl.platform.hmcts.net"
+      ],
+      "emails": null,
+      "upns": null
+    },
+    "validityInMonths": 12
+  }
+}
+
