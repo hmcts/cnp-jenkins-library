@@ -1,5 +1,4 @@
 import uk.gov.hmcts.contino.*
-import groovy.json.JsonSlurper
 
 def call(String platform, String subscription) {
 
@@ -17,9 +16,9 @@ def call(String platform, String subscription) {
   // Setting environment vars consumed by TF
   az "keyvault certificate show --vault-name app-vault-${subscription} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumbhex.txt"
   thumbprinthex = readFile('thumbhex.txt')
-  env.TF_VAR_pfxFile = "${WORKSPACE}/core-infra-${platform}.pfx"
   env.TF_VAR_certificateThumbprint = "${thumbprinthex}"
   env.TF_VAR_certificateName = "core-infra-${platform}"
-  env.TF_VAR_pfxBlobString = readFile('base64.txt')
+  env.TF_VAR_pfxFile = "${WORKSPACE}/core-infra-${platform}.pfx"
   env.TF_VAR_password = "${pfxPass}"
+  env.TF_VAR_vaultName = "app-vault-${subscription}"
 }
