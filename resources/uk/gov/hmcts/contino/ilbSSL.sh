@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 
 domain=$1
 pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
