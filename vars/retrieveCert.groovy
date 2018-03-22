@@ -2,8 +2,8 @@
 /* Must be used inside a withSubscription block */
 def call(String environment) {
 
-  echo "Retrieving certificate for ${environment} from vault"
-  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
+  echo "Producing certificate for ${environment}"
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${env.SUBSCRIPTION_NAME} az ${cmd}", returnStdout: true).trim() }
 
   log.info "using ${env.INFRA_VAULT_NAME}"
 
@@ -17,7 +17,7 @@ def call(String environment) {
   {
     defaultPolicy = libraryResource 'uk/gov/hmcts/contino/certificateDefaultPolicy.json'
     log.info("Certificate name ${env.TF_VAR_certificateName} does not exist in vault ${env.INFRA_VAULT_NAME}! Creating one right now...")
-    az(/keyvault certificate create --vault-name ${env.INFRA_VAULT_NAME} --name ${env.TF_VAR_certificateName} --policy "${defaultPolicy}"/)
+    az(/keyvault certificate create --vault-name ${env.INFRA_VAULT_NAME} --name ${env.TF_VAR_certificateName} --policy "${defaultPolicy.replaceAll('\\s','')}"/)
     log.info("Retrieving the thumbprint")
     env.TF_VAR_certificateThumbprint = az "keyvault certificate show --vault-name $env.INFRA_VAULT_NAME --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex --output tsv"
   }
