@@ -18,7 +18,7 @@ def call(String environment) {
   else
   {
     defaultPolicy = libraryResource 'uk/gov/hmcts/contino/certificateDefaultPolicy.json'
-    writeFile file: 'certificateDefaultPolicy.json', text: functions
+    writeFile file: 'certificateDefaultPolicy.json', text: defaultPolicy
 
     log.info("Certificate name ${env.TF_VAR_certificateName} does not exist in vault ${env.INFRA_VAULT_NAME}! Creating one right now...")
     az(/keyvault certificate create --vault-name ${env.INFRA_VAULT_NAME} --name ${env.TF_VAR_certificateName} --policy @certificateDefaultPolicy.json/)
