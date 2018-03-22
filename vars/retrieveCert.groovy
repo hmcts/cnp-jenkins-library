@@ -7,12 +7,10 @@ def call(String environment) {
 
   log.info "using ${env.INFRA_VAULT_NAME}"
 
-  // check certificate exists
-  az "keyvault certificate show --vault-name $env.INFRA_VAULT_NAME --name core-compute-${environment}"
-
   // Setting environment vars consumed by TF
   env.TF_VAR_certificateName = "core-compute-${environment}"
   thumbPrint = az "keyvault certificate show --vault-name $env.INFRA_VAULT_NAME --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex --output tsv"
+  // check certificate exists
   if (thumbPrint.contains("not found"))
   {
     defaultPolicy = libraryResource 'uk/gov/hmcts/contino/certificateDefaultPolicy.json'
