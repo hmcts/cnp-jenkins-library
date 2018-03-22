@@ -12,7 +12,7 @@ def call(String platform) {
 
   def functions = libraryResource 'uk/gov/hmcts/contino/ilbSSL.sh'
   writeFile file: 'ilbSSL.sh', text: functions
-  result = sh "bash ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform} ${env.SUBSCRIPTION_NAME}"
+  result = sh "bash -x ilbSSL.sh core-infra-${platform} ${pfxPass} ${platform} ${env.SUBSCRIPTION_NAME}"
 
   // Setting environment vars consumed by TF
   az "keyvault certificate show --vault-name app-vault-${env.SUBSCRIPTION_NAME} --name core-infra-${platform} --query x509ThumbprintHex --output tsv > thumbhex.txt"

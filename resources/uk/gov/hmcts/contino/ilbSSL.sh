@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 domain=$1
 pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
@@ -6,7 +7,7 @@ platform=$3
 subscription=$4
 
 certjson=$(env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate show --vault-name app-vault-${subscription} -n $domain)
-if [[ $certjson = *"not found"* ]]; then
+if [[ -z "$certjson" ]]; then
   echo "Creating Self-Signed cert for $domain"
 
   echo "workspace for script = ${WORKSPACE}"
@@ -40,15 +41,17 @@ EOF
   rm -f $domain.key $domain.csr $domain.conf
   #push created cert to the app-vault
   env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate import --vault-name app-vault-${subscription} -n $domain -f $domain.pfx --password $pfxPass
+  echo "Pushing cert to app gateway..."
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
 else
   echo "Cert found..."
-  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate show --vault-name app-vault-${subscription} --name $domain --query cer -o tsv > $domain.cer
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate download --vault-name app-vault-${subscription} -n $domain --file $domain.cer
+  echo "Refreshing cert on app gateway..."
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert update --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
   #in this case it's not possible to get a pfx file so creating a dummy one
   touch $domain.pfx
 fi
 
-echo "Pushing cert to app gateway..."
-env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
 rm -f $domain.cer
 
 
