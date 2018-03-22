@@ -11,13 +11,17 @@ def call(String environment) {
   env.TF_VAR_certificateName = "core-compute-${environment}"
   thumbPrint = az(/keyvault certificate list --vault-name ${env.INFRA_VAULT_NAME} --query "[?contains(id,'${env.TF_VAR_certificateName}')]" --query x509ThumbprintHex -o tsv/)
   // check certificate exists
-  if (thumbPrint)
+  if (thumbPrint) {
+    log.info("Certificate found in vault... will use the same")
     env.TF_VAR_certificateThumbprint = thumbPrint
+  }
   else
   {
     defaultPolicy = libraryResource 'uk/gov/hmcts/contino/certificateDefaultPolicy.json'
+    writeFile file: 'certificateDefaultPolicy.json', text: functions
+
     log.info("Certificate name ${env.TF_VAR_certificateName} does not exist in vault ${env.INFRA_VAULT_NAME}! Creating one right now...")
-    az(/keyvault certificate create --vault-name ${env.INFRA_VAULT_NAME} --name ${env.TF_VAR_certificateName} --policy "${defaultPolicy.replaceAll('\\s','')}"/)
+    az(/keyvault certificate create --vault-name ${env.INFRA_VAULT_NAME} --name ${env.TF_VAR_certificateName} --policy @certificateDefaultPolicy.json/)
     log.info("Retrieving the thumbprint")
     env.TF_VAR_certificateThumbprint = az "keyvault certificate show --vault-name $env.INFRA_VAULT_NAME --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex --output tsv"
   }
