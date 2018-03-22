@@ -88,7 +88,7 @@ EOF
     def dbPort = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PORT' --query value -o tsv"
     def dbUser = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv"
 
-    gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
+    gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}?ssl=true' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
   }
 
 }
