@@ -6,7 +6,7 @@ def call(String environment) {
   def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${env.SUBSCRIPTION_NAME} az ${cmd}", returnStdout: true).trim() }
 
   log.info "using ${env.INFRA_VAULT_NAME}"
-
+  env.TF_VAR_vaultName = env.INFRA_VAULT_NAME
   // Setting environment vars consumed by TF
   env.TF_VAR_certificateName = "core-compute-${environment}"
   thumbPrint = az(/keyvault certificate list --vault-name ${env.INFRA_VAULT_NAME} --query "[?contains(id,'${env.TF_VAR_certificateName}')].x509ThumbprintHex" -o tsv/)
