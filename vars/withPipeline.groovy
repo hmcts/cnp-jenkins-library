@@ -73,7 +73,7 @@ def call(type, String product, String component, Closure body) {
             component: component)
         }
 
-        onPr {
+        onPR {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
