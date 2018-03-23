@@ -1,7 +1,6 @@
 #!groovy
 
 def call(productName, environment, subscription, status){
-  withSubscription(subscription){
 
     if ( status == "on") {
       endpointStatus = "Enabled"
@@ -10,8 +9,7 @@ def call(productName, environment, subscription, status){
       endpointStatus = "Disabled"
     }
 
-    sh "az network traffic-manager endpoint update --resource-group ${productName}-${environment } --profile-name ${productName}-${environment } --name shutter --type externalEndpoints --endpoint-status ${endpointStatus}"
+    sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network traffic-manager endpoint update --resource-group ${productName}-${environment } --profile-name ${productName}-${environment } --name shutter --type externalEndpoints --endpoint-status ${endpointStatus}"
 
-     }
 
   }
