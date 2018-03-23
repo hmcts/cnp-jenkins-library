@@ -72,7 +72,17 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
         }
-      }  
+
+        onPr {
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.previewName,
+            environment: environment.previewName,
+            product: product,
+            component: component)
+        }
+      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {
