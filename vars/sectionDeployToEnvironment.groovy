@@ -25,6 +25,7 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
+  def suffix = params.suffix
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
