@@ -11,21 +11,23 @@ def call(String subscription, Closure body) {
       clientSecretVariable: 'JENKINS_CLIENT_SECRET',
       tenantIdVariable: 'JENKINS_TENANT_ID')]) {
 
+      def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
+
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-      az 'login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
-      az 'account set --subscription $JENKINS_SUBSCRIPTION_ID'
+      azJenkins 'login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
+      azJenkins 'account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
       log.info "using ${env.INFRA_VAULT_NAME}"
 
-      def subscriptionCredsjson = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name '$subscription-creds' --query value -o tsv".toString()
+      def subscriptionCredsjson = azJenkins "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name '$subscription-creds' --query value -o tsv".toString()
       subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
 
-      def stateStoreCfgjson = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'cfg-state-store' --query value -o tsv".toString()
+      def stateStoreCfgjson = azJenkins "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'cfg-state-store' --query value -o tsv".toString()
       stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
 
-      def root_address_space = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'cfg-root-vnet-cidr' --query value -o tsv".toString()
-      def dcdJenkinsObjectId = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name '$subscription-jenkins-object-id' --query value -o tsv".toString()
+      def root_address_space = azJenkins "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'cfg-root-vnet-cidr' --query value -o tsv".toString()
+      def dcdJenkinsObjectId = azJenkins "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name '$subscription-jenkins-object-id' --query value -o tsv".toString()
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
