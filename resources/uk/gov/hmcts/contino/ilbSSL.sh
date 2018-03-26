@@ -5,10 +5,12 @@ pfxPass=$2 #$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
 platform=$3
 subscription=$4
 
-echo "Creating Self-Signed cert for $domain"
+certjson=$(env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate show --vault-name app-vault-${subscription} -n $domain)
+if [[ -z "$certjson" ]]; then
+  echo "Creating Self-Signed cert for $domain"
 
-echo "workspace for script = ${WORKSPACE}"
-cat > $domain.conf <<-EOF
+  echo "workspace for script = ${WORKSPACE}"
+  cat > $domain.conf <<-EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -29,24 +31,27 @@ subjectAltName = @alt_names
 DNS.1 = *.scm.service.commonNameVar.internal
 
 EOF
-commonName=core-compute-$platform
-sed -i "s/commonNameVar/$commonName/g" $domain.conf
+  commonName=core-compute-$platform
+  sed -i "s/commonNameVar/$commonName/g" $domain.conf
 
-openssl req -new -sha256 -nodes -out $domain.csr -newkey rsa:2048 -keyout $domain.key -config <( cat $domain.conf )
+  openssl req -new -sha256 -nodes -out $domain.csr -newkey rsa:2048 -keyout $domain.key -config <( cat $domain.conf )
+  openssl x509 -req -in $domain.csr -signkey $domain.key -out $domain.cer
+  openssl pkcs12 -export -in $domain.cer -inkey $domain.key -out $domain.pfx -password pass:$pfxPass
+  rm -f $domain.key $domain.csr $domain.conf
+  #push created cert to the app-vault
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate import --vault-name app-vault-${subscription} -n $domain -f $domain.pfx --password $pfxPass
+  echo "Pushing cert to app gateway..."
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
+else
+  echo "Cert found..."
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate download --vault-name app-vault-${subscription} -n $domain --file $domain.cer
+  echo "Refreshing cert on app gateway..."
+  env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert update --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
+  #in this case it's not possible to get a pfx file so creating a dummy one
+  touch $domain.pfx
+fi
 
-openssl x509 -req -in $domain.csr -signkey $domain.key -out $domain.cer
+rm -f $domain.cer
 
-openssl pkcs12 -export -in $domain.cer -inkey $domain.key -out $domain.pfx -password pass:$pfxPass
 
-rm -f $domain.key $domain.csr $domain.conf
-
-env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az keyvault certificate import --vault-name app-vault-${subscription} -n $domain -f $domain.pfx --password $pfxPass
-
-#to be put back in
-env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az network application-gateway auth-cert create --cert-file $domain.cer --gateway-name $domain --name $domain --resource-group core-infra-${platform}
-
-# get base64 representation of pfx file and write to file
-a=$(cat ./$domain.pfx)
-echo -n $a | base64 > base64.txt
-truncate -s -1 base64.txt
 
