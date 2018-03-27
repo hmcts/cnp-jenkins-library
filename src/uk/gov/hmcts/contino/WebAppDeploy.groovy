@@ -9,7 +9,7 @@ class WebAppDeploy implements Serializable {
 
   public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final String GIT_USER = "moj-jenkins-user"
-  public static final String SERVICE_HOST_SUFFIX = "net"
+  public static final String SERVICE_HOST_SUFFIX = "internal"
 
   def steps
   def product
@@ -189,7 +189,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def getComputeFor(env){
-    return "${env}.platform.hmcts"
+    return "core-compute-${env}"
   }
 
   private def configureGit() {
