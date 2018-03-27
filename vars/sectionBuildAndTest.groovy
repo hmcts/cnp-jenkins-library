@@ -2,7 +2,7 @@
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacks
 
-def call(PipelineCallbacks pl, Builder builder) {
+def call(PipelineCallbacks pl, Builder builder, Subscription subscription) {
   stage('Checkout') {
     pl.callAround('checkout') {
       deleteDir()
@@ -28,7 +28,7 @@ def call(PipelineCallbacks pl, Builder builder) {
 
   stage("Security Checks") {
     pl.callAround('securitychecks') {
-      builder.securityCheck()
+      builder.securityCheck(subscription)
     }
   }
 

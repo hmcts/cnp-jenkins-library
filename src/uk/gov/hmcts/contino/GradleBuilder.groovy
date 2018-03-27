@@ -51,7 +51,7 @@ class GradleBuilder implements Builder, Serializable {
   def securityCheck() {
 
     try {
-      def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
+      def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
       def owaspUser = az "keyvault secret show --vault-name 'https://infra-vault.vault.azure.net/' --name 'OWASPDb-Account' --query value -o tsv"
       def owaspPassword = az "keyvault secret show --vault-name 'https://infra-vault.vault.azure.net/' --name 'OWASPDb-Password' --query value -o tsv"

@@ -43,7 +43,7 @@ def call(type, String product, String component, Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        sectionBuildAndTest(pl, pipelineType.builder)
+        sectionBuildAndTest(pl, pipelineType.builder, subscription)
 
         onMaster {
           sectionDeployToEnvironment(
@@ -72,7 +72,7 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
         }
-      }  
+      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {
