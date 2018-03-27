@@ -4,7 +4,7 @@ class GradleBuilder implements Builder, Serializable {
 
   def steps
   def product
-  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
 
   GradleBuilder(steps, product) {
     this.steps = steps
