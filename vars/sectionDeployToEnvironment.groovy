@@ -30,6 +30,10 @@ def call(params) {
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
+  onPR {
+    githubCreateDeployment
+  }
+
   stage("Build Infrastructure - ${environment}") {
     folderExists('infrastructure') {
       withSubscription(subscription) {
@@ -57,6 +61,10 @@ def call(params) {
       pl.callAround("deploy:${environment}") {
         deployer.deploy(environment)
         deployer.healthCheck(environment, "staging")
+
+        onPR {
+          githubUpdateDeploymentStatus
+        }
       }
     }
   }
@@ -92,6 +100,10 @@ def call(params) {
           pl.callAround("promote:${environment}") {
             sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
             deployer.healthCheck(environment, "production")
+
+            onPR {
+              githubUpdateDeploymentStatus
+            }
           }
         }
       }
