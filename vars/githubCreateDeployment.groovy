@@ -1,6 +1,6 @@
 def call() {
-  withCredentials([string(credentialsId: 'jenkins-github-api-token-secret-text', variable: 'BEARER_TOKEN')]) {
-    echo BEARER_TOKEN.substring(0, 5)
+  withCredentials([usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USERNAME')]) {
+  echo BEARER_TOKEN.substring(0, 5)
     echo BEARER_TOKEN.substring(5, BEARER_TOKEN.length() - 1)
     httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
       customHeaders: [[maskValue: false, name: 'Authorization', value: "Bearer ${BEARER_TOKEN}"]], httpMode: 'POST', requestBody: '''{
