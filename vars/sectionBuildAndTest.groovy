@@ -10,13 +10,13 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 
-  stage("Build") {
-    pl.callAround('build') {
-      timeout(time: 15, unit: 'MINUTES') {
-        builder.build()
-      }
-    }
-  }
+//  stage("Build") {
+//    pl.callAround('build') {
+//      timeout(time: 15, unit: 'MINUTES') {
+//        builder.build()
+//      }
+//    }
+//  }
 
 //  stage("Test") {
 //    pl.callAround('test') {
