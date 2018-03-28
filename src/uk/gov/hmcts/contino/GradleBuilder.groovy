@@ -1,5 +1,11 @@
 package uk.gov.hmcts.contino
 
+import jenkins.model.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.impl.*
+
 class GradleBuilder implements Builder, Serializable {
 
   def steps
@@ -55,9 +61,28 @@ class GradleBuilder implements Builder, Serializable {
 
       def owaspU = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
       def owaspP = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
-      OWASP_USER = credentials(owaspU)
-      OWASP_PASS = credentials(owaspP)
-      gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
+
+      //trying to get a handle on Jenkins global system credentials provider to inject our creds
+      def domain = Domain.global()
+      def store = SystemCredentialsProvider.getInstance().getStore()
+
+      def credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "owaspCredentials", "DB credentials for OWASP DB", "${owaspU}", "${owaspP}")
+      success = store.addCredentials(domain, credential)
+
+      if (success) {
+        log.info "owaspCredentials created successfully"
+        withCredentials([UsernamePasswordMultiBinding(credentialsId: 'owaspCredentials', usernameVariable: 'OWASP_USER', passwordVariable: 'OWASP_PASS') ]) {
+          gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
+        }
+        store.removeCredentials(domain, credential)
+      } else {
+        log.info "something went wrong creating owaspCredentials on Jenkins"
+        withEnv(["OWASP_USER=$owaspU",
+                 "OWASP_PASS=$owaspP"]) {
+          gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
+        }
+      }
+
     }
     finally {
       steps.archiveArtifacts 'build/reports/dependency-check-report.html'
