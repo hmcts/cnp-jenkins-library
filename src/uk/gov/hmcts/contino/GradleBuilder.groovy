@@ -55,12 +55,9 @@ class GradleBuilder implements Builder, Serializable {
 
       def owaspU = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
       def owaspP = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
-      withCredentials([
-        usernamePassword(credentialsId: owaspUser, usernameVariable: 'OWASP_USER', passwordVariable: owaspU),
-        usernamePassword(credentialsId: owaspPassword, usernameVariable: 'OWASP_PASS', passwordVariable: owaspP) ])
-      {
-        gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
-      }
+      OWASP_USER = credentials(owaspU)
+      OWASP_PASS = credentials(owaspP)
+      gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
     }
     finally {
       steps.archiveArtifacts 'build/reports/dependency-check-report.html'
