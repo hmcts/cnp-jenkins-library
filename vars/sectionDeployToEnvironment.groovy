@@ -31,7 +31,7 @@ def call(params) {
   Deployer deployer = pipelineType.deployer
 
   onPR {
-    githubCreateDeployment
+    githubCreateDeployment()
   }
 
   stage("Build Infrastructure - ${environment}") {
@@ -63,7 +63,7 @@ def call(params) {
         deployer.healthCheck(environment, "staging")
 
         onPR {
-          githubUpdateDeploymentStatus
+          githubUpdateDeploymentStatus()
         }
       }
     }
@@ -102,7 +102,7 @@ def call(params) {
             deployer.healthCheck(environment, "production")
 
             onPR {
-              githubUpdateDeploymentStatus
+              githubUpdateDeploymentStatus()
             }
           }
         }
