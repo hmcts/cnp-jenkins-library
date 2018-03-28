@@ -43,7 +43,7 @@ def call(type, String product, String component, Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        sectionBuildAndTest(pl, pipelineType.builder, subscription)
+        sectionBuildAndTest(pl, pipelineType.builder)
 
         onMaster {
           sectionDeployToEnvironment(
