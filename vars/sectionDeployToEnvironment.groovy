@@ -30,10 +30,6 @@ def call(params) {
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
-  onPR {
-    githubCreateDeployment()
-  }
-
   stage("Build Infrastructure - ${environment}") {
     folderExists('infrastructure') {
       withSubscription(subscription) {
@@ -57,6 +53,10 @@ def call(params) {
   }
 
   stage("Deploy - ${environment} (staging slot)") {
+    onPR {
+      githubCreateDeployment()
+    }
+
     withSubscription(subscription) {
       pl.callAround("deploy:${environment}") {
         deployer.deploy(environment)
