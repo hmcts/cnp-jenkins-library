@@ -53,8 +53,8 @@ class GradleBuilder implements Builder, Serializable {
     try {
       def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
 
-      def owaspUser = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
-      def owaspPassword = az "keyvault secret show --vault-name '${env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
+      def owaspUser = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
+      def owaspPassword = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
       gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspUser}@owaspdependencycheck;password=${owaspPassword};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspUser}' -DdependencyCheck.data.password='${owaspPassword}' dependencyCheck")
     }
     finally {
