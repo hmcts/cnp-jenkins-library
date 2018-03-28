@@ -14,7 +14,6 @@ def call(String environment) {
   if (thumbPrint) {
     log.info("Certificate found in vault... will use the same")
     env.TF_VAR_certificateThumbprint = thumbPrint
-    System.exit(0)
   }
   else
   {
@@ -25,7 +24,6 @@ def call(String environment) {
     az(/keyvault certificate create --vault-name ${env.INFRA_VAULT_NAME} --name ${env.TF_VAR_certificateName} --policy @certificateDefaultPolicy.json/)
     log.info("Retrieving the thumbprint")
     env.TF_VAR_certificateThumbprint = az "keyvault certificate show --vault-name $env.INFRA_VAULT_NAME --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex -o tsv"
-    System.exit(1)
   }
 
 }
