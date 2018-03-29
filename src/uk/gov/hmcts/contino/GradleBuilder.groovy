@@ -67,7 +67,7 @@ class GradleBuilder implements Builder, Serializable {
       def store = SystemCredentialsProvider.getInstance().getStore()
 
       def credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "owaspCredentials", "DB credentials for OWASP DB", "${owaspU}", "${owaspP}")
-      success = store.addCredentials(domain, credential)
+      def success = store.addCredentials(domain, credential)
 
       if (success) {
         log.info "owaspCredentials created successfully"
