@@ -55,7 +55,6 @@ class GradleBuilder implements Builder, Serializable {
     }
   }
 
-  @NonCPS
   def securityCheck() {
 
     try {
@@ -64,26 +63,7 @@ class GradleBuilder implements Builder, Serializable {
       def owaspU = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
       def owaspP = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
 
-      //trying to get a handle on Jenkins global system credentials provider to inject our creds
-      def domain = Domain.global()
-      def store = SystemCredentialsProvider.getInstance().getStore()
-
-      def credential = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "owaspCredentials", "DB credentials for OWASP DB", "${owaspU}", "${owaspP}")
-      def success = store.addCredentials(domain, credential)
-
-      if (success) {
-        steps.echo "owaspCredentials created successfully"
-        withCredentials([UsernamePasswordMultiBinding(credentialsId: 'owaspCredentials', usernameVariable: 'OWASP_USER', passwordVariable: 'OWASP_PASS') ]) {
-          gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
-        }
-        store.removeCredentials(domain, credential)
-      } else {
-        steps.echo "something went wrong creating owaspCredentials on Jenkins"
-        withEnv(["OWASP_USER=$owaspU",
-                 "OWASP_PASS=$owaspP"]) {
-          gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${OWASP_USER}@owaspdependencycheck;password=${OWASP_PASS};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${OWASP_USER}' -DdependencyCheck.data.password='${OWASP_PASS}' dependencyCheck")
-        }
-      }
+      gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspU}@owaspdependencycheck;password=${owaspP};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspU}' -DdependencyCheck.data.password='${owaspP}' dependencyCheck")
 
     }
     finally {
