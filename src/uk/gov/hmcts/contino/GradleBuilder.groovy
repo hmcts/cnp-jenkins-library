@@ -49,7 +49,6 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def securityCheck() {
-
     try {
       def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
 
@@ -62,7 +61,6 @@ class GradleBuilder implements Builder, Serializable {
     finally {
       steps.archiveArtifacts 'build/reports/dependency-check-report.html'
     }
-
   }
 
   @Override
