@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.common.*
 import com.cloudbees.plugins.credentials.domains.*
 import com.cloudbees.plugins.credentials.*
 import com.cloudbees.plugins.credentials.impl.*
+import com.cloudbees.groovy.cps.NonCPS
 
 class GradleBuilder implements Builder, Serializable {
 
@@ -54,6 +55,7 @@ class GradleBuilder implements Builder, Serializable {
     }
   }
 
+  @NonCPS
   def securityCheck() {
 
     try {
