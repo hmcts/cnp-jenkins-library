@@ -35,7 +35,14 @@ def call(params) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+              def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+              def appinsights_instrumentation_key = az "keyvault secret show --vault-name '${product}-${environment}' --name 'AppInsightsInstrumentationKey' --query value --output tsv".toString()
+
+              withEnv([
+                "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key}"
+              ]) {
+                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+              }
               scmServiceRegistration(environment)
             }
           }
