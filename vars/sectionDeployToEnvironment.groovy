@@ -1,4 +1,6 @@
 #!groovy
+
+import uk.gov.hmcts.contino.azure.KeyVault
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
@@ -35,8 +37,8 @@ def call(params) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-              def appinsights_instrumentation_key = az "keyvault secret show --vault-name '${product}-${environment}' --name 'AppInsightsInstrumentationKey' --query value --output tsv".toString()
+              KeyVault keyVault = new KeyVault(subscription, "${product}-${environment}")
+              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
 
               withEnv([
                 "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key}"
