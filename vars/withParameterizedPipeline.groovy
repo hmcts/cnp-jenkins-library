@@ -54,6 +54,12 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
+        stage("Security Checks") {
+          pl.callAround('securitychecks') {
+            builder.securityCheck()
+          }
+        }
+
         sectionDeployToEnvironment(
           pipelineCallbacks: pl,
           pipelineType: pipelineType,
