@@ -21,4 +21,8 @@ class ProjectBranch implements Serializable {
     branchName == 'demo'
   }
 
+  String deploymentNamespace() {
+    return (isPR() || isDemo()) ? branchName : ""
+  }
+
 }
