@@ -22,7 +22,7 @@ def call(String product, String environment, String subscription) {
           throw new IllegalStateException("No vault has been created to store the secrets in")
         }
 
-        KeyVault keyVault = new KeyVault(subscription, tfOutput.vaultName)
+        KeyVault keyVault = new KeyVault(subscription, tfOutput.vaultName.value)
 
         if (tfOutput.appInsightsInstrumentationKey) {
           keyVault.store('AppInsightsInstrumentationKey', tfOutput.appInsightsInstrumentationKey.value)
