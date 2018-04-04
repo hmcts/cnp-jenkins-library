@@ -4,14 +4,38 @@
 networkA=$1
 resourceA=$1
 subscriptionA=$2
-nameA="CNPMgmtProdToCNPAppProd"
+nameA="CNP${nameA}toCNP${nameB}"
 
 networkB="core-infra-vnet-$3"
 resourceB="core-infra-$3"
 subscriptionB=$4
-nameB="CNPAppProdToCNPMgmtProd"
+nameB="CNP${nameB}toCNP${nameA}"
 
 env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az account set --subscription ${subscriptionA}
+
+# Check if VNET peering exists for VNetA
+if ! AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering show \
+  --name ${nameA} \
+  --resource-group ${resourceA} \
+  --vnet-name ${networkA} ; then
+
+  AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering delete \
+   --name ${nameA} \
+   --resource-group ${resourceA} \
+   --vnet-name  ${networkA}
+fi
+
+# Check if VNET peering exists for VNetB
+if ! AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering show \
+  --name ${nameB} \
+  --resource-group ${resourceB} \
+  --vnet-name ${networkB} ; then
+
+  AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering delete \
+   --name ${nameB} \
+   --resource-group ${resourceB} \
+   --vnet-name  ${networkB}
+fi
 
 # Peer VNetA to VNetB
 env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering create \
