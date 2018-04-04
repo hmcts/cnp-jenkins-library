@@ -19,7 +19,9 @@ def call(String product, String environment, String subscription) {
       stage('Store shared product secrets') {
         def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-        az "keyvault secret set --vault-name '${tfOutput.vaultName.value}' --name 'AppInsightsInstrumentationKey' --value '${tfOutput.appInsightsInstrumentationKey.value}'".toString()
+        if (tfOutput.vaultName && tfOutput.appInsightsInstrumentationKey) {
+          az "keyvault secret set --vault-name '${tfOutput.vaultName.value}' --name 'AppInsightsInstrumentationKey' --value '${tfOutput.appInsightsInstrumentationKey.value}'".toString()
+        }
       }
     }
 
