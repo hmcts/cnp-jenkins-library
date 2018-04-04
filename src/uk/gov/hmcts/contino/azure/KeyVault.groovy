@@ -4,21 +4,23 @@ package uk.gov.hmcts.contino.azure;
  * Needs to be run within a withSubscription block.
  */
 class KeyVault {
+  private steps
   private String subscription
   private String vaultName
 
   private Closure az
 
-  KeyVault(String vaultName) {
-    this("jenkins", vaultName)
+  KeyVault(steps, String vaultName) {
+    this(steps, "jenkins", vaultName)
   }
 
-  KeyVault(String subscription, String vaultName) {
+  KeyVault(steps, String subscription, String vaultName) {
+    this.steps = steps
     this.subscription = subscription
     this.vaultName = vaultName
 
     this.az = { cmd ->
-      return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az ${cmd}", returnStdout: true).trim()
+      return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az ${cmd}", returnStdout: true).trim()
     }
   }
 
