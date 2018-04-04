@@ -4,12 +4,12 @@
 networkA=$1
 resourceA=$1
 subscriptionA=$2
-nameA="CNP${nameA}toCNP${nameB}"
+nameA="CNP${networkA}toCNP${networkB}"
 
 networkB="core-infra-vnet-$3"
 resourceB="core-infra-$3"
 subscriptionB=$4
-nameB="CNP${nameB}toCNP${nameA}"
+nameB="CNP${networkB}toCNP${networkA}"
 
 env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az account set --subscription ${subscriptionA}
 
