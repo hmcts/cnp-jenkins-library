@@ -2,6 +2,8 @@
 
 #Management network details
 networkA=$1
+networkB="core-infra-vnet-$3"
+
 resourceA=$1
 subscriptionA=$2
 nameA="A-CNP${networkA}toCNP${networkB}"
