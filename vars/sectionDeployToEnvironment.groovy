@@ -13,10 +13,12 @@ def testEnv(String testUrl, tfOutput, block) {
       "TEST_URL=${testUrl}",
       "IDAM_API_URL=${tfOutput?.idam_api_url?.value}",
       "S2S_URL=${tfOutput?.s2s_url?.value}",
+      "DM_STORE_APP_URL=${tfOutput?.dm_store_app_url?.value}",
     ]) {
     echo "Using TEST_URL: '$TEST_URL'"
     echo "Using IDAM_API_URL: '$IDAM_API_URL'"
     echo "Using S2S_URL: '$S2S_URL'"
+    echo "Using DM_STORE_APP_URL: '$DM_STORE_APP_URL'"
     block.call()
   }
 }
