@@ -14,6 +14,7 @@ nameB="B-CNP${networkB}toCNP${networkA}"
 env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az account set --subscription ${subscriptionA}
 
 # Check if VNET peering exists & is in connected state for VNetA
+set -x
 if [ "$(AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering show --name ${nameA} --resource-group ${resourceA} --vnet-name ${networkA} --query peeringState)" != "Connected" ] ; then
   AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering delete \
    --name ${nameA} \
@@ -28,6 +29,7 @@ if [ "$(AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet 
    --resource-group ${resourceB} \
    --vnet-name  ${networkB}
 fi
+set +x
 
 # Peer VNetA to VNetB
 env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering create \
