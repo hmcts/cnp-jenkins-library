@@ -36,7 +36,7 @@ def call(params) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+              tfOutput = spinInfra(product, component, environment, false, subscription)
               scmServiceRegistration(environment)
             }
           }
