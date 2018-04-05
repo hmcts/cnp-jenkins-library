@@ -28,7 +28,7 @@ if [ "$(AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet 
 fi
 
 # Check if VNET peering exists & is in connected state for VNetB
-if [ "$(AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering show --name ${nameB} --resource-group ${resourceB} --vnet-name ${networkB} --query peeringState)" != "Connected" ]  ; then
+if [ "$(AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering show --name ${nameB} --resource-group ${resourceB} --vnet-name ${networkB} --query peeringState)" != '"Connected"' ]  ; then
   AZURE_CONFIG_DIR=/opt/jenkins/.azure-$SUBSCRIPTION_NAME az network vnet peering delete \
    --name ${nameB} \
    --resource-group ${resourceB} \
