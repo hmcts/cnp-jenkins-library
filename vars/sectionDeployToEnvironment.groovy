@@ -39,7 +39,7 @@ def call(params) {
             withIlbIp(environment) {
               KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
 //              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
-              def appinsights_instrumentation_key =  keyVault.retrieve('This does not exist')
+              def appinsights_instrumentation_key =  keyVault.retrieve('ThisDoesNotExist')
 
               withEnv([
                 "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key}"
