@@ -32,11 +32,9 @@ class KeyVault {
     try {
       return Optional.of(this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString()))
     } catch (e) {
-      steps.echo ">>> ${e.getClass().toString()}"
-      steps.echo ">>> ${e}"
-      steps.echo ">>> ${e.getCause().getClass().toString()}"
-      steps.echo ">>> ${e.getCause()}"
-      if (e.getMessage().contains("Secret not found")) {
+      // Unfortunately Jenkins does not support returning both stdout and exit code yet, so we need to assume the
+      // 'script returned exit code 1' was due to secret not being found.
+      if (e.getMessage().contains("script returned exit code 1")) {
         return Optional.empty()
       } else {
         throw e
