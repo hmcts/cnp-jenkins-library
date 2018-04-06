@@ -25,7 +25,8 @@ def collectAdditionalInfrastructureVariablesFor(subscription, product, environme
   KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
   def environmentVariables = []
 
-  def appInsightsInstrumentationKey = keyVault.find(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY)
+//  def appInsightsInstrumentationKey = keyVault.find(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY)
+  def appInsightsInstrumentationKey = keyVault.find('DoesNotExistForTesting')
   if (appInsightsInstrumentationKey) {
     environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
   }
