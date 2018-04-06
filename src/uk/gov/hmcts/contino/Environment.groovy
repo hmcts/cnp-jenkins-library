@@ -6,6 +6,8 @@ class Environment implements Serializable {
   def final demoName
   def final previewName
 
+  def final functionalTestEnvironments
+
   Environment(Object env) {
     Objects.requireNonNull(env)
 
@@ -13,5 +15,11 @@ class Environment implements Serializable {
     prodName = env.PROD_ENVIRONMENT_NAME ?: 'prod'
     demoName = env.DEMO_ENVIRONMENT_NAME ?: 'demo'
     previewName = env.PREVIEW_ENVIRONMENT_NAME ?: 'preview'
+
+    functionalTestEnvironments = [nonProdName, previewName]
+  }
+
+  def onFunctionalTestEnvironment(environment) {
+    return functionalTestEnvironments.contains(environment)
   }
 }

@@ -77,7 +77,7 @@ def call(params) {
         }
       }
 
-      onAATEnvironment(environment) {
+      onFunctionalTestEnvironment(environment) {
         stage("Functional Test - ${environment} (staging slot)") {
           testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
             pl.callAround("functionalTest:${environment}") {
