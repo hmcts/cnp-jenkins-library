@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.azure.KeyVault
+import uk.gov.hmcts.contino.azure.ProductVaultEntries
 
 def call(String product, String environment, String subscription) {
 
@@ -25,7 +26,7 @@ def call(String product, String environment, String subscription) {
         KeyVault keyVault = new KeyVault(this, subscription, tfOutput.vaultName.value)
 
         if (tfOutput.appInsightsInstrumentationKey) {
-          keyVault.store('AppInsightsInstrumentationKey', tfOutput.appInsightsInstrumentationKey.value)
+          keyVault.store(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY, tfOutput.appInsightsInstrumentationKey.value)
         }
       }
     }

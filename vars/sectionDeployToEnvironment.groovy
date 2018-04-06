@@ -1,6 +1,7 @@
 #!groovy
 
 import uk.gov.hmcts.contino.azure.KeyVault
+import uk.gov.hmcts.contino.azure.ProductVaultEntries
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
@@ -21,10 +22,10 @@ def testEnv(String testUrl, tfOutput, block) {
 }
 
 def collectAdditionalInfrastructureVariablesFor(subscription, product, environment) {
-  def environmentVariables = []
   KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
+  def environmentVariables = []
 
-  def appInsightsInstrumentationKey = keyVault.find('AppInsightsInstrumentationKey')
+  def appInsightsInstrumentationKey = keyVault.find(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY)
   if (appInsightsInstrumentationKey) {
     environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
   }
