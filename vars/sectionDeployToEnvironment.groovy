@@ -4,16 +4,18 @@ import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 
-def testEnv(String testUrl, tfOutput, block) {
+def testEnv(String testUrl, String testEnv, tfOutput, block) {
   withEnv(
     [
       "TEST_URL=${testUrl}",
       "IDAM_API_URL=${tfOutput?.idam_api_url?.value}",
       "S2S_URL=${tfOutput?.s2s_url?.value}",
+      "TEST_ENVIRONMENT=${testEnv}"
     ]) {
     echo "Using TEST_URL: '$TEST_URL'"
     echo "Using IDAM_API_URL: '$IDAM_API_URL'"
     echo "Using S2S_URL: '$S2S_URL'"
+    echo "Using TEST_ENVIRONMENT: '$TEST_ENVIRONMENT'"
     block.call()
   }
 }
@@ -69,7 +71,7 @@ def call(params) {
       applicationSecretOverride: env.AZURE_CLIENT_SECRET
     ]) {
       stage("Smoke Test - ${environment} (staging slot)") {
-        testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+        testEnv(deployer.getServiceUrl(environment, "staging"), environment, tfOutput) {
           pl.callAround("smoketest:${environment}") {
             builder.smokeTest()
           }
@@ -78,7 +80,7 @@ def call(params) {
 
       onAATEnvironment(environment) {
         stage("Functional Test - ${environment} (staging slot)") {
-          testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+          testEnv(deployer.getServiceUrl(environment, "staging"), environment, tfOutput) {
             pl.callAround("functionalTest:${environment}") {
               builder.functionalTest()
             }
@@ -96,7 +98,7 @@ def call(params) {
       }
 
       stage("Smoke Test - ${environment} (production slot)") {
-        testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
+        testEnv(deployer.getServiceUrl(environment, "production"), environment, tfOutput) {
           pl.callAround("smokeTest:${environment}") {
             builder.smokeTest()
           }
