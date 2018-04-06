@@ -1,5 +1,6 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
+import uk.gov.hmcts.contino.ProjectBranch
 
 def call(productName, environment, planOnly = false, subscription) {
   log.info "Building with following input parameters: productName='$productName'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
@@ -29,13 +30,15 @@ def call(productName, environment, planOnly = false, subscription) {
         "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
         "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 
+      def branch = new ProjectBranch(env.BRANCH_NAME)
+
       sh "terraform get -update=true"
-      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
+      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${branch.deploymentNamespace()}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}'" +
+          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${branch.deploymentNamespace()}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
           parseResult = null
           try {
