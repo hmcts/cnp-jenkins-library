@@ -20,6 +20,18 @@ def testEnv(String testUrl, tfOutput, block) {
   }
 }
 
+def collectAdditionalInfrastructureVariablesFor(subscription, product, environment) {
+  def environmentVariables = []
+  KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
+
+  def appInsightsInstrumentationKey = keyVault.find('AppInsightsInstrumentationKey')
+  if (appInsightsInstrumentationKey) {
+    environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
+  }
+
+  return environmentVariables
+}
+
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
   PipelineType pipelineType = params.pipelineType
@@ -37,18 +49,14 @@ def call(params) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
-//              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
-              def appinsights_instrumentation_key =  keyVault.find('ThisDoesNotExist')
+              def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
 
-              if (appinsights_instrumentation_key) {
-                withEnv([
-                  "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key}"
-                ]) {
+              if (additionalInfrastructureVariables.isEmpty()) {
+                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+              } else {
+                withEnv(additionalInfrastructureVariables) {
                   tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
                 }
-              } else {
-                tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
               }
 
               scmServiceRegistration(environment)
