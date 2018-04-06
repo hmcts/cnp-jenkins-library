@@ -1,3 +1,5 @@
+import uk.gov.hmcts.contino.RepositoryUrl
+
 def call(Long deploymentNumber, String url) {
   String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
 
