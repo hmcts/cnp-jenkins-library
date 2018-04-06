@@ -41,9 +41,9 @@ def call(params) {
 //              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
               def appinsights_instrumentation_key =  keyVault.find('ThisDoesNotExist')
 
-              if (appinsights_instrumentation_key.isPresent) {
+              if (appinsights_instrumentation_key.isPresent()) {
                 withEnv([
-                  "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key.get}"
+                  "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key.get()}"
                 ]) {
                   tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
                 }
