@@ -32,7 +32,8 @@ class KeyVault {
     try {
       return Optional.of(this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString()))
     } catch (e) {
-      println e.getClass().toString()
+      steps.echo ">>> ${e.getClass().toString()}"
+      steps.echo ">>> ${e}"
       if (e.getMessage().contains("Secret not found")) {
         return Optional.empty()
       } else {
