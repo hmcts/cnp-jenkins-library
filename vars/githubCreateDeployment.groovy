@@ -5,7 +5,7 @@ def call() {
   String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
 
   withCredentials([usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USERNAME')]) {
-    def response = httpRequest consoleLogResponseBody: true, acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
+    def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
       customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${BEARER_TOKEN}"]], httpMode: 'POST',
       requestBody: """{
         "ref": "${env.CHANGE_BRANCH}",
