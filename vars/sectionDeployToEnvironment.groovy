@@ -26,13 +26,14 @@ def call(params) {
   def product = params.product
   def component = params.component
   def suffix = params.suffix
+  Long deploymentNumber
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
   stage("Build Infrastructure - ${environment}") {
     onPR {
-      githubCreateDeployment()
+      deploymentNumber = githubCreateDeployment()
     }
 
     folderExists('infrastructure') {
@@ -63,7 +64,7 @@ def call(params) {
         deployer.healthCheck(environment, "staging")
 
         onPR {
-          githubUpdateDeploymentStatus()
+          githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
         }
       }
     }
@@ -102,7 +103,7 @@ def call(params) {
             deployer.healthCheck(environment, "production")
 
             onPR {
-              githubUpdateDeploymentStatus()
+              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment))
             }
           }
         }
