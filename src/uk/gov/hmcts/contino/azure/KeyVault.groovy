@@ -28,8 +28,17 @@ class KeyVault {
     this.az("keyvault secret set --vault-name '${this.vaultName}' --name '${key}' --value '${value}'".toString())
   }
 
-  String retrieve(String key) {
-    return this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString())
+  Optional<String> find(String key) {
+    try {
+      return Optional.of(this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString()))
+    } catch (Exception e) {
+      println e.getClass().toString()
+      if (e.getMessage().contains("Secret not found")) {
+        return Optional.empty()
+      } else {
+        throw e
+      }
+    }
   }
 
 }

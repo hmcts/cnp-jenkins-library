@@ -39,13 +39,18 @@ def call(params) {
             withIlbIp(environment) {
               KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
 //              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
-              def appinsights_instrumentation_key =  keyVault.retrieve('ThisDoesNotExist')
+              def appinsights_instrumentation_key =  keyVault.find('ThisDoesNotExist')
 
-              withEnv([
-                "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key}"
-              ]) {
+              if (appinsights_instrumentation_key.isPresent) {
+                withEnv([
+                  "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key.get}"
+                ]) {
+                  tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+                }
+              } else {
                 tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
               }
+
               scmServiceRegistration(environment)
             }
           }
