@@ -28,14 +28,14 @@ class KeyVault {
     this.az("keyvault secret set --vault-name '${this.vaultName}' --name '${key}' --value '${value}'".toString())
   }
 
-  Optional<String> find(String key) {
+  String find(String key) {
     try {
-      return Optional.of(this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString()))
+      return this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString())
     } catch (e) {
       // Unfortunately Jenkins does not support returning both stdout and exit code yet, so we need to assume the
       // 'script returned exit code 1' was due to secret not being found.
       if (e.getMessage().contains("script returned exit code 1")) {
-        return Optional.empty()
+        return null
       } else {
         throw e
       }
