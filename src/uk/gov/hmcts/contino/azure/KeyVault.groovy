@@ -34,6 +34,8 @@ class KeyVault {
     } catch (e) {
       steps.echo ">>> ${e.getClass().toString()}"
       steps.echo ">>> ${e}"
+      steps.echo ">>> ${e.getCause().getClass().toString()}"
+      steps.echo ">>> ${e.getCause()}"
       if (e.getMessage().contains("Secret not found")) {
         return Optional.empty()
       } else {
