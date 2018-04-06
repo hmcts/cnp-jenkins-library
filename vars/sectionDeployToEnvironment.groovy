@@ -38,7 +38,8 @@ def call(params) {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
               KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
-              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
+//              def appinsights_instrumentation_key =  keyVault.retrieve('AppInsightsInstrumentationKey')
+              def appinsights_instrumentation_key =  keyVault.retrieve('This does not exist')
 
               withEnv([
                 "TF_VAR_appinsights_instrumentation_key=${appinsights_instrumentation_key}"
