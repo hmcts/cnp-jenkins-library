@@ -51,15 +51,9 @@ def call(params) {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
               def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-
-              if (additionalInfrastructureVariables.isEmpty()) {
+              withEnv(additionalInfrastructureVariables) {
                 tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
-              } else {
-                withEnv(additionalInfrastructureVariables) {
-                  tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
-                }
               }
-
               scmServiceRegistration(environment)
             }
           }
