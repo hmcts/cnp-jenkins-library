@@ -2,16 +2,23 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 
 def call(type, String product, String component, Closure body) {
+
+  def branch = new ProjectBranch(env.BRANCH_NAME)
+
+  def deploymentNamespace = branch.deploymentNamespace()
+  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component)
+    java  : new SpringBootPipelineType(this, deploymentProduct, component),
+    nodejs: new NodePipelineType(this, deploymentProduct, component),
+    angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
 
   PipelineType pipelineType
@@ -61,7 +68,7 @@ def call(type, String product, String component, Closure body) {
             environment: environment.prodName,
             product: product,
             component: component)
-          }
+        }
 
         onDemo {
           sectionDeployToEnvironment(
@@ -72,7 +79,17 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
         }
-      }  
+
+        onPR {
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.previewName,
+            environment: environment.previewName,
+            product: deploymentProduct,
+            component: component)
+        }
+      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       if (pl.slackChannel) {
