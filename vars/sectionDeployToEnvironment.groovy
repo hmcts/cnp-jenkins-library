@@ -102,7 +102,7 @@ def call(params) {
             deployer.healthCheck(environment, "production")
 
             onPR {
-              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment))
+              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
             }
           }
         }
