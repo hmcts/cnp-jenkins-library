@@ -131,7 +131,8 @@ class WebAppDeploy implements Serializable {
 
     copy('build/libs/*.jar', tempDir)
     checkAndCopy('web.config', tempDir)
-    copyIgnore('lib/applicationinsights-*.jar lib/AI-Agent.xml', tempDir)
+    copyIgnore('lib/applicationinsights-*.jar', tempDir)
+    copyIgnore('lib/AI-Agent.xml', tempDir)
     // for WebJobs
     copyIgnore('App_Data', tempDir)
 
