@@ -15,7 +15,7 @@ def call(String product, String environment, String subscription) {
 
     withSubscription(subscription) {
       withIlbIp(environment) {
-        tfOutput = spinInfra(product, environment, false, subscription)
+        tfOutput = spinInfra(product, null, environment, false, subscription)
       }
 
       stage('Store shared product secrets') {
