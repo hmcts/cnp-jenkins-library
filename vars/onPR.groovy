@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 /**
  * onPR
  *
- * Runs the block of code if the current branch is not master
+ * Runs the block of code if the current branch is associated with a pull request
  *
  * onPR {
  *   ...
