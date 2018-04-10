@@ -131,9 +131,13 @@ class WebAppDeploy implements Serializable {
 
     copy('build/libs/*.jar', tempDir)
     checkAndCopy('web.config', tempDir)
+    copyIgnore('lib/applicationinsights-*.jar', tempDir)
+    copyIgnore('lib/AI-Agent.xml', tempDir)
+    // for WebJobs
+    copyIgnore('App_Data', tempDir)
 
     steps.sh("GLOBIGNORE='${tempDir}:.git'; rm -rf *")
-    steps.sh("cp ${tempDir}/* .")
+    steps.sh("cp -R ${tempDir}/* .")
     steps.sh("rm -rf ${tempDir}")
     steps.sh("git add --all .")
 
@@ -162,9 +166,16 @@ class WebAppDeploy implements Serializable {
     steps.sh("cp ${filePath} ${destinationDir}")
   }
 
+  /**
+   * Forces a recursive copy by always returning 0 regardless of errors
+   */
+  private def copyIgnore(filePath, destinationDir) {
+    steps.sh("cp -R ${filePath} ${destinationDir} || :")
+  }
+
   private def checkAndCopy(filePath, destinationDir) {
     if (filePath && steps.fileExists(filePath)) {
-      steps.sh("cp  ${filePath} " + destinationDir)
+      steps.sh("cp ${filePath} " + destinationDir)
     }
   }
 
