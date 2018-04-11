@@ -25,17 +25,22 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
+  Long deploymentNumber
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
   stage("Build Infrastructure - ${environment}") {
+    onPR {
+      deploymentNumber = githubCreateDeployment()
+    }
+
     folderExists('infrastructure') {
       withSubscription(subscription) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              tfOutput = spinInfra("${product}-${component}", environment, false, subscription)
+              tfOutput = spinInfra(product, component, environment, false, subscription)
               scmServiceRegistration(environment)
             }
           }
@@ -56,6 +61,10 @@ def call(params) {
       pl.callAround("deploy:${environment}") {
         deployer.deploy(environment)
         deployer.healthCheck(environment, "staging")
+
+        onPR {
+          githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
+        }
       }
     }
   }
@@ -76,7 +85,7 @@ def call(params) {
         }
       }
 
-      onAATEnvironment(environment) {
+      onFunctionalTestEnvironment(environment) {
         stage("Functional Test - ${environment} (staging slot)") {
           testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
             pl.callAround("functionalTest:${environment}") {
@@ -91,6 +100,10 @@ def call(params) {
           pl.callAround("promote:${environment}") {
             sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
             deployer.healthCheck(environment, "production")
+
+            onPR {
+              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
+            }
           }
         }
       }

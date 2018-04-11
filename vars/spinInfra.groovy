@@ -2,8 +2,19 @@
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
 
-def call(productName, environment, planOnly = false, subscription) {
-  log.info "Building with following input parameters: productName='$productName'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+
+def call(productName, environment, planOnly, subscription) {
+  call(productName, null, environment, planOnly, subscription)
+}
+
+def call(product, component, environment, planOnly, subscription) {
+  def branch = new ProjectBranch(env.BRANCH_NAME)
+
+  def deploymentNamespace = branch.deploymentNamespace()
+
+  log.info "Building with following input parameters: product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+
+  def productName = component ? "$product-$component" : product
 
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
@@ -30,15 +41,15 @@ def call(productName, environment, planOnly = false, subscription) {
         "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
         "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 
-      def branch = new ProjectBranch(env.BRANCH_NAME)
+
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${branch.deploymentNamespace()}'" +
+      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${branch.deploymentNamespace()}'" +
+          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
           parseResult = null
           try {
@@ -54,4 +65,6 @@ def call(productName, environment, planOnly = false, subscription) {
         log.warning "Skipping apply due to planOnly flag set"
     }
   }
+
 }
+
