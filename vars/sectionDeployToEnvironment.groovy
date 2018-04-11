@@ -1,4 +1,7 @@
 #!groovy
+
+import uk.gov.hmcts.contino.azure.KeyVault
+import uk.gov.hmcts.contino.azure.ProductVaultEntries
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
@@ -16,6 +19,18 @@ def testEnv(String testUrl, tfOutput, block) {
     echo "Using S2S_URL: '$S2S_URL'"
     block.call()
   }
+}
+
+def collectAdditionalInfrastructureVariablesFor(subscription, product, environment) {
+  KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
+  def environmentVariables = []
+
+  def appInsightsInstrumentationKey = keyVault.find(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY)
+  if (appInsightsInstrumentationKey) {
+    environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
+  }
+
+  return environmentVariables
 }
 
 def call(params) {
@@ -40,7 +55,10 @@ def call(params) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              tfOutput = spinInfra(product, component, environment, false, subscription)
+              def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+              withEnv(additionalInfrastructureVariables) {
+                tfOutput = spinInfra(product, component, environment, false, subscription)
+              }
               scmServiceRegistration(environment)
             }
           }
