@@ -3,7 +3,7 @@ package uk.gov.hmcts.contino.azure;
 /**
  * Needs to be used within a withSubscription block.
  */
-class KeyVault {
+class KeyVault implements Serializable {
   private steps
   private String subscription
   private String vaultName
