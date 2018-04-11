@@ -88,6 +88,10 @@ withPipeline(type, product, component) {
 
 Calls `yarn test:nsp` so this command must be implemented in package.json
 
+#### Tests
+
+Smoke and functional test will have access to an environment variable `TEST_ENVIRONMENT`, which can be used to parameterize the test properties per environment.
+
 #### Smoke tests
 
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
