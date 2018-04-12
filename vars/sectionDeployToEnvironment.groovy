@@ -8,13 +8,20 @@ import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 
 def testEnv(String testUrl, tfOutput, block) {
-  withEnv(["TEST_URL=${testUrl}"]) {
+  print(tfOutput)
+
+  def terraOutEnv = ["TEST_URL=${testUrl}"]
+
+  for(o in tfOutput) {
+    def outString = o.key.toUpper() +"="+o.value
+    print(outString)
+    terraOutEnv.add(outString)
+  }
+
+  withEnv(terraOutEnv) {
     echo "Using TEST_URL: '$TEST_URL'"
     block.call()
   }
-  
-  print(tfOutput)
-
 }
 
 def collectAdditionalInfrastructureVariablesFor(subscription, product, environment) {
