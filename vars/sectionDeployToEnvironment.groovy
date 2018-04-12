@@ -13,7 +13,7 @@ def testEnv(String testUrl, tfOutput, block) {
   def terraOutEnv = ["TEST_URL=${testUrl}"]
 
   for(o in tfOutput) {
-    def outString = o.key.toUpperCase() + "=" + o.value
+    def outString = o.key.toUpperCase() + "=" + o.value.value
     print(outString)
     terraOutEnv.add(outString)
   }
