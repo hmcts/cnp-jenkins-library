@@ -8,17 +8,16 @@ import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 
 def testEnv(String testUrl, tfOutput, block) {
-  print(tfOutput)
+  def testEnvVariables = ["TEST_URL=${testUrl}"]
 
-  def terraOutEnv = ["TEST_URL=${testUrl}"]
-
-  for(o in tfOutput) {
-    def outString = o.key.toUpperCase() + "=" + o.value.value
-    print(outString)
-    terraOutEnv.add(outString)
+  
+  for (o in tfOutput) {
+    def envVariable = o.key.toUpperCase() + "=" + o.value.value
+    echo(envVariable)
+    testEnvVariables.add(envVariable)
   }
 
-  withEnv(terraOutEnv) {
+  withEnv(testEnvVariables) {
     echo "Using TEST_URL: '$TEST_URL'"
     block.call()
   }
