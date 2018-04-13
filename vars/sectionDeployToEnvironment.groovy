@@ -10,7 +10,6 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 def testEnv(String testUrl, tfOutput, block) {
   def testEnvVariables = ["TEST_URL=${testUrl}"]
 
-  
   for (o in tfOutput) {
     def envVariable = o.key.toUpperCase() + "=" + o.value.value
     echo(envVariable)
