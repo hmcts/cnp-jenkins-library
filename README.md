@@ -84,9 +84,9 @@ withPipeline(type, product, component) {
 }
 ```
 #### tf ouput for functional / smoke testing
-Any outputs you add to `output.tf` are now available as environment variable which can be used in smoke and functional test.
+Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
-Example. If your functional test require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
+If your functional tests require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
 ````
 output "s2s_url" {
   value = "http://${var.s2s_url}-${local.local_env}.service.core-compute-${local.local_env}.internal"
