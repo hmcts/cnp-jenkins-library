@@ -83,6 +83,16 @@ withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 }
 ```
+#### tf ouput for functional / smoke testing
+Any outputs you add to `output.tf` are now available as environment variable which can be used in smoke and functional test.
+
+Example. If your functional test require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
+````
+output "s2s_url" {
+  value = "http://${var.s2s_url}-${local.local_env}.service.core-compute-${local.local_env}.internal"
+}
+````
+this output will be transposed to Uppercase s2s_url => S2S_URL and can then be used by functional and smoke test.
 
 #### Security Checks
 

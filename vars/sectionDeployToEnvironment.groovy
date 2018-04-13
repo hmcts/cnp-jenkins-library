@@ -8,15 +8,16 @@ import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 
 def testEnv(String testUrl, tfOutput, block) {
-  withEnv(
-    [
-      "TEST_URL=${testUrl}",
-      "IDAM_API_URL=${tfOutput?.idam_api_url?.value}",
-      "S2S_URL=${tfOutput?.s2s_url?.value}",
-    ]) {
+  def testEnvVariables = ["TEST_URL=${testUrl}"]
+
+  for (o in tfOutput) {
+    def envVariable = o.key.toUpperCase() + "=" + o.value.value
+    echo(envVariable)
+    testEnvVariables.add(envVariable)
+  }
+
+  withEnv(testEnvVariables) {
     echo "Using TEST_URL: '$TEST_URL'"
-    echo "Using IDAM_API_URL: '$IDAM_API_URL'"
-    echo "Using S2S_URL: '$S2S_URL'"
     block.call()
   }
 }
