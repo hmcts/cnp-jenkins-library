@@ -19,7 +19,7 @@ node {
     }
 
     stage('Run pipeline') {
-      build job: 'HMCTS_pipeline_test/moj-rhubarb-recipes-service/pipeline_test',
+      build job: 'HMCTS_pipeline_test/moj-rhubarb-recipes-service/master',
         parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
 
     }
