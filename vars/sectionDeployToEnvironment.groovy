@@ -1,21 +1,37 @@
 #!groovy
+
+import uk.gov.hmcts.contino.azure.KeyVault
+import uk.gov.hmcts.contino.azure.ProductVaultEntries
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 
 def testEnv(String testUrl, tfOutput, block) {
-  withEnv(
-    [
-      "TEST_URL=${testUrl}",
-      "IDAM_API_URL=${tfOutput?.idam_api_url?.value}",
-      "S2S_URL=${tfOutput?.s2s_url?.value}",
-    ]) {
+  def testEnvVariables = ["TEST_URL=${testUrl}"]
+
+  for (o in tfOutput) {
+    def envVariable = o.key.toUpperCase() + "=" + o.value.value
+    echo(envVariable)
+    testEnvVariables.add(envVariable)
+  }
+
+  withEnv(testEnvVariables) {
     echo "Using TEST_URL: '$TEST_URL'"
-    echo "Using IDAM_API_URL: '$IDAM_API_URL'"
-    echo "Using S2S_URL: '$S2S_URL'"
     block.call()
   }
+}
+
+def collectAdditionalInfrastructureVariablesFor(subscription, product, environment) {
+  KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
+  def environmentVariables = []
+
+  def appInsightsInstrumentationKey = keyVault.find(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY)
+  if (appInsightsInstrumentationKey) {
+    environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
+  }
+
+  return environmentVariables
 }
 
 def call(params) {
@@ -40,7 +56,10 @@ def call(params) {
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
-              tfOutput = spinInfra(product, component, environment, false, subscription)
+              def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+              withEnv(additionalInfrastructureVariables) {
+                tfOutput = spinInfra(product, component, environment, false, subscription)
+              }
               scmServiceRegistration(environment)
             }
           }
