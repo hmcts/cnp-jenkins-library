@@ -41,7 +41,7 @@ class withPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure], {})
     helper.registerAllowedMethod("sh", [Map.class], { return "" })
     helper.registerAllowedMethod("timestamps", [Closure], { println 'Printing timestamp' })
-    loadScript("testResources/examplePipeline.jenkins")
+    runScript("testResources/examplePipeline.jenkins")
     printCallStack()
   }
 
