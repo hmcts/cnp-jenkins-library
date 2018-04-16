@@ -13,6 +13,7 @@ def call(PipelineCallbacks pl, Builder builder) {
   stage("Build") {
     pl.callAround('build') {
       timeout(time: 15, unit: 'MINUTES') {
+        sh "build closure"
         builder.build()
       }
     }

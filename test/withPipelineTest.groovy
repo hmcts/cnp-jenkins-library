@@ -70,7 +70,6 @@ class withPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("sh", [Map.class], { return "" })
     helper.registerAllowedMethod( 'fileExists', [String.class], { c -> true })
     helper.registerAllowedMethod("timestamps", [Closure.class], { c -> c.call() })
-    helper.registerAllowedMethod("timeout", [Map.class, Closure.class], { c, d -> d.call() })
     runScript("testResources/examplePipeline.jenkins")
     printCallStack()
 

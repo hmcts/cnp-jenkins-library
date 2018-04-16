@@ -3,7 +3,7 @@ package uk.gov.hmcts.contino
 class MockBuilder implements Builder, Serializable {
   @Override
   def build() {
-    return null
+    println("Building...")
   }
 
   @Override
