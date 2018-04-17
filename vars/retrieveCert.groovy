@@ -18,6 +18,7 @@ def call(String environment) {
   else
   {
     defaultPolicy = libraryResource 'uk/gov/hmcts/contino/certificateDefaultPolicy.json'
+    defaultPolicy.replaceAll("ENVIRONMENT_NAME",environment)
     writeFile file: 'certificateDefaultPolicy.json', text: defaultPolicy
 
     log.info("Certificate name ${env.TF_VAR_certificateName} does not exist in vault ${env.INFRA_VAULT_NAME}! Creating one right now...")
