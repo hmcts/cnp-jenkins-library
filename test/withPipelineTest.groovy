@@ -1,9 +1,8 @@
 import org.junit.Before
-import uk.gov.hmcts.contino.MockBuilder
+import static org.mockito.Mockito.*
+import uk.gov.hmcts.contino.MockPipelineType
 
-import static com.lesfurets.jenkins.unit.MethodCall.callArgsToString
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
-import static org.assertj.core.api.Assertions.assertThat
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import uk.gov.hmcts.contino.MockJenkins
@@ -73,9 +72,9 @@ class withPipelineTest extends BasePipelineTest {
     runScript("testResources/examplePipeline.jenkins")
     printCallStack()
 
+    def mockPipelineType = MockPipelineType.getInstance()
 
-    assertThat(helper.callStack.any { call ->
-      call.methodName == "sectionBuildAndTest.stage(Test, groovy.lang.Closure)"
-    }).isTrue()
+    verify(mockPipelineType.builder, times(1)).build()
+
   }
 }

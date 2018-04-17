@@ -2,13 +2,11 @@
 
 @Library("Infrastructure")
 
-def mockPipelineType = new uk.gov.hmcts.contino.MockPipelineType()
+def mockPipelineType = uk.gov.hmcts.contino.MockPipelineType.getInstance()
 
 def product = "product"
 
 def app = "app"
-
-
 
 withPipeline(mockPipelineType, product, app) {
 
