@@ -11,7 +11,6 @@ def call(PipelineCallbacks pl, Builder builder) {
   }
 
   stage("Build") {
-    error("Deliberately breaking pipeline to test. Again")
     pl.callAround('build') {
       timeout(time: 15, unit: 'MINUTES') {
         builder.build()
