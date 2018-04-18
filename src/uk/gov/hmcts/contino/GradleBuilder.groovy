@@ -55,7 +55,7 @@ class GradleBuilder implements Builder, Serializable {
       def owaspU = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
       def owaspP = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
 
-      gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspU}@owaspdependencycheck;password=${owaspP};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspU}' -DdependencyCheck.data.password='${owaspP}' dependencyCheckAnalyze")
+      gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -Danalyzer.central.enabled=false -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspU}@owaspdependencycheck;password=${owaspP};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspU}' -DdependencyCheck.data.password='${owaspP}' dependencyCheckAnalyze")
 
     }
     finally {
