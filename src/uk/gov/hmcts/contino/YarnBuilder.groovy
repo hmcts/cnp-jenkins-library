@@ -47,17 +47,6 @@ class YarnBuilder implements Builder, Serializable {
     yarn("test:nsp")
   }
 
-  @Override
-  def addVersionInfo() {
-    steps.sh '''tee version <<EOF
-version: $(node -pe 'require("./package.json").version')
-number: ${BUILD_NUMBER}
-commit: $(git rev-parse HEAD)
-date: $(date)
-EOF
-    '''
-  }
-
   def yarn(task){
     steps.sh("yarn ${task}")
   }

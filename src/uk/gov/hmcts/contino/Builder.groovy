@@ -7,5 +7,4 @@ interface Builder {
   def smokeTest()
   def functionalTest()
   def securityCheck()
-  def addVersionInfo()
 }
