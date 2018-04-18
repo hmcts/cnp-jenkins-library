@@ -19,12 +19,12 @@ class withPipelineTest extends BasePipelineTest {
 
     super.setUp()
     binding.setVariable("scm", null)
-    binding.setVariable("env", [BRANCH_NAME:"master"])
-    binding.setVariable( "Jenkins", [instance: new MockJenkins()])
   }
 
   @Test
   void PipelineBuildsSuccesfully() {
+    binding.setVariable("env", [BRANCH_NAME: "master"])
+    binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true)]))])
 
     def library = library()
       .name('Infrastructure')
