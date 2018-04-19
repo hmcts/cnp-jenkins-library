@@ -23,7 +23,7 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('check') })
   }
 
-  def "smokeTest calls 'gradle --rerun-tasks smoke' with '--rerun-tasks' flag"() {
+  def "smokeTest calls 'gradle smoke' with '--rerun-tasks' flag"() {
     when:
       builder.smokeTest()
     then:
