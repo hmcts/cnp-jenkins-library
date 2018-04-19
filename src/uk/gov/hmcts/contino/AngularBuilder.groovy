@@ -41,4 +41,9 @@ class AngularBuilder implements Builder, Serializable {
   def securityCheck() {
     builder.securityCheck()
   }
+
+  @Override
+  def addVersionInfo() {
+    builder.addVersionInfo()
+  }
 }
