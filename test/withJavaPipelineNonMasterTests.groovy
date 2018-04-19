@@ -9,12 +9,12 @@ import com.lesfurets.jenkins.unit.BasePipelineTest
 import uk.gov.hmcts.contino.MockJenkins
 import org.junit.Test
 
-class withPipelineNonMasterTests extends BasePipelineTest {
+class withJavaPipelineNonMasterTests extends BasePipelineTest {
 
   // get the 'project' directory
   String projectDir = (new File(this.getClass().getResource("examplePipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
 
-  withPipelineNonMasterTests() {
+  withJavaPipelineNonMasterTests() {
     super.setUp()
     binding.setVariable("scm", null)
     binding.setVariable("env", [BRANCH_NAME: "feature-branch"])
@@ -50,8 +50,9 @@ class withPipelineNonMasterTests extends BasePipelineTest {
     mockBuilder.demand.test() {}
     mockBuilder.demand.securityCheck() {}
     mockBuilder.demand.sonarScan() {}
+
     mockBuilder.use {
-      runScript("testResources/examplePipeline.jenkins")
+      runScript("testResources/exampleJavaPipeline.jenkins")
       printCallStack()
     }
   }
