@@ -12,7 +12,7 @@ import org.junit.Test
 class withJavaPipelineNonMasterTests extends BasePipelineTest {
 
   // get the 'project' directory
-  String projectDir = (new File(this.getClass().getResource("examplePipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
+  String projectDir = (new File(this.getClass().getResource("exampleJavaPipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
 
   withJavaPipelineNonMasterTests() {
     super.setUp()

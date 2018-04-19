@@ -10,7 +10,7 @@ import org.junit.Test
 class folderExistsTest extends BasePipelineTest {
 
   // get the 'project' directory
-  String projectDir = (new File(this.getClass().getResource("examplePipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
+  String projectDir = (new File(this.getClass().getResource("folderExistsTestPipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
 
   @Override
   @Before
