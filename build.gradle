@@ -33,7 +33,6 @@ dependencies {
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
   testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.18.0'
 }
 
 

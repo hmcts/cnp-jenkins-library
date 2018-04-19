@@ -1,8 +1,7 @@
+import groovy.mock.interceptor.MockFor
+import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
-
-import static org.mockito.Mockito.*
-import uk.gov.hmcts.contino.MockPipelineType
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
@@ -42,20 +41,19 @@ class withPipelineNonMasterTests extends BasePipelineTest {
     helper.registerAllowedMethod("timestamps", [Closure.class], { c -> c.call() })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], { s, c -> c.call() })
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
-    runScript("testResources/examplePipeline.jenkins")
-    printCallStack()
   }
 
   @Test
   void PipelineExecutesExpectedSteps() {
-    def mockPipelineType = MockPipelineType.getInstance()
-    verify(mockPipelineType.builder, times(1)).build()
-    verify(mockPipelineType.builder, times(1)).test()
-    verify(mockPipelineType.builder, times(1)).sonarScan()
-    verify(mockPipelineType.builder, times(1)).securityCheck()
-
-    // Assert deployment steps not called
-    verify(mockPipelineType.deployer, times(0)).deploy()
+    def mockBuilder = new MockFor(GradleBuilder)
+    mockBuilder.demand.build() {}
+    mockBuilder.demand.test() {}
+    mockBuilder.demand.securityCheck() {}
+    mockBuilder.demand.sonarScan() {}
+    mockBuilder.use {
+      runScript("testResources/examplePipeline.jenkins")
+      printCallStack()
+    }
   }
 }
 
