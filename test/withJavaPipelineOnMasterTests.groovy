@@ -37,12 +37,12 @@ class withJavaPipelineOnMasterTests extends BasePipelineTest {
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
-    helper.registerAllowedMethod("sh", [Map.class], { return "" })
+    helper.registerAllowedMethod("sh", [Map.class], { return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id","azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}' })
     helper.registerAllowedMethod('fileExists', [String.class], { c -> true })
     helper.registerAllowedMethod("timestamps", [Closure.class], null)
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
-    helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { return ['content': '']} )
+    helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id","azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']} )
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], { })
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
     helper.registerAllowedMethod("scmServiceRegistration", [String.class], {})
@@ -77,15 +77,10 @@ class withJavaPipelineOnMasterTests extends BasePipelineTest {
       healthCheck() { env, slot -> return null }
     }
 
-    def stubJsonSlurperClassic = new StubFor(JsonSlurperClassic)
-    stubJsonSlurperClassic.ignore.parseText() { return ['azure_client_id': 'azure_client_id']}
-
-    stubJsonSlurperClassic.use {
-      mockBuilder.use {
-        mockDeployer.use {
-          runScript("testResources/exampleJavaPipeline.jenkins")
-          printCallStack()
-        }
+    mockBuilder.use {
+      mockDeployer.use {
+        runScript("testResources/exampleJavaPipeline.jenkins")
+        printCallStack()
       }
     }
   }
