@@ -1,5 +1,6 @@
 import groovy.mock.interceptor.MockFor
 import uk.gov.hmcts.contino.GradleBuilder
+import uk.gov.hmcts.contino.JavaDeployer
 import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
 
@@ -51,9 +52,14 @@ class withJavaPipelineNonMasterTests extends BasePipelineTest {
     mockBuilder.demand.securityCheck() {}
     mockBuilder.demand.sonarScan() {}
 
-    mockBuilder.use {
-      runScript("testResources/exampleJavaPipeline.jenkins")
-      printCallStack()
+    // ensure no deployer methods are called
+    def mockDeployer = new MockFor(JavaDeployer)
+
+    mockDeployer.use {
+      mockBuilder.use {
+        runScript("testResources/exampleJavaPipeline.jenkins")
+        printCallStack()
+      }
     }
   }
 }
