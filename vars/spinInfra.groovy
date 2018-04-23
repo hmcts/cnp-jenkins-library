@@ -37,7 +37,7 @@ def call(product, component, environment, planOnly, subscription) {
 
       sh "terraform init -reconfigure -backend-config " +
         "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
-        "-backend-config \"container_name=${STORE_sa_container_name_template}${environment}\" " +
+        "-backend-config \"container_name=${env.STORE_sa_container_name_template}${environment}\" " +
         "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
         "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
 

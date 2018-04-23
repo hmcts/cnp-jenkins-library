@@ -17,7 +17,7 @@ def testEnv(String testUrl, tfOutput, block) {
   }
 
   withEnv(testEnvVariables) {
-    echo "Using TEST_URL: '$TEST_URL'"
+    echo "Using TEST_URL: '$env.TEST_URL'"
     block.call()
   }
 }

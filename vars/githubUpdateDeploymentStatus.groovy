@@ -5,7 +5,7 @@ def call(Long deploymentNumber, String url) {
 
   withCredentials([usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USERNAME')]) {
     httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
-      customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${BEARER_TOKEN}"]], httpMode: 'POST',
+      customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${env.BEARER_TOKEN}"]], httpMode: 'POST',
       requestBody: """{
         "state": "success",
         "description": "Deployment finished successfully.",
