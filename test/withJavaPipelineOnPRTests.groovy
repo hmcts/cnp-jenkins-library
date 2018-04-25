@@ -1,58 +1,18 @@
-import com.lesfurets.jenkins.unit.BasePipelineTest
-import groovy.json.JsonSlurperClassic
 import groovy.mock.interceptor.MockFor
-import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.GradleBuilder
+import uk.gov.hmcts.contino.JavaDeployer
 
-import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
-import static uk.gov.hmcts.contino.ProjectSource.projectSource
-
-class withJavaPipelineOnPRTests extends BasePipelineTest {
-
-  // get the 'project' directory
-  String projectDir = (new File(this.getClass().getResource("exampleJavaPipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
+class withJavaPipelineOnPRTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleJavaPipeline.jenkins"
 
   withJavaPipelineOnPRTests() {
-    super.setUp()
-    binding.setVariable("scm", null)
-    binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true) ] as MockJenkinsPlugin[]))])
-    binding.setVariable("env", [
-      BRANCH_NAME: "PR-999", TEST_URL:'', SUBSCRIPTION_NAME:'', ARM_CLIENT_ID:'', ARM_CLIENT_SECRET:'', ARM_TENANT_ID:'',
-      ARM_SUBSCRIPTION_ID:'', STORE_rg_name_template:'', STORE_sa_name_template:'', STORE_sa_container_name_template:'',
-      CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:''])
-
-    def library = library()
-      .name('Infrastructure')
-      .targetPath(projectDir)
-      .retriever(projectSource(projectDir))
-      .defaultVersion("master")
-      .allowOverride(true)
-      .implicit(false)
-      .build()
-    helper.registerSharedLibrary(library)
-    helper.registerAllowedMethod("deleteDir", null)
-    helper.registerAllowedMethod("stash", [Map.class], null)
-    helper.registerAllowedMethod("unstash", [String.class], null)
-    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
-    helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
-    helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
-    helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
-    helper.registerAllowedMethod("usernamePassword", [LinkedHashMap], null)
-    helper.registerAllowedMethod("sh", [Map.class], { return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id","azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}' })
-    helper.registerAllowedMethod('fileExists', [String.class], { c -> true })
-    helper.registerAllowedMethod("timestamps", [Closure.class], null)
-    helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
-    helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
-    helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id","azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']} )
-    helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], { })
-    helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
-    helper.registerAllowedMethod("scmServiceRegistration", [String.class], {})
-    helper.registerAllowedMethod("wrap", [LinkedHashMap, Closure.class], null)
+    super("PR-999", jenkinsFile)
   }
 
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
+
     def mockBuilder = new MockFor(GradleBuilder)
     mockBuilder.demand.with {
       build(1) {}
@@ -76,7 +36,7 @@ class withJavaPipelineOnPRTests extends BasePipelineTest {
 
     mockBuilder.use {
       mockDeployer.use {
-        runScript("testResources/exampleJavaPipeline.jenkins")
+        runScript("testResources/$jenkinsFile")
         printCallStack()
       }
     }
