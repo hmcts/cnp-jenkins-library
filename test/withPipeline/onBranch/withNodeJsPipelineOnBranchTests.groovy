@@ -1,3 +1,5 @@
+package withPipeline.onBranch
+
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
@@ -6,13 +8,13 @@ import uk.gov.hmcts.contino.*
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
 
-class withNodeJsPipelineNonMasterTests extends BasePipelineTest {
+class withNodeJsPipelineOnBranchTests extends BasePipelineTest {
   final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
 
   // get the 'project' directory
-  String projectDir = (new File(this.getClass().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
+  String projectDir = (new File(this.getClass().getClassLoader().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
 
-  withNodeJsPipelineNonMasterTests() {
+  withNodeJsPipelineOnBranchTests() {
     super.setUp()
     binding.setVariable("scm", null)
     binding.setVariable("env", [BRANCH_NAME: "feature-branch"])

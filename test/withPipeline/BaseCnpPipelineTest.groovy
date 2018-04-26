@@ -1,3 +1,5 @@
+package withPipeline
+
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import uk.gov.hmcts.contino.MockJenkins
 import uk.gov.hmcts.contino.MockJenkinsPlugin
@@ -12,7 +14,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     super.setUp()
 
     // get the 'project' directory
-    def projectDir = (new File(this.getClass().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
+    def projectDir = (new File(this.getClass().getClassLoader().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
 
     binding.setVariable("scm", null)
     binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true)] as MockJenkinsPlugin[]))])

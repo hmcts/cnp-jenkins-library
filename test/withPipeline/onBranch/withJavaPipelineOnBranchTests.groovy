@@ -1,18 +1,23 @@
-import com.lesfurets.jenkins.unit.BasePipelineTest
+package withPipeline.onBranch
+
 import groovy.mock.interceptor.MockFor
-import org.junit.Test
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.GradleBuilder
+import uk.gov.hmcts.contino.JavaDeployer
+import uk.gov.hmcts.contino.MockJenkinsPlugin
+import uk.gov.hmcts.contino.MockJenkinsPluginManager
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
+import com.lesfurets.jenkins.unit.BasePipelineTest
+import uk.gov.hmcts.contino.MockJenkins
+import org.junit.Test
 
-class withAngularPipelineNonMasterTests extends BasePipelineTest {
-  final static jenkinsFile = "exampleAngularPipeline.jenkins"
+class withJavaPipelineOnBranchTests extends BasePipelineTest {
 
   // get the 'project' directory
-  String projectDir = (new File(this.getClass().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
+  String projectDir = (new File(this.getClass().getClassLoader().getResource("exampleJavaPipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
 
-  withAngularPipelineNonMasterTests() {
+  withJavaPipelineOnBranchTests() {
     super.setUp()
     binding.setVariable("scm", null)
     binding.setVariable("env", [BRANCH_NAME: "feature-branch"])
@@ -43,18 +48,18 @@ class withAngularPipelineNonMasterTests extends BasePipelineTest {
 
   @Test
   void PipelineExecutesExpectedSteps() {
-    def mockBuilder = new MockFor(AngularBuilder)
+    def mockBuilder = new MockFor(GradleBuilder)
     mockBuilder.demand.build() {}
     mockBuilder.demand.test() {}
     mockBuilder.demand.securityCheck() {}
     mockBuilder.demand.sonarScan() {}
 
     // ensure no deployer methods are called
-    def mockDeployer = new MockFor(StaticSiteDeployer)
+    def mockDeployer = new MockFor(JavaDeployer)
 
     mockDeployer.use {
       mockBuilder.use {
-        runScript("testResources/$jenkinsFile")
+        runScript("testResources/exampleJavaPipeline.jenkins")
         printCallStack()
       }
     }

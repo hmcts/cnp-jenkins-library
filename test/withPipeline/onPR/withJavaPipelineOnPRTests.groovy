@@ -1,21 +1,22 @@
+package withPipeline.onPR
+
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.contino.JavaDeployer
-import uk.gov.hmcts.contino.NodeDeployer
-import uk.gov.hmcts.contino.YarnBuilder
+import withPipeline.BaseCnpPipelineTest
 
-class withNodeJsPipelineOnPRTests extends BaseCnpPipelineTest {
-  final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
+class withJavaPipelineOnPRTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleJavaPipeline.jenkins"
 
-  withNodeJsPipelineOnPRTests() {
+  withJavaPipelineOnPRTests() {
     super("PR-999", jenkinsFile)
   }
 
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
-    def mockBuilder = new MockFor(YarnBuilder)
+    def mockBuilder = new MockFor(GradleBuilder)
     mockBuilder.demand.with {
       build(1) {}
       test(1) {}
@@ -26,7 +27,7 @@ class withNodeJsPipelineOnPRTests extends BaseCnpPipelineTest {
       smokeTest(1) {} // preview-prod
     }
 
-    def mockDeployer = new MockFor(NodeDeployer)
+    def mockDeployer = new MockFor(JavaDeployer)
     mockDeployer.ignore.getServiceUrl() { env, slot -> return null} // we don't care when or how often this is called
     mockDeployer.demand.with {
       // preview-staging

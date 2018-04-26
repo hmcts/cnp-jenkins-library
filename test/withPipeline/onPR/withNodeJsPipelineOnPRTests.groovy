@@ -1,42 +1,39 @@
+package withPipeline.onPR
+
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
-import uk.gov.hmcts.contino.AngularBuilder
 import uk.gov.hmcts.contino.NodeDeployer
-import uk.gov.hmcts.contino.StaticSiteDeployer
 import uk.gov.hmcts.contino.YarnBuilder
+import withPipeline.BaseCnpPipelineTest
 
-class withAngularPipelineOnMasterTests extends BaseCnpPipelineTest {
-  final static jenkinsFile = "exampleAngularPipeline.jenkins"
+class withNodeJsPipelineOnPRTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
 
-  withAngularPipelineOnMasterTests() {
-    super("master", jenkinsFile)
+  withNodeJsPipelineOnPRTests() {
+    super("PR-999", jenkinsFile)
   }
 
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
-    def mockBuilder = new MockFor(AngularBuilder)
+
+    def mockBuilder = new MockFor(YarnBuilder)
     mockBuilder.demand.with {
       build(1) {}
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
-      smokeTest(1) {} //aat-staging
+      smokeTest(1) {} //preview-staging
       functionalTest(1) {}
-      smokeTest(3) {} // aat-prod, prod-staging, prod-prod
+      smokeTest(1) {} // preview-prod
     }
 
-    def mockDeployer = new MockFor(StaticSiteDeployer)
+    def mockDeployer = new MockFor(NodeDeployer)
     mockDeployer.ignore.getServiceUrl() { env, slot -> return null} // we don't care when or how often this is called
     mockDeployer.demand.with {
-      // aat-staging
+      // preview-staging
       deploy() {}
       healthCheck() { env, slot -> return null }
-      // aat-prod
-      healthCheck() { env, slot -> return null }
-      // prod-staging
-      deploy() {}
-      healthCheck() { env, slot -> return null }
-      // prod-prod
+      // preview-prod
       healthCheck() { env, slot -> return null }
     }
 
