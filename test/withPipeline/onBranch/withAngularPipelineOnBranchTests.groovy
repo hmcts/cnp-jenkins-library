@@ -1,21 +1,20 @@
+package withPipeline.onBranch
+
+import com.lesfurets.jenkins.unit.BasePipelineTest
 import groovy.mock.interceptor.MockFor
-import uk.gov.hmcts.contino.GradleBuilder
-import uk.gov.hmcts.contino.JavaDeployer
-import uk.gov.hmcts.contino.MockJenkinsPlugin
-import uk.gov.hmcts.contino.MockJenkinsPluginManager
+import org.junit.Test
+import uk.gov.hmcts.contino.*
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
-import com.lesfurets.jenkins.unit.BasePipelineTest
-import uk.gov.hmcts.contino.MockJenkins
-import org.junit.Test
 
-class withJavaPipelineNonMasterTests extends BasePipelineTest {
+class withAngularPipelineOnBranchTests extends BasePipelineTest {
+  final static jenkinsFile = "exampleAngularPipeline.jenkins"
 
   // get the 'project' directory
-  String projectDir = (new File(this.getClass().getResource("exampleJavaPipeline.jenkins").toURI())).parentFile.parentFile.parentFile.parentFile
+  String projectDir = (new File(this.getClass().getClassLoader().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
 
-  withJavaPipelineNonMasterTests() {
+  withAngularPipelineOnBranchTests() {
     super.setUp()
     binding.setVariable("scm", null)
     binding.setVariable("env", [BRANCH_NAME: "feature-branch"])
@@ -46,18 +45,18 @@ class withJavaPipelineNonMasterTests extends BasePipelineTest {
 
   @Test
   void PipelineExecutesExpectedSteps() {
-    def mockBuilder = new MockFor(GradleBuilder)
+    def mockBuilder = new MockFor(AngularBuilder)
     mockBuilder.demand.build() {}
     mockBuilder.demand.test() {}
     mockBuilder.demand.securityCheck() {}
     mockBuilder.demand.sonarScan() {}
 
     // ensure no deployer methods are called
-    def mockDeployer = new MockFor(JavaDeployer)
+    def mockDeployer = new MockFor(StaticSiteDeployer)
 
     mockDeployer.use {
       mockBuilder.use {
-        runScript("testResources/exampleJavaPipeline.jenkins")
+        runScript("testResources/$jenkinsFile")
         printCallStack()
       }
     }
