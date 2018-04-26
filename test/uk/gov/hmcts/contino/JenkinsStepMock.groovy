@@ -20,6 +20,7 @@ interface JenkinsStepMock {
   Object fileExists(String)
   Object stash(LinkedHashMap)
   Object junit(String)
+  Object archiveArtifacts(String)
 }
 
 
