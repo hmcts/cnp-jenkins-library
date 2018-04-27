@@ -41,13 +41,13 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"
+def type = "java"          // supports "java", "nodejs" and "angular"
 
 def product = "rhubarb"
 
-def app = "recipe-backend"
+def component = "recipe-backend" // must match infrastructure module name
 
-withPipeline(type, product, app) {
+withPipeline(type, product, component) {
 }
 ```
 
