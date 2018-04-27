@@ -38,20 +38,16 @@ script and dependencies in source control. NodeJS apps must use Yarn.
 Example `Jenkinsfile` to use the opinionated pipeline:
 ```groovy
 #!groovy
-properties(
-  [[$class: 'GithubProjectProperty', projectUrlStr: 'https://github.com/contino/moj-rhubarb-recipes-service'],
-   pipelineTriggers([[$class: 'GitHubPushTrigger']])]
-)
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java" and "nodejs"
+def type = "java"
 
 def product = "rhubarb"
 
-def component = "recipe-backend" // must match infrastructure module name
+def app = "recipe-backend"
 
-withPipeline(type, product, component) {
+withPipeline(type, product, app) {
 }
 ```
 
