@@ -44,7 +44,6 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
     mockBuilder.use {
       mockDeployer.use {
         runScript("testResources/$jenkinsFile")
-        printCallStack()
       }
     }
   }
