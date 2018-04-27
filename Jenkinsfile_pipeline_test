@@ -15,7 +15,11 @@ node {
     }
 
     stage('Test') {
-      sh "./gradlew --info test"
+      try {
+        sh "./gradlew --info test"
+      } finally {
+        steps.junit '**/test-results/**/*.xml'
+      }
     }
 
     stage('Run pipeline') {
