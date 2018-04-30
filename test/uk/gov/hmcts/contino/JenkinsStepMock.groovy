@@ -18,6 +18,9 @@ interface JenkinsStepMock {
 
   Object ansiColor(String, Closure)
   Object fileExists(String)
+  Object stash(LinkedHashMap)
+  Object junit(String)
+  Object archiveArtifacts(String)
 }
 
 
