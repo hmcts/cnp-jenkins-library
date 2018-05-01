@@ -59,7 +59,7 @@ def call(environment) {
 // Get ServerFarms list
   println "Getting a list of the current apps deployed ..."
   Request requestfarms = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environment + "/serverfarms?api-version=2016-09-01")
+    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environment + "/sites?api-version=2016-09-01")
     .get()
     .addHeader("authorization", "Bearer " + authtoken)
     .addHeader("cache-control", "no-cache")
@@ -68,16 +68,15 @@ def call(environment) {
   Response responsefarms = client.newCall(requestfarms).execute()
 
   def responsefarmsbody = new JsonSlurper().parseText(responsefarms.body().string())
-  List serverfarmslist = responsefarmsbody.value
+  List siteslist = responsefarmsbody.value
 
 // Get list of webapps using the ServerFarms list
 
   List webapps = []
-  serverfarmslist.each {
-    it.each {
-      k, v -> if (k == "name") {
-        webapps << v
-        webapps << v + "-staging"
+  siteslist.each { site ->
+    site.properties.each {
+      k, v -> if (k == "defaultHostName") {
+        webapps << v.split("\\.")[0]
       }
     }
   }
