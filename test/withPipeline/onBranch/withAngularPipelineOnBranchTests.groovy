@@ -57,7 +57,6 @@ class withAngularPipelineOnBranchTests extends BasePipelineTest {
     mockDeployer.use {
       mockBuilder.use {
         runScript("testResources/$jenkinsFile")
-        printCallStack()
       }
     }
   }

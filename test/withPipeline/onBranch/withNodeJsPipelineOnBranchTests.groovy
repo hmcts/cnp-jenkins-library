@@ -57,7 +57,6 @@ class withNodeJsPipelineOnBranchTests extends BasePipelineTest {
     mockDeployer.use {
       mockBuilder.use {
         runScript("testResources/$jenkinsFile")
-        printCallStack()
       }
     }
   }

@@ -60,7 +60,6 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
     mockDeployer.use {
       mockBuilder.use {
         runScript("testResources/exampleJavaPipeline.jenkins")
-        printCallStack()
       }
     }
   }
