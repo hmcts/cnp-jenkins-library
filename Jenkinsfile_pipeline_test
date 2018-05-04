@@ -22,13 +22,15 @@ node {
       }
     }
 
-    parallel {
+    parallel (
+      a: {
       stage('Run pipeline for backend') {
         build job: 'HMCTS_pipeline_test/moj-rhubarb-recipes-service/master',
           parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
-      }
+      },
 
-      stage('Run pipeline for frontend') {
+      b: {
+        stage('Run pipeline for frontend') {
         build job: 'HMCTS_pipeline_test/moj-rhubarb-frontend/master',
           parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
       }
