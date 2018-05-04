@@ -23,14 +23,14 @@ node {
     }
 
     parallel (
-      custard-backend: {
+      backend: {
         stage('Run pipeline for backend') {
           build job: 'HMCTS_pipeline_test/moj-rhubarb-recipes-service/master',
             parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
         }
       },
 
-      custard-frontend: {
+      frontend: {
         stage('Run pipeline for frontend') {
           build job: 'HMCTS_pipeline_test/moj-rhubarb-frontend/master',
             parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
