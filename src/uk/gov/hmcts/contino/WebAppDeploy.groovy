@@ -176,7 +176,7 @@ class WebAppDeploy implements Serializable {
 
   private def copyAndReturnStatus(filePath, destinationDir) {
     steps.sh(
-      "cp ${filePath} ${destinationDir}",
+      script: "cp ${filePath} ${destinationDir}",
       returnStatus: true
     )
   }
