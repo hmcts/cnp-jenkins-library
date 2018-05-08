@@ -118,7 +118,7 @@ class WebAppDeploy implements Serializable {
   }
 
   /**
-   * Deploys a Java Web App. Expects a self hosted Jar
+   * Deploys a Java Web App. Expects a self hosted Jar or War
    * @param env
    * @return
    */
@@ -130,6 +130,7 @@ class WebAppDeploy implements Serializable {
     steps.sh("mkdir ${tempDir}")
 
     copy('build/libs/*.jar', tempDir)
+    copy('build/libs/*.war', tempDir)
     checkAndCopy('web.config', tempDir)
     copyIgnore('lib/applicationinsights-*.jar', tempDir)
     copyIgnore('lib/AI-Agent.xml', tempDir)
