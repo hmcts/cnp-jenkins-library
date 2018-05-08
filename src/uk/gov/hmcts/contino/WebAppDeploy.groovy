@@ -129,8 +129,15 @@ class WebAppDeploy implements Serializable {
 
     steps.sh("mkdir ${tempDir}")
 
-    copy('build/libs/*.jar', tempDir)
-    copy('build/libs/*.war', tempDir)
+    def status = copyAndReturnStatus('build/libs/*.jar', tempDir)
+    if (status != 0) {
+      status = copyAndReturnStatus('build/libs/*.war', tempDir)
+    }
+
+    if (status != 0) {
+      error 'deployJavaWebApp expects an executable JAR or WAR deployment, neither was found.'
+    }
+
     checkAndCopy('web.config', tempDir)
     copyIgnore('lib/applicationinsights-*.jar', tempDir)
     copyIgnore('lib/AI-Agent.xml', tempDir)
@@ -165,6 +172,13 @@ class WebAppDeploy implements Serializable {
 
   private def copy(filePath, destinationDir) {
     steps.sh("cp ${filePath} ${destinationDir}")
+  }
+
+  private def copyAndReturnStatus(filePath, destinationDir) {
+    steps.sh(
+      "cp ${filePath} ${destinationDir}",
+      returnStatus: true
+    )
   }
 
   /**
