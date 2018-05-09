@@ -40,7 +40,6 @@ def call(type, String product, String component, Closure body) {
   pl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
-  currentBuild.result = "SUCCESS"
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
