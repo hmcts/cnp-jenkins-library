@@ -130,8 +130,10 @@ class WebAppDeploy implements Serializable {
     steps.sh("mkdir ${tempDir}")
 
     def status = copyAndReturnStatus('build/libs/*.jar', tempDir)
+    steps.echo "Return Status - Copy Jar - ${status}"
     if (status != 0) {
       status = copyAndReturnStatus('build/libs/*.war', tempDir)
+      steps.echo "Return Status - Copy War - ${status}"
     }
 
     if (status != 0) {
