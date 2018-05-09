@@ -128,17 +128,14 @@ class WebAppDeploy implements Serializable {
     steps.sh("git checkout ${branch.branchName}")
 
     steps.sh("mkdir ${tempDir}")
-    steps.sh("ls -laR *")
-    //steps.sh("ls -la build/libs")
+
     def status = copyAndReturnStatus('build/libs/*.jar', tempDir)
-    steps.echo "Return Status - Copy Jar - ${status}"
     if (status != 0) {
       status = copyAndReturnStatus('build/libs/*.war', tempDir)
-      steps.echo "Return Status - Copy War - ${status}"
     }
 
     if (status != 0) {
-      error 'deployJavaWebApp expects an executable JAR or WAR deployment, neither was found.'
+      steps.error "deployJavaWebApp expects an executable JAR or WAR deployment, neither was found. status = ${status}"
     }
 
     checkAndCopy('web.config', tempDir)
