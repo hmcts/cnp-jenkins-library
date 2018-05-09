@@ -13,7 +13,7 @@ class JavaDeployer implements Deployer, Serializable {
   }
 
   def deploy(String env) {
-    steps.unstash(product)
+    //steps.unstash(product)
     deployer.deployJavaWebApp(env)
   }
 
