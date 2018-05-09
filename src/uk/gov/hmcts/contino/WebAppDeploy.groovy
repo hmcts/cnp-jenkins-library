@@ -128,7 +128,8 @@ class WebAppDeploy implements Serializable {
     steps.sh("git checkout ${branch.branchName}")
 
     steps.sh("mkdir ${tempDir}")
-
+    steps.sh("ls -la build/libs")
+    steps.sh("ls -laR *")
     def status = copyAndReturnStatus('build/libs/*.jar', tempDir)
     steps.echo "Return Status - Copy Jar - ${status}"
     if (status != 0) {
