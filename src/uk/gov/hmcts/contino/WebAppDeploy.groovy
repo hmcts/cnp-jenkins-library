@@ -118,7 +118,7 @@ class WebAppDeploy implements Serializable {
   }
 
   /**
-   * Deploys a Java Web App. Expects a self hosted Jar
+   * Deploys a Java Web App. Expects a self hosted Jar or War
    * @param env
    * @return
    */
@@ -129,7 +129,15 @@ class WebAppDeploy implements Serializable {
 
     steps.sh("mkdir ${tempDir}")
 
-    copy('build/libs/*.jar', tempDir)
+    def status = copyAndReturnStatus('build/libs/*.jar', tempDir)
+    if (status != 0) {
+      status = copyAndReturnStatus('build/libs/*.war', tempDir)
+    }
+
+    if (status != 0) {
+      steps.error "deployJavaWebApp expects an executable JAR or WAR deployment, neither was found. status = ${status}"
+    }
+
     checkAndCopy('web.config', tempDir)
     copyIgnore('lib/applicationinsights-*.jar', tempDir)
     copyIgnore('lib/AI-Agent.xml', tempDir)
@@ -164,6 +172,13 @@ class WebAppDeploy implements Serializable {
 
   private def copy(filePath, destinationDir) {
     steps.sh("cp ${filePath} ${destinationDir}")
+  }
+
+  private def copyAndReturnStatus(filePath, destinationDir) {
+    steps.sh(
+      script: "cp ${filePath} ${destinationDir}",
+      returnStatus: true
+    )
   }
 
   /**
