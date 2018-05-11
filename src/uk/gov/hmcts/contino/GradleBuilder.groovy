@@ -11,6 +11,8 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def build() {
+    // disable gradle daemon as it has caused quite a lot of build failures
+    steps.sh("mkdir -p ~/.gradle && echo 'org.gradle.daemon=false' > ~/.gradle/gradle.properties")
     addVersionInfo()
     gradle("assemble")
     steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
