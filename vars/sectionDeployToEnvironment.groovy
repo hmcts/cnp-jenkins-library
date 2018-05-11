@@ -46,7 +46,7 @@ def call(params) {
   Deployer deployer = pipelineType.deployer
 
   milestone()
-  lock(resource: "${product}-${environment}", inversePrecedence: true) {
+  lock(resource: "${product}-${component}-${environment}", inversePrecedence: true) {
     stage("Build Infrastructure - ${environment}") {
       onPR {
         deploymentNumber = githubCreateDeployment()
