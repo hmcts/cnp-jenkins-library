@@ -12,7 +12,7 @@ class GradleBuilderTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.getEnv() >> [INFRA_VAULT_NAME: 'blah']
+    steps.getEnv() >> []
     builder = new GradleBuilder(steps, 'test')
   }
 
@@ -55,7 +55,7 @@ class GradleBuilderTest extends Specification {
     setup:
     def closure
     steps.withCredentials(_, { closure = it }) >> { closure.call() }
-    builder.metaClass.usernamePassword { LinkedHashMap map ->
+    steps.metaClass.usernamePassword { LinkedHashMap map ->
       return []
     }
 
