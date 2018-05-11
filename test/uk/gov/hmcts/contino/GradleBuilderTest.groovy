@@ -52,10 +52,16 @@ class GradleBuilderTest extends Specification {
   }
 
   def "securityCheck calls 'gradle dependencyCheckAnalyze'"() {
+    setup:
+    def closure
+    steps.withCredentials(_, { closure = it }) >> { closure.call() }
+    builder.metaClass.usernamePassword { LinkedHashMap map ->
+      return []
+    }
+
     when:
       builder.securityCheck()
     then:
-      2 * steps.sh(_ as Map) >> ''
       1 * steps.sh({ GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') })
   }
 
