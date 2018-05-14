@@ -9,8 +9,8 @@ import java.nio.file.Paths
 
 class AzureFactory {
   static getAzure(subscription) {
-    def azureProfile = Paths.get(System.getProperty("user.home"), ".azure-$subscription", "azureProfile.json").toFile()
-    def accessTokens = Paths.get(System.getProperty("user.home"), ".azure-$subscription", "accessTokens.json").toFile()
+    def azureProfile = Paths.get("/opt/jenkins/.azure-$subscription", "azureProfile.json").toFile()
+    def accessTokens = Paths.get("/opt/jenkins/.azure-$subscription", "accessTokens.json").toFile()
     return Azure.authenticate(AzureCliCredentials.create(azureProfile, accessTokens)).withDefaultSubscription()
   }
 }
