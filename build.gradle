@@ -26,6 +26,7 @@ dependencies {
   compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
   compile 'org.jenkins-ci.plugins:job-dsl-core:1.65'
   compile 'com.microsoft.azure:azure-documentdb:1.15.2'
+  compile 'com.microsoft.azure:azure:1.10.0'
   compile 'com.github.seancfoley:ipaddress:4.1.0'
   compile 'com.squareup.okio:okio:1.13.0'
   compile 'com.squareup.okhttp3:okhttp:3.9.1'
