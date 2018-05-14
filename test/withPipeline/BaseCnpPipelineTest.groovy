@@ -56,6 +56,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
         '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
     })
+    helper.registerAllowedMethod("milestone", null)
+    helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
   }
 }
 
