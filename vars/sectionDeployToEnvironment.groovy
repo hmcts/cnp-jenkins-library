@@ -53,6 +53,9 @@ def call(params) {
 
     folderExists('infrastructure') {
       withSubscription(subscription) {
+        withAzure(subscription) { azure ->
+          echo "Current Subscription: ${azure.getCurrentSubscription().displayName()}"
+        }
         dir('infrastructure') {
           pl.callAround("buildinfra:${environment}") {
             withIlbIp(environment) {
