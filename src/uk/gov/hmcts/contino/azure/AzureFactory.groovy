@@ -1,11 +1,11 @@
 package uk.gov.hmcts.contino.azure
 
+@Grab('com.microsoft.azure:azure:1.10.0')
+
 import com.microsoft.azure.credentials.AzureCliCredentials
 import com.microsoft.azure.management.Azure
 
 import java.nio.file.Paths
-
-@Grab('com.microsoft.azure:azure:1.10.0')
 
 class AzureFactory {
   static getAzure(String subscription) {
