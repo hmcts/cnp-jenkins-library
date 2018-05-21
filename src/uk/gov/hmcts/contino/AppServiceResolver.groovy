@@ -28,6 +28,7 @@ class AppServiceResolver {
   }
 
   private Azure getAzure() {
-    return AzureFactory.getAzure(steps.env.SUBSCRIPTION_NAME)
+    def af = new AzureFactory(steps)
+    return af.getAzure(steps.env.SUBSCRIPTION_NAME)
   }
 }

@@ -9,11 +9,18 @@ import com.microsoft.azure.management.Azure
 import java.nio.file.Paths
 
 class AzureFactory {
-  static getAzure(String subscription) {
+
+  def steps
+
+  AzureFactory(steps) {
+    this.steps = steps
+  }
+
+  def getAzure(String subscription) {
     def azureProfile = Paths.get("/opt/jenkins/.azure-$subscription", "azureProfile.json").toFile()
     def accessTokens = Paths.get("/opt/jenkins/.azure-$subscription", "accessTokens.json").toFile()
-    println("azureProfile.json exists ${azureProfile.exists()}")
-    println("accessTokens.json exists ${accessTokens.exists()}")
+    steps.echo("azureProfile.json exists ${azureProfile.exists()}")
+    steps.echo("accessTokens.json exists ${accessTokens.exists()}")
     return Azure.authenticate(AzureCliCredentials.create(azureProfile, accessTokens)).withDefaultSubscription()
   }
 }
