@@ -185,7 +185,7 @@ class WebAppDeploy implements Serializable {
   }
 
   private def getServiceHost(String product, String component, String env, String slot) {
-    AppServiceResolver asr = new AppServiceResolver()
+    AppServiceResolver asr = new AppServiceResolver(steps)
     boolean staging = (slot == "staging")
 
     return asr.getServiceHost(product, component, env, staging)
