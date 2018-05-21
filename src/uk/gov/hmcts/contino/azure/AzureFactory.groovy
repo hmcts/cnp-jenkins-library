@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino.azure
 
 @Grab('com.microsoft.azure:azure:1.10.0')
+@GrabExclude('javax.mail:mail')
 
 import com.microsoft.azure.credentials.AzureCliCredentials
 import com.microsoft.azure.management.Azure
