@@ -12,6 +12,8 @@ class AzureFactory {
   static getAzure(String subscription) {
     def azureProfile = Paths.get("/opt/jenkins/.azure-$subscription", "azureProfile.json").toFile()
     def accessTokens = Paths.get("/opt/jenkins/.azure-$subscription", "accessTokens.json").toFile()
+    println("azureProfile.json exists ${azureProfile.exists()}")
+    println("accessTokens.json exists ${accessTokens.exists()}")
     return Azure.authenticate(AzureCliCredentials.create(azureProfile, accessTokens)).withDefaultSubscription()
   }
 }
