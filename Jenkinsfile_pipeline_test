@@ -28,14 +28,14 @@ node {
           build job: 'HMCTS_pipeline_test/moj-rhubarb-recipes-service/master',
             parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
         }
-      }//,
-//
-//      frontend: {
-//        stage('Run pipeline for frontend') {
-//          build job: 'HMCTS_pipeline_test/moj-rhubarb-frontend/master',
-//            parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
-//        }
-//      }
+      },
+
+      frontend: {
+        stage('Run pipeline for frontend') {
+          build job: 'HMCTS_pipeline_test/moj-rhubarb-frontend/master',
+            parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
+        }
+      }
     )
 
   } catch (err) {
