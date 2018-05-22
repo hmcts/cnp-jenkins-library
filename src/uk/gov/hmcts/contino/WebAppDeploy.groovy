@@ -80,12 +80,10 @@ class WebAppDeploy implements Serializable {
   }
 
   /**
-   * Deploys a NodeJs app to @env and to the cluster @hostingEnv
+   * Deploys a NodeJs app to @env
    * @param env
-   * @param hostingEnv
    * @return
    */
-
   def deployNodeJS(env) {
     steps.sh("git checkout ${branch.branchName}")
 
