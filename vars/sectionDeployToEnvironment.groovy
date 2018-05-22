@@ -113,7 +113,7 @@ def call(params) {
           stage("Functional Test - ${environment} (staging slot)") {
             testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
               pl.callAround("functionalTest:${environment}") {
-                timeout(time: 15, unit: 'MINUTES') {
+                timeout(time: 40, unit: 'MINUTES') {
                   builder.functionalTest()
                 }
               }
