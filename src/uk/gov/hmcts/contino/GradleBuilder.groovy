@@ -49,17 +49,13 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def securityCheck() {
-    try {
-      def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
-
-      def owaspU = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Account' --query value -o tsv"
-      def owaspP = az "keyvault secret show --vault-name '${steps.env.INFRA_VAULT_NAME}' --name 'OWASPDb-Password' --query value -o tsv"
-
-      gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -Danalyzer.central.enabled=false -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${owaspU}@owaspdependencycheck;password=${owaspP};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${owaspU}' -DdependencyCheck.data.password='${owaspP}' dependencyCheckAnalyze")
-
-    }
-    finally {
-      steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+    steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-db-login', passwordVariable: 'OWASPDB_ACCOUNT', usernameVariable: 'OWASPDB_PASSWORD')]) {
+      try {
+        gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -Danalyzer.central.enabled=false -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${steps.env.OWASPDB_ACCOUNT}@owaspdependencycheck;password=${steps.env.OWASPDB_PASSWORD};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${steps.env.OWASPDB_ACCOUNT}' -DdependencyCheck.data.password='${steps.env.OWASPDB_PASSWORD}' dependencyCheckAnalyze")
+      }
+      finally {
+        steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+      }
     }
   }
 
