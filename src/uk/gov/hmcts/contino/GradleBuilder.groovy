@@ -48,6 +48,16 @@ class GradleBuilder implements Builder, Serializable {
     }
   }
 
+  def performanceTest() {
+    try {
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      gradle("--info --rerun-tasks gatlingRun")
+    } finally {
+      // TODO add azcopy upload
+    }
+  }
+
   def securityCheck() {
     steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-db-login', passwordVariable: 'OWASPDB_ACCOUNT', usernameVariable: 'OWASPDB_PASSWORD')]) {
       try {

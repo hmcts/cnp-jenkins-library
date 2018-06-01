@@ -51,6 +51,13 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
   }
 
+  def "performanceTest calls 'gradle gatlingRun' with '--rerun-tasks' flag"() {
+    when:
+    builder.performanceTest()
+    then:
+    1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('gatlingRun') && it.contains('--rerun-tasks') })
+  }
+
   def "securityCheck calls 'gradle dependencyCheckAnalyze'"() {
     setup:
     def closure

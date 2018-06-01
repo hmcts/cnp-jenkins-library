@@ -43,6 +43,10 @@ class YarnBuilder implements Builder, Serializable {
     }
   }
 
+  def performanceTest() {
+    // TODO
+  }
+
   def securityCheck() {
     yarn("test:nsp")
   }

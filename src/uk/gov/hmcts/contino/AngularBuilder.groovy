@@ -38,6 +38,11 @@ class AngularBuilder implements Builder, Serializable {
   }
 
   @Override
+  def performanceTest() {
+    builder.performanceTest()
+  }
+
+  @Override
   def securityCheck() {
     builder.securityCheck()
   }
