@@ -20,6 +20,8 @@ compileTestGroovy {
 }
 
 dependencies {
+  compileOnly 'org.apache.ivy:ivy:2.4.0'
+
   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.9'
   compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.12'
   //used for generating RandomStrings
@@ -33,8 +35,6 @@ dependencies {
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
   testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
-
-  compileOnly 'org.apache.ivy:ivy:2.4.0'
 }
 
 

@@ -6,6 +6,7 @@ class PipelineCallbacks implements Serializable {
   String slackChannel
   List<Map<String, Object>> vaultSecrets = []
   boolean migrateDb = false
+  boolean performanceTest = false
   private MetricsPublisher metricsPublisher
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
@@ -71,6 +72,10 @@ class PipelineCallbacks implements Serializable {
 
   void enableDbMigration() {
     this.migrateDb = true
+  }
+
+  void enablePerformanceTest() {
+    this.performanceTest = true
   }
 
   private def nullSafeCall(String key) {

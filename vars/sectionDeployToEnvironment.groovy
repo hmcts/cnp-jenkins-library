@@ -113,10 +113,12 @@ def call(params) {
               }
             }
           }
-          stage("Performance Test - ${environment} (staging slot)") {
-            testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-              pl.callAround("functionalTest:${environment}") {
-                builder.functionalTest()
+          if (pl.performanceTest) {
+            stage("Performance Test - ${environment} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                pl.callAround("performanceTest:${environment}") {
+                  builder.performanceTest()
+                }
               }
             }
           }
