@@ -49,11 +49,7 @@ class GradleBuilder implements Builder, Serializable {
   }
 
   def performanceTest() {
-    try {
       gradle("--info --rerun-tasks gatlingRun")
-    } finally {
-      // TODO add azcopy upload
-    }
   }
 
   def securityCheck() {

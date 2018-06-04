@@ -118,6 +118,7 @@ def call(params) {
               testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
                 pl.callAround("performanceTest:${environment}") {
                   builder.performanceTest()
+                  azureBlobUpload('buildlog-storage-account', pl.perfTestReportsDir, 'performance/${product}-${component}/${environment}')
                 }
               }
             }

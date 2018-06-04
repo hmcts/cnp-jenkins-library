@@ -7,6 +7,7 @@ class PipelineCallbacks implements Serializable {
   List<Map<String, Object>> vaultSecrets = []
   boolean migrateDb = false
   boolean performanceTest = false
+  String perfTestReportsDir
   private MetricsPublisher metricsPublisher
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
@@ -74,8 +75,9 @@ class PipelineCallbacks implements Serializable {
     this.migrateDb = true
   }
 
-  void enablePerformanceTest() {
+  void enablePerformanceTest(String perfTestReportsDir) {
     this.performanceTest = true
+    this.perfTestReportsDir = perfTestReportsDir
   }
 
   private def nullSafeCall(String key) {
