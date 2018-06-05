@@ -39,7 +39,7 @@ def call(String subscription, String environment) {
         chosenIP = (subnetsList[3..12] - ipList)[0]
       echo "List of all possible subnets for $subscription: ${subnetsList[2..12]}"
       break
-    case 'hmcts-demo':
+    case 'hmctsdemo':
       chosenIP = chosenIP = subnetsList[13]
       break
     case 'sandbox':
