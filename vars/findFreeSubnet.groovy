@@ -36,12 +36,15 @@ def call(String subscription, String environment) {
       if (environment.equalsIgnoreCase("aat"))
         chosenIP = subnetsList[2]
       else
-        chosenIP = (subnetsList[3..14] - ipList)[0]
-      echo "List of all possible subnets for $subscription: ${subnetsList[2..14]}"
+        chosenIP = (subnetsList[3..12] - ipList)[0]
+      echo "List of all possible subnets for $subscription: ${subnetsList[2..12]}"
+      break
+    case 'hmcts-demo':
+      chosenIP = chosenIP = subnetsList[13]
       break
     case 'sandbox':
-      chosenIP = (subnetsList[15..-1] - ipList)[0]
-      echo "List of all possible subnets for $subscription: ${subnetsList[15..-1]}"
+      chosenIP = (subnetsList[14..-1] - ipList)[0]
+      echo "List of all possible subnets for $subscription: ${subnetsList[14..-1]}"
       break
   }
 
