@@ -28,7 +28,6 @@ def call(String subscription, String environment) {
   subnetsList = list.collect { it.toString() }
 
   def chosenIP
-  echo "Subscription: ${subscription}"
   switch (subscription) {
     case 'prod':
       chosenIP = subnetsList[1]
