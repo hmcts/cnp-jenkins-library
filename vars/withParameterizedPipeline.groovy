@@ -40,18 +40,7 @@ def call(type, String product, String component, String environment, String subs
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        stage('Checkout') {
-          pl.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
-        }
-
-        stage("Build") {
-          pl.callAround('build') {
-            builder.build()
-          }
-        }
+        sectionBuildAndTest(pl, pipelineType.builder)
 
         sectionDeployToEnvironment(
           pipelineCallbacks: pl,
