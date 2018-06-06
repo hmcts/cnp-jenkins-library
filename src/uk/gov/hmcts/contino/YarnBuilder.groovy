@@ -1,11 +1,9 @@
 package uk.gov.hmcts.contino;
 
-class YarnBuilder implements Builder, Serializable {
-
-  def steps
+class YarnBuilder extends AbstractBuilder {
 
   YarnBuilder(steps) {
-    this.steps = steps
+    super(steps)
   }
 
   def build() {
@@ -41,10 +39,6 @@ class YarnBuilder implements Builder, Serializable {
       steps.junit allowEmptyResults: true, testResults: './functional-output/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*'
     }
-  }
-
-  def performanceTest() {
-    // TODO
   }
 
   def securityCheck() {

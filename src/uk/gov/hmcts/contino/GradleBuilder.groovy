@@ -1,12 +1,11 @@
 package uk.gov.hmcts.contino
 
-class GradleBuilder implements Builder, Serializable {
+class GradleBuilder extends AbstractBuilder {
 
-  def steps
   def product
 
   GradleBuilder(steps, product) {
-    this.steps = steps
+    super(steps)
     this.product = product
   }
 
@@ -46,10 +45,6 @@ class GradleBuilder implements Builder, Serializable {
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
-  }
-
-  def performanceTest() {
-      gradle("--info --rerun-tasks gatlingRun")
   }
 
   def securityCheck() {
