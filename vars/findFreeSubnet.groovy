@@ -12,7 +12,8 @@ import groovy.json.JsonSlurperClassic
     slice 0 - management vnet
     slice 1 - prod environment
     slice 2 - nonprod environment
-    anything else automatically selected from free slices 3-14
+    slice 13 - hmcts demo environment
+    anything else automatically selected from free slices 3-12
   subnet 15-end for sandbox subscription
 */
 def call(String subscription, String environment) {
@@ -41,6 +42,7 @@ def call(String subscription, String environment) {
       break
     case 'hmctsdemo':
       chosenIP = chosenIP = subnetsList[13]
+      echo "Subnet for $subscription: ${subnetsList[13]}"
       break
     case 'sandbox':
       chosenIP = (subnetsList[14..-1] - ipList)[0]
