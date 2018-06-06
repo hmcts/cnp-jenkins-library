@@ -24,7 +24,7 @@ def call(String environment) {
     log.info("Certificate name ${env.TF_VAR_certificateName} does not exist in vault $infraVaultName! Creating one right now...")
     az(/keyvault certificate create --vault-name $infraVaultName --name ${env.TF_VAR_certificateName} --policy @certificateDefaultPolicy.json/)
     log.info("Retrieving the thumbprint")
-    env.TF_VAR_certificateThumbprint = az "keyvault certificate show --vault-name $infraVaultNameE --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex -o tsv"
+    env.TF_VAR_certificateThumbprint = az "keyvault certificate show --vault-name $infraVaultName --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex -o tsv"
   }
 
 }
