@@ -41,7 +41,7 @@ def call(String subscription, String environment) {
       echo "List of all possible subnets for $subscription: ${subnetsList[2..12]}"
       break
     case 'hmctsdemo':
-      chosenIP = chosenIP = subnetsList[13]
+      chosenIP = subnetsList[13]
       echo "Subnet for $subscription: ${subnetsList[13]}"
       break
     case 'sandbox':
