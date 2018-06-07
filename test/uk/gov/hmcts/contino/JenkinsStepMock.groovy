@@ -21,6 +21,7 @@ interface JenkinsStepMock {
   Object stash(LinkedHashMap)
   Object junit(String)
   Object archiveArtifacts(String)
+  Object withDocker(String image, String options, Closure)
 }
 
 

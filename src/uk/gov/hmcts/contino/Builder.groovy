@@ -6,6 +6,7 @@ interface Builder {
   def sonarScan()
   def smokeTest()
   def functionalTest()
+  def performanceTest()
   def securityCheck()
   def addVersionInfo()
 }
