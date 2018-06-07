@@ -57,12 +57,14 @@ def call(params) {
         withSubscription(subscription) {
           dir('infrastructure') {
             pl.callAround("buildinfra:${environment}") {
-              withIlbIp(environment) {
-                def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-                withEnv(additionalInfrastructureVariables) {
-                  tfOutput = spinInfra(product, component, environment, false, subscription)
+              timeout(time: 120, unit: 'MINUTES') {
+                withIlbIp(environment) {
+                  def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+                  withEnv(additionalInfrastructureVariables) {
+                    tfOutput = spinInfra(product, component, environment, false, subscription)
+                  }
+                  scmServiceRegistration(environment)
                 }
-                scmServiceRegistration(environment)
               }
             }
           }
@@ -101,7 +103,9 @@ def call(params) {
         stage("Smoke Test - ${environment} (staging slot)") {
           testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
             pl.callAround("smoketest:${environment}") {
-              builder.smokeTest()
+              timeout(time: 10, unit: 'MINUTES') {
+                builder.smokeTest()
+              }
             }
           }
         }
@@ -110,7 +114,9 @@ def call(params) {
           stage("Functional Test - ${environment} (staging slot)") {
             testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
               pl.callAround("functionalTest:${environment}") {
-                builder.functionalTest()
+                timeout(time: 40, unit: 'MINUTES') {
+                  builder.functionalTest()
+                }
               }
             }
           }
@@ -129,11 +135,13 @@ def call(params) {
         stage("Promote - ${environment} (staging -> production slot)") {
           withSubscription(subscription) {
             pl.callAround("promote:${environment}") {
-              sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
-              deployer.healthCheck(environment, "production")
+              timeout(time: 15, unit: 'MINUTES') {
+                sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+                deployer.healthCheck(environment, "production")
 
-              onPR {
-                githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
+                onPR {
+                  githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
+                }
               }
             }
           }
@@ -142,7 +150,9 @@ def call(params) {
         stage("Smoke Test - ${environment} (production slot)") {
           testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
             pl.callAround("smokeTest:${environment}") {
-              builder.smokeTest()
+              timeout(time: 10, unit: 'MINUTES') {
+                builder.smokeTest()
+              }
             }
           }
         }
