@@ -8,7 +8,7 @@ abstract class AbstractBuilder implements Builder, Serializable {
   public static final String GATLING_BODIES_DIR   = 'src/gatling/bodies'
   public static final String GATLING_CONF_DIR     = 'src/gatling/conf'
   public static final String GATLING_IMAGE        = 'hmcts/moj-gatling-image'
-  public static final String GATLING_RUN_ARGS     = '-v $WORKSPACE/'+ GATLING_CONF_DIR + '/etc/gatling/conf'
+  public static final String GATLING_RUN_ARGS     = '-v $WORKSPACE/'+ GATLING_CONF_DIR + ':/etc/gatling/conf'
 
   def steps
 
