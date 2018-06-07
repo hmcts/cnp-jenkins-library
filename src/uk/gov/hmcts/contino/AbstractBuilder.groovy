@@ -19,7 +19,7 @@ abstract class AbstractBuilder implements Builder, Serializable {
   @Override
   def performanceTest() {
     // with Gatling command-line you can't specify a configuration directory, so we need to bind-mount it
-    this.steps.withDocker("${GATLING_IMAGE}", "${GATLING_RUN_ARGS}") {
+    this.steps.withDocker(GATLING_IMAGE, GATLING_RUN_ARGS) {
       this.steps.sh "gatling.sh -sf ${GATLING_SIMS_DIR} -df ${GATLING_DATA_DIR} -bdf ${GATLING_BODIES_DIR} -rf ${GATLING_REPORTS_DIR} -m"
     }
   }

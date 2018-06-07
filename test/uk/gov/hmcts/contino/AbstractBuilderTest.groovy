@@ -14,9 +14,9 @@ class AbstractBuilderTest extends Specification {
 
   def "performanceTest calls 'gradle gatlingRun' with '--rerun-tasks' flag"() {
     when:
-    builder.performanceTest()
+      builder.performanceTest()
     then:
-    1 * steps.withDocker("${AbstractBuilder.GATLING_IMAGE}", "${AbstractBuilder.GATLING_RUN_ARGS}", _ as Closure)
+      1 * steps.withDocker(AbstractBuilder.GATLING_IMAGE, AbstractBuilder.GATLING_RUN_ARGS, _ as Closure)
   }
 
   class BuilderImpl extends AbstractBuilder {
