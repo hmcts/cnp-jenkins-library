@@ -46,7 +46,7 @@ def call(String subscription, String environment, Integer numberOfSubnets) {
       break
   }
 
-  return chosenIP.collect { item -> [item, a.findIndexOf { it.equalsIgnoreCase(item) }] }
+  return chosenIP.collect { item -> [item, subnetsList.findIndexOf { it.equalsIgnoreCase(item) }] }
 }
 
 def getSubnetsList(String rootSubnet, newbits) {
