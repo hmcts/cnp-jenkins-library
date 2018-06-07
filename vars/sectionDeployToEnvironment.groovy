@@ -1,4 +1,5 @@
 #!groovy
+import uk.gov.hmcts.contino.AbstractBuilder
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
@@ -115,6 +116,16 @@ def call(params) {
               pl.callAround("functionalTest:${environment}") {
                 timeout(time: 40, unit: 'MINUTES') {
                   builder.functionalTest()
+                }
+              }
+            }
+          }
+          if (pl.performanceTest) {
+            stage("Performance Test - ${environment} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                pl.callAround("performanceTest:${environment}") {
+                  builder.performanceTest()
+                  azureBlobUpload('buildlog-storage-account', AbstractBuilder.GATLING_REPORTS_DIR, 'performance/${product}-${component}/${environment}')
                 }
               }
             }
