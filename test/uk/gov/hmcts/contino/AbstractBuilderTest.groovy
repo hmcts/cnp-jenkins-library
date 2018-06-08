@@ -4,19 +4,23 @@ import spock.lang.Specification
 
 class AbstractBuilderTest extends Specification {
 
-  def steps
   def builder
+  def mockSteps
+  def mockGatling
 
   def setup() {
-    steps = Mock(JenkinsStepMock.class)
-    builder = new BuilderImpl(steps)
+    mockSteps = Mock(JenkinsStepMock.class)
+    mockGatling = Mock(Gatling)
+    builder = new BuilderImpl(mockSteps)
+    builder.gatling = mockGatling
   }
 
-  def "performanceTest calls 'gradle gatlingRun' with '--rerun-tasks' flag"() {
+  def "performanceTest calls 'gatling.execute()'"() {
+
     when:
       builder.performanceTest()
     then:
-      1 * steps.withDocker(AbstractBuilder.GATLING_IMAGE, AbstractBuilder.GATLING_RUN_ARGS, _ as Closure)
+      1 * mockGatling.execute()
   }
 
   class BuilderImpl extends AbstractBuilder {
