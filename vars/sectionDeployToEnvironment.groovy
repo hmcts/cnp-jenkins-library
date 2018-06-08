@@ -1,5 +1,5 @@
 #!groovy
-import uk.gov.hmcts.contino.AbstractBuilder
+import uk.gov.hmcts.contino.Gatling
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
@@ -125,7 +125,7 @@ def call(params) {
               testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
                 pl.callAround("performanceTest:${environment}") {
                   builder.performanceTest()
-                  azureBlobUpload('buildlog-storage-account', AbstractBuilder.GATLING_REPORTS_DIR, "performance/${product}-${component}/${environment}")
+                  azureBlobUpload('buildlog-storage-account', Gatling.GATLING_REPORTS_DIR, "performance/${product}-${component}/${environment}")
                 }
               }
             }
