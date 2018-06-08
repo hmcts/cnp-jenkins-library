@@ -1,0 +1,10 @@
+{
+  "simulation": "uk.gov.hmcts.reform.rhubarb.performance.RhubarbReferenceSimulation",
+  "simulationId": "rhubarbreferencesimulation",
+  "start": 1528198705178,
+  "description": "",
+  "scenarios": ["RhubarbReferenceSimulation"],
+  "assertions": [
+
+  ]
+}
