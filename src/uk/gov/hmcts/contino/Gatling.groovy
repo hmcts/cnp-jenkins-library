@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class Gatling {
+class Gatling implements Serializable {
 
   public static final String GATLING_REPORTS_DIR  = 'build/gatling/reports'
   public static final String GATLING_SIMS_DIR     = 'src/gatling/simulations'
