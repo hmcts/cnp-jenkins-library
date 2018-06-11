@@ -10,7 +10,7 @@ import uk.gov.hmcts.contino.ProjectBranch
  * }
  */
 def call(block) {
-  if (new ProjectBranch(env.BRANCH_NAME).isPR()) {
+  if (new ProjectBranch(env.BRANCH_NAME).isPR() && !env.CHANGE_TITLE.startsWith('[SKIP-PREVIEW]')) {
     return block.call()
   }
 }
