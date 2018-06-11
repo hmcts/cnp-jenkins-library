@@ -6,24 +6,24 @@ import groovy.json.JsonSlurper
 
 class DocumentPublisher {
 
-  def documentClient
   def jsonSlurper = new JsonSlurper()
 
-  DocumentPublisher(String dbUrl, String dbKey) {
-    this.documentClient = new DocumentClient(dbUrl, dbKey, null, null)
+  def publish(DocumentClient documentClient, String collectionLink, Object data) {
+    try {
+      Document documentDefinition = new Document(data)
+      documentClient.createDocument(collectionLink, documentDefinition, null, false)
+    }
+    finally {
+      documentClient.close()
+    }
   }
 
-  def publish(String collectionLink, Object data) {
-    Document documentDefinition = new Document(data)
-    this.documentClient.createDocument(collectionLink, documentDefinition, null, false)
-  }
-
-  def publishAll(String collectionLink, String basedir, String pattern) {
+  def publishAll(DocumentClient documentClient, String collectionLink, String basedir, String pattern) {
     def files = this.findFiles(basedir, pattern)
 
-    files.each { -> jsonFilePath
-      def jsonObject = toJson(jsonFilePath)
-      publish(collectionLink, jsonObject)
+    files.each {
+      def jsonObject = toJson(it)
+      this.publish(documentClient, collectionLink, jsonObject)
     }
   }
 

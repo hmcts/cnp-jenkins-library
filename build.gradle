@@ -32,12 +32,15 @@ dependencies {
   compile 'com.github.seancfoley:ipaddress:4.1.0'
   compile 'com.squareup.okio:okio:1.13.0'
   compile 'com.squareup.okhttp3:okhttp:3.9.1'
+  compile 'org.apache.ant:ant:1.10.3'
 
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
   testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
 
-  testRuntime "net.bytebuddy:byte-buddy:1.6.5"
+  //testRuntime "net.bytebuddy:byte-buddy:1.6.5"
+  testRuntime "cglib:cglib-nodep:3.2.6"
+  testRuntime "org.objenesis:objenesis:2.5.1"
 }
 
 
