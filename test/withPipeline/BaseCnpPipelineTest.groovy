@@ -21,7 +21,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     binding.setVariable("env", [
       BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
       ARM_SUBSCRIPTION_ID: '', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
-      CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:''])
+      CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:''])
 
     def library = library()
       .name('Infrastructure')
