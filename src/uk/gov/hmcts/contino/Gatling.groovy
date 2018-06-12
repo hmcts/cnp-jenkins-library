@@ -11,6 +11,7 @@ class Gatling implements Serializable {
   public static final String GATLING_IMAGE         = 'hmcts/moj-gatling-image:2.3.1-1.0'
 
   // with Gatling command-line you can't specify a configuration directory, so we need to bind-mount it
+  // TODO: use host networking for now as 1) DNS seems to be broken in container and 2) may need it for local perf. testing against localhost
   public static final String GATLING_RUN_ARGS     = '--network=host -v ' + GATLING_CONF_DIR + ':/etc/gatling/conf'
 
   def steps
@@ -23,6 +24,9 @@ class Gatling implements Serializable {
     this.steps.withDocker(GATLING_IMAGE, GATLING_RUN_ARGS) {
       this.steps.sh "gatling.sh -m -sf ${GATLING_SIMS_DIR} -df ${GATLING_DATA_DIR} -bdf ${GATLING_BODIES_DIR} -bf ${GATLING_BINARIES_DIR} -rf ${GATLING_REPORTS_DIR}"
     }
+
+    // jenkins gatling plugin
+    this.steps.gatlingArchive()
   }
 
 }

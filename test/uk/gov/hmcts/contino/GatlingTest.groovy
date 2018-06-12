@@ -17,6 +17,7 @@ class GatlingTest extends Specification {
       gatling.execute()
     then:
     1 * steps.withDocker(Gatling.GATLING_IMAGE, Gatling.GATLING_RUN_ARGS, _ as Closure)
+    1 * steps.gatlingArchive()
   }
 
 }
