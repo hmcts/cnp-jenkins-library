@@ -1,17 +1,6 @@
-import com.microsoft.azure.documentdb.DocumentClient
-import uk.gov.hmcts.contino.DocumentPublisher
+import com.timw.DocumentPublisher
 
-def call(steps, params) {
-
-  def env = steps.env
-  def documentClient = new DocumentClient(env.COSMOSDB_URL, env.COSMOSDB_TOKEN_KEY, null, null)
-  def documentPublisher = new DocumentPublisher(steps, params.product, params.component, params.environment)
-
-  try {
-    documentPublisher.publishAll(documentClient, "dbs/jenkins/colls/performance-metrics", "**/*.json")
-  }
-  finally {
-    documentClient.close()
-  }
-
+def call(steps, params, baseDir, pattern) {
+  def documentPublisher = new DocumentPublisher(steps, params)
+  documentPublisher.publishAll('dbs/jenkins/colls/performance-metrics', baseDir, pattern)
 }

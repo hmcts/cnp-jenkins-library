@@ -1,58 +1,62 @@
 package uk.gov.hmcts.contino
 
-import com.microsoft.azure.documentdb.Document
-import com.microsoft.azure.documentdb.DocumentClient
+import net.javacrumbs.jsonunit.core.Option
 import spock.lang.Specification
+
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson
+
 
 class DocumentPublisherTest extends Specification {
 
-  private static final String COLLECTION_LINK = "dbs/jenkins/colls/mycollection"
-  private static final String DATA            = '{ \"key\": \"value\"}'
-  private static final String PRODUCT         = 'product'
-  private static final String COMPONENT       = 'component'
-  private static final String ENVIRONMENT     = 'environment'
+  private static final String PRODUCT            = 'some-webapp'
+  private static final String COMPONENT          = 'backend'
+  private static final String ENVIRONMENT        = 'dev'
+  private static final String BRANCH_NAME        = 'master'
+  private static final String BUILD_NUMBER       = '66'
+  private static final String BUILD_ID           = '12'
+  private static final String BUILD_DISPLAY_NAME = 'build-display-name'
+  private static final String JOB_NAME           = 'job-name'
+  private static final String JOB_BASE_NAME      = 'job-base-name'
+  private static final String BUILD_TAG          = 'build-tag'
+  private static final String NODE_NAME          = 'node-name'
+
+  private static final String DATA = "{\"simulation\": \"RhubarbReferenceSimulation\"}"
 
   def documentPublisher
-  def documentClient
-  def steps
+  def steps = Mock(JenkinsStepMock)
+  def params = [product: PRODUCT, component: COMPONENT, environment: ENVIRONMENT]
 
   def setup() {
-    steps = Mock(JenkinsStepMock)
-    steps.env >> [BRANCH_NAME: "master",
-                  BUILD_NUMBER: "6",
-                  BUILD_ID: "56",
-                  BUILD_DISPLAY_NAME: "build-display-name",
-                  JOB_NAME: "job-name",
-                  JOB_BASE_NAME: 'job-base-name',
-                  BUILD_TAG: 'build-tag',
-                  NODE_NAME: 'node-name']
+    steps.env >> [BRANCH_NAME: BRANCH_NAME,
+                  BUILD_NUMBER: BUILD_NUMBER,
+                  BUILD_ID: BUILD_ID,
+                  BUILD_DISPLAY_NAME: BUILD_DISPLAY_NAME,
+                  JOB_NAME: JOB_NAME,
+                  JOB_BASE_NAME: JOB_BASE_NAME,
+                  BUILD_TAG: BUILD_TAG,
+                  NODE_NAME: NODE_NAME]
 
-    documentClient = Mock(DocumentClient)
-    documentPublisher = new DocumentPublisher(steps, PRODUCT, COMPONENT, ENVIRONMENT)
-
+    documentPublisher = new DocumentPublisher(steps, params)
   }
 
-  def "publish single document"() {
+  def "WrapWithBuildInfo"() {
     when:
-      documentPublisher.publish(this.documentClient, COLLECTION_LINK, DATA)
+      def result = documentPublisher.wrapWithBuildInfo('test.json', DATA)
     then:
-      1 * documentClient.createDocument(COLLECTION_LINK, _ as Document, null, false)
-  }
+      assertThatJson(result).node('product').isStringEqualTo(PRODUCT)
+      assertThatJson(result).node('component').isStringEqualTo(COMPONENT)
+      assertThatJson(result).node('environment').isStringEqualTo(ENVIRONMENT)
+      assertThatJson(result).node('branch_name').isStringEqualTo(BRANCH_NAME)
+      assertThatJson(result).node('build_number').isStringEqualTo(BUILD_NUMBER)
+      assertThatJson(result).node('build_id').isStringEqualTo(BUILD_ID)
+      assertThatJson(result).node('build_display_name').isStringEqualTo(BUILD_DISPLAY_NAME)
+      assertThatJson(result).node('job_name').isStringEqualTo(JOB_NAME)
+      assertThatJson(result).node('job_base_name').isStringEqualTo(JOB_BASE_NAME)
+      assertThatJson(result).node('build_tag').isStringEqualTo(BUILD_TAG)
+      assertThatJson(result).node('node_name').isStringEqualTo(NODE_NAME)
 
-  def "publish all documents"() {
-    when:
-      documentPublisher.publishAll(this.documentClient, COLLECTION_LINK, 'testResources/files/perf-reports', '**/*.json')
-    then:
-      2 * documentClient.createDocument(COLLECTION_LINK, _ as Document, null, false)
-
-  }
-
-  def "get files of pattern **/*.json"() {
-    when:
-      def files = documentPublisher.findFiles('testResources/files/perf-reports', '**/*.json')
-
-    then:
-      files.size() == 2
+      assertThatJson(result).node('stage_timestamp').isPresent()
+      assertThatJson(result).node("test\\.json").isPresent()
   }
 
 }
