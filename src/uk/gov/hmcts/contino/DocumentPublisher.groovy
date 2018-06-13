@@ -24,10 +24,9 @@ class DocumentPublisher implements Serializable {
     List documents = new ArrayList()
 
     files.each {
-      def fullPath = "${baseDir}/" + it.path
-      def json = this.steps.readJSON file: fullPath
-      def jsonObject = wrapWithBuildInfo(it.name, json)
-      documents.add(jsonObject)
+      def absolutePath = "${baseDir}/" + it.path
+      def json = this.steps.readJSON file: absolutePath
+      documents.add(wrapWithBuildInfo(it.name, json))
     }
 
     publish(collectionLink, documents)

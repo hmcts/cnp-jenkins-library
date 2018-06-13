@@ -1,6 +1,6 @@
-import com.timw.DocumentPublisher
+import uk.gov.hmcts.contino.DocumentPublisher
 
-def call(steps, params, baseDir, pattern) {
+def call(steps, params, collectionLink, baseDir, pattern) {
   def documentPublisher = new DocumentPublisher(steps, params)
-  documentPublisher.publishAll('dbs/jenkins/colls/performance-metrics', baseDir, pattern)
+  documentPublisher.publishAll(collectionLink, baseDir, pattern)
 }
