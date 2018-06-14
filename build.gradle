@@ -39,7 +39,6 @@ dependencies {
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
   testCompile group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '1.31.0'
 
-  //testRuntime "net.bytebuddy:byte-buddy:1.6.5"
   testRuntime "cglib:cglib-nodep:3.2.6"
   testRuntime "org.objenesis:objenesis:2.5.1"
 }

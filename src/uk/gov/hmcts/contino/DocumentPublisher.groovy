@@ -52,10 +52,6 @@ class DocumentPublisher implements Serializable {
 
   def getCosmosDbKey() {
     steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-      if (env.COSMOSDB_TOKEN_KEY == null) {
-        steps.echo "CosmosDB key not found, skipping performance metrics publishing"
-        return
-      }
       return env.COSMOSDB_TOKEN_KEY
     }
   }
