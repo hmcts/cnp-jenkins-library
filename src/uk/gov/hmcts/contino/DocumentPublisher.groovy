@@ -8,6 +8,8 @@ import com.cloudbees.groovy.cps.NonCPS
 
 class DocumentPublisher implements Serializable {
 
+  private static final String DB_DEFAULT_URL = 'https://pipeline-metrics.documents.azure.com/'
+
   def steps
   def params
   def env
@@ -29,32 +31,32 @@ class DocumentPublisher implements Serializable {
       documents.add(wrapWithBuildInfo(it.name, json))
     }
 
-    steps.echo "Found ${documents.size()} with pattern ${pattern}"
-
-    publish(collectionLink, documents)
+    publish(getCosmosDbKey(), collectionLink, documents)
   }
 
   @NonCPS
-  private def publish(collectionLink, documents) {
+  private def publish(cosmosDbKey, collectionLink, documents) {
 
-    steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_KEY']]) {
-      if ("${COSMOSDB_KEY}" == null) {
+    def cosmosDbUrl = env.COSMOSDB_URL ?: DB_DEFAULT_URL
+    def documentClient = new DocumentClient(cosmosDbUrl, cosmosDbKey, null, null)
+
+    try {
+      documents.each {
+        documentClient.createDocument(collectionLink, new Document(it), null, false)
+      }
+    }
+    finally {
+      documentClient.close()
+    }
+  }
+
+  def getCosmosDbKey() {
+    steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
+      if (env.COSMOSDB_TOKEN_KEY == null) {
         steps.echo "CosmosDB key not found, skipping performance metrics publishing"
         return
       }
-
-      def cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com/'
-      def documentClient = new DocumentClient(cosmosDbUrl, "${COSMOSDB_KEY}", null, null)
-
-      try {
-        documents.each {
-          steps.echo "Publishing to collection ${collectionLink}: " + it.toString()
-          documentClient.createDocument(collectionLink, new Document(it), null, false)
-        }
-      }
-      finally {
-        documentClient.close()
-      }
+      return env.COSMOSDB_TOKEN_KEY
     }
   }
 
