@@ -6,7 +6,7 @@ def call() {
 
   withCredentials([usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USERNAME')]) {
     def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
-      customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${BEARER_TOKEN}"]], httpMode: 'POST',
+      customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${env.BEARER_TOKEN}"]], httpMode: 'POST',
       requestBody: """{
         "ref": "${env.CHANGE_BRANCH}",
         "description": "Deploying ${env.CHANGE_BRANCH}",

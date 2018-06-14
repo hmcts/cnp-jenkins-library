@@ -1,11 +1,9 @@
 package uk.gov.hmcts.contino;
 
-class YarnBuilder implements Builder, Serializable {
-
-  def steps
+class YarnBuilder extends AbstractBuilder {
 
   YarnBuilder(steps) {
-    this.steps = steps
+    super(steps)
   }
 
   def build() {

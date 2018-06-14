@@ -12,11 +12,10 @@ import groovy.json.JsonSlurperClassic
     slice 0 - management vnet
     slice 1 - prod environment
     slice 2 - nonprod environment
-    slice 13 - hmcts demo environment
-    anything else automatically selected from free slices 3-12
+    anything else automatically selected from free slices 3-14
   subnet 15-end for sandbox subscription
 */
-def call(String subscription, String environment) {
+def call(String subscription, String environment, Integer numberOfSubnets) {
   def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
   result = az "network vnet list --query '[].[name,addressSpace.addressPrefixes]' -o json"
@@ -28,35 +27,26 @@ def call(String subscription, String environment) {
   list = getSubnetsList(env.TF_VAR_root_address_space, 6)
   subnetsList = list.collect { it.toString() }
 
-  def chosenIP
+  def chosenIP = []
   switch (subscription) {
-    case 'prod':
-      chosenIP = subnetsList[1]
-      break
     case 'nonprod':
-      if (environment.equalsIgnoreCase("aat"))
-        chosenIP = subnetsList[2]
+      if (environment.equalsIgnoreCase("aat")) {
+        chosenIP.add(subnetsList[2])
+        if (numberOfSubnets>1)
+          chosenIP.add((subnetsList[3..14] - ipList)[0..numberOfSubnets-1])
+        log.warning("Can't return ${numberOfSubnets} subnets for ${environment}! Returning one only!")
+      }
       else
-        chosenIP = (subnetsList[3..12] - ipList)[0]
-      echo "List of all possible subnets for $subscription: ${subnetsList[2..12]}"
-      break
-    case 'hmctsdemo':
-      chosenIP = subnetsList[13]
-      echo "Subnet for $subscription: ${subnetsList[13]}"
+        chosenIP = (subnetsList[3..14] - ipList)[0..numberOfSubnets-1]
+      echo "List of all possible subnets for $subscription: ${subnetsList[2..14]}. Choosing: ${chosenIP}"
       break
     case 'sandbox':
-      chosenIP = (subnetsList[14..-1] - ipList)[0]
-      echo "List of all possible subnets for $subscription: ${subnetsList[14..-1]}"
+      chosenIP = (subnetsList[15..-1] - ipList)[0..1]
+      echo "List of all possible subnets for $subscription: ${subnetsList[15..-1]}. Choosing: ${chosenIP}"
       break
   }
 
-  if (ipList.contains(chosenIP))
-    log.warning("${subnetsList[1]} already in use!")
-
-  if (chosenIP != null)
-    return [chosenIP, subnetsList.findIndexValues { it.equalsIgnoreCase(chosenIP) }[0] ]
-  else
-    throw new Exception("Could not find a free subnetwork!")
+  return chosenIP.collect { item -> [item, subnetsList.findIndexOf { it.equalsIgnoreCase(item) }] }
 }
 
 def getSubnetsList(String rootSubnet, newbits) {

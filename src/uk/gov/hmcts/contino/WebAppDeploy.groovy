@@ -9,7 +9,6 @@ class WebAppDeploy implements Serializable {
 
   public static final String GIT_EMAIL = "jenkinsmoj@contino.io"
   public static final String GIT_USER = "moj-jenkins-user"
-  public static final String SERVICE_HOST_SUFFIX = "internal"
 
   def steps
   def product
@@ -85,18 +84,7 @@ class WebAppDeploy implements Serializable {
    * @param env
    * @return
    */
-  def deployNodeJS(env){
-    return deployNodeJS(env, getComputeFor(env))
-  }
-
-  /**
-   * Deploys a NodeJs app to @env and to the cluster @hostingEnv
-   * @param env
-   * @param hostingEnv
-   * @return
-   */
-
-  def deployNodeJS(env, hostingEnv) {
+  def deployNodeJS(env) {
     steps.sh("git checkout ${branch.branchName}")
 
     steps.sh("rm .gitignore")
@@ -118,7 +106,7 @@ class WebAppDeploy implements Serializable {
   }
 
   /**
-   * Deploys a Java Web App. Expects a self hosted Jar
+   * Deploys a Java Web App. Expects a self hosted Jar or War
    * @param env
    * @return
    */
@@ -129,7 +117,15 @@ class WebAppDeploy implements Serializable {
 
     steps.sh("mkdir ${tempDir}")
 
-    copy('build/libs/*.jar', tempDir)
+    def status = copyAndReturnStatus('build/libs/*.jar', tempDir)
+    if (status != 0) {
+      status = copyAndReturnStatus('build/libs/*.war', tempDir)
+    }
+
+    if (status != 0) {
+      steps.error "deployJavaWebApp expects an executable JAR or WAR deployment, neither was found. status = ${status}"
+    }
+
     checkAndCopy('web.config', tempDir)
     copyIgnore('lib/applicationinsights-*.jar', tempDir)
     copyIgnore('lib/AI-Agent.xml', tempDir)
@@ -166,6 +162,13 @@ class WebAppDeploy implements Serializable {
     steps.sh("cp ${filePath} ${destinationDir}")
   }
 
+  private def copyAndReturnStatus(filePath, destinationDir) {
+    steps.sh(
+      script: "cp ${filePath} ${destinationDir}",
+      returnStatus: true
+    )
+  }
+
   /**
    * Forces a recursive copy by always returning 0 regardless of errors
    */
@@ -179,28 +182,15 @@ class WebAppDeploy implements Serializable {
     }
   }
 
-  private def getServiceHost(product, app, env, slot) {
-    def serviceName = getServiceName(product, app, env)
-    def serviceDomain = getServiceDomain(env)
-    def slotString = ""
+  private def getServiceHost(String product, String component, String env, String slot) {
+    AppServiceResolver asr = new AppServiceResolver(steps)
+    boolean staging = (slot == "staging")
 
-    if (slot != "production")
-      slotString = "-${slot}"
-
-    return "${serviceName}${slotString}.${serviceDomain}"
+    return asr.getServiceHost(product, component, env, staging)
   }
 
   private def getServiceName(product, app, env) {
     return "${product}-${app}-${env}"
-  }
-
-  private def getServiceDomain(env) {
-    def compute = getComputeFor(env)
-    return "service.${compute}.${SERVICE_HOST_SUFFIX}"
-  }
-
-  private def getComputeFor(env){
-    return "core-compute-${env}"
   }
 
   private def configureGit() {

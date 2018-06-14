@@ -1,0 +1,46 @@
+#!groovy
+@Library('Infrastructure') _
+
+def channel = '#cnp-build-status'
+
+node {
+  try {
+    stage('Checkout') {
+      deleteDir()
+      checkout scm
+    }
+
+    stage('Build') {
+      sh "./gradlew --info clean build -x test"
+    }
+
+    stage('Test') {
+      try {
+        sh "./gradlew --info test"
+      } finally {
+        steps.junit '**/test-results/**/*.xml'
+      }
+    }
+
+    parallel (
+      backend: {
+        stage('Run pipeline for backend') {
+          build job: 'HMCTS_pipeline_test/moj-rhubarb-recipes-service/master',
+            parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
+        }
+      },
+
+      frontend: {
+        stage('Run pipeline for frontend') {
+          build job: 'HMCTS_pipeline_test/moj-rhubarb-frontend/master',
+            parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
+        }
+      }
+    )
+
+  } catch (err) {
+    notifyBuildFailure channel: channel
+    throw err
+  }
+  notifyBuildFixed channel: channel
+}

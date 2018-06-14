@@ -34,7 +34,6 @@ def call(type, String product, String component, String environment, String subs
   pl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
-  currentBuild.result = "SUCCESS"
 
   timestamps {
     try {

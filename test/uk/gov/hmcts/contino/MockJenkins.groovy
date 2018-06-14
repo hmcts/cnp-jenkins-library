@@ -1,9 +1,18 @@
 package uk.gov.hmcts.contino
 
 class MockJenkins {
-  MockJenkinsPluginManager pluginManager = new MockJenkinsPluginManager()
+
+  private final MockJenkinsPluginManager pluginManager
+
+  MockJenkins() {
+    this. pluginManager = new MockJenkinsPluginManager()
+  }
+
+  MockJenkins(MockJenkinsPluginManager pluginManager) {
+    this.pluginManager = pluginManager
+  }
 
   def getPluginManager() {
-    return pluginManager
+    return this.pluginManager
   }
 }

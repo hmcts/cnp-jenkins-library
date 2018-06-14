@@ -1,13 +1,11 @@
 package uk.gov.hmcts.contino
 
-class AngularBuilder implements Builder, Serializable {
-
-  def steps
+class AngularBuilder extends AbstractBuilder {
 
   YarnBuilder builder
 
   AngularBuilder(steps) {
-    this.steps = steps
+    super(steps)
     this.builder = new YarnBuilder(steps)
   }
 
@@ -35,6 +33,11 @@ class AngularBuilder implements Builder, Serializable {
   @Override
   def functionalTest() {
     builder.functionalTest()
+  }
+
+  @Override
+  def performanceTest() {
+    builder.performanceTest()
   }
 
   @Override
