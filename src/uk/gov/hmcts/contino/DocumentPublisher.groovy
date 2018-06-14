@@ -29,6 +29,8 @@ class DocumentPublisher implements Serializable {
       documents.add(wrapWithBuildInfo(it.name, json))
     }
 
+    steps.echo "Found ${documents.size()} with pattern ${pattern}"
+
     publish(collectionLink, documents)
   }
 
@@ -46,6 +48,7 @@ class DocumentPublisher implements Serializable {
 
       try {
         documents.each {
+          steps.echo "Publishing to collection ${collectionLink}: " + it.toString()
           documentClient.createDocument(collectionLink, new Document(it), null, false)
         }
       }
