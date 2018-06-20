@@ -1,5 +1,4 @@
 #!groovy
-import uk.gov.hmcts.contino.Gatling
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
