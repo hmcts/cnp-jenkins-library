@@ -125,10 +125,7 @@ def call(params) {
               testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
                 pl.callAround("performanceTest:${environment}") {
                   builder.performanceTest()
-                  azureBlobUpload('buildlog-storage-account', Gatling.GATLING_REPORTS_DIR, "performance/${product}-${component}/${environment}")
-
-                  def reportsPath = "${WORKSPACE}/" + Gatling.GATLING_REPORTS_PATH
-                  publishToCosmosDb(this, params, Gatling.COSMOSDB_COLLECTION, reportsPath, '**/*.json')
+                  publishPerformanceReports(this, params)
                 }
               }
             }
