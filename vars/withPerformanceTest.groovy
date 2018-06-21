@@ -24,10 +24,10 @@ def call(String product, String component, String environment, Closure body) {
           }
         }
         stage('Performance Test') {
-
-          echo "TEST_URL is ${TEST_URL}"
-
           pl.callAround('performancetest') {
+
+            echo "TEST_URL is ${TEST_URL}"
+
             def gatling = new Gatling(this)
             gatling.execute()
 
