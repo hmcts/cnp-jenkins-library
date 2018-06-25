@@ -12,9 +12,11 @@ def call(product, component, environment, planOnly, subscription) {
 
   def deploymentNamespace = branch.deploymentNamespace()
   def resourceGroupName = ""
+  def tfBackendKeyPath = "${productName}/${environment}"
 
   onPr {
     resourceGroupName = getPreviewResourceGroupName()
+    tfBackendKeyPath = "${resourceGroupName}/${environment}"
   }
 
   log.info "Building with following input parameters: resource_group_name='$resourceGroupName'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
@@ -44,7 +46,7 @@ def call(product, component, environment, planOnly, subscription) {
         "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
         "-backend-config \"container_name=${env.STORE_sa_container_name_template}${environment}\" " +
         "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
-        "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
+        "-backend-config \"key=${tfBackendKeyPath}/terraform.tfstate\""
 
 
 
@@ -73,14 +75,19 @@ def call(product, component, environment, planOnly, subscription) {
 
 }
 
+/**
+ * Only use for PRs
+ */
 def getPreviewResourceGroupName() {
-  def changeUrl = "${CHANGE_URL}"
-  def branchName = "${BRANCH_NAME}"
-
-  def repoName = changeUrl.tokenize('/.')[-3]
-  def rgName = branchName + '-' + repoName + '-preview'
-
-  // will be something like 'pr-23-git-repo-name-preview'
-  return rgName
+  return "${BRANCH_NAME}" + '-' + getGitRepoName() + '-preview'
 }
+
+/**
+ * CHANGE_URL only exists for PR branches.
+ */
+def getGitRepoName() {
+  def changeUrl = "${CHANGE_URL}"
+  return changeUrl.tokenize('/.')[-3]
+}
+
 
