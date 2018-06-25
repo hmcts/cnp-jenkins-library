@@ -11,8 +11,13 @@ def call(product, component, environment, planOnly, subscription) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
+  def resourceGroupName = ""
 
-  log.info "Building with following input parameters: product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+  onPr {
+    resourceGroupName = getPreviewResourceGroupName()
+  }
+
+  log.info "Building with following input parameters: resource_group_name='$resourceGroupName'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   def productName = component ? "$product-$component" : product
 
@@ -44,12 +49,12 @@ def call(product, component, environment, planOnly, subscription) {
 
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+      sh "terraform plan -var 'resource_group_name=${resourceGroupName}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+          sh "terraform apply -auto-approve -var 'resource_group_name=${resourceGroupName}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
           parseResult = null
           try {
@@ -66,5 +71,16 @@ def call(product, component, environment, planOnly, subscription) {
     }
   }
 
+}
+
+def getPreviewResourceGroupName() {
+  def changeUrl = "${CHANGE_URL}"
+  def branchName = "${BRANCH_NAME}"
+
+  def repoName = changeUrl.tokenize('/.')[-3]
+  def rgName = branchName + '-' + repoName + '-preview'
+
+  // will be something like 'pr-23-git-repo-name-preview'
+  return rgName
 }
 
