@@ -14,11 +14,8 @@ def call(type,Closure body) {
 
   PipelineType pipelineType=crossBrowser
 
-  if (type instanceof PipelineType) {
-    pipelineType = type
-  } else {
     pipelineType = typesOfTesting.get(type)
-  }
+
 
   assert pipelineType != null
 
