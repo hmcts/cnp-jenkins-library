@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.*
 
 
-def call(type, String product,  Closure body) {
+def call(type,Closure body) {
 
   def branch = new ProjectBranch("master")
 
@@ -12,7 +12,7 @@ def call(type, String product,  Closure body) {
     crossBrowser  : new CrossBrowserPipeline(this)
   ]
 
-  PipelineType pipelineType
+  PipelineType pipelineType=crossBrowser
 
   if (type instanceof PipelineType) {
     pipelineType = type

@@ -10,7 +10,7 @@ class CrossBrowserPipeline implements  PipelineType, Serializable {
   Deployer deployer
 
 
-  CrossBrowserPipeline(steps,product) {
+  CrossBrowserPipeline(steps) {
       this.steps = steps
       this.product = product
       builder = new CrossBrowserPipelineSteps(steps, product)
