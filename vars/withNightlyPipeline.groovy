@@ -7,7 +7,7 @@ import uk.gov.hmcts.contino.CrossBrowserPipeline
 
 def call(type,Closure body) {
 
-  def branch = new ProjectBranch("master")
+  //def branch = new ProjectBranch("master")
 
   def pipelineTypes = [
     crossBrowser  : new CrossBrowserPipeline(this)
