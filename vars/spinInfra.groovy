@@ -11,17 +11,16 @@ def call(product, component, environment, planOnly, subscription) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
+  def productName = component ? "$product-$component" : product
   def resourceGroupName = ""
   def tfBackendKeyPath = "${productName}/${environment}"
 
-  onPr {
+  onPR {
     resourceGroupName = getPreviewResourceGroupName()
-    tfBackendKeyPath = "${resourceGroupName}/${environment}"
+    tfBackendKeyPath = "${resourceGroupName}"
   }
 
   log.info "Building with following input parameters: resource_group_name='$resourceGroupName'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
-
-  def productName = component ? "$product-$component" : product
 
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
@@ -79,14 +78,14 @@ def call(product, component, environment, planOnly, subscription) {
  * Only use for PRs
  */
 def getPreviewResourceGroupName() {
-  return "${BRANCH_NAME}" + '-' + getGitRepoName() + '-preview'
+  return "${env.BRANCH_NAME}" + '-' + getGitRepoName() + '-preview'
 }
 
 /**
  * CHANGE_URL only exists for PR branches.
  */
 def getGitRepoName() {
-  def changeUrl = "${CHANGE_URL}"
+  def changeUrl = "${env.CHANGE_URL}"
   return changeUrl.tokenize('/.')[-3]
 }
 
