@@ -19,7 +19,7 @@ def call(type,Closure body) {
 
   assert pipelineType != null
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,"gjhgjh")
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,"gjhgjh","hgjj")
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
