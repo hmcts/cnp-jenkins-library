@@ -5,8 +5,8 @@ def call(type,Closure body) {
 
   def branch = new ProjectBranch("master")
 
-  def deploymentNamespace = branch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+ /* def deploymentNamespace = branch.deploymentNamespace()
+  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product*/
 
   def typesOfTesting = [
     crossBrowser  : new CrossBrowserPipeline(this)
