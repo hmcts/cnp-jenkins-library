@@ -14,8 +14,8 @@ def call(type, String product,  Closure body) {
 
   PipelineType pipelineType
 
-  if (type instanceof typesOfTesting) {
-    pipelineType = typeOfTesting
+  if (type instanceof PipelineType) {
+    pipelineType = type
   } else {
     pipelineType = typesOfTesting.get(type)
   }
