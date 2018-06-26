@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class AbstractNightlyBuilder implements NightlyBuilder, Serializable {
+abstract class  AbstractNightlyBuilder implements NightlyBuilder, Serializable {
 
     def steps
     def gatling
