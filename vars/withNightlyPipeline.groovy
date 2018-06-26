@@ -5,17 +5,17 @@ def call(type,Closure body) {
 
   def branch = new ProjectBranch("master")
 
- /* def deploymentNamespace = branch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product*/
-
-  def typesOfTesting = [
+  def pipelineTypes = [
     crossBrowser  : new CrossBrowserPipeline(this)
   ]
 
-  PipelineType pipelineType=crossBrowser
+  PipelineType pipelineType
 
-    pipelineType = typesOfTesting.get(type)
-
+  if (type instanceof PipelineType) {
+    pipelineType = type
+  } else {
+    pipelineType = pipelineTypes.get(type)
+  }
 
   assert pipelineType != null
 
@@ -28,7 +28,6 @@ def call(type,Closure body) {
   pl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
-
 
   timestamps {
     try {

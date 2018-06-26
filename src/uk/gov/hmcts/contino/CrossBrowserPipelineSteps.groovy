@@ -2,7 +2,6 @@ package uk.gov.hmcts.contino
 
 class CrossBrowserPipelineSteps extends AbstractNightlyBuilder {
 
-
   CrossBrowserPipelineSteps(steps) {
       super(steps)
     }
