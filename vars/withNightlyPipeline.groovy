@@ -1,4 +1,8 @@
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.NightlyBuilder
+import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.CrossBrowserPipeline
 
 
 def call(type,Closure body) {
@@ -18,6 +22,8 @@ def call(type,Closure body) {
   }
 
   assert pipelineType != null
+  NightlyBuilder builder = pipelineType.nBuilder
+
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,"gjhgjh","hgjj")
   def pl = new PipelineCallbacks(metricsPublisher)
@@ -38,6 +44,16 @@ def call(type,Closure body) {
           pl.callAround('checkout') {
             deleteDir()
             checkout scm
+          }
+        }
+        stage("Build") {
+          pl.callAround('build') {
+            builder.build()
+          }
+        }
+        stage("crossBrowser") {
+          pl.callAround('build') {
+            builder.crossBrowserTest()
           }
         }
 
