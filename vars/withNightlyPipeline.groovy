@@ -9,7 +9,7 @@ def call(type, String product,  Closure body) {
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   def typesOfTesting = [
-    crossBrowser  : new CrossBrowserPipeline(this, deploymentProduct)
+    crossBrowser  : new CrossBrowserPipeline(this)
   ]
 
   PipelineType pipelineType
