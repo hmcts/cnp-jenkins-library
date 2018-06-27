@@ -19,10 +19,15 @@ def call(String environment) {
   else
   {
     defaultPolicy = libraryResource 'uk/gov/hmcts/contino/certificateDefaultPolicy.json'
-    writeFile file: 'certificateDefaultPolicy.json', text: defaultPolicy
+    log.info(defaultPolicy)
+    def newPolicy = defaultPolicy.replaceAll('ENVIRONMENT_NAME',"${environment}")
+    log.info(newPolicy)
+    writeFile file: 'defaultPolicy.json', text: newPolicy
+
+    log.info(defaultPolicy)
 
     log.info("Certificate name ${env.TF_VAR_certificateName} does not exist in vault $infraVaultName! Creating one right now...")
-    az(/keyvault certificate create --vault-name $infraVaultName --name ${env.TF_VAR_certificateName} --policy @certificateDefaultPolicy.json/)
+    az(/keyvault certificate create --vault-name $infraVaultName --name ${env.TF_VAR_certificateName} --policy @defaultPolicy.json/)
     log.info("Retrieving the thumbprint")
     env.TF_VAR_certificateThumbprint = az "keyvault certificate show --vault-name $infraVaultName --name ${env.TF_VAR_certificateName} --query x509ThumbprintHex -o tsv"
   }
