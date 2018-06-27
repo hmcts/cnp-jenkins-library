@@ -1,7 +1,7 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
-
+import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
@@ -78,15 +78,8 @@ def call(product, component, environment, planOnly, subscription) {
  * Only use for PRs
  */
 def getPreviewResourceGroupName() {
-  return "${env.BRANCH_NAME}" + '-' + getGitRepoName() + '-preview'
+  return "${env.BRANCH_NAME}" + '-' + new RepositoryUrl().getShort(env.CHANGE_URL) + '-preview'
 }
 
-/**
- * CHANGE_URL only exists for PR branches.
- */
-def getGitRepoName() {
-  def changeUrl = "${env.CHANGE_URL}"
-  return changeUrl.tokenize('/.')[-3]
-}
 
 
