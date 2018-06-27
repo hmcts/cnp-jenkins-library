@@ -27,6 +27,7 @@ class withNodeJsPipelineOnPRTests extends BaseCnpPipelineTest {
       smokeTest(1) {} // preview-prod
     }
 
+    binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     def mockDeployer = new MockFor(NodeDeployer)
     mockDeployer.ignore.getServiceUrl() { env, slot -> return null} // we don't care when or how often this is called
     mockDeployer.demand.with {

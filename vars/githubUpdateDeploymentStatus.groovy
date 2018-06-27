@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(Long deploymentNumber, String url) {
-  String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
+  String repositoryShortUrl = new RepositoryUrl().getFull(env.CHANGE_URL)
 
   withCredentials([usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USERNAME')]) {
     httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',

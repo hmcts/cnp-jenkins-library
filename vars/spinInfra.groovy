@@ -1,7 +1,7 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
-
+import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
@@ -11,10 +11,16 @@ def call(product, component, environment, planOnly, subscription) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
-
-  log.info "Building with following input parameters: product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
-
   def productName = component ? "$product-$component" : product
+  def resourceGroupName = ""
+  def tfBackendKeyPath = "${productName}/${environment}"
+
+  onPR {
+    resourceGroupName = getPreviewResourceGroupName()
+    tfBackendKeyPath = "${resourceGroupName}"
+  }
+
+  log.info "Building with following input parameters: resource_group_name='$resourceGroupName'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
@@ -39,17 +45,17 @@ def call(product, component, environment, planOnly, subscription) {
         "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
         "-backend-config \"container_name=${env.STORE_sa_container_name_template}${environment}\" " +
         "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
-        "-backend-config \"key=${productName}/${environment}/terraform.tfstate\""
+        "-backend-config \"key=${tfBackendKeyPath}/terraform.tfstate\""
 
 
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+      sh "terraform plan -var 'resource_group_name=${resourceGroupName}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+          sh "terraform apply -auto-approve -var 'resource_group_name=${resourceGroupName}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
           parseResult = null
           try {
@@ -68,3 +74,9 @@ def call(product, component, environment, planOnly, subscription) {
 
 }
 
+/**
+ * Only use for PRs
+ */
+def getPreviewResourceGroupName() {
+  return "${env.BRANCH_NAME}" + '-' + new RepositoryUrl().getShort(env.CHANGE_URL) + '-preview'
+}
