@@ -11,9 +11,8 @@ class CrossBrowserPipelineSteps extends AbstractNightlyBuilder {
   }
 
   def crossBrowserTest() {
-      sauceconnect(options: "-u divorce -K e0067992-049e-412c-9d15-2566a28cfb73 --verbose --tunnel-identifier reformtunnel", verboseLogging: true)
       yarn("test:crossbrowser")
-    
+
 
   }
 
