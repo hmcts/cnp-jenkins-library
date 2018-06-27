@@ -33,9 +33,9 @@
     "subject": "CN=platform.hmcts.net",
     "subjectAlternativeNames": {
       "dnsNames": [
-        "*.ssl.platform.hmcts.net",
-        "*.service.ssl.platform.hmcts.net",
-        "*.scm.service.ssl.platform.hmcts.net"
+        "*.ENVIRONMENT_NAME.platform.hmcts.net",
+        "*.service.ENVIRONMENT_NAME.platform.hmcts.net",
+        "*.scm.service.ENVIRONMENT_NAME.platform.hmcts.net"
       ],
       "emails": null,
       "upns": null
