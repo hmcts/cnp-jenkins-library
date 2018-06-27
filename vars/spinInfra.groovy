@@ -78,5 +78,6 @@ def call(product, component, environment, planOnly, subscription) {
  * Only use for PRs
  */
 def getPreviewResourceGroupName() {
-  return "${env.BRANCH_NAME}" + '-' + new RepositoryUrl().getShort(env.CHANGE_URL) + '-preview'
+  def rgName =  "${env.BRANCH_NAME}" + '-' + new RepositoryUrl().getShort(env.CHANGE_URL) + '-preview'
+  return rgName.toLowerCase()
 }
