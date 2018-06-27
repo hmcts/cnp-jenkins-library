@@ -80,6 +80,3 @@ def call(product, component, environment, planOnly, subscription) {
 def getPreviewResourceGroupName() {
   return "${env.BRANCH_NAME}" + '-' + new RepositoryUrl().getShort(env.CHANGE_URL) + '-preview'
 }
-
-
-
