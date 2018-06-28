@@ -7,8 +7,6 @@ import uk.gov.hmcts.contino.CrossBrowserPipeline
 
 def call(type,Closure body) {
 
-  //def branch = new ProjectBranch("master")
-
   def pipelineTypes = [
     crossBrowser  : new CrossBrowserPipeline(this)
   ]
@@ -24,7 +22,7 @@ def call(type,Closure body) {
   NightlyBuilder builder = pipelineType.nBuilder
 
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,"gjhgjh","hgjj")
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,"product","component")
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
