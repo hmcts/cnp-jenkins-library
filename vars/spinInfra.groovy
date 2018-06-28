@@ -1,6 +1,7 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.TerraformTagMap
 
 def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
@@ -17,7 +18,8 @@ def call(product, component, environment, planOnly, subscription) {
     changeUrl = env.CHANGE_URL
   }
 
-  log.info "Building with following input parameters: changeUrl='$changeUrl'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl]).toString()
+  log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
@@ -47,12 +49,12 @@ def call(product, component, environment, planOnly, subscription) {
 
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'change_url=${changeUrl}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+      sh "terraform plan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'change_url=${changeUrl}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+          sh "terraform apply -auto-approve -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
           parseResult = null
           try {
