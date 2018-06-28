@@ -22,7 +22,7 @@ def call(type,Closure body) {
   }*/
 
   //assert pipelineType != null
-  //NightlyBuilder builder = pipelineType.nBuilder
+  NightlyBuilder builder = pipelineType.nBuilder
 
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,"gjhgjh","hgjj")
