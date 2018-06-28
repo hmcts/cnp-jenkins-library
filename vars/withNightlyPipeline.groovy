@@ -38,7 +38,7 @@ def call(type,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        SectionNightlyTest(pl, pipelineType.builder)
+        SectionNightlyTest(pl, builder)
       }
     }
     catch (err) {
