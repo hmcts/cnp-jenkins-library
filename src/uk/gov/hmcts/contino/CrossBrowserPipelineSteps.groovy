@@ -3,18 +3,19 @@ package uk.gov.hmcts.contino
 class CrossBrowserPipelineSteps extends AbstractNightlyBuilder {
 
   CrossBrowserPipelineSteps(steps) {
-      super(steps)
-    }
+    super(steps)
+  }
 
   def build() {
     yarn("install")
   }
 
   def crossBrowserTest() {
-    sauce('crossbrowser-sauce-labs') {
-      sauceconnect(options: "-u divorce -K e0067992-049e-412c-9d15-2566a28cfb73 --verbose --tunnel-identifier reformtunnel", verboseLogging: true)
-      yarn("test:crossbrowser")
-    }
+    //sauce('crossbrowser-sauce-labs') {
+    echo 'print user nameeeeeeee' ${env.SAUCE_USERNAME}
+    sauceconnect(options: "-u ${env.SAUCE_USERNAME} -K ${env.SAUCE_ACCESS_KEY} --verbose --tunnel-identifier reformtunnel", verboseLogging: true)
+    yarn("test:crossbrowser")
+
 
   }
 
