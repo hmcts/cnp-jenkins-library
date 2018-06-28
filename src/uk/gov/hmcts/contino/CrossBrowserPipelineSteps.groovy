@@ -11,11 +11,10 @@ class CrossBrowserPipelineSteps extends AbstractNightlyBuilder {
   }
 
   def crossBrowserTest() {
-    //sauce('crossbrowser-sauce-labs') {
-    echo 'print user nameeeeeeee' ${env.SAUCE_USERNAME}
-    sauceconnect(options: "-u ${env.SAUCE_USERNAME} -K ${env.SAUCE_ACCESS_KEY} --verbose --tunnel-identifier reformtunnel", verboseLogging: true)
-    yarn("test:crossbrowser")
-
+    sauce('crossbrowser-sauce-labs') {
+      sauceconnect(options: "-u ${env.SAUCE_USERNAME} -K ${env.SAUCE_ACCESS_KEY} --verbose --tunnel-identifier reformtunnel", verboseLogging: true)
+      yarn("test:crossbrowser")
+    }
 
   }
 
