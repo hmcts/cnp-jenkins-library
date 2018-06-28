@@ -9,16 +9,16 @@ def call(type,Closure body) {
 
   //def branch = new ProjectBranch("master")
 
-  /*def pipelineTypes = [
+  def pipelineTypes = [
     crossBrowser  : new CrossBrowserPipeline(this)
-  ]*/
-  PipelineType pipelineType = new CrossBrowserPipeline(this)
+  ]
+  PipelineType pipelineType
 
-  /*if (type instanceof PipelineType) {
+  if (type instanceof PipelineType) {
     pipelineType = type
   } else {
     pipelineType = pipelineTypes.get(type)
-  }*/
+  }
 
   assert pipelineType != null
   NightlyBuilder builder = pipelineType.nBuilder
