@@ -9,7 +9,7 @@ def call(type,Closure body) {
 
   //def branch = new ProjectBranch("master")
 
-  /*def pipelineTypes = [
+  def pipelineTypes = [
     crossBrowser  : new CrossBrowserPipeline(this)
   ]
 
@@ -19,9 +19,9 @@ def call(type,Closure body) {
     pipelineType = type
   } else {
     pipelineType = pipelineTypes.get(type)
-  }*/
+  }
 
-  //assert pipelineType != null
+  assert pipelineType != null
   NightlyBuilder builder = pipelineType.nBuilder
 
 
@@ -39,26 +39,7 @@ def call(type,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-
-        stage('Checkout') {
-          pl.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
-        }
-        stage("Build") {
-          pl.callAround('build') {
-            builder.build()
-          }
-        }
-        stage("crossBrowser") {
-          pl.callAround('build') {
-            /*sauce('e0067992-049e-412c-9d15-2566a28cfb73')
-            sauceconnect(options: "--verbose --tunnel-identifier reformtunnel", verboseLogging: true)*/
-            builder.crossBrowserTest()
-          }
-        }
-
+        SectionNightlyTest(pl, pipelineType.builder)
       }
     }
     catch (err) {
