@@ -2,23 +2,23 @@ import uk.gov.hmcts.contino.NightlyBuilder
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
-import uk.gov.hmcts.contino.CrossBrowserPipeline
+import uk.gov.hmcts.contino.NightlyPipeline
 
 
 def call(type,Closure body) {
 
-  def pipelineTypes = [
-    crossBrowser  : new CrossBrowserPipeline(this)
-  ]
-  PipelineType pipelineType
+   String typeOfTesting
 
-  if (type instanceof PipelineType) {
-    pipelineType = type
-  } else {
-    pipelineType = pipelineTypes.get(type)
+  forEach(typeOfTesting :type){
+    if (typeOfTesting.equalIgnorecase('crossBrowser')||('PerformanceTest')){
+      np  : new NightlyPipeline(this)
+    }
   }
 
+  PipelineType pipelineType=np
+
   assert pipelineType != null
+
   NightlyBuilder builder = pipelineType.nBuilder
 
 

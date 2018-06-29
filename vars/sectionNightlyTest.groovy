@@ -3,7 +3,6 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 
 def call(PipelineCallbacks pl, NightlyBuilder builder) {
 
-
   stage('Checkout') {
     pl.callAround('checkout') {
       deleteDir()
@@ -18,11 +17,23 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
       }
     }
   }
+
   stage("crossBrowser") {
-    pl.callAround('build') {
+    pl.callAround('crossBrowser') {
+      timeout(time: 15, unit: 'MINUTES') {
         builder.crossBrowserTest()
 
       }
     }
+  }
+
+  stage("performanceTest") {
+    pl.callAround('PerformanceTest') {
+      timeout(time: 15, unit: 'MINUTES') {
+        builder.performanceTest()
+      }
+    }
+  }
+
 }
 
