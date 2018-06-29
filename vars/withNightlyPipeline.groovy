@@ -5,18 +5,11 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NightlyPipeline
 
 
-def call(type,Closure body) {
+def call(type,product,component,Closure body) {
 
-  String typeOfTesting
-
-  /*for(int i=0;i<type.length();i++){
-    if (type[i].equalIgnorecase('crossBrowser')||('PerformanceTest')){
-      np  : new NightlyPipeline(this)
-    }
-  }*/
   def pipelineTypes = [
-    crossBrowser  : new NightlyPipeline(this),
-    PerformanceTest : new NightlyPipeline(this)
+    ('PerformanceTest'|| 'crossBrowser')  : new NightlyPipeline(this),
+    //PerformanceTest : new NightlyPipeline(this)
   ]
   PipelineType pipelineType
 
@@ -28,13 +21,11 @@ def call(type,Closure body) {
       pipelineType = pipelineTypes.get(it)
     }
   }
-
     assert pipelineType != null
 
     NightlyBuilder builder = pipelineType.nBuilder
 
-
-    MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, "product", "component")
+    MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
     def pl = new PipelineCallbacks(metricsPublisher)
 
     body.delegate = pl
