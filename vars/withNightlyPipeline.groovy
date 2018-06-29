@@ -21,7 +21,7 @@ def call(type,Closure body) {
   type.each {
     if("${it}" instanceof PipelineType) {
 
-      println "type of testing  ${it} "
+      echo "type of testing  ${it} "
       pipelineType = "${it}"
     } else {
       pipelineType = pipelineTypes.get("${it}")
