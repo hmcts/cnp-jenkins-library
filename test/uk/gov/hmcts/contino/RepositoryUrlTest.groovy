@@ -5,21 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat
 
 class RepositoryUrlTest extends Specification {
 
-  static final URL = 'https://github.com/hmcts/spring-boot-template/pull/101'
-
-  def "should provide github 'full' url" () {
+  def "should provide github short url" () {
     when:
-      def fullUrl = new RepositoryUrl().getFull(URL)
+    def shortUrl = new RepositoryUrl().getShort("https://github.com/hmcts/spring-boot-template/pull/101")
 
     then:
-      assertThat(fullUrl).isEqualTo("hmcts/spring-boot-template")
-  }
-
-  def "should provide github repo name" () {
-    when:
-      def shortUrl = new RepositoryUrl().getShort(URL)
-
-    then:
-      assertThat(shortUrl).isEqualTo("spring-boot-template")
+    assertThat(shortUrl).isEqualTo("hmcts/spring-boot-template")
   }
 }
