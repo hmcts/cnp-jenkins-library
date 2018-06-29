@@ -25,7 +25,7 @@ def call(type,Closure body) {
       pipelineType = pipelineTypes.get('${it}')
     }
 
-    PipelineType pipelineType = np
+    PipelineType pipelineType
 
     assert pipelineType != null
 
