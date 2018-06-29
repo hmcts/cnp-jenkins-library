@@ -17,7 +17,7 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
       }
     }
   }
-
+try{
   stage("crossBrowser") {
     pl.callAround('crossBrowser') {
       timeout(time: 15, unit: 'MINUTES') {
@@ -26,6 +26,10 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
       }
     }
   }
+}
+catch(err){
+  echo err.printStackTrace()
+}
 
   stage("performanceTest") {
     pl.callAround('PerformanceTest') {

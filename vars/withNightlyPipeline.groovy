@@ -11,7 +11,7 @@ def call(type,product,component,Closure body) {
     PerformanceTest : new NightlyPipeline(this),
     crossBrowser : new NightlyPipeline(this)
   ]
-  
+
   PipelineType pipelineType
 
   type.each {
