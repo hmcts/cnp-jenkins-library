@@ -15,7 +15,7 @@ def call(type,Closure body) {
     }
   }*/
   def pipelineTypes = [
-    (crossBrowser || PerformanceTest): new NightlyPipeline(this)
+    ('crossBrowser' || 'PerformanceTest'): new NightlyPipeline(this)
   ]
 
   type.each {
