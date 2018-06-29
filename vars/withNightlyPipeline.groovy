@@ -8,7 +8,7 @@ import uk.gov.hmcts.contino.NightlyPipeline
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    PerformanceTest : new NightlyPipeline(this),
+    PerformanceTest: new NightlyPipeline(this),
     crossBrowser : new NightlyPipeline(this)
   ]
 
