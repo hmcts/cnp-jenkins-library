@@ -15,11 +15,13 @@ def call(type,Closure body) {
     }
   }*/
   def pipelineTypes = [
-    ('crossBrowser' || 'PerformanceTest'): new NightlyPipeline(this)
+    type : new NightlyPipeline(this)
   ]
 
   type.each {
     if("${it}" instanceof PipelineType) {
+
+      println "type of testing  ${it} "
       pipelineType = "${it}"
     } else {
       pipelineType = pipelineTypes.get("${it}")
