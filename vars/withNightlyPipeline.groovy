@@ -15,19 +15,19 @@ def call(type,Closure body) {
     }
   }*/
   def pipelineTypes = [
-    type : new NightlyPipeline(this)
+    crossBrowser  : new NightlyPipeline(this),
+    PerformanceTest : new NightlyPipeline(this)
   ]
+  PipelineType pipelineType
 
   type.each {
-    if("${it}" instanceof PipelineType) {
-
-      echo "type of testing  ${it} "
-      pipelineType = "${it}"
+    if (it instanceof PipelineType) {
+      if (it != null)
+        pipelineType = it
     } else {
-      pipelineType = pipelineTypes.get("${it}")
+      pipelineType = pipelineTypes.get(it)
     }
-
-    PipelineType pipelineType
+  }
 
     assert pipelineType != null
 
