@@ -17,28 +17,28 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
       }
     }
   }
-  parallel {
-    try {
-      stage("crossBrowser") {
-        pl.callAround('crossBrowser') {
-          timeout(time: 15, unit: 'MINUTES') {
-            builder.crossBrowserTest()
 
-          }
-        }
+try{
+  stage("crossBrowser") {
+    pl.callAround('crossBrowser') {
+      timeout(time: 15, unit: 'MINUTES') {
+        builder.crossBrowserTest()
+
       }
     }
-    catch (err) {
-      echo err.printStackTrace()
-    }
-
-    stage("performanceTest") {
-      pl.callAround('PerformanceTest') {
-        timeout(time: 15, unit: 'MINUTES') {
-          builder.performanceTest()
-        }
-      }
-    }
-
   }
 }
+catch(err){
+  echo err.printStackTrace()
+}
+
+  stage("performanceTest") {
+    pl.callAround('PerformanceTest') {
+      timeout(time: 15, unit: 'MINUTES') {
+        builder.performanceTest()
+      }
+    }
+  }
+
+}
+
