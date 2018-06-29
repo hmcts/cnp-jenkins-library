@@ -22,48 +22,48 @@ def call(type,product,component,Closure body) {
       pipelineType = pipelineTypes.get(it)
     }
   }
-    assert pipelineType != null
+  assert pipelineType != null
 
-    NightlyBuilder builder = pipelineType.nBuilder
+  NightlyBuilder builder = pipelineType.nBuilder
 
-    MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
-    def pl = new PipelineCallbacks(metricsPublisher)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
+  def pl = new PipelineCallbacks(metricsPublisher)
 
-    body.delegate = pl
-    body.call() // register callbacks
+  body.delegate = pl
+  body.call() // register callbacks
 
-    pl.onStageFailure() {
-      currentBuild.result = "FAILURE"
-    }
-
-    timestamps {
-      try {
-        node {
-          env.PATH = "$env.PATH:/usr/local/bin"
-          sectionNightlyTest(pl, builder)
-        }
-      }
-      catch (err) {
-        currentBuild.result = "FAILURE"
-        if (pl.slackChannel) {
-          notifyBuildFailure channel: pl.slackChannel
-        }
-
-        pl.call('onFailure')
-        node {
-          metricsPublisher.publish('Pipeline Failed')
-        }
-        throw err
-      }
-
-      if (pl.slackChannel) {
-        notifyBuildFixed channel: pl.slackChannel
-      }
-
-      pl.call('onSuccess')
-      node {
-        metricsPublisher.publish('Pipeline Succeeded')
-      }
-    }
+  pl.onStageFailure() {
+    currentBuild.result = "FAILURE"
   }
+
+  timestamps {
+    try {
+      node {
+        env.PATH = "$env.PATH:/usr/local/bin"
+        sectionNightlyTest(pl, builder)
+      }
+    }
+    catch (err) {
+      currentBuild.result = "FAILURE"
+      if (pl.slackChannel) {
+        notifyBuildFailure channel: pl.slackChannel
+      }
+
+      pl.call('onFailure')
+      node {
+        metricsPublisher.publish('Pipeline Failed')
+      }
+      throw err
+    }
+
+    if (pl.slackChannel) {
+      notifyBuildFixed channel: pl.slackChannel
+    }
+
+    pl.call('onSuccess')
+      node {
+       metricsPublisher.publish('Pipeline Succeeded')
+      }
+  }
+}
 

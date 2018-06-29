@@ -1,12 +1,12 @@
 package uk.gov.hmcts.contino
 
 class NightlyPipelineSteps extends AbstractNightlyBuilder {
+
   def gatling
 
   NightlyPipelineSteps(steps) {
     super(steps)
     this.gatling = new Gatling(this.steps)
-
   }
 
   def build() {
