@@ -19,10 +19,10 @@ def call(type,Closure body) {
   ]
 
   type.each {
-    if ($ { it } instanceof PipelineType) {
-      pipelineType = $ { it }
+    if('${it}' instanceof PipelineType) {
+      pipelineType = '${it}'
     } else {
-      pipelineType = pipelineTypes.get($ { it })
+      pipelineType = pipelineTypes.get('${it}')
     }
 
     PipelineType pipelineType = np
