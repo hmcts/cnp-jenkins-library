@@ -9,7 +9,7 @@ def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
     PerformanceTest: new NightlyPipeline(this),
-    crossBrowser : new NightlyPipeline(this)
+    crossBrowserTest : new NightlyPipeline(this)
   ]
   PipelineType pipelineType
 

@@ -19,8 +19,8 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
   }
 
   try{
-    stage("crossBrowser") {
-      pl.callAround('crossBrowser') {
+    stage("crossBrowserTest") {
+      pl.callAround('crossBrowserTest') {
         timeout(time: 15, unit: 'MINUTES') {
           builder.crossBrowserTest()
 
