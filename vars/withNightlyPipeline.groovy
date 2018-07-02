@@ -39,7 +39,7 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        sectionNightlyTest(pl, builder)
+        sectionCrossBrowserTest(pl, builder)
         sectionPerformanceTest(pl,builder)
       }
     }
