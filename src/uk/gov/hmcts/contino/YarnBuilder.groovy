@@ -41,6 +41,10 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def crossBrowserTest() {
+    yarn("test:crossbrowser")
+  }
+
   def securityCheck() {
     yarn("test:nsp")
   }

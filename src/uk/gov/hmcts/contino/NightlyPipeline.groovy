@@ -7,7 +7,8 @@ class NightlyPipeline implements  PipelineType, Serializable {
 
   NightlyPipeline(steps) {
       this.steps = steps
-      nBuilder = new NightlyPipelineSteps(steps)
+      nBuilder = new NightlyPipelineBuilder(steps)
   }
 
 }
+

@@ -8,9 +8,11 @@ import uk.gov.hmcts.contino.NightlyPipeline
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    PerformanceTest: new NightlyPipeline(this),
-    crossBrowserTest : new NightlyPipeline(this)
+    java  : new SpringBootPipelineType(this, deploymentProduct, component),
+    nodejs: new NodePipelineType(this, deploymentProduct, component),
+    angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
+
   PipelineType pipelineType
 
   type.each {
@@ -39,8 +41,19 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        sectionCrossBrowserTest(pl, builder)
-        sectionPerformanceTest(pl,builder)
+
+        stage('Checkout') {
+          pl.callAround('checkout') {
+            deleteDir()
+            checkout scm
+          }
+        }
+        if (pl.enablePerformanceTest) {
+          sectionPerformanceTest(pl, builder)
+        }
+        if (pl.crossBrowserTest) {
+          sectionCrossBrowserTest(pl, builder)
+        }
       }
     }
     catch (err) {

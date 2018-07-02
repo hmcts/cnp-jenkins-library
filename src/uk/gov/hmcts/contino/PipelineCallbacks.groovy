@@ -7,6 +7,8 @@ class PipelineCallbacks implements Serializable {
   List<Map<String, Object>> vaultSecrets = []
   boolean migrateDb = false
   boolean performanceTest = false
+  int pefTestTimeout = 0
+  boolean crossBrowserTest = false
   private MetricsPublisher metricsPublisher
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
@@ -74,8 +76,13 @@ class PipelineCallbacks implements Serializable {
     this.migrateDb = true
   }
 
-  void enablePerformanceTest() {
+  void enablePerformanceTest(int timeout) {
+    this.pefTestTimeout = timeout
     this.performanceTest = true
+  }
+
+  void enableCrossBrowserTest() {
+    this.crossBrowserTest = true
   }
 
   private def nullSafeCall(String key) {

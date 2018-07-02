@@ -5,7 +5,7 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
 
   stage("performanceTest") {
     pl.callAround('PerformanceTest') {
-      timeout(time: 15, unit: 'MINUTES') {
+      timeout(time: pl.perfTestTimeout, unit: 'MINUTES') {
         builder.performanceTest()
       }
     }
