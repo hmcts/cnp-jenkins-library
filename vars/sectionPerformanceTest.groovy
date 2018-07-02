@@ -10,26 +10,12 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
     }
   }
 
-  stage("Build") {
-    pl.callAround('build') {
+  stage("performanceTest") {
+    pl.callAround('PerformanceTest') {
       timeout(time: 15, unit: 'MINUTES') {
-        builder.build()
+        builder.performanceTest()
       }
     }
-  }
-
-  try{
-    stage("crossBrowser") {
-      pl.callAround('crossBrowser') {
-        timeout(time: 15, unit: 'MINUTES') {
-          builder.crossBrowserTest()
-
-        }
-      }
-    }
-  }
-  catch(err){
-    echo err.printStackTrace()
   }
 
 }

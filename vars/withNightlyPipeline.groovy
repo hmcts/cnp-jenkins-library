@@ -11,7 +11,6 @@ def call(type,product,component,Closure body) {
     PerformanceTest: new NightlyPipeline(this),
     crossBrowser : new NightlyPipeline(this)
   ]
-
   PipelineType pipelineType
 
   type.each {
@@ -41,6 +40,7 @@ def call(type,product,component,Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
         sectionNightlyTest(pl, builder)
+        sectionPerformanceTest(pl,builder)
       }
     }
     catch (err) {
