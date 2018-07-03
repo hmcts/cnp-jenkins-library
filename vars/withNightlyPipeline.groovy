@@ -19,7 +19,7 @@ def call(type,product,component,Closure body) {
     if (type instanceof PipelineType) {
         pipelineType = type
     } else {
-      pipelineType = pipelineTypes.get(it)
+      pipelineType = pipelineTypes.get(type)
     }
   }
   assert pipelineType != null
