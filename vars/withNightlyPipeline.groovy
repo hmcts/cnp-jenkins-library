@@ -36,25 +36,7 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-
-        stage('Checkout') {
-          pl.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
-        }
-
-        if (pl.crossBrowserTest) {
-          try {
-            sectionCrossBrowserTest(pl, builder)
-          }
-          catch (err) {
-            currentBuild.result = "UNSTABLE"
-          }
-        }
-        if (pl.performanceTest) {
-          sectionPerformanceTest(pl, builder)
-        }
+        sectionNightlyTests(pl, builder)
       }
     }
     catch (err) {
