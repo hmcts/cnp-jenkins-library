@@ -23,7 +23,7 @@ def call(type,product,component,Closure body) {
   }
   assert pipelineType != null
 
-  Builder builder = pipelineType.nBuilder
+  Builder builder = pipelineType.builder
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
   def pl = new PipelineCallbacks(metricsPublisher)
