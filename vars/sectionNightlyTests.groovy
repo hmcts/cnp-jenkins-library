@@ -7,10 +7,6 @@ def call(PipelineCallbacks pl, Builder builder) {
 
   stage('Checkout') {
     pl.callAround('checkout') {
-
-      sh "ls -la ${WORKSPACE}/src/gatling"
-      sh "ls -la ${WORKSPACE}/src/gatling/conf"
-
       deleteDir()
       checkout scm
     }
@@ -38,7 +34,7 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 
-  if (pl.peformanceTest) {
+  if (pl.performanceTest) {
     stage("performanceTest") {
       pl.callAround('PerformanceTest') {
         timeout(time: pl.perfTestTimeout, unit: 'MINUTES') {
