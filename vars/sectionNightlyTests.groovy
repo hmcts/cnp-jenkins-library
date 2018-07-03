@@ -8,6 +8,7 @@ def call(PipelineCallbacks pl, Builder builder) {
   stage('Checkout') {
     pl.callAround('checkout') {
 
+      sh "ls -la ${WORKSPACE}/src/gatling"
       sh "ls -la ${WORKSPACE}/src/gatling/conf"
 
       deleteDir()
