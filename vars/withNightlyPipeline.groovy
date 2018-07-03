@@ -8,8 +8,8 @@ import uk.gov.hmcts.contino.NodePipelineType
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    PerformanceTest: new NodePipelineType(this, deploymentProduct, component),
-    crossBrowserTest: new NodePipelineType(this, deploymentProduct, component)
+    PerformanceTest: new NodePipelineType(this, product, component),
+    crossBrowserTest: new NodePipelineType(this, product, component)
   ]
   PipelineType pipelineType
 
