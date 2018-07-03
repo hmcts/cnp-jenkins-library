@@ -11,7 +11,7 @@ class PipelineCallbacks implements Serializable {
   boolean performanceTest = false
   boolean crossBrowserTest = false
   int crossBrowserTestTimeout
-  int pefTestTimeout
+  int perfTestTimeout
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
