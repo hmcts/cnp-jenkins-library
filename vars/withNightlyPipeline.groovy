@@ -49,7 +49,7 @@ def call(type,product,component,Closure body) {
 
         sectionCrossBrowserTest(pl, builder)
 
-        if (pl.enablePerformanceTest)
+        if (pl.performanceTest)
           sectionPerformanceTest(pl,builder)
       }
     }
