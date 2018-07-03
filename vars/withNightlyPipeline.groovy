@@ -48,12 +48,16 @@ def call(type,product,component,Closure body) {
         }
 
         if (pl.crossBrowserTest) {
-          sectionCrossBrowserTest(pl, builder)
+          try {
+            sectionCrossBrowserTest(pl, builder)
+          }
+          catch (err) {
+            currentBuild.result = "UNSTABLE"
+          }
         }
         if (pl.performanceTest) {
           sectionPerformanceTest(pl,builder)
         }
-
       }
     }
     catch (err) {
