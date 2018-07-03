@@ -3,8 +3,6 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 
 def call(PipelineCallbacks pl, Builder builder) {
 
-  def caughtException
-
   stage('Checkout') {
     pl.callAround('checkout') {
       deleteDir()
