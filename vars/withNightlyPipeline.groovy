@@ -14,14 +14,10 @@ def call(type,product,component,Closure body) {
     jave: new SpringBootPipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component)
   ]
-  PipelineType pipelineType
 
-    if (type instanceof PipelineType) {
-        pipelineType = type
-    } else {
-      pipelineType = pipelineTypes.get(type)
-    }
-  }
+  pipelineType = pipelineTypes.get(type)
+
+  echo "pipeline type is ${pipelineType}"
   assert pipelineType != null
 
   Builder builder = pipelineType.builder
