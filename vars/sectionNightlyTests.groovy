@@ -29,23 +29,24 @@ def call(PipelineCallbacks pl, Builder builder) {
         }
       }
     } catch (err) {
-      caughtException = err
+      err.printStackTrace()
       currentBuild.result = "UNSTABLE"
     }
   }
 
   if (pl.performanceTest) {
-    stage("performanceTest") {
-      pl.callAround('PerformanceTest') {
-        timeout(time: pl.perfTestTimeout, unit: 'MINUTES') {
-          builder.performanceTest()
+    try {
+      stage("performanceTest") {
+        pl.callAround('PerformanceTest') {
+          timeout(time: pl.perfTestTimeout, unit: 'MINUTES') {
+            builder.performanceTest()
+          }
         }
       }
+    } catch (err) {
+      err.printStackTrace()
+      currentBuild.result = "UNSTABLE"
     }
-  }
-
-  if (caughtException) {
-    throw caughtException
   }
 }
 
