@@ -49,12 +49,8 @@ def call(type,product,component,Closure body) {
         }
 
         if (pl.crossBrowserTest) {
-          try {
+          echo"print in the jenkins console"
             sectionCrossBrowserTest(pl, builder)
-          }
-          catch (err) {
-            currentBuild.result = "UNSTABLE"
-          }
         }
         if (pl.performanceTest) {
           sectionPerformanceTest(pl, builder)
