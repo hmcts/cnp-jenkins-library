@@ -56,7 +56,7 @@ def call(type,product,component,Closure body) {
           }
         }
         if (pl.performanceTest) {
-          sectionPerformanceTest(pl,builder)
+          sectionPerformanceTest(pl, builder)
         }
       }
     }

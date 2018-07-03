@@ -79,7 +79,7 @@ class PipelineCallbacks implements Serializable {
   }
 
   void enablePerformanceTest(int timeout = 15) {
-    this.pefTestTimeout = timeout
+    this.perfTestTimeout = timeout
     this.performanceTest = true
   }
 
