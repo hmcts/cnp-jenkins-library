@@ -2,7 +2,7 @@ import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
-import uk.gov.hmcts.contino.NightlyPipeline
+import uk.gov.hmcts.contino.NodePipelineType
 
 
 def call(type,product,component,Closure body) {
