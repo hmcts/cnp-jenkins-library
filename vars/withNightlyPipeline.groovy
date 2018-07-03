@@ -1,4 +1,4 @@
-import uk.gov.hmcts.contino.NightlyBuilder
+import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
@@ -8,11 +8,9 @@ import uk.gov.hmcts.contino.NightlyPipeline
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, deploymentProduct, component),
-    nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component)
+    PerformanceTest: new NodePipelineType(this, deploymentProduct, component),
+    crossBrowserTest: new NodePipelineType(this, deploymentProduct, component)
   ]
-
   PipelineType pipelineType
 
   type.each {
@@ -25,7 +23,7 @@ def call(type,product,component,Closure body) {
   }
   assert pipelineType != null
 
-  NightlyBuilder builder = pipelineType.nBuilder
+  Builder builder = pipelineType.nBuilder
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
   def pl = new PipelineCallbacks(metricsPublisher)
@@ -48,12 +46,12 @@ def call(type,product,component,Closure body) {
             checkout scm
           }
         }
-        if (pl.enablePerformanceTest) {
-          sectionPerformanceTest(pl, builder)
-        }
-        if (pl.crossBrowserTest) {
-          sectionCrossBrowserTest(pl, builder)
-        }
+
+        sectionCrossBrowserTest(pl, builder)
+
+        if (pl.enablePerformanceTest)
+
+          sectionPerformanceTest(pl,builder)
       }
     }
     catch (err) {
@@ -74,9 +72,8 @@ def call(type,product,component,Closure body) {
     }
 
     pl.call('onSuccess')
-      node {
-       metricsPublisher.publish('Pipeline Succeeded')
-      }
+    node {
+      metricsPublisher.publish('Pipeline Succeeded')
+    }
   }
 }
-

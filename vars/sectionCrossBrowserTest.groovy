@@ -1,7 +1,7 @@
-import uk.gov.hmcts.contino.NightlyBuilder
+import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacks
 
-def call(PipelineCallbacks pl, NightlyBuilder builder) {
+def call(PipelineCallbacks pl, Builder builder) {
 
   stage("Build") {
     pl.callAround('build') {
@@ -18,4 +18,3 @@ def call(PipelineCallbacks pl, NightlyBuilder builder) {
     }
   }
 }
-
