@@ -3,6 +3,8 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
+import uk.gov.hmcts.contino.SpringBootPipelineType
+import uk.gov.hmcts.contino.AngularPipelineType
 
 
 def call(type,product,component,Closure body) {
