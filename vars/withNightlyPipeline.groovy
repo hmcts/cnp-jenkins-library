@@ -8,15 +8,14 @@ import uk.gov.hmcts.contino.NodePipelineType
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    PerformanceTest: new NodePipelineType(this, product, component),
-    crossBrowserTest: new NodePipelineType(this, product, component)
+    nodejs: new NodePipelineType(this, product, component),
+    jave: new NodePipelineType(this, product, component),
+    angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
   PipelineType pipelineType
 
-  type.each {
-    if (it instanceof PipelineType) {
-      if (it != null)
-        pipelineType = it
+    if (type instanceof PipelineType) {
+        pipelineType = type
     } else {
       pipelineType = pipelineTypes.get(it)
     }
@@ -82,4 +81,4 @@ def call(type,product,component,Closure body) {
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
-}
+
