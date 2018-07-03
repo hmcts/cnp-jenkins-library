@@ -10,8 +10,8 @@ import uk.gov.hmcts.contino.AngularPipelineType
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    nodejs: new NodePipelineType(this, product, component),
-    jave: new SpringBootPipelineType(this, product, component),
+    nodejs : new NodePipelineType(this, product, component),
+    jave   : new SpringBootPipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component)
   ]
 
@@ -22,7 +22,7 @@ def call(type,product,component,Closure body) {
 
   Builder builder = pipelineType.builder
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
@@ -80,3 +80,4 @@ def call(type,product,component,Closure body) {
     }
   }
 
+}
