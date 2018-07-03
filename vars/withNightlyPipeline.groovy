@@ -47,10 +47,13 @@ def call(type,product,component,Closure body) {
           }
         }
 
-        sectionCrossBrowserTest(pl, builder)
-
-        if (pl.performanceTest)
+        if (pl.crossBrowserTest) {
+          sectionCrossBrowserTest(pl, builder)
+        }
+        if (pl.performanceTest) {
           sectionPerformanceTest(pl,builder)
+        }
+
       }
     }
     catch (err) {
