@@ -6,10 +6,12 @@ class PipelineCallbacks implements Serializable {
   String slackChannel
   List<Map<String, Object>> vaultSecrets = []
   boolean migrateDb = false
-  boolean performanceTest = false
-  int pefTestTimeout = 0
-  boolean crossBrowserTest = false
   private MetricsPublisher metricsPublisher
+
+  boolean performanceTest = false
+  boolean crossBrowserTest = false
+  int crossBrowserTestTimeout
+  int pefTestTimeout
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
@@ -76,12 +78,13 @@ class PipelineCallbacks implements Serializable {
     this.migrateDb = true
   }
 
-  void enablePerformanceTest(int timeout) {
+  void enablePerformanceTest(int timeout = 15) {
     this.pefTestTimeout = timeout
     this.performanceTest = true
   }
 
-  void enableCrossBrowserTest() {
+  void enableCrossBrowserTest(int timeout = 15) {
+    this.crossBrowserTestTimeout = timeout
     this.crossBrowserTest = true
   }
 
