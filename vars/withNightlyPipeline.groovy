@@ -33,11 +33,23 @@ def call(type,product,component,Closure body) {
     currentBuild.result = "FAILURE"
   }
 
+  Subscription subscription = new Subscription(env)
+  Environment environment = new Environment(env)
+
   timestamps {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
         sectionNightlyTests(pl, builder)
+        onNightlyPipeline {
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component)
+        }
       }
     }
     catch (err) {

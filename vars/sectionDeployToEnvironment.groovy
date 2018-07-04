@@ -129,6 +129,15 @@ def call(params) {
               }
             }
           }
+          if (pl.crossBrowserTest) {
+            stage("CrossBrowser Test - ${environment} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                pl.callAround("crossBrowserTest:${environment}") {
+                  builder.crossBrowserTest()
+                }
+              }
+            }
+          }
         }
 
         stage("Promote - ${environment} (staging -> production slot)") {
