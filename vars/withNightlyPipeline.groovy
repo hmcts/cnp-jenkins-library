@@ -10,23 +10,23 @@ import uk.gov.hmcts.contino.AngularPipelineType
 def call(type,product,component,Closure body) {
 
   def pipelineTypes = [
-    nodejs : new NodePipelineType(this, product, component),
-    jave   : new SpringBootPipelineType(this, product, component),
+    nodejs: new NodePipelineType(this, product, component),
+    jave: new SpringBootPipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component)
   ]
   PipelineType pipelineType
 
-  if (type instanceof PipelineType) {
-    pipelineType = type
-  } else {
-    pipelineType = pipelineTypes.get(type)
+    if (type instanceof PipelineType) {
+        pipelineType = type
+    } else {
+      pipelineType = pipelineTypes.get(type)
+    }
   }
-
   assert pipelineType != null
 
   Builder builder = pipelineType.builder
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild,product,component)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
@@ -48,10 +48,14 @@ def call(type,product,component,Closure body) {
           }
         }
 
-        //if (pl.crossBrowserTest) {
-        //  echo"print in the jenkins console"
+        if (pl.crossBrowserTest) {
+          try {
             sectionCrossBrowserTest(pl, builder)
-        //}
+          }
+          catch (err) {
+            currentBuild.result = "UNSTABLE"
+          }
+        }
         if (pl.performanceTest) {
           sectionPerformanceTest(pl, builder)
         }
@@ -79,4 +83,4 @@ def call(type,product,component,Closure body) {
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
-}
+
