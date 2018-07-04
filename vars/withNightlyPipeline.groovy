@@ -50,7 +50,6 @@ def call(type,product,component,Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component)
-        }
       }
     }
     catch (err) {
