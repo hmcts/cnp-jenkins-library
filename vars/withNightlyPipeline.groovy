@@ -43,7 +43,7 @@ def call(type,product,component,Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
         sectionNightlyTests(pl, builder)
-        onNightlyPipeline {
+        onMaster {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
