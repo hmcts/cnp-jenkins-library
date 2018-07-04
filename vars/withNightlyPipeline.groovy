@@ -48,10 +48,10 @@ def call(type,product,component,Closure body) {
           }
         }
 
-        if (pl.crossBrowserTest) {
-          echo"print in the jenkins console"
+        //if (pl.crossBrowserTest) {
+        //  echo"print in the jenkins console"
             sectionCrossBrowserTest(pl, builder)
-        }
+        //}
         if (pl.performanceTest) {
           sectionPerformanceTest(pl, builder)
         }
