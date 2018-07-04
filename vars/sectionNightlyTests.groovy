@@ -1,3 +1,4 @@
+
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacks
 
@@ -47,7 +48,3 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 }
-
-
-
-
