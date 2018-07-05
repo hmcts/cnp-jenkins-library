@@ -42,9 +42,15 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        sectionNightlyTests(pl, builder)
-        onFunctionalTestEnvironment(environment)
-      }
+
+          sectionNightlyTests(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component)
+    }
     }
     catch (err) {
       currentBuild.result = "FAILURE"
