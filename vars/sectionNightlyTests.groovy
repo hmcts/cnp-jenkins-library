@@ -16,8 +16,7 @@ def call(params) {
 
 
   withSubscription(subscription) {
-    echo "TEST_URL is........", deployer.getServiceUrl(environment, "staging")
-  }
+    echo "TEST_URL is........" ${deployer.getServiceUrl(environment, "staging")}
 
     stage('Checkout') {
       pl.callAround('checkout') {
@@ -62,4 +61,5 @@ def call(params) {
         currentBuild.result = "UNSTABLE"
       }
     }
+  }
 }
