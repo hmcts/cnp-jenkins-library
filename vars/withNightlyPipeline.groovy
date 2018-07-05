@@ -10,7 +10,7 @@ import uk.gov.hmcts.contino.Environment
 
 
 def call(type,product,component,Closure body) {
-  def branch = new ProjectBranch("Master")
+  def branch = new ProjectBranch("master")
 
   def deploymentNamespace = branch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
@@ -57,7 +57,11 @@ def call(type,product,component,Closure body) {
             component: component)
 
       assert pl!= null
-       assert  pipelineType!= null
+        assert  pipelineType!= null
+        assert subscription.nonProdName!= null
+        assert environment.nonProdName!= null
+
+
       }
     }
     catch (err) {
