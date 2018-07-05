@@ -7,14 +7,9 @@ import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
-import uk.gov.hmcts.contino.ProjectBranch
 
 
 def call(type,product,component,Closure body) {
-  def branch = new ProjectBranch(env.BRANCH_NAME)
-
-  def deploymentNamespace = branch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
 
   def pipelineTypes = [
@@ -48,21 +43,18 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
+        sectionNightlyTests()
 
-          sectionNightlyTests(
-            pipelineCallbacks: pl,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: deploymentProduct,
-            component: component)
+//          sectionNightlyTests(
+//            pipelineCallbacks: pl,
+//            pipelineType: pipelineType,
+//            subscription: subscription.nonProdName,
+//            environment: environment.nonProdName,
+//            product: deploymentProduct,
+//            component: component)
 
       assert pl!= null
         assert  pipelineType!= null
-        assert subscription.nonProdName!= null
-        assert environment.nonProdName!= null
-
-
       }
     }
     catch (err) {
