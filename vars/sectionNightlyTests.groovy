@@ -4,12 +4,21 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 
 def call(params) {
 
+  PipelineCallbacks pl = params.pipelineCallbacks
   PipelineType pipelineType = params.pipelineType
-  Deployer deployer = pipelineType.deployer
   def subscription = params.subscription
+  def environment = params.environment
+  def product = params.product
+  def component = params.component
+
+  Builder builder = pipelineType.builder
+  Deployer deployer = pipelineType.deployer
+
 
   withSubscription(subscription) {
     echo "TEST_URL is........", deployer.getServiceUrl(environment, "staging")
+  }
+
     stage('Checkout') {
       pl.callAround('checkout') {
         deleteDir()
@@ -53,5 +62,4 @@ def call(params) {
         currentBuild.result = "UNSTABLE"
       }
     }
-  }
 }
