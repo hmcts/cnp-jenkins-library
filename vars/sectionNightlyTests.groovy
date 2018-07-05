@@ -15,12 +15,9 @@ def call(params) {
   Deployer deployer = pipelineType.deployer
 
 
-  withSubscription(subscription) {
+  def TEST_URL = deployer.getServiceUrl(environment, "staging")
 
-      def TEST_URL = deployer.getServiceUrl(environment, "staging")
-
-
-      echo "Using TEST_URL....: ${env.TEST_URL}"
+  echo "Using TEST_URL....: ${env.TEST_URL}"
 
       stage('Checkout') {
         pl.callAround('checkout') {
@@ -70,5 +67,4 @@ def call(params) {
           currentBuild.result = "UNSTABLE"
         }
       }
-    }
   }
