@@ -10,6 +10,11 @@ import uk.gov.hmcts.contino.Environment
 
 
 def call(type,product,component,Closure body) {
+  def branch = new ProjectBranch("Master")
+
+  def deploymentNamespace = branch.deploymentNamespace()
+  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+
 
   def pipelineTypes = [
     nodejs : new NodePipelineType(this, product, component),
@@ -48,9 +53,12 @@ def call(type,product,component,Closure body) {
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
             environment: environment.nonProdName,
-            product: product,
+            product: deploymentProduct,
             component: component)
-    }
+
+      assert pl!= null
+       assert  pipelineType!= null
+      }
     }
     catch (err) {
       currentBuild.result = "FAILURE"
