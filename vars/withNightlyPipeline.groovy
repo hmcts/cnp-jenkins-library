@@ -10,7 +10,7 @@ import uk.gov.hmcts.contino.Environment
 
 
 def call(type,product,component,Closure body) {
-  def branch = new ProjectBranch("master")
+  def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
