@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.ProjectBranch
 
 
 def call(type,product,component,Closure body) {
