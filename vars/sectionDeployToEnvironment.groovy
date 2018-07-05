@@ -45,7 +45,6 @@ def call(params) {
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
-  milestone()
   lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
     stage("Build Infrastructure - ${environment}") {
       onPR {

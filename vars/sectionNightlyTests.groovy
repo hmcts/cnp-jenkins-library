@@ -16,16 +16,11 @@ def call(params) {
 
 
   withSubscription(subscription) {
-    wrap([
-      $class                   : 'AzureKeyVaultBuildWrapper',
-      azureKeyVaultSecrets     : pl.vaultSecrets,
-      keyVaultURLOverride      : tfOutput?.vaultUri?.value,
-      applicationIDOverride    : env.AZURE_CLIENT_ID,
-      applicationSecretOverride: env.AZURE_CLIENT_SECRET
-    ]) {
+
+      def TEST_URL = deployer.getServiceUrl(environment, "staging")
 
 
-      echo "TEST_URL is........" $ { deployer.getServiceUrl(environment, "staging") }
+      echo "Using TEST_URL....: ${env.TEST_URL}"
 
       stage('Checkout') {
         pl.callAround('checkout') {
@@ -43,10 +38,15 @@ def call(params) {
               }
             }
           }
-          stage("crossBrowserTest") {
-            pl.callAround('crossBrowserTest') {
-              timeout(time: pl.crossBrowserTestTimeout, unit: 'MINUTES') {
-                builder.crossBrowserTest()
+          onFunctionalTestEnvironment(environment) {
+            stage("crossBrowserTest") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                echo "test url is ..... ${TEST_URL}"
+                pl.callAround('crossBrowserTest') {
+                  timeout(time: pl.crossBrowserTestTimeout, unit: 'MINUTES') {
+                    builder.crossBrowserTest()
+                  }
+                }
               }
             }
           }
@@ -72,4 +72,3 @@ def call(params) {
       }
     }
   }
-}
