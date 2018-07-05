@@ -43,13 +43,7 @@ def call(type,product,component,Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
         sectionNightlyTests(pl, builder)
-          sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: product,
-            component: component)
+        onFunctionalTestEnvironment(environment)
       }
     }
     catch (err) {

@@ -47,26 +47,4 @@ def call(PipelineCallbacks pl, Builder builder) {
       currentBuild.result = "UNSTABLE"
     }
   }
-
-  onFunctionalTestEnvironment(environment) {
-    if (pl.performanceTest) {
-      stage("Performance Test - ${environment} (staging slot)") {
-        testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-          pl.callAround("performanceTest:${environment}") {
-            builder.performanceTest()
-            publishPerformanceReports(this, params)
-          }
-        }
-      }
-    }
-    if (pl.crossBrowserTest) {
-      stage("CrossBrowser Test - ${environment} (staging slot)") {
-        testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-          pl.callAround("crossBrowserTest:${environment}") {
-            builder.crossBrowserTest()
-          }
-        }
-      }
-    }
-  }
 }
