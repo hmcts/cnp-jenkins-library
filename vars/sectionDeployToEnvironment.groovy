@@ -80,11 +80,13 @@ def call(params) {
     stage("Deploy - ${environment} (staging slot)") {
       withSubscription(subscription) {
         pl.callAround("deploy:${environment}") {
-          deployer.deploy(environment)
-          deployer.healthCheck(environment, "staging")
+          timeout(time: 30, unit: 'MINUTES') {
+            deployer.deploy(environment)
+            deployer.healthCheck(environment, "staging")
 
-          onPR {
-            githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
+            onPR {
+              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
+            }
           }
         }
       }
@@ -122,8 +124,10 @@ def call(params) {
             stage("Performance Test - ${environment} (staging slot)") {
               testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
                 pl.callAround("performanceTest:${environment}") {
-                  builder.performanceTest()
-                  publishPerformanceReports(this, params)
+                  timeout(time: 120, unit: 'MINUTES') {
+                    builder.performanceTest()
+                    publishPerformanceReports(this, params)
+                  }
                 }
               }
             }
