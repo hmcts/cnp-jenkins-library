@@ -10,6 +10,14 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 
+  stage("Build") {
+    pl.callAround('build') {
+      timeout(time: 15, unit: 'MINUTES') {
+        builder.build()
+      }
+    }
+  }
+
   try {
     stage('DependencyCheckNightly') {
       pl.callAround('DependencyCheckNightly') {
@@ -25,13 +33,6 @@ def call(PipelineCallbacks pl, Builder builder) {
 
   if (pl.crossBrowserTest) {
     try {
-      stage("Build") {
-        pl.callAround('build') {
-          timeout(time: 15, unit: 'MINUTES') {
-            builder.build()
-          }
-        }
-      }
       stage("crossBrowserTest") {
         pl.callAround('crossBrowserTest') {
           timeout(time: pl.crossBrowserTestTimeout, unit: 'MINUTES') {
