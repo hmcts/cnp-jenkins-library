@@ -5,9 +5,6 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
-import uk.gov.hmcts.contino.Subscription
-import uk.gov.hmcts.contino.Environment
-
 
 def call(type,product,component,Closure body) {
 
@@ -19,8 +16,6 @@ def call(type,product,component,Closure body) {
   ]
 
   pipelineType = pipelineTypes.get(type)
-
-  echo "pipeline type is ${pipelineType}"
 
   assert pipelineType != null
 
@@ -36,24 +31,11 @@ def call(type,product,component,Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  Subscription subscription = new Subscription(env)
-  Environment environment = new Environment(env)
-
   timestamps {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        sectionNightlyTests()
-
-//          sectionNightlyTests(
-//            pipelineCallbacks: pl,
-//            pipelineType: pipelineType,
-//            subscription: subscription.nonProdName,
-//            environment: environment.nonProdName,
-//            product: deploymentProduct,
-//            component: component)
-
-      assert pl!= null
+        sectionNightlyTests(pl, builder)
         assert  pipelineType!= null
       }
     }
@@ -79,5 +61,4 @@ def call(type,product,component,Closure body) {
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
-
 }
