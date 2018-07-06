@@ -63,6 +63,7 @@ class MetricsPublisher implements Serializable {
     ]
   }
 
+  @NonCPS
   def publish(currentStepName) {
     try {
       steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
