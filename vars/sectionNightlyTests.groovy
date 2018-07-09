@@ -1,15 +1,9 @@
 
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.Deployer
+
 
 def call() {
-
-//  PipelineCallbacks pl = params.pipelineCallbacks
-//  PipelineType pipelineType = params.pipelineType
-//  def subscription = params.subscription
-//  def environment = params.environment
-//  def product = params.product
-//  def component = params.component
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
