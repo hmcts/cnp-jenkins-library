@@ -49,4 +49,9 @@ class AngularBuilder extends AbstractBuilder {
   def addVersionInfo() {
     builder.addVersionInfo()
   }
+
+  @Override
+  def crossBrowserTest() {
+    builder.crossBrowserTest()
+  }
 }

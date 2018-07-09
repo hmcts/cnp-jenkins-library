@@ -45,7 +45,6 @@ def call(params) {
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
 
-  milestone()
   lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
     stage("Build Infrastructure - ${environment}") {
       onPR {
@@ -129,6 +128,15 @@ def call(params) {
                     builder.performanceTest()
                     publishPerformanceReports(this, params)
                   }
+                }
+              }
+            }
+          }
+          if (pl.crossBrowserTest) {
+            stage("CrossBrowser Test - ${environment} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                pl.callAround("crossBrowserTest:${environment}") {
+                  builder.crossBrowserTest()
                 }
               }
             }
