@@ -54,6 +54,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def apiGatewayTest() {
+      return null
+    }
+
+    @Override
     def securityCheck() {
       return null
     }

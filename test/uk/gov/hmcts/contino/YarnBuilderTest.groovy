@@ -52,6 +52,13 @@ class YarnBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:functional') })
   }
 
+  def "apiGatewayTest calls 'yarn test:apiGateway'"() {
+    when:
+    builder.apiGatewayTest()
+    then:
+    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:apiGateway') })
+  }
+
   def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
     when:
     builder.crossBrowserTest()

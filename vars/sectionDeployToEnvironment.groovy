@@ -167,6 +167,20 @@ def call(params) {
             }
           }
         }
+
+        onNonPR() {
+          if (pl.apiGatewayTest) {
+            stage("API Gateway Test - ${environment} (production slot)") {
+              testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
+                pl.callAround("apiGatewayTest:${environment}") {
+                  timeout(time: pl.apiGatewayTestTimeout, unit: 'MINUTES') {
+                    builder.apiGatewayTest()
+                  }
+                }
+              }
+            }
+          }
+        }
       }
       milestone()
     }
