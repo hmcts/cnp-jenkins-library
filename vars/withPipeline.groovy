@@ -45,8 +45,8 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   timestamps {
-    try {
-      node {
+    node {
+      try {
         env.PATH = "$env.PATH:/usr/local/bin"
 
         sectionBuildAndTest(pl, pipelineType.builder)
@@ -88,26 +88,22 @@ def call(type, String product, String component, Closure body) {
             product: deploymentProduct,
             component: component)
         }
-      }
-    } catch (err) {
-      currentBuild.result = "FAILURE"
-      if (pl.slackChannel) {
-        notifyBuildFailure channel: pl.slackChannel
-      }
+      } catch (err) {
+        currentBuild.result = "FAILURE"
+        if (pl.slackChannel) {
+          notifyBuildFailure channel: pl.slackChannel
+        }
 
-      pl.call('onFailure')
-      node {
+        pl.call('onFailure')
         metricsPublisher.publish('Pipeline Failed')
+        throw err
       }
-      throw err
-    }
 
-    if (pl.slackChannel) {
-      notifyBuildFixed channel: pl.slackChannel
-    }
+      if (pl.slackChannel) {
+        notifyBuildFixed channel: pl.slackChannel
+      }
 
-    pl.call('onSuccess')
-    node {
+      pl.call('onSuccess')
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
