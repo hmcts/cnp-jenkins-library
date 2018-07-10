@@ -54,7 +54,7 @@ class WebAppDeploy implements Serializable {
       if (response.status > 300) {
         ++retryCounter
         if (retryCounter < maxRetries) {
-          nonCnpsSleep(sleepDuration)
+          nonCpsSleep(sleepDuration)
         }
         steps.echo "Service isn’t healthy, will retry up to ${maxRetries} times"
         throw new RuntimeException()
@@ -63,7 +63,7 @@ class WebAppDeploy implements Serializable {
   }
 
   @NonCPS
-  def nonCnpsSleep(int seconds){
+  def nonCpsSleep(int seconds){
     sleep(seconds*1000)
   }
 
