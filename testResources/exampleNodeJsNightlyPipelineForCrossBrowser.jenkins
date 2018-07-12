@@ -6,6 +6,6 @@ def product = "product"
 
 def app = "app"
 
-withNightlyPipeline('java', product, app) {
-  enablePerformanceTest()
+withNightlyPipeline('nodejs', product, app) {
+  enableCrossBrowserTest()
 }

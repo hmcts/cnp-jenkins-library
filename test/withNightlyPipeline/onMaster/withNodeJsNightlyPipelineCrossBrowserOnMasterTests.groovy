@@ -2,24 +2,24 @@ package withNightlyPipeline.onMaster
 
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
+import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
-  final static jenkinsFile = "exampleJavaNightlyPipeline.jenkins"
+class withNodeJsNightlyPipelineCrossBrowserOnMasterTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleNodeJsNightlyPipelineForCrossBrowser.jenkins"
 
-  withJavaNightlyPipelineOnMasterTests() {
+  withNodeJsNightlyPipelineCrossBrowserOnMasterTests() {
     super("master", jenkinsFile)
   }
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
-    def mockBuilder = new MockFor(GradleBuilder)
+    def mockBuilder = new MockFor(YarnBuilder)
     mockBuilder.demand.with {
       build(1) {}
       securityCheck(1) {}
-      crossBrowserTest(0) {}
-      performanceTest(1) {}
+      crossBrowserTest(1) {}
+      performanceTest(0) {}
     }
 
     mockBuilder.use {
