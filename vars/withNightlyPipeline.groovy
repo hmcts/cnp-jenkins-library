@@ -19,8 +19,6 @@ def call(type,product,component,Closure body) {
 
   assert pipelineType != null
 
-  Builder builder = pipelineType.builder
-
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pl = new PipelineCallbacks(metricsPublisher)
 
@@ -35,7 +33,7 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        sectionNightlyTests(pl, builder)
+        sectionNightlyTests(pl, pipelineType)
         assert  pipelineType!= null
       }
     }

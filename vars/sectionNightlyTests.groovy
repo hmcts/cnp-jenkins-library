@@ -1,7 +1,11 @@
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.PipelineType
 
-def call(PipelineCallbacks pl, Builder builder) {
+
+def call(PipelineCallbacks pl, PipelineType pipelineType) {
+
+  Builder builder = pipelineType.builder
 
   stage('Checkout') {
     pl.callAround('checkout') {
