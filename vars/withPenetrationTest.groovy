@@ -24,6 +24,7 @@ def call(Closure body) {
           withDocker('hmcts/moj-kali-image:1.0', null) {
             withSubscription("${params.SUBSCRIPTION}") {
               env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-sandbox"
+              def command = getCommand(params)
               sh "${command}"
             }
           }
