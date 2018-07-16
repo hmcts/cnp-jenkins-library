@@ -62,24 +62,5 @@ def getCommand(params) {
   if (params.TEST_MODE == 'true') {
     command = command + '-t '
   }
-
-  //def azSubscription = getAzSubscription(params.SUBSCRIPTION)
   return command
-
-  //return command + ' -s ' + azSubscription
 }
-
-/*
-def getAzSubscription(param) {
-
-  def subscriptionMap = [sandbox: 'DCD-CFT-Sandbox',
-                         nonprod: 'DCD-CNP-DEV',
-                         prod: 'DCD-CNP-Prod']
-
-  def azSubscription = subscriptionMap.get(param)
-  if (!azSubscription) {
-    error 'Specify a valid subscription'
-  }
-  return azSubscription
-}
-*/
