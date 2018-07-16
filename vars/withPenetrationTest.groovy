@@ -23,7 +23,7 @@ def call(Closure body) {
         stage('Penetration Test - Kali Image') {
           withDocker('hmcts/moj-kali-image:1.0', null) {
             withSubscription("${params.SUBSCRIPTION}") {
-              env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-sandbox"
+              env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-${params.SUBSCRIPTION}"
               def command = getCommand(params)
               sh "${command}"
             }
@@ -63,10 +63,13 @@ def getCommand(params) {
     command = command + '-t '
   }
 
-  def azSubscription = getAzSubscription(params.SUBSCRIPTION)
-  return command + ' -s ' + azSubscription
+  //def azSubscription = getAzSubscription(params.SUBSCRIPTION)
+  return command
+
+  //return command + ' -s ' + azSubscription
 }
 
+/*
 def getAzSubscription(param) {
 
   def subscriptionMap = [sandbox: 'DCD-CFT-Sandbox',
@@ -79,3 +82,4 @@ def getAzSubscription(param) {
   }
   return azSubscription
 }
+*/
