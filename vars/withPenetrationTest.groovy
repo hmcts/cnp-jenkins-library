@@ -1,3 +1,6 @@
+import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.MetricsPublisher
+
 def call(Closure body) {
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, 'pen-test', 'pen-test')
