@@ -21,7 +21,7 @@ def call(Closure body) {
           checkout scm
         }
         stage('Penetration Test - Kali Image') {
-          withDocker('hmcts/moj-kali-image:1.0', null) {
+          withDocker('hmcts/kali-image:1.1', null) {
             withSubscription("${params.SUBSCRIPTION}") {
               env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-${params.SUBSCRIPTION}"
               def command = getCommand(params)
