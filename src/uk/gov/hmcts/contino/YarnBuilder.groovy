@@ -43,6 +43,9 @@ class YarnBuilder extends AbstractBuilder {
 
   def crossBrowserTest() {
     try{
+
+      echo "sauce labs access key' ${env.SAUCE_ACCESS_KEY}"
+      echo "sauce labs access key' ${env.SAUCE_USERNAME}"
     yarn("test:crossbrowser")
     }
     finally {
