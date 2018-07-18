@@ -59,6 +59,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def crossBrowserTest(){
+      return null
+    }
+
+    @Override
     def addVersionInfo() {
       return null
     }

@@ -41,6 +41,15 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def crossBrowserTest() {
+    try{
+    yarn("test:crossbrowser")
+    }
+    finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/cross-browser/*'
+    }
+  }
+
   def securityCheck() {
     yarn("test:nsp")
   }
