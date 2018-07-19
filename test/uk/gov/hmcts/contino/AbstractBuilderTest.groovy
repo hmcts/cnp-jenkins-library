@@ -64,6 +64,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def mutationTest(){
+      return null
+    }
+
+    @Override
     def addVersionInfo() {
       return null
     }

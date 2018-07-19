@@ -64,4 +64,22 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       currentBuild.result = "UNSTABLE"
     }
   }
+
+  if (pl.mutationTest) {
+    try {
+      stage('mutationTest') {
+        pl.callAround('mutationTest') {
+          timeout(time: pl.mutationTestTimeout, unit: 'MINUTES') {
+            builder.mutationTest()
+          }
+        }
+      }
+    }
+    catch(err) {
+      err.printStackTrace()
+      currentBuild.result = "UNSTABLE"
+    }
+  }
+
+
 }

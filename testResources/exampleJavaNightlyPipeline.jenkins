@@ -8,4 +8,5 @@ def app = "app"
 
 withNightlyPipeline('java', product, app) {
   enablePerformanceTest()
+  enableMutationTest()
 }

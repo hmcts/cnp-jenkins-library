@@ -141,6 +141,16 @@ def call(params) {
               }
             }
           }
+          if (pl.mutationTest) {
+            stage("Mutation Test - ${environment} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                pl.callAround("mutationTest:${environment}") {
+                  builder.mutationTest()
+                }
+              }
+            }
+          }
+
         }
 
         stage("Promote - ${environment} (staging -> production slot)") {

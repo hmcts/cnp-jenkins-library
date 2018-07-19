@@ -43,10 +43,16 @@ class YarnBuilder extends AbstractBuilder {
 
   def crossBrowserTest() {
     try{
-
-      echo "sauce labs access key' ${env.SAUCE_ACCESS_KEY}"
-      echo "sauce labs access key' ${env.SAUCE_USERNAME}"
     yarn("test:crossbrowser")
+    }
+    finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/cross-browser/*'
+    }
+  }
+
+  def mutationTest() {
+    try{
+      yarn("test:mutation")
     }
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/cross-browser/*'

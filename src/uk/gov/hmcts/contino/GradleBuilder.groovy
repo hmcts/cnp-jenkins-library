@@ -51,6 +51,10 @@ class GradleBuilder extends AbstractBuilder {
     // this method is included in builder interface as part of nightly pipieline job
   }
 
+  def mutationTest(){
+       gradle("pitest")
+  }
+
   def securityCheck() {
     steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-db-login', passwordVariable: 'OWASPDB_ACCOUNT', usernameVariable: 'OWASPDB_PASSWORD')]) {
       try {
