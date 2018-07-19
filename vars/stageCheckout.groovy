@@ -11,7 +11,7 @@ def call(String url) {
   stage('Checkout') {
     deleteDir()
     git([url   : url,
-         branch: env.CHANGE_BRANCH])
+         branch: env.CHANGE_BRANCH ?: env.BRANCH_NAME])
   }
 
 }
