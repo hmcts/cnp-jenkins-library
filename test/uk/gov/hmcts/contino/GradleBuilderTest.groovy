@@ -51,6 +51,13 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
   }
 
+  def "apiGatewayTest calls 'gradle api' with '--rerun-tasks' flag"() {
+    when:
+    builder.apiGatewayTest()
+    then:
+    1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('apiGateway') && it.contains('--rerun-tasks') })
+  }
+
   def "securityCheck calls 'gradle dependencyCheckAnalyze'"() {
     setup:
     def closure

@@ -29,8 +29,10 @@ and NodeJS applications. The pipeline contains the following stages:
 * Sonar Scan
 * Deploy Dev
 * Smoke Tests - Dev
+* (Optional) API (gateway) Tests - Dev
 * Deploy Prod
 * Smoke Tests - Production
+* (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must be use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
@@ -133,6 +135,24 @@ withPipeline(type, product, component) {
   }
 }
 ```
+
+#### API (gateway) tests
+
+If your service contains an API (in Azure Api Management Service), you need to implement
+tests for that API. For the pipeline to run those tests, do the following:
+
+ - define `apiGateway` task (gradle/yarn) in you application
+ - from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableApiGatewayTest()
+    ...
+  }
+  ```
+
+The API tests run after smoke tests.
 
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that

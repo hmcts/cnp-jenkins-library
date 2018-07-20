@@ -41,6 +41,15 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def apiGatewayTest() {
+    try {
+      yarn("test:apiGateway")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: './api-output/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'api-output/*'
+    }
+  }
+
   def crossBrowserTest() {
     try{
     yarn("test:crossbrowser")

@@ -9,9 +9,11 @@ class PipelineCallbacks implements Serializable {
   private MetricsPublisher metricsPublisher
 
   boolean performanceTest = false
+  boolean apiGatewayTest = false
   boolean crossBrowserTest = false
   int crossBrowserTestTimeout
   int perfTestTimeout
+  int apiGatewayTestTimeout
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
@@ -81,6 +83,11 @@ class PipelineCallbacks implements Serializable {
   void enablePerformanceTest(int timeout = 15) {
     this.perfTestTimeout = timeout
     this.performanceTest = true
+  }
+
+  void enableApiGatewayTest(int timeout = 15) {
+    this.apiGatewayTestTimeout = timeout
+    this.apiGatewayTest = true
   }
 
   void enableCrossBrowserTest(int timeout = 15) {
