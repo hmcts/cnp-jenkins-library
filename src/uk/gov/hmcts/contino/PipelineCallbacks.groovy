@@ -85,12 +85,12 @@ class PipelineCallbacks implements Serializable {
     this.performanceTest = true
   }
 
-  void enableCrossBrowserTest(int timeout = 15) {
+  void enableCrossBrowserTest(int timeout = 120) {
     this.crossBrowserTestTimeout = timeout
     this.crossBrowserTest = true
   }
 
-  void enableMutationTest(int timeout = 15) {
+  void enableMutationTest(int timeout = 120) {
     this.mutationTestTimeout = timeout
     this.mutationTest = true
   }
