@@ -27,8 +27,8 @@ class YarnBuilder extends AbstractBuilder {
     try {
       yarn("test:smoke")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: './smoke-output/*result.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/*'
+      steps.junit allowEmptyResults: true, testResults: './smoke-output/**/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/**'
     }
   }
 
@@ -36,8 +36,8 @@ class YarnBuilder extends AbstractBuilder {
     try {
       yarn("test:functional")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: './functional-output/*result.xml'
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/*'
+      steps.junit allowEmptyResults: true, testResults: './functional-output/**/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
     }
   }
 
