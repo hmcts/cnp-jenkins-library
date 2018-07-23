@@ -1,9 +1,5 @@
 package uk.gov.hmcts.contino
 
-import com.microsoft.azure.management.Azure
-import uk.gov.hmcts.contino.azure.AzureFactory
-
-
 class AppServiceResolver {
 
   def steps
@@ -15,20 +11,15 @@ class AppServiceResolver {
   def getServiceHost(String product, String component, String env, boolean staging = false) {
 
     String productComponentEnv = product + "-" + component + "-" + env
-    def webApp = getAzure().webApps().getByResourceGroup(productComponentEnv, productComponentEnv)
+    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
 
     def serviceHost
     if (staging) {
-      serviceHost = webApp.deploymentSlots().getByName("staging").defaultHostName()
+      serviceHost = az "webapp deployment slot list -g ${productComponentEnv} -n ${productComponentEnv} --query [].defaultHostName -o tsv"
     } else {
-      serviceHost = webApp.defaultHostName()
+      serviceHost = az "webapp list -g ${productComponentEnv} --query [].defaultHostName -o tsv"
     }
 
     return serviceHost
-  }
-
-  private Azure getAzure() {
-    def af = new AzureFactory(steps)
-    return af.getAzure()
   }
 }
