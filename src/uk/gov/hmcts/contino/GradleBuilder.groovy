@@ -52,7 +52,13 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def mutationTest(){
-       gradle("pitest")
+    try {
+      gradle("pitest")
+    }
+    finally {
+      steps.archiveArtifacts 'build/reports/pitest/*/*'
+
+    }
   }
 
   def securityCheck() {
