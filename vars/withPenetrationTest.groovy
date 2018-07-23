@@ -26,6 +26,8 @@ def call(Closure body) {
               env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-${params.SUBSCRIPTION}"
               def command = getCommand(params)
               sh "${command}"
+
+              sh "python ITHCReport.py > ./reports/ITHCReport.txt"
             }
           }
         }
