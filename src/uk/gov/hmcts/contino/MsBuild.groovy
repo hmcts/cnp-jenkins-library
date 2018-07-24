@@ -4,7 +4,7 @@ class MsBuild extends AbstractBuilder {
 
   def product
 
-  GradleBuilder(steps, product) {
+  MsBuild(steps, product) {
     super(steps)
     this.product = product
   }
