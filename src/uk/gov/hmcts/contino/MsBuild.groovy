@@ -62,30 +62,30 @@ class MsBuild extends AbstractBuilder {
   }
 
   def securityCheck() {
-    //steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-db-login', passwordVariable: 'OWASPDB_ACCOUNT', usernameVariable: 'OWASPDB_PASSWORD')]) {
+    /*steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-db-login', passwordVariable: 'OWASPDB_ACCOUNT', usernameVariable: 'OWASPDB_PASSWORD')]) {
       try {
-        //gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -Danalyzer.central.enabled=false -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${steps.env.OWASPDB_ACCOUNT}@owaspdependencycheck;password=${steps.env.OWASPDB_PASSWORD};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${steps.env.OWASPDB_ACCOUNT}' -DdependencyCheck.data.password='${steps.env.OWASPDB_PASSWORD}' dependencyCheckAnalyze")
+        gradle("-DdependencyCheck.failBuild=true -DdependencyCheck.cveValidForHours=24 -Danalyzer.central.enabled=false -DdependencyCheck.data.driver='com.microsoft.sqlserver.jdbc.SQLServerDriver' -DdependencyCheck.data.connectionString='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;user=${steps.env.OWASPDB_ACCOUNT}@owaspdependencycheck;password=${steps.env.OWASPDB_PASSWORD};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -DdependencyCheck.data.username='${steps.env.OWASPDB_ACCOUNT}' -DdependencyCheck.data.password='${steps.env.OWASPDB_PASSWORD}' dependencyCheckAnalyze")
       }
       finally {
-        //steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        steps.archiveArtifacts 'build/reports/dependency-check-report.html'
       }
-    }
-  
+    }*/
+  }
 
   @Override
   def addVersionInfo() {
-    /*steps.sh '''
-mkdir -p src/main/resources/META-INF
-echo "allprojects { task printVersionInit { doLast { println project.version } } }" > init.gradle
+                  /*steps.sh '''
+              mkdir -p src/main/resources/META-INF
+              echo "allprojects { task printVersionInit { doLast { println project.version } } }" > init.gradle
 
-tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
-build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
-build.number=${BUILD_NUMBER}
-build.commit=$(git rev-parse HEAD)
-build.date=$(date)
-EOF
+              tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
+              build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
+              build.number=${BUILD_NUMBER}
+              build.commit=$(git rev-parse HEAD)
+              build.date=$(date)
+              EOF
 
-'''*/
+              '''*/
   }
 
   def gradle(String task) {
