@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.MsBuildPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
