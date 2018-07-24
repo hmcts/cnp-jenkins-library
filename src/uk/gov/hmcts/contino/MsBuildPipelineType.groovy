@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class SpringBootPipelineType implements PipelineType, Serializable {
+class MsBuildPipelineType implements PipelineType, Serializable {
   def steps
   def product
   def app
@@ -8,12 +8,12 @@ class SpringBootPipelineType implements PipelineType, Serializable {
   Builder builder
   Deployer deployer
 
-  SpringBootPipelineType(steps, product, app) {
+  MsBuildPipelineType(steps, product, app) {
     this.steps = steps
     this.product = product
     this.app = app
 
-    builder = new GradleBuilder(steps, product)
-    deployer = new JavaDeployer(steps, product, app)
+    builder = new MsBuild(steps, product)
+    //deployer = new JavaDeployer(steps, product, app)
   }
 }

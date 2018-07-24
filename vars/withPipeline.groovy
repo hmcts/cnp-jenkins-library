@@ -19,6 +19,7 @@ def call(type, String product, String component, Closure body) {
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
     angular: new AngularPipelineType(this, deploymentProduct, component)
+    dotnet  : new MsBuildPipelineType(this, deploymentProduct, component),
   ]
 
   PipelineType pipelineType
