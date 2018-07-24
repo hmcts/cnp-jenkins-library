@@ -70,7 +70,7 @@ class MsBuild extends AbstractBuilder {
         //steps.archiveArtifacts 'build/reports/dependency-check-report.html'
       }
     }
-  }
+  
 
   @Override
   def addVersionInfo() {
