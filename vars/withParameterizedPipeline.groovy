@@ -12,7 +12,7 @@ def call(type, String product, String component, String environment, String subs
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
-    dotnet  : new MsBuildPipelineType(this, deploymentProduct, component)
+    dotnet  : new MsBuildPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
