@@ -52,12 +52,12 @@ class YarnBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:functional') })
   }
 
-  def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
+  /*def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
     when:
     builder.crossBrowserTest()
     then:
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:crossbrowser') })
-  }
+  }*/
 
   def "securityCheck calls 'yarn test:nsp'"() {
     when:
