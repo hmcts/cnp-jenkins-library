@@ -43,13 +43,13 @@ class YarnBuilder extends AbstractBuilder {
 
   def crossBrowserTest() {
     try {
-      steps.sh(sauce('reform_tunnel') {
-        sauceconnect(options: "--verbose  --logfile sauceconnect.log --tunnel-identifier reform_tunnel", useGeneratedTunnelIdentifier: false, verboseLogging: true)
-      })
+      steps.sh("sauce('reform_tunnel') {"+
+        sauceconnect(options: "--verbose  --logfile sauceconnect.log --tunnel-identifier reform_tunnel", useGeneratedTunnelIdentifier: false, verboseLogging: true)+
+    "+}")
     yarn("test:crossbrowser")
 
-  }
-      finally {
+    }
+    finally {
         steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/cross-browser/*'
       }
     }
