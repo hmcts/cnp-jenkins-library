@@ -44,7 +44,8 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
           }
         }
       }
-    } catch (err) {
+    }
+     catch (err) {
       err.printStackTrace()
       currentBuild.result = "UNSTABLE"
     }
