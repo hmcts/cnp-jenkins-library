@@ -41,6 +41,11 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
+  def apiGatewayTest() {
+    builder.apiGatewayTest()
+  }
+
+  @Override
   def securityCheck() {
     builder.securityCheck()
   }

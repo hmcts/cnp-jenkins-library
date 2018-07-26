@@ -7,6 +7,7 @@ interface Builder {
   def smokeTest()
   def functionalTest()
   def performanceTest()
+  def apiGatewayTest()
   def crossBrowserTest()
   def securityCheck()
   def addVersionInfo()
