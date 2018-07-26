@@ -56,7 +56,7 @@ class GradleBuilder extends AbstractBuilder {
       gradle("pitest")
     }
     finally {
-      steps.archiveArtifacts 'build/reports/pitest/*/*'
+      steps.archiveArtifacts 'build/reports/pitest/*/*.*'
 
     }
   }

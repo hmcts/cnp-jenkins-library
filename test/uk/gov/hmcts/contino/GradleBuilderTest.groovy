@@ -51,6 +51,14 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
   }
 
+  def "mutationTest calls 'gradle pitest' with '--rerun-tasks' flag"() {
+    when:
+    builder.mutationTest()
+    then:
+    1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('pitest') })
+  }
+
+
   def "securityCheck calls 'gradle dependencyCheckAnalyze'"() {
     setup:
     def closure
