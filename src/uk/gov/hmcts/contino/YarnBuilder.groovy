@@ -20,7 +20,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
-    yarn('sonar-scan')
+    yarn('sonar-scan -Dsonar.organization=hmcts')
   }
 
   def smokeTest() {
