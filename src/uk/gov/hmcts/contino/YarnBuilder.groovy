@@ -20,6 +20,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
+    steps.sh("env)"
     yarn('sonar-scan -Dsonar.organization=hmcts')
   }
 
