@@ -24,7 +24,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
-      gradle("--info sonarqube")
+      steps.sh "env"
+      gradle("--info sonarqube -Dsonar.organization=hmcts")
   }
 
   def smokeTest() {
