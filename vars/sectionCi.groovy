@@ -15,14 +15,15 @@ def call(params) {
   def repository = 'hmcts'
   def imageName = "$registry/$repository/$serviceName:$tag"
 
-  def registrySecrets = [
-    [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-host', version: '', envVariable: 'REGISTRY_HOST' ],
-    [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-username', version: '', envVariable: 'REGISTRY_USERNAME' ],
-    [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-password', version: '', envVariable: 'REGISTRY_PASSWORD' ]
-  ]
-
   if (pl.containerCi) {
     withSubscription(subscription) {
+
+      def registrySecrets = [
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-host', version: '', envVariable: 'REGISTRY_HOST' ],
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-username', version: '', envVariable: 'REGISTRY_USERNAME' ],
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-password', version: '', envVariable: 'REGISTRY_PASSWORD' ]
+      ]
+
       wrap([$class: 'AzureKeyVaultBuildWrapper',
             azureKeyVaultSecrets: registrySecrets,
             keyVaultURLOverride: env.INFRA_VAULT_URL,
