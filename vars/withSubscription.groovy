@@ -54,7 +54,8 @@ def call(String subscription, Closure body) {
                "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}",
                "SUBSCRIPTION_NAME=$subscription",
                "TF_VAR_jenkins_AAD_objectId=$dcdJenkinsObjectId",
-               "TF_VAR_root_address_space=$root_address_space"])
+               "TF_VAR_root_address_space=$root_address_space",
+               "INFRA_VAULT_URL=https://infra-vault-${subscription}.vault.azure.net/"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
         az 'login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
