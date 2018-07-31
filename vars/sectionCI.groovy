@@ -28,11 +28,19 @@ def call(params) {
         def serviceName  = product + '-' + component
         def tag = new ProjectBranch(env.BRANCH_NAME).imageTag()
         def imageName = "$REGISTRY_HOST/$repository/$serviceName:$tag"
+        def templateEnvVars = ["NAMESPACE=${product}", "SERVICE_NAME=${serviceName}", "IMAGE_NAME=${imageName}"]
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
               dockerBuild(imageName)
+            }
+          }
+        }
+        stage('Deploy to AKS') {
+          pl.callAround('deployaks') {
+            timeout(time: 15, unit: 'MINUTES') {
+              aksDeploy(templateEnvVars, subscription, pl.vaultSecrets, product)
             }
           }
         }
