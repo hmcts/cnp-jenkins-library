@@ -11,6 +11,7 @@ class PipelineCallbacks implements Serializable {
   boolean performanceTest = false
   boolean apiGatewayTest = false
   boolean crossBrowserTest = false
+  boolean containerCi = false
   int crossBrowserTestTimeout
   int perfTestTimeout
   int apiGatewayTestTimeout
@@ -93,6 +94,10 @@ class PipelineCallbacks implements Serializable {
   void enableCrossBrowserTest(int timeout = 15) {
     this.crossBrowserTestTimeout = timeout
     this.crossBrowserTest = true
+  }
+
+  void enableContainerCi() {
+    this.containerCi = true
   }
 
   private def nullSafeCall(String key) {

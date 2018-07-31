@@ -26,4 +26,11 @@ class ProjectBranch implements Serializable {
     return (isPR()) ? branchName.toLowerCase() : ""
   }
 
+  String imageTag() {
+    if (isPR()) {
+      return branchName.toLowerCase()
+    }
+    return (branchName == 'master') ? 'latest' : this.branchName
+  }
+
 }

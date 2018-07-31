@@ -51,6 +51,15 @@ def call(type, String product, String component, Closure body) {
 
         sectionBuildAndTest(pl, pipelineType.builder)
 
+        sectionCi(
+          pipelineCallbacks: pl,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          environment: environment.nonProdName,
+          product: product,
+          component: component
+        )
+
         onMaster {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
