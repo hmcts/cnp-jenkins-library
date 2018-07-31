@@ -63,6 +63,7 @@ class YarnBuilderTest extends Specification {
     when:
     builder.crossBrowserTest()
     then:
+    1 * steps.withSauceConnect({it.startsWith('reform_tunnel')})
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:crossbrowser') })
   }
 
