@@ -52,9 +52,9 @@ class YarnBuilder extends AbstractBuilder {
 
   def crossBrowserTest() {
     try{
-      steps.withSauceConnect("reform_tunnel")
+      steps.withSauceConnect("reform_tunnel"){
         yarn("test:crossbrowser")
-    }
+    }}
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/cross-browser/*'
     }
