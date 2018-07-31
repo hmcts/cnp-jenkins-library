@@ -51,7 +51,7 @@ def call(type, String product, String component, Closure body) {
 
         sectionBuildAndTest(pl, pipelineType.builder)
 
-        sectionCi(
+        sectionCI(
           pipelineCallbacks: pl,
           pipelineType: pipelineType,
           subscription: subscription.nonProdName,
