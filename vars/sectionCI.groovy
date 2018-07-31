@@ -32,7 +32,7 @@ def call(params) {
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              dockerBuild(imageName, subscription)
+              dockerBuild(imageName)
             }
           }
         }
