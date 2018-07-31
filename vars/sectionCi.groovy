@@ -8,13 +8,6 @@ def call(params) {
   def product = params.product
   def component = params.component
 
-  def serviceName  = product + '-' + component
-  def tag = new ProjectBranch(env.BRANCH_NAME).imageTag()
-
-  def registry = 'cnpacr.azurecr.io'
-  def repository = 'hmcts'
-  def imageName = "$registry/$repository/$serviceName:$tag"
-
   if (pl.containerCi) {
     withSubscription(subscription) {
 
@@ -30,6 +23,15 @@ def call(params) {
             applicationIDOverride    : env.AZURE_CLIENT_ID,
             applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
+
+        // TODO do we need this for ACR? Might want to use 'product' repos instead
+        // TODO e.g. 'cmc/citizen-frontend'
+        def repository = 'hmcts'
+
+        def serviceName  = product + '-' + component
+        def tag = new ProjectBranch(env.BRANCH_NAME).imageTag()
+        def imageName = "$REGISTRY_HOST/$repository/$serviceName:$tag"
+
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
