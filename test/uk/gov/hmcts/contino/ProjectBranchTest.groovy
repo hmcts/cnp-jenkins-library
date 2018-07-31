@@ -53,14 +53,6 @@ class ProjectBranchTest extends Specification {
     !branch.isPR()
   }
 
-  def "imageTag should return a PR tag when a PR branch is used"() {
-    when:
-    def branch = new ProjectBranch('pr-1')
-
-    then:
-    assertThat(branch.imageTag()).isEqualTo('pr-1')
-  }
-
   def "imageTag should return a PR tag in LOWER CASE when a PR branch is used"() {
     when:
     def branch = new ProjectBranch('PR-23')

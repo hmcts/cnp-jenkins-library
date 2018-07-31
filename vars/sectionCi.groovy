@@ -24,10 +24,7 @@ def call(params) {
             applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
 
-        // TODO do we need this for ACR? Might want to use 'product' repos instead
-        // TODO e.g. 'cmc/citizen-frontend'
         def repository = 'hmcts'
-
         def serviceName  = product + '-' + component
         def tag = new ProjectBranch(env.BRANCH_NAME).imageTag()
         def imageName = "$REGISTRY_HOST/$repository/$serviceName:$tag"
