@@ -15,7 +15,8 @@ class Kubectl {
     this.steps = steps
     this.namespace = namespace
 
-    //this.steps.echo "Logging in with ${subscription}"
+    this.steps.echo "Logging in with ${subscription}"
+    this.steps.sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
     //az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
     //this.login(subscription)
   }

@@ -19,8 +19,8 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
 
-        def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-        az 'aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster'
+        //def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+        //az 'aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster'
 
         echo 'wrapping template variables...'
         withEnv(templateEnvVars) {
