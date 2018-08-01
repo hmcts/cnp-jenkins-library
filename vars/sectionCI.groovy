@@ -38,9 +38,16 @@ def call(params) {
           }
         }
         stage('Deploy to AKS') {
-          pl.callAround('deployaks') {
+          pl.callAround('aksdeploy') {
             timeout(time: 15, unit: 'MINUTES') {
               aksDeploy(templateEnvVars, subscription, pl, product)
+            }
+          }
+        }
+        stage('Delete AKS Deployment') {
+          pl.callAround('aksdelete') {
+            timeout(time: 15, unit: 'MINUTES') {
+              aksDelete(templateEnvVars, subscription, product)
             }
           }
         }
