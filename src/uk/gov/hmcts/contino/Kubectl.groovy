@@ -31,7 +31,8 @@ class Kubectl {
 
   private void login(String subscription) {
     def az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true)}
-    az "aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}"
+    //az "aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}"
+    az "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
   }
 
   private Object execute(String command, boolean jsonOutput) {
