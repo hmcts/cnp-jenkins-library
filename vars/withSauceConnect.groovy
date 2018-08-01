@@ -10,7 +10,7 @@ def call(String sauceid, Closure body) {
     sauce(sauceid) {
         sauceconnect(options: '--verbose  --tunnel-identifier reformtunnel', useGeneratedTunnelIdentifier: false,
                 useLatestSauceConnect: true, verboseLogging: true) {
-            body()
+            body().call()
         }
     }
 }
