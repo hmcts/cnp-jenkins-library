@@ -15,8 +15,8 @@ class Kubectl {
     this.steps = steps
     this.namespace = namespace
 
-    this.steps.echo "Logging in with ${subscription}"
-    az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
+    //this.steps.echo "Logging in with ${subscription}"
+    //az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
     //this.login(subscription)
   }
 
