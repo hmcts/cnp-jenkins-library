@@ -30,6 +30,9 @@ class Kubectl {
 
   private void login(String subscription) {
     def az = { sub, cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$sub az $cmd", returnStdout: true)}
+
+    this.steps.echo "Logging in with ${subscription}"
+
     az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
   }
 
