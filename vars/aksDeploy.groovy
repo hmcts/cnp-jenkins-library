@@ -15,7 +15,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
         withEnv(templateEnvVars) {
-          def kubectl = new Kubectl(this, namespace)
+          def kubectl = new Kubectl(this, subscription, namespace)
           sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
           kubectl.apply 'src/kubernetes/deployment.yaml'
         }
