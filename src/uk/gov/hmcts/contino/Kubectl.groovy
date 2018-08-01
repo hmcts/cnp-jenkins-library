@@ -7,12 +7,13 @@ class Kubectl {
   static String AKS_CLUSTER_NAME   = 'cnp-aks-cluster'
 
   def steps
-  def namespace
   def subscription
+  def namespace
   def kubectl = { cmd, namespace, jsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $jsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
     this.steps = steps
+    this.subscription = subscription
     this.namespace = namespace
   }
 
@@ -28,10 +29,9 @@ class Kubectl {
     execute("get service ${name}", true)
   }
 
+  // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    this.steps.echo "Logging in with ${subscription}"
-    def az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az $cmd", returnStdout: true)}
-    az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}", returnStdout: true)
   }
 
   private Object execute(String command, boolean jsonOutput) {
