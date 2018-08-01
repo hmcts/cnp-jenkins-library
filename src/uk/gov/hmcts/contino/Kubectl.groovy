@@ -9,6 +9,7 @@ class Kubectl {
   def steps
   def namespace
   def kubectl = { cmd, namespace, jsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $jsonOutput", returnStdout: true)}
+  def az = { sub, cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$sub az $cmd", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
     this.steps = steps
@@ -29,10 +30,7 @@ class Kubectl {
   }
 
   private void login(String subscription) {
-    def az = { sub, cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$sub az $cmd", returnStdout: true)}
-
     this.steps.echo "Logging in with ${subscription}"
-
     az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
   }
 
