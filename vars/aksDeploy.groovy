@@ -1,6 +1,7 @@
 import uk.gov.hmcts.contino.Kubectl
+import uk.gov.hmcts.contino.PipelineCallbacks
 
-def call(List templateEnvVars, String subscription, List secrets, String namespace) {
+def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String namespace) {
   withDocker('hmcts/cnp-aks-client:1.2', null) {
     withSubscription(subscription) {
 
@@ -8,7 +9,7 @@ def call(List templateEnvVars, String subscription, List secrets, String namespa
 
       wrap([
         $class                   : 'AzureKeyVaultBuildWrapper',
-        azureKeyVaultSecrets     : secrets,
+        azureKeyVaultSecrets     : pl.secrets,
         keyVaultURLOverride      : keyvaultUrl,
         applicationIDOverride    : env.AZURE_CLIENT_ID,
         applicationSecretOverride: env.AZURE_CLIENT_SECRET

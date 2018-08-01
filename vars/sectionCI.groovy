@@ -40,7 +40,7 @@ def call(params) {
         stage('Deploy to AKS') {
           pl.callAround('deployaks') {
             timeout(time: 15, unit: 'MINUTES') {
-              aksDeploy(templateEnvVars, subscription, pl.vaultSecrets, product)
+              aksDeploy(templateEnvVars, subscription, pl, product)
             }
           }
         }
