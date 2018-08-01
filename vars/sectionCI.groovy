@@ -44,6 +44,7 @@ def call(params) {
             }
           }
         }
+        /*
         stage('Delete AKS Deployment') {
           pl.callAround('aksdelete') {
             timeout(time: 15, unit: 'MINUTES') {
@@ -51,6 +52,7 @@ def call(params) {
             }
           }
         }
+        */
       }
     }
   }
