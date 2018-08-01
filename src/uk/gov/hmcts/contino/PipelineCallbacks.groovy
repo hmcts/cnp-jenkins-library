@@ -91,7 +91,7 @@ class PipelineCallbacks implements Serializable {
     this.apiGatewayTest = true
   }
 
-  void enableCrossBrowserTest(int timeout = 15) {
+  void enableCrossBrowserTest(int timeout = 120) {
     this.crossBrowserTestTimeout = timeout
     this.crossBrowserTest = true
   }
