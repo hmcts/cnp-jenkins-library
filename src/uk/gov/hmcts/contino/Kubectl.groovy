@@ -14,7 +14,10 @@ class Kubectl {
   Kubectl(steps, subscription, namespace) {
     this.steps = steps
     this.namespace = namespace
-    this.login(subscription)
+
+    this.steps.echo "Logging in with ${subscription}"
+    az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
+    //this.login(subscription)
   }
 
   def apply(String path) {
@@ -29,10 +32,10 @@ class Kubectl {
     execute("get service ${name}", true)
   }
 
-  private void login(String subscription) {
-    this.steps.echo "Logging in with ${subscription}"
-    az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
-  }
+//  private void login(String subscription) {
+//    this.steps.echo "Logging in with ${subscription}"
+//    az subscription, "aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster"
+//  }
 
   private Object execute(String command, boolean jsonOutput) {
     kubectl command,"-n ${this.namespace}",
