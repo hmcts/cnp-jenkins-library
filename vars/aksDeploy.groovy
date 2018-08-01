@@ -9,7 +9,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
 
       wrap([
         $class                   : 'AzureKeyVaultBuildWrapper',
-        azureKeyVaultSecrets     : pl.secrets,
+        azureKeyVaultSecrets     : pl.vaultSecrets,
         keyVaultURLOverride      : keyvaultUrl,
         applicationIDOverride    : env.AZURE_CLIENT_ID,
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
