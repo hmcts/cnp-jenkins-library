@@ -14,18 +14,18 @@ class KubectlTest extends Specification {
     kubectl = new Kubectl(steps, subscription, namespace)
   }
 
-  def "Constructor should authenticate using the correct resource group and cluster name"() {
+  def "login() should authenticate using the correct resource group and cluster name"() {
     when:
-    kubectl = new Kubectl(steps, subscription, namespace)
+      kubectl.login()
 
     then:
-    1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("aks get-credentials --resource-group ${Kubectl.AKS_RESOURCE_GROUP} --name ${Kubectl.AKS_CLUSTER_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("aks get-credentials --resource-group ${Kubectl.AKS_RESOURCE_GROUP} --name ${Kubectl.AKS_CLUSTER_NAME}")})
   }
 
-  def "AZ login should use the subscription passed in"() {
+  def "login() should use the subscription passed in"() {
     when:
-      kubectl = new Kubectl(steps, subscription, namespace)
+      kubectl.login()
 
     then:
       1 * steps.sh({it.containsKey('script') &&
@@ -46,14 +46,14 @@ class KubectlTest extends Specification {
 
   def "delete() should have namespace and NO JSON output"() {
     when:
-    kubectl.delete 'deployment.yaml'
+      kubectl.delete 'deployment.yaml'
 
     then:
-    1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains('kubectl delete -f deployment.yaml -n cnp') &&
-      !(it.get('script').contains('-o json')) &&
-      it.containsKey('returnStdout') &&
-      it.get('returnStdout').equals(true)})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains('kubectl delete -f deployment.yaml -n cnp') &&
+                    !(it.get('script').contains('-o json')) &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
   }
 
   def "getService() should have namespace and JSON output"() {
