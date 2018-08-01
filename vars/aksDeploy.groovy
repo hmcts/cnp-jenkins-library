@@ -27,6 +27,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
           echo 'logging into AKS...'
 
           def kubectl = new Kubectl(this, subscription, namespace)
+          kubectl.login()
 
           echo 'replacing template variables...'
           sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
