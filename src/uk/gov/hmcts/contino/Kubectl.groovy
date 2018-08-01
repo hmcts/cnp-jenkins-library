@@ -2,14 +2,19 @@ package uk.gov.hmcts.contino
 
 class Kubectl {
 
+  // TODO where/what will these be configured
+  static String AKS_RESOURCE_GROUP = 'cnp-aks-rg'
+  static String AKS_CLUSTER_NAME   = 'cnp-aks-cluster'
+
   def steps
   def namespace
 
   def kubectl = { cmd, namespace, jsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $jsonOutput", returnStdout: true)}
 
-  Kubectl(steps, namespace) {
+  Kubectl(steps, subscription, namespace) {
     this.steps = steps
     this.namespace = namespace
+    this.login(subscription)
   }
 
   def apply(String path) {
@@ -24,7 +29,12 @@ class Kubectl {
     execute("get service ${name}", true)
   }
 
-  def execute(String command, boolean jsonOutput) {
+  private void login(String subscription) {
+    def az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true)}
+    az "aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}"
+  }
+
+  private Object execute(String command, boolean jsonOutput) {
     kubectl command,"-n ${this.namespace}",
       jsonOutput ? '-o json' : ""
   }

@@ -14,15 +14,9 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
         applicationIDOverride    : env.AZURE_CLIENT_ID,
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
-        // TODO put this somewhere else that's reusable
-        // TODO remove hardcoded az config file
-        def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-        az 'aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster'
-
         withEnv(templateEnvVars) {
-          sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
-
           def kubectl = new Kubectl(this, namespace)
+          sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
           kubectl.apply 'src/kubernetes/deployment.yaml'
         }
       }

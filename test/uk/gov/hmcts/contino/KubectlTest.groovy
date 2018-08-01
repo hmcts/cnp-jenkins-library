@@ -5,12 +5,31 @@ import spock.lang.Specification
 class KubectlTest extends Specification {
 
   def namespace = 'cnp'
+  def subscription = 'sandbox'
   def steps
   def kubectl
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    kubectl = new Kubectl(steps, namespace)
+    kubectl = new Kubectl(steps, subscription, namespace)
+  }
+
+  def "Constructor should authenticate using the correct resource group and cluster name"() {
+    when:
+    kubectl = new Kubectl(steps, subscription, namespace)
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("aks get-credentials --resource-group ${Kubectl.AKS_RESOURCE_GROUP} --name ${Kubectl.AKS_CLUSTER_NAME}")})
+  }
+
+  def "AZ login should use the subscription passed in"() {
+    when:
+      kubectl = new Kubectl(steps, subscription, namespace)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription}")})
   }
 
   def "apply() should have namespace and NO JSON output"() {
