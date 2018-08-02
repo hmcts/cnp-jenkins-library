@@ -35,7 +35,7 @@ def call(type, String product, String component, Closure body) {
   assert pipelineType != null
 
   //MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
-  //def pl = new PipelineCallbacks(metricsPublisher)
+  def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
   body.call() // register callbacks
