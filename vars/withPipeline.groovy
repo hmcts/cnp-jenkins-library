@@ -1,5 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
-import uk.gov.hmcts.contino.MsBuildPipelineType
+import uk.gov.hmcts.contino.DotNetPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
@@ -20,7 +20,7 @@ def call(type, String product, String component, Closure body) {
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
     angular: new AngularPipelineType(this, deploymentProduct, component),
-    dotnet  : new MsBuildPipelineType(this, deploymentProduct, component)
+    dotnet  : new DotNetPipelineType(this, deploymentProduct, component)
   ]
 
   PipelineType pipelineType
