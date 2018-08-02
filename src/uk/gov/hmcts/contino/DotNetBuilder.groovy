@@ -1,10 +1,10 @@
 package uk.gov.hmcts.contino
 
-class DotNet extends AbstractBuilder {
+class DotNetBuilder extends AbstractBuilder {
 
   def product
 
-  MsBuild(steps, product) {
+  DotNetBuilder(steps, product) {
     super(steps)
     this.product = product
   }
