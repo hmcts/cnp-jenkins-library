@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import spock.lang.Specification
+import static org.assertj.core.api.Assertions.*
 
 class KubectlTest extends Specification {
 
@@ -58,7 +59,7 @@ class KubectlTest extends Specification {
 
   def "getService() should have namespace and JSON output"() {
     when:
-      kubectl.getService 'frontend-ilb'
+      kubectl.getService 'frontend-ilb', true
 
     then:
       1 * steps.sh({it.containsKey('script') &&
@@ -66,4 +67,59 @@ class KubectlTest extends Specification {
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
+
+  def "getServiceLoadbalancerIP() should throw exception if IP never becomes available"() {
+    when:
+      kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+      kubectl.getService('custard-recipe-backend-ilb', true) >> getServiceJsonPending()
+      kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
+
+    then:
+      thrown RuntimeException
+  }
+
+  def "getServiceLoadbalancerIP() return IP address after retries"() {
+    when:
+    kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+    kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonPending(), getServiceJsonWithIP()]
+    def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
+
+    then:
+      assertThat(ip).isEqualTo('172.15.4.97')
+  }
+
+
+  def getServiceJsonPending(){ ''' \
+{
+    "status": {
+        "loadBalancer": {
+            "ingress": [
+                {
+                    "ip": "<pending>"
+                }
+            ]
+        }
+    }
 }
+'''
+  }
+
+  def getServiceJsonWithIP(){ ''' \
+{
+    "status": {
+        "loadBalancer": {
+            "ingress": [
+                {
+                    "ip": "172.15.4.97"
+                }
+            ]
+        }
+    }
+}
+'''
+  }
+}
+
+
+
+

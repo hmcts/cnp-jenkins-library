@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonSlurper
+
 class Kubectl {
 
   // TODO where/what will these be configured
@@ -25,8 +27,28 @@ class Kubectl {
     execute("delete -f ${path}", false)
   }
 
-  def getService(String name) {
-    execute("get service ${name}", true)
+  def getServiceLoadbalancerIP(String name) {
+    int maxRetries = 5
+    int retryCount = 0
+    int sleepDuration = 10
+    def ip
+
+    while ((ip = getIp(name)) == '<pending>' && (retryCount < maxRetries)) {
+      ++retryCount
+      println "Retry count: ${retryCount}"
+
+      if (retryCount == maxRetries) {
+        throw new RuntimeException("Loadbalancer unavailable.")
+      }
+
+      this.steps.sleep sleepDuration
+    }
+
+    return ip
+  }
+
+  def getService(String name, boolean jsonOutput) {
+    execute("get service ${name}", jsonOutput)
   }
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
@@ -34,7 +56,13 @@ class Kubectl {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}", returnStdout: true)
   }
 
-  private Object execute(String command, boolean jsonOutput) {
+  private getIp(String serviceName) {
+    def serviceJson = this.getService(serviceName, true)
+    def serviceObject = new JsonSlurper().parseText(serviceJson)
+    return serviceObject.status.loadBalancer.ingress[0].ip
+  }
+
+  private execute(String command, boolean jsonOutput) {
     kubectl command,"-n ${this.namespace}",
       jsonOutput ? '-o json' : ""
   }
