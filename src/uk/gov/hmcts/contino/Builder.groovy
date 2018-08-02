@@ -11,4 +11,5 @@ interface Builder {
   def crossBrowserTest()
   def securityCheck()
   def addVersionInfo()
+  def getBuildLabel()
 }

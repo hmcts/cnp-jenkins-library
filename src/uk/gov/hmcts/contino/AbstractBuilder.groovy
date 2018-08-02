@@ -15,4 +15,8 @@ abstract class AbstractBuilder implements Builder, Serializable {
     this.gatling.execute()
   }
 
+  def getBuildLabel() {
+    return ''
+  }
+
 }

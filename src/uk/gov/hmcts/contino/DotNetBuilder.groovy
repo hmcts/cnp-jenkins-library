@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class MsBuild extends AbstractBuilder {
+class DotNet extends AbstractBuilder {
 
   def product
 
@@ -9,9 +9,12 @@ class MsBuild extends AbstractBuilder {
     this.product = product
   }
 
+  def getBuildLabel() {
+    return 'windows'
+  }
+
   def build() {
     addVersionInfo()
-    getBuildLabel()
     //gradle("assemble")
     //steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
   }

@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class MsBuildPipelineType implements PipelineType, Serializable {
+class DotNetPipelineType implements PipelineType, Serializable {
   def steps
   def product
   def app
@@ -13,7 +13,7 @@ class MsBuildPipelineType implements PipelineType, Serializable {
     this.product = product
     this.app = app
 
-    builder = new MsBuild(steps, product)
+    builder = new DotNetBuilder(steps, product)
     //deployer = new JavaDeployer(steps, product, app)
   }
 }
