@@ -31,7 +31,7 @@ class DocumentPublisher implements Serializable {
       documents.add(wrapWithBuildInfo(it.name, json))
     }
 
-    //publish(getCosmosDbKey(), collectionLink, documents)
+    publish(getCosmosDbKey(), collectionLink, documents)
   }
 
   @NonCPS
