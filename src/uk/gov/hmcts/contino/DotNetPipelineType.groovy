@@ -8,7 +8,7 @@ class DotNetPipelineType implements PipelineType, Serializable {
   Builder builder
   Deployer deployer
 
-  MsBuildPipelineType(steps, product, app) {
+  DotNetPipelineType(steps, product, app) {
     this.steps = steps
     this.product = product
     this.app = app
