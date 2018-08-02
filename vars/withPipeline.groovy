@@ -47,7 +47,7 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   timestamps {
-    node {
+    node(pipelineType.builder.getBuildLabel()) {
       try {
         env.PATH = "$env.PATH:/usr/local/bin"
 
