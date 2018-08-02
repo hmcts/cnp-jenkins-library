@@ -34,7 +34,7 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  //MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
@@ -98,7 +98,7 @@ def call(type, String product, String component, Closure body) {
         }
 
         pl.call('onFailure')
-        //metricsPublisher.publish('Pipeline Failed')
+        metricsPublisher.publish('Pipeline Failed')
         throw err
       }
 
@@ -107,7 +107,7 @@ def call(type, String product, String component, Closure body) {
       }
 
       pl.call('onSuccess')
-      //metricsPublisher.publish('Pipeline Succeeded')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
   }
 }
