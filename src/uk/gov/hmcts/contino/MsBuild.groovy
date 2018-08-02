@@ -11,6 +11,7 @@ class MsBuild extends AbstractBuilder {
 
   def build() {
     addVersionInfo()
+    getBuildLabel()
     //gradle("assemble")
     //steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
   }
