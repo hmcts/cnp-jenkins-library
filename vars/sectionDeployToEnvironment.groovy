@@ -40,6 +40,7 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
+  def customVars = params.customVars
   Long deploymentNumber
 
   Builder builder = pipelineType.builder
@@ -59,7 +60,7 @@ def call(params) {
                 withIlbIp(environment) {
                   def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
                   withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, false, subscription)
+                    tfOutput = spinInfra(product, component, environment, false, subscription, customVars)
                   }
                   scmServiceRegistration(environment)
                 }

@@ -7,7 +7,11 @@ def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
 }
 
-def call(product, component, environment, planOnly, subscription) {
+def call(productName, component, environment, planOnly, subscription) {
+  call(productName, component, environment, planOnly, subscription, null)
+}
+
+def call(product, component, environment, planOnly, subscription, customVars) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
@@ -49,13 +53,25 @@ def call(product, component, environment, planOnly, subscription) {
 
 
       sh "terraform get -update=true"
-      sh "terraform plan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+      def terraformPlanCommand = "terraform plan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+
+      if (customVars != null) {
+        terraformPlanCommand += " " + customVars
+      }
+
+      sh terraformPlanCommand
 
       if (!planOnly) {
         stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+          def terraformApplyCommand = "terraform apply -auto-approve -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+          if (customVars != null) {
+            terraformApplyCommand += " " + customVars
+          }
+
+          sh terraformApplyCommand
+
           parseResult = null
           try {
             result = sh(script: "terraform output -json", returnStdout: true).trim()
