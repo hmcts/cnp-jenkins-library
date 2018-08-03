@@ -18,7 +18,6 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 
-  /**
   stage("Test") {
     pl.callAround('test') {
       timeout(time: 15, unit: 'MINUTES') {
@@ -49,5 +48,4 @@ def call(PipelineCallbacks pl, Builder builder) {
       }
     }
   }
-   */
 }
