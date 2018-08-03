@@ -104,7 +104,7 @@ class PipelineCallbacks implements Serializable {
     this.dockerBuild = true
   }
 
-  void enableDeploytoAKS() {
+  void enableDeployToAKS() {
     this.deployToAKS = true
   }
 
