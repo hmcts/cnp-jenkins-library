@@ -82,7 +82,7 @@ class KubectlTest extends Specification {
   def "getServiceLoadbalancerIP() should throw exception if IP never becomes available"() {
     when:
       kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
-      kubectl.getService('custard-recipe-backend-ilb') >> getServiceJsonPending()
+      kubectl.getService('custard-recipe-backend-ilb') >> getServiceJsonWithUninitialisedILB()
       kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
     then:
