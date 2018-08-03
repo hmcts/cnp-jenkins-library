@@ -81,7 +81,7 @@ class PipelineCallbacks implements Serializable {
   }
 
   void setVaultName(String vaultName) {
-    this.vaultName
+    this.vaultName  = vaultName
   }
 
   void enableDbMigration() {
