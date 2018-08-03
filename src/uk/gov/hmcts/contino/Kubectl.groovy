@@ -33,7 +33,7 @@ class Kubectl {
     int sleepDuration = 10
     def ip
 
-    while ((ip = getIp(name)) == '<pending>' && (retryCount < maxRetries)) {
+    while ((ip = getILBIP(name)) == '<pending>' && (retryCount < maxRetries)) {
       ++retryCount
       println "Retry count: ${retryCount}"
 
@@ -56,8 +56,10 @@ class Kubectl {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}", returnStdout: true)
   }
 
-  private getIp(String serviceName) {
+  private getILBIP(String serviceName) {
     def serviceJson = this.getService(serviceName, true)
+    this.steps.echo "Service Json: ${serviceJson}"
+
     def serviceObject = new JsonSlurper().parseText(serviceJson)
     return serviceObject.status.loadBalancer.ingress[0].ip
   }
