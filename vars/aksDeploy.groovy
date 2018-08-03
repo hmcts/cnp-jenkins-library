@@ -15,13 +15,22 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
         withEnv(templateEnvVars) {
+
+          // authenticate with the cluster
           def kubectl = new Kubectl(this, subscription, namespace)
           kubectl.login()
 
+          // create namespace (idempotent)
+          kubetl.createNamespace(env.NAMESPACE)
+
+          // perform template variable substitution
           sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
+
+          // deploy the app
           kubectl.apply('src/kubernetes/deployment.yaml')
 
-          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP("${env.SERVICE_NAME}")
+          // discover and export the service URL for the next stage
+          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
         }
       }

@@ -19,6 +19,11 @@ class Kubectl {
     this.namespace = namespace
   }
 
+  // ignore return status
+  def createNamespace(String name) {
+    this.steps.sh(returnStatus: true, script: "kubectl create namespace ${name}")
+  }
+
   def apply(String path) {
     execute("apply -f ${path}", false)
   }

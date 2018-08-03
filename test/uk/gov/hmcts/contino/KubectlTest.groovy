@@ -15,6 +15,17 @@ class KubectlTest extends Specification {
     kubectl = new Kubectl(steps, subscription, namespace)
   }
 
+  def "createNamespace() should execute with the correct namespace"() {
+    when:
+      kubectl.createNamespace(namespace)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("kubectl create namespace ${namespace}") &&
+                    it.containsKey('returnStatus') &&
+                    it.get('returnStatus').equals(true)})
+  }
+
   def "login() should authenticate using the correct resource group and cluster name"() {
     when:
       kubectl.login()
