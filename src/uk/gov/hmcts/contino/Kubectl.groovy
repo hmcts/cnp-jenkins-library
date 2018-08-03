@@ -32,13 +32,13 @@ class Kubectl {
   def getServiceLoadbalancerIP(String name) {
     int maxRetries = 5
     int retryCount = 0
-    int sleepDuration = 10
+    int sleepDuration = 5
     def ip
 
-    while ((ip = getILBIP(name)) == ILB_PENDING && (retryCount < maxRetries)) {
+    while (((ip = getILBIP(name)).equals(ILB_PENDING)) && (retryCount < maxRetries)) {
       this.steps.echo "ILB address: ${ip}"
       ++retryCount
-      println "Retry count: ${retryCount}"
+      this.steps.echo "Retry count: ${retryCount}"
 
       if (retryCount == maxRetries) {
         throw new RuntimeException("Loadbalancer for service ${name} is unavailable.")
@@ -59,7 +59,7 @@ class Kubectl {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}", returnStdout: true)
   }
 
-  private getILBIP(String serviceName) {
+  private String getILBIP(String serviceName) {
     def serviceJson = this.getService(serviceName, true)
     this.steps.echo "Service Json: ${serviceJson}"
     def serviceObject = new JsonSlurper().parseText(serviceJson)
@@ -73,7 +73,7 @@ class Kubectl {
     return serviceObject.status.loadBalancer.ingress[0].ip
   }
 
-  private execute(String command, boolean jsonOutput) {
+  private Object execute(String command, boolean jsonOutput) {
     kubectl command,"-n ${this.namespace}",
       jsonOutput ? '-o json' : ""
   }
