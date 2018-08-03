@@ -77,6 +77,13 @@ class YarnBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:mutation') })
   }
 
+  def "mutationTest calls 'yarn test:mutation'"() {
+    when:
+    builder.mutationTest()
+    then:
+    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:mutation') })
+  }
+
   def "securityCheck calls 'yarn test:nsp'"() {
     when:
       builder.securityCheck()

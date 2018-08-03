@@ -63,6 +63,5 @@ class AngularBuilder extends AbstractBuilder {
   @Override
   def mutationTest(){
     builder.mutationTest()
-
   }
 }

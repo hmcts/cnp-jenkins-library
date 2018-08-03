@@ -81,5 +81,4 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       currentBuild.result = "UNSTABLE"
     }
   }
-
 }

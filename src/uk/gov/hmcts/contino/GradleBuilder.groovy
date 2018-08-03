@@ -67,7 +67,6 @@ class GradleBuilder extends AbstractBuilder {
     }
     finally {
       steps.archiveArtifacts 'build/reports/pitest/**/*.*'
-
     }
   }
 
