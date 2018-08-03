@@ -78,16 +78,6 @@ class KubectlTest extends Specification {
       thrown RuntimeException
   }
 
-  def "getServiceLoadbalancerIP() return IP address after retries"() {
-    when:
-      kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
-      kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonPending(), getServiceJsonWithIP()]
-      def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
-
-    then:
-      assertThat(ip).isEqualTo('172.15.4.97')
-  }
-
   def "getServiceLoadbalancerIP() return IP address with initialisation"() {
     when:
       kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
@@ -96,22 +86,6 @@ class KubectlTest extends Specification {
 
     then:
       assertThat(ip).isEqualTo('172.15.4.97')
-  }
-
-
-  def getServiceJsonPending(){ ''' \
-{
-    "status": {
-        "loadBalancer": {
-            "ingress": [
-                {
-                    "ip": "<pending>"
-                }
-            ]
-        }
-    }
-}
-'''
   }
 
   def getServiceJsonWithIP(){ ''' \

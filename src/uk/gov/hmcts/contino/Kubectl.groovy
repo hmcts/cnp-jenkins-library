@@ -8,8 +8,6 @@ class Kubectl {
   static String AKS_RESOURCE_GROUP = 'cnp-aks-rg'
   static String AKS_CLUSTER_NAME   = 'cnp-aks-cluster'
 
-  static String ILB_PENDING = "<pending>"
-
   def steps
   def subscription
   def namespace
@@ -30,21 +28,19 @@ class Kubectl {
   }
 
   def getServiceLoadbalancerIP(String name) {
-    int maxRetries = 50
+    int maxRetries = 30
     int retryCount = 0
-    int sleepDuration = 5
+    int sleepDuration = 10
     def ip
 
     while (true) {
-
       if (retryCount == maxRetries) {
         throw new RuntimeException("Loadbalancer for service ${name} is unavailable.")
       }
 
       ip = getILBIP(name)
-      this.steps.echo "ILB address: ${ip}"
 
-      if (ip != ILB_PENDING) {
+      if (ip) {
         return ip
       }
 
@@ -52,9 +48,6 @@ class Kubectl {
       this.steps.echo "Retry count: ${retryCount}"
       this.steps.sleep sleepDuration
     }
-
-    this.steps.echo "ILB address 2: ${ip}"
-    return ip
   }
 
   def getService(String name, boolean jsonOutput) {
@@ -74,7 +67,7 @@ class Kubectl {
     // Check if the ILB is still initialising...
     if (!serviceObject.status.loadBalancer.ingress) {
       this.steps.echo "ILB not found or still initialising..."
-      return ILB_PENDING
+      return null
     }
 
     return serviceObject.status.loadBalancer.ingress[0].ip
