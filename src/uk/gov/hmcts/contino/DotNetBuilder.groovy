@@ -10,7 +10,7 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def getBuildLabel() {
-    return 'windows-dotnet'
+    return 'windows'
   }
 
   def build() {
