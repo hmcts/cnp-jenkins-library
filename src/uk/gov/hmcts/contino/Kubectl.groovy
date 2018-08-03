@@ -35,15 +35,21 @@ class Kubectl {
     int sleepDuration = 5
     def ip
 
-    while (((ip = getILBIP(name)) == '<pending>') && (retryCount < maxRetries)) {
-      this.steps.echo "ILB address: ${ip}"
-      ++retryCount
-      this.steps.echo "Retry count: ${retryCount}"
+    while (true) {
 
       if (retryCount == maxRetries) {
         throw new RuntimeException("Loadbalancer for service ${name} is unavailable.")
       }
 
+      ip = getILBIP(name)
+      this.steps.echo "ILB address: ${ip}"
+
+      if (ip != ILB_PENDING) {
+        return ip
+      }
+
+      ++retryCount
+      this.steps.echo "Retry count: ${retryCount}"
       this.steps.sleep sleepDuration
     }
 
@@ -68,7 +74,7 @@ class Kubectl {
     // Check if the ILB is still initialising...
     if (!serviceObject.status.loadBalancer.ingress) {
       this.steps.echo "ILB not found or still initialising..."
-      return '<pending>'
+      return ILB_PENDING
     }
 
     return serviceObject.status.loadBalancer.ingress[0].ip
