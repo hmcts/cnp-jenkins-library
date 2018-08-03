@@ -30,7 +30,7 @@ class Kubectl {
   }
 
   def getServiceLoadbalancerIP(String name) {
-    int maxRetries = 5
+    int maxRetries = 50
     int retryCount = 0
     int sleepDuration = 5
     def ip
