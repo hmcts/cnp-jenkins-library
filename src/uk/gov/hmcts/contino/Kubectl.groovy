@@ -35,7 +35,7 @@ class Kubectl {
     int sleepDuration = 5
     def ip
 
-    while (((ip = getILBIP(name)).equals(ILB_PENDING)) && (retryCount < maxRetries)) {
+    while (((ip = getILBIP(name)) == ILB_PENDING) && (retryCount < maxRetries)) {
       this.steps.echo "ILB address: ${ip}"
       ++retryCount
       this.steps.echo "Retry count: ${retryCount}"
@@ -47,6 +47,7 @@ class Kubectl {
       this.steps.sleep sleepDuration
     }
 
+    this.steps.echo "ILB address 2: ${ip}"
     return ip
   }
 

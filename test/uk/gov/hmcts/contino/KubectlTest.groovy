@@ -80,9 +80,9 @@ class KubectlTest extends Specification {
 
   def "getServiceLoadbalancerIP() return IP address after retries"() {
     when:
-    kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
-    kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonPending(), getServiceJsonWithIP()]
-    def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
+      kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+      kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonPending(), getServiceJsonWithIP()]
+      def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
     then:
       assertThat(ip).isEqualTo('172.15.4.97')
@@ -90,12 +90,12 @@ class KubectlTest extends Specification {
 
   def "getServiceLoadbalancerIP() return IP address with initialisation"() {
     when:
-    kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
-    kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonPending(), getServiceJsonWithIP()]
-    def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
+      kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+      kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonWithIP()]
+      def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
     then:
-    assertThat(ip).isEqualTo('172.15.4.97')
+      assertThat(ip).isEqualTo('172.15.4.97')
   }
 
 
