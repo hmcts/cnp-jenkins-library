@@ -31,14 +31,13 @@ class Kubectl {
     int maxRetries = 30
     int retryCount = 0
     int sleepDuration = 10
-    def ip
 
     while (true) {
       if (retryCount == maxRetries) {
         throw new RuntimeException("Loadbalancer for service ${name} is unavailable.")
       }
 
-      ip = getILBIP(name)
+      def ip = getILBIP(name)
 
       if (ip) {
         return ip
@@ -50,8 +49,8 @@ class Kubectl {
     }
   }
 
-  def getService(String name, boolean jsonOutput) {
-    execute("get service ${name}", jsonOutput)
+  def getService(String name) {
+    execute("get service ${name}", true)
   }
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
@@ -60,7 +59,7 @@ class Kubectl {
   }
 
   private String getILBIP(String serviceName) {
-    def serviceJson = this.getService(serviceName, true)
+    def serviceJson = this.getService(serviceName)
     this.steps.echo "Service Json: ${serviceJson}"
     def serviceObject = new JsonSlurper().parseText(serviceJson)
 

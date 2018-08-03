@@ -59,7 +59,7 @@ class KubectlTest extends Specification {
 
   def "getService() should have namespace and JSON output"() {
     when:
-      kubectl.getService 'frontend-ilb', true
+      kubectl.getService 'frontend-ilb'
 
     then:
       1 * steps.sh({it.containsKey('script') &&
@@ -71,7 +71,7 @@ class KubectlTest extends Specification {
   def "getServiceLoadbalancerIP() should throw exception if IP never becomes available"() {
     when:
       kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
-      kubectl.getService('custard-recipe-backend-ilb', true) >> getServiceJsonPending()
+      kubectl.getService('custard-recipe-backend-ilb') >> getServiceJsonPending()
       kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
     then:
@@ -81,7 +81,7 @@ class KubectlTest extends Specification {
   def "getServiceLoadbalancerIP() return IP address with initialisation"() {
     when:
       kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
-      kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonWithIP()]
+      kubectl.getService('custard-recipe-backend-ilb') >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonWithIP()]
       def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
     then:
