@@ -61,16 +61,15 @@ class Kubectl {
 
   private getILBIP(String serviceName) {
     def serviceJson = this.getService(serviceName, true)
+    this.steps.echo "Service Json: ${serviceJson}"
+    def serviceObject = new JsonSlurper().parseText(serviceJson)
 
-    // null here could mean the ILB is still initialising...
-    if (!serviceJson) {
+    // Check if the ILB is still initialising...
+    if (!serviceObject.status.loadBalancer.ingress) {
       this.steps.echo "ILB not found or still initialising..."
       return ILB_PENDING
     }
 
-    this.steps.echo "Service Json: ${serviceJson}"
-
-    def serviceObject = new JsonSlurper().parseText(serviceJson)
     return serviceObject.status.loadBalancer.ingress[0].ip
   }
 

@@ -88,6 +88,16 @@ class KubectlTest extends Specification {
       assertThat(ip).isEqualTo('172.15.4.97')
   }
 
+  def "getServiceLoadbalancerIP() return IP address with initialisation"() {
+    when:
+    kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+    kubectl.getService('custard-recipe-backend-ilb', true) >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonPending(), getServiceJsonWithIP()]
+    def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
+
+    then:
+    assertThat(ip).isEqualTo('172.15.4.97')
+  }
+
 
   def getServiceJsonPending(){ ''' \
 {
@@ -117,6 +127,17 @@ class KubectlTest extends Specification {
     }
 }
 '''
+  }
+
+  def getServiceJsonWithUninitialisedILB() { ''' \
+{
+    "status": {
+        "loadBalancer": {}
+    }
+}
+
+'''
+
   }
 }
 
