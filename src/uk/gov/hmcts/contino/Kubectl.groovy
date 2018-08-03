@@ -11,7 +11,7 @@ class Kubectl {
   def steps
   def subscription
   def namespace
-  def kubectl = { cmd, namespace, jsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $jsonOutput", returnStdout: true)}
+  def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
     this.steps = steps
@@ -77,9 +77,9 @@ class Kubectl {
     return serviceObject.status.loadBalancer.ingress[0].ip
   }
 
-  private Object execute(String command, boolean jsonOutput) {
+  private Object execute(String command, boolean returnJsonOutput) {
     kubectl command,"-n ${this.namespace}",
-      jsonOutput ? '-o json' : ""
+      returnJsonOutput ? '-o json' : ""
   }
 
 }

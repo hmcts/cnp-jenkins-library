@@ -125,7 +125,3 @@ class KubectlTest extends Specification {
 
   }
 }
-
-
-
-

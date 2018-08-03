@@ -5,7 +5,8 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
   withDocker('hmcts/cnp-aks-client:1.2', null) {
     withSubscription(subscription) {
 
-      def keyvaultUrl = "https://${pl.keyvaultName}.vault.azure.net/".replace('(subscription)', subscription)
+      def projectKeyvaultName = pl.vaultName + '-' + env.NONPROD_ENVIRONMENT_NAME
+      def keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
 
       wrap([
         $class                   : 'AzureKeyVaultBuildWrapper',

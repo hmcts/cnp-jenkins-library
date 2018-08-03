@@ -5,7 +5,7 @@ class PipelineCallbacks implements Serializable {
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
   List<Map<String, Object>> vaultSecrets = []
-  String keyvaultName
+  String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
 
@@ -76,9 +76,12 @@ class PipelineCallbacks implements Serializable {
     this.slackChannel = slackChannel
   }
 
-  void loadVaultSecrets(List<Map<String, Object>> vaultSecrets, String keyvaultName) {
+  void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
     this.vaultSecrets = vaultSecrets
-    this.keyvaultName = keyvaultName
+  }
+
+  void setVaultName(String vaultName) {
+    this.vaultName
   }
 
   void enableDbMigration() {
