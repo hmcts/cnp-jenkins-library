@@ -21,7 +21,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
           sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
           kubectl.apply('src/kubernetes/deployment.yaml')
 
-          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP("${env.SERVICE_NAME}-ilb")
+          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP("${env.SERVICE_NAME}")
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
         }
       }
