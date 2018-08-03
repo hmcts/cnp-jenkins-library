@@ -9,5 +9,5 @@ def app = "app"
 withNightlyPipeline('angular', product, app) {
   enableCrossBrowserTest()
   enablePerformanceTest()
-
+  enableMutationTest()
 }
