@@ -8,7 +8,7 @@ def call(List templateEnvVars, String subscription, String namespace) {
         def kubectl = new Kubectl(this, subscription, namespace)
         kubectl.login()
 
-        sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
+        sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
         kubectl.delete 'src/kubernetes/deployment.yaml'
       }
     }

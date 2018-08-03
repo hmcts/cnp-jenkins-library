@@ -25,7 +25,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
           kubectl.createNamespace(env.NAMESPACE)
 
           // perform template variable substitution
-          sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
+          sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
 
           // deploy the app
           kubectl.apply('src/kubernetes/deployment.yaml')
