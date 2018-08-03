@@ -19,7 +19,7 @@ class Kubectl {
     this.namespace = namespace
   }
 
-  // ignore return status
+  // ignore return status so doesn't fail if namespace already exists
   def createNamespace(String name) {
     this.steps.sh(returnStatus: true, script: "kubectl create namespace ${name}")
   }
