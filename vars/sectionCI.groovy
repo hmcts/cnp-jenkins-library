@@ -8,7 +8,7 @@ def call(params) {
   def product = params.product
   def component = params.component
 
-  if (pl.containerCI) {
+  if (pl.dockerBuild) {
     withSubscription(subscription) {
 
       def registrySecrets = [
@@ -37,22 +37,29 @@ def call(params) {
             }
           }
         }
-        stage('Deploy to AKS') {
-          pl.callAround('aksdeploy') {
-            timeout(time: 15, unit: 'MINUTES') {
-              aksDeploy(templateEnvVars, subscription, pl, product)
+        if (pl.deployToAKS) {
+          stage('Deploy to AKS') {
+            pl.callAround('aksdeploy') {
+              timeout(time: 15, unit: 'MINUTES') {
+                aksDeploy(templateEnvVars, subscription, pl, product)
+              }
+            }
+          }
+          stage('Functional Tests') {
+            pl.callAround('functionaltests') {
+              timeout(time: 15, unit: 'MINUTES') {
+                echo "Running some tests..."
+              }
+            }
+          }
+          stage('Delete AKS Deployment') {
+            pl.callAround('aksdelete') {
+              timeout(time: 15, unit: 'MINUTES') {
+                aksDelete(templateEnvVars, subscription, product)
+              }
             }
           }
         }
-        /*
-        stage('Delete AKS Deployment') {
-          pl.callAround('aksdelete') {
-            timeout(time: 15, unit: 'MINUTES') {
-              aksDelete(templateEnvVars, subscription, product)
-            }
-          }
-        }
-        */
       }
     }
   }
