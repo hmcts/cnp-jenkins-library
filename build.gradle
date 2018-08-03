@@ -1,28 +1,12 @@
-plugins {
-  id "com.saucelabs.SauceConnectPlugin" version "0.0.12"
-}
-
 apply plugin: 'groovy'
-apply plugin: "com.saucelabs.SauceConnectPlugin"
 
-  repositories {
-    jcenter()
-    mavenCentral()
-    maven {
-      url = 'https://plugins.gradle.org/m2/'
-    }
-    maven{
-      url = 'https://repo.jenkins-ci.org/public/'
-    }
-    maven {
-      url = 'http://vaadin.com/nexus/content/repositories/vaadin-addons'
-    }
-    maven {
-      url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-    }
+repositories {
 
+  jcenter()
+  maven {
+    url 'https://repo.jenkins-ci.org/public/'
   }
-
+}
 
 test {
   systemProperty 'groovy.grape.enable', 'false'
@@ -57,10 +41,6 @@ dependencies {
 
   testRuntime "cglib:cglib-nodep:3.2.6"
   testRuntime "org.objenesis:objenesis:2.5.1"
-  compile group: 'com.saucelabs', name: 'sauce-connect', version: '3.1.32'
-  compile group: 'org.jenkins-ci.plugins', name: 'sauce-ondemand', version: '1.7'
-  compile group: 'com.saucelabs.maven.plugin', name: 'sauce-connect-plugin', version: '2.1.8'
-  compile group: 'com.saucelabs', name: 'ci-sauce', version: '1.138'
 }
 
 
@@ -81,9 +61,5 @@ sourceSets {
     groovy {
       srcDirs = ['test']
     }
-    resources {
-      srcDirs = ['testResources']
-    }
   }
-
 }
