@@ -21,7 +21,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
           kubectl.login()
 
           // create namespace (idempotent)
-          kubetl.createNamespace(env.NAMESPACE)
+          kubectl.createNamespace(env.NAMESPACE)
 
           // perform template variable substitution
           sh "envsubst < src/kubernetes/deployment.tmpl > src/kubernetes/deployment.yaml"
