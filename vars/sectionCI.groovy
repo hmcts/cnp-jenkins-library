@@ -46,6 +46,7 @@ def call(params) {
               }
             }
           }
+          /*
           stage('Functional Tests') {
             pl.callAround('functionaltests') {
               timeout(time: 15, unit: 'MINUTES') {
@@ -60,6 +61,7 @@ def call(params) {
               }
             }
           }
+          */
         }
       }
     }
