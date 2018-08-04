@@ -25,10 +25,11 @@ def call(params) {
       ]) {
 
         def repository = 'hmcts'
-        def serviceName  = product + '-' + component
+        def appName  = product + '-' + component
         def tag = new ProjectBranch(env.BRANCH_NAME).imageTag()
-        def imageName = "$REGISTRY_HOST/$repository/$serviceName:$tag"
-        def templateEnvVars = ["NAMESPACE=${product}", "SERVICE_NAME=${serviceName}", "IMAGE_NAME=${imageName}"]
+        def aksServiceName = appName + '-' + tag
+        def imageName = "$REGISTRY_HOST/$repository/$appName:$tag"
+        def templateEnvVars = ["NAMESPACE=${product}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${imageName}"]
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
