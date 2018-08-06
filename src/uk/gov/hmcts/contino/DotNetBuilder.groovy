@@ -14,9 +14,7 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def build() {
-    addVersionInfo()
-    //gradle("assemble")
-    //steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
+    bat 'powershell get-date'
   }
 
   def test() {
