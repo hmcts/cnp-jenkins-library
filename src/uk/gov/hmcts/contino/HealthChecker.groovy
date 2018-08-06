@@ -8,30 +8,34 @@ class HealthChecker {
     this.steps = steps
   }
 
-  def check(url, sleepDuration, maxRetries) {
+  def check(url, sleepDuration, maxAttempts) {
 
-    int retryCounter = 0
+    int attemptCounter = 1
 
-    steps.retry(maxRetries) {
-      steps.echo "Attempt number: " + (1 + retryCounter)
+    steps.retry(maxAttempts) {
+      steps.echo "Attempt number: " + attemptCounter
 
-      def response = steps.httpRequest(
-        acceptType: 'APPLICATION_JSON',
-        consoleLogResponseBody: true,
-        contentType: 'APPLICATION_JSON',
-        timeout: 10,
-        url: url,
-        validResponseCodes: '200:599',
-        ignoreSslErrors: true
-      )
+      try {
+        def response = steps.httpRequest(
+          acceptType: 'APPLICATION_JSON',
+          consoleLogResponseBody: true,
+          contentType: 'APPLICATION_JSON',
+          timeout: 10,
+          url: url,
+          validResponseCodes: '200:599',
+          ignoreSslErrors: true
+        )
 
-      if (response.status > 300) {
-        ++retryCounter
-        if (retryCounter < maxRetries) {
-          steps.sleep sleepDuration
+        if (response.status > 300) {
+          if (attemptCounter < maxAttempts) {
+            steps.sleep sleepDuration
+          }
+          steps.echo "Service isn’t healthy, will try up to ${maxAttempts} times"
+          throw new RuntimeException()
         }
-        steps.echo "Service isn’t healthy, will retry up to ${maxRetries} times"
-        throw new RuntimeException()
+      }
+      finally {
+        ++attemptCounter
       }
     }
   }

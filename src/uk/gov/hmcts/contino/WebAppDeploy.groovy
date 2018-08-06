@@ -33,10 +33,10 @@ class WebAppDeploy implements Serializable {
     def healthCheckUrl = "${serviceUrl}/health"
 
     int sleepDuration = 10
-    int maxRetries = 50
+    int maxAttempts = 50
 
     def healthChecker = new HealthChecker(steps)
-    healthChecker.check(healthCheckUrl, sleepDuration, maxRetries)
+    healthChecker.check(healthCheckUrl, sleepDuration, maxAttempts)
   }
 
   /**

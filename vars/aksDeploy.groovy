@@ -35,7 +35,6 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
           env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
-          // health check
           def url = env.AKS_TEST_URL + '/health'
           def healthChecker = new HealthChecker(this)
           healthChecker.check(url, 10, 50)
