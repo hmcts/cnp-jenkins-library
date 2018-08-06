@@ -46,7 +46,7 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
 
           def url = env.AKS_TEST_URL + '/health'
           def healthChecker = new HealthChecker(this)
-          healthChecker.check(url, 10, 50)
+          healthChecker.check(url, 10, 10)
         }
       }
     }
