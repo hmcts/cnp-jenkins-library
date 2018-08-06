@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonSlurperClassic
 
 /**
@@ -53,12 +54,17 @@ class WebAppDeploy implements Serializable {
       if (response.status > 300) {
         ++retryCounter
         if (retryCounter < maxRetries) {
-          steps.sleep sleepDuration
+          nonCpsSleep(sleepDuration)
         }
         steps.echo "Service isn’t healthy, will retry up to ${maxRetries} times"
         throw new RuntimeException()
       }
     }
+  }
+
+  @NonCPS
+  def nonCpsSleep(int seconds){
+    sleep(seconds*1000)
   }
 
   /**
