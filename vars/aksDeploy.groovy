@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.HealthChecker
 
 def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String namespace) {
   withDocker('hmcts/cnp-aks-client:1.2', null) {
@@ -33,6 +34,11 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
           // discover and export the service URL for the next stage
           env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
+
+          // health check
+          def url = env.AKS_TEST_URL + '/health'
+          def healthChecker = new HealthChecker(this)
+          healthChecker.check(url, 10, 50)
         }
       }
     }

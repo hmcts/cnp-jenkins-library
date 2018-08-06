@@ -35,30 +35,8 @@ class WebAppDeploy implements Serializable {
     int sleepDuration = 10
     int maxRetries = 50
 
-    int retryCounter = 0
-
-    steps.retry(maxRetries) {
-      steps.echo "Attempt number: " + (1 + retryCounter)
-
-      def response = steps.httpRequest(
-        acceptType: 'APPLICATION_JSON',
-        consoleLogResponseBody: true,
-        contentType: 'APPLICATION_JSON',
-        timeout: 10,
-        url: healthCheckUrl,
-        validResponseCodes: '200:599',
-        ignoreSslErrors: true
-      )
-
-      if (response.status > 300) {
-        ++retryCounter
-        if (retryCounter < maxRetries) {
-          steps.sleep sleepDuration
-        }
-        steps.echo "Service isn’t healthy, will retry up to ${maxRetries} times"
-        throw new RuntimeException()
-      }
-    }
+    def healthChecker = new HealthChecker(steps)
+    healthChecker.check(healthCheckUrl, sleepDuration, maxRetries)
   }
 
   /**
