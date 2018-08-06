@@ -14,7 +14,7 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def build() {
-    steps.bat 'powershell.exe (Get-ChildItem -Recurse).FullName"'
+    steps.bat 'powershell.exe msbuild **\*.sln'
   }
 
   def test() {
