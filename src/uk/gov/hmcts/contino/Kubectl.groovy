@@ -33,23 +33,23 @@ class Kubectl {
   }
 
   def getServiceLoadbalancerIP(String name) {
-    int maxRetries = 30
-    int retryCount = 0
+    int maxAttempts = 30
+    int attemptCount = 1
     int sleepDuration = 10
 
     while (true) {
-      if (retryCount == maxRetries) {
+      if (attemptCount == maxAttempts) {
         throw new RuntimeException("Loadbalancer for service ${name} is unavailable.")
       }
 
+      this.steps.echo "Attempt number: ${attemptCount}"
       def ip = getILBIP(name)
 
       if (ip) {
         return ip
       }
 
-      ++retryCount
-      this.steps.echo "Retry count: ${retryCount}"
+      ++attemptCount
       this.steps.sleep sleepDuration
     }
   }
