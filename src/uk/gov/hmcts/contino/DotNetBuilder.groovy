@@ -14,7 +14,7 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def build() {
-    bat 'powershell.exe write-output "testing pipeline"'
+    steps.bat 'powershell.exe write-output "testing pipeline"'
   }
 
   def test() {
