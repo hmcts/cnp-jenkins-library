@@ -14,12 +14,12 @@ class AcrTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    acr = new Acr(steps, SUBSCRIPTION)
+    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME)
   }
 
   def "login() should login with registry name"() {
     when:
-      acr.login(REGISTRY_NAME)
+      acr.login()
 
     then:
       1 * steps.sh({it.containsKey('script') &&
@@ -30,7 +30,7 @@ class AcrTest extends Specification {
 
   def "getImageDigest() should call az with registry and image name"() {
     when:
-      acr.getImageDigest(REGISTRY_NAME, IMAGE_NAME)
+      acr.getImageDigest(IMAGE_NAME)
 
     then:
       1 * steps.sh({it.containsKey('script') &&

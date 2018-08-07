@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.DockerImage
 
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
@@ -28,17 +29,15 @@ def call(params) {
             applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
 
-        def repository = 'hmcts'
-        def appName  = product + '-' + component
-        def tag = new ProjectBranch(env.BRANCH_NAME).imageTag()
-        def aksServiceName = appName + '-' + tag
-        def imageName = "$REGISTRY_HOST/$repository/$appName:$tag"
-        def templateEnvVars = ["NAMESPACE=${product}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${imageName}"]
+        def dockerImage = new DockerImage(product, component, this, new ProjectBranch(env.BRANCH_NAME))
+        def buildName = dockerImage.getTaggedName()
+        def digestName = dockerImage.getDigestName()
+        def aksServiceName = dockerImage.getAksServiceName()
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              dockerBuild(imageName, subscription)
+              dockerBuild(buildName, subscription)
             }
           }
         }
@@ -46,6 +45,7 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
+                def templateEnvVars = ["NAMESPACE=${product}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
                 aksDeploy(templateEnvVars, subscription, pl, product)
               }
             }
