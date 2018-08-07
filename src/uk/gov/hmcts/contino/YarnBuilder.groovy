@@ -62,6 +62,15 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def mutationTest() {
+    try{
+      yarn("test:mutation")
+    }
+    finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+    }
+  }
+
   def securityCheck() {
     yarn("test:nsp")
   }
