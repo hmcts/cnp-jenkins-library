@@ -14,8 +14,7 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def build() {
-    step.bat 'powershell nuget restore SolutionName.sln'
-    //step.bat "\"${tool 'MSBuild'}\" SolutionName.sln /p:Configuration=Release"
+    steps.bat 'nuget'
   }
 
   def test() {
