@@ -11,7 +11,6 @@ def call(String sauceid, Closure body) {
         sauceconnect(options: '--verbose  --tunnel-identifier reformtunnel', useGeneratedTunnelIdentifier: false,
                 useLatestSauceConnect: true, verboseLogging: true) {
             body().call()
-            saucePublisher()
         }
     }
 }
