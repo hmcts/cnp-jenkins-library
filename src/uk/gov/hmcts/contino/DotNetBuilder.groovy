@@ -14,7 +14,8 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def build() {
-    steps.bat 'nuget'
+    steps.bat 'nuget restore HearingsAPI\\HearingsAPI.sln'
+    steps.bat 'msbuild HearingsAPI\\HearingsAPI.sln'
   }
 
   def test() {
