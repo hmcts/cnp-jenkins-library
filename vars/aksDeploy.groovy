@@ -1,8 +1,9 @@
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.HealthChecker
+import uk.gov.hmcts.contino.DockerImage
 
-def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String namespace) {
+def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
   withDocker('hmcts/cnp-aks-client:1.2', null) {
     withSubscription(subscription) {
 
@@ -25,6 +26,13 @@ def call(List templateEnvVars, String subscription, PipelineCallbacks pl, String
         applicationIDOverride    : env.AZURE_CLIENT_ID,
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
+
+        def acr = new Acr(this, subscription, env.REGISTRY_NAME)
+        def digestName = dockerImage.getDigestName(acr)
+        def aksServiceName = dockerImage.getAksServiceName()
+        def namespace = dockerImage.product
+        def templateEnvVars = ["NAMESPACE=${namespace}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
+
         withEnv(templateEnvVars) {
 
           // authenticate with the cluster

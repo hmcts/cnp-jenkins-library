@@ -33,7 +33,6 @@ def call(params) {
         def dockerImage = new DockerImage(product, component, this, new ProjectBranch(env.BRANCH_NAME))
         def acr = new Acr(this, subscription, env.REGISTRY_NAME)
         def buildName = dockerImage.getTaggedName()
-        def aksServiceName = dockerImage.getAksServiceName()
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
@@ -46,9 +45,7 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                def digestName = dockerImage.getDigestName(acr)
-                def templateEnvVars = ["NAMESPACE=${product}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
-                aksDeploy(templateEnvVars, subscription, pl, product)
+                aksDeploy(dockerImage, subscription, pl, product)
               }
             }
           }
