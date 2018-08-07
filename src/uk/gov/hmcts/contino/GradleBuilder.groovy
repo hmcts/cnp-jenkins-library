@@ -20,7 +20,7 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--info check")
     } finally {
       steps.junit '**/test-results/**/*.xml'
-      steps.archiveArtifacts artifacts: 'build/reports/checkstyle/*.html', allowEmptyArchive: true
+      steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
     }
   }
 
