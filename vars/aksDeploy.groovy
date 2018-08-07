@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.azure.Acr
 
 def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
   withDocker('hmcts/cnp-aks-client:1.2', null) {
