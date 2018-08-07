@@ -15,7 +15,8 @@ class DotNetBuilder extends AbstractBuilder {
 
   def build() {
     steps.bat 'nuget restore HearingsAPI\\HearingsAPI.sln'
-    steps.bat 'msbuild HearingsAPI\\HearingsAPI.sln'
+    \\steps.bat 'msbuild HearingsAPI\\HearingsAPI.sln'
+    steps.bat "\"${tool 'MSBuild'}\" HearingsAPI\\HearingsAPI.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
   }
 
   def test() {
