@@ -12,5 +12,7 @@ def call(String sauceid, Closure body) {
                 useLatestSauceConnect: true, verboseLogging: true) {
             body().call()
         }
+      saucePublisher()
+
     }
 }
