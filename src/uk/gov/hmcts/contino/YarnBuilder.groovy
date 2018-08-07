@@ -57,7 +57,7 @@ class YarnBuilder extends AbstractBuilder {
       }
     }
     finally {
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: '/functional-output/crossbrowser/reports/**.*'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**.*'
       steps.saucePublisher()
     }
   }
