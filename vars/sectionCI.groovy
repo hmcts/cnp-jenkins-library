@@ -45,7 +45,7 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksDeploy(dockerImage, subscription, pl, product)
+                aksDeploy(dockerImage, subscription, pl)
               }
             }
           }
