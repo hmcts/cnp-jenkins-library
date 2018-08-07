@@ -1,0 +1,41 @@
+package uk.gov.hmcts.contino.azure
+
+import spock.lang.Specification
+import uk.gov.hmcts.contino.JenkinsStepMock
+
+class AcrTest extends Specification {
+
+  static String SUBSCRIPTION = 'sandbox'
+  static String REGISTRY_NAME = 'cpnacr'
+  static String IMAGE_NAME = 'hmcts/alpine:sometag'
+
+  def steps
+  def acr
+
+  def setup() {
+    steps = Mock(JenkinsStepMock.class)
+    acr = new Acr(steps, SUBSCRIPTION)
+  }
+
+  def "login() should login with registry name"() {
+    when:
+      acr.login(REGISTRY_NAME)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr login --name ${REGISTRY_NAME}") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
+
+  def "getImageDigest() should call az with registry and image name"() {
+    when:
+      acr.getImageDigest(REGISTRY_NAME, IMAGE_NAME)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr repository show --name ${REGISTRY_NAME} --image ${IMAGE_NAME} --query [digest] -otsv") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
+}

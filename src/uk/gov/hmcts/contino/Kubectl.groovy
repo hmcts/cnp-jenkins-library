@@ -4,19 +4,19 @@ import groovy.json.JsonSlurper
 
 class Kubectl {
 
-  // TODO where/what will these be configured
-  static String AKS_RESOURCE_GROUP = 'cnp-aks-rg'
-  static String AKS_CLUSTER_NAME   = 'cnp-aks-cluster'
-
   def steps
   def subscription
   def namespace
+  def resourceGroup
+  def clusterName
   def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
     this.steps = steps
     this.subscription = subscription
     this.namespace = namespace
+    this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
+    this.clusterName = steps.env.AKS_CLUSTER_NAME
   }
 
   // ignore return status so doesn't fail if namespace already exists
@@ -60,7 +60,7 @@ class Kubectl {
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME}", returnStdout: true)
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName}", returnStdout: true)
   }
 
   private String getILBIP(String serviceName) {

@@ -11,10 +11,14 @@ def call(params) {
   if (pl.dockerBuild) {
     withSubscription(subscription) {
 
+      // TODO required for Docker and Kubectl operations.  Is there a better place than keyvault for this?
       def registrySecrets = [
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME' ],
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-host', version: '', envVariable: 'REGISTRY_HOST' ],
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-username', version: '', envVariable: 'REGISTRY_USERNAME' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-password', version: '', envVariable: 'REGISTRY_PASSWORD' ]
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-password', version: '', envVariable: 'REGISTRY_PASSWORD' ],
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP' ],
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME' ],
       ]
 
       wrap([$class: 'AzureKeyVaultBuildWrapper',
@@ -34,7 +38,7 @@ def call(params) {
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              dockerBuild(imageName)
+              dockerBuild(imageName, subscription)
             }
           }
         }

@@ -12,6 +12,8 @@ class KubectlTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
+    steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                  AKS_CLUSTER_NAME: "cnp-aks-cluster"]
     kubectl = new Kubectl(steps, subscription, namespace)
   }
 
@@ -32,7 +34,7 @@ class KubectlTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("aks get-credentials --resource-group ${Kubectl.AKS_RESOURCE_GROUP} --name ${Kubectl.AKS_CLUSTER_NAME}")})
+                    it.get('script').contains("aks get-credentials --resource-group cnp-aks-rg --name cnp-aks-cluster")})
   }
 
   def "login() should use the subscription passed in"() {

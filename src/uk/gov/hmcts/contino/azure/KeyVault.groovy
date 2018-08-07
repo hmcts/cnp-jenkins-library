@@ -3,25 +3,17 @@ package uk.gov.hmcts.contino.azure;
 /**
  * Needs to be used within a withSubscription block.
  */
-class KeyVault implements Serializable {
-  private steps
-  private String subscription
-  private String vaultName
+class KeyVault extends Az implements Serializable {
 
-  private Closure az
+  private String vaultName
 
   KeyVault(steps, String vaultName) {
     this(steps, "jenkins", vaultName)
   }
 
   KeyVault(steps, String subscription, String vaultName) {
-    this.steps = steps
-    this.subscription = subscription
+    super(steps, subscription)
     this.vaultName = vaultName
-
-    this.az = { cmd ->
-      return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az ${cmd}", returnStdout: true).trim()
-    }
   }
 
   void store(String key, String value) {
