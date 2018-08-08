@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
 
