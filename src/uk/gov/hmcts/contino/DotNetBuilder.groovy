@@ -108,5 +108,10 @@ class DotNetBuilder extends AbstractBuilder {
 
     //gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}?ssl=true' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
   }
+  
+  @Override
+  def mutationTest(){
+    builder.mutationTest()
+  }  
 
 }
