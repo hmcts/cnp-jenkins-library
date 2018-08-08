@@ -23,6 +23,8 @@ interface JenkinsStepMock {
   Object archiveArtifacts(String)
   Object withDocker(String image, String options, Closure)
   Object gatlingArchive()
+  Object withSauceConnect(String, Closure)
+  Object saucePublisher()
 }
 
 

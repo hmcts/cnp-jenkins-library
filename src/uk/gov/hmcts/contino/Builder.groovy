@@ -12,4 +12,5 @@ interface Builder {
   def securityCheck()
   def addVersionInfo()
   def getBuildLabel()
+  def mutationTest()
 }
