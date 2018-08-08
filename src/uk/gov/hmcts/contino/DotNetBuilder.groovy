@@ -14,13 +14,32 @@ class DotNetBuilder extends AbstractBuilder {
   }
 
   def build() {
-    steps.powershell '$Path = Resolve-Path **\\**.sln; Start-Process -NoNewWindow -Wait -PassThru -FilePath nuget -ArgumentList "restore", "$Path"'
+    steps.powershell '''
+    $Path = Resolve-Path **\\**.sln
+    Start-Process -NoNewWindow -PassThru -FilePath nuget -ArgumentList "restore", "$Path"
+    $proc.WaitForExit()
+    '''
     //steps.bat "${tool 'MSBuild'} HearingsAPI\\HearingsAPI.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
 
     steps.powershell '''
     $Path = Resolve-Path **\\**.sln
-    $proc = Start-Process -NoNewWindow -PassThru -FilePath msbuild -ArgumentList "$Path /clp:Summary;ErrorsOnly;WarningsOnly /p:Configuration=Release /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
-    $proc.WaitForExit()
+    if (Test-Path $Path) {
+        try {
+            $proc = Start-Process -NoNewWindow -PassThru -FilePath msbuild -ArgumentList "$Path /t:rebuild  /fileLogger /p:Configuration=Release /p:ProductVersion=${env.BUILD_NUMBER}"
+            $proc.WaitForExit()    
+        }
+        catch {
+            throw $Error
+        }
+        if ($LASTEXITCODE -gt 0) {
+            Write-Output "Build failed!"
+            Break
+        }
+    }
+    else {
+        Write-Output "Solution not found!"
+        break 
+    }
      '''
     //steps.msbuild "\"${tool 'MSBuild'}\" HearingsAPI\\HearingsAPI.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
   }
