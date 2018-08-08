@@ -29,7 +29,7 @@ class DockerImage {
    */
   def getTaggedName() {
     return this.registry.concat('/')
-                        .concat(this.getShortName())
+      .concat(this.getShortName())
   }
 
   /**
@@ -40,7 +40,7 @@ class DockerImage {
    */
   def getAksServiceName() {
     return this.product.concat('-').concat(this.component)
-                       .concat('-').concat(this.getTag())
+      .concat('-').concat(this.getTag())
   }
 
   /**
@@ -61,10 +61,10 @@ class DockerImage {
     }
 
     return this.registry.concat('/')
-                        .concat(REPOSITORY).concat('/')
-                        .concat(this.product).concat('-')
-                        .concat(this.component).concat('@')
-                        .concat(digest)
+      .concat(REPOSITORY).concat('/')
+      .concat(this.product).concat('-')
+      .concat(this.component).concat('@')
+      .concat(digest)
   }
 
   /**
@@ -79,8 +79,8 @@ class DockerImage {
 
   private def getShortName() {
     return REPOSITORY.concat('/')
-                     .concat(this.product).concat('-')
-                     .concat(this.component).concat(':')
-                     .concat(this.getTag())
+      .concat(this.product).concat('-')
+      .concat(this.component).concat(':')
+      .concat(this.getTag())
   }
 }

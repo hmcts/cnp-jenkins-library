@@ -9,7 +9,7 @@ class DockerImageTest extends Specification {
 
   static final String PRODUCT   = 'custard'
   static final String COMPONENT = 'back-end'
-  static final String TAG = 'pr-47'
+  static final String TAG       = 'pr-47'
 
   def steps
   def dockerImage

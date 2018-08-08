@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.JenkinsStepMock
 
 class AzTest extends Specification {
 
-  static String SUBSCRIPTION = 'sandbox'
+  static final String SUBSCRIPTION = 'sandbox'
 
   def steps
   def testSubject

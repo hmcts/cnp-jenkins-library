@@ -5,9 +5,9 @@ import uk.gov.hmcts.contino.JenkinsStepMock
 
 class AcrTest extends Specification {
 
-  static String SUBSCRIPTION = 'sandbox'
-  static String REGISTRY_NAME = 'cpnacr'
-  static String IMAGE_NAME = 'hmcts/alpine:sometag'
+  static final String SUBSCRIPTION  = 'sandbox'
+  static final String REGISTRY_NAME = 'cnpacr'
+  static final String IMAGE_NAME    = 'hmcts/alpine:sometag'
 
   def steps
   def acr

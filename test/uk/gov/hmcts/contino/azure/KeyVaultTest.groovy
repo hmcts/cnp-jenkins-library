@@ -6,10 +6,10 @@ import static org.assertj.core.api.Assertions.*
 
 class KeyVaultTest extends Specification {
 
-  static String SUBSCRIPTION = 'sandbox'
-  static String VAULT_NAME = 'myvault'
-  static String KEY        = 'my-secret-key'
-  static String VALUE      = 'my-secret-value'
+  static final String SUBSCRIPTION = 'sandbox'
+  static final String VAULT_NAME   = 'myvault'
+  static final String KEY          = 'my-secret-key'
+  static final String VALUE        = 'my-secret-value'
 
   def steps
   def keyvault

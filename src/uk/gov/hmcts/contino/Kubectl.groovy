@@ -68,7 +68,6 @@ class Kubectl {
     this.steps.echo "Service Json: ${serviceJson}"
     def serviceObject = new JsonSlurper().parseText(serviceJson)
 
-    // Check if the ILB is still initialising...
     if (!serviceObject.status.loadBalancer.ingress) {
       this.steps.echo "ILB not found or still initialising..."
       return null
