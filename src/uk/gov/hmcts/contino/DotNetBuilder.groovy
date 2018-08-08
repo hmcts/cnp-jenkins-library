@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino
 class DotNetBuilder extends AbstractBuilder {
 
   def product
-  public void mutationTest()
 
   DotNetBuilder(steps, product) {
     super(steps)
