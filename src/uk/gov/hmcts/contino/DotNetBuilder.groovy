@@ -19,7 +19,7 @@ class DotNetBuilder extends AbstractBuilder {
 
     steps.powershell '''
     $Path = Resolve-Path **\\**.sln
-    $proc = Start-Process -NoNewWindow -PassThru -FilePath msbuild -ArgumentList "$Path", "/clp:Summary;ErrorsOnly;WarningsOnly /p:Configuration=Release /p:Platform='Any CP'", "/p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
+    $proc = Start-Process -NoNewWindow -PassThru -FilePath msbuild -ArgumentList "$Path /clp:Summary;ErrorsOnly;WarningsOnly /p:Configuration=Release /p:Platform='Any CP' /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
     $proc.WaitForExit()
      '''
     //steps.msbuild "\"${tool 'MSBuild'}\" HearingsAPI\\HearingsAPI.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
