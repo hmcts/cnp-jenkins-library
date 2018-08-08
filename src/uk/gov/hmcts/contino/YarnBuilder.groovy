@@ -57,7 +57,17 @@ class YarnBuilder extends AbstractBuilder {
       }
     }
     finally {
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/cross-browser/*'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**.*'
+      steps.saucePublisher()
+    }
+  }
+
+  def mutationTest() {
+    try{
+      yarn("test:mutation")
+    }
+    finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
     }
   }
 
