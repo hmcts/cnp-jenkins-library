@@ -16,7 +16,7 @@ class DotNetBuilder extends AbstractBuilder {
   def build() {
     steps.powershell '$Path = Resolve-Path **\\**.sln; Start-Process -NoNewWindow -Wait -PassThru -FilePath nuget -ArgumentList "restore", "$Path"'
     
-    	bat "\"${tool 'MSBuild'}\" HearingsAPI\HearingsAPI.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
+    	steps.bat "\"${tool 'MSBuild'}\" HearingsAPI\\HearingsAPI.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /p:ProductVersion=1.0.0.${env.BUILD_NUMBER}"
     
     /*steps.powershell '''
     $Path = Resolve-Path **\\**.sln
