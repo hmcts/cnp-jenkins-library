@@ -32,12 +32,14 @@ def call(params) {
 
         def dockerImage = new DockerImage(product, component, this, new ProjectBranch(env.BRANCH_NAME))
         def acr = new Acr(this, subscription, env.REGISTRY_NAME)
-        def buildName = dockerImage.getTaggedName()
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              dockerBuild(buildName, acr)
+              def docker = new Docker(this, acr)
+              docker.login()
+              docker.build(dockerImage)
+              docker.push(dockerImage)
             }
           }
         }
