@@ -11,7 +11,7 @@ class PipelineCallbacks implements Serializable {
   boolean performanceTest = false
   boolean apiGatewayTest = false
   boolean crossBrowserTest = false
-  boolean containerCI = false
+  boolean dockerBuild = false
   boolean mutationTest = false
   int crossBrowserTestTimeout
   int perfTestTimeout
@@ -98,8 +98,8 @@ class PipelineCallbacks implements Serializable {
     this.crossBrowserTest = true
   }
 
-  void enableContainerCI() {
-    this.containerCI = true
+  void enableDockerBuild() {
+    this.dockerBuild = true
   }
 
   void enableMutationTest(int timeout = 120) {

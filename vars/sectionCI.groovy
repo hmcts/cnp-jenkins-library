@@ -8,7 +8,7 @@ def call(params) {
   def product = params.product
   def component = params.component
 
-  if (pl.containerCI) {
+  if (pl.dockerBuild) {
     withSubscription(subscription) {
 
       def registrySecrets = [
