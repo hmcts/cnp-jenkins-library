@@ -17,6 +17,8 @@ class PipelineCallbacks implements Serializable {
   int perfTestTimeout
   int apiGatewayTestTimeout
   int mutationTestTimeout
+  int fullFuntionalTestTimeout
+  boolean fullFuntionalTest = false
 
   PipelineCallbacks(MetricsPublisher metricsPublisher) {
     this.metricsPublisher = metricsPublisher
@@ -100,6 +102,11 @@ class PipelineCallbacks implements Serializable {
 
   void enableContainerCI() {
     this.containerCI = true
+  }
+
+  void enableFullFunctionalTest(int timeout = 30) {
+    this.fullFuntionalTestTimeout = timeout
+    this.fullFuntionalTest = true
   }
 
   void enableMutationTest(int timeout = 120) {

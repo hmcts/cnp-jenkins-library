@@ -81,4 +81,21 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       currentBuild.result = "UNSTABLE"
     }
   }
+
+  if (pl.fullFuntionalTest) {
+    try {
+      stage('fullFunctionalTest') {
+        pl.callAround('fullFunctionalTest') {
+          timeout(time: pl.fullFuntionalTestTimeout, unit: 'MINUTES') {
+            builder.fullFunctionalTest()
+          }
+        }
+      }
+    }
+    catch(err) {
+      err.printStackTrace()
+      currentBuild.result = "UNSTABLE"
+    }
+  }
+  
 }

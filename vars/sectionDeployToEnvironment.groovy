@@ -150,6 +150,15 @@ def call(params) {
               }
             }
           }
+          if (pl.fullFuntionalTest) {
+            stage("FullFunctional Test - ${environment} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                pl.callAround("crossBrowserTest:${environment}") {
+                  builder.fullFunctionalTest()
+                }
+              }
+            }
+          }
 
         }
 

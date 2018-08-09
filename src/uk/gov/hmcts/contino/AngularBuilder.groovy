@@ -64,4 +64,9 @@ class AngularBuilder extends AbstractBuilder {
   def mutationTest(){
     builder.mutationTest()
   }
+
+  @Override
+  def fullFunctionalTest(){
+    builder.fullFunctionalTest()
+  }
 }
