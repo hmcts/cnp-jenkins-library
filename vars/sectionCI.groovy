@@ -13,7 +13,6 @@ def call(params) {
   if (pl.dockerBuild) {
     withSubscription(subscription) {
 
-      // TODO required for Docker and Kubectl operations.  Is there a better place than keyvault for this?
       def registrySecrets = [
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME' ],
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-host', version: '', envVariable: 'REGISTRY_HOST' ],
@@ -50,22 +49,6 @@ def call(params) {
               }
             }
           }
-          /*
-          stage('Functional Tests') {
-            pl.callAround('functionaltests') {
-              timeout(time: 15, unit: 'MINUTES') {
-                echo "Running some tests..."
-              }
-            }
-          }
-          stage('Delete AKS Deployment') {
-            pl.callAround('aksdelete') {
-              timeout(time: 15, unit: 'MINUTES') {
-                aksDelete(templateEnvVars, subscription, product)
-              }
-            }
-          }
-          */
         }
       }
     }

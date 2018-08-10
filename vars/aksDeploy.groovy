@@ -36,20 +36,16 @@ def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
 
         withEnv(templateEnvVars) {
 
-          // authenticate with the cluster
           def kubectl = new Kubectl(this, subscription, namespace)
           kubectl.login()
 
-          // create namespace (idempotent)
           kubectl.createNamespace(env.NAMESPACE)
 
           // perform template variable substitution
           sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
 
-          // deploy the app
           kubectl.apply('src/kubernetes/deployment.yaml')
 
-          // discover and export the service URL for the next stage
           env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
