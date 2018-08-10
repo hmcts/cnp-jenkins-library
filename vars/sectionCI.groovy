@@ -2,7 +2,6 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
-import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
@@ -32,13 +31,12 @@ def call(params) {
       ]) {
 
         def dockerImage = new DockerImage(product, component, this, new ProjectBranch(env.BRANCH_NAME))
-        def acr = new Acr(this, subscription, env.REGISTRY_NAME)
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              def docker = new Docker(this, acr)
-              docker.login()
+              def docker = new Docker(this)
+              docker.login(env.REGISTRY_HOST, env.REGISTRY_USERNAME, env.REGISTRY_PASSWORD)
               docker.build(dockerImage)
               docker.push(dockerImage)
             }

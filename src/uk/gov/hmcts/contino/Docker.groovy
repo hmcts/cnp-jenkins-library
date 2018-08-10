@@ -5,15 +5,13 @@ import uk.gov.hmcts.contino.azure.Acr
 class Docker {
 
   def steps
-  def acr
 
-  Docker(steps, Acr acr) {
+  Docker(steps) {
     this.steps = steps
-    this.acr = acr
   }
 
-  def login() {
-    this.acr.login()
+  def login(hostUrl, username, password) {
+    this.steps.sh(returnStdout: true, script: "docker login ${hostUrl} -u ${username} -p ${password}")
   }
 
   def build(DockerImage dockerImage) {

@@ -1,32 +1,35 @@
 package uk.gov.hmcts.contino
 
 import spock.lang.Specification
-import uk.gov.hmcts.contino.azure.Acr
 
 class DockerTest extends Specification {
 
-  static final String IMAGE_NAME = 'cnpacr.azrecr.io/hmcts/my-app:pr-76'
+  static final String IMAGE_NAME = 'cnpacr.azurecr.io/hmcts/my-app:pr-76'
+  static final String REGISTRY_HOST = 'cnpacr.azurecr.io'
+  static final String REGISTRY_USERNAME = 'username'
+  static final String REGISTRY_PASSWORD = 'password'
 
   def steps
-  def acr
   def dockerImage
   def docker
 
   void setup() {
-    acr = Mock(Acr)
     dockerImage = Mock(DockerImage)
     steps = Mock(JenkinsStepMock)
-    docker = new Docker(steps, acr)
+    docker = new Docker(steps)
 
     dockerImage.getTaggedName() >> IMAGE_NAME
   }
 
   def "Login"() {
     when:
-      docker.login()
+      docker.login(REGISTRY_HOST, REGISTRY_USERNAME, REGISTRY_PASSWORD)
 
     then:
-      1 * acr.login()
+    1 * steps.sh({it.containsKey('script') &&
+                  it.get('script').contains("docker login ${REGISTRY_HOST} -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD}") &&
+                  it.containsKey('returnStdout') &&
+                  it.get('returnStdout').equals(true)})
   }
 
   def "Build"() {
