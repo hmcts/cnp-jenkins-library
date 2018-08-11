@@ -45,7 +45,24 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   timestamps {
-    node {
+
+    def label = "k8s-${UUID.randomUUID().toString()}"
+    podTemplate(label: label, yaml: """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    pod: docker-agent
+spec:
+  containers:
+  - name: hmcts-image
+    image: hmcts/docker-agent:1.3
+    command:
+    - cat
+    tty: true
+"""
+    )
+    node(label) {
       try {
         env.PATH = "$env.PATH:/usr/local/bin"
 
