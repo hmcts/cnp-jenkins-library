@@ -46,7 +46,7 @@ class DotNetBuilder extends AbstractBuilder {
 
   def test() {
     try {
-      steps.powershell ``` 
+      steps.powershell ''' 
     $Path = Resolve-Path "**\\**\\*.UnitTests.csproj"
     if (Test-Path $Path) {
         try {
@@ -65,7 +65,7 @@ class DotNetBuilder extends AbstractBuilder {
         Write-Output "Unit test not found!"
         break 
     }
-      ```
+      '''
     } finally {
       //steps.junit '**/test-results/**/*.xml'
     }
