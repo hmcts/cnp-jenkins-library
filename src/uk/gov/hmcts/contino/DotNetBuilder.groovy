@@ -25,7 +25,7 @@ class DotNetBuilder extends AbstractBuilder {
     $Path = Resolve-Path **\\**.sln
     if (Test-Path $Path) {
         try {
-            $proc = Start-Process -NoNewWindow -PassThru -FilePath msbuild -ArgumentList "$Path /t:rebuild  /fileLogger /p:Configuration=Release /p:ProductVersion=${env.BUILD_NUMBER}"
+            $proc = Start-Process -NoNewWindow -PassThru -FilePath msbuild -ArgumentList "$Path /t:rebuild /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:PackageLocation=..\\DeploymentPackage /p:Configuration=Release /p:ProductVersion=${env.BUILD_NUMBER}"
             $proc.WaitForExit()    
         }
         catch {
@@ -46,7 +46,26 @@ class DotNetBuilder extends AbstractBuilder {
 
   def test() {
     try {
-      //gradle("--info check")
+      steps.powershell ``` 
+    $Path = Resolve-Path "**\\**\\*.UnitTests.csproj"
+    if (Test-Path $Path) {
+        try {
+            $proc = Start-Process -NoNewWindow -PassThru -FilePath dotnet -ArgumentList "test $Path /p:CollectCoverage=true /p:CoverletOutputFormat=opencover"
+            $proc.WaitForExit()    
+        }
+        catch {
+            throw $Error
+        }
+        if ($LASTEXITCODE -gt 0) {
+            Write-Output "Unit tests failed!"
+            Break
+        }
+    }
+    else {
+        Write-Output "Unit test not found!"
+        break 
+    }
+      ```
     } finally {
       //steps.junit '**/test-results/**/*.xml'
     }
