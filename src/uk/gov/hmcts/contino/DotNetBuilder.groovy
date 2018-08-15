@@ -66,7 +66,6 @@ class DotNetBuilder extends AbstractBuilder {
           Write-Output "Unit test not found!"
           break 
       }
-      }
       '''
     } finally {
       steps.junit 'Artifacts/Coverage/unit.coverage.xml'
