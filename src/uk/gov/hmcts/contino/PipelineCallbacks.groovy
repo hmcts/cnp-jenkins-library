@@ -5,14 +5,17 @@ class PipelineCallbacks implements Serializable {
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
   List<Map<String, Object>> vaultSecrets = []
+  String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
   boolean crossBrowserTest = false
-  boolean dockerBuild = false
   boolean mutationTest = false
+  boolean dockerBuild = false
+  boolean deployToAKS = false
+
   int crossBrowserTestTimeout
   int perfTestTimeout
   int apiGatewayTestTimeout
@@ -79,6 +82,10 @@ class PipelineCallbacks implements Serializable {
     this.vaultSecrets = vaultSecrets
   }
 
+  void setVaultName(String vaultName) {
+    this.vaultName  = vaultName
+  }
+
   void enableDbMigration() {
     this.migrateDb = true
   }
@@ -100,6 +107,10 @@ class PipelineCallbacks implements Serializable {
 
   void enableDockerBuild() {
     this.dockerBuild = true
+  }
+
+  void enableDeployToAKS() {
+    this.deployToAKS = true
   }
 
   void enableMutationTest(int timeout = 120) {
