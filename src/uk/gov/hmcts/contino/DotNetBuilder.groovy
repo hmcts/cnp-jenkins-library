@@ -47,25 +47,26 @@ class DotNetBuilder extends AbstractBuilder {
   def test() {
     try {
       steps.powershell ''' 
-    $CsProjPath = Resolve-Path "**\\**\\*.UnitTests.csproj"
-    $DllPath = Resolve-Path "**\\**\\bin\\debug\\**\\*.UnitTests.dll"
+      $CsProjPath = Resolve-Path "**\\**\\*.UnitTests.csproj"
+      $DllPath = Resolve-Path "**\\**\\bin\\debug\\**\\*.UnitTests.dll"
 
-    if (Test-Path $CsProjPath, $DllPath) {
-        try {
-            coverlet $DllPath --target "dotnet" --targetargs "test $CsProjPath" -f opencover -o Artifacts/Coverage/unit.coverage.xml
-        catch {
-            throw $Error
-        }
-        if ($LASTEXITCODE -gt 0) {
-            Write-Output "Unit tests failed!"
-            Break
-        }
-    }
-    else {
-        Write-Output "Unit test not found!"
-        break 
-    }
-}
+      if (Test-Path $CsProjPath, $DllPath) {
+          try {
+              coverlet $DllPath --target "dotnet" --targetargs "test $CsProjPath" -f opencover -o Artifacts/Coverage/unit.coverage.xml
+          }
+          catch {
+              throw $Error
+          }
+          if ($LASTEXITCODE -gt 0) {
+              Write-Output "Unit tests failed!"
+              Break
+          }
+      }
+      else {
+          Write-Output "Unit test not found!"
+          break 
+      }
+      }
       '''
     } finally {
       steps.junit 'Artifacts/Coverage/unit.coverage.xml'
