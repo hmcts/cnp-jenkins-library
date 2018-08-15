@@ -47,12 +47,12 @@ class DotNetBuilder extends AbstractBuilder {
   def test() {
     try {
       steps.powershell ''' 
-    $Path = Resolve-Path "**\\**\\*.UnitTests.csproj"
-    if (Test-Path $Path) {
+    $CsProjPath = Resolve-Path "**\\**\\*.UnitTests.csproj"
+    $DllPath = Resolve-Path "**\\**\\bin\\debug\\**\\*.UnitTests.dll"
+
+    if (Test-Path $CsProjPath, $DllPath) {
         try {
-            $proc = Start-Process -NoNewWindow -PassThru -FilePath dotnet -ArgumentList "test $Path /p:CollectCoverage=true /p:CoverletOutputFormat=opencover"
-            $proc.WaitForExit()    
-        }
+            coverlet $DllPath --target "dotnet" --targetargs "test $CsProjPath" -f opencover -o Artifacts/Coverage/unit.coverage.xml
         catch {
             throw $Error
         }
@@ -65,9 +65,10 @@ class DotNetBuilder extends AbstractBuilder {
         Write-Output "Unit test not found!"
         break 
     }
+}
       '''
     } finally {
-      //steps.junit '**/test-results/**/*.xml'
+      steps.junit 'Artifacts/Coverage/unit.coverage.xml'
     }
   }
 
