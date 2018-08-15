@@ -48,7 +48,9 @@ class DotNetBuilder extends AbstractBuilder {
     try {
       steps.powershell ''' 
       $CsProjPath = Resolve-Path "**\\**\\*.UnitTests.csproj"
-      $DllPath = Resolve-Path "**\\**\\bin\\debug\\**\\*.UnitTests.dll"
+      $DllPath = Resolve-Path "**\\**\\bin\\Release\\**\\*.UnitTests.dll"
+      Write-output $CsProjPath 
+      Write-output $DllPath
 
       if (Test-Path $CsProjPath, $DllPath) {
           try {
