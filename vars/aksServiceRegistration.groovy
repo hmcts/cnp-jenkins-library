@@ -80,7 +80,7 @@ def call(subscription, serviceName, serviceIP) {
   Response responseLbCfg = client.newCall(requestLbCfg).execute();
 
   def consulLbCfg = new JsonSlurper().parseText(responseLbCfg.body().string())
-  log.debug "Consul LB config: " + consulLbCfg
+  log.debug("Consul LB config: " + consulLbCfg)
   String consulapiaddr = consulLbCfg.properties.privateIPAddress
   println "Consul IP address is: " + consulapiaddr
 
