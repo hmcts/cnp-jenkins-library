@@ -46,6 +46,10 @@ def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
 
           kubectl.apply('src/kubernetes/deployment.yaml')
 
+          serviceIP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
+          //add service to consul
+          aksServiceRegistration(subscription, env.SERVICE_NAME, serviceIP)
+
           env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
