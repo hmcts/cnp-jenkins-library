@@ -81,7 +81,7 @@ def call(subscription, serviceName, serviceIP) {
 
   def consulLbCfg = new JsonSlurper().parseText(responseLbCfg.body().string())
   log.debug "Consul LB config: " + consulLbCfg
-  String consulapiaddr = consulLbCfg.properties.privateIPAddress
+  String consulapiaddr = consulLbCfg.privateIPAddress
   println "Consul IP address is: " + consulapiaddr
 
   // Build json payload for scm record
