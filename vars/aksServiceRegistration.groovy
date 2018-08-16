@@ -80,12 +80,12 @@ def call(subscription, serviceName, serviceIP) {
   Response responseLbCfg = client.newCall(requestLbCfg).execute();
 
   def consulLbCfg = new JsonSlurper().parseText(responseLbCfg.body().string())
-  println "Consul LB config: " + consulLbCfg
+  log.debug "Consul LB config: " + consulLbCfg
   String consulapiaddr = consulLbCfg.properties.privateIPAddress
   println "Consul IP address is: " + consulapiaddr
 
   // Build json payload for scm record
-  def serviceRecord = new ConsulRecord(ID: serviceName, Name: serviceName, Tags: webapps, Address: serviceIP, Port: 80 )
+  def serviceRecord = new ConsulRecord(ID: serviceName, Name: serviceName, Address: serviceIP, Port: 80 )
   def serviceRecordjson = new JsonBuilder(serviceRecord).toString()
   println("Sending consul record: " + serviceRecordjson)
 
