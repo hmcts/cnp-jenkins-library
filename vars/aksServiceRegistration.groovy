@@ -18,17 +18,6 @@ and update the scm consul record with the right details. This
 script is expected to be called as part of withPipeline just
 after spinInfra.
  --------------------------------------------------------------*/
-
-// ConsulRecord class used to build requests to update consul records
-
-class ConsulRecord {
-  String ID
-  String Name
-  List Tags
-  String Address
-  Integer Port
-}
-
 def call(subscription, serviceName, serviceIP) {
 
   println "Registering AKS application to consul cluster in `$subscription` subscription"
@@ -46,62 +35,43 @@ def call(subscription, serviceName, serviceIP) {
       break
   }
 
-  // Get Auth Token
-  println "Getting access token from management.azure.com ..."
-  OkHttpClient client = new OkHttpClient.Builder()
-    .connectTimeout(90, TimeUnit.SECONDS)
-    .writeTimeout(90, TimeUnit.SECONDS)
-    .readTimeout(90, TimeUnit.SECONDS)
-    .build()
+  log.info("get a token for Management API...")
+  //STEP: get a TOKEN for the management API to query for the ILBs
+  def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F&client_id=$env.ARM_CLIENT_ID&client_secret=$env.ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$env.ARM_TENANT_ID/oauth2/token"
+  authtoken  = readJSON(text: response.content).access_token
 
-  MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
-  RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + env.ARM_CLIENT_SECRET)
-  Request requestToken = new Request.Builder()
-    .url("https://login.microsoftonline.com/" + env.ARM_TENANT_ID + "/oauth2/token")
-    .post(body)
-    .addHeader("content-type", "application/x-www-form-urlencoded")
-    .addHeader("cache-control", "no-cache")
-    .build()
-
-  Response responseToken = client.newCall(requestToken).execute()
-
-  def responseTokenBody = new JsonSlurper().parseText(responseToken.body().string())
-  def authtoken = responseTokenBody.access_token
-
-// Get details about the consul vm scale set i.e. IP address
+  // Get details about the consul load balancer IP address
   println "Getting consul's IP address ..."
-  Request requestLbCfg = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
-    .get()
-    .addHeader("Authorization", "Bearer " + authtoken)
-    .addHeader("Cache-Control", "no-cache")
-    .build();
+  def lbCfg = httpRequest(
+    httpMode: 'GET',
+    customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]],
+    url: "https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
+  if (! lbCfg.content?.trim()) {
+    log.debug(lbCfg.content)
+    error("Something went wrong finding consul lb")
+  }
 
-  Response responseLbCfg = client.newCall(requestLbCfg).execute();
-
-  def consulLbCfg = new JsonSlurper().parseText(responseLbCfg.body().string())
-  log.debug "Consul LB config: " + consulLbCfg
-  String consulapiaddr = consulLbCfg.privateIPAddress
-  println "Consul IP address is: " + consulapiaddr
+  lbCfgJson = readJSON(text: lbCfg.content)
+  String consulapiaddr = lbCfgJson.privateIPAddress
+  log.info("Consul LB IP: ${consulapiaddr}")
 
   // Build json payload for scm record
-  def serviceRecord = new ConsulRecord(ID: serviceName, Name: serviceName, Address: serviceIP, Port: 80 )
-  def serviceRecordjson = new JsonBuilder(serviceRecord).toString()
-  println("Sending consul record: " + serviceRecordjson)
+  scmjson = JsonOutput.toJson(
+    ["Name": serviceName,
+     "Service": serviceName,
+     "Address": "${serviceIP}",
+     "Port": 80
+    ])
+  log.info("Preparing and sending scm consul record: $scmjson")
 
-  // Update the scm record in consul
-  MediaType reqMediaType = MediaType.parse("application/json");
-  RequestBody requestBody = RequestBody.create(reqMediaType, serviceRecordjson);
-  Request request = new Request.Builder()
-    .url("http://" + consulapiaddr + ":8500/v1/agent/service/register")
-    .post(requestBody)
-    .addHeader("content-type", "application/json")
-    .addHeader("cache-control", "no-cache")
-    .build();
+  def reqScm = httpRequest httpMode: 'POST',
+    acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
+    url: "http://${consulapiaddr}:8500/v1/agent/service/register",
+    requestBody: "${scmjson}",
+    consoleLogResponseBody: true
+  //customHeaders: [["cache-control": "no-cache"]],
 
-  Response response = client.newCall(request).execute();
+  log.debug(reqScm)
 
-  // Print the new record details
-  println("Result code for scm service registration: " + response.code())
 }
 
