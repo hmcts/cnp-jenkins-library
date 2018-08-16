@@ -12,7 +12,7 @@ def call(DockerImage dockerImage, Map params) {
     withSubscription(subscription) {
 
       PipelineCallbacks pl = params.pipelineCallbacks
-      def environment = param.environment
+      def environment = params.environment
 
       def keyvaultUrl
 
