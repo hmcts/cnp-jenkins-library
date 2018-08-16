@@ -19,7 +19,7 @@ abstract class AbstractBuilder implements Builder, Serializable {
 
   @Override
   def zapScan(){
-    this.zapScan().execute()
+    this.zapScan.execute()
   }
 
 }

@@ -20,18 +20,18 @@ class ZapScan implements Serializable {
             zap-cli --zap-url http://127.0.0.1 -p 8080 status -t 120
             zap-cli --zap-url http://127.0.0.1 -p 8080 open-url "${TEST_URL}"
             zap-cli --zap-url http://127.0.0.1 -p 8080 active-scan  --scanners all --recursive "${TEST_URL}"
-            zap-cli --zap-url http://127.0.0.1 -p 8080 report -o activescan.html -f html
+            zap-cli --zap-url http://127.0.0.1 -p 8080 report -o security-reports/activescan.html -f html
             zap-cli --zap-url http://127.0.0.1 -p 8080 spider "${TEST_URL}"
-            zap-cli --zap-url http://127.0.0.1 -p 8080 report -o spider.html -f html
+            zap-cli --zap-url http://127.0.0.1 -p 8080 report -o security-reports/spider.html -f html
             zap-cli --zap-url http://127.0.0.1 -p 8080 ajax-spider "${TEST_URL}"
-            zap-cli --zap-url http://127.0.0.1 -p 8080 report -o ajax-spider.html -f html
+            zap-cli --zap-url http://127.0.0.1 -p 8080 report -o security-reports/ajax-spider.html -f html
             zap-cli --zap-url http://127.0.0.1 -p 8080 alerts -l Low
               
           '''
    }
   finally{
-     steps.sh ''' cp owasp/zap2docker-stable:/zap/**  artifacts: '**/**' '''
-     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+     steps.sh ''' cp owasp/zap2docker-stable:/zap/security-reports/**  ../security-reports '''
+     steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/security-reports/**/*'
     }
   }
 
