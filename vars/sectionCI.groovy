@@ -9,6 +9,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def environment = params.environment
 
   if (pl.dockerBuild) {
     withSubscription(subscription) {
@@ -45,7 +46,7 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksDeploy(dockerImage, subscription, pl)
+                aksDeploy(dockerImage, params)
               }
             }
           }
