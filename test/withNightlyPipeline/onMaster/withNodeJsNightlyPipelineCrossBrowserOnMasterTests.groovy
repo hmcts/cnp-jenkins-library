@@ -18,6 +18,7 @@ class withNodeJsNightlyPipelineCrossBrowserOnMasterTests extends BaseCnpPipeline
     mockBuilder.demand.with {
       build(1) {}
       securityCheck(1) {}
+      zapScan(1){}
       crossBrowserTest(1) {}
       performanceTest(0) {}
       mutationTest(1){}

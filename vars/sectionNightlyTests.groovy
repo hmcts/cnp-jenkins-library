@@ -35,6 +35,19 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
     currentBuild.result = "UNSTABLE"
   }
 
+  try {
+    stage('ZapScan') {
+      pl.callAround('ZapScan') {
+        timeout(time: 15, unit: 'MINUTES') {
+          builder.zapScan()
+        }
+      }
+    }
+  } catch(err) {
+    err.printStackTrace()
+    currentBuild.result = "UNSTABLE"
+  }
+
   if (pl.crossBrowserTest) {
     try {
       stage("crossBrowserTest") {

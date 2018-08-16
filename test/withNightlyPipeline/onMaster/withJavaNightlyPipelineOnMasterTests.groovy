@@ -18,6 +18,7 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
     mockBuilder.demand.with {
       build(1) {}
       securityCheck(1) {}
+      zapScan(1){}
       crossBrowserTest(0) {}
       performanceTest(1) {}
       mutationTest(1){}
