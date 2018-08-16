@@ -12,7 +12,8 @@ class ZapScan implements Serializable {
   }
 
   def execute() {
-    this.steps.withDocker(OWASP_ZAP_IMAGE, "--network=host "+ OWASP_ZAP_ARGS)
+    try{
+    this.steps.withDocker(OWASP_ZAP_IMAGE, "--network=host " + OWASP_ZAP_ARGS)
     this.steps.sh '''
             set -e
             echo ${TEST_URL}
@@ -25,7 +26,13 @@ class ZapScan implements Serializable {
             zap-cli --zap-url http://127.0.0.1 -p 8080 ajax-spider "${TEST_URL}"
             zap-cli --zap-url http://127.0.0.1 -p 8080 report -o ajax-spider.html -f html
             zap-cli --zap-url http://127.0.0.1 -p 8080 alerts -l Low
-            '''
+              
+          '''
+   }
+  finally{
+     steps.sh ''' cp owasp/zap2docker-stable:/zap/**  artifacts: '**/**' '''
+     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+    }
   }
 
 }
