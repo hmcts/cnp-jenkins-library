@@ -5,12 +5,13 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
 
 def call(DockerImage dockerImage, Map params) {
+
+  def subscription = params.subscription
+
   withDocker('hmcts/cnp-aks-client:1.2', null) {
     withSubscription(subscription) {
 
-
       PipelineCallbacks pl = params.pipelineCallbacks
-      def subscription = params.subscription
       def environment = param.environment
 
       def keyvaultUrl
