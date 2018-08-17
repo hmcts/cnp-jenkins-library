@@ -1,15 +1,7 @@
-@Grab('com.squareup.okhttp3:okhttp:3.9.1')
-@Grab('com.squareup.okio:okio:1.13.0')
+//@Grab('com.squareup.okhttp3:okhttp:3.9.1')
+//@Grab('com.squareup.okio:okio:1.13.0')
 
-import groovy.json.JsonSlurper
-import groovy.json.JsonBuilder
-import okhttp3.OkHttpClient
-import okhttp3.OkHttpClient.Builder
-import java.util.concurrent.TimeUnit
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.MediaType
-import okhttp3.RequestBody
+import groovy.json.JsonOutput
 
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
@@ -71,11 +63,13 @@ def call(subscription, serviceName, serviceIP) {
     ])
   log.info("Preparing and sending scm consul record: $scmjson")
 
-  def reqScm = httpRequest httpMode: 'POST',
-    acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
+  def reqScm = httpRequest(
+    httpMode: 'POST',
+    acceptType: 'APPLICATION_JSON',
+    contentType: 'APPLICATION_JSON',
     url: "http://${consulapiaddr}:8500/v1/agent/service/register",
     requestBody: "${scmjson}",
-    consoleLogResponseBody: true
+    consoleLogResponseBody: true)
   //customHeaders: [["cache-control": "no-cache"]],
 
   log.debug(reqScm)
