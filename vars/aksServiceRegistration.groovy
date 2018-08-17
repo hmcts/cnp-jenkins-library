@@ -51,7 +51,8 @@ def call(subscription, serviceName, serviceIP) {
   }
 
   lbCfgJson = readJSON(text: lbCfg.content)
-  String consulapiaddr = lbCfgJson.privateIPAddress
+  log.debug lbCfgJson
+  String consulapiaddr = lbCfgJson.properties.privateIPAddress
   log.info("Consul LB IP: ${consulapiaddr}")
 
   // Build json payload for scm record
