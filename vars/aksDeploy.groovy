@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
 
-def call(DockerImage dockerImage, Map params) {
+def call(DockerImage dockerImage, Map params, Acr acr) {
 
   def subscription = params.subscription
 
@@ -34,7 +34,6 @@ def call(DockerImage dockerImage, Map params) {
         applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
 
-        def acr = new Acr(this, subscription, env.REGISTRY_NAME)
         def digestName = acr.getImageDigest(dockerImage.getShortName())
         def aksServiceName = dockerImage.getAksServiceName()
         def namespace = dockerImage.product
