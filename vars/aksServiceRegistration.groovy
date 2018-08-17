@@ -1,15 +1,5 @@
-//@Grab('com.squareup.okhttp3:okhttp:3.9.1')
-//@Grab('com.squareup.okio:okio:1.13.0')
-
 import groovy.json.JsonOutput
 
-/*--------------------------------------------------------------
-Groovy script to update the scm service consul record. It will
-crawl the infra to workout which webapps are currently deployed
-and update the scm consul record with the right details. This
-script is expected to be called as part of withPipeline just
-after spinInfra.
- --------------------------------------------------------------*/
 def call(subscription, serviceName, serviceIP) {
 
   println "Registering AKS application to consul cluster in `$subscription` subscription"
@@ -28,7 +18,7 @@ def call(subscription, serviceName, serviceIP) {
   }
 
   log.info("get a token for Management API...")
-  //STEP: get a TOKEN for the management API to query for the ILBs
+  //get an auth TOKEN for management API to query for the ILBs
   def response = httpRequest(
     httpMode: 'POST',
     customHeaders: [[name: 'ContentType', value: "application/x-www-form-urlencoded"]],
@@ -47,12 +37,11 @@ def call(subscription, serviceName, serviceIP) {
     log.debug(lbCfg.content)
     error("Something went wrong finding consul lb")
   }
-
   lbCfgJson = readJSON(text: lbCfg.content)
   String consulapiaddr = lbCfgJson.properties.privateIPAddress
   log.info("Consul LB IP: ${consulapiaddr}")
 
-  // Build json payload for scm record
+  // Build json payload for aks service record
   scmjson = JsonOutput.toJson(
     ["Name": serviceName,
      "Service": serviceName,
