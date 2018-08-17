@@ -28,7 +28,7 @@ def call(params) {
       ]) {
 
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).getImageTag())
+        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
