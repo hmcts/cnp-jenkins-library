@@ -13,7 +13,14 @@ class ZapScan implements Serializable {
 
   def execute() {
     try {
+
+      echo ${TEST_URL}
+
       this.steps.withDocker('--network=host'+'--name=zaptest'+ OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS)
+
+      echo ${TEST_URL}
+
+
       this.steps.sh '''
             set -e
             echo ${TEST_URL}
