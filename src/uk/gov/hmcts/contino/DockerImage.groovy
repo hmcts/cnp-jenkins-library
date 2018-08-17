@@ -77,7 +77,13 @@ class DockerImage {
     return this.projectBranch.imageTag()
   }
 
-  private def getShortName() {
+  /**
+   * Get the 'short name' of the image, without the registry prefix
+   *
+   * @return
+   *   the short name. e.g. hmcts/product-component:branch
+   */
+  def getShortName() {
     return REPOSITORY.concat('/')
       .concat(this.product).concat('-')
       .concat(this.component).concat(':')

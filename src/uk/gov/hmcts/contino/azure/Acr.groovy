@@ -1,8 +1,11 @@
 package uk.gov.hmcts.contino.azure
 
+import uk.gov.hmcts.contino.DockerImage
+
 class Acr extends Az {
 
   def registryName
+  def resourceGroup
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -16,9 +19,10 @@ class Acr extends Az {
    * @param registryName
    *   the 'resource name' of the ACR registry.  i.e. 'cnpacr' not 'cnpacr.azurecr.io'
    */
-  Acr(steps, subscription, registryName) {
+  Acr(steps, subscription, registryName, resourceGroup) {
     super(steps, subscription)
     this.registryName = registryName
+    this.resourceGroup = resourceGroup
   }
 
   /**
@@ -42,6 +46,19 @@ class Acr extends Az {
    */
   def getImageDigest(imageName) {
     this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv"
+  }
+
+  /**
+   * Build an image
+   *
+   * @param dockerImage
+   *   the docker image to build
+   *
+   * @return
+   *   stdout of the step
+   */
+  def build(DockerImage dockerImage) {
+    this.az "acr build -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
   }
 
 }

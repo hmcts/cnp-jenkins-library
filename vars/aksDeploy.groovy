@@ -35,7 +35,7 @@ def call(DockerImage dockerImage, Map params) {
       ]) {
 
         def acr = new Acr(this, subscription, env.REGISTRY_NAME)
-        def digestName = dockerImage.getDigestName(acr)
+        def digestName = acr.getImageDigest(dockerImage.getShortName())
         def aksServiceName = dockerImage.getAksServiceName()
         def namespace = dockerImage.product
         def templateEnvVars = ["NAMESPACE=${namespace}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
