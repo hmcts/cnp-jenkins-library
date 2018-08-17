@@ -31,11 +31,11 @@ def call(params) {
       ]) {
 
         def dockerImage = new DockerImage(product, component, this, new ProjectBranch(env.BRANCH_NAME))
+        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
               acr.build(dockerImage)
             }
           }
