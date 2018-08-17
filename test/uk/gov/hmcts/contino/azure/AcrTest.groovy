@@ -54,4 +54,15 @@ class AcrTest extends Specification {
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
+
+  def "getHostname() should call az with correct arguments"() {
+    when:
+      acr.getHostname()
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr show -n ${REGISTRY_NAME} --query loginServer -otsv") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
 }

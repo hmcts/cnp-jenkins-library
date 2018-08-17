@@ -61,4 +61,14 @@ class Acr extends Az {
     this.az "acr build -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
   }
 
+  /**
+   * get the hostname of the ACR
+   *
+   * @return
+   *   the hostname. e.g. cnpacr.azurecr.io
+   */
+  def getHostname() {
+    this.az "acr show -n ${registryName} --query loginServer -otsv"
+  }
+
 }
