@@ -14,8 +14,7 @@ def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
         if (pl.vaultName) {
           def projectKeyvaultName = pl.vaultName + '-' + env.NONPROD_ENVIRONMENT_NAME
           keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
-        }
-        else  {
+        } else {
           error "Please set vault name `setVaultName('rhubarb')` if loading vault secrets"
         }
       }
@@ -56,6 +55,8 @@ def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
           def url = env.AKS_TEST_URL + '/health'
           def healthChecker = new HealthChecker(this)
           healthChecker.check(url, 10, 10)
+
+          return env.AKS_TEST_URL
         }
       }
     }

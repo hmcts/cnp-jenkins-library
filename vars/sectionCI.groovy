@@ -45,10 +45,33 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksDeploy(dockerImage, subscription, pl)
+                def aksUrl = aksDeploy(dockerImage, subscription, pl)
               }
             }
           }
+        }
+
+        stage("Smoke Test - ${environment} (staging slot)") {
+          testEnv(aksUrl, tfOutput) {
+            pl.callAround("smoketest:${environment}") {
+              timeout(time: 10, unit: 'MINUTES') {
+                builder.smokeTest()
+              }
+            }
+          }
+        }
+
+        onFunctionalTestEnvironment(environment) {
+          stage("Functional Test - ${environment} (staging slot)") {
+            testEnv(aksUrl, tfOutput) {
+              pl.callAround("functionalTest:${environment}") {
+                timeout(time: 40, unit: 'MINUTES') {
+                  builder.functionalTest()
+                }
+              }
+            }
+          }
+          //more stages
         }
       }
     }
