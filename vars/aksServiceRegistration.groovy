@@ -51,7 +51,7 @@ def call(subscription, serviceName, serviceIP) {
   log.info "Getting consul's IP address ..."
   def lbCfg = httpRequest(
     httpMode: 'GET',
-    customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]],
+    customHeaders: [[name: 'Authorization', value: "Bearer ${authtoken}"]],
     url: "https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
   if (! lbCfg.content?.trim()) {
     log.debug(lbCfg.content)
