@@ -1,19 +1,20 @@
 import groovy.json.JsonOutput
 
-def call(subscription, serviceName, serviceIP) {
-
-  println "Registering AKS application to consul cluster in `$subscription` subscription"
-
-  def environment
-  switch (subscription) {
+def environment(s) {
+  switch (s) {
     case ['nonprod', 'prod']:
-      environment = 'preview'
+      return 'preview'
       break
     case 'sandbox':
     default:
-      environment = 'saat'
+      return 'saat'
       break
   }
+}
+
+def call(subscription, serviceName, serviceIP) {
+
+  println "Registering AKS application to consul cluster in `$subscription` subscription"
 
   log.info("get a token for Management API...")
   //get an auth TOKEN for management API to query for the ILBs
@@ -30,7 +31,7 @@ def call(subscription, serviceName, serviceIP) {
   def lbCfg = httpRequest(
     httpMode: 'GET',
     customHeaders: [[name: 'Authorization', value: "Bearer ${authtoken}"]],
-    url: "https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
+    url: "https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment(subscription) + "/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
   if (! lbCfg.content?.trim()) {
     log.debug(lbCfg.content)
     error("Something went wrong finding consul lb")

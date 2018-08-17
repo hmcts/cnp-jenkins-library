@@ -4,6 +4,18 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
 
+def domain(s) {
+  switch (s) {
+    case ['nonprod', 'prod']:
+      return 'service.core-compute-preview.internal'
+      break
+    case 'sandbox':
+    default:
+      return 'service.core-compute-saat.internal'
+      break
+  }
+}
+
 def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
   withDocker('hmcts/cnp-aks-client:1.2', null) {
     withSubscription(subscription) {
@@ -50,17 +62,7 @@ def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
           aksServiceRegistration(subscription, env.SERVICE_NAME, serviceIP)
 
 //          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
-          def domain
-          switch (subscription) {
-            case ['nonprod', 'prod']:
-              domain = 'service.core-compute-preview.internal'
-              break
-            case 'sandbox':
-            default:
-              domain = 'service.core-compute-saat.internal'
-          }
-
-          env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${domain}"
+          env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${domain(subscription)}"
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
           def url = env.AKS_TEST_URL + '/health'
