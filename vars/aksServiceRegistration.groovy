@@ -37,11 +37,17 @@ def call(subscription, serviceName, serviceIP) {
 
   log.info("get a token for Management API...")
   //STEP: get a TOKEN for the management API to query for the ILBs
-  def response = httpRequest httpMode: 'POST', requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=$env.ARM_CLIENT_ID&client_secret=$env.ARM_CLIENT_SECRET", acceptType: 'APPLICATION_JSON', url: "https://login.microsoftonline.com/$env.ARM_TENANT_ID/oauth2/token"
+  def response = httpRequest(
+    httpMode: 'POST',
+    contentType: "application/x-www-form-urlencoded",
+    requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=$env.ARM_CLIENT_ID&client_secret=$env.ARM_CLIENT_SECRET",
+    acceptType: 'APPLICATION_JSON',
+    url: "https://login.microsoftonline.com/$env.ARM_TENANT_ID/oauth2/token")
+  log.debug "Auth respone:"+ response.content
   authtoken  = readJSON(text: response.content).access_token
 
   // Get details about the consul load balancer IP address
-  println "Getting consul's IP address ..."
+  log.info "Getting consul's IP address ..."
   def lbCfg = httpRequest(
     httpMode: 'GET',
     customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]],
