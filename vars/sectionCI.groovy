@@ -56,11 +56,12 @@ def call(params) {
             }
           }
         }
+        def aksUrl
         if (pl.deployToAKS) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                def aksUrl = aksDeploy(dockerImage, subscription, pl)
+                aksUrl = aksDeploy(dockerImage, subscription, pl)
               }
             }
           }
