@@ -8,14 +8,14 @@ class DockerImage {
 
   def product
   def component
-  def tag
+  def imageTag
   Acr acr
   def registryHost
 
   DockerImage(product, component, acr, tag) {
     this.product = product
     this.component = component
-    this.tag = tag
+    this.imageTag = tag
     this.acr = acr
   }
 
@@ -39,7 +39,7 @@ class DockerImage {
    */
   def getAksServiceName() {
     return this.product.concat('-').concat(this.component)
-      .concat('-').concat(this.tag)
+      .concat('-').concat(this.imageTag)
   }
 
   /**
@@ -73,7 +73,7 @@ class DockerImage {
    *   the tag e.g. 'latest', 'pr-77'
    */
   def getTag() {
-    return this.tag
+    return this.imageTag
   }
 
   /**
@@ -86,7 +86,7 @@ class DockerImage {
     return REPOSITORY.concat('/')
       .concat(this.product).concat('-')
       .concat(this.component).concat(':')
-      .concat(this.tag)
+      .concat(this.imageTag)
   }
 
   private def getRegistryHost() {
