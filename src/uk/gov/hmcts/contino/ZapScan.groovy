@@ -13,7 +13,7 @@ class ZapScan implements Serializable {
 
   def execute() {
     try{
-    this.steps.withDocker(OWASP_ZAP_IMAGE, '--network=host'+'--name=zaptest' + OWASP_ZAP_ARGS)
+    this.steps.withDocker(OWASP_ZAP_IMAGE, '--network=host'+'--name=zaptest'+ OWASP_ZAP_ARGS)
     this.steps.sh '''
             set -e
             echo ${TEST_URL}
@@ -31,8 +31,7 @@ class ZapScan implements Serializable {
           '''
    }
   finally{
-     steps.sh ''' cp zaptest:/zap/security-reports/**  ../security-reports '''
-     steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/security-reports/**/*'
+     steps.archiveArtifacts allowEmptyArchive: true, artifacts: './functional-output/security-reports/**/*'
     }
   }
 
