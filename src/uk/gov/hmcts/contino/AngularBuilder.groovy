@@ -64,4 +64,10 @@ class AngularBuilder extends AbstractBuilder {
   def mutationTest(){
     builder.mutationTest()
   }
+
+  @Override
+  def zapScan(){
+    builder.zapScan()
+  }
+
 }
