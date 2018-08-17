@@ -3,6 +3,21 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
 
+def testEnv(String testUrl, tfOutput, block) {
+  def testEnvVariables = ["TEST_URL=${testUrl}"]
+
+  for (o in tfOutput) {
+    def envVariable = o.key.toUpperCase() + "=" + o.value.value
+    echo(envVariable)
+    testEnvVariables.add(envVariable)
+  }
+
+  withEnv(testEnvVariables) {
+    echo "Using TEST_URL: '$env.TEST_URL'"
+    block.call()
+  }
+}
+
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
 
@@ -51,9 +66,9 @@ def call(params) {
           }
         }
 
-        stage("Smoke Test - ${environment} (staging slot)") {
+        stage("Smoke Test - (staging slot)") {
           testEnv(aksUrl, tfOutput) {
-            pl.callAround("smoketest:${environment}") {
+            pl.callAround("smoketest:aks") {
               timeout(time: 10, unit: 'MINUTES') {
                 builder.smokeTest()
               }
@@ -61,7 +76,7 @@ def call(params) {
           }
         }
 
-        onFunctionalTestEnvironment(environment) {
+        /*onFunctionalTestEnvironment(environment) {
           stage("Functional Test - ${environment} (staging slot)") {
             testEnv(aksUrl, tfOutput) {
               pl.callAround("functionalTest:${environment}") {
@@ -72,7 +87,7 @@ def call(params) {
             }
           }
           //more stages
-        }
+        }*/
       }
     }
   }
