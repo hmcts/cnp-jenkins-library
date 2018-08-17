@@ -35,9 +35,7 @@ def call(subscription, serviceName, serviceIP) {
     requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=$env.ARM_CLIENT_ID&client_secret=$env.ARM_CLIENT_SECRET",
     acceptType: 'APPLICATION_JSON',
     url: "https://login.microsoftonline.com/$env.ARM_TENANT_ID/oauth2/token")
-  log.debug "Auth respone:"+ response.content
   authtoken  = readJSON(text: response.content).access_token
-  log.debug "Token: '$authtoken'"
 
   // Get details about the consul load balancer IP address
   log.info "Getting consul's IP address ..."
@@ -51,7 +49,6 @@ def call(subscription, serviceName, serviceIP) {
   }
 
   lbCfgJson = readJSON(text: lbCfg.content)
-  log.debug lbCfgJson
   String consulapiaddr = lbCfgJson.properties.privateIPAddress
   log.info("Consul LB IP: ${consulapiaddr}")
 
@@ -62,7 +59,7 @@ def call(subscription, serviceName, serviceIP) {
      "Address": "${serviceIP}",
      "Port": 80
     ])
-  log.info("Preparing and sending scm consul record: $scmjson")
+  log.info("Registering to consul with following record: $scmjson")
 
   def reqScm = httpRequest(
     httpMode: 'POST',
@@ -70,10 +67,9 @@ def call(subscription, serviceName, serviceIP) {
     contentType: 'APPLICATION_JSON',
     url: "http://${consulapiaddr}:8500/v1/agent/service/register",
     requestBody: "${scmjson}",
-    consoleLogResponseBody: true)
-  //customHeaders: [["cache-control": "no-cache"]],
-
-  log.debug(reqScm)
+    consoleLogResponseBody: true,
+    validResponseCodes: '200'
+  )
 
 }
 

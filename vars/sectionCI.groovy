@@ -3,14 +3,8 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
 
-def testEnv(String testUrl, tfOutput, block) {
+def testEnv(String testUrlblock) {
   def testEnvVariables = ["TEST_URL=${testUrl}"]
-
-  for (o in tfOutput) {
-    def envVariable = o.key.toUpperCase() + "=" + o.value.value
-    echo(envVariable)
-    testEnvVariables.add(envVariable)
-  }
 
   withEnv(testEnvVariables) {
     echo "Using TEST_URL: '$env.TEST_URL'"
@@ -68,7 +62,7 @@ def call(params) {
         }
 
         stage("Smoke Test - (staging slot)") {
-          testEnv(aksUrl, tfOutput) {
+          testEnv(aksUrl) {
             pl.callAround("smoketest:aks") {
               timeout(time: 10, unit: 'MINUTES') {
                 builder.smokeTest()
