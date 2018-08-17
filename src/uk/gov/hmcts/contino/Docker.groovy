@@ -1,7 +1,5 @@
 package uk.gov.hmcts.contino
 
-import uk.gov.hmcts.contino.azure.Acr
-
 class Docker {
 
   def steps
