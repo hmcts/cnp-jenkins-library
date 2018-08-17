@@ -45,6 +45,7 @@ def call(subscription, serviceName, serviceIP) {
     url: "https://login.microsoftonline.com/$env.ARM_TENANT_ID/oauth2/token")
   log.debug "Auth respone:"+ response.content
   authtoken  = readJSON(text: response.content).access_token
+  log.debug "Token: '$authtoken'"
 
   // Get details about the consul load balancer IP address
   log.info "Getting consul's IP address ..."
