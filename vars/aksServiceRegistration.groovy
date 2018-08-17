@@ -1,15 +1,17 @@
 import groovy.json.JsonOutput
 
 def environment(s) {
+  def env
   switch (s) {
     case ['nonprod', 'prod']:
-      return 'preview'
+      env='preview'
       break
     case 'sandbox':
     default:
-      return 'saat'
+      env='saat'
       break
   }
+  env
 }
 
 def call(subscription, serviceName, serviceIP) {

@@ -5,15 +5,17 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
 
 def domain(s) {
+  def dom
   switch (s) {
     case ['nonprod', 'prod']:
-      return 'service.core-compute-preview.internal'
+      dom='service.core-compute-preview.internal'
       break
     case 'sandbox':
     default:
-      return 'service.core-compute-saat.internal'
+      dom='service.core-compute-saat.internal'
       break
   }
+  dom
 }
 
 def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
