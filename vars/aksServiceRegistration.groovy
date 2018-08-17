@@ -11,7 +11,7 @@ def call(subscription, serviceName, serviceIP) {
     customHeaders: [[name: 'ContentType', value: "application/x-www-form-urlencoded"]],
     requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=$env.ARM_CLIENT_ID&client_secret=$env.ARM_CLIENT_SECRET",
     acceptType: 'APPLICATION_JSON',
-    url: "https://login.microsoftonline.com/$env.ARM_TENANT_ID/oauth2/token")
+    url: "https://login.microsoftonline.com/${env.ARM_TENANT_ID}/oauth2/token")
   authtoken  = readJSON(text: response.content).access_token
 
   // Get details about the consul load balancer IP address
@@ -19,7 +19,7 @@ def call(subscription, serviceName, serviceIP) {
   def lbCfg = httpRequest(
     httpMode: 'GET',
     customHeaders: [[name: 'Authorization', value: "Bearer ${authtoken}"]],
-    url: "https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + (subscription in ['nonprod', 'prod'])?'preview':'saat' + "/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
+    url: "https://management.azure.com/subscriptions/${env.ARM_SUBSCRIPTION_ID}/resourceGroups/core-infra-${subscription in ['nonprod', 'prod']?'preview':'saat'}/providers/Microsoft.Network/loadBalancers/consul-server_dns/frontendIPConfigurations/privateIPAddress?api-version=2018-04-01")
   if (! lbCfg.content?.trim()) {
     log.debug(lbCfg.content)
     error("Something went wrong finding consul lb")
