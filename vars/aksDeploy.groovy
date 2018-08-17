@@ -49,7 +49,18 @@ def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
           //add service to consul
           aksServiceRegistration(subscription, env.SERVICE_NAME, serviceIP)
 
-          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
+//          env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
+          def domain
+          switch (subscription) {
+            case ['nonprod', 'prod']:
+              domain = 'service.core-compute-preview.internal'
+              break
+            case 'sandbox':
+            default:
+              domain = 'service.core-compute-saat.internal'
+          }
+
+          env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${domain}"
           echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
           def url = env.AKS_TEST_URL + '/health'

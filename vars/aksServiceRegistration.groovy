@@ -10,8 +10,6 @@ def call(subscription, serviceName, serviceIP) {
       environment = 'preview'
       break
     case 'sandbox':
-      environment = 'saat'
-      break
     default:
       environment = 'saat'
       break
