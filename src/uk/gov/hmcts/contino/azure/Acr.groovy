@@ -45,7 +45,8 @@ class Acr extends Az {
    *   The raw value of the digest e.g. sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa
    */
   def getImageDigest(imageName) {
-    this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv".trim()
+    def digest = this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv"
+    return digest.trim()
   }
 
   /**
@@ -68,7 +69,8 @@ class Acr extends Az {
    *   the hostname. e.g. cnpacr.azurecr.io
    */
   def getHostname() {
-    this.az "acr show -n ${registryName} --query loginServer -otsv".trim()
+    def host = this.az "acr show -n ${registryName} --query loginServer -otsv"
+    return host.trim()
   }
 
 }
