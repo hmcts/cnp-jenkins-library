@@ -27,7 +27,7 @@ class DockerImage {
    *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag'
    */
   def getTaggedName() {
-    return this.getRegistryHost().concat('/')
+    return this.getRegistryHostname().concat('/')
       .concat(this.getShortName())
   }
 
@@ -59,7 +59,7 @@ class DockerImage {
       throw new IllegalStateException("A digest is not available for this image.  Has it been pushed?")
     }
 
-    return this.getRegistryHost().concat('/')
+    return this.getRegistryHostname().concat('/')
       .concat(REPOSITORY).concat('/')
       .concat(this.product).concat('-')
       .concat(this.component).concat('@')
@@ -89,7 +89,7 @@ class DockerImage {
       .concat(this.imageTag)
   }
 
-  private def getRegistryHost() {
+  private def getRegistryHostname() {
     if (!this.registryHost) {
       this.registryHost = this.acr.getHostname()
     }
