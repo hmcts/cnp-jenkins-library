@@ -45,6 +45,7 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
           kubectl.login()
 
           kubectl.createNamespace(env.NAMESPACE)
+          kubectl.deleteDeployment(aksServiceName)
 
           // perform template variable substitution
           sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"

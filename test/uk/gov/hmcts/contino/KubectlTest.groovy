@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.*
 
 class KubectlTest extends Specification {
 
-  def namespace = 'cnp'
-  def subscription = 'sandbox'
+  static final String NAMESPACE = 'cnp'
+  static final String SUBSCRIPTION = 'sandbox'
+  static final String DEPLOYMENT = 'my-deployment'
+
   def steps
   def kubectl
 
@@ -14,16 +16,16 @@ class KubectlTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
                   AKS_CLUSTER_NAME: "cnp-aks-cluster"]
-    kubectl = new Kubectl(steps, subscription, namespace)
+    kubectl = new Kubectl(steps, SUBSCRIPTION, NAMESPACE)
   }
 
   def "createNamespace() should execute with the correct namespace"() {
     when:
-      kubectl.createNamespace(namespace)
+      kubectl.createNamespace(NAMESPACE)
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("kubectl create namespace ${namespace}") &&
+                    it.get('script').contains("kubectl create namespace ${NAMESPACE}") &&
                     it.containsKey('returnStatus') &&
                     it.get('returnStatus').equals(true)})
   }
@@ -43,7 +45,7 @@ class KubectlTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription}")})
+                    it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${SUBSCRIPTION}")})
   }
 
   def "apply() should have namespace and NO JSON output"() {
@@ -52,7 +54,7 @@ class KubectlTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains('kubectl apply -f deployment.yaml -n cnp') &&
+                    it.get('script').contains("kubectl apply -f deployment.yaml -n ${NAMESPACE}") &&
                     !(it.get('script').contains('-o json')) &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
@@ -64,10 +66,21 @@ class KubectlTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains('kubectl delete -f deployment.yaml -n cnp') &&
+                    it.get('script').contains("kubectl delete -f deployment.yaml -n ${NAMESPACE}") &&
                     !(it.get('script').contains('-o json')) &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
+  }
+
+  def "deleteDeployment() should have deployment, namespace and return exit status"() {
+    when:
+      kubectl.deleteDeployment(DEPLOYMENT)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+        it.get('script').contains("kubectl delete deployment ${DEPLOYMENT} -n ${NAMESPACE}") &&
+        it.containsKey('returnStatus') &&
+        it.get('returnStatus').equals(true)})
   }
 
   def "getService() should have namespace and JSON output"() {
@@ -76,14 +89,14 @@ class KubectlTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains('kubectl get service frontend-ilb -n cnp -o json') &&
+                    it.get('script').contains("kubectl get service frontend-ilb -n ${NAMESPACE} -o json") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
 
   def "getServiceLoadbalancerIP() should throw exception if IP never becomes available"() {
     when:
-      kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+      kubectl = Spy(Kubectl, constructorArgs:[steps, SUBSCRIPTION, NAMESPACE])
       kubectl.getService('custard-recipe-backend-ilb') >> getServiceJsonWithUninitialisedILB()
       kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
@@ -93,7 +106,7 @@ class KubectlTest extends Specification {
 
   def "getServiceLoadbalancerIP() return IP address with initialisation"() {
     when:
-      kubectl = Spy(Kubectl, constructorArgs:[steps, subscription, namespace])
+      kubectl = Spy(Kubectl, constructorArgs:[steps, SUBSCRIPTION, NAMESPACE])
       kubectl.getService('custard-recipe-backend-ilb') >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonWithIP()]
       def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
