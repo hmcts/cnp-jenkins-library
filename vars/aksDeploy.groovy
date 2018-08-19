@@ -50,6 +50,8 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
           // perform template variable substitution
           sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
 
+          sh "cat src/kubernetes/deployment.yaml"
+
           kubectl.apply('src/kubernetes/deployment.yaml')
 
           env.AKS_TEST_URL = "http://" + kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
