@@ -46,7 +46,7 @@ class Acr extends Az {
    */
   def getImageDigest(imageName) {
     def digest = this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv"
-    return digest.trim()
+    return digest?.trim()
   }
 
   /**
@@ -70,7 +70,7 @@ class Acr extends Az {
    */
   def getHostname() {
     def host = this.az "acr show -n ${registryName} --query loginServer -otsv"
-    return host.trim()
+    return host?.trim()
   }
 
 }
