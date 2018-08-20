@@ -4,15 +4,21 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
 
-def call(DockerImage dockerImage, String subscription, PipelineCallbacks pl) {
+def call(DockerImage dockerImage, Map params) {
+
+  def subscription = params.subscription
+
   withDocker('hmcts/cnp-aks-client:1.2', null) {
     withSubscription(subscription) {
+
+      PipelineCallbacks pl = params.pipelineCallbacks
+      def environment = params.environment
 
       def keyvaultUrl
 
       if (pl.vaultSecrets?.size() > 0) {
         if (pl.vaultName) {
-          def projectKeyvaultName = pl.vaultName + '-' + env.NONPROD_ENVIRONMENT_NAME
+          def projectKeyvaultName = pl.vaultName + '-' + environment
           keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
         } else {
           error "Please set vault name `setVaultName('rhubarb')` if loading vault secrets"
