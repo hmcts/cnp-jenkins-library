@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.ProjectBranch
-import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
@@ -15,9 +15,7 @@ def call(params) {
 
       def registrySecrets = [
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-host', version: '', envVariable: 'REGISTRY_HOST' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-username', version: '', envVariable: 'REGISTRY_USERNAME' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-password', version: '', envVariable: 'REGISTRY_PASSWORD' ],
+        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP' ],
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP' ],
         [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME' ],
       ]
@@ -29,15 +27,13 @@ def call(params) {
             applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
 
-        def dockerImage = new DockerImage(product, component, this, new ProjectBranch(env.BRANCH_NAME))
+        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
         stage('Docker Build') {
           pl.callAround('dockerbuild') {
             timeout(time: 15, unit: 'MINUTES') {
-              def docker = new Docker(this)
-              docker.login(env.REGISTRY_HOST, env.REGISTRY_USERNAME, env.REGISTRY_PASSWORD)
-              docker.build(dockerImage)
-              docker.push(dockerImage)
+              acr.build(dockerImage)
             }
           }
         }
@@ -45,7 +41,7 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksDeploy(dockerImage, params)
+                aksDeploy(dockerImage, params, acr)
               }
             }
           }
