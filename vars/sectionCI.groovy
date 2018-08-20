@@ -46,7 +46,7 @@ def call(params) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksUrl = aksDeploy(dockerImage, subscription, pl)
+                aksUrl = aksDeploy(dockerImage, pl)
                 log.info("deployed component URL: ${aksUrl}")
               }
             }
