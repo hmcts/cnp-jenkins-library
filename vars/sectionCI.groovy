@@ -37,11 +37,13 @@ def call(params) {
             }
           }
         }
+        def aksUrl
         if (pl.deployToAKS) {
           stage('Deploy to AKS') {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksDeploy(dockerImage, params, acr)
+                aksUrl = aksDeploy(dockerImage, params, acr)
+                log.info("deployed component URL: ${aksUrl}")
               }
             }
           }
