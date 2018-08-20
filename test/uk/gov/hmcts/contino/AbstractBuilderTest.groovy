@@ -64,17 +64,22 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
-    def crossBrowserTest(){
+    def crossBrowserTest() {
       return null
     }
 
     @Override
-    def mutationTest(){
+    def mutationTest() {
       return null
     }
 
     @Override
     def addVersionInfo() {
+      return null
+    }
+
+    @Override
+    def fullFunctionalTest() {
       return null
     }
   }
