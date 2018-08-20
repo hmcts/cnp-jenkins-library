@@ -21,6 +21,7 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       crossBrowserTest(1) {}
       performanceTest(1) {}
       mutationTest(1){}
+      fullFunctionalTest(1){}
     }
 
     mockBuilder.use {
