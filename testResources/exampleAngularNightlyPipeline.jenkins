@@ -10,4 +10,5 @@ withNightlyPipeline('angular', product, app) {
   enableCrossBrowserTest()
   enablePerformanceTest()
   enableMutationTest()
+  enableFullFunctionalTest()
 }

@@ -21,6 +21,7 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       crossBrowserTest(0) {}
       performanceTest(1) {}
       mutationTest(1){}
+      fullFunctionalTest(1){}
     }
 
     mockBuilder.use {

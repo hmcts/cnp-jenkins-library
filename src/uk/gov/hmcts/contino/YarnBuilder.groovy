@@ -62,6 +62,16 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def fullFunctionalTest(){
+    try{
+      yarn("test:fullfunctional")
+    }
+    finally {
+      steps.junit allowEmptyResults: true, testResults: './functional-output/**/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
+    }
+  }
+
   def mutationTest() {
     try{
       yarn("test:mutation")
