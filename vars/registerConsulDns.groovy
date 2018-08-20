@@ -2,10 +2,8 @@ import groovy.json.JsonOutput
 
 def call(subscription, serviceName, serviceIP) {
 
-  println "Registering AKS application to consul cluster in `$subscription` subscription"
+  log.info "Registering AKS application to consul cluster in `$subscription` subscription"
 
-  log.info("get a token for Management API...")
-  //get an auth TOKEN for management API to query for the ILBs
   def response = httpRequest(
     httpMode: 'POST',
     customHeaders: [[name: 'ContentType', value: "application/x-www-form-urlencoded"]],
@@ -14,7 +12,6 @@ def call(subscription, serviceName, serviceIP) {
     url: "https://login.microsoftonline.com/${env.ARM_TENANT_ID}/oauth2/token")
   authtoken  = readJSON(text: response.content).access_token
 
-  // Get details about the consul load balancer IP address
   log.info "Getting consul's IP address ..."
   def lbCfg = httpRequest(
     httpMode: 'GET',
@@ -29,20 +26,20 @@ def call(subscription, serviceName, serviceIP) {
   log.info("Consul LB IP: ${consulapiaddr}")
 
   // Build json payload for aks service record
-  scmjson = JsonOutput.toJson(
+  json = JsonOutput.toJson(
     ["Name": serviceName,
      "Service": serviceName,
      "Address": "${serviceIP}",
      "Port": 80
     ])
-  log.info("Registering to consul with following record: $scmjson")
+  log.info("Registering to consul with following record: $json")
 
-  def reqScm = httpRequest(
+  req = httpRequest(
     httpMode: 'POST',
     acceptType: 'APPLICATION_JSON',
     contentType: 'APPLICATION_JSON',
     url: "http://${consulapiaddr}:8500/v1/agent/service/register",
-    requestBody: "${scmjson}",
+    requestBody: "${json}",
     consoleLogResponseBody: true,
     validResponseCodes: '200'
   )

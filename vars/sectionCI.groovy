@@ -47,6 +47,7 @@ def call(params) {
             pl.callAround('aksdeploy') {
               timeout(time: 15, unit: 'MINUTES') {
                 aksUrl = aksDeploy(dockerImage, subscription, pl)
+                log.debug("deployed component URL: ${aksUrl}")
               }
             }
           }
