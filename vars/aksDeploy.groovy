@@ -47,7 +47,7 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
           kubectl.createNamespace(env.NAMESPACE)
           kubectl.deleteDeployment(aksServiceName)
 
-          // environment specific config is optional, only apply if present
+          // environment specific config is optional
           def configTemplate = "src/kubernetes/config.${environment}.yaml"
           if (fileExists(configTemplate)) {
             sh "envsubst < ${configTemplate} > src/kubernetes/config.yaml"
