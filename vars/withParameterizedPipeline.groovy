@@ -6,7 +6,7 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 
-def call(type, String product, String component, String environment, String subscription, Closure body) {
+def call(type, String product, String component, String environment, String subscription, String customVars, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
@@ -59,7 +59,8 @@ def call(type, String product, String component, String environment, String subs
           subscription: subscription,
           environment: environment,
           product: product,
-          component: component)
+          component: component,
+          customVars: customVars)
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

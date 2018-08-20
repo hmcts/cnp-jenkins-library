@@ -8,7 +8,7 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 
-def call(type, String product, String component, Closure body) {
+def call(type, String product, String component, String customVars, Closure body) {
 
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
@@ -95,7 +95,9 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.previewName,
             environment: environment.previewName,
             product: deploymentProduct,
-            component: component)
+            component: component,
+            customVars: customVars
+          )
         }
       } catch (err) {
         currentBuild.result = "FAILURE"
