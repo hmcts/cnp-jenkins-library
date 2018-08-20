@@ -46,9 +46,14 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
           kubectl.createNamespace(env.NAMESPACE)
           kubectl.deleteDeployment(aksServiceName)
 
-          // perform template variable substitution
-          sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
+          // environment specific config is optional
+          def configTemplate = "src/kubernetes/config.${environment}.yaml"
+          if (fileExists(configTemplate)) {
+            sh "envsubst < ${configTemplate} > src/kubernetes/config.yaml"
+            kubectl.apply('src/kubernetes/config.yaml')
+          }
 
+          sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
           kubectl.apply('src/kubernetes/deployment.yaml')
 
           serviceIP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
