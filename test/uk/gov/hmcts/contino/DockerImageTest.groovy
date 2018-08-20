@@ -10,23 +10,21 @@ class DockerImageTest extends Specification {
   static final String PRODUCT   = 'custard'
   static final String COMPONENT = 'back-end'
   static final String TAG       = 'pr-47'
+  static final String REGISTRY_HOST = 'cnpacr.azure.io'
 
-  def steps
   def dockerImage
   def projectBranch
   def acr
 
   void setup() {
-    steps = Mock(JenkinsStepMock)
     acr = Mock(Acr)
     projectBranch = Mock(ProjectBranch)
   }
 
   def "getTaggedName"() {
     when:
-      steps.env >> [REGISTRY_HOST: "cnpacr.azure.io"]
-      projectBranch.imageTag() >> TAG
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, steps, projectBranch)
+      acr.getHostname() >> REGISTRY_HOST
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
       def buildName = dockerImage.getTaggedName()
 
     then:
@@ -35,11 +33,10 @@ class DockerImageTest extends Specification {
 
   def "getDigestName should have digest"() {
     when:
-      steps.env >> [REGISTRY_HOST: "cnpacr.azure.io"]
-      projectBranch.imageTag() >> TAG
+      acr.getHostname() >> REGISTRY_HOST
       acr.getImageDigest('hmcts/custard-back-end:pr-47') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, steps, projectBranch)
-      def buildName = dockerImage.getDigestName(this.acr)
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      def buildName = dockerImage.getDigestName()
 
     then:
       assertThat(buildName).isEqualTo('cnpacr.azure.io/hmcts/custard-back-end@sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa')
@@ -47,11 +44,10 @@ class DockerImageTest extends Specification {
 
   def "getDigestName should throw exception if digest env variable is not set"() {
     when:
-      steps.env >> [REGISTRY_HOST: "cnpacr.azure.io"]
-      projectBranch.imageTag() >> TAG
+      acr.getHostname() >> REGISTRY_HOST
       acr.getImageDigest('hmcts/custard-back-end:pr-47') >> ''
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, steps, projectBranch)
-      dockerImage.getDigestName(this.acr)
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      dockerImage.getDigestName()
 
     then:
       thrown IllegalStateException
@@ -59,9 +55,8 @@ class DockerImageTest extends Specification {
 
   def "getTag should return the tag"() {
     when:
-      steps.env >> [REGISTRY_HOST: "cnpacr.azure.io"]
-      projectBranch.imageTag() >> TAG
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, steps, projectBranch)
+      acr.getHostname() >> REGISTRY_HOST
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
       def tag = dockerImage.getTag()
 
     then:
@@ -70,9 +65,8 @@ class DockerImageTest extends Specification {
 
   def "getAksServiceName should return the service name"() {
     when:
-      steps.env >> [REGISTRY_HOST: "cnpacr.azure.io"]
-      projectBranch.imageTag() >> TAG
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, steps, projectBranch)
+      acr.getHostname() >> REGISTRY_HOST
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
       def serviceName = dockerImage.getAksServiceName()
 
     then:
