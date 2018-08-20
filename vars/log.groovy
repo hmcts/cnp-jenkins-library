@@ -15,3 +15,9 @@ def error(message) {
     echo "\u001B[31mERROR: ${message}\u001B[0m"
   }
 }
+
+def debug(message) {
+  ansiColor('xterm') {
+    echo "\u001B[36mDEBUG: ${message}\u001B[0m"
+  }
+}
