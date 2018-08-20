@@ -35,9 +35,6 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
       ]) {
 
         def digestName = dockerImage.getDigestName()
-
-        echo "digest: ${digestName}"
-
         def aksServiceName = dockerImage.getAksServiceName()
         def namespace = dockerImage.product
         def templateEnvVars = ["NAMESPACE=${namespace}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
@@ -52,8 +49,6 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
 
           // perform template variable substitution
           sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
-
-          sh "cat src/kubernetes/deployment.yaml"
 
           kubectl.apply('src/kubernetes/deployment.yaml')
 
