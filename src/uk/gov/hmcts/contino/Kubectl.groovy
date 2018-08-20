@@ -32,6 +32,10 @@ class Kubectl {
     execute("delete -f ${path}", false)
   }
 
+  def deleteDeployment(String deploymentName) {
+    this.steps.sh(returnStatus: true, script: "kubectl delete deployment ${deploymentName} -n ${this.namespace}")
+  }
+
   def getServiceLoadbalancerIP(String name) {
     int maxAttempts = 30
     int attemptCount = 1

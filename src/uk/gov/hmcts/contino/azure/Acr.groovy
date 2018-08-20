@@ -1,8 +1,11 @@
 package uk.gov.hmcts.contino.azure
 
+import uk.gov.hmcts.contino.DockerImage
+
 class Acr extends Az {
 
   def registryName
+  def resourceGroup
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -16,9 +19,10 @@ class Acr extends Az {
    * @param registryName
    *   the 'resource name' of the ACR registry.  i.e. 'cnpacr' not 'cnpacr.azurecr.io'
    */
-  Acr(steps, subscription, registryName) {
+  Acr(steps, subscription, registryName, resourceGroup) {
     super(steps, subscription)
     this.registryName = registryName
+    this.resourceGroup = resourceGroup
   }
 
   /**
@@ -41,7 +45,32 @@ class Acr extends Az {
    *   The raw value of the digest e.g. sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa
    */
   def getImageDigest(imageName) {
-    this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv"
+    def digest = this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv"
+    return digest?.trim()
+  }
+
+  /**
+   * Build an image
+   *
+   * @param dockerImage
+   *   the docker image to build
+   *
+   * @return
+   *   stdout of the step
+   */
+  def build(DockerImage dockerImage) {
+    this.az "acr build -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
+  }
+
+  /**
+   * get the hostname of the ACR
+   *
+   * @return
+   *   the hostname. e.g. cnpacr.azurecr.io
+   */
+  def getHostname() {
+    def host = this.az "acr show -n ${registryName} --query loginServer -otsv"
+    return host?.trim()
   }
 
 }
