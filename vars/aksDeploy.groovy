@@ -47,10 +47,8 @@ def call(DockerImage dockerImage, Map params, Acr acr) {
           kubectl.createNamespace(env.NAMESPACE)
           kubectl.deleteDeployment(aksServiceName)
 
-          // apply config and don't fail if config template isn't present
-          sh returnStatus: true, script: "envsubst < src/kubernetes/config.${environment}.yaml > src/kubernetes/config.yaml"
-
-          if (fileExists('src/kubernetes/config.yaml')) {
+          if (fileExists("src/kubernetes/config.${environment}.yaml")) {
+            sh "envsubst < src/kubernetes/config.${environment}.yaml > src/kubernetes/config.yaml"
             kubectl.apply('src/kubernetes/config.yaml')
           }
 
