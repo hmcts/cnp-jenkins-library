@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
 
-def testEnv(String testUrlblock) {
+def testEnv(String testUrl, block) {
   def testEnvVariables = ["TEST_URL=${testUrl}"]
 
   withEnv(testEnvVariables) {
@@ -59,29 +59,27 @@ def call(params) {
               }
             }
           }
-        }
-
-        stage("Smoke Test - (staging slot)") {
-          testEnv(aksUrl) {
-            pl.callAround("smoketest:aks") {
-              timeout(time: 10, unit: 'MINUTES') {
-                builder.smokeTest()
-              }
-            }
-          }
-        }
-
-        onFunctionalTestEnvironment(environment) {
-          stage("Functional Test - ${environment} (staging slot)") {
+          stage("Smoke Test - (staging slot)") {
             testEnv(aksUrl) {
-              pl.callAround("functionalTest:${environment}") {
-                timeout(time: 40, unit: 'MINUTES') {
-                  builder.functionalTest()
+              pl.callAround("smoketest:aks") {
+                timeout(time: 10, unit: 'MINUTES') {
+                  builder.smokeTest()
                 }
               }
             }
           }
-          //more stages
+          onFunctionalTestEnvironment(environment) {
+            stage("Functional Test - ${environment} (staging slot)") {
+              testEnv(aksUrl) {
+                pl.callAround("functionalTest:${environment}") {
+                  timeout(time: 40, unit: 'MINUTES') {
+                    builder.functionalTest()
+                  }
+                }
+              }
+            }
+            //more stages
+          }
         }
       }
     }
