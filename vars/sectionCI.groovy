@@ -71,9 +71,9 @@ def call(params) {
           }
         }
 
-        /*onFunctionalTestEnvironment(environment) {
+        onFunctionalTestEnvironment(environment) {
           stage("Functional Test - ${environment} (staging slot)") {
-            testEnv(aksUrl, tfOutput) {
+            testEnv(aksUrl) {
               pl.callAround("functionalTest:${environment}") {
                 timeout(time: 40, unit: 'MINUTES') {
                   builder.functionalTest()
@@ -82,7 +82,7 @@ def call(params) {
             }
           }
           //more stages
-        }*/
+        }
       }
     }
   }
