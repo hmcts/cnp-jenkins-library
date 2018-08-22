@@ -1,4 +1,7 @@
+import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.Docker
 import uk.gov.hmcts.contino.DockerImage
@@ -14,10 +17,13 @@ def testEnv(String testUrl, block) {
 
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
+  PipelineType pipelineType = params.pipelineType
 
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+
+  Builder builder = pipelineType.builder
 
   if (pl.dockerBuild) {
     withSubscription(subscription) {
