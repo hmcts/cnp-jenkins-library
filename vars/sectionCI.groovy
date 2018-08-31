@@ -84,18 +84,6 @@ def call(params) {
                 }
               }
             }
-            if (pl.performanceTest) {
-              stage("Performance Test - AKS") {
-                testEnv(aksUrl) {
-                  pl.callAround("performanceTest:${environment}") {
-                    timeout(time: 120, unit: 'MINUTES') {
-                      builder.performanceTest()
-                      publishPerformanceReports(this, params)
-                    }
-                  }
-                }
-              }
-            }
           }
         }
       }
