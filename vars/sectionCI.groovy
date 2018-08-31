@@ -71,18 +71,9 @@ def call(params) {
               }
             }
           }
-          def environment
-          switch (subscription) {
-            case ['nonprod', 'prod']:
-              environment = 'preview'
-              break
-            case 'sandbox':
-              environment = 'saat'
-              break
-            default:
-              environment = 'saat'
-              break
-          }
+
+          def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+
           onFunctionalTestEnvironment(environment) {
             stage("Functional Test - ${environment}") {
               testEnv(aksUrl) {
@@ -101,33 +92,6 @@ def call(params) {
                       builder.performanceTest()
                       publishPerformanceReports(this, params)
                     }
-                  }
-                }
-              }
-            }
-            if (pl.crossBrowserTest) {
-              stage("CrossBrowser Test - ${environment} (staging slot)") {
-                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                  pl.callAround("crossBrowserTest:${environment}") {
-                    builder.crossBrowserTest()
-                  }
-                }
-              }
-            }
-            if (pl.mutationTest) {
-              stage("Mutation Test - ${environment} (staging slot)") {
-                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                  pl.callAround("mutationTest:${environment}") {
-                    builder.mutationTest()
-                  }
-                }
-              }
-            }
-            if (pl.fullFunctionalTest) {
-              stage("FullFunctional Test - ${environment} (staging slot)") {
-                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                  pl.callAround("crossBrowserTest:${environment}") {
-                    builder.fullFunctionalTest()
                   }
                 }
               }
