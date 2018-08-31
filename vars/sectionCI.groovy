@@ -29,15 +29,15 @@ def call(params) {
     withSubscription(subscription) {
 
       def registrySecrets = [
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP' ],
-        [ $class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME' ],
+        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME'],
+        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP'],
+        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP'],
+        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME'],
       ]
 
-      wrap([$class: 'AzureKeyVaultBuildWrapper',
-            azureKeyVaultSecrets: registrySecrets,
-            keyVaultURLOverride: env.INFRA_VAULT_URL,
+      wrap([$class                   : 'AzureKeyVaultBuildWrapper',
+            azureKeyVaultSecrets     : registrySecrets,
+            keyVaultURLOverride      : env.INFRA_VAULT_URL,
             applicationIDOverride    : env.AZURE_CLIENT_ID,
             applicationSecretOverride: env.AZURE_CLIENT_SECRET
       ]) {
@@ -71,7 +71,18 @@ def call(params) {
               }
             }
           }
-          environment = "preview"
+          def environment
+          switch (subscription) {
+            case ['nonprod', 'prod']:
+              environment = 'preview'
+              break
+            case 'sandbox':
+              environment = 'saat'
+              break
+            default:
+              environment = 'saat'
+              break
+          }
           onFunctionalTestEnvironment(environment) {
             stage("Functional Test - ${environment}") {
               testEnv(aksUrl) {
@@ -82,7 +93,45 @@ def call(params) {
                 }
               }
             }
-            //more stages
+            if (pl.performanceTest) {
+              stage("Performance Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("performanceTest:${environment}") {
+                    timeout(time: 120, unit: 'MINUTES') {
+                      builder.performanceTest()
+                      publishPerformanceReports(this, params)
+                    }
+                  }
+                }
+              }
+            }
+            if (pl.crossBrowserTest) {
+              stage("CrossBrowser Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("crossBrowserTest:${environment}") {
+                    builder.crossBrowserTest()
+                  }
+                }
+              }
+            }
+            if (pl.mutationTest) {
+              stage("Mutation Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("mutationTest:${environment}") {
+                    builder.mutationTest()
+                  }
+                }
+              }
+            }
+            if (pl.fullFunctionalTest) {
+              stage("FullFunctional Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("crossBrowserTest:${environment}") {
+                    builder.fullFunctionalTest()
+                  }
+                }
+              }
+            }
           }
         }
       }
