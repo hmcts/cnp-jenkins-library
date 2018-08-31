@@ -71,8 +71,9 @@ def call(params) {
               }
             }
           }
+          environment = "preview"
           onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - ${environment} (staging slot)") {
+            stage("Functional Test - ${environment}") {
               testEnv(aksUrl) {
                 pl.callAround("functionalTest:${environment}") {
                   timeout(time: 40, unit: 'MINUTES') {
