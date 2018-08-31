@@ -62,7 +62,7 @@ def call(params) {
               }
             }
           }
-          stage("Smoke Test - (staging slot)") {
+          stage("Smoke Test - AKS") {
             testEnv(aksUrl) {
               pl.callAround("smoketest:aks") {
                 timeout(time: 10, unit: 'MINUTES') {
@@ -75,7 +75,7 @@ def call(params) {
           def environment = subscription == 'nonprod' ? 'preview' : 'saat'
 
           onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - ${environment}") {
+            stage("Functional Test - AKS") {
               testEnv(aksUrl) {
                 pl.callAround("functionalTest:${environment}") {
                   timeout(time: 40, unit: 'MINUTES') {
@@ -85,8 +85,8 @@ def call(params) {
               }
             }
             if (pl.performanceTest) {
-              stage("Performance Test - ${environment} (staging slot)") {
-                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+              stage("Performance Test - AKS") {
+                testEnv(aksUrl) {
                   pl.callAround("performanceTest:${environment}") {
                     timeout(time: 120, unit: 'MINUTES') {
                       builder.performanceTest()

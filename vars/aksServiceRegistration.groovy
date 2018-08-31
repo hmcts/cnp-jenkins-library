@@ -1,12 +1,5 @@
 import groovy.json.JsonOutput
 
-/*--------------------------------------------------------------
-Groovy script to update the scm service consul record. It will
-crawl the infra to workout which webapps are currently deployed
-and update the scm consul record with the right details. This
-script is expected to be called as part of withPipeline just
-after spinInfra.
- --------------------------------------------------------------*/
 def call(subscription, serviceName, serviceIP) {
 
   println "Registering AKS application to consul cluster in `$subscription` subscription"
@@ -14,7 +7,6 @@ def call(subscription, serviceName, serviceIP) {
   def environment = subscription == 'nonprod' ? 'preview' : 'saat'
 
   log.info("get a token for Management API...")
-  //STEP: get a TOKEN for the management API to query for the ILBs
   def accessTokenResponse = httpRequest(
     httpMode: 'POST',
     customHeaders: [[name: 'ContentType', value: "application/x-www-form-urlencoded"]],
