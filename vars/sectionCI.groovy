@@ -1,5 +1,4 @@
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
