@@ -5,6 +5,7 @@ class Environment implements Serializable {
   def final prodName
   def final demoName
   def final previewName
+  def final hmctsDemoName
 
   def final functionalTestEnvironments
 
