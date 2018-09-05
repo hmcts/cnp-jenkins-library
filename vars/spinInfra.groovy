@@ -18,11 +18,11 @@ def call(product, component, environment, planOnly, subscription) {
     changeUrl = env.CHANGE_URL
   }
 
-  def teamNames = ['rhubarb':'Contino']
+  def teamNames = ['bar':'Fees/Pay', 'ccd':'CCD', 'cmc':'Money Claims', 'div':'Divorce', 'dm':'Evidence Mment', 'em':'Evidence Mment', 'fees':'Fees/Pay', 'finrem':'Financial Remedy', 'ia':'Inmigration', 'idam':'IdAM', 'payment':'Fees/Pay', 'sscs':'SSCS']
   def teamPrefix = "${productName}".split('-')[0]
   def teamName = teamNames.get(teamPrefix)
 
-  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, teamname: teamName]).toString()
+  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, teamName: teamName]).toString()
   log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
