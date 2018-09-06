@@ -2,6 +2,8 @@ package uk.gov.hmcts.contino
 
 class TeamNames {
 
+  static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
+
   def teamNamesMap = ['bar':'Fees/Pay',
                       'ccd':'CCD',
                       'cmc':'Money Claims',
@@ -16,6 +18,6 @@ class TeamNames {
                       'sscs':'SSCS']
 
   def getName (String product) {
-    return teamNamesMap.get(product, 'pleaseTagMe')
+    return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
   }
 }
