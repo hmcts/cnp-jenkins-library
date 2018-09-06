@@ -14,7 +14,7 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def withTeamSecrets(PipelineCallbacks pl, Closure block) {
+def withTeamSecrets(PipelineCallbacks pl, String environment, Closure block) {
   def keyvaultUrl = null
 
   if (pl.vaultSecrets?.size() > 0) {
@@ -80,7 +80,7 @@ def call(params) {
         }
         def aksUrl
         if (pl.deployToAKS) {
-          withTeamSecrets(pl) {
+          withTeamSecrets(pl, params.environment) {
             stage('Deploy to AKS') {
               pl.callAround('aksdeploy') {
                 timeout(time: 15, unit: 'MINUTES') {
