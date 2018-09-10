@@ -21,7 +21,7 @@ def call(product, component, environment, planOnly, subscription) {
 
   def teamName = new TeamNames().getName(product)
 
-  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, 'Team Name': teamName]).toString()
+  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, \'Team Name\': teamName]).toString()
   log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
