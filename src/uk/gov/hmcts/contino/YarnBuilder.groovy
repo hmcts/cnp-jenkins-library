@@ -97,6 +97,6 @@ EOF
   }
 
   def yarn(task){
-    steps.sh("yarn ${task}")
+    steps.sh("yarn --mutex file:/tmp/.yarn-mutex ${task}")
   }
 }
