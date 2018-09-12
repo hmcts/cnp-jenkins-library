@@ -7,7 +7,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def build() {
-    yarn("install")
+    yarn("--mutex network install")
     yarn("lint")
 
     addVersionInfo()

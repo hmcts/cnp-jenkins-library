@@ -99,7 +99,7 @@ EOF
   }
 
   def gradle(String task) {
-    steps.sh("./gradlew ${task}")
+    steps.sh("./gradlew -Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000 ${task}")
   }
 
   def fullFunctionalTest() {

@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
+import uk.gov.hmcts.contino.TeamNames
 
 def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
@@ -18,7 +19,9 @@ def call(product, component, environment, planOnly, subscription) {
     changeUrl = env.CHANGE_URL
   }
 
-  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl]).toString()
+  def teamName = new TeamNames().getName(product)
+
+  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, teamName: teamName]).toString()
   log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
