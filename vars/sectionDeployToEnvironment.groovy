@@ -179,7 +179,7 @@ def call(params) {
 
         stage("Smoke Test - ${environment} (production slot)") {
           testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
-            pl.callAround("smokeTest:${environment}") {
+            pl.callAround("smoketest:${environment}") {
               timeout(time: 10, unit: 'MINUTES') {
                 builder.smokeTest()
               }
