@@ -79,34 +79,36 @@ def call(params) {
           }
         }
         def aksUrl
-        if (pl.deployToAKS) {
-          withTeamSecrets(pl, params.environment) {
-            stage('Deploy to AKS') {
-              pl.callAround('aksdeploy') {
-                timeout(time: 15, unit: 'MINUTES') {
-                  aksUrl = aksDeploy(dockerImage, params)
-                  log.info("deployed component URL: ${aksUrl}")
-                }
-              }
-            }
-            stage("Smoke Test - AKS") {
-              testEnv(aksUrl) {
-                pl.callAround("smoketest:aks") {
-                  timeout(time: 10, unit: 'MINUTES') {
-                    builder.smokeTest()
+        onPR {
+          if (pl.deployToAKS) {
+            withTeamSecrets(pl, params.environment) {
+              stage('Deploy to AKS') {
+                pl.callAround('aksdeploy') {
+                  timeout(time: 15, unit: 'MINUTES') {
+                    aksUrl = aksDeploy(dockerImage, params)
+                    log.info("deployed component URL: ${aksUrl}")
                   }
                 }
               }
-            }
-
-            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
-
-            onFunctionalTestEnvironment(environment) {
-              stage("Functional Test - AKS") {
+              stage("Smoke Test - AKS") {
                 testEnv(aksUrl) {
-                  pl.callAround("functionalTest:${environment}") {
-                    timeout(time: 40, unit: 'MINUTES') {
-                      builder.functionalTest()
+                  pl.callAround("smoketest:aks") {
+                    timeout(time: 10, unit: 'MINUTES') {
+                      builder.smokeTest()
+                    }
+                  }
+                }
+              }
+
+              def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+
+              onFunctionalTestEnvironment(environment) {
+                stage("Functional Test - AKS") {
+                  testEnv(aksUrl) {
+                    pl.callAround("functionalTest:${environment}") {
+                      timeout(time: 40, unit: 'MINUTES') {
+                        builder.functionalTest()
+                      }
                     }
                   }
                 }

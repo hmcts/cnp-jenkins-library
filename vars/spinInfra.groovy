@@ -15,7 +15,7 @@ def call(product, component, environment, planOnly, subscription) {
   def productName = component ? "$product-$component" : product
   def changeUrl = ""
 
-  onPR {
+  onPreview {
     changeUrl = env.CHANGE_URL
   }
 
