@@ -1,22 +1,22 @@
-package withPipeline.onPR
+package withPipeline.onPreview
 
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
-import uk.gov.hmcts.contino.JavaDeployer
+import uk.gov.hmcts.contino.AngularBuilder
+import uk.gov.hmcts.contino.StaticSiteDeployer
 import withPipeline.BaseCnpPipelineTest
 
-class withJavaPipelineOnPRTests extends BaseCnpPipelineTest {
-  final static jenkinsFile = "exampleJavaPipeline.jenkins"
+class withAngularPipelineOnPreviewTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleAngularPipeline.jenkins"
 
-  withJavaPipelineOnPRTests() {
+  withAngularPipelineOnPreviewTests() {
     super("PR-999", jenkinsFile)
   }
 
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
-    def mockBuilder = new MockFor(GradleBuilder)
+    def mockBuilder = new MockFor(AngularBuilder)
     mockBuilder.demand.with {
       build(1) {}
       test(1) {}
@@ -29,7 +29,7 @@ class withJavaPipelineOnPRTests extends BaseCnpPipelineTest {
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     binding.getVariable('env').putAt('CHANGE_TITLE', '[PREVIEW] Some change')
-    def mockDeployer = new MockFor(JavaDeployer)
+    def mockDeployer = new MockFor(StaticSiteDeployer)
     mockDeployer.ignore.getServiceUrl() { env, slot -> return null} // we don't care when or how often this is called
     mockDeployer.demand.with {
       // preview-staging

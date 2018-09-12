@@ -1,11 +1,11 @@
 import uk.gov.hmcts.contino.ProjectBranch
 
 /**
- * onPR
+ * onNonPR
  *
  * Runs the block of code if the current branch is not associated with a pull request
  *
- * onPR {
+ * onNonPR {
  *   ...
  * }
  */
