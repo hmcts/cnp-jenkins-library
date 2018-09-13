@@ -10,7 +10,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def build() {
-    addInitScript()
     addVersionInfo()
     gradle("assemble")
     steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
@@ -103,6 +102,7 @@ EOF
   }
 
   def gradle(String task) {
+    addInitScript()
     steps.sh("./gradlew --init-script init.gradle ${task}")
   }
 
