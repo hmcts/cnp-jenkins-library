@@ -1,7 +1,6 @@
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
-import uk.gov.hmcts.contino.RepositoryUrl
 import uk.gov.hmcts.contino.GithubAPI
 
 def call(DockerImage dockerImage, Map params) {
@@ -55,17 +54,13 @@ def call(DockerImage dockerImage, Map params) {
 }
 
 def addGithubLabels() {
-  def project = new RepositoryUrl().getShort(env.CHANGE_URL)
-  def issueNumber = env.CHANGE_ID
 
-  def githubApi = new GithubAPI(this)
-  githubApi.addLabels(project, issueNumber, getLabels())
-}
-
-def getLabels() {
   def namespaceLabel   = 'ns:' + env.NAMESPACE
   def serviceNameLabel = 'sn:' + env.SERVICE_NAME
   def serviceIpLabel   = 'ip:' + env.SERVICE_IP
 
-  return [namespaceLabel, serviceNameLabel, serviceIpLabel]
+  def labels = [namespaceLabel, serviceNameLabel, serviceIpLabel]
+
+  def githubApi = new GithubAPI(this)
+  githubApi.addLabelsToCurrentPR(project, issueNumber, labels)
 }
