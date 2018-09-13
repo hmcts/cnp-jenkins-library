@@ -13,6 +13,7 @@ interface JenkinsStepMock {
   Object git(Map params)
   Object tool(HashMap)
   String libraryResource(String)
+  Object writeFile(Map)
   Object withCredentials(ArrayList, Closure)
   Object httpRequest(LinkedHashMap)
 

@@ -15,6 +15,10 @@ class GradleBuilder extends AbstractBuilder {
     steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
   }
 
+  def addInitScript() {
+    steps.writeFile(file: 'init.gradle', text: steps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
+  }
+
   def test() {
     try {
       gradle("--info check")
@@ -84,9 +88,9 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def addVersionInfo() {
+    addInitScript()
     steps.sh '''
 mkdir -p src/main/resources/META-INF
-echo "allprojects { task printVersionInit { doLast { println project.version } } }" > init.gradle
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
 build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
@@ -99,7 +103,8 @@ EOF
   }
 
   def gradle(String task) {
-    steps.sh("./gradlew -Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000 ${task}")
+    addInitScript()
+    steps.sh("./gradlew --init-script init.gradle ${task}")
   }
 
   def fullFunctionalTest() {
