@@ -44,6 +44,8 @@ def call(type, String product, String component, Closure body) {
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
 
+  sh "env"
+
   timestamps {
     node {
       try {
