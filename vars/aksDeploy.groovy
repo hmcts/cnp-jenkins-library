@@ -62,5 +62,5 @@ def addGithubLabels() {
   def labels = [namespaceLabel, serviceNameLabel, serviceIpLabel]
 
   def githubApi = new GithubAPI(this)
-  githubApi.addLabelsToCurrentPR(project, issueNumber, labels)
+  githubApi.addLabelsToCurrentPR(labels)
 }
