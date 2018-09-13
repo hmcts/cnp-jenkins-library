@@ -88,6 +88,7 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def addVersionInfo() {
+    addInitScript()
     steps.sh '''
 mkdir -p src/main/resources/META-INF
 
