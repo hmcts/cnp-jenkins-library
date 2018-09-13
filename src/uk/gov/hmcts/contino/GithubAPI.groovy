@@ -17,7 +17,7 @@ class GithubAPI {
     def body = JsonOutput.toJson(labels)
 
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: 'githubToken',
+      authentication: 'jenkins-github-hmcts-api-token',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/${project}/issues/${issueNumber}/labels",
