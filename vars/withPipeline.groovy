@@ -46,9 +46,6 @@ def call(type, String product, String component, Closure body) {
 
   timestamps {
     node {
-
-      sh "env"
-
       try {
         env.PATH = "$env.PATH:/usr/local/bin"
 
