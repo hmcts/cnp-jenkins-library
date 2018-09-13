@@ -5,9 +5,10 @@ class TeamNames {
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
 
   def teamNamesMap = ['bar':'Fees/Pay',
-                      'bulk':'Software Engineering',
+                      'bulk-scan':'Software Engineering',
                       'ccd':'CCD',
                       'cmc':'Money Claims',
+                      'custard':'CNP',
                       'div':'Divorce',
                       'dm':'Evidence Mment',
                       'em':'Evidence Mment',
@@ -17,6 +18,7 @@ class TeamNames {
                       'idam':'IdAM',
                       'payment':'Fees/Pay',
                       'rpe':'Software Engineering',
+                      'rhubarb':'CNP',
                       'sscs':'SSCS']
 
   def getName (String product) {

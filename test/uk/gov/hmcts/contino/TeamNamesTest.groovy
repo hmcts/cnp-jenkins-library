@@ -17,8 +17,8 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "bulk"() {
-    def productName = 'bulk'
+  def "bulk-scan"() {
+    def productName = 'bulk-scan'
     def expected = 'Software Engineering'
 
     when:
@@ -42,6 +42,17 @@ class TeamNamesTest extends Specification {
   def "cmc"() {
     def productName = 'cmc'
     def expected = 'Money Claims'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+
+  def "custard"() {
+    def productName = 'custard'
+    def expected = 'CNP'
 
     when:
     def teamName = new TeamNames().getName(productName)
@@ -130,6 +141,17 @@ class TeamNamesTest extends Specification {
   def "payment"() {
     def productName = 'payment'
     def expected = 'Fees/Pay'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+
+  def "rhubarb"() {
+    def productName = 'rhubarb'
+    def expected = 'CNP'
 
     when:
     def teamName = new TeamNames().getName(productName)
