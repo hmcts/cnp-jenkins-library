@@ -17,8 +17,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def addInitScript() {
-    def file = steps.libraryResource 'uk/gov/hmcts/gradle/init.gradle'
-    steps.writeFile file: 'init.gradle', text: file
+    steps.writeFile(file: 'init.gradle', text: steps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
   }
 
   def test() {
