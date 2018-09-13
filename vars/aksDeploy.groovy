@@ -65,6 +65,6 @@ def addGithubLabels() {
 def getLabels() {
   def namespaceLabel   = 'aks-namespace:' + env.NAMESPACE
   def serviceNameLabel = 'aks-servicename:' + env.SERVICE_NAME
-  def serviceUrlLabel  = 'aks-serviceurl:' + env.AKS_TEST_URL
-  return [namespaceLabel, serviceNameLabel, serviceUrlLabel]
+
+  return [namespaceLabel, serviceNameLabel]
 }
