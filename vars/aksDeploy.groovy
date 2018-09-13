@@ -1,6 +1,8 @@
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
+import uk.gov.hmcts.contino.RepositoryUrl
+import uk.gov.hmcts.contino.GithubAPI
 
 def call(DockerImage dockerImage, Map params) {
 
@@ -40,6 +42,8 @@ def call(DockerImage dockerImage, Map params) {
         env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
         echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
+        addGithubLabels()
+
         def url = env.AKS_TEST_URL + '/health'
         def healthChecker = new HealthChecker(this)
         healthChecker.check(url, 10, 10)
@@ -48,4 +52,19 @@ def call(DockerImage dockerImage, Map params) {
       }
     }
   }
+}
+
+def addGithubLabels() {
+  def project = new RepositoryUrl().getShort(env.CHANGE_URL)
+  def issueNumber = env.CHANGE_ID
+
+  def githubApi = new GithubAPI(this)
+  githubApi.addLabels(project, issueNumber, getLabels())
+}
+
+def getLabels() {
+  def namespaceLabel   = 'aks-namespace:' + env.NAMESPACE
+  def serviceNameLabel = 'aks-servicename:' + env.SERVICE_NAME
+  def serviceUrlLabel  = 'aks-serviceurl:' + env.AKS_TEST_URL
+  return [namespaceLabel, serviceNameLabel, serviceUrlLabel]
 }

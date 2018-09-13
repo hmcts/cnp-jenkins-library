@@ -4,7 +4,7 @@ import groovy.json.JsonOutput
 
 class GithubAPI {
 
-  private static final String API_URL = "https://api.github.com/repos/hmcts"
+  private static final String API_URL = "https://api.github.com/repos/"
 
   def steps
 
