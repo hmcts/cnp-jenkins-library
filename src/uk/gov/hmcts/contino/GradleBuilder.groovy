@@ -93,7 +93,7 @@ class GradleBuilder extends AbstractBuilder {
 mkdir -p src/main/resources/META-INF
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
-build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
+build.version=$(./gradlew --no-daemon --init-script init.gradle -q :printVersionInit)
 build.number=${BUILD_NUMBER}
 build.commit=$(git rev-parse HEAD)
 build.date=$(date)
@@ -104,7 +104,7 @@ EOF
 
   def gradle(String task) {
     addInitScript()
-    steps.sh("./gradlew --init-script init.gradle ${task}")
+    steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
   def fullFunctionalTest() {
