@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 /**
  * onHMCTSDemo
  *
- * Runs the block of code if the current branch is hmctsdemo
+ * Runs the block of code if the current branch is demo
  *
  * onHMCTSDemo {
  *   ...
