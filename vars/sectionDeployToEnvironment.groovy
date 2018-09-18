@@ -33,17 +33,17 @@ def collectAdditionalInfrastructureVariablesFor(subscription, product, environme
   if (subcription == subcription.hmctsDemoName && environment == environment.hmctsDemoName) {
     keyVault = new KeyVault(this, subscription, "infra-vault-hmctsdemo")
     
-    def hmctsdemoTenantId = keyVault.find("security_aad_tenantId")
+    def hmctsdemoTenantId = keyVault.find("security-aad-tenantId")
     if (hmctsdemoTenantId) {
       environmentVariables.add("TF_VAR_security_aad_tenantId=${hmctsdemoTenantId}")
     }
 
-    def hmctsdemoClientId = keyVault.find("security_aad_clientId")
+    def hmctsdemoClientId = keyVault.find("security-aad-clientId")
     if (hmctsdemoClientId) {
       environmentVariables.add("TF_VAR_security_aad_clientId=${hmctsdemoClientId}")
     }
 
-    def hmctsdemoClientSecret = keyVault.find("security_aad_clientSecret")
+    def hmctsdemoClientSecret = keyVault.find("security-aad-clientSecret")
     if (hmctsdemoClientSecret) {
       environmentVariables.add("TF_VAR_security_aad_clientSecret=${hmctsdemoClientSecret}")
     }        
