@@ -5,7 +5,7 @@ class Subscription implements Serializable {
   def final prodName
   def final demoName
   def final previewName
-  defin final hmctsDemoName
+  def final hmctsDemoName
 
   Subscription(Object env) {
     Objects.requireNonNull(env)
