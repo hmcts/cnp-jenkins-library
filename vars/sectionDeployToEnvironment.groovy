@@ -30,13 +30,23 @@ def collectAdditionalInfrastructureVariablesFor(subscription, product, environme
     environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
   }
   
-  if (subcription == 'hmctsdemo' && environment == 'hmctsdemo') {
-    KeyVault keyVault = new KeyVault(this, subscription, "infra-vault-hmctsdemo")
+  if (subcription == subcription.hmctsDemoName && environment == environment.hmctsDemoName) {
+    keyVault = new KeyVault(this, subscription, "infra-vault-hmctsdemo")
     
-    def hmctsdemoTenantId = keyVault.find("security_tenantId")
+    def hmctsdemoTenantId = keyVault.find("security_aad_tenantId")
     if (hmctsdemoTenantId) {
-      environmentVariables.add("TF_VAR_tenantId=${hmctsdemoTenantId}")
+      environmentVariables.add("TF_VAR_security_aad_tenantId=${hmctsdemoTenantId}")
     }
+
+    def hmctsdemoClientId = keyVault.find("security_aad_clientId")
+    if (hmctsdemoClientId) {
+      environmentVariables.add("TF_VAR_security_aad_clientId=${hmctsdemoClientId}")
+    }
+
+    def hmctsdemoClientSecret = keyVault.find("security_aad_clientSecret")
+    if (hmctsdemoClientSecret) {
+      environmentVariables.add("TF_VAR_security_aad_clientSecret=${hmctsdemoClientSecret}")
+    }        
   }
 
   return environmentVariables
