@@ -6,7 +6,8 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 
 def testEnv(String testUrl, block) {
-  def testEnvVariables = ["TEST_URL=${testUrl}"]
+  def testEnv = new Environment(env).nonProdName
+  def testEnvVariables = ["TEST_URL=${testUrl},test_environment=${testEnv}"]
 
   withEnv(testEnvVariables) {
     echo "Using TEST_URL: '$env.TEST_URL'"
