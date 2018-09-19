@@ -67,7 +67,7 @@ def call(params) {
   Builder builder = pipelineType.builder
 
   if (pl.dockerBuild) {
-    withDocker('hmcts/cnp-aks-client:dev', null) {
+    withDocker('hmcts/cnp-aks-client:az-2.0.45-kubectl-1.11.2', null) {
       withSubscription(subscription) {
         withRegistrySecrets {
           def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
