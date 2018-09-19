@@ -99,27 +99,29 @@ def call(params) {
       }
     }
 
-    if (pl.deployToAKS) {
-      withSubscription(subscription) {
-        withTeamSecrets(pl, params.environment) {
-          stage("Smoke Test - AKS") {
-            testEnv(aksUrl) {
-              pl.callAround("smoketest:aks") {
-                timeout(time: 10, unit: 'MINUTES') {
-                  builder.smokeTest()
+    onPR {
+      if (pl.deployToAKS) {
+        withSubscription(subscription) {
+          withTeamSecrets(pl, params.environment) {
+            stage("Smoke Test - AKS") {
+              testEnv(aksUrl) {
+                pl.callAround("smoketest:aks") {
+                  timeout(time: 10, unit: 'MINUTES') {
+                    builder.smokeTest()
+                  }
                 }
               }
             }
-          }
 
-          def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
 
-          onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - AKS") {
-              testEnv(aksUrl) {
-                pl.callAround("functionalTest:${environment}") {
-                  timeout(time: 40, unit: 'MINUTES') {
-                    builder.functionalTest()
+            onFunctionalTestEnvironment(environment) {
+              stage("Functional Test - AKS") {
+                testEnv(aksUrl) {
+                  pl.callAround("functionalTest:${environment}") {
+                    timeout(time: 40, unit: 'MINUTES') {
+                      builder.functionalTest()
+                    }
                   }
                 }
               }
