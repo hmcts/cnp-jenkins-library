@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.azure.Environment
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
