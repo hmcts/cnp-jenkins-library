@@ -62,6 +62,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def aksUrl
 
   Builder builder = pipelineType.builder
 
@@ -79,7 +80,7 @@ def call(params) {
               }
             }
           }
-          def aksUrl
+
           onPR {
             if (pl.deployToAKS) {
               withTeamSecrets(pl, params.environment) {
