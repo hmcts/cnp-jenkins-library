@@ -6,7 +6,7 @@ def call(Closure body) {
 
   Subscription subscription = new Subscription(env)
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, 'pen-test', 'pen-test')
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, 'pen-test', 'pen-test', subscription)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
