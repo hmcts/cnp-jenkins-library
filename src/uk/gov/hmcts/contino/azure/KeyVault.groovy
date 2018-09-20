@@ -25,8 +25,8 @@ class KeyVault extends Az implements Serializable {
       return this.az("keyvault secret show --vault-name '${this.vaultName}' --name '${key}' --query value -o tsv".toString())
     } catch (e) {
       // Unfortunately Jenkins does not support returning both stdout and exit code yet, so we need to assume the
-      // 'script returned exit code 1' was due to secret not being found or particular vault not being there.
-      if (e.getMessage().contains("script returned exit code 1")) {
+      // 'script returned exit code n' was due to secret not being found or particular vault not being there.
+      if (e.getMessage().contains("script returned exit code")) {
         return null
       } else {
         throw e
