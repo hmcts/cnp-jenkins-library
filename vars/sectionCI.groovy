@@ -62,53 +62,65 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def aksUrl
 
   Builder builder = pipelineType.builder
 
   if (pl.dockerBuild) {
-    withSubscription(subscription) {
-      withRegistrySecrets {
-        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
+    withDocker('hmcts/cnp-aks-client:az-2.0.45-kubectl-1.11.2', null) {
+      withSubscription(subscription) {
+        withRegistrySecrets {
+          def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+          def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
-        stage('Docker Build') {
-          pl.callAround('dockerbuild') {
-            timeout(time: 15, unit: 'MINUTES') {
-              acr.build(dockerImage)
+          stage('Docker Build') {
+            pl.callAround('dockerbuild') {
+              timeout(time: 15, unit: 'MINUTES') {
+                acr.build(dockerImage)
+              }
             }
           }
-        }
-        def aksUrl
-        onPR {
-          if (pl.deployToAKS) {
-            withTeamSecrets(pl, params.environment) {
-              stage('Deploy to AKS') {
-                pl.callAround('aksdeploy') {
-                  timeout(time: 15, unit: 'MINUTES') {
-                    aksUrl = aksDeploy(dockerImage, params)
-                    log.info("deployed component URL: ${aksUrl}")
-                  }
-                }
-              }
-              stage("Smoke Test - AKS") {
-                testEnv(aksUrl) {
-                  pl.callAround("smoketest:aks") {
-                    timeout(time: 10, unit: 'MINUTES') {
-                      builder.smokeTest()
+
+          onPR {
+            if (pl.deployToAKS) {
+              withTeamSecrets(pl, params.environment) {
+                stage('Deploy to AKS') {
+                  pl.callAround('aksdeploy') {
+                    timeout(time: 15, unit: 'MINUTES') {
+                      aksUrl = aksDeploy(dockerImage, params)
+                      log.info("deployed component URL: ${aksUrl}")
                     }
                   }
                 }
               }
+            }
+          }
+        }
+      }
+    }
 
-              def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+    onPR {
+      if (pl.deployToAKS) {
+        withSubscription(subscription) {
+          withTeamSecrets(pl, params.environment) {
+            stage("Smoke Test - AKS") {
+              testEnv(aksUrl) {
+                pl.callAround("smoketest:aks") {
+                  timeout(time: 10, unit: 'MINUTES') {
+                    builder.smokeTest()
+                  }
+                }
+              }
+            }
 
-              onFunctionalTestEnvironment(environment) {
-                stage("Functional Test - AKS") {
-                  testEnv(aksUrl) {
-                    pl.callAround("functionalTest:${environment}") {
-                      timeout(time: 40, unit: 'MINUTES') {
-                        builder.functionalTest()
-                      }
+            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+
+            onFunctionalTestEnvironment(environment) {
+              stage("Functional Test - AKS") {
+                testEnv(aksUrl) {
+                  pl.callAround("functionalTest:${environment}") {
+                    timeout(time: 40, unit: 'MINUTES') {
+                      builder.functionalTest()
                     }
                   }
                 }
