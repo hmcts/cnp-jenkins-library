@@ -11,8 +11,8 @@ def testEnv(String testUrl, block) {
   def testEnvVariables = ["TEST_URL=${testUrl},ENVIRONMENT_NAME=${testEnv}"]
 
   withEnv(testEnvVariables) {
-    echo "Using TEST_URL: '$env.TEST_URL'"
-    echo "Using ENVIRONMENT_NAME: '$env.ENVIRONMENT_NAME'"
+    echo "Using TEST_URL: ${env.TEST_URL}"
+    echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
     block.call()
   }
 }
