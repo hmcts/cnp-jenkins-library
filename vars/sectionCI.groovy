@@ -8,7 +8,12 @@ import uk.gov.hmcts.contino.Environment
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
+
+  echo "testEnv: ${testEnv}"
+
   def testEnvVariables = ["TEST_URL=${testUrl},ENVIRONMENT_NAME=${testEnv}"]
+
+  echo "testEnvVariables: ${testEnvVariables}"
 
   withEnv(testEnvVariables) {
     echo "Using TEST_URL: ${env.TEST_URL}"
