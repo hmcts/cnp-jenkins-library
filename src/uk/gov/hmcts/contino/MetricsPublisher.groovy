@@ -23,8 +23,8 @@ class MetricsPublisher implements Serializable {
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://pipeline-metrics.documents.azure.com/'
-    this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/pipeline-metrics'
+    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://sandbox-pipeline-metrics.documents.azure.com/'
+    this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/sandbox-pipeline-metrics'
     this.correlationId = UUID.randomUUID()
   }
 
@@ -65,13 +65,13 @@ class MetricsPublisher implements Serializable {
 
   def publish(currentStepName) {
     try {
-      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-        if (env.COSMOSDB_TOKEN_KEY == null) {
-          steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
+      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'SANDBOX_COSMOSDB_TOKEN_KEY', variable: 'SANDBOX_COSMOSDB_TOKEN_KEY']]) {
+        if (env.SANDBOX_COSMOSDB_TOKEN_KEY == null) {
+          steps.echo "Set the 'SANDBOX_COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
           return
         }
 
-        def client = new DocumentClient(cosmosDbUrl, env.COSMOSDB_TOKEN_KEY, null, null)
+        def client = new DocumentClient(cosmosDbUrl, env.SANDBOX_COSMOSDB_TOKEN_KEY, null, null)
 
         def metrics = collectMetrics(currentStepName)
         def data = JsonOutput.toJson(metrics).toString()
