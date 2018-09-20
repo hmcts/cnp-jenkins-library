@@ -4,12 +4,15 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.Environment
 
 def testEnv(String testUrl, block) {
-  def testEnvVariables = ["TEST_URL=${testUrl}"]
+  def testEnv = new Environment(env).nonProdName
+  def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnv}"]
 
   withEnv(testEnvVariables) {
-    echo "Using TEST_URL: '$env.TEST_URL'"
+    echo "Using TEST_URL: ${env.TEST_URL}"
+    echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
     block.call()
   }
 }
