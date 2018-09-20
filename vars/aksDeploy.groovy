@@ -8,6 +8,10 @@ def call(DockerImage dockerImage, Map params) {
   def subscription = params.subscription
   def environment = params.environment
 
+  def kubeResourcesDir
+  def kubeResourcesDirDefault = "src/kubernetes"
+  def kubeResourcesDirAlternate = "kubernetes"
+
   def digestName = dockerImage.getDigestName()
   def aksServiceName = dockerImage.getAksServiceName()
   def namespace = dockerImage.product
@@ -21,15 +25,23 @@ def call(DockerImage dockerImage, Map params) {
     kubectl.createNamespace(env.NAMESPACE)
     kubectl.deleteDeployment(aksServiceName)
 
-    // environment specific config is optional
-    def configTemplate = "src/kubernetes/config.${environment}.yaml"
-    if (fileExists(configTemplate)) {
-      sh "envsubst < ${configTemplate} > src/kubernetes/config.yaml"
-      kubectl.apply('src/kubernetes/config.yaml')
+    if (fileExists(kubeResourcesDirDefault)) {
+      kubeResourcesDir = kubeResourcesDirDefault
+    } else if (fileExists(kubeResourcesDirAlternate)) {
+      kubeResourcesDir = kubeResourcesDirAlternate
+    } else {
+      throw new RuntimeException("No Kubernetes resource directory found at $kubeResourcesDirDefault or $kubeResourcesDirAlternate")
     }
 
-    sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
-    kubectl.apply('src/kubernetes/deployment.yaml')
+    // environment specific config is optional
+    def configTemplate = "${kubeResourcesDir}/config.${environment}.yaml"
+    if (fileExists(configTemplate)) {
+      sh "envsubst < ${configTemplate} > ${kubeResourcesDir}/config.yaml"
+      kubectl.apply("${kubeResourcesDir}/config.yaml")
+    }
+
+    sh "envsubst < ${kubeResourcesDir}/deployment.template.yaml > ${kubeResourcesDir}/deployment.yaml"
+    kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
     env.SERVICE_IP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
     registerConsulDns(subscription, env.SERVICE_NAME, env.SERVICE_IP)
