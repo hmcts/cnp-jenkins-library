@@ -23,7 +23,7 @@ class MetricsPublisherTests extends Specification {
 
   def "Executes without throwing uncaught errors"() {
     when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', 'nonprod')
     metricsPublisher.publish()
 
     then:
@@ -32,7 +32,7 @@ class MetricsPublisherTests extends Specification {
 
   def "collects build metrics"() {
     when:
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', 'nonprod')
     def metricsMap = metricsPublisher.collectMetrics('current stepName')
 
     then:

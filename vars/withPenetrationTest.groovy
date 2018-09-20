@@ -1,7 +1,10 @@
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.Subscription
 
 def call(Closure body) {
+
+  Subscription subscription = new Subscription(env)
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, 'pen-test', 'pen-test')
   def pl = new PipelineCallbacks(metricsPublisher)
