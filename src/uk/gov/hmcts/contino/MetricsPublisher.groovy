@@ -23,8 +23,8 @@ class MetricsPublisher implements Serializable {
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = subscription == "sandbox" ? 'https://sandbox-pipeline-metrics.documents.azure.com/' : 'https://pipeline-metrics.documents.azure.com/'
-    this.resourceLink = subscription == "sandbox" ? 'dbs/jenkins/colls/sandbox-pipeline-metrics' : 'dbs/jenkins/colls/pipeline-metrics'
+    this.cosmosDbUrl = subscription.prodName == "sandbox" ? 'https://sandbox-pipeline-metrics.documents.azure.com/' : 'https://pipeline-metrics.documents.azure.com/'
+    this.resourceLink = subscription.prodName == "sandbox" ? 'dbs/jenkins/colls/sandbox-pipeline-metrics' : 'dbs/jenkins/colls/pipeline-metrics'
     this.correlationId = UUID.randomUUID()
   }
 
