@@ -44,12 +44,4 @@ class SubscriptionTest extends Specification {
     assert subscription.nonProdName == "snonprod"
   }
 
-  def "test"() {
-    when:
-    def subscription = new Subscription(["NONPROD_SUBSCRIPTION_NAME": "snonprod"])
-
-    then:
-    assert subscription == "sandbox"
-
-  }
 }
