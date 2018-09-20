@@ -17,13 +17,13 @@ class MetricsPublisher implements Serializable {
   def component
   def correlationId
 
-  MetricsPublisher(steps, currentBuild, product, component) {
+  MetricsPublisher(steps, currentBuild, product, component, subscription) {
     this.product = product
     this.component = component
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = env.COSMOSDB_URL ?: 'https://sandbox-pipeline-metrics.documents.azure.com/'
+    this.cosmosDbUrl = subscription == "sandbox" ? 'https://sandbox-pipeline-metrics.documents.azure.com/' : 'https://pipeline-metrics.documents.azure.com/'
     this.resourceLink = env.COSMOSDB_METRICS_RESOURCE_LINK ?: 'dbs/jenkins/colls/sandbox-pipeline-metrics'
     this.correlationId = UUID.randomUUID()
   }

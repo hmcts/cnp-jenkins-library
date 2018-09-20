@@ -25,7 +25,7 @@ def call(type, String product, String component, String environment, String subs
 
   Builder builder = pipelineType.builder
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
