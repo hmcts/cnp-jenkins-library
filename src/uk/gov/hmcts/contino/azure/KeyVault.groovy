@@ -26,7 +26,7 @@ class KeyVault extends Az implements Serializable {
     } catch (e) {
       // Unfortunately Jenkins does not support returning both stdout and exit code yet, so we need to assume the
       // 'script returned exit code 1' was due to secret not being found or particular vault not being there.
-      if (e.getMessage().contains("script returned exit code 1")) {
+      if (e.getMessage().contains("script returned exit code")) {
         return null
       } else {
         throw e
