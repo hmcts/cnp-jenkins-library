@@ -23,9 +23,15 @@ class MetricsPublisher implements Serializable {
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
-    this.cosmosDbUrl = subscription.prodName == "sandbox" ? 'https://sandbox-pipeline-metrics.documents.azure.com/' : 'https://pipeline-metrics.documents.azure.com/'
-    this.resourceLink = subscription.prodName == "sandbox" ? 'dbs/jenkins/colls/sandbox-pipeline-metrics' : 'dbs/jenkins/colls/pipeline-metrics'
     this.correlationId = UUID.randomUUID()
+    this.cosmosDbUrl = (subscription.class == java.lang.String && subscription.matches(/sandbox|sprod|saat|/)) || \
+                        subscription.prodName == "sandbox" ? \
+                        'https://sandbox-pipeline-metrics.documents.azure.com/' : \
+                        'https://pipeline-metrics.documents.azure.com/'
+    this.resourceLink = (subscription.class == java.lang.String && subscription.matches(/sandbox|sprod|saat|/)) || \
+                         subscription.prodName == "sandbox" ? \
+                         'dbs/jenkins/colls/sandbox-pipeline-metrics' : \
+                         'dbs/jenkins/colls/pipeline-metrics'
   }
 
   @NonCPS
