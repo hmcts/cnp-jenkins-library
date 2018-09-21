@@ -28,10 +28,7 @@ class MetricsPublisher implements Serializable {
                         subscription.prodName == "sandbox" ? \
                         'https://sandbox-pipeline-metrics.documents.azure.com/' : \
                         'https://pipeline-metrics.documents.azure.com/'
-    this.resourceLink = (subscription.class == java.lang.String && subscription.matches(/sandbox|sprod|saat|/)) || \
-                         subscription.prodName == "sandbox" ? \
-                         'dbs/jenkins/colls/sandbox-pipeline-metrics' : \
-                         'dbs/jenkins/colls/pipeline-metrics'
+    this.resourceLink = 'dbs/jenkins/colls/pipeline-metrics'
   }
 
   @NonCPS
