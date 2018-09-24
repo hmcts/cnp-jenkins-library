@@ -9,6 +9,7 @@ import com.cloudbees.groovy.cps.NonCPS
 class DocumentPublisher implements Serializable {
 
   private static final String DB_DEFAULT_URL = 'https://pipeline-metrics.documents.azure.com/'
+  private static final String DB_SANDBOX_URL = 'https://sandbox-pipeline-metrics.documents.azure.com/'
 
   def steps
   def params
@@ -37,7 +38,7 @@ class DocumentPublisher implements Serializable {
   @NonCPS
   private def publish(cosmosDbKey, collectionLink, documents) {
 
-    def cosmosDbUrl = env.COSMOSDB_URL ?: DB_DEFAULT_URL
+    def cosmosDbUrl = params.subscription == 'prod' ? DB_DEFAULT_URL : DB_SANDBOX_URL
     def documentClient = new DocumentClient(cosmosDbUrl, cosmosDbKey, null, null)
 
     try {
