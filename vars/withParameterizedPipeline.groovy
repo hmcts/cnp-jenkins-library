@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
+import uk.gov.hmcts.contino.Subscription
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   def pipelineTypes = [
@@ -25,7 +26,8 @@ def call(type, String product, String component, String environment, String subs
 
   Builder builder = pipelineType.builder
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription)
+  Subscription metricsSubscription = new Subscription(env)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl

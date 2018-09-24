@@ -24,10 +24,9 @@ class MetricsPublisher implements Serializable {
     this.env = steps.env
     this.currentBuild = currentBuild
     this.correlationId = UUID.randomUUID()
-    this.cosmosDbUrl = (subscription.class == java.lang.String && subscription.matches(/sandbox|sprod|saat|/)) || \
-                        subscription.prodName == "sandbox" ? \
-                        'https://sandbox-pipeline-metrics.documents.azure.com/' : \
-                        'https://pipeline-metrics.documents.azure.com/'
+    this.cosmosDbUrl = subscription.prodName == "prod" ?
+      'https://pipeline-metrics.documents.azure.com/' :
+      'https://sandbox-pipeline-metrics.documents.azure.com/'
     this.resourceLink = 'dbs/jenkins/colls/pipeline-metrics'
   }
 
