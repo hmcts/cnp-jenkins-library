@@ -30,7 +30,7 @@ def collectAdditionalInfrastructureVariablesFor(subscription, product, environme
     environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
   }
   
-  if (subscription && subcription == 'hmctsDemo' && environment && environment == 'hmctsDemo') {
+  if (subscription && subscription == 'hmctsDemo' && environment && environment == 'hmctsDemo') {
     keyVault = new KeyVault(this, subscription, "infra-vault-hmctsdemo")
     
     def hmctsdemoTenantId = keyVault.find("security-aad-tenantId")
