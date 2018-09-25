@@ -3,7 +3,7 @@
 import uk.gov.hmcts.contino.GradleBuilder
 
 def channel = '#cnp-build-status'
-GradleBuilder builder = new GradleBuilder(this, product)
+GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
 node {
   try {
