@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.Subscription
 
 def call(type,product,component,Closure body) {
 
@@ -19,7 +20,9 @@ def call(type,product,component,Closure body) {
 
   assert pipelineType != null
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  Subscription subscription = new Subscription(env)
+
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription)
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
