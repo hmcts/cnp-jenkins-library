@@ -15,7 +15,7 @@ class MetricsPublisherTests extends Specification {
     stubSteps.currentBuild >>  ["timeInMillis" : 1513613748925]
     stubSteps.env >> [BRANCH_NAME: "master",
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw==",
-                      PROD_SUBSCRIPTION_NAME: "prod"]
+                      PROD_SUBSCRIPTION_NAME: "sandbox"]
 
     def closure
     stubSteps.withCredentials(_, { closure = it }) >> { closure.call() }
