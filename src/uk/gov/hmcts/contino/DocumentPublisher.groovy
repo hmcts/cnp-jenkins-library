@@ -38,7 +38,7 @@ class DocumentPublisher implements Serializable {
   @NonCPS
   private def publish(cosmosDbKey, collectionLink, documents) {
 
-    def cosmosDbUrl = params.subscription == 'prod' ? DB_DEFAULT_URL : DB_SANDBOX_URL
+    def cosmosDbUrl = params.subscription == 'sandbox' ? DB_SANDBOX_URL : DB_DEFAULT_URL
     def documentClient = new DocumentClient(cosmosDbUrl, cosmosDbKey, null, null)
 
     try {
