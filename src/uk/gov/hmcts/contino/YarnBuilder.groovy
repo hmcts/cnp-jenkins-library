@@ -96,10 +96,6 @@ EOF
     '''
   }
 
-  def testmethod(){
-    
-  }
-
   def yarn(task){
     steps.sh("yarn ${task}")
   }
