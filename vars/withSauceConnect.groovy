@@ -10,7 +10,7 @@ def call(String sauceid, Closure body) {
     sauce(sauceid) {
               sauceconnect(options: '--proxy reformmgmtproxyout.reform.hmcts.net:8080 --shared-tunnel --verbose --no-remove-colliding-tunnels --tunnel-identifier reformtunnel', useGeneratedTunnelIdentifier: false,
                 useLatestSauceConnect: true, verboseLogging: true) {
-            body().call()
+            body()
         }
     }
 }

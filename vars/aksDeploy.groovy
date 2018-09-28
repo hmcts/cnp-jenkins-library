@@ -14,12 +14,11 @@ def call(DockerImage dockerImage, Map params) {
 
   def digestName = dockerImage.getDigestName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def namespace = dockerImage.product
-  def templateEnvVars = ["NAMESPACE=${namespace}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
+  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
 
   withEnv(templateEnvVars) {
 
-    def kubectl = new Kubectl(this, subscription, namespace)
+    def kubectl = new Kubectl(this, subscription, aksServiceName)
     kubectl.login()
 
     kubectl.createNamespace(env.NAMESPACE)
@@ -62,10 +61,9 @@ def call(DockerImage dockerImage, Map params) {
 def addGithubLabels() {
 
   def namespaceLabel   = 'ns:' + env.NAMESPACE
-  def serviceNameLabel = 'sn:' + env.SERVICE_NAME
   def serviceIpLabel   = 'ip:' + env.SERVICE_IP
 
-  def labels = [namespaceLabel, serviceNameLabel, serviceIpLabel]
+  def labels = [namespaceLabel, serviceIpLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)
