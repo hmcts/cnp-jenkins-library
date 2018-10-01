@@ -16,7 +16,7 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
 
-  env.AKS_DOMAIN = (subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'
+  env.AKS_DOMAIN = "aks-internal.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
 
   withEnv(templateEnvVars) {
 
@@ -44,7 +44,7 @@ def call(DockerImage dockerImage, Map params) {
     sh "envsubst < ${kubeResourcesDir}/deployment.template.yaml > ${kubeResourcesDir}/deployment.yaml"
     kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
-    env.AKS_TEST_URL = "http://aks-internal.${env.AKS_DOMAIN}/${env.SERVICE_NAME}"
+    env.AKS_TEST_URL = "http://${env.AKS_DOMAIN}/${env.SERVICE_NAME}"
     echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
     addGithubLabels()
