@@ -43,9 +43,8 @@ def call(DockerImage dockerImage, Map params) {
     kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
     env.SERVICE_IP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
-    registerConsulDns(subscription, env.SERVICE_NAME, env.SERVICE_IP)
 
-    env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+    env.AKS_TEST_URL = "http://aks-internal.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}/${env.SERVICE_NAME}"
     echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
     addGithubLabels()
