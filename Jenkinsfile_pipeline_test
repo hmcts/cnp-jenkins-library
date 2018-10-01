@@ -1,7 +1,9 @@
 #!groovy
 @Library('Infrastructure') _
+import uk.gov.hmcts.contino.GradleBuilder
 
 def channel = '#cnp-build-status'
+GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
 node {
   try {
@@ -11,12 +13,12 @@ node {
     }
 
     stage('Build') {
-      sh "./gradlew --info clean build -x test"
+      builder.gradle('build -x test')
     }
 
     stage('Test') {
       try {
-        sh "./gradlew --info test"
+        builder.gradle('test')
       } finally {
         steps.junit '**/test-results/**/*.xml'
       }

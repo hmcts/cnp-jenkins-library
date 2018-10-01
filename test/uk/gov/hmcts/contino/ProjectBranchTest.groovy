@@ -77,4 +77,12 @@ class ProjectBranchTest extends Specification {
     assertThat(branch.imageTag()).isEqualTo('latest')
   }
 
+  def "imageTag should return branch name with no slashes in it"() {
+    when:
+    def branch = new ProjectBranch('feature/blah')
+
+    then:
+    assertThat(branch.imageTag()).isEqualTo('feature-blah')
+  }
+
 }

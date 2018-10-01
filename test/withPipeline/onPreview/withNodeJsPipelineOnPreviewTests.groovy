@@ -1,4 +1,4 @@
-package withPipeline.onPR
+package withPipeline.onPreview
 
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
@@ -6,10 +6,10 @@ import uk.gov.hmcts.contino.NodeDeployer
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-class withNodeJsPipelineOnPRTests extends BaseCnpPipelineTest {
+class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
 
-  withNodeJsPipelineOnPRTests() {
+  withNodeJsPipelineOnPreviewTests() {
     super("PR-999", jenkinsFile)
   }
 

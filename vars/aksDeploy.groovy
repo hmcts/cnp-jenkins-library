@@ -1,74 +1,70 @@
-import uk.gov.hmcts.contino.Kubectl
-import uk.gov.hmcts.contino.PipelineCallbacks
-import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.DockerImage
-import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.HealthChecker
+import uk.gov.hmcts.contino.Kubectl
+import uk.gov.hmcts.contino.GithubAPI
 
-def call(DockerImage dockerImage, Map params, Acr acr) {
+def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
+  def environment = params.environment
 
-  withDocker('hmcts/cnp-aks-client:1.2', null) {
-    withSubscription(subscription) {
+  def kubeResourcesDir
+  def kubeResourcesDirDefault = "src/kubernetes"
+  def kubeResourcesDirAlternate = "kubernetes"
 
-      PipelineCallbacks pl = params.pipelineCallbacks
-      def environment = params.environment
+  def digestName = dockerImage.getDigestName()
+  def aksServiceName = dockerImage.getAksServiceName()
+  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
 
-      def keyvaultUrl
+  withEnv(templateEnvVars) {
 
-      if (pl.vaultSecrets?.size() > 0) {
-        if (pl.vaultName) {
-          def projectKeyvaultName = pl.vaultName + '-' + environment
-          keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
-        } else {
-          error "Please set vault name `setVaultName('rhubarb')` if loading vault secrets"
-        }
-      }
+    def kubectl = new Kubectl(this, subscription, aksServiceName)
+    kubectl.login()
 
-      wrap([
-        $class                   : 'AzureKeyVaultBuildWrapper',
-        azureKeyVaultSecrets     : pl.vaultSecrets,
-        keyVaultURLOverride      : keyvaultUrl,
-        applicationIDOverride    : env.AZURE_CLIENT_ID,
-        applicationSecretOverride: env.AZURE_CLIENT_SECRET
-      ]) {
+    kubectl.createNamespace(env.NAMESPACE)
+    kubectl.deleteDeployment(aksServiceName)
 
-        def digestName = dockerImage.getDigestName()
-        def aksServiceName = dockerImage.getAksServiceName()
-        def namespace = dockerImage.product
-        def templateEnvVars = ["NAMESPACE=${namespace}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
-
-        withEnv(templateEnvVars) {
-
-          def kubectl = new Kubectl(this, subscription, namespace)
-          kubectl.login()
-
-          kubectl.createNamespace(env.NAMESPACE)
-          kubectl.deleteDeployment(aksServiceName)
-
-          // environment specific config is optional
-          def configTemplate = "src/kubernetes/config.${environment}.yaml"
-          if (fileExists(configTemplate)) {
-            sh "envsubst < ${configTemplate} > src/kubernetes/config.yaml"
-            kubectl.apply('src/kubernetes/config.yaml')
-          }
-
-          sh "envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml"
-          kubectl.apply('src/kubernetes/deployment.yaml')
-
-          serviceIP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
-          registerConsulDns(subscription, env.SERVICE_NAME, serviceIP)
-
-          env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${(subscription in ['nonprod', 'prod'])?'service.core-compute-preview.internal':'service.core-compute-saat.internal'}"
-          echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
-
-          def url = env.AKS_TEST_URL + '/health'
-          def healthChecker = new HealthChecker(this)
-          healthChecker.check(url, 10, 10)
-
-          return env.AKS_TEST_URL
-        }
-      }
+    if (fileExists(kubeResourcesDirDefault)) {
+      kubeResourcesDir = kubeResourcesDirDefault
+    } else if (fileExists(kubeResourcesDirAlternate)) {
+      kubeResourcesDir = kubeResourcesDirAlternate
+    } else {
+      throw new RuntimeException("No Kubernetes resource directory found at $kubeResourcesDirDefault or $kubeResourcesDirAlternate")
     }
+
+    // environment specific config is optional
+    def configTemplate = "${kubeResourcesDir}/config.${environment}.yaml"
+    if (fileExists(configTemplate)) {
+      sh "envsubst < ${configTemplate} > ${kubeResourcesDir}/config.yaml"
+      kubectl.apply("${kubeResourcesDir}/config.yaml")
+    }
+
+    sh "envsubst < ${kubeResourcesDir}/deployment.template.yaml > ${kubeResourcesDir}/deployment.yaml"
+    kubectl.apply("${kubeResourcesDir}/deployment.yaml")
+
+    env.SERVICE_IP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
+    registerConsulDns(subscription, env.SERVICE_NAME, env.SERVICE_IP)
+
+    env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+    echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
+
+    addGithubLabels()
+
+    def url = env.AKS_TEST_URL + '/health'
+    def healthChecker = new HealthChecker(this)
+    healthChecker.check(url, 10, 30)
+
+    return env.AKS_TEST_URL
   }
+}
+
+def addGithubLabels() {
+
+  def namespaceLabel   = 'ns:' + env.NAMESPACE
+  def serviceIpLabel   = 'ip:' + env.SERVICE_IP
+
+  def labels = [namespaceLabel, serviceIpLabel]
+
+  def githubApi = new GithubAPI(this)
+  githubApi.addLabelsToCurrentPR(labels)
 }

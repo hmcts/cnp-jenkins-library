@@ -7,7 +7,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def build() {
-    yarn("install")
+    yarn("--mutex network install")
     yarn("lint")
 
     addVersionInfo()
@@ -57,7 +57,7 @@ class YarnBuilder extends AbstractBuilder {
       }
     }
     finally {
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**.*'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
       steps.saucePublisher()
     }
   }

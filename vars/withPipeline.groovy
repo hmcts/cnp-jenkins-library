@@ -21,6 +21,8 @@ def call(type, String product, String component, Closure body) {
     angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
 
+  Subscription subscription = new Subscription(env)
+
   PipelineType pipelineType
 
   if (type instanceof PipelineType) {
@@ -31,7 +33,7 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
   def pl = new PipelineCallbacks(metricsPublisher)
 
   body.delegate = pl
@@ -41,7 +43,6 @@ def call(type, String product, String component, Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
 
   timestamps {
@@ -98,7 +99,7 @@ def call(type, String product, String component, Closure body) {
             component: component)
         }
 
-        onPR {
+        onPreview {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,

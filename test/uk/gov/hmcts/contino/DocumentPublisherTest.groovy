@@ -19,12 +19,13 @@ class DocumentPublisherTest extends Specification {
   private static final String JOB_BASE_NAME      = 'job-base-name'
   private static final String BUILD_TAG          = 'build-tag'
   private static final String NODE_NAME          = 'node-name'
+  private static final String SUBSCRIPTION       = 'prod'
 
   private static final String DATA = "{\"simulation\": \"RhubarbReferenceSimulation\"}"
 
   def documentPublisher
   def steps = Mock(JenkinsStepMock)
-  def params = [product: PRODUCT, component: COMPONENT, environment: ENVIRONMENT]
+  def params = [product: PRODUCT, component: COMPONENT, environment: ENVIRONMENT, subscription: SUBSCRIPTION]
 
   def setup() {
     steps.env >> [BRANCH_NAME: BRANCH_NAME,

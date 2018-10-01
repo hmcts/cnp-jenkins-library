@@ -1,15 +1,59 @@
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
-import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.Environment
 
 def testEnv(String testUrl, block) {
-  def testEnvVariables = ["TEST_URL=${testUrl}"]
+  def testEnv = new Environment(env).nonProdName
+  def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnv}"]
 
   withEnv(testEnvVariables) {
-    echo "Using TEST_URL: '$env.TEST_URL'"
+    echo "Using TEST_URL: ${env.TEST_URL}"
+    echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
+    block.call()
+  }
+}
+
+def withTeamSecrets(PipelineCallbacks pl, String environment, Closure block) {
+  def keyvaultUrl = null
+
+  if (pl.vaultSecrets?.size() > 0) {
+    if (pl.vaultName) {
+      def projectKeyvaultName = pl.vaultName + '-' + environment
+      keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
+    } else {
+      error "Please set vault name `setVaultName('rhubarb')` if loading vault secrets"
+    }
+  }
+
+  wrap([
+    $class                   : 'AzureKeyVaultBuildWrapper',
+    azureKeyVaultSecrets     : pl.vaultSecrets,
+    keyVaultURLOverride      : keyvaultUrl,
+    applicationIDOverride    : env.AZURE_CLIENT_ID,
+    applicationSecretOverride: env.AZURE_CLIENT_SECRET
+  ]) {
+    block.call()
+  }
+}
+
+def withRegistrySecrets(Closure block) {
+  def registrySecrets = [
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME'],
+  ]
+
+  wrap([$class                   : 'AzureKeyVaultBuildWrapper',
+        azureKeyVaultSecrets     : registrySecrets,
+        keyVaultURLOverride      : env.INFRA_VAULT_URL,
+        applicationIDOverride    : env.AZURE_CLIENT_ID,
+        applicationSecretOverride: env.AZURE_CLIENT_SECRET
+  ]) {
     block.call()
   }
 }
@@ -21,64 +65,70 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def aksUrl
 
   Builder builder = pipelineType.builder
 
   if (pl.dockerBuild) {
-    withSubscription(subscription) {
+    withDocker('hmcts/cnp-aks-client:az-2.0.45-kubectl-1.11.2', null) {
+      withSubscription(subscription) {
+        withRegistrySecrets {
+          def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+          def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
-      def registrySecrets = [
-        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME'],
-        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP'],
-        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP'],
-        [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME'],
-      ]
-
-      wrap([$class                   : 'AzureKeyVaultBuildWrapper',
-            azureKeyVaultSecrets     : registrySecrets,
-            keyVaultURLOverride      : env.INFRA_VAULT_URL,
-            applicationIDOverride    : env.AZURE_CLIENT_ID,
-            applicationSecretOverride: env.AZURE_CLIENT_SECRET
-      ]) {
-
-        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
-
-        stage('Docker Build') {
-          pl.callAround('dockerbuild') {
-            timeout(time: 15, unit: 'MINUTES') {
-              acr.build(dockerImage)
-            }
-          }
-        }
-        def aksUrl
-        if (pl.deployToAKS) {
-          stage('Deploy to AKS') {
-            pl.callAround('aksdeploy') {
+          stage('Docker Build') {
+            pl.callAround('dockerbuild') {
               timeout(time: 15, unit: 'MINUTES') {
-                aksUrl = aksDeploy(dockerImage, params, acr)
-                log.info("deployed component URL: ${aksUrl}")
+                acr.build(dockerImage)
               }
             }
           }
-          stage("Smoke Test - AKS") {
-            testEnv(aksUrl) {
-              pl.callAround("smoketest:aks") {
-                timeout(time: 10, unit: 'MINUTES') {
-                  builder.smokeTest()
+
+          onPR {
+            if (pl.deployToAKS) {
+              withTeamSecrets(pl, params.environment) {
+                stage('Deploy to AKS') {
+                  pl.callAround('aksdeploy') {
+                    timeout(time: 15, unit: 'MINUTES') {
+                      deploymentNumber = githubCreateDeployment()
+
+                      aksUrl = aksDeploy(dockerImage, params)
+                      log.info("deployed component URL: ${aksUrl}")
+                      
+                      githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                    }
+                  }
                 }
               }
             }
           }
+        }
+      }
+    }
 
-          def environment = subscription == 'nonprod' ? 'preview' : 'saat'
-
-          onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - AKS") {
+    onPR {
+      if (pl.deployToAKS) {
+        withSubscription(subscription) {
+          withTeamSecrets(pl, params.environment) {
+            stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
-                pl.callAround("functionalTest:${environment}") {
-                  timeout(time: 40, unit: 'MINUTES') {
-                    builder.functionalTest()
+                pl.callAround("smoketest:aks") {
+                  timeout(time: 10, unit: 'MINUTES') {
+                    builder.smokeTest()
+                  }
+                }
+              }
+            }
+
+            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+
+            onFunctionalTestEnvironment(environment) {
+              stage("Functional Test - AKS") {
+                testEnv(aksUrl) {
+                  pl.callAround("functionalTest:${environment}") {
+                    timeout(time: 40, unit: 'MINUTES') {
+                      builder.functionalTest()
+                    }
                   }
                 }
               }

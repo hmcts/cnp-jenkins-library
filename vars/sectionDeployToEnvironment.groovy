@@ -66,7 +66,7 @@ def call(params) {
 
   lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
     stage("Build Infrastructure - ${environment}") {
-      onPR {
+      onPreview {
         deploymentNumber = githubCreateDeployment()
       }
 
@@ -103,7 +103,7 @@ def call(params) {
             deployer.deploy(environment)
             deployer.healthCheck(environment, "staging")
 
-            onPR {
+            onPreview {
               githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
             }
           }
@@ -121,7 +121,7 @@ def call(params) {
       ]) {
         stage("Smoke Test - ${environment} (staging slot)") {
           testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-            pl.callAround("smoketest:${environment}") {
+            pl.callAround("smoketest:${environment}-staging") {
               timeout(time: 10, unit: 'MINUTES') {
                 builder.smokeTest()
               }
@@ -188,7 +188,7 @@ def call(params) {
                 sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
                 deployer.healthCheck(environment, "production")
 
-                onPR {
+                onPreview {
                   githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
                 }
               }
@@ -198,7 +198,7 @@ def call(params) {
 
         stage("Smoke Test - ${environment} (production slot)") {
           testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
-            pl.callAround("smokeTest:${environment}") {
+            pl.callAround("smoketest:${environment}") {
               timeout(time: 10, unit: 'MINUTES') {
                 builder.smokeTest()
               }

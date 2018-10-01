@@ -15,6 +15,10 @@ class GradleBuilder extends AbstractBuilder {
     steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
   }
 
+  def addInitScript() {
+    steps.writeFile(file: 'init.gradle', text: steps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
+  }
+
   def test() {
     try {
       gradle("--info check")
@@ -84,12 +88,12 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def addVersionInfo() {
+    addInitScript()
     steps.sh '''
 mkdir -p src/main/resources/META-INF
-echo "allprojects { task printVersionInit { doLast { println project.version } } }" > init.gradle
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
-build.version=$(./gradlew --init-script init.gradle -q :printVersionInit)
+build.version=$(./gradlew --no-daemon --init-script init.gradle -q :printVersionInit)
 build.number=${BUILD_NUMBER}
 build.commit=$(git rev-parse HEAD)
 build.date=$(date)
@@ -99,7 +103,8 @@ EOF
   }
 
   def gradle(String task) {
-    steps.sh("./gradlew ${task}")
+    addInitScript()
+    steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
   def fullFunctionalTest() {
@@ -114,7 +119,7 @@ EOF
     def dbPort = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PORT' --query value -o tsv"
     def dbUser = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv"
 
-    gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}?ssl=true' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
+    gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}?ssl=true&sslmode=require' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
   }
 
 }

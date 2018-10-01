@@ -51,4 +51,5 @@ class SubscriptionTest extends Specification {
     then:
     assert subscription.nonProdName == "snonprod"
   }
+
 }
