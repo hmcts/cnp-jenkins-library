@@ -45,7 +45,7 @@ def call(DockerImage dockerImage, Map params) {
     kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
     // Get the IP of the Traefik Ingress Controller
-    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik-1", "kube-system")
+    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
     registerConsulDns(subscription, aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
