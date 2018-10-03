@@ -107,11 +107,21 @@ class KubectlTest extends Specification {
   def "getServiceLoadbalancerIP() return IP address with initialisation"() {
     when:
       kubectl = Spy(Kubectl, constructorArgs:[steps, SUBSCRIPTION, NAMESPACE])
-      kubectl.getService('custard-recipe-backend-ilb') >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonWithIP()]
+      kubectl.getService('custard-recipe-backend-ilb', NAMESPACE) >>> [getServiceJsonWithUninitialisedILB(), getServiceJsonWithIP()]
       def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb')
 
     then:
       assertThat(ip).isEqualTo('172.15.4.97')
+  }
+
+  def "getServiceLoadbalancerIP(name, namespace) return IP address"() {
+    when:
+    kubectl = Spy(Kubectl, constructorArgs:[steps, SUBSCRIPTION, NAMESPACE])
+    kubectl.getService('custard-recipe-backend-ilb', NAMESPACE) >> [getServiceJsonWithIP()]
+    def ip = kubectl.getServiceLoadbalancerIP('custard-recipe-backend-ilb', NAMESPACE)
+
+    then:
+    assertThat(ip).isEqualTo('172.15.4.97')
   }
 
   def getServiceJsonWithIP(){ ''' \

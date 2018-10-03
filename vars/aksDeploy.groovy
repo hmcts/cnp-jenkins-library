@@ -14,9 +14,9 @@ def call(DockerImage dockerImage, Map params) {
 
   def digestName = dockerImage.getDigestName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
-
-  env.AKS_DOMAIN = "aks-internal.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+  def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+  def serviceFqdn = "${aksServiceName}.${aksDomain}"
+  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
 
   withEnv(templateEnvVars) {
 
@@ -44,8 +44,12 @@ def call(DockerImage dockerImage, Map params) {
     sh "envsubst < ${kubeResourcesDir}/deployment.template.yaml > ${kubeResourcesDir}/deployment.yaml"
     kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
-    env.AKS_TEST_URL = "http://${env.AKS_DOMAIN}/${env.SERVICE_NAME}"
-    echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
+    // Get the IP of the Traefik Ingress Controller
+    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik-1", "kube-system")
+    registerConsulDns(subscription, env.SERVICE_FQDN, ingressIP)
+
+    env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
+    echo "Your AKS service can be reached at: ${env.SERVICE_FQDN}"
 
     addGithubLabels()
 
