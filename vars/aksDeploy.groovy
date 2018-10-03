@@ -16,6 +16,8 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
 
+  env.AKS_DOMAIN = "aks-internal.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+
   withEnv(templateEnvVars) {
 
     def kubectl = new Kubectl(this, subscription, aksServiceName)
@@ -42,10 +44,7 @@ def call(DockerImage dockerImage, Map params) {
     sh "envsubst < ${kubeResourcesDir}/deployment.template.yaml > ${kubeResourcesDir}/deployment.yaml"
     kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
-    env.SERVICE_IP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
-    registerConsulDns(subscription, env.SERVICE_NAME, env.SERVICE_IP)
-
-    env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+    env.AKS_TEST_URL = "http://${env.AKS_DOMAIN}/${env.SERVICE_NAME}"
     echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
     addGithubLabels()
@@ -59,11 +58,8 @@ def call(DockerImage dockerImage, Map params) {
 }
 
 def addGithubLabels() {
-
   def namespaceLabel   = 'ns:' + env.NAMESPACE
-  def serviceIpLabel   = 'ip:' + env.SERVICE_IP
-
-  def labels = [namespaceLabel, serviceIpLabel]
+  def labels = [namespaceLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)
