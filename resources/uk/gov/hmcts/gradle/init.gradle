@@ -1,6 +1,28 @@
 allprojects {
+  repositories {
+    maven {
+      url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+    }
+  }
+  buildscript {
+    repositories {
+      maven {
+        url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+      }
+    }
+  }
+
   task printVersionInit {
     doLast { println project.version }
   }
 }
 
+settingsEvaluated { settings ->
+  settings.pluginManagement {
+    repositories {
+      maven {
+        url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+      }
+    }
+  }
+}
