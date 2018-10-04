@@ -51,7 +51,9 @@ def call(DockerImage dockerImage, Map params) {
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
-    addGithubLabels()
+    if (subscription != 'sandbox') {
+      addGithubLabels()
+    }
 
     def url = env.AKS_TEST_URL + '/health'
     def healthChecker = new HealthChecker(this)
