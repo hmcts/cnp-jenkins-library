@@ -59,7 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    this.az "acr build -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
+    this.az "acr build --no-logs -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
   }
 
   /**
