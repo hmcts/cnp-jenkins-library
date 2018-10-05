@@ -50,7 +50,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr build -r ${REGISTRY_NAME} -t ${IMAGE_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
+                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
