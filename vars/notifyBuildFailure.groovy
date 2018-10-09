@@ -24,6 +24,8 @@ def call(Map args = [:]) {
     channel = new SlackChannelRetriever(this).retrieve(args.channel as String, changeAuthor)
   }
 
+  echo "Notifying slack ${channel} of failure (author: ${env.CHANGE_AUTHOR})"
+
   try {
     slackSend(
       channel: channel,
