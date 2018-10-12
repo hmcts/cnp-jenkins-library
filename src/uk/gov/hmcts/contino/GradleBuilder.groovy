@@ -104,7 +104,7 @@ EOF
 
   def gradle(String task) {
     addInitScript()
-    steps.sh("./gradlew --no-daemon --init-script init.gradle --debug ${task}")
+    steps.sh("./gradlew --no-daemon --init-script init.gradle --debug --stacktrace ${task}")
   }
 
   def fullFunctionalTest() {
