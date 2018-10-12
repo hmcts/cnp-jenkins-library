@@ -51,7 +51,7 @@ def call(type, String product, String component, Closure body) {
         env.PATH = "$env.PATH:/usr/local/bin"
 
         def mirrorHost = (subscription.nonProdName == "sandbox") ? 'sandbox-artifactory' : 'artifactory'
-        env.ARTIFACT_MIRROR = "https://${mirrorHost}.platform.hmcts.net/maven-remotes"
+        env.ARTIFACT_MIRROR = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
 
         sectionBuildAndTest(pl, pipelineType.builder)
 
