@@ -1,13 +1,15 @@
+def mirrorUrl = System.getenv("ARTIFACT_MIRROR")
+
 allprojects {
   repositories {
     maven {
-      url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+      url mirrorUrl
     }
   }
   buildscript {
     repositories {
       maven {
-        url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+        url mirrorUrl
       }
     }
   }
@@ -21,7 +23,7 @@ settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
       maven {
-        url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+        url mirrorUrl
       }
     }
   }
