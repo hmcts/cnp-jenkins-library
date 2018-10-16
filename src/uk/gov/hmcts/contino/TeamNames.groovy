@@ -11,6 +11,7 @@ class TeamNames {
                       'custard':'CNP',
                       'div':'Divorce',
                       'dm':'Evidence Mment',
+                      'draft-store':'Software Engineering',
                       'em':'Evidence Mment',
                       'fees':'Fees/Pay',
                       'finrem':'Financial Remedy',
