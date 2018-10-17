@@ -33,6 +33,10 @@ class IPV4Validator {
   private static final Pattern IPV4_PATTERN = Pattern.compile(IPV4_REGEX)
 
   static boolean validate(String ipAddress) {
+    if (ipAddress == null || ipAddress.isEmpty()) {
+      return false
+    }
+
     return IPV4_PATTERN.matcher(ipAddress).matches()
   }
 }
