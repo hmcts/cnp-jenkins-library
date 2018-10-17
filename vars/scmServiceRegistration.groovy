@@ -4,6 +4,7 @@ import groovy.json.JsonBuilder
 
 import groovy.json.JsonSlurper
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -107,7 +108,7 @@ def call(environment) {
   if (!validIpAddress) {
     error "IP address for the ILB of the ASE failed validation, exiting to prevent corruption of the scm records"
   }
-  
+
 // Get details about the consul vm scale set i.e. IP address
   println "Getting consul's IP address ..."
   Request requestvmss = new Request.Builder()
