@@ -20,6 +20,13 @@ class AppServiceResolver {
       serviceHost = az "webapp list -g ${productComponentEnv} --query [].defaultHostName -o tsv"
     }
 
+    steps.echo "Retrieved hostname: ${serviceHost}"
+    try {
+      new URI("http://${serviceHost}")
+    } catch (URISyntaxException ignored) {
+      steps.error "Validation of service host from azure failed, hostname returned was: ${serviceHost}"
+    }
+
     return serviceHost
   }
 }
