@@ -80,6 +80,8 @@ def call(environment) {
       }
     }
   }
+  
+  println "The List of Web Apps are: " + webapps
 
 // Get ILB internal IP address
   println "Getting the ILB internal IP address ..."
@@ -94,7 +96,8 @@ def call(environment) {
 
   def responseilbipbody = new JsonSlurper().parseText(responseilbip.body().string())
   String ilbinternalip = responseilbipbody.internalIpAddress
-
+  
+  println "ASE ILB address is: " + ilbinternalip
 
 // Get details about the consul vm scale set i.e. IP address
   println "Getting consul's IP address ..."
