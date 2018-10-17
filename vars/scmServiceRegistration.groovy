@@ -1,16 +1,14 @@
+import groovy.json.JsonBuilder
 @Grab('com.squareup.okhttp3:okhttp:3.9.1')
 @Grab('com.squareup.okio:okio:1.13.0')
 
 import groovy.json.JsonSlurper
-import groovy.json.JsonBuilder
-import okhttp3.OkHttpClient
-import okhttp3.OkHttpClient.Builder
 import java.util.concurrent.TimeUnit
-import okhttp3.Request
-import okhttp3.Response
 import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody
-
+import okhttp3.Response
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
 crawl the infra to workout which webapps are currently deployed
@@ -27,6 +25,15 @@ class ConsulRecord {
   List Tags
   String Address
   Integer Port
+}
+
+class IPV4Validator {
+  private static final String IPV4_REGEX = /^((0|1\d?\d?|2[0-4]?\d?|25[0-5]?|[3-9]\d?)\.){3}(0|1\d?\d?|2[0-4]?\d?|25[0-5]?|[3-9]\d?)$/
+  private static final Pattern IPV4_PATTERN = Pattern.compile(IPV4_REGEX)
+
+  static boolean validate(String ipAddress) {
+    return IPV4_PATTERN.matcher(ipAddress).matches()
+  }
 }
 
 def call(environment) {
@@ -95,7 +102,12 @@ def call(environment) {
   def responseilbipbody = new JsonSlurper().parseText(responseilbip.body().string())
   String ilbinternalip = responseilbipbody.internalIpAddress
 
-
+  echo "ILB address is ${ilbinternalip}"
+  boolean validIpAddress = IPV4Validator.validate(ilbinternalip)
+  if (!validIpAddress) {
+    error "IP address for the ILB of the ASE failed validation, exiting to prevent corruption of the scm records"
+  }
+  
 // Get details about the consul vm scale set i.e. IP address
   println "Getting consul's IP address ..."
   Request requestvmss = new Request.Builder()
