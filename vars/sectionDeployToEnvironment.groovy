@@ -30,25 +30,23 @@ def collectAdditionalInfrastructureVariablesFor(subscription, product, environme
     environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
   }
   
-  if (subscription && subscription == 'hmctsDemo' && environment && environment == 'hmctsDemo') {
-    keyVault = new KeyVault(this, subscription, "infra-vault-hmctsdemo")
+  keyVault = new KeyVault(this, subscription, "infra-vault-hmctsdemo")
     
-    def hmctsdemoTenantId = keyVault.find("security-aad-tenantId")
-    if (hmctsdemoTenantId) {
-      environmentVariables.add("TF_VAR_security_aad_tenantId=${hmctsdemoTenantId}")
-    }
-
-    def hmctsdemoClientId = keyVault.find("security-aad-clientId")
-    if (hmctsdemoClientId) {
-      environmentVariables.add("TF_VAR_security_aad_clientId=${hmctsdemoClientId}")
-    }
-
-    def hmctsdemoClientSecret = keyVault.find("security-aad-clientSecret")
-    if (hmctsdemoClientSecret) {
-      environmentVariables.add("TF_VAR_security_aad_clientSecret=${hmctsdemoClientSecret}")
-    }        
+  def hmctsdemoTenantId = keyVault.find("security-aad-tenantId")
+  if (hmctsdemoTenantId) {
+    environmentVariables.add("TF_VAR_security_aad_tenantId=${hmctsdemoTenantId}")
   }
 
+  def hmctsdemoClientId = keyVault.find("security-aad-clientId")
+  if (hmctsdemoClientId) {
+    environmentVariables.add("TF_VAR_security_aad_clientId=${hmctsdemoClientId}")
+  }
+  
+  def hmctsdemoClientSecret = keyVault.find("security-aad-clientSecret")
+  if (hmctsdemoClientSecret) {
+    environmentVariables.add("TF_VAR_security_aad_clientSecret=${hmctsdemoClientSecret}")
+  }        
+  
   return environmentVariables
 }
 
