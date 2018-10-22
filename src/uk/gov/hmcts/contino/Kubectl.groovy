@@ -37,6 +37,10 @@ class Kubectl {
   }
 
   def getServiceLoadbalancerIP(String name) {
+    this.getServiceLoadbalancerIP(name, this.namespace)
+  }
+
+  def getServiceLoadbalancerIP(String name, String namespace) {
     int maxAttempts = 30
     int attemptCount = 1
     int sleepDuration = 10
@@ -47,7 +51,7 @@ class Kubectl {
       }
 
       this.steps.echo "Attempt number: ${attemptCount}"
-      def ip = getILBIP(name)
+      def ip = getILBIP(name, namespace)
 
       if (ip) {
         return ip
@@ -59,7 +63,11 @@ class Kubectl {
   }
 
   def getService(String name) {
-    execute("get service ${name}", true)
+    this.getService(name, this.namespace)
+  }
+
+  def getService(String name, String namespace) {
+    this.execute("get service ${name}", namespace, true)
   }
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
@@ -67,8 +75,8 @@ class Kubectl {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName}", returnStdout: true)
   }
 
-  private String getILBIP(String serviceName) {
-    def serviceJson = this.getService(serviceName)
+  private String getILBIP(String serviceName, String namespace) {
+    def serviceJson = this.getService(serviceName, namespace)
     this.steps.echo "Service Json: ${serviceJson}"
     def serviceObject = new JsonSlurper().parseText(serviceJson)
 
@@ -81,7 +89,11 @@ class Kubectl {
   }
 
   private Object execute(String command, boolean returnJsonOutput) {
-    kubectl command,"-n ${this.namespace}",
+    this.execute(command, this.namespace, returnJsonOutput)
+  }
+
+  private Object execute(String command, String namespace, boolean returnJsonOutput) {
+    kubectl command,"-n ${namespace}",
       returnJsonOutput ? '-o json' : ""
   }
 

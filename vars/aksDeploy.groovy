@@ -14,7 +14,9 @@ def call(DockerImage dockerImage, Map params) {
 
   def digestName = dockerImage.getDigestName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}"]
+  def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+  def serviceFqdn = "${aksServiceName}.${aksDomain}"
+  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
 
   withEnv(templateEnvVars) {
 
@@ -42,13 +44,16 @@ def call(DockerImage dockerImage, Map params) {
     sh "envsubst < ${kubeResourcesDir}/deployment.template.yaml > ${kubeResourcesDir}/deployment.yaml"
     kubectl.apply("${kubeResourcesDir}/deployment.yaml")
 
-    env.SERVICE_IP = kubectl.getServiceLoadbalancerIP(env.SERVICE_NAME)
-    registerConsulDns(subscription, env.SERVICE_NAME, env.SERVICE_IP)
+    // Get the IP of the Traefik Ingress Controller
+    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
+    registerConsulDns(subscription, aksServiceName, ingressIP)
 
-    env.AKS_TEST_URL = "http://${env.SERVICE_NAME}.${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
-    echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
+    env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
+    echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
-    addGithubLabels()
+    if (subscription != 'sandbox') {
+      addGithubLabels()
+    }
 
     def url = env.AKS_TEST_URL + '/health'
     def healthChecker = new HealthChecker(this)
@@ -59,11 +64,8 @@ def call(DockerImage dockerImage, Map params) {
 }
 
 def addGithubLabels() {
-
   def namespaceLabel   = 'ns:' + env.NAMESPACE
-  def serviceIpLabel   = 'ip:' + env.SERVICE_IP
-
-  def labels = [namespaceLabel, serviceIpLabel]
+  def labels = [namespaceLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)

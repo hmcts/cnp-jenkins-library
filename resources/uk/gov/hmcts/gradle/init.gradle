@@ -1,13 +1,16 @@
+def mirrorHost = (System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox") ? 'sandbox-artifactory' : 'artifactory'
+def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
+
 allprojects {
   repositories {
     maven {
-      url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+      url mirrorUrl
     }
   }
   buildscript {
     repositories {
       maven {
-        url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+        url mirrorUrl
       }
     }
   }
@@ -21,7 +24,7 @@ settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
       maven {
-        url "https://artifactory.reform.hmcts.net/artifactory/gradle-release"
+        url mirrorUrl
       }
     }
   }

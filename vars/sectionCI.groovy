@@ -70,7 +70,7 @@ def call(params) {
   Builder builder = pipelineType.builder
 
   if (pl.dockerBuild) {
-    withDocker('hmcts/cnp-aks-client:az-2.0.45-kubectl-1.11.2', null) {
+    withDocker('hmcts/cnp-aks-client:az-2.0.46-kubectl-1.11.3-v2', null) {
       withSubscription(subscription) {
         withRegistrySecrets {
           def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
@@ -94,7 +94,7 @@ def call(params) {
 
                       aksUrl = aksDeploy(dockerImage, params)
                       log.info("deployed component URL: ${aksUrl}")
-                      
+
                       githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
                     }
                   }
