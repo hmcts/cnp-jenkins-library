@@ -46,6 +46,7 @@ def call(String subscription, Closure body) {
                "TF_VAR_secret_access_key=${subscriptionCredValues.azure_client_secret}",
                "TF_VAR_tenant_id=${subscriptionCredValues.azure_tenant_id}",
                "TF_VAR_subscription_id=${subscriptionCredValues.azure_subscription}",
+               "TF_VAR_mgmt_subscription_id=${JENKINS_SUBSCRIPTION_ID}",
                "TF_VAR_token=${subscriptionCredValues.azure_tenant_id}",
                // other variables
                "TOKEN=${subscriptionCredValues.azure_tenant_id}",
