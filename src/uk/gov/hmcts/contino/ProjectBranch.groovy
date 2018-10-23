@@ -22,7 +22,7 @@ class ProjectBranch implements Serializable {
   }
   
   boolean isHMCTSDemo() {
-    branchName == 'demo'
+    branchName == 'hmctsdemo'
   }
 
   String deploymentNamespace() {
