@@ -88,6 +88,10 @@ class Kubectl {
     return serviceObject.status.loadBalancer.ingress[0].ip
   }
 
+  def getSecret(String name, String namespace, String jsonPath) {
+    this.executeAndExtract("get secret ${name}", namespace, jsonPath)
+  }
+
   private Object execute(String command, boolean returnJsonOutput) {
     this.execute(command, this.namespace, returnJsonOutput)
   }
@@ -95,6 +99,10 @@ class Kubectl {
   private Object execute(String command, String namespace, boolean returnJsonOutput) {
     kubectl command,"-n ${namespace}",
       returnJsonOutput ? '-o json' : ""
+  }
+
+  private Object executeAndExtract(String command, String namespace, String jsonPath) {
+    kubectl command,"-n ${namespace}", "-o json -o=jsonpath={" + jsonPath +"}"
   }
 
 }
