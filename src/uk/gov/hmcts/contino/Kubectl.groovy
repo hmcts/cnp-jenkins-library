@@ -90,7 +90,7 @@ class Kubectl {
 
   def getSecret(String name, String namespace, String jsonPath) {
     def secretBase64 = this.executeAndExtract("get secret ${name}", namespace, jsonPath)
-    return secretBase64?.decodeBase64()
+    return secretBase64 == null ? null : new String(secretBase64.decodeBase64())
   }
 
   private Object execute(String command, boolean returnJsonOutput) {
