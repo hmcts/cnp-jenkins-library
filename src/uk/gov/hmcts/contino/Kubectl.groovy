@@ -102,7 +102,7 @@ class Kubectl {
   }
 
   private Object executeAndExtract(String command, String namespace, String jsonPath) {
-    kubectl command,"-n ${namespace}", "-o json -o=jsonpath={" + jsonPath +"}"
+    kubectl command,"-n ${namespace}", "-o json -o=jsonpath=" + jsonPath
   }
 
 }
