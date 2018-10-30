@@ -19,6 +19,10 @@ class TeamNames {
                       'idam':'IdAM',
                       'payment':'Fees/Pay',
                       'rpe':'Software Engineering',
+                      'jui': 'Professional Applications',
+                      'pui': 'Professional Applications',
+                      'coh': 'Professional Applications',
+                      'rpa': 'Professional Applications',
                       'rhubarb':'CNP',
                       'sscs':'SSCS']
 
