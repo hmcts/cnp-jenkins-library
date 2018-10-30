@@ -19,6 +19,7 @@ class TeamNames {
                       'ia':'Immigration',
                       'idam':'IdAM',
                       'payment':'Fees/Pay',
+                       ccpay':'Fees/Pay',
                       'rpe':'Software Engineering',
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
