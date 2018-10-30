@@ -104,7 +104,18 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
+  
+   def "fees-register"() {
+    def productName = 'fees-register'
+    def expected = 'Fees/Pay'
 
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  } 
+  
   def "finrem"() {
     def productName = 'finrem'
     def expected = 'Financial Remedy'
@@ -149,6 +160,17 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
 
+   def "ccpay"() {
+    def productName = 'ccpay'
+    def expected = 'Fees/Pay'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
   def "rhubarb"() {
     def productName = 'rhubarb'
     def expected = 'CNP'
@@ -181,7 +203,50 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
+  def "rpa"() {
+    def productName = 'rpa'
+    def expected = 'Professional Applications'
 
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
+    def "jui"() {
+    def productName = 'jui'
+    def expected = 'Professional Applications'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
+    def "pui"() {
+    def productName = 'pui'
+    def expected = 'Professional Applications'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
+   def "coh"() {
+    def productName = 'coh'
+    def expected = 'Professional Applications'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
   def "default"() {
     def productName = 'idontexist'
     def expected = TeamNames.DEFAULT_TEAM_NAME
