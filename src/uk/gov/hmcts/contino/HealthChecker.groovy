@@ -30,8 +30,7 @@ class HealthChecker {
           if (attemptCounter < maxAttempts) {
             steps.sleep sleepDuration
           }
-          steps.echo "Service isn’t healthy, will try up to ${maxAttempts} times"
-          throw new RuntimeException()
+          steps.error "Service isn’t healthy, will try up to ${maxAttempts} times"
         }
       }
       finally {
