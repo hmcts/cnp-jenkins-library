@@ -14,11 +14,16 @@ class TeamNames {
                       'draft-store':'Software Engineering',
                       'em':'Evidence Mment',
                       'fees':'Fees/Pay',
+                      'fees-register':'Fees/Pay',
                       'finrem':'Financial Remedy',
                       'ia':'Immigration',
                       'idam':'IdAM',
                       'payment':'Fees/Pay',
                       'rpe':'Software Engineering',
+                      'jui': 'Professional Applications',
+                      'pui': 'Professional Applications',
+                      'coh': 'Professional Applications',
+                      'rpa': 'Professional Applications',
                       'rhubarb':'CNP',
                       'sscs':'SSCS']
 
