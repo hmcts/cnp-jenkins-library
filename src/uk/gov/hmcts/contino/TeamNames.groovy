@@ -4,23 +4,26 @@ class TeamNames {
 
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
 
-  def teamNamesMap = ['bar':'Fees/Pay',
-                      'bulk-scan':'Software Engineering',
+  def teamNamesMap = [
+
                       'ccd':'CCD',
                       'cmc':'Money Claims',
                       'custard':'CNP',
                       'div':'Divorce',
                       'dm':'Evidence Mment',
-                      'draft-store':'Software Engineering',
                       'em':'Evidence Mment',
-                      'fees':'Fees/Pay',
-                      'fees-register':'Fees/Pay',
                       'finrem':'Financial Remedy',
                       'ia':'Immigration',
                       'idam':'IdAM',
+                      'fees':'Fees/Pay',
+                      'fees-register':'Fees/Pay',
                       'payment':'Fees/Pay',
                       'ccpay':'Fees/Pay',
+                      'bar':'Fees/Pay',
+                      'probate':'Probate',
+                      'bulk-scan':'Software Engineering',                  
                       'rpe':'Software Engineering',
+                      'draft-store':'Software Engineering',
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
                       'coh': 'Professional Applications',
