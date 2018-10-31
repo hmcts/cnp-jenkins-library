@@ -303,6 +303,17 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
   
+   def "ref"() {
+    def productName = 'ref'
+    def expected = 'Professional Applications'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
   def "default"() {
     def productName = 'idontexist'
     def expected = TeamNames.DEFAULT_TEAM_NAME
