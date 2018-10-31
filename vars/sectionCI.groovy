@@ -40,24 +40,6 @@ def withTeamSecrets(PipelineCallbacks pl, String environment, Closure block) {
   }
 }
 
-def withRegistrySecrets(Closure block) {
-  def registrySecrets = [
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME'],
-  ]
-
-  wrap([$class                   : 'AzureKeyVaultBuildWrapper',
-        azureKeyVaultSecrets     : registrySecrets,
-        keyVaultURLOverride      : env.INFRA_VAULT_URL,
-        applicationIDOverride    : env.AZURE_CLIENT_ID,
-        applicationSecretOverride: env.AZURE_CLIENT_SECRET
-  ]) {
-    block.call()
-  }
-}
-
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
   PipelineType pipelineType = params.pipelineType
@@ -70,34 +52,30 @@ def call(params) {
   Builder builder = pipelineType.builder
 
   if (pl.dockerBuild) {
-    withDocker('hmcts/cnp-aks-client:az-2.0.46-kubectl-1.11.3-v2', null) {
-      withSubscription(subscription) {
-        withRegistrySecrets {
-          def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-          def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
+    withAksClient(subscription) {
+      def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+      def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
-          stage('Docker Build') {
-            pl.callAround('dockerbuild') {
-              timeout(time: 15, unit: 'MINUTES') {
-                acr.build(dockerImage)
-              }
-            }
+      stage('Docker Build') {
+        pl.callAround('dockerbuild') {
+          timeout(time: 15, unit: 'MINUTES') {
+            acr.build(dockerImage)
           }
+        }
+      }
 
-          onPR {
-            if (pl.deployToAKS) {
-              withTeamSecrets(pl, params.environment) {
-                stage('Deploy to AKS') {
-                  pl.callAround('aksdeploy') {
-                    timeout(time: 15, unit: 'MINUTES') {
-                      deploymentNumber = githubCreateDeployment()
+      onPR {
+        if (pl.deployToAKS) {
+          withTeamSecrets(pl, params.environment) {
+            stage('Deploy to AKS') {
+              pl.callAround('aksdeploy') {
+                timeout(time: 15, unit: 'MINUTES') {
+                  deploymentNumber = githubCreateDeployment()
 
-                      aksUrl = aksDeploy(dockerImage, params)
-                      log.info("deployed component URL: ${aksUrl}")
+                  aksUrl = aksDeploy(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
 
-                      githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-                    }
-                  }
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
                 }
               }
             }
