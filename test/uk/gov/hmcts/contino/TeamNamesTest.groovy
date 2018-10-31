@@ -74,7 +74,7 @@ class TeamNamesTest extends Specification {
 
   def "dm"() {
     def productName = 'dm'
-    def expected = 'CCD/DM'
+    def expected = 'CCD'
 
     when:
     def teamName = new TeamNames().getName(productName)
