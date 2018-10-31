@@ -204,6 +204,40 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
   
+    def "sscs-tya"() {
+    def productName = 'sscs-tya'
+    def expected = 'SSCS'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+ 
+    def "sscs-tribunals"() {
+    def productName = 'sscs-tribunals'
+    def expected = 'SSCS'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+ 
+    def "sscs-cor"() {
+    def productName = 'sscs-cor'
+    def expected = 'SSCS'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
+  sscs-cor
   
   def "snl"() {
     def productName = 'snl'
