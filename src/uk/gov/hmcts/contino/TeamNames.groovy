@@ -29,7 +29,9 @@ class TeamNames {
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
                       'rhubarb':'CNP',
-                      'sscs':'SSCS']
+                      'sscs':'SSCS',
+                      'snl':'SnL'
+  ]
 
   def getName (String product) {
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
