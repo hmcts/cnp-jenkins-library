@@ -10,7 +10,7 @@ class TeamNames {
                       'cmc':'Money Claims',
                       'custard':'CNP',
                       'div':'Divorce',
-                      'dm':'Evidence Mment',
+                      'dm':'CCD',
                       'em':'Evidence Mment',
                       'finrem':'Financial Remedy',
                       'ia':'Immigration',
