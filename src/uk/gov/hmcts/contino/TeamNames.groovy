@@ -30,6 +30,9 @@ class TeamNames {
                       'rpa': 'Professional Applications',
                       'rhubarb':'CNP',
                       'sscs':'SSCS',
+                      'sscs-cor':'SSCS',
+                      'sscs-tya':'SSCS',
+                      'sscs-tribunals':'SSCS',
                       'snl':'SnL'
   ]
 
