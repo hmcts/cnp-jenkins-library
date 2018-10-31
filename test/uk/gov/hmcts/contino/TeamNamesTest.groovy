@@ -39,6 +39,19 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
 
+  def "cet"() {
+    def productName = 'cet'
+    def expected = 'Civil Enforcement'
+
+    when:
+    def teamName = new TeamNames().getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+  
+  
+  
   def "cmc"() {
     def productName = 'cmc'
     def expected = 'Money Claims'
