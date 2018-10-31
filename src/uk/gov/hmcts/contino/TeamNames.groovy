@@ -28,6 +28,7 @@ class TeamNames {
                       'pui': 'Professional Applications',
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
+                      'ref': 'Professional Applications',
                       'rhubarb':'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
