@@ -74,7 +74,7 @@ class TeamNamesTest extends Specification {
 
   def "dm"() {
     def productName = 'dm'
-    def expected = 'Evidence Mment'
+    def expected = 'CCD'
 
     when:
     def teamName = new TeamNames().getName(productName)
@@ -237,7 +237,6 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
   
-  sscs-cor
   
   def "snl"() {
     def productName = 'snl'
