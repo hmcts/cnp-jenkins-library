@@ -10,7 +10,7 @@ class TeamNames {
                       'cmc':'Money Claims',
                       'custard':'CNP',
                       'div':'Divorce',
-                      'dm':'CCD/DM',
+                      'dm':'CCD',
                       'draft-store':'Software Engineering',
                       'em':'Evidence Mment',
                       'fees':'Fees/Pay',
