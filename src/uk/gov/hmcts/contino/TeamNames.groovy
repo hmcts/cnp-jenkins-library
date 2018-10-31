@@ -9,6 +9,7 @@ class TeamNames {
                       'ccd':'CCD',
                       'cmc':'Money Claims',
                       'custard':'CNP',
+                      'cet': 'Civil Enforcement',
                       'div':'Divorce',
                       'dm':'CCD',
                       'em':'Evidence Mment',
