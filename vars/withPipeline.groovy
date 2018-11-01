@@ -88,6 +88,16 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
         }
+        
+        onHMCTSDemo {
+          sectionDeployToEnvironment(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.hmctsDemoName,
+            environment: environment.hmctsDemoName,
+            product: product,
+            component: component)
+        }
 
         onPreview {
           sectionDeployToEnvironment(
