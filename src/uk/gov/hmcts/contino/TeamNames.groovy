@@ -4,23 +4,39 @@ class TeamNames {
 
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
 
-  def teamNamesMap = ['bar':'Fees/Pay',
-                      'bulk-scan':'Software Engineering',
+  def teamNamesMap = [
+
                       'ccd':'CCD',
                       'cmc':'Money Claims',
                       'custard':'CNP',
+                      'cet': 'Civil Enforcement',
                       'div':'Divorce',
-                      'dm':'Evidence Mment',
-                      'draft-store':'Software Engineering',
+                      'dm':'CCD',
                       'em':'Evidence Mment',
-                      'fees':'Fees/Pay',
                       'finrem':'Financial Remedy',
                       'ia':'Immigration',
                       'idam':'IdAM',
+                      'fees':'Fees/Pay',
+                      'fees-register':'Fees/Pay',
                       'payment':'Fees/Pay',
+                      'ccpay':'Fees/Pay',
+                      'bar':'Fees/Pay',
+                      'probate':'Probate',
+                      'bulk-scan':'Software Engineering',                  
                       'rpe':'Software Engineering',
+                      'draft-store':'Software Engineering',
+                      'jui': 'Professional Applications',
+                      'pui': 'Professional Applications',
+                      'coh': 'Professional Applications',
+                      'rpa': 'Professional Applications',
+                      'ref': 'Professional Applications',
                       'rhubarb':'CNP',
-                      'sscs':'SSCS']
+                      'sscs':'SSCS',
+                      'sscs-cor':'SSCS',
+                      'sscs-tya':'SSCS',
+                      'sscs-tribunals':'SSCS',
+                      'snl':'SnL'
+  ]
 
   def getName (String product) {
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
