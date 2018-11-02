@@ -92,4 +92,36 @@ class EnvironmentTest extends Specification {
     then:
     assert environment.previewName == "previewv2"
   }
+
+  def "default hmctsdemo environment"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused"])
+
+    then:
+    assert environment.hmctsDemoName == "hmctsdemo"
+  }
+
+  def "overrride hmctsdemo environment"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused", "HMCTSDEMO_ENVIRONMENT_NAME": "hmctsdemooverride"])
+
+    then:
+    assert environment.hmctsDemoName == "hmctsdemooverride"
+  }
+
+  def "overrride hmctsdemo environment with suffix"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused", "HMCTSDEMO_ENVIRONMENT_NAME": "hmctsdemooverride", "ENV_SUFFIX": "v2"])
+
+    then:
+    assert environment.hmctsDemoName == "hmctsdemooverridev2"
+  }
+
+  def "environment suffix is applied to default hmctsdemo environment"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused", "ENV_SUFFIX": "v2"])
+
+    then:
+    assert environment.hmctsDemoName == "hmctsdemov2"
+  }
 }
