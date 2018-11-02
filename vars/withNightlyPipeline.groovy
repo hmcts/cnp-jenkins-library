@@ -36,8 +36,7 @@ def call(type,product,component,Closure body) {
     try {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
-        def environment = "$env.environment"
-        sectionNightlyTests(pl, pipelineType, environment)
+        sectionNightlyTests(pl, pipelineType)
         assert  pipelineType!= null
       }
     }

@@ -3,9 +3,9 @@ import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 
 
-def call(PipelineCallbacks pl, PipelineType pipelineType, environment) {
+def call(PipelineCallbacks pl, PipelineType pipelineType) {
 
-  withTeamSecrets(pl, environment) {
+  withTeamSecrets(pl) {
     Builder builder = pipelineType.builder
 
     stage('Checkout') {
@@ -103,13 +103,12 @@ def call(PipelineCallbacks pl, PipelineType pipelineType, environment) {
 }
 
 
-def withTeamSecrets(PipelineCallbacks pl, String environment, Closure block) {
+def withTeamSecrets(PipelineCallbacks pl, Closure block) {
   def keyvaultUrl = null
 
   if (pl.vaultSecrets?.size() > 0) {
     if (pl.vaultName) {
-      def projectKeyvaultName = pl.vaultName + '-' + environment
-      keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
+      keyvaultUrl = "https://${pl.vaultName}.vault.azure.net/"
     } else {
       error "Please set vault name `setVaultName(${pl.vaultName})` if loading vault secrets"
     }
