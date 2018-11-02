@@ -57,7 +57,7 @@ def call(DockerImage dockerImage, Map params) {
 
     def url = env.AKS_TEST_URL + '/health'
     def healthChecker = new HealthChecker(this)
-    healthChecker.check(url, 10, 30)
+    healthChecker.check(url, 10, 40)
 
     return env.AKS_TEST_URL
   }
