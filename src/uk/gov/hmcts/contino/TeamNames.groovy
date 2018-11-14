@@ -22,7 +22,7 @@ class TeamNames {
                       'ccpay':'Fees/Pay',
                       'bar':'Fees/Pay',
                       'probate':'Probate',
-                      'bulk-scan':'Software Engineering',                  
+                      'bulk-scan':'Software Engineering',
                       'rpe':'Software Engineering',
                       'draft-store':'Software Engineering',
                       'jui': 'Professional Applications',
@@ -39,6 +39,13 @@ class TeamNames {
   ]
 
   def getName (String product) {
+    if (product.startsWith('pr-')) {
+      product = getRawProductName(product)
+    }
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
+  }
+  
+  def getRawProductName (String product) {
+    return product.split('pr-(\\d+)-')[1];
   }
 }
