@@ -39,6 +39,14 @@ class TeamNames {
   ]
 
   def getName (String product) {
+    if (product.startsWith('pr-')
+        {
+          product = getRawProductName(product)
+        }
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
+  }
+  
+  def getRawProductName (String product) {
+    return product.split('pr-(\\d+)-');
   }
 }
