@@ -34,7 +34,7 @@ and NodeJS applications. The pipeline contains the following stages:
 * Smoke Tests - Production
 * (Optional) API (gateway) Tests - Production
 
-In this version, Java apps must be use Gradle for builds and contain the `gradlew` wrapper
+In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
 
 Example `Jenkinsfile` to use the opinionated pipeline:
