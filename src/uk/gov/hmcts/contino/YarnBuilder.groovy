@@ -7,7 +7,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def build() {
-    yarn("--mutex network install")
+    yarn("--mutex network install --frozen-lockfile")
     yarn("lint")
 
     addVersionInfo()
