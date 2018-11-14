@@ -39,7 +39,7 @@ class TeamNames {
   ]
 
   def getName (String product) {
-    if (product.startsWith('pr-')
+    if (product.startsWith('pr-'))
         {
           product = getRawProductName(product)
         }
