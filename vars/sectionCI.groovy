@@ -58,7 +58,7 @@ def call(params) {
 
       stage('Docker Build') {
         pl.callAround('dockerbuild') {
-          timeout(time: 15, unit: 'MINUTES') {
+          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
             acr.build(dockerImage)
           }
         }
@@ -69,7 +69,7 @@ def call(params) {
           withTeamSecrets(pl, params.environment) {
             stage('Deploy to AKS') {
               pl.callAround('aksdeploy') {
-                timeout(time: 15, unit: 'MINUTES') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
                   deploymentNumber = githubCreateDeployment()
 
                   aksUrl = aksDeploy(dockerImage, params)
@@ -91,7 +91,7 @@ def call(params) {
             stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
                 pl.callAround("smoketest:aks") {
-                  timeout(time: 10, unit: 'MINUTES') {
+                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                     builder.smokeTest()
                   }
                 }
@@ -104,7 +104,7 @@ def call(params) {
               stage("Functional Test - AKS") {
                 testEnv(aksUrl) {
                   pl.callAround("functionalTest:${environment}") {
-                    timeout(time: 40, unit: 'MINUTES') {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
                       builder.functionalTest()
                     }
                   }

@@ -12,7 +12,7 @@ def call(PipelineCallbacks pl, Builder builder) {
 
   stage("Build") {
     pl.callAround('build') {
-      timeout(time: 15, unit: 'MINUTES') {
+      timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
         builder.build()
       }
     }
@@ -20,7 +20,7 @@ def call(PipelineCallbacks pl, Builder builder) {
 
   stage("Test") {
     pl.callAround('test') {
-      timeout(time: 20, unit: 'MINUTES') {
+      timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
         builder.test()
       }
     }
@@ -39,7 +39,7 @@ def call(PipelineCallbacks pl, Builder builder) {
           builder.sonarScan()
         }
 
-        timeout(time: 15, unit: 'MINUTES') {
+        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Sonar Scan') {
           def qg = waitForQualityGate()
           if (qg.status != 'OK') {
             error "Pipeline aborted due to quality gate failure: ${qg.status}"

@@ -17,7 +17,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
 
     stage("Build") {
       pl.callAround('build') {
-        timeout(time: 15, unit: 'MINUTES') {
+        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
           builder.build()
         }
       }
@@ -26,7 +26,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
     try {
       stage('DependencyCheckNightly') {
         pl.callAround('DependencyCheckNightly') {
-          timeout(time: 15, unit: 'MINUTES') {
+          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Dependency check') {
             builder.securityCheck()
           }
         }
@@ -40,7 +40,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       try {
         stage("crossBrowserTest") {
           pl.callAround('crossBrowserTest') {
-            timeout(time: pl.crossBrowserTestTimeout, unit: 'MINUTES') {
+            timeoutWithMsg(time: pl.crossBrowserTestTimeout, unit: 'MINUTES', action: 'cross browser test') {
               builder.crossBrowserTest()
             }
           }
@@ -56,7 +56,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       try {
         stage("performanceTest") {
           pl.callAround('PerformanceTest') {
-            timeout(time: pl.perfTestTimeout, unit: 'MINUTES') {
+            timeoutWithMsg(time: pl.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
             }
           }
@@ -71,7 +71,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       try {
         stage('mutationTest') {
           pl.callAround('mutationTest') {
-            timeout(time: pl.mutationTestTimeout, unit: 'MINUTES') {
+            timeoutWithMsg(time: pl.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
               builder.mutationTest()
             }
           }
@@ -87,7 +87,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       try {
         stage('fullFunctionalTest') {
           pl.callAround('fullFunctionalTest') {
-            timeout(time: pl.fullFunctionalTestTimeout, unit: 'MINUTES') {
+            timeoutWithMsg(time: pl.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
               builder.fullFunctionalTest()
             }
           }
