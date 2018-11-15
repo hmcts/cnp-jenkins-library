@@ -40,7 +40,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       try {
         stage("crossBrowserTest") {
           pl.callAround('crossBrowserTest') {
-            timeoutWithMsg(time: pl.crossBrowserTestTimeout, unit: 'MINUTES', action: 'cross browser test') {
+            timeoutWithMsg(time: pl.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
               builder.crossBrowserTest()
             }
           }
