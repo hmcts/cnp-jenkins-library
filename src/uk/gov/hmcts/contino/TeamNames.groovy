@@ -31,6 +31,7 @@ class TeamNames {
                       'rpa': 'Professional Applications',
                       'ref': 'Professional Applications',
                       'rhubarb':'CNP',
+                      'rhubarb-shared-infrastructure' : 'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
                       'sscs-tya':'SSCS',
