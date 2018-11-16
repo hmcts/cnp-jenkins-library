@@ -25,6 +25,7 @@ class TeamNames {
                       'bulk-scan':'Software Engineering',
                       'rpe':'Software Engineering',
                       'draft-store':'Software Engineering',
+                      'pbi':'Software Engineering',
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
                       'coh': 'Professional Applications',
