@@ -55,7 +55,7 @@ if [ -z "${__saState}" ] ; then
           --resource-group $__rg \
           --sku Standard_LRS \
           --encryption-services blob \
-          --kind Storage \
+          --kind StorageV2 \
           --location $__location
     else
         echo -e "${__message} \t ${__reason}"
