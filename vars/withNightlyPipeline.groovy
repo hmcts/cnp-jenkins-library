@@ -37,7 +37,7 @@ def call(type,product,component,Closure body) {
       node {
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscription(subscription.nonProdName) {
-          sectionNightlyTests(pl, pipelineType, subscription)
+          sectionNightlyTests(pl, pipelineType)
         }
         assert  pipelineType!= null
       }
