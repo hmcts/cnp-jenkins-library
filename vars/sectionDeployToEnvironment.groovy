@@ -67,7 +67,7 @@ def call(params) {
         withSubscription(subscription) {
           dir('infrastructure') {
             pl.callAround("buildinfra:${environment}") {
-              timeout(time: 120, unit: 'MINUTES') {
+              timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
                 withIlbIp(environment) {
                   def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
                   withEnv(additionalInfrastructureVariables) {
@@ -92,7 +92,7 @@ def call(params) {
     stage("Deploy - ${environment} (staging slot)") {
       withSubscription(subscription) {
         pl.callAround("deploy:${environment}") {
-          timeout(time: 30, unit: 'MINUTES') {
+          timeoutWithMsg(time: 30, unit: 'MINUTES', action: "Deploy - ${environment} (staging slot)") {
             deployer.deploy(environment)
             deployer.healthCheck(environment, "staging")
 
@@ -115,7 +115,7 @@ def call(params) {
         stage("Smoke Test - ${environment} (staging slot)") {
           testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
             pl.callAround("smoketest:${environment}-staging") {
-              timeout(time: 10, unit: 'MINUTES') {
+              timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'smoke test') {
                 builder.smokeTest()
               }
             }
@@ -126,7 +126,7 @@ def call(params) {
           stage("Functional Test - ${environment} (staging slot)") {
             testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
               pl.callAround("functionalTest:${environment}") {
-                timeout(time: 40, unit: 'MINUTES') {
+                timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
                   builder.functionalTest()
                 }
               }
@@ -136,7 +136,7 @@ def call(params) {
             stage("Performance Test - ${environment} (staging slot)") {
               testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
                 pl.callAround("performanceTest:${environment}") {
-                  timeout(time: 120, unit: 'MINUTES') {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                     builder.performanceTest()
                     publishPerformanceReports(this, params)
                   }
@@ -177,7 +177,7 @@ def call(params) {
         stage("Promote - ${environment} (staging -> production slot)") {
           withSubscription(subscription) {
             pl.callAround("promote:${environment}") {
-              timeout(time: 15, unit: 'MINUTES') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: "Promote - ${environment} (staging -> production slot)") {
                 sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
                 deployer.healthCheck(environment, "production")
 
@@ -192,7 +192,7 @@ def call(params) {
         stage("Smoke Test - ${environment} (production slot)") {
           testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
             pl.callAround("smoketest:${environment}") {
-              timeout(time: 10, unit: 'MINUTES') {
+              timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke test (prod slot)') {
                 builder.smokeTest()
               }
             }
@@ -204,7 +204,7 @@ def call(params) {
             stage("API Gateway Test - ${environment} (production slot)") {
               testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
                 pl.callAround("apiGatewayTest:${environment}") {
-                  timeout(time: pl.apiGatewayTestTimeout, unit: 'MINUTES') {
+                  timeoutWithMsg(time: pl.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environment} (production slot)") {
                     builder.apiGatewayTest()
                   }
                 }
