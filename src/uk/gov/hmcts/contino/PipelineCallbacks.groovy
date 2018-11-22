@@ -8,6 +8,7 @@ class PipelineCallbacks implements Serializable {
   String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
+  List<String> charts
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
@@ -15,6 +16,7 @@ class PipelineCallbacks implements Serializable {
   boolean mutationTest = false
   boolean dockerBuild = false
   boolean deployToAKS = false
+  boolean installCharts = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout
@@ -113,6 +115,13 @@ class PipelineCallbacks implements Serializable {
 
   void enableDeployToAKS() {
     this.deployToAKS = true
+    this.installCharts = false
+  }
+
+  void installCharts(List<String> charts) {
+    this.installCharts = true
+    this.deployToAKS = false
+    this.charts = charts
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
