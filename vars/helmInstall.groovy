@@ -25,7 +25,6 @@ def call(DockerImage dockerImage, Map params) {
     kubectl.login()
 
     kubectl.createNamespace(env.NAMESPACE)
-    kubectl.deleteDeployment(aksServiceName)
 
     def helm = new Helm(this)
     def values = []
@@ -54,7 +53,7 @@ def call(DockerImage dockerImage, Map params) {
       values << "${helmResourcesDir}/values.${environment}.yaml"
     }
 
-    helm.install(values)
+    helm.installOrUpgrade(values)
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")

@@ -15,8 +15,8 @@ class Helm {
     this.steps.sh(returnStatus: true, script: "helm init --client-only")
   }
 
-  def install(String name, List<String> values) {
-    this.execute("install", name, values)
+  def installOrUpgrade(String name, List<String> values) {
+    this.execute("upgrade", name, values, ["--install"])
   }
 
   private Object execute(String command, String name, List<String> values) {
