@@ -33,7 +33,8 @@ def call(PipelineCallbacks pl, Builder builder) {
   }
 
   stage("Sonar Scan") {
-    pl.callAround('sonarscan') {
+    /* 20181122 - sonar timing out so temporarily disabling
+      pl.callAround('sonarscan') {
       pluginActive('sonar') {
         withSonarQubeEnv("SonarQube") {
           builder.sonarScan()
@@ -46,7 +47,7 @@ def call(PipelineCallbacks pl, Builder builder) {
           }
         }
       }
-    }
+    } */
   }
 
 }
