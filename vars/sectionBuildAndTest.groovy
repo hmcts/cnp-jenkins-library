@@ -31,7 +31,7 @@ def call(PipelineCallbacks pl, Builder builder) {
       builder.securityCheck()
     }
   }
-
+/* 20181122 - sonar timing out so temporarily disabling
   stage("Sonar Scan") {
     pl.callAround('sonarscan') {
       pluginActive('sonar') {
@@ -47,6 +47,6 @@ def call(PipelineCallbacks pl, Builder builder) {
         }
       }
     }
-  }
+  }*/
 
 }
