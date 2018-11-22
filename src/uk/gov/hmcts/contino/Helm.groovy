@@ -15,8 +15,20 @@ class Helm {
     this.steps.sh(returnStatus: true, script: "helm init --client-only")
   }
 
-  def installOrUpgrade(String name, List<String> values) {
-    this.execute("upgrade", name, values, ["--install"])
+  def installOrUpgradeMulti(List<String> names, List<String> values, List<String> options) {
+    def allOptions = ["--install"] + (options == null ? [] : options)
+    if (names.size() != values.size()) {
+      throw new RuntimeException("Helm charts size (${names.size()}) != values size (${values.size()}).")
+    }
+    // zip chart name + values files and execute
+    [names, values].transpose().each { nv ->
+      this.execute("upgrade", nv[0], nv[1..-1], allOptions)
+    }
+  }
+
+  def installOrUpgrade(String name, List<String> values, List<String> options) {
+    def allOptions = ["--install"] + (options == null ? [] : options)
+    this.execute("upgrade", name, values, allOptions)
   }
 
   private Object execute(String command, String name, List<String> values) {

@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.GithubAPI
 
-def call(DockerImage dockerImage, Map params) {
+def call(DockerImage dockerImage, List<String> charts, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
@@ -29,31 +29,35 @@ def call(DockerImage dockerImage, Map params) {
     def helm = new Helm(this)
     def values = []
 
-    if (fileExists(helmResourcesDirDefault)) {
+    if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
       helmResourcesDir = helmResourcesDirDefault
-    } else if (fileExists(helmResourcesDirAlternate)) {
+    } else if (fileExists("${helmResourcesDirAlternate}/${charts[0]}")) {
       helmResourcesDir = helmResourcesDirAlternate
     } else {
       throw new RuntimeException("No Helm charts directory found at $helmResourcesDirDefault or $helmResourcesDirAlternate")
     }
 
-    // default values
-    def templateValues = "${helmResourcesDir}/values.template.yaml"
-    def defaultValues = "${helmResourcesDir}/values.yaml"
-    if (!fileExists(templateValues)) {
-      throw new RuntimeException("No default values template file found at.")
-    }
-    sh "envsubst < ${templateValues} > ${defaultValues}"
-    values << defaultValues
+    // default values + overrides
+    for (chart in charts) {
+      def chartValues = []
+      def templateValues = "${helmResourcesDir}/${chart}/values.template.yaml"
+      def defaultValues = "${helmResourcesDir}/${chart}/values.yaml"
+      if (!fileExists(templateValues)) {
+        throw new RuntimeException("No default values template file found at.")
+      }
+      sh "envsubst < ${templateValues} > ${defaultValues}"
+      chartValues << defaultValues
 
-    // environment specific values is optional
-    def valuesEnv = "${helmResourcesDir}/values.${environment}.template.yaml"
-    if (fileExists(valuesEnv)) {
-      sh "envsubst < ${valuesEnv} > ${helmResourcesDir}/values.${environment}.yaml"
-      values << "${helmResourcesDir}/values.${environment}.yaml"
+      // environment specific values is optional
+      def valuesEnvTemplate = "${helmResourcesDir}/${chart}/values.${environment}.template.yaml"
+      def valuesEnv = "${helmResourcesDir}/${chart}/values.${environment}.yaml"
+      if (fileExists(valuesEnvTemplate)) {
+        sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
+        chartValues << valuesEnv
+      }
+      values << chartValues
     }
-
-    helm.installOrUpgrade(values)
+    helm.installOrUpgradeMulti(charts, values)
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
