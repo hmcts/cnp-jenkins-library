@@ -45,7 +45,7 @@ class Helm {
 
   private Object execute(String command, String name, List<String> values, List<String> options) {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
-    def valuesStr = "${' -f ' + values.join(' -f ')}"
+    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${optionsStr} ${valuesStr}"
   }
 
