@@ -19,11 +19,13 @@ class Helm {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
     // debug log
-    this.steps.echo "env"
     this.steps.echo "subscription: ${subscription} - subscriptionId: ${subscriptionId.substring(0, subscriptionId.length() -1)} - acr: ${acr.substring(0, acr.length() -1)}"
-    this.steps.sh(script: "helm repo list", returnStdout: true)
-    this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm list --name ${acr}", returnStdout: true)
+    def repos = this.steps.sh(script: "helm repo list", returnStdout: true)
+    this.steps.echo "${repos}"
+    def search = this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
+    this.steps.echo "${search}"
+    def list = this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm list --name ${acr}", returnStdout: true)
+    this.steps.echo "${list}"
   }
 
   def installOrUpgradeMulti(List<String> names, List<String> values) {
