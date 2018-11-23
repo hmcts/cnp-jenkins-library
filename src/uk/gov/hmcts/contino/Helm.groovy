@@ -15,7 +15,8 @@ class Helm {
     this.steps.sh(returnStatus: true, script: "helm init --client-only")
     def subscription = this.steps.env.SUBSCRIPTION_NAME
     def subscriptionId = steps.env.AZURE_SUBSCRIPTION_ID
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=hmcts", returnStdout: true)
+    def acr = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
   }
 
