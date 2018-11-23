@@ -16,7 +16,7 @@ class Helm {
     def subscription = this.steps.env.SUBSCRIPTION_NAME
     def subscriptionId = steps.env.AZURE_SUBSCRIPTION_ID
     def acr = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
-    this.steps.sh(script: "echo subscription: ${subscription} - subscriptionId: ${subscriptionId} - acr: ${acr}", returnStdout: true)
+    this.steps.echo "subscription: ${subscription} - subscriptionId: ${subscriptionId} - acr: ${acr}"
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
   }
