@@ -8,7 +8,7 @@ class Helm {
 
   Helm(steps) {
     this.steps = steps
-    this.steps.sh(returnStatus: true, script: "helm init --client-only")
+    //this.steps.sh(returnStatus: true, script: "helm init --client-only")
   }
 
   def init() {

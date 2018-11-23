@@ -31,6 +31,7 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
     kubectl.createNamespace(env.NAMESPACE)
 
     def helm = new Helm(this)
+    helm.init()
     def values = []
 
     if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
