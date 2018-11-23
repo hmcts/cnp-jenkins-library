@@ -21,11 +21,11 @@ class Helm {
     // debug log
     this.steps.echo "subscription: ${subscription} - subscriptionId: ${subscriptionId.substring(0, subscriptionId.length() -1)} - acr: ${acr.substring(0, acr.length() -1)}"
     def repos = this.steps.sh(script: "helm repo list", returnStdout: true)
-    this.steps.echo "${repos}"
+    this.steps.echo "${repos.replaceAll("hmctssandbox", "hmctssandbo")}"
     def search = this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
-    this.steps.echo "${search}"
+    this.steps.echo "${search.replaceAll("hmctssandbox", "hmctssandbo")}"
     def list = this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm list --name ${acr}", returnStdout: true)
-    this.steps.echo "${list}"
+    this.steps.echo "${list.replaceAll("hmctssandbox", "hmctssandbo")}"
   }
 
   def installOrUpgradeMulti(List<String> names, List<String> values) {
