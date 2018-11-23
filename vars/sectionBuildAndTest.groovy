@@ -18,6 +18,7 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 
+  /*
   stage("Test") {
     pl.callAround('test') {
       timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
@@ -31,6 +32,7 @@ def call(PipelineCallbacks pl, Builder builder) {
       builder.securityCheck()
     }
   }
+  */
 
   stage("Sonar Scan") {
     pl.callAround('sonarscan') {
