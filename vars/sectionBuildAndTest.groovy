@@ -32,7 +32,6 @@ def call(PipelineCallbacks pl, Builder builder) {
       builder.securityCheck()
     }
   }
-  */
 
   stage("Sonar Scan") {
     pl.callAround('sonarscan') {
@@ -50,5 +49,6 @@ def call(PipelineCallbacks pl, Builder builder) {
       }
     }
   }
+  */
 
 }
