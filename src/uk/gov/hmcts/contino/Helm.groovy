@@ -13,6 +13,9 @@ class Helm {
 
   def init() {
     this.steps.sh(returnStatus: true, script: "helm init --client-only")
+    def subscription = this.steps.env.SUBSCRIPTION_NAME
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=hmcts", returnStdout: true)
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscription}", returnStdout: true)
   }
 
   def installOrUpgradeMulti(List<String> names, List<String> values) {

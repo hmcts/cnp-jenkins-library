@@ -20,9 +20,7 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
   def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
-
-  def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
-
+  
   withEnv(templateEnvVars) {
 
     def kubectl = new Kubectl(this, subscription, aksServiceName)
@@ -63,8 +61,6 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
       values << chartValues
     }
 
-    az "configure --defaults acr=hmcts"
-    az "acr helm repo add  --subscription ${subscription}"
     def options = ["--set", "product=${product}", "component=${component}"]
     helm.installOrUpgradeMulti(charts, values, options)
 
