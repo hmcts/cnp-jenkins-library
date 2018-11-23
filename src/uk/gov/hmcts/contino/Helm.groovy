@@ -20,6 +20,7 @@ class Helm {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} helm repo list", returnStdout: true)
+    this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
   }
 
   def installOrUpgradeMulti(List<String> names, List<String> values) {
