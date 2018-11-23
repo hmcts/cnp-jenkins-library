@@ -36,7 +36,7 @@ class Helm {
   def installOrUpgradeMulti(List<String> names, List<String> values, List<String> options) {
     // zip chart name + related values files and execute
     [names, values].transpose().each { nv ->
-      this.installOrUpgrade(nv[0], nv[1..-1], options)
+      this.installOrUpgrade(nv[0], nv[1..-1].flatten(), options)
     }
   }
 
@@ -45,7 +45,7 @@ class Helm {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
     this.dependencyUpdate(name)
-    def allOptions = ["--install"] + (options == null ? [] : options)
+    def allOptions = ["--install", "--name ${name}"] + (options == null ? [] : options)
     this.execute("upgrade", name, values, allOptions)
   }
 
@@ -59,7 +59,7 @@ class Helm {
 
   private Object execute(String command, String name, List<String> values, List<String> options) {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
-    def valuesStr = (values == null ? "" : "${' -f ' + values.flatten().join(' -f ')}")
+    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
   }
 
