@@ -8,6 +8,8 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
+  def product = params.product
+  def component = params.component
 
   def helmResourcesDir
   def helmResourcesDirDefault = "src/kubernetes/charts"
@@ -62,7 +64,8 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
 
     az "configure --defaults acr=hmcts"
     az "acr helm repo add  --subscription ${subscription}"
-    helm.installOrUpgradeMulti(charts, values)
+    def options = ["--set", "product=${product}", "component=${component}"]
+    helm.installOrUpgradeMulti(charts, values, options)
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
