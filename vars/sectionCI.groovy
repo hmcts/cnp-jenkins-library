@@ -80,7 +80,7 @@ def call(params) {
               }
             }
           }
-        } else if (pl.installChart) {
+        } else if (pl.installCharts) {
           withTeamSecrets(pl, params.environment) {
             stage('Install Charts to AKS') {
               pl.callAround('akschartsinstall') {
@@ -100,7 +100,7 @@ def call(params) {
     }
 
     onPR {
-      if (pl.deployToAKS || pl.installChart) {
+      if (pl.deployToAKS || pl.installCharts) {
         withSubscription(subscription) {
           withTeamSecrets(pl, params.environment) {
             stage("Smoke Test - AKS") {
