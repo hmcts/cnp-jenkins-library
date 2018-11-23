@@ -27,7 +27,7 @@ class Helm {
   def installOrUpgradeMulti(List<String> names, List<String> values, List<String> options) {
     // zip chart name + related values files and execute
     [names, values].transpose().each { nv ->
-      this.installOrUpgrade("upgrade", nv[0], nv[1..-1], options)
+      this.installOrUpgrade(nv[0], nv[1..-1], options)
     }
   }
 
