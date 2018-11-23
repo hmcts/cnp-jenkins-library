@@ -16,12 +16,14 @@ class Helm {
     def subscription = this.steps.env.SUBSCRIPTION_NAME
     def subscriptionId = steps.env.AZURE_SUBSCRIPTION_ID
     def acr = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
-    this.steps.echo "subscription: ${subscription} - subscriptionId: ${subscriptionId.substring(0, subscriptionId.length() -1)} - acr: ${acr.substring(0, acr.length() -1)}"
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} helm repo list", returnStdout: true)
-    this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
+    // debug log
     this.steps.echo "env"
+    this.steps.echo "subscription: ${subscription} - subscriptionId: ${subscriptionId.substring(0, subscriptionId.length() -1)} - acr: ${acr.substring(0, acr.length() -1)}"
+    this.steps.sh(script: "helm repo list", returnStdout: true)
+    this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm list --name ${acr}", returnStdout: true)
   }
 
   def installOrUpgradeMulti(List<String> names, List<String> values) {
