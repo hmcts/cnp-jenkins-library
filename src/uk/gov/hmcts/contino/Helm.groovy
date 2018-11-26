@@ -44,13 +44,13 @@ class Helm {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
-    this.dependencyUpdate(name)
+    this.dependencyUpdate("${path}/${name}")
     def allOptions = ["--install"] + (options == null ? [] : options)
     this.execute("upgrade", "${name} ${path}/${name}", values, allOptions)
   }
 
-  def dependencyUpdate(String name) {
-    this.execute("dependency update", name, null)
+  def dependencyUpdate(Strin path) {
+    this.execute("dependency update", path, null)
   }
 
   private Object execute(String command, String name, List<String> values) {
