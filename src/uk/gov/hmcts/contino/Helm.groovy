@@ -4,7 +4,8 @@ package uk.gov.hmcts.contino
 class Helm {
 
   def steps
-  def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $options $name", returnStdout: true)}
+  def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $name $options", returnStdout: true)}
+  def helmOptionsFirst = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $options $name", returnStdout: true)}
 
   Helm(steps) {
     this.steps = steps
@@ -44,21 +45,17 @@ class Helm {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
-
-    def valuesPrint = this.steps.sh(script: "cat ${values[0]}", returnStdout: true)
-    this.steps.echo "${valuesPrint.replaceAll("hmctssandbox", "hmctssandbo")}"
-
     this.dependencyUpdate("${path}/${name}")
     def allOptions = ["--install", "--force"] + (options == null ? [] : options)
     this.execute("upgrade", "${name} ${path}/${name}", values, allOptions)
   }
 
   def dependencyUpdate(String path) {
-    this.execute("dependency update", path, null)
+    this.executeOptionsFirst("dependency update", path, null)
   }
 
   def delete(String name) {
-    this.execute("delete", name, ["--purge"])
+    this.executeOptionsFirst("delete", name, ["--purge"])
   }
 
   private Object execute(String command, String name, List<String> values) {
@@ -69,6 +66,12 @@ class Helm {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
+  }
+
+  private Object executeOptionsFirst(String command, String name, List<String> values, List<String> options) {
+    def optionsStr = "${options == null ?  '' : options.join(' ')}"
+    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
+    helmOptionsFirst command, name, "${valuesStr} ${optionsStr}"
   }
 
 }
