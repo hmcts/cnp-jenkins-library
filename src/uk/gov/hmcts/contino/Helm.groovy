@@ -29,24 +29,24 @@ class Helm {
     */
   }
 
-  def installOrUpgradeMulti(List<String> names, List<String> values) {
+  def installOrUpgradeMulti(String path, List<String> names, List<String> values) {
     this.installOrUpgradeMulti(names, values, null)
   }
 
-  def installOrUpgradeMulti(List<String> names, List<String> values, List<String> options) {
+  def installOrUpgradeMulti(String path, List<String> names, List<String> values, List<String> options) {
     // zip chart name + related values files and execute
     [names, values].transpose().each { nv ->
-      this.installOrUpgrade(nv[0], nv[1..-1].flatten(), options)
+      this.installOrUpgrade(path, nv[0], nv[1..-1].flatten(), options)
     }
   }
 
-  def installOrUpgrade(String name, List<String> values, List<String> options) {
+  def installOrUpgrade(String path, String name, List<String> values, List<String> options) {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
     this.dependencyUpdate(name)
-    def allOptions = ["--install", "--name ${name}"] + (options == null ? [] : options)
-    this.execute("upgrade", name, values, allOptions)
+    def allOptions = ["--install"] + (options == null ? [] : options)
+    this.execute("upgrade", "${name} ${path}/${name}", values, allOptions)
   }
 
   def dependencyUpdate(String name) {

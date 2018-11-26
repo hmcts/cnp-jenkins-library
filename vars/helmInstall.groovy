@@ -43,7 +43,6 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
 
     // default values + overrides
     for (chart in charts) {
-      chartsWithPath << "${helmResourcesDir}/${chart}"
       def chartValues = []
       def templateValues = "${helmResourcesDir}/${chart}/values.template.yaml"
       def defaultValues = "${helmResourcesDir}/${chart}/values.yaml"
@@ -64,7 +63,7 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
     }
 
     def options = ["--set", "product=${product}", "component=${component}"]
-    helm.installOrUpgradeMulti(chartsWithPath, values, options)
+    helm.installOrUpgradeMulti(helmResourcesDir, charts, values, options)
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
