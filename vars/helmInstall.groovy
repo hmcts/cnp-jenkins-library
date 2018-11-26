@@ -62,7 +62,7 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
       values << chartValues
     }
 
-    def options = ["--set", "product=${product}", "component=${component}"]
+    def options = ["--set", "product=${product},component=${component}"]
     helm.installOrUpgradeMulti(helmResourcesDir, charts, values, options)
 
     // Get the IP of the Traefik Ingress Controller
