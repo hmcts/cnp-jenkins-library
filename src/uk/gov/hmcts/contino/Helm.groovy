@@ -49,7 +49,7 @@ class Helm {
     this.execute("upgrade", "${name} ${path}/${name}", values, allOptions)
   }
 
-  def dependencyUpdate(Strin path) {
+  def dependencyUpdate(String path) {
     this.execute("dependency update", path, null)
   }
 
