@@ -51,19 +51,23 @@ def call(params) {
   def aksUrl
 
   Builder builder = pipelineType.builder
-  def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-  def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
   if (pl.dockerBuild) {
+    withSubscription(subscription) {
+      withRegistrySecrets{
+        stage('Docker Build') {
+          pl.callAround('dockerbuild') {
+            timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+              //acr.build(dockerImage)
+              def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+              def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
-    stage('Docker Build') {
-      pl.callAround('dockerbuild') {
-        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
-          //acr.build(dockerImage)
-          acr.login()
-          docker = new Docker(this)
-          docker.build(dockerImage)
-          docker.push(dockerImage)
+              acr.login()
+              docker = new Docker(this)
+              docker.build(dockerImage)
+              docker.push(dockerImage)
+            }
+          }
         }
       }
     }
