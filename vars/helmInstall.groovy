@@ -31,7 +31,6 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
     def helm = new Helm(this)
     helm.init()
     def values = []
-    def chartsWithPath = []
 
     if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
       helmResourcesDir = helmResourcesDirDefault

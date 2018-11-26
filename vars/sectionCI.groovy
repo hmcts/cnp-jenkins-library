@@ -87,6 +87,7 @@ def call(params) {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
                   deploymentNumber = githubCreateDeployment()
 
+                  log.info("ServiceName: ${dockerImage.getAksServiceName()}")
                   aksUrl = helmInstall(dockerImage, pl.charts, params)
                   log.info("deployed component URL: ${aksUrl}")
 
