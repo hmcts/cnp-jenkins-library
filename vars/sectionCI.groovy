@@ -51,7 +51,6 @@ def call(params) {
   def aksUrl
 
   Builder builder = pipelineType.builder
-  def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
   if (pl.dockerBuild) {
     withSubscription(subscription) {
@@ -61,6 +60,7 @@ def call(params) {
             timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
               //acr.build(dockerImage)
               def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+              def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
               acr.login()
               docker = new Docker(this)
@@ -81,6 +81,8 @@ def call(params) {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
                   deploymentNumber = githubCreateDeployment()
 
+                  def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+                  def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
                   aksUrl = aksDeploy(dockerImage, params)
                   log.info("deployed component URL: ${aksUrl}")
 
