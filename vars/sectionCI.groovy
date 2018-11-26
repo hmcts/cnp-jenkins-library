@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.Docker
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -59,7 +60,11 @@ def call(params) {
       stage('Docker Build') {
         pl.callAround('dockerbuild') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
-            acr.build(dockerImage)
+            //acr.build(dockerImage)
+            acr.login()
+            docker = new Docker(this)
+            docker.build(dockerImage)
+            docker.push(dockerImage)
           }
         }
       }
