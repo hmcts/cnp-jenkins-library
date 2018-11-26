@@ -44,13 +44,21 @@ class Helm {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
+
+    def valuesPrint = this.steps.sh(script: "cat ${values[0]}", returnStdout: true)
+    this.steps.echo "${valuesPrint.replaceAll("hmctssandbox", "hmctssandbo")}"
+
     this.dependencyUpdate("${path}/${name}")
-    def allOptions = ["--install"] + (options == null ? [] : options)
+    def allOptions = ["--install", "--force"] + (options == null ? [] : options)
     this.execute("upgrade", "${name} ${path}/${name}", values, allOptions)
   }
 
   def dependencyUpdate(String path) {
     this.execute("dependency update", path, null)
+  }
+
+  def delete(String name) {
+    this.execute("delete", name, ["--purge"])
   }
 
   private Object execute(String command, String name, List<String> values) {
