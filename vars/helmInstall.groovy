@@ -11,9 +11,7 @@ def call(DockerImage dockerImage, Map params, String... charts) {
   def product = params.product
   def component = params.component
 
-  def helmResourcesDir
-  def helmResourcesDirDefault = "src/kubernetes/charts"
-  def helmResourcesDirAlternate = "kubernetes/charts"
+  def helmResourcesDir = "charts"
 
   def digestName = dockerImage.getDigestName()
   def aksServiceName = dockerImage.getAksServiceName()
@@ -39,12 +37,8 @@ def call(DockerImage dockerImage, Map params, String... charts) {
       charts = charts + aksServiceName
     }
 
-    if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
-      helmResourcesDir = helmResourcesDirDefault
-    } else if (fileExists("${helmResourcesDirAlternate}/${charts[0]}")) {
-      helmResourcesDir = helmResourcesDirAlternate
-    } else {
-      throw new RuntimeException("No Helm charts directory found at $helmResourcesDirDefault or $helmResourcesDirAlternate")
+    if (!fileExists("${helmResourcesDir}")) {
+      throw new RuntimeException("No Helm charts directory found at ${helmResourcesDir}")
     }
 
     // default values + overrides
