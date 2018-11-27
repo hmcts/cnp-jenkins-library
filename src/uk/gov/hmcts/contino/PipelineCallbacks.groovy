@@ -8,7 +8,7 @@ class PipelineCallbacks implements Serializable {
   String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
-  List<String> charts
+  String[] charts
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
@@ -121,13 +121,13 @@ class PipelineCallbacks implements Serializable {
   void installCharts(List<String> charts) {
     this.installCharts = true
     this.deployToAKS = false
-    this.charts = charts
+    this.charts = charts as String[]
   }
 
   void installCharts() {
     this.installCharts = true
     this.deployToAKS = false
-    this.charts = []
+    this.charts = [] as String[]
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
