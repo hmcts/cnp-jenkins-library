@@ -68,6 +68,10 @@ class Helm {
     helm command, name, "${valuesStr} ${optionsStr}"
   }
 
+  private Object executeOptionsFirst(String command, String name, List<String> values) {
+    this.executeOptionsFirst(command, name, values, null)
+  }
+
   private Object executeOptionsFirst(String command, String name, List<String> values, List<String> options) {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
