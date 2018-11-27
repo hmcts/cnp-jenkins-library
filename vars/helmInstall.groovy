@@ -41,31 +41,31 @@ def call(DockerImage dockerImage, Map params, String... charts) {
       throw new RuntimeException("No Helm charts directory found at ${helmResourcesDir}")
     }
 
+    def chart = "${product}-${component}"
+
     // default values + overrides
-    for (chart in charts) {
-      def chartValues = []
-      def templateValues = "${helmResourcesDir}/${chart}/values.template.yaml"
-      def defaultValues = "${helmResourcesDir}/${chart}/values.yaml"
-      if (!fileExists(templateValues)) {
-        throw new RuntimeException("No default values template file found at.")
-      }
-      sh "envsubst < ${templateValues} > ${defaultValues}"
-      chartValues << defaultValues
+    def chartValues = []
+    def templateValues = "${helmResourcesDir}/${chart}/values.template.yaml"
+    def defaultValues = "${helmResourcesDir}/${chart}/values.yaml"
+    if (!fileExists(templateValues)) {
+      throw new RuntimeException("No default values template file found at.")
+    }
+    sh "envsubst < ${templateValues} > ${defaultValues}"
+    chartValues << defaultValues
 
-      // environment specific values is optional
-      def valuesEnvTemplate = "${helmResourcesDir}/${chart}/values.${environment}.template.yaml"
-      def valuesEnv = "${helmResourcesDir}/${chart}/values.${environment}.yaml"
-      if (fileExists(valuesEnvTemplate)) {
-        sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
-        chartValues << valuesEnv
-      }
-      values << chartValues
+    // environment specific values is optional
+    def valuesEnvTemplate = "${helmResourcesDir}/${chart}/values.${environment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chart}/values.${environment}.yaml"
+    if (fileExists(valuesEnvTemplate)) {
+      sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
+      chartValues << valuesEnv
+    }
+    values << chartValues
 
-      def requirementsEnv = "${helmResourcesDir}/${chart}/requirements.${environment}.yaml"
-      def requirements = "${helmResourcesDir}/${chart}/requirements.yaml"
-      if (fileExists(requirementsEnv)) {
-        sh "envsubst < ${requirementsEnv} > ${requirements}"
-      }
+    def requirementsEnv = "${helmResourcesDir}/${chart}/requirements.${environment}.yaml"
+    def requirements = "${helmResourcesDir}/${chart}/requirements.yaml"
+    if (fileExists(requirementsEnv)) {
+      sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
     def options = ["--set product=${product},component=${component}", "--namespace ${product}" ]
