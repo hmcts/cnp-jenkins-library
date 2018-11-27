@@ -124,6 +124,12 @@ class PipelineCallbacks implements Serializable {
     this.charts = charts
   }
 
+  void installCharts() {
+    this.installCharts = true
+    this.deployToAKS = false
+    this.charts = []
+  }
+
   void enableFullFunctionalTest(int timeout = 30) {
     this.fullFunctionalTestTimeout = timeout
     this.fullFunctionalTest = true
