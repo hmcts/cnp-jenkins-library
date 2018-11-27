@@ -33,10 +33,10 @@ def call(DockerImage dockerImage, Map params, String... charts) {
     def values = []
 
     if (charts == null) {
-      charts = []
+      charts = [] as String[]
     }
     if (!charts.contains("${product}-${component}")) {
-      charts << "${product}-${component}"
+      charts = charts + "${product}-${component}"
     }
 
     if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
