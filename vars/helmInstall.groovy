@@ -26,7 +26,7 @@ def call(DockerImage dockerImage, Map params, String... charts) {
     def kubectl = new Kubectl(this, subscription, aksServiceName)
     kubectl.login()
 
-    kubectl.createNamespace(env.NAMESPACE)
+    //kubectl.createNamespace(env.NAMESPACE)
 
     def helm = new Helm(this)
     helm.init()
@@ -35,8 +35,8 @@ def call(DockerImage dockerImage, Map params, String... charts) {
     if (charts == null) {
       charts = [] as String[]
     }
-    if (!charts.contains("${product}-${component}")) {
-      charts = charts + "${product}-${component}"
+    if (!charts.contains(aksServiceName)) {
+      charts = charts + aksServiceName
     }
 
     if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
@@ -74,7 +74,7 @@ def call(DockerImage dockerImage, Map params, String... charts) {
       }
     }
 
-    def options = ["--set product=${product},component=${component}", "--namespace ${aksServiceName}" ]
+    def options = ["--set product=${product},component=${component}", "--namespace ${product}" ]
     helm.installOrUpgradeMulti(helmResourcesDir, charts as List, values, options)
 
     // Get the IP of the Traefik Ingress Controller
