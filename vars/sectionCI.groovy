@@ -87,7 +87,7 @@ def call(params) {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
                   deploymentNumber = githubCreateDeployment()
 
-                  aksUrl = helmInstall(dockerImage, pl.charts, params)
+                  aksUrl = helmInstall(dockerImage, params, pl.charts)
                   log.info("deployed component URL: ${aksUrl}")
 
                   githubUpdateDeploymentStatus(deploymentNumber, aksUrl)

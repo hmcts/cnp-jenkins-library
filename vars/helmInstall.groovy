@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.GithubAPI
 
-def call(DockerImage dockerImage, List<String> charts, Map params) {
+def call(DockerImage dockerImage, Map params, String... charts) {
 
   def subscription = params.subscription
   def environment = params.environment
@@ -31,6 +31,13 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
     def helm = new Helm(this)
     helm.init()
     def values = []
+
+    if (charts == null) {
+      charts = []
+    }
+    if (!charts.contains("${product}-${component}")) {
+      charts << "${product}-${component}"
+    }
 
     if (fileExists("${helmResourcesDirDefault}/${charts[0]}")) {
       helmResourcesDir = helmResourcesDirDefault
@@ -59,9 +66,15 @@ def call(DockerImage dockerImage, List<String> charts, Map params) {
         chartValues << valuesEnv
       }
       values << chartValues
+
+      def requirementsEnv = "${helmResourcesDir}/${chart}/requirements.${environment}.yaml"
+      def requirements = "${helmResourcesDir}/${chart}/requirements.yaml"
+      if (fileExists(requirementsEnv)) {
+        sh "envsubst < ${requirementsEnv} > ${requirements}"
+      }
     }
 
-    def options = ["--set", "product=${product},component=${component}"]
+    def options = ["--set product=${product},component=${component}", "--namespace ${aksServiceName}" ]
     helm.installOrUpgradeMulti(helmResourcesDir, charts, values, options)
 
     // Get the IP of the Traefik Ingress Controller
