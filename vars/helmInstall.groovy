@@ -59,7 +59,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def options = ["--set product=${product},component=${component}", "--namespace ${product}" ]
-    helm.installOrUpgrade(helmResourcesDir, chart, values, options)
+    helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
