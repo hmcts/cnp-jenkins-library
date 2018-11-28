@@ -62,7 +62,9 @@ class TeamNames {
       )
     }
     return teamNamesMap.get(product)
-
+      .toLowerCase()
+      .replace("/", "-")
+      .replace(" ", "-")
   }
 
 }

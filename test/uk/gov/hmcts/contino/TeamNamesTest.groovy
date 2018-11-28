@@ -385,7 +385,7 @@ class TeamNamesTest extends Specification {
 
   def "getNameOrThow() should return team name if found"() {
     def productName = 'bulk-scan'
-    def expected = "Software Engineering"
+    def expected = "software-engineering"
 
     when:
     def teamName = new TeamNames().getNameOrThrow(productName)
