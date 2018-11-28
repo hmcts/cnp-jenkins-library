@@ -34,6 +34,7 @@ def call(DockerImage dockerImage, Map params) {
     def values = []
     def chart = aksServiceName
     def chartPath = "${product}-${component}"
+    def namespace = new TeamNames().getNameOrThrow(product)
 
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartPath}/values.template.yaml"
@@ -58,7 +59,7 @@ def call(DockerImage dockerImage, Map params) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
-    def options = ["--set product=${product},component=${component}", "--namespace ${product}" ]
+    def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
     // Get the IP of the Traefik Ingress Controller

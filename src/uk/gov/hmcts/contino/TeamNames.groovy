@@ -50,4 +50,19 @@ class TeamNames {
   def getRawProductName (String product) {
     return product.split('pr-(\\d+)-')[1];
   }
+
+  def getNameOrThrow(String product) {
+    if (product.startsWith('pr-')) {
+      product = getRawProductName(product)
+    }
+    if (!teamNamesMap.containsKey(product)) {
+      throw new RuntimeException(
+        "Product ${product} does not belong to any team. "
+        + "Please create a PR to update TeamNames in the Jenkins library."
+      )
+    }
+    return teamNamesMap.get(product)
+
+  }
+
 }
