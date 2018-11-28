@@ -8,7 +8,8 @@ class HealthChecker {
     this.steps = steps
   }
 
-  def check(url, sleepDuration, maxAttempts) {
+  def check(url, sleepDuration, maxAttempts,
+            Closure verifyHealthy = { resp -> resp.status <= 300 }) {
 
     int attemptCounter = 1
 
@@ -17,16 +18,16 @@ class HealthChecker {
 
       try {
         def response = steps.httpRequest(
-          acceptType: 'APPLICATION_JSON',
-          consoleLogResponseBody: true,
-          contentType: 'APPLICATION_JSON',
-          timeout: 10,
-          url: url,
-          validResponseCodes: '200:599',
-          ignoreSslErrors: true
+                acceptType: 'APPLICATION_JSON',
+                consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                timeout: 10,
+                url: url,
+                validResponseCodes: '200:599',
+                ignoreSslErrors: true
         )
 
-        if (response.status > 300) {
+        if (!verifyHealthy(response)) {
           if (attemptCounter < maxAttempts) {
             steps.sleep sleepDuration
           }
@@ -38,4 +39,6 @@ class HealthChecker {
       }
     }
   }
+
+
 }
