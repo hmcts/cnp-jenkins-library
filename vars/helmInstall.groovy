@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.TeamNames
 
 def call(DockerImage dockerImage, Map params) {
 
