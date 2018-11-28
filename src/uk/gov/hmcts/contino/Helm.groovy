@@ -5,7 +5,6 @@ class Helm {
 
   def steps
   def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $name $options", returnStdout: true)}
-  def helmOptionsFirst = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $options $name", returnStdout: true)}
 
   Helm(steps) {
     this.steps = steps
@@ -18,16 +17,6 @@ class Helm {
     def acr = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
-    // debug log
-    /*
-    this.steps.echo "subscription: ${subscription} - subscriptionId: ${subscriptionId.substring(0, subscriptionId.length() -1)} - acr: ${acr.substring(0, acr.length() -1)}"
-    def repos = this.steps.sh(script: "helm repo list", returnStdout: true)
-    this.steps.echo "${repos.replaceAll("hmctssandbox", "hmctssandbo")}"
-    def search = this.steps.sh(script: "helm search hmctssandbox", returnStdout: true)
-    this.steps.echo "${search.replaceAll("hmctssandbox", "hmctssandbo")}"
-    def list = this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm list --name ${acr}", returnStdout: true)
-    this.steps.echo "${list.replaceAll("hmctssandbox", "hmctssandbo")}"
-    */
   }
 
   def installOrUpgradeMulti(String path, List<String> names, List<String> values) {
@@ -37,7 +26,7 @@ class Helm {
   def installOrUpgradeMulti(String path, List<String> names, List<String> values, List<String> options) {
     // zip chart name + related values files and execute
     [names, values].transpose().each { nv ->
-      this.installOrUpgrade(path, nv[0], nv[1..-1].flatten(), options)
+      this.installOrUpgrade(path, nv[0], nv[1..-1], options)
     }
   }
 
@@ -52,31 +41,21 @@ class Helm {
   }
 
   def dependencyUpdate(String path) {
-    this.executeOptionsFirst("dependency update", path, null)
+    this.execute("dependency update", path)
   }
 
   def delete(String name) {
-    this.executeOptionsFirst("delete", name, ["--purge"])
+    this.execute("delete", name, null, ["--purge"])
   }
 
-  private Object execute(String command, String name, List<String> values) {
-    this.execute(command, name, values, null)
+  private Object execute(String command) {
+    this.execute(command, name, null, null)
   }
 
   private Object execute(String command, String name, List<String> values, List<String> options) {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
-  }
-
-  private Object executeOptionsFirst(String command, String name, List<String> values) {
-    this.executeOptionsFirst(command, name, values, null)
-  }
-
-  private Object executeOptionsFirst(String command, String name, List<String> values, List<String> options) {
-    def optionsStr = "${options == null ?  '' : options.join(' ')}"
-    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
-    helmOptionsFirst command, name, "${valuesStr} ${optionsStr}"
   }
 
 }
