@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.GithubAPI
 
-def call(DockerImage dockerImage, Map params, String... charts) {
+def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
@@ -24,46 +24,36 @@ def call(DockerImage dockerImage, Map params, String... charts) {
     def kubectl = new Kubectl(this, subscription, aksServiceName)
     kubectl.login()
 
-    //kubectl.createNamespace(env.NAMESPACE)
-
     def helm = new Helm(this)
     helm.init()
-    def values = []
-
-    if (charts == null) {
-      charts = [] as String[]
-    }
-    if (!charts.contains(aksServiceName)) {
-      charts = charts + aksServiceName
-    }
 
     if (!fileExists("${helmResourcesDir}")) {
       throw new RuntimeException("No Helm charts directory found at ${helmResourcesDir}")
     }
 
-    def chart = "${product}-${component}"
+    def values = []
+    def chart = aksServiceName
+    def chartPath = "${product}-${component}"
 
     // default values + overrides
-    def chartValues = []
-    def templateValues = "${helmResourcesDir}/${chart}/values.template.yaml"
-    def defaultValues = "${helmResourcesDir}/${chart}/values.yaml"
+    def templateValues = "${helmResourcesDir}/${chartPath}/values.template.yaml"
+    def defaultValues = "${helmResourcesDir}/${chartPath}/values.yaml"
     if (!fileExists(templateValues)) {
       throw new RuntimeException("No default values template file found at.")
     }
     sh "envsubst < ${templateValues} > ${defaultValues}"
-    chartValues << defaultValues
+    values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chart}/values.${environment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chart}/values.${environment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartPath}/values.${environment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartPath}/values.${environment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
-      chartValues << valuesEnv
+      values << valuesEnv
     }
-    values << chartValues
 
-    def requirementsEnv = "${helmResourcesDir}/${chart}/requirements.${environment}.yaml"
-    def requirements = "${helmResourcesDir}/${chart}/requirements.yaml"
+    def requirementsEnv = "${helmResourcesDir}/${chartPath}/requirements.${environment}.yaml"
+    def requirements = "${helmResourcesDir}/${chartPath}/requirements.yaml"
     if (fileExists(requirementsEnv)) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
