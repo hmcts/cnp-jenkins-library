@@ -10,17 +10,30 @@ class Helm {
     this.steps = steps
   }
 
+  def setup() {
+    init()
+    configureAcr()
+    addRepo()
+  }
+
   def init() {
     this.steps.sh(returnStatus: true, script: "helm init --client-only")
+  }
+
+  def configureAcr() {
     def subscription = this.steps.env.SUBSCRIPTION_NAME
-    def subscriptionId = steps.env.AZURE_SUBSCRIPTION_ID
     def acr = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
+  }
+
+  def addRepo() {
+    def subscription = this.steps.env.SUBSCRIPTION_NAME
+    def subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
   }
 
   def installOrUpgradeMulti(String path, List<String> names, List<String> values) {
-    this.installOrUpgradeMulti(names, values, null)
+    this.installOrUpgradeMulti(path, names, values, null)
   }
 
   def installOrUpgradeMulti(String path, List<String> names, List<String> values, List<String> options) {
@@ -34,7 +47,7 @@ class Helm {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
-    this.dependencyUpdate("${path}")
+    this.dependencyUpdate(path)
     def allOptions = ["--install"] + (options == null ? [] : options)
     def allValues = values.flatten()
     this.execute("upgrade", "${name} ${path}", allValues, allOptions)

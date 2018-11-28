@@ -25,7 +25,7 @@ def call(DockerImage dockerImage, Map params) {
     kubectl.login()
 
     def helm = new Helm(this)
-    helm.init()
+    helm.setup()
 
     if (!fileExists("${helmResourcesDir}")) {
       throw new RuntimeException("No Helm charts directory found at ${helmResourcesDir}")
