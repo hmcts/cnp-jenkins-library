@@ -48,7 +48,7 @@ class Helm {
     this.execute("delete", name, null, ["--purge"])
   }
 
-  private Object execute(String command) {
+  private Object execute(String command, String name) {
     this.execute(command, name, null, null)
   }
 
