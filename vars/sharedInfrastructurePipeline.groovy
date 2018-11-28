@@ -1,6 +1,10 @@
 import uk.gov.hmcts.contino.azure.KeyVault
 import uk.gov.hmcts.contino.azure.ProductVaultEntries
 
+def call(String product, String environment, String subscription) {
+  call(product, environment, subscription, false)
+}
+
 def call(String product, String environment, String subscription, boolean planOnly) {
 
   node {
