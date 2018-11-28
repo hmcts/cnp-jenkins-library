@@ -47,7 +47,8 @@ class Helm {
     }
     this.dependencyUpdate("${path}/${name}")
     def allOptions = ["--install"] + (options == null ? [] : options)
-    this.execute("upgrade", "${name} ${path}/${name}", values, allOptions)
+    def allValues = values.flatten()
+    this.execute("upgrade", "${name} ${path}/${name}", allValues, allOptions)
   }
 
   def dependencyUpdate(String path) {
