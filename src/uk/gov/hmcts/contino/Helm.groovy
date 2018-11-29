@@ -1,13 +1,26 @@
 package uk.gov.hmcts.contino
 
+import uk.gov.hmcts.contino.azure.Acr
+
 
 class Helm {
 
   def steps
+  def acr
   def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $name $options", returnStdout: true)}
+
+  def subscription
+  def subscriptionId
+  def resourceGroup
+  def registryName
 
   Helm(steps) {
     this.steps = steps
+    this.subscription = this.steps.env.SUBSCRIPTION_NAME
+    this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
+    this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
+    this.registryName = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
+    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup)
   }
 
   def setup() {
@@ -17,19 +30,15 @@ class Helm {
   }
 
   def init() {
-    this.steps.sh(returnStatus: true, script: "helm init --client-only")
+    this.helm "init", "", "--client-only"
   }
 
   def configureAcr() {
-    def subscription = this.steps.env.SUBSCRIPTION_NAME
-    def acr = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az configure --defaults acr=${acr}", returnStdout: true)
+    this.acr.az "configure --defaults acr=${registryName}"
   }
 
   def addRepo() {
-    def subscription = this.steps.env.SUBSCRIPTION_NAME
-    def subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az acr helm repo add  --subscription ${subscriptionId}", returnStdout: true)
+    this.acr.az "acr helm repo add --subscription ${subscriptionId}"
   }
 
   def installOrUpgradeMulti(String path, List<String> names, List<String> values) {
