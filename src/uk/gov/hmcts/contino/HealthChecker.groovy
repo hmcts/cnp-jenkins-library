@@ -9,7 +9,7 @@ class HealthChecker {
   }
 
   def check(url, sleepDuration, maxAttempts,
-            Closure verifyHealthy = { resp -> resp.status <= 300 }) {
+            Closure verifyHealthy = { resp -> resp.status > 300 }) {
 
     int attemptCounter = 1
 
