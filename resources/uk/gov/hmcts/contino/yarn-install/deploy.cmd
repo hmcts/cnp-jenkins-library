@@ -99,7 +99,7 @@ call :SelectNodeVersion
 
 :: 3. Install Yarn
 echo Verifying Yarn Install.
-call :ExecuteCmd !NPM_CMD! install --global yarn@1.10
+call :ExecuteCmd !NPM_CMD! install --global yarn@1.12.3
 
 set PATH=%PATH%;%appdata%\npm
 
