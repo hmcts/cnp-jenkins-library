@@ -37,9 +37,9 @@ class HelmTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm init --client-only") &&
-      it.containsKey('returnStatus') &&
-      it.get('returnStatus').equals(true)
+      it.get('script').contains("helm init  --client-only") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)
     })
   }
 
