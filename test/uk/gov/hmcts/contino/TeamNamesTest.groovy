@@ -383,22 +383,22 @@ class TeamNamesTest extends Specification {
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "getNameOrThow() should return team name if found"() {
+  def "getNameNormalizedOrThow() should return team name if found"() {
     def productName = 'bulk-scan'
     def expected = "software-engineering"
 
     when:
-    def teamName = new TeamNames().getNameOrThrow(productName)
+    def teamName = new TeamNames().getNameNormalizedOrThrow(productName)
 
     then:
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "getNameOrThow() should throw exception if team name not found"() {
+  def "getNameNormalizedOrThow() should throw exception if team name not found"() {
     def productName = 'idontexist'
 
     when:
-    new TeamNames().getNameOrThrow(productName)
+    new TeamNames().getNameNormalizedOrThrow(productName)
 
     then:
     thrown RuntimeException

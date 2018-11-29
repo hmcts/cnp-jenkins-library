@@ -35,7 +35,7 @@ def call(DockerImage dockerImage, Map params) {
     def values = []
     def chart = aksServiceName
     def chartPath = "${product}-${component}"
-    def namespace = new TeamNames().getNameOrThrow(product)
+    def namespace = new TeamNames().getNameNormalizedOrThrow(product)
 
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartPath}/values.template.yaml"

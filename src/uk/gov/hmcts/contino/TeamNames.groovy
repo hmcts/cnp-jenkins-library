@@ -51,7 +51,7 @@ class TeamNames {
     return product.split('pr-(\\d+)-')[1];
   }
 
-  def getNameOrThrow(String product) {
+  def getNameNormalizedOrThrow(String product) {
     if (product.startsWith('pr-')) {
       product = getRawProductName(product)
     }
