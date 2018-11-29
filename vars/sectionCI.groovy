@@ -80,12 +80,27 @@ def call(params) {
               }
             }
           }
+        } else if (pl.installCharts) {
+          withTeamSecrets(pl, params.environment) {
+            stage('Install Charts to AKS') {
+              pl.callAround('akschartsinstall') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
+                  deploymentNumber = githubCreateDeployment()
+
+                  aksUrl = helmInstall(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
+
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
+              }
+            }
+          }
         }
       }
     }
 
     onPR {
-      if (pl.deployToAKS) {
+      if (pl.deployToAKS || pl.installCharts) {
         withSubscription(subscription) {
           withTeamSecrets(pl, params.environment) {
             stage("Smoke Test - AKS") {

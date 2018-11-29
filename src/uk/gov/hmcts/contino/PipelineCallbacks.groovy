@@ -15,6 +15,7 @@ class PipelineCallbacks implements Serializable {
   boolean mutationTest = false
   boolean dockerBuild = false
   boolean deployToAKS = false
+  boolean installCharts = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout
@@ -113,6 +114,12 @@ class PipelineCallbacks implements Serializable {
 
   void enableDeployToAKS() {
     this.deployToAKS = true
+    this.installCharts = false
+  }
+
+  void installCharts() {
+    this.installCharts = true
+    this.deployToAKS = false
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
