@@ -9,7 +9,7 @@ class HealthChecker {
   }
 
   def check(url, sleepDuration, maxAttempts,
-            Closure verifyHealthy = { resp -> resp.status <= 300 }) {
+            Closure isHealthy = { resp -> resp.status <= 300 }) {
 
     int attemptCounter = 1
 
@@ -27,7 +27,7 @@ class HealthChecker {
           ignoreSslErrors: true
         )
 
-        if (!verifyHealthy(response)) {
+        if (!isHealthy(response)) {
           if (attemptCounter < maxAttempts) {
             steps.sleep sleepDuration
           }
