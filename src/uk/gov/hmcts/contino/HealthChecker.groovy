@@ -18,13 +18,13 @@ class HealthChecker {
 
       try {
         def response = steps.httpRequest(
-                acceptType: 'APPLICATION_JSON',
-                consoleLogResponseBody: true,
-                contentType: 'APPLICATION_JSON',
-                timeout: 10,
-                url: url,
-                validResponseCodes: '200:599',
-                ignoreSslErrors: true
+            acceptType: 'APPLICATION_JSON',
+            consoleLogResponseBody: true,
+            contentType: 'APPLICATION_JSON',
+            timeout: 10,
+            url: url,
+            validResponseCodes: '200:599',
+            ignoreSslErrors: true
         )
 
         if (!verifyHealthy(response)) {
@@ -39,6 +39,4 @@ class HealthChecker {
       }
     }
   }
-
-
 }
