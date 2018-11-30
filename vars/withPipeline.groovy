@@ -34,7 +34,7 @@ def call(type, String product, String component, Closure body) {
   assert pipelineType != null
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
-  def pl = new PipelineCallbacks(metricsPublisher)
+  def pl = new PipelineCallbacks(metricsPublisher, this)
 
   body.delegate = pl
   body.call() // register callbacks
@@ -88,7 +88,7 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
         }
-        
+
         onHMCTSDemo {
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,

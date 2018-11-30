@@ -8,6 +8,7 @@ class PipelineCallbacks implements Serializable {
   String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
+  def steps
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
@@ -24,8 +25,9 @@ class PipelineCallbacks implements Serializable {
   int fullFunctionalTestTimeout
   boolean fullFunctionalTest = false
 
-  PipelineCallbacks(MetricsPublisher metricsPublisher) {
+  PipelineCallbacks(MetricsPublisher metricsPublisher, steps) {
     this.metricsPublisher = metricsPublisher
+    this.steps = steps
   }
 
   void afterCheckout(Closure body) {
@@ -130,6 +132,10 @@ class PipelineCallbacks implements Serializable {
   void enableMutationTest(int timeout = 120) {
     this.mutationTestTimeout = timeout
     this.mutationTest = true
+  }
+
+  void deployToV2Environments() {
+    this.steps.env.ENV_SUFFIX = 'v2'
   }
 
   private def nullSafeCall(String key) {
