@@ -18,7 +18,7 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
+  def templateEnvVars = ["SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
   
   withEnv(templateEnvVars) {
 
@@ -36,6 +36,18 @@ def call(DockerImage dockerImage, Map params) {
     def chart = aksServiceName
     def chartPath = "${product}-${component}"
     def namespace = new TeamNames().getNameNormalizedOrThrow(product)
+
+    // Set some base values so that users can avoid having too many env vars in their values files.
+    // We create a new file and pass it first as to allow overriding these
+    def baseValues = new File("${helmResourcesDir}/${chartPath}/_values.${aksServiceName}.yaml")
+    baseValues.write("")
+    ["java", "nodejs"].each {app ->
+      baseValues << "${app}:\n"
+      baseValues << "  image: ${digestName}\n"
+      baseValues << "  ingressHost: ${serviceFqdn}\n"
+      baseValues << "\n"
+    }
+    values << baseValues
 
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartPath}/values.template.yaml"
