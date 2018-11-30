@@ -10,7 +10,8 @@ class ProjectBranch implements Serializable {
 
   boolean isMaster() {
     branchName == 'master' ||
-    branchName == 'cnp'
+    branchName == 'cnp' ||
+    branchName == 'masterv2'
   }
 
   boolean isPR() {
@@ -20,7 +21,7 @@ class ProjectBranch implements Serializable {
   boolean isDemo() {
     branchName == 'demo'
   }
-  
+
   boolean isHMCTSDemo() {
     branchName == 'hmctsdemo'
   }

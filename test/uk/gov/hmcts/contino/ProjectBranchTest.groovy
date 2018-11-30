@@ -29,6 +29,14 @@ class ProjectBranchTest extends Specification {
     branch.isMaster()
   }
 
+  def "isMaster should return true when branch is 'masterv2'"() {
+    when:
+    def branch = new ProjectBranch('masterv2')
+
+    then:
+    branch.isMaster()
+  }
+
   def "isMaster should return false when branch is not 'master' or 'cnp'"() {
     when:
     def branch = new ProjectBranch('cnp123')
