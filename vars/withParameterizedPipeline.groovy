@@ -28,7 +28,7 @@ def call(type, String product, String component, String environment, String subs
 
   Subscription metricsSubscription = new Subscription(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription)
-  def pl = new PipelineCallbacks(metricsPublisher)
+  def pl = new PipelineCallbacks(metricsPublisher, this)
 
   body.delegate = pl
   body.call() // register callbacks
