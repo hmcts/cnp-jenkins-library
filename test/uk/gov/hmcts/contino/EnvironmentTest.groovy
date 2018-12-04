@@ -124,4 +124,28 @@ class EnvironmentTest extends Specification {
     then:
     assert environment.hmctsDemoName == "hmctsdemov2"
   }
+
+  def "environment suffix is EXCLUDED from hmctsdemo environment"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused", "ENV_SUFFIX": "v2"], false)
+
+    then:
+    assert environment.hmctsDemoName == "hmctsdemo"
+  }
+
+  def "environment suffix is EXCLUDED to default nonprod environment"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused", "ENV_SUFFIX": "v2"], false)
+
+    then:
+    assert environment.nonProdName == "aat"
+  }
+
+  def "environment suffix is NOT applied to default nonprod environment when includeSuffix is false"() {
+    when:
+    def environment = new Environment(["unusedVar": "unused"], false)
+
+    then:
+    assert environment.nonProdName == "aat"
+  }
 }

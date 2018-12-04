@@ -17,11 +17,12 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def withTeamSecrets(PipelineCallbacks pl, String environment, Closure block) {
+def withTeamSecrets(PipelineCallbacks pl, Closure block) {
   def keyvaultUrl = null
 
   if (pl.vaultSecrets?.size() > 0) {
     if (pl.vaultName) {
+      def environment = new Environment(env, false).nonProdName
       def projectKeyvaultName = pl.vaultName + '-' + environment
       keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
     } else {
@@ -66,7 +67,7 @@ def call(params) {
 
       onPR {
         if (pl.deployToAKS) {
-          withTeamSecrets(pl, params.environment) {
+          withTeamSecrets(pl) {
             stage('Deploy to AKS') {
               pl.callAround('aksdeploy') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
@@ -81,7 +82,7 @@ def call(params) {
             }
           }
         } else if (pl.installCharts) {
-          withTeamSecrets(pl, params.environment) {
+          withTeamSecrets(pl) {
             stage('Install Charts to AKS') {
               pl.callAround('akschartsinstall') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
@@ -102,7 +103,7 @@ def call(params) {
     onPR {
       if (pl.deployToAKS || pl.installCharts) {
         withSubscription(subscription) {
-          withTeamSecrets(pl, params.environment) {
+          withTeamSecrets(pl) {
             stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
                 pl.callAround("smoketest:aks") {
