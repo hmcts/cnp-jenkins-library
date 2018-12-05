@@ -57,7 +57,7 @@ class Helm {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
     this.dependencyUpdate(path)
-    def allOptions = ["--install"] + (options == null ? [] : options)
+    def allOptions = ["--install", "--wait"] + (options == null ? [] : options)
     def allValues = values.flatten()
     this.execute("upgrade", "${name} ${path}", allValues, allOptions)
   }
