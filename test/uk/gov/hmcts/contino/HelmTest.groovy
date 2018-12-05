@@ -58,7 +58,7 @@ class HelmTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm upgrade ${CHART} ${CHART_PATH}  -f val1 -f val2 --install") &&
+      it.get('script').contains("helm upgrade ${CHART} ${CHART_PATH}  -f val1 -f val2 --install --wait") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)
     })
