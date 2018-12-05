@@ -174,6 +174,7 @@ class WebAppDeploy implements Serializable {
   private def configureGit() {
     steps.sh("git config user.email '${GIT_EMAIL}'")
     steps.sh("git config user.name '${GIT_USER}'")
+    steps.sh("git config http.postBuffer 524288000")
     steps.sh("git commit -m 'Deploying Build #${steps.env.BUILD_NUMBER}' --allow-empty")
   }
 
