@@ -40,10 +40,12 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartPath}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartPath}/values.yaml"
-    if (!fileExists(templateValues)) {
-      throw new RuntimeException("No default values template file found at.")
+    if (!fileExists(templateValues) && !fileExists(defaultValues)) {
+      throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
     }
-    sh "envsubst < ${templateValues} > ${defaultValues}"
+    if (fileExists(templateValues)) {
+      sh "envsubst < ${templateValues} > ${defaultValues}"
+    }
     values << defaultValues
 
     // environment specific values is optional
