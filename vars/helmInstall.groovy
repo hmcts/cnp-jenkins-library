@@ -18,8 +18,14 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
-  
+  def templateEnvVars = [
+    "ENVIRONMENT=${environment}",
+    "NAMESPACE=${aksServiceName}",
+    "SERVICE_NAME=${aksServiceName}",
+    "IMAGE_NAME=${digestName}",
+    "SERVICE_FQDN=${serviceFqdn}"
+  ]
+
   withEnv(templateEnvVars) {
 
     def kubectl = new Kubectl(this, subscription, aksServiceName)
