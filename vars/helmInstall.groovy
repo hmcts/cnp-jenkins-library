@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
+import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 
@@ -18,7 +19,17 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
+  
+  def consul = new Consul(this)
+  def consulapiaddr = consul.getConsulIp()
+  
+  def templateEnvVars = [
+    "NAMESPACE=${aksServiceName}", 
+    "SERVICE_NAME=${aksServiceName}", 
+    "IMAGE_NAME=${digestName}", 
+    "SERVICE_FQDN=${serviceFqdn}",
+    "CONSUL_LB_IP=${consulapiaddr}"
+  ]
   
   withEnv(templateEnvVars) {
 
@@ -67,7 +78,7 @@ def call(DockerImage dockerImage, Map params) {
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
-    registerConsulDns(subscription, aksServiceName, ingressIP)
+    consul.registerConsulDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
