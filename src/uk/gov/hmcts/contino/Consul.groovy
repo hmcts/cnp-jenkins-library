@@ -53,7 +53,7 @@ class Consul {
   def registerConsulDns(serviceName, serviceIP) {
     // Build json payload for aks service record
     getConsulIP()
-    json = JsonOutput.toJson(
+    def json = JsonOutput.toJson(
       ["Name": serviceName,
       "Service": serviceName,
       "Address": "${serviceIP}",
@@ -61,7 +61,7 @@ class Consul {
       ])
     this.steps.log.info("Registering to consul with following record: $json")
 
-    req = this.steps.httpRequest(
+    def req = this.steps.httpRequest(
       httpMode: 'POST',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
