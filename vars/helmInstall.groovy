@@ -78,14 +78,6 @@ def call(DockerImage dockerImage, Map params) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
-    // populate other templates (eg. dns.template.yaml)
-    def fileFinder = new FileNameByRegexFinder()
-    def tpls = ff.getFileNames("${helmResourcesDir}/${chartPath}/templates/", /^.*\.template\.yaml$/)
-    tpls.each{ tplEnv ->
-      def tpl = tplEnv.replace(".template.yaml", ".yaml")
-      sh "envsubst < ${tplEnv} > ${tpl}"
-    }
-
     def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
