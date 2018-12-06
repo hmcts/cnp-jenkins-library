@@ -25,7 +25,7 @@ class Consul {
         requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=${this.steps.env.ARM_CLIENT_ID}&client_secret=${this.steps.env.ARM_CLIENT_SECRET}",
         acceptType: 'APPLICATION_JSON',
         url: "https://login.microsoftonline.com/${this.steps.env.ARM_TENANT_ID}/oauth2/token")
-    this.authtoken = readJSON(text: response.content.text).access_token    
+    this.authtoken = this.steps.readJSON(text: response.content).access_token    
     return this.authtoken
   }    
 
@@ -43,7 +43,7 @@ class Consul {
       lthis.steps.og.debug(lbCfg.content)
       error("Something went wrong finding consul lb")
     }
-    lbCfgJson = readJSON(text: lbCfg.content)
+    lbCfgJson = this.steps.readJSON(text: lbCfg.content)
     this.consulapiaddr = lbCfgJson.properties.privateIPAddress
     this.steps.log.info("Consul LB IP: ${this.consulapiaddr}")
     this.steps.env.CONSUL_LB_IP = consulapiaddr
