@@ -25,7 +25,7 @@ class Consul {
         requestBody: "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=${this.steps.env.ARM_CLIENT_ID}&client_secret=${this.steps.env.ARM_CLIENT_SECRET}",
         acceptType: 'APPLICATION_JSON',
         url: "https://login.microsoftonline.com/${this.steps.env.ARM_TENANT_ID}/oauth2/token")
-    this.authtoken = readJSON(text: response.content).access_token    
+    this.authtoken = readJSON(text: response.content.text).access_token    
     return this.authtoken
   }    
 
