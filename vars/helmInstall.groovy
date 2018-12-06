@@ -21,27 +21,30 @@ def call(DockerImage dockerImage, Map params) {
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
   
   def consul = new Consul(this)
-  def consulapiaddr = consul.getConsulIp()
-  
+  def consulApiAddr = consul.getConsulIP()
+
+  def kubectl = new Kubectl(this, subscription, aksServiceName)
+  kubectl.login()
+  // Get the IP of the Traefik Ingress Controller
+  def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
+
   def templateEnvVars = [
     "NAMESPACE=${aksServiceName}", 
     "SERVICE_NAME=${aksServiceName}", 
     "IMAGE_NAME=${digestName}", 
     "SERVICE_FQDN=${serviceFqdn}",
-    "CONSUL_LB_IP=${consulapiaddr}"
+    "CONSUL_LB_IP=${consulApiAddr}",
+    "INGRESS_IP=${ingressIP}"
   ]
   
   withEnv(templateEnvVars) {
 
-    def kubectl = new Kubectl(this, subscription, aksServiceName)
-    kubectl.login()
-
-    def helm = new Helm(this)
-    helm.setup()
-
     if (!fileExists("${helmResourcesDir}")) {
       throw new RuntimeException("No Helm charts directory found at ${helmResourcesDir}")
     }
+
+    def helm = new Helm(this)
+    helm.setup()
 
     def values = []
     def chart = aksServiceName
@@ -76,8 +79,7 @@ def call(DockerImage dockerImage, Map params) {
     def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
-    // Get the IP of the Traefik Ingress Controller
-    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
+    // Register service dns
     consul.registerConsulDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"

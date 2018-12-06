@@ -29,7 +29,7 @@ class Consul {
     return this.authtoken
   }    
 
-  def getConsulIp() {    
+  def getConsulIP() {    
     if (this.consulapiaddr) {
       return this.consulapiaddr
     }
@@ -52,7 +52,7 @@ class Consul {
 
   def registerConsulDns(serviceName, serviceIP) {
     // Build json payload for aks service record
-    getConsulIp()
+    getConsulIP()
     json = JsonOutput.toJson(
       ["Name": serviceName,
       "Service": serviceName,
