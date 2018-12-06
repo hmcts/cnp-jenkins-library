@@ -6,6 +6,8 @@ import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 
+import groovy.util.FileNameByRegexFinder
+
 def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
@@ -74,6 +76,14 @@ def call(DockerImage dockerImage, Map params) {
     def requirements = "${helmResourcesDir}/${chartPath}/requirements.yaml"
     if (fileExists(requirementsEnv)) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
+    }
+
+    // populate other templates (eg. dns.template.yaml)
+    def fileFinder = new FileNameByRegexFinder()
+    def tpls = ff.getFileNames("${helmResourcesDir}/${chartPath}/templates/", /^.*\.template\.yaml$/)
+    tpls.each{ tplEnv ->
+      def tpl = tplEnv.replace(".template.yaml", ".yaml")
+      sh "envsubst < ${tplEnv} > ${tpl}"
     }
 
     def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
