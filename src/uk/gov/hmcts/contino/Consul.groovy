@@ -43,7 +43,7 @@ class Consul {
       lthis.steps.og.debug(lbCfg.content)
       error("Something went wrong finding consul lb")
     }
-    lbCfgJson = this.steps.readJSON(text: lbCfg.content)
+    def lbCfgJson = this.steps.readJSON(text: lbCfg.content)
     this.consulapiaddr = lbCfgJson.properties.privateIPAddress
     this.steps.log.info("Consul LB IP: ${this.consulapiaddr}")
     this.steps.env.CONSUL_LB_IP = consulapiaddr
