@@ -1,7 +1,8 @@
 package uk.gov.hmcts.contino
 
-import uk.gov.hmcts.contino.azure.Acr
+import groovy.json.JsonOutput
 
+import uk.gov.hmcts.contino.azure.Acr
 
 class Consul {
 
