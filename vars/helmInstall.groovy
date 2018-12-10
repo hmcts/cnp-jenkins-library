@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
+import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 
@@ -18,19 +19,32 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
+  
+  def consul = new Consul(this)
+  def consulApiAddr = consul.getConsulIP()
+
+  def kubectl = new Kubectl(this, subscription, aksServiceName)
+  kubectl.login()
+  // Get the IP of the Traefik Ingress Controller
+  def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
+
+  def templateEnvVars = [
+    "NAMESPACE=${aksServiceName}", 
+    "SERVICE_NAME=${aksServiceName}", 
+    "IMAGE_NAME=${digestName}", 
+    "SERVICE_FQDN=${serviceFqdn}",
+    "CONSUL_LB_IP=${consulApiAddr}",
+    "INGRESS_IP=${ingressIP}"
+  ]
   
   withEnv(templateEnvVars) {
-
-    def kubectl = new Kubectl(this, subscription, aksServiceName)
-    kubectl.login()
-
-    def helm = new Helm(this)
-    helm.setup()
 
     if (!fileExists("${helmResourcesDir}")) {
       throw new RuntimeException("No Helm charts directory found at ${helmResourcesDir}")
     }
+
+    def helm = new Helm(this)
+    helm.setup()
 
     def values = []
     def chart = aksServiceName
@@ -65,9 +79,8 @@ def call(DockerImage dockerImage, Map params) {
     def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
-    // Get the IP of the Traefik Ingress Controller
-    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
-    registerConsulDns(subscription, aksServiceName, ingressIP)
+    // Register service dns
+    consul.registerConsulDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
