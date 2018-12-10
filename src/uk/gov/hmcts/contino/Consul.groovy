@@ -24,10 +24,14 @@ class Consul {
     }
     this.steps.log.info "Getting consul's IP address ..."    
     
-    this.consulapiaddr = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv" 
-    
+    def cip = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv" 
+    this.consulapiaddr = cip?.trim()
+    if (this.consulapiaddr == null || "".equals(this.consulapiaddr)) {
+      throw new RuntimeException("Failed to retrieve Consul LB IP")
+    }
+
     this.steps.log.info("Consul LB IP: ${this.consulapiaddr}")
-    this.steps.env.CONSUL_LB_IP = consulapiaddr
+    this.steps.env.CONSUL_LB_IP = this.consulapiaddr
     return this.consulapiaddr
   }
 
