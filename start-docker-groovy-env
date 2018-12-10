@@ -13,4 +13,4 @@ docker run \
   -v $(pwd)/testResources:/home/groovy/testResources \
   -v $(pwd)/vars:/home/groovy/vars \
   -v $(pwd)/build:/home/groovy/build \
-  hmcts/groovy-pipeline-dev sh
+  hmcts/groovy-pipeline-dev bash
