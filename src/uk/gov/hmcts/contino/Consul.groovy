@@ -8,9 +8,8 @@ class Consul {
 
   def steps  
   def subscription
-  def authtoken
-  def consulapiaddr
   def az
+  private consulApiAddr
 
   Consul(steps) {
     this.steps = steps
@@ -19,25 +18,23 @@ class Consul {
   }
 
   def getConsulIP() {    
-    if (this.consulapiaddr) {
-      return this.consulapiaddr
+    if (this.consulApiAddr) {
+      return this.consulApiAddr
     }
     this.steps.log.info "Getting consul's IP address ..."    
     
-    def cip = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv" 
-    this.consulapiaddr = cip?.trim()
-    if (this.consulapiaddr == null || "".equals(this.consulapiaddr)) {
+    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv" 
+    this.consulApiAddr = tempConsulIpAddr?.trim()
+    if (this.consulApiAddr == null || "".equals(this.consulApiAddr)) {
       throw new RuntimeException("Failed to retrieve Consul LB IP")
     }
 
-    this.steps.log.info("Consul LB IP: ${this.consulapiaddr}")
-    this.steps.env.CONSUL_LB_IP = this.consulapiaddr
-    return this.consulapiaddr
+    this.steps.log.info("Consul LB IP: ${this.consulApiAddr}")
+    return this.consulApiAddr
   }
 
   def registerConsulDns(serviceName, serviceIP) {
     // Build json payload for aks service record
-    getConsulIP()
     def json = JsonOutput.toJson(
       ["Name": serviceName,
       "Service": serviceName,
@@ -50,7 +47,7 @@ class Consul {
       httpMode: 'POST',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: "http://${this.consulapiaddr}:8500/v1/agent/service/register",
+      url: "http://${getConsulIP()}:8500/v1/agent/service/register",
       requestBody: "${json}",
       consoleLogResponseBody: true,
       validResponseCodes: '200'
