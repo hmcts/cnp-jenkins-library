@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.Consul
 
 def call(DockerImage dockerImage, Map params) {
 
@@ -46,7 +47,7 @@ def call(DockerImage dockerImage, Map params) {
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
-    registerConsulDns(subscription, aksServiceName, ingressIP)
+    (new Consul(this)).registerConsulDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
