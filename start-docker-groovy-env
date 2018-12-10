@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+docker build \
+  -f groovy-tests.Dockerfile \
+  -t hmcts/groovy-pipeline-dev \
+  .
+
+docker run \
+  -it \
+  --rm \
+  -v $(pwd)/src:/home/groovy/src \
+  -v $(pwd)/test:/home/groovy/test \
+  -v $(pwd)/testResources:/home/groovy/testResources \
+  -v $(pwd)/vars:/home/groovy/vars \
+  -v $(pwd)/build:/home/groovy/build \
+  hmcts/groovy-pipeline-dev sh
