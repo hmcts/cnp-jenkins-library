@@ -6,8 +6,6 @@ import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 
-import groovy.util.FileNameByRegexFinder
-
 def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
