@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino.azure
 
-abstract class Az {
+class Az {
 
   def steps
   def subscription
