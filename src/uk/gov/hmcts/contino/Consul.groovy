@@ -33,7 +33,7 @@ class Consul {
     return this.consulApiAddr
   }
 
-  def registerConsulDns(serviceName, serviceIP) {
+  def registerDns(serviceName, serviceIP) {
     // Build json payload for aks service record
     def json = JsonOutput.toJson(
       ["Name": serviceName,

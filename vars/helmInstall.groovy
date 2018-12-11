@@ -80,7 +80,7 @@ def call(DockerImage dockerImage, Map params) {
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
     // Register service dns
-    consul.registerConsulDns(aksServiceName, ingressIP)
+    consul.registerDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
