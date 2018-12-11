@@ -17,13 +17,16 @@ class PipelineCallbacks implements Serializable {
   boolean dockerBuild = false
   boolean deployToAKS = false
   boolean installCharts = false
+  boolean fullFunctionalTest = false
+  boolean securityScan = false
+
 
   int crossBrowserTestTimeout
   int perfTestTimeout
   int apiGatewayTestTimeout
   int mutationTestTimeout
   int fullFunctionalTestTimeout
-  boolean fullFunctionalTest = false
+  int securityScanTimeout
 
   PipelineCallbacks(MetricsPublisher metricsPublisher, steps) {
     this.metricsPublisher = metricsPublisher
@@ -108,6 +111,11 @@ class PipelineCallbacks implements Serializable {
   void enableCrossBrowserTest(int timeout = 120) {
     this.crossBrowserTestTimeout = timeout
     this.crossBrowserTest = true
+  }
+
+  void enableSecurityScan(int timeout = 120) {
+    this.securityScanTimeout = timeout
+    this.securityScan = true
   }
 
   void enableDockerBuild() {
