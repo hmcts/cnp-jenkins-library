@@ -1,6 +1,7 @@
 package withPipeline.onBranch
 
 import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
 import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.contino.JavaDeployer
 import uk.gov.hmcts.contino.MockJenkinsPlugin
@@ -48,20 +49,22 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
 
   @Test
   void PipelineExecutesExpectedSteps() {
-    def mockBuilder = new MockFor(GradleBuilder)
-    mockBuilder.demand.build() {}
-    mockBuilder.demand.test() {}
-    mockBuilder.demand.securityCheck() {}
-    mockBuilder.demand.sonarScan() {}
+    def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.build() {}
+    stubBuilder.demand.test() {}
+    stubBuilder.demand.securityCheck() {}
+    stubBuilder.demand.sonarScan() {}
 
     // ensure no deployer methods are called
     def mockDeployer = new MockFor(JavaDeployer)
 
     mockDeployer.use {
-      mockBuilder.use {
+      stubBuilder.use {
         runScript("testResources/exampleJavaPipeline.jenkins")
       }
     }
+
+    stubBuilder.expect.verify()
   }
 }
 
