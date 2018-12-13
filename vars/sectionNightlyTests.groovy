@@ -5,7 +5,9 @@ import uk.gov.hmcts.contino.PipelineType
 
 def call(PipelineCallbacks pl, PipelineType pipelineType) {
 
-  withTeamSecrets(pl) {
+  Environment environment = new Environment(env)
+
+  withTeamSecrets(pl, environment.nonProdName) {
     Builder builder = pipelineType.builder
 
     stage('Checkout') {
@@ -100,28 +102,4 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
     }
 
   }
-}
-
-
-def withTeamSecrets(PipelineCallbacks pl, Closure block) {
-  def keyvaultUrl = null
-
-  if (pl.vaultSecrets?.size() > 0) {
-    if (pl.vaultName) {
-      keyvaultUrl = "https://${pl.vaultName}.vault.azure.net/"
-    } else {
-      error "Please set vault name `setVaultName(${pl.vaultName})` if loading vault secrets"
-    }
-  }
-
-  wrap([
-    $class                   : 'AzureKeyVaultBuildWrapper',
-    azureKeyVaultSecrets     : pl.vaultSecrets,
-    keyVaultURLOverride      : keyvaultUrl,
-    applicationIDOverride    : env.AZURE_CLIENT_ID,
-    applicationSecretOverride: env.AZURE_CLIENT_SECRET
-  ]) {
-    block.call()
-  }
-
 }
