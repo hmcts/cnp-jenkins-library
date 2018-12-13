@@ -1,3 +1,5 @@
+import uk.gov.hmcts.contino.PipelineCallbacks
+
 def call(PipelineCallbacks pl, String environment, Closure block) {
   def mapToUse = new HashMap(pl.vaultSecrets)
 
