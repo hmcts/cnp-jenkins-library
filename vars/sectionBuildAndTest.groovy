@@ -20,38 +20,40 @@ def call(PipelineCallbacks pl, Builder builder) {
 
   stage("Tests and checks") {
 
-    parallel(
-      "Unit tests and Sonar scan": {
+    timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Tests and checks') {
 
-        pl.callAround('test') {
-          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+      parallel(
+        "Unit tests and Sonar scan": {
+
+          pl.callAround('test') {
             builder.test()
           }
-        }
 
-        pl.callAround('sonarscan') {
-          pluginActive('sonar') {
-            withSonarQubeEnv("SonarQube") {
-              builder.sonarScan()
-            }
-
-            timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Sonar Scan') {
-              def qg = waitForQualityGate()
-              if (qg.status != 'OK') {
-                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+          pl.callAround('sonarscan') {
+            pluginActive('sonar') {
+              withSonarQubeEnv("SonarQube") {
+                builder.sonarScan()
               }
             }
           }
-        }
 
-      },
+        },
 
-      "Security Checks": {
-        pl.callAround('securitychecks') {
-          builder.securityCheck()
+        "Security Checks": {
+          pl.callAround('securitychecks') {
+            builder.securityCheck()
+          }
         }
+      )
+
+      // Quality Gate check
+      def qg = waitForQualityGate()
+      if (qg.status != 'OK') {
+        error "Pipeline aborted due to quality gate failure: ${qg.status}"
       }
-    )
+    }
+
+
 
   }
 
