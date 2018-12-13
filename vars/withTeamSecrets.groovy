@@ -8,7 +8,7 @@ def call(PipelineCallbacks pl, String environment, Closure block) {
   }
 }
 
-def executeClosure(Map<String, Object> secrets, String environment, Closure body) {
+def executeClosure(Map<String, List<Map<String, Object>>> secrets, String environment, Closure body) {
   def entry = secrets.entrySet().iterator().next()
   def keyVaultUrl = "https://${entry.key.replace('${env}', environment)}.vault.azure.net/"
   wrap([
