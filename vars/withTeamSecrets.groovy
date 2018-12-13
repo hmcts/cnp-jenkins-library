@@ -20,7 +20,7 @@ def executeClosure(secrets, String environment, Closure body) {
   ]) {
     if (secrets.size() > 1) {
       secrets.remove(entry.key)
-      return executeClosure(secrets, body)
+      return executeClosure(secrets, environment, body)
     } else {
       body.call()
     }
