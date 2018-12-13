@@ -1,6 +1,15 @@
 #!groovy
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacks
+
+@NonCPS
+def qualityCheck(){
+  def qg = waitForQualityGate()
+  if (qg.status != 'OK') {
+    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+  }
+}
 
 def call(PipelineCallbacks pl, Builder builder) {
   stage('Checkout') {
@@ -43,14 +52,13 @@ def call(PipelineCallbacks pl, Builder builder) {
           pl.callAround('securitychecks') {
             builder.securityCheck()
           }
+        },
+
+        "Quality Gate": {
+          qualityCheck()
         }
       )
 
-      // Quality Gate check
-      def qg = waitForQualityGate()
-      if (qg.status != 'OK') {
-        error "Pipeline aborted due to quality gate failure: ${qg.status}"
-      }
     }
 
 
