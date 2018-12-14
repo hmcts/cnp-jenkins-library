@@ -37,7 +37,7 @@ def call(subscription, serviceName, serviceIP) {
   log.info("Registering to consul with following record: $scmjson")
 
   httpRequest(
-    httpMode: 'POST',
+    httpMode: 'PUT',
     acceptType: 'APPLICATION_JSON',
     contentType: 'APPLICATION_JSON',
     url: "http://${consulApiAddr}:8500/v1/agent/service/register",

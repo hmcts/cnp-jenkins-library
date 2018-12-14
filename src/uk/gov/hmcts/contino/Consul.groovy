@@ -6,7 +6,7 @@ import uk.gov.hmcts.contino.azure.Az
 
 class Consul {
 
-  def steps  
+  def steps
   def subscription
   def az
   private consulApiAddr
@@ -17,13 +17,13 @@ class Consul {
     this.az = new Az(this.steps, this.subscription)
   }
 
-  def getConsulIP() {    
+  def getConsulIP() {
     if (this.consulApiAddr) {
       return this.consulApiAddr
     }
-    this.steps.log.info "Getting consul's IP address ..."    
-    
-    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv" 
+    this.steps.log.info "Getting consul's IP address ..."
+
+    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv"
     this.consulApiAddr = tempConsulIpAddr?.trim()
     if (this.consulApiAddr == null || "".equals(this.consulApiAddr)) {
       throw new RuntimeException("Failed to retrieve Consul LB IP")
@@ -44,7 +44,7 @@ class Consul {
     this.steps.log.info("Registering to consul with following record: $json")
 
     def req = this.steps.httpRequest(
-      httpMode: 'POST',
+      httpMode: 'PUT',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "http://${getConsulIP()}:8500/v1/agent/service/register",
