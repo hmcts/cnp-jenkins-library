@@ -8,14 +8,12 @@ def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure b
   Map<String, List<Map<String, Object>>> secrets = pl.vaultSecrets
   String vaultName = pl.vaultName
 
-  if (secrets.size() == 0) {
-    // no-op, supports empty secrets map
+  if (secrets.isEmpty()) {
     body.call()
     return
   }
 
-  def iterator = secrets.entrySet().iterator()
-  executeClosure(iterator, environment, keyVaultURL, vaultName) {
+  executeClosure(secrets.entrySet().iterator(), environment, keyVaultURL, vaultName) {
     body.call()
   }
 }
