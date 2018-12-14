@@ -4,7 +4,7 @@ def call(PipelineCallbacks pl, String environment, Closure block) {
   call(pl, environment, null, block)
 }
 
-def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure block) {
+def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure body) {
   Map<String, List<Map<String, Object>>> secrets = pl.vaultSecrets
   String vaultName = pl.vaultName
 
@@ -16,7 +16,7 @@ def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure b
 
   def iterator = secrets.entrySet().iterator()
   executeClosure(iterator, environment, keyVaultURL, vaultName) {
-    block.call()
+    body.call()
   }
 }
 
