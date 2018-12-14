@@ -4,15 +4,15 @@ def call(PipelineCallbacks pl, String environment, Closure block) {
   call(pl, environment, null, block)
 }
 
-def call(PipelineCallbacks pl, String environment, String keyvaultUrl, Closure block) {
+def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure block) {
   def mapToUse = new HashMap(pl.vaultSecrets)
 
-  executeClosure(mapToUse, environment, keyvaultUrl) {
+  executeClosure(mapToUse, environment, keyVaultURL, pl.vaultName) {
     block.call()
   }
 }
 
-def executeClosure(Map<String, List<Map<String, Object>>> secrets, String environment, String keyVaultUrl, Closure body) {
+def executeClosure(Map<String, List<Map<String, Object>>> secrets, String environment, String keyVaultURL, String vaultName, Closure body) {
   if (secrets.size() == 0) {
     body.call()
     return
@@ -20,7 +20,7 @@ def executeClosure(Map<String, List<Map<String, Object>>> secrets, String enviro
 
   def entry = secrets.entrySet().iterator().next()
 
-  String theKeyVaultUrl = determineKeyVaultUrl(keyVaultUrl, entry, environment)
+  String theKeyVaultUrl = getKeyVaultUrl(keyVaultURL, entry, environment, vaultName)
 
   wrap([
     $class                   : 'AzureKeyVaultBuildWrapper',
@@ -31,17 +31,19 @@ def executeClosure(Map<String, List<Map<String, Object>>> secrets, String enviro
   ]) {
     if (secrets.size() > 1) {
       secrets.remove(entry.key)
-      return executeClosure(secrets, environment, keyVaultUrl, body)
+      return executeClosure(secrets, environment, keyVaultURL, vaultName, body)
     } else {
       body.call()
     }
   }
 }
 
-private String determineKeyVaultUrl(String keyVaultUrl, Map.Entry<String, List<Map<String, Object>>> entry, String environment) {
+private String getKeyVaultUrl(String keyVaultURL, Map.Entry<String, List<Map<String, Object>>> entry, String environment, String vaultName) {
   def theKeyVaultUrl
-  if (keyVaultUrl != null) {
-    theKeyVaultUrl = keyVaultUrl
+  if (keyVaultURL != null) {
+    theKeyVaultUrl = keyVaultURL
+  } else if (vaultName != null) {
+    theKeyVaultUrl = "https://${(vaultName + '-' + environment)}.vault.azure.net/"
   } else {
     theKeyVaultUrl = "https://${entry.key.replace('${env}', environment)}.vault.azure.net/"
   }
