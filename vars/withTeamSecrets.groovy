@@ -31,7 +31,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     applicationIDOverride    : env.AZURE_CLIENT_ID,
     applicationSecretOverride: env.AZURE_CLIENT_SECRET
   ]) {
-    if (secrets.hasNext()) {
+    if (secretIterator.hasNext()) {
       return executeClosure(secretIterator, environment, keyVaultURL, vaultName, body)
     } else {
       body.call()
