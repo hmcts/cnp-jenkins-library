@@ -5,20 +5,24 @@ def call(PipelineCallbacks pl, String environment, Closure block) {
 }
 
 def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure block) {
-  def mapToUse = new HashMap(pl.vaultSecrets)
+  Map<String, List<Map<String, Object>>> secrets = pl.vaultSecrets
+  String vaultName = pl.vaultName
 
-  executeClosure(mapToUse, environment, keyVaultURL, pl.vaultName) {
-    block.call()
-  }
-}
-
-def executeClosure(Map<String, List<Map<String, Object>>> secrets, String environment, String keyVaultURL, String vaultName, Closure body) {
   if (secrets.size() == 0) {
+    // no-op, supports empty secrets map
     body.call()
     return
   }
 
-  def entry = secrets.entrySet().iterator().next()
+  def iterator = secrets.entrySet().iterator()
+  executeClosure(iterator, environment, keyVaultURL, vaultName) {
+    block.call()
+  }
+}
+
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, String keyVaultURL, String vaultName, Closure body) {
+  //noinspection ChangeToOperator doesn't work in jenkins
+  def entry = secretIterator.next()
 
   String theKeyVaultUrl = getKeyVaultUrl(keyVaultURL, entry, environment, vaultName)
 
@@ -29,15 +33,15 @@ def executeClosure(Map<String, List<Map<String, Object>>> secrets, String enviro
     applicationIDOverride    : env.AZURE_CLIENT_ID,
     applicationSecretOverride: env.AZURE_CLIENT_SECRET
   ]) {
-    if (secrets.size() > 1) {
-      secrets.remove(entry.key)
-      return executeClosure(secrets, environment, keyVaultURL, vaultName, body)
+    if (secrets.hasNext()) {
+      return executeClosure(secretIterator, environment, keyVaultURL, vaultName, body)
     } else {
       body.call()
     }
   }
 }
 
+@SuppressWarnings("GrMethodMayBeStatic") // no idea how a static method would work inside a jenkins step...
 private String getKeyVaultUrl(String keyVaultURL, Map.Entry<String, List<Map<String, Object>>> entry, String environment, String vaultName) {
   def theKeyVaultUrl
   if (keyVaultURL != null) {
