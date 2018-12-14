@@ -17,29 +17,6 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def withTeamSecrets(PipelineCallbacks pl, String environment, Closure block) {
-  def keyvaultUrl = null
-
-  if (pl.vaultSecrets?.size() > 0) {
-    if (pl.vaultName) {
-      def projectKeyvaultName = pl.vaultName + '-' + environment
-      keyvaultUrl = "https://${projectKeyvaultName}.vault.azure.net/"
-    } else {
-      error "Please set vault name `setVaultName('rhubarb')` if loading vault secrets"
-    }
-  }
-
-  wrap([
-    $class                   : 'AzureKeyVaultBuildWrapper',
-    azureKeyVaultSecrets     : pl.vaultSecrets,
-    keyVaultURLOverride      : keyvaultUrl,
-    applicationIDOverride    : env.AZURE_CLIENT_ID,
-    applicationSecretOverride: env.AZURE_CLIENT_SECRET
-  ]) {
-    block.call()
-  }
-}
-
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
   PipelineType pipelineType = params.pipelineType
