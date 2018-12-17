@@ -65,6 +65,21 @@ class MetricsPublisher implements Serializable {
     ]
   }
 
+  @NonCPS
+  private def createDocument(metrics, cosmosDbUrl) {
+    def client = new DocumentClient(cosmosDbUrl, env.COSMOSDB_TOKEN_KEY, null, null)
+
+    try {
+      def data = JsonOutput.toJson(metrics).toString()
+      client.createDocument(resourceLink, new Document(data), null, false)
+      data = null
+    } finally {
+      client.close()
+      client = null
+    }
+
+  }
+
   def publish(currentStepName) {
     try {
       steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
@@ -73,14 +88,8 @@ class MetricsPublisher implements Serializable {
           return
         }
 
-        def client = new DocumentClient(cosmosDbUrl, env.COSMOSDB_TOKEN_KEY, null, null)
-
-        def metrics = collectMetrics(currentStepName)
-        def data = JsonOutput.toJson(metrics).toString()
         steps.echo "Publishing Metrics data"
-
-        Document documentDefinition = new Document(data)
-        client.createDocument(resourceLink, documentDefinition, null, false)
+        createDocument(collectMetrics(currentStepName), cosmosDbUrl)
       }
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"

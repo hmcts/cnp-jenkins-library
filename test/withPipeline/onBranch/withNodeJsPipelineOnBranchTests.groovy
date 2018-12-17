@@ -2,6 +2,7 @@ package withPipeline.onBranch
 
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.*
 
@@ -45,20 +46,22 @@ class withNodeJsPipelineOnBranchTests extends BasePipelineTest {
 
   @Test
   void PipelineExecutesExpectedSteps() {
-    def mockBuilder = new MockFor(YarnBuilder)
-    mockBuilder.demand.build() {}
-    mockBuilder.demand.test() {}
-    mockBuilder.demand.securityCheck() {}
-    mockBuilder.demand.sonarScan() {}
+    def stubBuilder = new StubFor(YarnBuilder)
+    stubBuilder.demand.build() {}
+    stubBuilder.demand.test() {}
+    stubBuilder.demand.securityCheck() {}
+    stubBuilder.demand.sonarScan() {}
 
     // ensure no deployer methods are called
     def mockDeployer = new MockFor(NodeDeployer)
 
     mockDeployer.use {
-      mockBuilder.use {
+      stubBuilder.use {
         runScript("testResources/$jenkinsFile")
       }
     }
+
+    stubBuilder.expect.verify()
   }
 }
 
