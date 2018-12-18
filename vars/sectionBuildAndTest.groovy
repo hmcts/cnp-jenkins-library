@@ -23,11 +23,33 @@ def call(params) {
   }
 
   stage("Build") {
-    pl.callAround('build') {
-      timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-        builder.build()
+
+    parallel(
+      "build": {
+        pl.callAround('build') {
+          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+            builder.build()
+          }
+        }
+      },
+
+      "Docker build" : {
+        if (pl.dockerBuild) {
+          withAksClient(subscription) {
+            def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+            def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
+
+            pl.callAround('dockerbuild') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+                acr.build(dockerImage)
+              }
+            }
+          }
+        }
       }
-    }
+    )
+
+
   }
 
   stage("Tests and checks") {
@@ -56,21 +78,6 @@ def call(params) {
           }
         }
 
-      },
-
-      "Docker build" : {
-        if (pl.dockerBuild) {
-          withAksClient(subscription) {
-            def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-            def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
-
-            pl.callAround('dockerbuild') {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
-                acr.build(dockerImage)
-              }
-            }
-          }
-        }
       },
 
       "Security Checks": {
