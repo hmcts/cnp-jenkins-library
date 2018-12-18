@@ -77,10 +77,9 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def options = [
-      "--set product=${product},component=${component} ", 
-      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID}"
-      + ",global.environment=${environment}"
-      + ",global.tenantId=${this.env.AZURE_TENANT_ID} ", 
+      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
+      "--set global.tenantId=${this.env.AZURE_TENANT_ID} ", 
+      "--set global.environment=${environment} ",
       "--namespace ${namespace}" 
     ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
