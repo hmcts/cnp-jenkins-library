@@ -76,7 +76,13 @@ def call(DockerImage dockerImage, Map params) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
-    def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
+    def options = [
+      "--set product=${product},component=${component} ", 
+      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID}"
+      + ",global.environment=${environment}"
+      + ",global.tenantId=${this.env.AZURE_TENANT_ID} ", 
+      "--namespace ${namespace}" 
+    ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
     // Register service dns
