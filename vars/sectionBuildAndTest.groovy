@@ -25,7 +25,7 @@ def call(params) {
   stage("Build") {
 
     parallel(
-      "build": {
+      "On agent build": {
         pl.callAround('build') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
             builder.build()

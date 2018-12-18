@@ -30,6 +30,7 @@ def call(params) {
 
   if (pl.dockerBuild) {
     withAksClient(subscription) {
+      def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
       onPR {
