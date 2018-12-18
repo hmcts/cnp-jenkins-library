@@ -52,6 +52,7 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
+  def deploymentTargets = params.deploymentTargets
   Long deploymentNumber
 
   Builder builder = pipelineType.builder
@@ -74,6 +75,21 @@ def call(params) {
                     tfOutput = spinInfra(product, component, environment, false, subscription)
                   }
                   scmServiceRegistration(environment)
+                }
+              }
+              folderExists('deploymentTarget') {
+                dir('deploymentTarget') {
+                  for (deploymentTarget <- deploymentTargets) {
+                    timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
+                      withIlbIp(environment) {
+                        def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+                        withEnv(additionalInfrastructureVariables) {
+                          tfOutput = spinInfra(product, component, environment, false, subscription, deploymentTarget)
+                        }
+                        scmServiceRegistration(environment)
+                      }
+                    }
+                  }
                 }
               }
             }
