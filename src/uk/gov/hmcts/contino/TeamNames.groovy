@@ -54,7 +54,7 @@ class TeamNames {
   }
   
   def getRawHmctsDemoProductName(String product) {
-    def prefix = ~/^hmctsdemo(-|_)/
+    def prefix = ~/^(hmctsdemo)(_|-?)/
     return branchName.toLowerCase() - prefix
   }
 
