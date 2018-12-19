@@ -42,13 +42,20 @@ class TeamNames {
 
   def getName (String product) {
     if (product.startsWith('pr-')) {
-      product = getRawProductName(product)
+      product = getRawPrProductName(product)
+    } else if (product.startsWith('hmctsdemo')) {
+      product = getRawHmctsDemoProductName(product)
     }
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
   }
   
-  def getRawProductName (String product) {
+  def getRawPrProductName(String product) {
     return product.split('pr-(\\d+)-')[1];
+  }
+  
+  def getRawHmctsDemoProductName(String product) {
+    def prefix = ~/^hmctsdemo(-|_)/
+    return branchName.toLowerCase() - prefix
   }
 
   def getNameNormalizedOrThrow(String product) {
