@@ -41,7 +41,7 @@ def call(params) {
         }
       }
 
-      onPR {
+      onPR || onHMCTSDemo {
         if (pl.deployToAKS) {
           withTeamSecrets(pl, params.environment) {
             stage('Deploy to AKS') {
@@ -76,7 +76,7 @@ def call(params) {
       }
     }
 
-    onPR {
+    onPR || onHMCTSDemo {
       if (pl.deployToAKS || pl.installCharts) {
         withSubscription(subscription) {
           withTeamSecrets(pl, params.environment) {
@@ -107,5 +107,7 @@ def call(params) {
         }
       }
     }
+    
+    
   }
 }
