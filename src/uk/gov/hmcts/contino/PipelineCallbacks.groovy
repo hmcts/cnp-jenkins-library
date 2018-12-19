@@ -17,6 +17,7 @@ class PipelineCallbacks implements Serializable {
   boolean dockerBuild = false
   boolean deployToAKS = false
   boolean installCharts = false
+  boolean legacyDeployment = true
 
   int crossBrowserTestTimeout
   int perfTestTimeout
@@ -132,6 +133,10 @@ class PipelineCallbacks implements Serializable {
   void enableMutationTest(int timeout = 120) {
     this.mutationTestTimeout = timeout
     this.mutationTest = true
+  }
+
+  void disableLegacyDeployment() {
+    legacyDeployment = false
   }
 
   void deployToV2Environments() {
