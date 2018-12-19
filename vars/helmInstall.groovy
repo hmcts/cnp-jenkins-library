@@ -17,7 +17,14 @@ def call(DockerImage dockerImage, Map params) {
 
   def digestName = dockerImage.getDigestName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+  
+  def aksSubscriptionDomainMap = [
+        'nonprod'  : 'service.core-compute-preview.internal',
+        'prod': 'service.core-compute-preview.internal',
+        'hmctsdemo'  : 'service.core-compute-hmctsdemo.internal'
+  ]
+
+  def aksDomain = "${aksSubscriptionDomainMap.subscription ?: 'service.core-compute-saat.internal'}"  
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
   
   def consul = new Consul(this)
