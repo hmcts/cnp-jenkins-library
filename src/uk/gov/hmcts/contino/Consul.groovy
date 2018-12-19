@@ -30,7 +30,7 @@ class Consul {
 
     def consulResourceGroup = subscriptionResourceGroupMap.subscription ?: 'core-infra-saat'
 
-    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g ${consulResourceGroup}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv"
+    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g ${consulResourceGroup} --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv"
     this.consulApiAddr = tempConsulIpAddr?.trim()
     if (this.consulApiAddr == null || "".equals(this.consulApiAddr)) {
       throw new RuntimeException("Failed to retrieve Consul LB IP")
