@@ -41,7 +41,7 @@ def call(params) {
         }
       }
 
-      onPR || onHMCTSDemo {
+      onPR {
         if (pl.deployToAKS) {
           withTeamSecrets(pl, params.environment) {
             stage('Deploy to AKS') {
@@ -76,7 +76,75 @@ def call(params) {
       }
     }
 
-    onPR || onHMCTSDemo {
+    onPR {
+      if (pl.deployToAKS || pl.installCharts) {
+        withSubscription(subscription) {
+          withTeamSecrets(pl, params.environment) {
+            stage("Smoke Test - AKS") {
+              testEnv(aksUrl) {
+                pl.callAround("smoketest:aks") {
+                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                    builder.smokeTest()
+                  }
+                }
+              }
+            }
+
+            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+
+            onFunctionalTestEnvironment(environment) {
+              stage("Functional Test - AKS") {
+                testEnv(aksUrl) {
+                  pl.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      builder.functionalTest()
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    
+    onHMCTSDemo {
+        if (pl.deployToAKS) {
+          withTeamSecrets(pl, params.environment) {
+            stage('Deploy to AKS') {
+              pl.callAround('aksdeploy') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
+                  deploymentNumber = githubCreateDeployment()
+
+                  aksUrl = aksDeploy(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
+
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
+              }
+            }
+          }
+        } else if (pl.installCharts) {
+          withTeamSecrets(pl, params.environment) {
+            stage('Install Charts to AKS') {
+              pl.callAround('akschartsinstall') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
+                  deploymentNumber = githubCreateDeployment()
+
+                  aksUrl = helmInstall(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
+
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    onHMCTSDemo {
       if (pl.deployToAKS || pl.installCharts) {
         withSubscription(subscription) {
           withTeamSecrets(pl, params.environment) {
