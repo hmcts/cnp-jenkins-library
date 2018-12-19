@@ -28,7 +28,16 @@ class ProjectBranch implements Serializable {
 
   String deploymentNamespace() {
     // lowercase because some Azure resource names require lowercase
-    return isPR() || isHMCTSDemo() ? branchName.toLowerCase() : ""
+    if (isPR()){
+      return branchName.toLowerCase()
+    } else if (isHMCTSDemo()) {
+      //Remove 'hmctsdemo_'
+      def prefix = ~/^hmctsdemo_/
+      return branchName.toLowerCase() - prefix
+    }
+    else{
+      return ""
+    }
   }
 
   String imageTag() {
