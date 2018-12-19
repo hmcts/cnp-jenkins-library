@@ -31,8 +31,8 @@ class ProjectBranch implements Serializable {
     if (isPR()){
       return branchName.toLowerCase()
     } else if (isHMCTSDemo()) {
-      //Remove 'hmctsdemo_'
-      def prefix = ~/^hmctsdemo(-|_)/
+      //Remove 'hmctsdemo_ or hmctsdemo-'
+      def prefix = ~/^(hmctsdemo)(_|-?)/
       return branchName.toLowerCase() - prefix
     }
     else{
