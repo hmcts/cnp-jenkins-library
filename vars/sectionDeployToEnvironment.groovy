@@ -17,6 +17,7 @@ def call(params) {
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
+  def tfOutput
 
   lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
     stage("Build Infrastructure - ${environment}") {
@@ -61,6 +62,7 @@ def call(params) {
         environment: environment,
         product: product,
         component: component,
+        envTfOutput: tfOutput,
         deploymentTarget: deploymentTarget)
     }
   }
