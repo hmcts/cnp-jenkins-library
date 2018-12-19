@@ -82,7 +82,9 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    yarn("test:nsp")
+    // no-op
+    // to be replaced with yarn audit once suppressing vulnerabilities is possible 
+    // https://github.com/yarnpkg/yarn/issues/6669
   }
 
   @Override

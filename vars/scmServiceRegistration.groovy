@@ -127,7 +127,7 @@ def call(environment) {
   RequestBody scmrequestbody = RequestBody.create(mediaTypeScm, scmjson);
   Request requestscm = new Request.Builder()
     .url("http://" + consulapiaddr + ":8500/v1/agent/service/register")
-    .post(scmrequestbody)
+    .put(scmrequestbody)
     .addHeader("content-type", "application/json")
     .addHeader("cache-control", "no-cache")
     .build();

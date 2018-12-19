@@ -76,11 +76,16 @@ def call(DockerImage dockerImage, Map params) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
-    def options = ["--set product=${product},component=${component}", "--namespace ${namespace}" ]
+    def options = [
+      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
+      "--set global.tenantId=${this.env.AZURE_TENANT_ID} ", 
+      "--set global.environment=${environment} ",
+      "--namespace ${namespace}" 
+    ]
     helm.installOrUpgrade("${helmResourcesDir}/${chartPath}", chart, values, options)
 
     // Register service dns
-    consul.registerConsulDns(aksServiceName, ingressIP)
+    consul.registerDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"

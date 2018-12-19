@@ -76,13 +76,7 @@ def call(params) {
   }
 
   withSubscription(subscription) {
-    wrap([
-      $class                   : 'AzureKeyVaultBuildWrapper',
-      azureKeyVaultSecrets     : pl.vaultSecrets,
-      keyVaultURLOverride      : tfOutput?.vaultUri?.value,
-      applicationIDOverride    : env.AZURE_CLIENT_ID,
-      applicationSecretOverride: env.AZURE_CLIENT_SECRET
-    ]) {
+    withTeamSecrets(pl, environment, tfOutput?.vaultUri?.value) {
       stage("Smoke Test - ${environmentDt} (staging slot)") {
         testEnv(deployer.getServiceUrl(environmentDt, "staging"), tfOutput) {
           pl.callAround("smoketest:${environmentDt}-staging") {

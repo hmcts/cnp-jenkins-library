@@ -1,6 +1,7 @@
 package withPipeline.onPreview
 
 import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.contino.JavaDeployer
@@ -16,8 +17,8 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
-    def mockBuilder = new MockFor(GradleBuilder)
-    mockBuilder.demand.with {
+    def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.with {
       build(1) {}
       test(1) {}
       securityCheck(1) {}
@@ -39,11 +40,13 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
       healthCheck() { env, slot -> return null }
     }
 
-    mockBuilder.use {
+    stubBuilder.use {
       mockDeployer.use {
         runScript("testResources/$jenkinsFile")
       }
     }
+
+    stubBuilder.expect.verify()
   }
 }
 

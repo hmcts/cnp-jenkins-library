@@ -1,6 +1,7 @@
 package withPipeline.onDemo
 
 import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.NodeDeployer
 import uk.gov.hmcts.contino.YarnBuilder
@@ -16,8 +17,8 @@ class withNodeJsPipelineOnDemoTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
-    def mockBuilder = new MockFor(YarnBuilder)
-    mockBuilder.demand.with {
+    def stubBuilder = new StubFor(YarnBuilder)
+    stubBuilder.demand.with {
       build(1) {}
       test(1) {}
       securityCheck(1) {}
@@ -36,11 +37,13 @@ class withNodeJsPipelineOnDemoTests extends BaseCnpPipelineTest {
       healthCheck() { env, slot -> return null }
     }
 
-    mockBuilder.use {
+    stubBuilder.use {
       mockDeployer.use {
         runScript("testResources/$jenkinsFile")
       }
     }
+
+    stubBuilder.expect.verify()
   }
 }
 

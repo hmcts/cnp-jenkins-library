@@ -63,9 +63,16 @@ withPipeline(type, product, component) {
 
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
+
+`${env}` will be replaced by the pipeline with the environment that it is being run in
 ```groovy
-List<LinkedHashMap<String, Object>> secrets = [
-  secret('secretNameInVault', 'theEnvVarYouWantToBeSet')
+def secrets = [
+  'your-app-${env}': [
+    secret('idam-client-secret', 'IDAM_CLIENT_SECRET')
+  ],
+  's2s-${env}'      : [
+    secret('microservicekey-your-app', 'S2S_SECRET')
+  ]
 ]
 
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
