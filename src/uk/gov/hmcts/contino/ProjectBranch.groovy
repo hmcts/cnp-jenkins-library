@@ -32,7 +32,7 @@ class ProjectBranch implements Serializable {
   }
 
   String imageTag() {
-    if (isPR()) || isHMCTSDEMO() {
+    if (isPR() || isHMCTSDEMO()) {
       return branchName.toLowerCase()
     }
     return (branchName == 'master' || branchName == 'masterv2') ? 'latest' : this.branchName.replaceAll('/', '-')
