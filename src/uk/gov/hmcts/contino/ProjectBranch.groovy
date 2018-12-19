@@ -28,11 +28,11 @@ class ProjectBranch implements Serializable {
 
   String deploymentNamespace() {
     // lowercase because some Azure resource names require lowercase
-    return isPR() || isHMCTSDEMO() ? branchName.toLowerCase() : ""
+    return isPR() || isHMCTSDemo() ? branchName.toLowerCase() : ""
   }
 
   String imageTag() {
-    if (isPR() || isHMCTSDEMO()) {
+    if (isPR() || isHMCTSDemo()) {
       return branchName.toLowerCase()
     }
     return (branchName == 'master' || branchName == 'masterv2') ? 'latest' : this.branchName.replaceAll('/', '-')
