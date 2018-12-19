@@ -13,13 +13,18 @@ class Helm {
   def subscriptionId
   def resourceGroup
   def registryName
+  
+  def registryNameSubscriptionMap = [
+    'sandbox' : 'hmctssandbox',
+    'hmctsdemo' : 'hmctsdemo'
+  ]
 
   Helm(steps) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
     this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
-    this.registryName = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
+    this.registryName = (registryNameSubscriptionMap.subscription ?: "hmcts")
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup)
   }
 
