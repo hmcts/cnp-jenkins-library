@@ -64,10 +64,16 @@ def call(params) {
   }
 
   // merge env and deployment target tf output using some groovy magic
-  def mergedTfOutput = tfOutput ?: new Object()
-  envTfOutput.properties.each {
-    mergedTfOutput.metaClass[it.key] = it.value
+  def mergedTfOutput
+  if (tfOutput) {
+    envTfOutput.properties.each {
+      tfOutput.metaClass[it.key] = it.value
+    }
+    mergedTfOutput = tfOutput
+  } else {
+    mergedTfOutput = envTfOutput
   }
+
 
   stage("Deploy - ${environmentDt} (staging slot)") {
     withSubscription(subscription) {
