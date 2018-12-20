@@ -8,7 +8,7 @@ import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
-  call(type, product,component,environment,subscription,[],body)
+  call(type, product,component,environment,subscription,'',body)
 }
 
 def call(type, String product, String component, String environment, String subscription, String deploymentTargets, Closure body) {
