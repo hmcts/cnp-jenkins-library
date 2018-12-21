@@ -41,6 +41,8 @@ def call(type, String product, String component, String environment, String subs
     currentBuild.result = "FAILURE"
   }
 
+  def deploymentTargetList = deploymentTargets.split(',') as List
+
   timestamps {
     try {
       node {
@@ -66,7 +68,7 @@ def call(type, String product, String component, String environment, String subs
           environment: environment,
           product: product,
           component: component,
-          deploymentTargets: deploymentTargets.split(','))
+          deploymentTargets: deploymentTargetList)
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
