@@ -10,9 +10,9 @@
 def call(String subscription, String environment) {
   def deploymentTargets = [
     sandbox: [
-      sandbox: ["v2"],
-      saat: [],
-      sprod: []
+      sandbox: ["-v2"],
+      saat: ["-v2"],
+      sprod: ["-v2"]
     ],
     nonprod: [
       aat: [],
