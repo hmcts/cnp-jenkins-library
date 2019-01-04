@@ -6,6 +6,7 @@ def call(PipelineCallbacks pl, String environment, Closure block) {
 
 def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure body) {
   Map<String, List<Map<String, Object>>> secrets = pl.vaultSecrets
+  Map<String, String> vaultOverrides = pl.vaultEnvironmentOverrides
   String vaultName = pl.vaultName
 
   if (secrets.isEmpty()) {
@@ -13,16 +14,16 @@ def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure b
     return
   }
 
-  executeClosure(secrets.entrySet().iterator(), environment, keyVaultURL, vaultName) {
+  executeClosure(secrets.entrySet().iterator(), environment, keyVaultURL, vaultName, vaultOverrides) {
     body.call()
   }
 }
 
-def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, String keyVaultURL, String vaultName, Closure body) {
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, String keyVaultURL, String vaultName, Map<String, String> vaultOverrides, Closure body) {
   //noinspection ChangeToOperator doesn't work in jenkins
   def entry = secretIterator.next()
 
-  String theKeyVaultUrl = getKeyVaultUrl(keyVaultURL, entry, environment, vaultName)
+  String theKeyVaultUrl = getKeyVaultUrl(keyVaultURL, entry, environment, vaultName, vaultOverrides)
 
   wrap([
     $class                   : 'AzureKeyVaultBuildWrapper',
@@ -40,10 +41,10 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 }
 
 @SuppressWarnings("GrMethodMayBeStatic") // no idea how a static method would work inside a jenkins step...
-private String getKeyVaultUrl(String keyVaultURL, Map.Entry<String, List<Map<String, Object>>> entry, String environment, String vaultName) {
+private String getKeyVaultUrl(String keyVaultURL, Map.Entry<String, List<Map<String, Object>>> entry, String environment, String vaultName, Map<String, String> vaultOverrides) {
   def theKeyVaultUrl
   // Use AAT vaults for Preview environment
-  def vaultEnv = "preview".equalsIgnoreCase(environment) ? "aat" : environment
+  def vaultEnv = vaultOverrides.get(environment, environment)
   if (keyVaultURL != null) {
     theKeyVaultUrl = keyVaultURL
   } else if (vaultName != null) {
