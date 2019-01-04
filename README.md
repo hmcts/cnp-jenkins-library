@@ -125,8 +125,6 @@ withPipeline(type, product, component) {
 }
 ```
 
-
-
 #### tf ouput for functional / smoke testing
 Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
