@@ -42,12 +42,14 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 @SuppressWarnings("GrMethodMayBeStatic") // no idea how a static method would work inside a jenkins step...
 private String getKeyVaultUrl(String keyVaultURL, Map.Entry<String, List<Map<String, Object>>> entry, String environment, String vaultName) {
   def theKeyVaultUrl
+  // Use AAT vaults for Preview environment
+  def vaultEnv = "preview".equalsIgnoreCase(environment) ? "aat" : environment
   if (keyVaultURL != null) {
     theKeyVaultUrl = keyVaultURL
   } else if (vaultName != null) {
-    theKeyVaultUrl = "https://${(vaultName + '-' + environment)}.vault.azure.net/"
+    theKeyVaultUrl = "https://${(vaultName + '-' + vaultEnv)}.vault.azure.net/"
   } else {
-    theKeyVaultUrl = "https://${entry.key.replace('${env}', environment)}.vault.azure.net/"
+    theKeyVaultUrl = "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
   }
   theKeyVaultUrl
 }
