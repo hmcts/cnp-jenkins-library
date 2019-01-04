@@ -5,6 +5,7 @@ class PipelineCallbacks implements Serializable {
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
+  Map<String, String> vaultEnvironmentOverrides = [:]
   String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
@@ -142,6 +143,10 @@ class PipelineCallbacks implements Serializable {
 
   void deployToV2Environments() {
     this.steps.env.ENV_SUFFIX = 'v2'
+  }
+
+  void overrideVaultEnvironments(Map<String, String> vaultOverrides) {
+    this.vaultEnvironmentOverrides = vaultOverrides
   }
 
   private def nullSafeCall(String key) {
