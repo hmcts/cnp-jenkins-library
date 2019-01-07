@@ -158,7 +158,7 @@ def call(params) {
               }
             }
 
-            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
+            def environment = subscription == 'hmctsdemo'
 
             onFunctionalTestEnvironment(environment) {
               stage("Functional Test - AKS") {
