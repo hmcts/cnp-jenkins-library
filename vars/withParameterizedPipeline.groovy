@@ -61,6 +61,9 @@ def call(type, String product, String component, String environment, String subs
           }
         }
 
+        //TODO: remove
+        echo "INFO: main file inside withParametrizedPiepline ${deploymentTargets}"
+        
         sectionDeployToEnvironment(
           pipelineCallbacks: pl,
           pipelineType: pipelineType,

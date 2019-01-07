@@ -37,6 +37,9 @@ def call(params) {
 
   def environmentDt = "${environment}${deploymentTarget}"
 
+  //TODO: remove
+  echo "INFO: inside main file sectionDeployToDeploymentTarget ${deploymentTarget}"
+
   if (deploymentTarget != '') {
     stage("Build Infrastructure - ${environmentDt}") {
       onPreview {
@@ -44,6 +47,10 @@ def call(params) {
       }
 
       folderExists('infrastructure/deploymentTarget') {
+
+      //TODO: remove
+      echo "INFO: inside infra directory sectionDeployToDeploymentTarget ${deploymentTarget}"
+
         withSubscription(subscription) {
           dir('infrastructure/deploymentTarget') {
             pl.callAround("buildinfra:${environmentDt}") {
