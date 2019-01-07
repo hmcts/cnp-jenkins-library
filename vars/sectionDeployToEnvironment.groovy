@@ -61,7 +61,7 @@ def call(params) {
     for (int i = 0; i < deploymentTargets.size() ; i++) {
       
       //TODO: remove
-      echo "INFO: inside for loop sectionDeployToEnvironment ${deploymentTarget}"
+      echo "INFO: inside for loop sectionDeployToEnvironment ${i}"
       
       sectionDeployToDeploymentTarget(
         pipelineCallbacks: pl,
