@@ -57,7 +57,8 @@ def call(params) {
     if (pl.legacyDeployment) {
       deploymentTargets.add(0, '')
     }
-    for (deploymentTarget in deploymentTargets) {
+
+    for (int i = 0; i < deploymentTargets.size() ; i++) {
       
       //TODO: remove
       echo "INFO: inside for loop sectionDeployToEnvironment ${deploymentTarget}"
@@ -70,7 +71,7 @@ def call(params) {
         product: product,
         component: component,
         envTfOutput: tfOutput,
-        deploymentTarget: deploymentTarget)
+        deploymentTarget: deploymentTargets[i])
     }
   }
 }
