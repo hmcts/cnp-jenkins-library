@@ -38,7 +38,9 @@ def call(params) {
                   withEnv(additionalInfrastructureVariables) {
                     tfOutput = spinInfra(product, component, environment, false, subscription)
                   }
-                  scmServiceRegistration(environment)
+                  if (pl.legacyDeployment) {
+                    scmServiceRegistration(environment)
+                  }  
                 }
               }
             }
@@ -61,7 +63,7 @@ def call(params) {
     for (int i = 0; i < deploymentTargets.size() ; i++) {
       
       //TODO: remove
-      echo "INFO: inside for loop sectionDeployToEnvironment ${i}"
+      echo "INFO: inside for loop sectionDeployToEnvironment ${deploymentTargets[i]}"
       
       sectionDeployToDeploymentTarget(
         pipelineCallbacks: pl,
