@@ -52,16 +52,15 @@ def call(type, String product, String component, Closure body) {
 
         sectionBuildAndTest(pl, pipelineType.builder)
 
-        sectionCI(
-          pipelineCallbacks: pl,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          environment: environment.nonProdName,
-          product: product,
-          component: component
-        )
-
         onMaster {
+          sectionCI(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component)
+ 
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
@@ -80,6 +79,14 @@ def call(type, String product, String component, Closure body) {
         }
 
         onDemo {
+          sectionCI(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component)
+
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
@@ -90,6 +97,14 @@ def call(type, String product, String component, Closure body) {
         }
 
         onHMCTSDemo {
+          sectionCI(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.hmctsDemoName,
+            environment: environment.hmctsDemoName,
+            product: product,
+            component: component
+        )  
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
@@ -100,6 +115,14 @@ def call(type, String product, String component, Closure body) {
         }
 
         onPreview {
+          sectionCI(
+            pipelineCallbacks: pl,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component)
+          
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
