@@ -23,6 +23,9 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
   def entry = secretIterator.next()
 
   String theKeyVaultUrl = getKeyVaultUrl(keyVaultURL, entry, environment, vaultName)
+  
+  echo "Vault: ${keyVaultUrl}"
+  echo "ClientId: ${env.AZURE_CLIENT_SECRET}"
 
   wrap([
     $class                   : 'AzureKeyVaultBuildWrapper',
