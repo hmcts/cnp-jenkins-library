@@ -4,7 +4,8 @@ class PipelineCallbacks implements Serializable {
 
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
-  List<Map<String, Object>> vaultSecrets = []
+  Map<String, List<Map<String, Object>>> vaultSecrets = [:]
+  Map<String, String> vaultEnvironmentOverrides = [:]
   String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
@@ -86,12 +87,18 @@ class PipelineCallbacks implements Serializable {
     this.slackChannel = slackChannel
   }
 
+  @Deprecated
   void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
+    this.vaultSecrets = ['unknown': vaultSecrets]
+  }
+
+  void loadVaultSecrets(Map<String, List<Map<String, Object>>> vaultSecrets) {
     this.vaultSecrets = vaultSecrets
   }
 
+  @Deprecated
   void setVaultName(String vaultName) {
-    this.vaultName  = vaultName
+    this.vaultName = vaultName
   }
 
   void enableDbMigration() {
@@ -144,6 +151,10 @@ class PipelineCallbacks implements Serializable {
 
   void deployToV2Environments() {
     this.steps.env.ENV_SUFFIX = 'v2'
+  }
+
+  void overrideVaultEnvironments(Map<String, String> vaultOverrides) {
+    this.vaultEnvironmentOverrides = vaultOverrides
   }
 
   private def nullSafeCall(String key) {

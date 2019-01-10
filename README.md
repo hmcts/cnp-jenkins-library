@@ -63,9 +63,16 @@ withPipeline(type, product, component) {
 
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
+
+`${env}` will be replaced by the pipeline with the environment that it is being run in
 ```groovy
-List<LinkedHashMap<String, Object>> secrets = [
-  secret('secretNameInVault', 'theEnvVarYouWantToBeSet')
+def secrets = [
+  'your-app-${env}': [
+    secret('idam-client-secret', 'IDAM_CLIENT_SECRET')
+  ],
+  's2s-${env}'      : [
+    secret('microservicekey-your-app', 'S2S_SECRET')
+  ]
 ]
 
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
@@ -81,6 +88,43 @@ withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 }
 ```
+
+##### Overriding vault environment
+
+In some instances vaults from a different environment could be needed. This is for example the case when deploying to `preview` environments, which should use `aat` vaults.
+
+When enabled, `${env}` will be replaced by the overridden vault environment.
+
+```groovy
+def vaultOverrides = [
+  'preview': 'aat',
+  'spreview': 'saat'
+]
+
+def secrets = [
+  'your-app-${env}': [
+    secret('idam-client-secret', 'IDAM_CLIENT_SECRET')
+  ],
+  's2s-${env}'      : [
+    secret('microservicekey-your-app', 'S2S_SECRET')
+  ]
+]
+
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [ $class: 'AzureKeyVaultSecret',
+    secretType: 'Secret',
+    name: secretName,
+    version: '',
+    envVariable: envVar
+  ]
+}
+
+withPipeline(type, product, component) {
+  overrideVaultEnvironments(vaultOverrides)
+  loadVaultSecrets(secrets)
+}
+```
+
 #### tf ouput for functional / smoke testing
 Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
@@ -179,7 +223,7 @@ For triggered jobs with a schedule, you can add a file called `settings.job` wit
 }
 ```
 
-> Note: This has only been tested for Java applications! 
+> Note: This has only been tested for Java applications!
 
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
