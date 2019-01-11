@@ -30,4 +30,12 @@ class PipelineCallbacksTest extends Specification {
     then:
     assertThat(this.steps.env.ENV_SUFFIX).isNull()
   }
+
+  def "ensure securityScan can be set in steps"() {
+    when:
+    pipelineCallbacks.enableSecurityScan()
+
+    then:
+    assertThat(pipelineCallbacks.securityScan).isEqualTo(true)
+  }
 }
