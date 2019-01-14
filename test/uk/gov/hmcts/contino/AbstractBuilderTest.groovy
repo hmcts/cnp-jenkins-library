@@ -7,12 +7,15 @@ class AbstractBuilderTest extends Specification {
   def builder
   def mockSteps
   def mockGatling
+  def mockSecurity
 
   def setup() {
     mockSteps = Mock(JenkinsStepMock.class)
     mockGatling = Mock(Gatling)
+    mockSecurity = Mock(SecurityScan)
     builder = new BuilderImpl(mockSteps)
     builder.gatling = mockGatling
+    builder.securitytest = mockSecurity
   }
 
   def "performanceTest calls 'gatling.execute()'"() {
@@ -22,6 +25,14 @@ class AbstractBuilderTest extends Specification {
     then:
       1 * mockGatling.execute()
   }
+
+  def "security calls 'securitytest.execute()'"() {
+    when:
+    builder.securityScan()
+    then:
+    1 * mockSecurity.execute()
+  }
+
 
   class BuilderImpl extends AbstractBuilder {
     BuilderImpl(steps) {
