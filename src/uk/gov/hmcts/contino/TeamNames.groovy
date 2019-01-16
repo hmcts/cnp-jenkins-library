@@ -37,7 +37,8 @@ class TeamNames {
                       'sscs-cor':'SSCS',
                       'sscs-tya':'SSCS',
                       'sscs-tribunals':'SSCS',
-                      'snl':'SnL'
+                      'snl':'SnL',
+                      'am':'AM'
   ]
 
   def getName (String product) {
