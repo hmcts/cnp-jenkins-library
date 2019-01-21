@@ -101,9 +101,9 @@ def call(environment) {
   }
 
 // Get details about the consul vm scale set i.e. IP address
-  println "Getting consul's IP address ..."
+  println "Getting consul's IP address ...(scmServiceRegistration)"
   Request requestvmss = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
+    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/env-infra-" + environment + "/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
     .get()
     .addHeader("Authorization", "Bearer " + authtoken)
     .addHeader("Cache-Control", "no-cache")
