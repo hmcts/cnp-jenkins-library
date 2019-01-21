@@ -1,8 +1,19 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.azure.Acr
 
-def call(PipelineCallbacks pl, Builder builder) {
+def call(params) {
+
+  PipelineCallbacks pl = params.pipelineCallbacks
+  Builder builder = params.builder
+
+  def subscription = params.subscription
+  def product = params.product
+  def component = params.component
+
   stage('Checkout') {
     pl.callAround('checkout') {
       deleteDir()
@@ -18,7 +29,7 @@ def call(PipelineCallbacks pl, Builder builder) {
     }
   }
 
-  stage("Tests and checks") {
+  stage("Tests/Checks/Container build") {
 
     parallel(
       "Unit tests and Sonar scan": {
@@ -49,6 +60,21 @@ def call(PipelineCallbacks pl, Builder builder) {
       "Security Checks": {
         pl.callAround('securitychecks') {
           builder.securityCheck()
+        }
+      },
+
+      "Docker Build" : {
+        if (pl.dockerBuild) {
+          withAksClient(subscription) {
+            def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+            def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
+
+            pl.callAround('dockerbuild') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+                acr.build(dockerImage)
+              }
+            }
+          }
         }
       }
     )
