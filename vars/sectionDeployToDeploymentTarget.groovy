@@ -60,7 +60,7 @@ def call(params) {
                   withEnv(additionalInfrastructureVariables) {
                     tfOutput = spinInfra(product, component, environment, false, subscription, deploymentTarget)
                   }
-                  scmServiceRegistration(environment, deploymentTarget)
+                  sectionDeployToDeploymentTarget(environment, deploymentTarget)
                 }
               }
             }
