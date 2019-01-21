@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# This script can be used to run the groovy tasks from within a container,
+# for local development convenience.
+
+docker run \
+  -it \
+  --rm \
+  -v $(pwd)/build:/home/groovy/build \
+  -v $(pwd)/gradle:/home/groovy/gradle \
+  -v $(pwd)/resources:/home/groovy/resources \
+  -v $(pwd)/src:/home/groovy/src \
+  -v $(pwd)/test:/home/groovy/test \
+  -v $(pwd)/testResources:/home/groovy/testResources \
+  -v $(pwd)/vars:/home/groovy/vars \
+  -v $(pwd)/build.gradle:/home/groovy/build.gradle \
+  -v $(pwd)/gradlew:/home/groovy/gradlew \
+  -v $(pwd)/init.gradle:/home/groovy/init.gradle \
+  -v $(pwd)/settings.gradle:/home/groovy/settings.gradle \
+  groovy:jre8 bash
