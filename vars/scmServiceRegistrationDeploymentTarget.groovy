@@ -28,7 +28,9 @@ class ConsulRecord {
   Integer Port
 }
 
-def call(environment) {
+def call(environment, deploymentTarget) {
+
+  def environmentDt = "${environment}${deploymentTarget}"
 
   println "Registering application to the scm service"
 
@@ -58,7 +60,7 @@ def call(environment) {
 // Get ServerFarms list
   println "Getting a list of the current apps deployed ..."
   Request requestfarms = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environment + "/sites?api-version=2016-09-01")
+    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environmentDt + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environmentDt + "/sites?api-version=2016-09-01")
     .get()
     .addHeader("authorization", "Bearer " + authtoken)
     .addHeader("cache-control", "no-cache")
@@ -83,7 +85,7 @@ def call(environment) {
 // Get ILB internal IP address
   println "Getting the ILB internal IP address ..."
   Request requestilbip = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environment + "/capacities/virtualip?api-version=2016-09-01")
+    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environmentDt + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environmentDt + "/capacities/virtualip?api-version=2016-09-01")
     .get()
     .addHeader("authorization", "Bearer " + authtoken)
     .addHeader("cache-control", "no-cache")
@@ -104,7 +106,7 @@ def call(environment) {
   println "Getting consul's IP address ...(scmServiceRegistration)"
   println environment
   Request requestvmss = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environment + "/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
+    .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/env-infra-" + environment + "/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
     .get()
     .addHeader("Authorization", "Bearer " + authtoken)
     .addHeader("Cache-Control", "no-cache")
