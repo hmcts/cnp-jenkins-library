@@ -234,6 +234,14 @@ $ ./gradlew build
 $ ./gradlew test
 ```
 
+Alternatively, you can use the gradle tasks from within a container using the following script:
+
+```bash
+$ ./start-docker-groovy-env
+```
+
+Then you can run the build and test tasks as described above.
+
 ## Contributing
 
  1. Use the Github pull requests to make change
