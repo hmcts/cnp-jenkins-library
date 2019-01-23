@@ -66,12 +66,17 @@ def call(params) {
       "Docker Build" : {
         if (pl.dockerBuild) {
           withAksClient(subscription) {
+
+            def acbTemplateFilePath = 'acb.tpl.yaml'
+            def acbTemplateFile = new File(acbTemplateFilePath)
             def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
             def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
             pl.callAround('dockerbuild') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
-                acr.build(dockerImage)
+                acbTemplateFile.exists() ?
+                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                  : acr.build(dockerImage)
               }
             }
           }
