@@ -25,13 +25,15 @@ def call(String product, String environment, String subscription, boolean planOn
       if (!planOnly) {
         stage('Store shared product secrets') {
           if (!tfOutput.vaultName) {
-            throw new IllegalStateException("No vault has been created to store the secrets in")
-          }
+         
 
-          KeyVault keyVault = new KeyVault(this, subscription, tfOutput.vaultName.value)
+            KeyVault keyVault = new KeyVault(this, subscription, tfOutput.vaultName.value)
 
-          if (tfOutput.appInsightsInstrumentationKey) {
-            keyVault.store(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY, tfOutput.appInsightsInstrumentationKey.value)
+            if (tfOutput.appInsightsInstrumentationKey) {
+              keyVault.store(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY, tfOutput.appInsightsInstrumentationKey.value)
+            }
+          } else {
+            echo "No vault name, skipping storing vault secrets" 
           }
         }
       }
