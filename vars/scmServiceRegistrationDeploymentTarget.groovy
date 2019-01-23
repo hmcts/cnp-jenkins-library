@@ -19,7 +19,7 @@ after spinInfra.
  --------------------------------------------------------------*/
 
 // ConsulRecord class used to build requests to update consul records
-
+/*
 class ConsulRecord {
   String ID
   String Name
@@ -27,7 +27,7 @@ class ConsulRecord {
   String Address
   Integer Port
 }
-
+*/
 def call(environment, deploymentTarget) {
 
   def environmentDt = "${environment}${deploymentTarget}"
