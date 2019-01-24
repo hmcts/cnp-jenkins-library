@@ -14,7 +14,7 @@ class Helm {
   def resourceGroup
   def registryName
   
-  def registryNameSubscriptionMap = [
+  def subscriptionToDockerRegistryMapping = [
     'sandbox' : 'hmctssandbox',
     'hmctsdemo' : 'hmctsdemo'
   ]
