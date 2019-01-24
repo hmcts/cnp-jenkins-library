@@ -23,7 +23,7 @@ class Consul {
     }
     this.steps.log.info "Getting consul's IP address ..."
     
-    def subscriptionResourceGroupMap = [
+    def subscriptionToResourceGroupMapping = [
         'nonprod'  : 'core-infra-preview',
         'hmctsdemo'  : 'core-infra-hmctsdemo'
     ]
