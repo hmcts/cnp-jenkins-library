@@ -13,7 +13,7 @@ def call(DockerImage dockerImage, Map params) {
   def kubeResourcesDirDefault = "src/kubernetes"
   def kubeResourcesDirAlternate = "kubernetes"
   
-  def aksSubscriptionDomainMap = [
+  def subscriptionToDomainMapping = [
         'nonprod'  : 'service.core-compute-preview.internal',
         'prod': 'service.core-compute-preview.internal',
         'hmctsdemo'  : 'service.core-compute-hmctsdemo.internal'
