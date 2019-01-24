@@ -29,7 +29,7 @@ class Consul {
         'sandbox' : 'core-infra-saat;
     ]
 
-    def consulResourceGroup = subscriptionResourceGroupMap.subscription ?: 'core-infra-saat'
+    def consulResourceGroup = subscriptionToResourceGroupMapping.subscription
 
     def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g ${consulResourceGroup} --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv"
     this.consulApiAddr = tempConsulIpAddr?.trim()
