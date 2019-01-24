@@ -21,6 +21,18 @@ def testEnv(String testUrl, tfOutput, block) {
   }
 }
 
+def collectAdditionalInfrastructureVariablesFor(subscription, product, environment) {
+  KeyVault keyVault = new KeyVault(this, subscription, "${product}-${environment}")
+  def environmentVariables = []
+
+  def appInsightsInstrumentationKey = keyVault.find(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY)
+  if (appInsightsInstrumentationKey) {
+    environmentVariables.add("TF_VAR_appinsights_instrumentation_key=${appInsightsInstrumentationKey}")
+  }
+
+  return environmentVariables
+}
+
 def call(params) {
   PipelineCallbacks pl = params.pipelineCallbacks
   PipelineType pipelineType = params.pipelineType
