@@ -25,7 +25,8 @@ class Consul {
     
     def subscriptionToResourceGroupMapping = [
         'nonprod'  : 'core-infra-preview',
-        'hmctsdemo'  : 'core-infra-hmctsdemo'
+        'hmctsdemo'  : 'core-infra-hmctsdemo',
+        'sandbox' : 'core-infra-saat;
     ]
 
     def consulResourceGroup = subscriptionResourceGroupMap.subscription ?: 'core-infra-saat'
