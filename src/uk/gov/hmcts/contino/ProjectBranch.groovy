@@ -35,7 +35,7 @@ class ProjectBranch implements Serializable {
       def prefix = ~/^(hmctsdemo)(_|-?)/
       return branchName.toLowerCase() - prefix
     }
-    else{
+    else {
       return ""
     }
   }
