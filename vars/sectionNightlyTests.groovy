@@ -70,6 +70,22 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       }
     }
 
+    if (pl.securityScan) {
+      try {
+        stage('securityScan') {
+          pl.callAround('securityScan') {
+            timeout(time: pl.securityScanTimeout, unit: 'MINUTES') {
+              builder.securityScan()
+            }
+          }
+        }
+      }
+      catch (err) {
+        err.printStackTrace()
+        currentBuild.result = "UNSTABLE"
+      }
+    }
+
     if (pl.mutationTest) {
       try {
         stage('mutationTest') {

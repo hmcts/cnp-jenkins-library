@@ -5,6 +5,7 @@ class PipelineCallbacks implements Serializable {
   Map<String, Closure> bodies = new HashMap<>()
   String slackChannel
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
+  Map<String, String> vaultEnvironmentOverrides = [:]
   String vaultName
   boolean migrateDb = false
   private MetricsPublisher metricsPublisher
@@ -17,6 +18,9 @@ class PipelineCallbacks implements Serializable {
   boolean dockerBuild = false
   boolean deployToAKS = false
   boolean installCharts = false
+  boolean fullFunctionalTest = false
+  boolean securityScan = false
+
   boolean legacyDeployment = true
 
   int crossBrowserTestTimeout
@@ -24,7 +28,7 @@ class PipelineCallbacks implements Serializable {
   int apiGatewayTestTimeout
   int mutationTestTimeout
   int fullFunctionalTestTimeout
-  boolean fullFunctionalTest = false
+  int securityScanTimeout
 
   PipelineCallbacks(MetricsPublisher metricsPublisher, steps) {
     this.metricsPublisher = metricsPublisher
@@ -117,6 +121,11 @@ class PipelineCallbacks implements Serializable {
     this.crossBrowserTest = true
   }
 
+  void enableSecurityScan(int timeout = 120) {
+    this.securityScanTimeout = timeout
+    this.securityScan = true
+  }
+
   void enableDockerBuild() {
     this.dockerBuild = true
   }
@@ -147,6 +156,10 @@ class PipelineCallbacks implements Serializable {
 
   void deployToV2Environments() {
     this.steps.env.ENV_SUFFIX = 'v2'
+  }
+
+  void overrideVaultEnvironments(Map<String, String> vaultOverrides) {
+    this.vaultEnvironmentOverrides = vaultOverrides
   }
 
   private def nullSafeCall(String key) {

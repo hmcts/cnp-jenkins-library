@@ -50,7 +50,13 @@ def call(type, String product, String component, Closure body) {
       try {
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        sectionBuildAndTest(pl, pipelineType.builder)
+        sectionBuildAndTest(
+          pipelineCallbacks: pl,
+          builder: pipelineType.builder,
+          subscription: subscription.nonProdName,
+          product: product,
+          component: component
+        )
 
         sectionCI(
           pipelineCallbacks: pl,

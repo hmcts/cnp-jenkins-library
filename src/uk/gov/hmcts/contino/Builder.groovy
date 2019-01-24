@@ -13,4 +13,5 @@ interface Builder {
   def addVersionInfo()
   def mutationTest()
   def fullFunctionalTest()
+  def securityScan()
 }
