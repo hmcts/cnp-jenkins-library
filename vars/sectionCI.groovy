@@ -27,6 +27,7 @@ def call(params) {
   def aksUrl
 
   Builder builder = pipelineType.builder
+  Deployer deployer = pipelineType.deployer
 
   if (pl.dockerBuild) {
     withAksClient(subscription) {
