@@ -10,6 +10,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import uk.gov.hmcts.contino.IPV4Validator
+import uk.gov.hmcts.contino.ConsulRecord
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
 crawl the infra to workout which webapps are currently deployed
@@ -17,16 +18,6 @@ and update the scm consul record with the right details. This
 script is expected to be called as part of withPipeline just
 after spinInfra.
  --------------------------------------------------------------*/
-
-// ConsulRecord class used to build requests to update consul records
-
-class ConsulRecord {
-  String ID
-  String Name
-  List Tags
-  String Address
-  Integer Port
-}
 
 def call(environment) {
 
