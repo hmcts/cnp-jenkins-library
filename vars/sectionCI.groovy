@@ -95,6 +95,18 @@ def call(params) {
                 }
               }
             }
+            if (pl.performanceTest) {
+              stage("Performance Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("performanceTest:${environment}") {
+                    timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
+                      builder.performanceTest()
+                      publishPerformanceReports(this, params)
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
