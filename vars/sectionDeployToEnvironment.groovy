@@ -56,6 +56,11 @@ def call(params) {
       }
     }
 
+    notFolderExists('infrastructure/deploymentTarget') {
+      // if there's no deployment target infrastructure code then don't run deployment code for deployment targets
+      deploymentTargets.clear()
+    }
+
     if (pl.legacyDeployment) {
       deploymentTargets.add(0, '')
     }
