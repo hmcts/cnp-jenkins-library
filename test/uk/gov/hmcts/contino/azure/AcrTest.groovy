@@ -65,4 +65,16 @@ class AcrTest extends Specification {
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
+
+  def "run() should call the run command with the right registry group and resource group"() {
+    when:
+      acr.run()
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
+
 }
