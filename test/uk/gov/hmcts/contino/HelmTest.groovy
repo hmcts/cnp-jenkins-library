@@ -16,16 +16,16 @@ class HelmTest extends Specification {
     steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
                   AKS_CLUSTER_NAME: "cnp-aks-cluster",
                   SUBSCRIPTION_NAME: "${SUBSCRIPTION}"]
-    helm = new Helm(steps)
+    helm = new Helm(steps, CHART)
   }
 
   def "dependencyUpdate() should execute with the correct chart"() {
     when:
-      helm.dependencyUpdate(CHART)
+      helm.dependencyUpdate()
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("helm dependency update ${CHART}") &&
+                    it.get('script').contains("helm dependency update ${CHART_PATH}") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)
       })
@@ -54,11 +54,11 @@ class HelmTest extends Specification {
 
   def "upgrade() should execute with the correct chart and values"() {
     when:
-    helm.installOrUpgrade(CHART_PATH, CHART, ["val1", "val2"], null)
+    helm.installOrUpgrade("pr-1", ["val1", "val2"], null)
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm upgrade ${CHART} ${CHART_PATH}  -f val1 -f val2 --install --wait") &&
+      it.get('script').contains("helm upgrade ${CHART}-pr-1 ${CHART_PATH}  -f val1 -f val2 --install --wait") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)
     })
