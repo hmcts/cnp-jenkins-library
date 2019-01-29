@@ -96,7 +96,7 @@ def call(params) {
               }
             }
             if (pl.performanceTest) {
-              stage("Performance Test - ${environment}") { //trigger
+              stage("Performance Test - ${environment}") {
                 testEnv(aksUrl) {
                   pl.callAround("performanceTest:${environment}") {
                     timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
