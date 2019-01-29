@@ -82,9 +82,6 @@ def call(DockerImage dockerImage, Map params) {
       "--namespace ${namespace}"
     ]
 
-    helm.dependencyUpdate()
-    helm.lint(values)
-
     helm.installOrUpgrade(dockerImage.getTag(), values, options)
 
     // Register service dns

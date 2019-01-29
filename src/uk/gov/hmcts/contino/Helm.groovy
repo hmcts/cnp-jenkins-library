@@ -47,13 +47,17 @@ class Helm {
   }
 
   def lint(List<String> values) {
-    this.execute("lint", this.chartLocation, values)
+    this.execute("lint", this.chartLocation, values, null)
   }
 
   def installOrUpgrade(String imageTag, List<String> values, List<String> options) {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
+
+    dependencyUpdate()
+    lint(values)
+
     def allOptions = ["--install", "--wait", "--timeout 500"] + (options == null ? [] : options)
     def allValues = values.flatten()
     this.execute("upgrade", "${this.chartName}-${imageTag} ${this.chartLocation}", allValues, allOptions)
