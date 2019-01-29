@@ -259,7 +259,7 @@ Then you can run the build and test tasks as described above.
 
 ## Container build
 
-If you use AKS deployments, a docker image is build and pushed remotely in ACR.
+If you use AKS deployments, a docker image is built and pushed remotely to ACR.
 
 You can optionally make this build faster by using explicit ACR tasks, in a `acb.tpl.yaml` file located at the root of your project (watch out, the extension is .yaml, not .yml).
 
