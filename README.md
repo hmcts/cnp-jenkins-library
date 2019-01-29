@@ -1,6 +1,7 @@
 # Shared Jenkins Library for Code and Infrastructure pipelines
 
 ## How is this used?
+
 Code in this library are loaded at runtime by Jenkins.
 Jenkins is already configured to point to this repository
 See [Jenkins Shared Libraries](https://jenkins.io/doc/book/pipeline/shared-libraries/)
@@ -12,6 +13,7 @@ In your pipeline, import this library.
 ```
 
 To refer to a branch use
+
 ```groovy
 @Library('Infrastructure@<branch-name>')
 ```
@@ -21,23 +23,25 @@ To refer to a branch use
 This library contains a complete opinionated pipeline that can build, test and deploy Java
 and NodeJS applications. The pipeline contains the following stages:
 
-* Checkout
-* Build
-* Unit Test
-* Security Checks
-* Lint (nodejs only)
-* Sonar Scan
-* Deploy Dev
-* Smoke Tests - Dev
-* (Optional) API (gateway) Tests - Dev
-* Deploy Prod
-* Smoke Tests - Production
-* (Optional) API (gateway) Tests - Production
+- Checkout
+- Build
+- Unit Test
+- Security Checks
+- Lint (nodejs only)
+- Sonar Scan
+- Docker build (for AKS deployments, optional ACR steps)
+- Deploy Dev
+- Smoke Tests - Dev
+- (Optional) API (gateway) Tests - Dev
+- Deploy Prod
+- Smoke Tests - Production
+- (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
 
 Example `Jenkinsfile` to use the opinionated pipeline:
+
 ```groovy
 #!groovy
 
@@ -54,7 +58,9 @@ withPipeline(type, product, component) {
 ```
 
 #### Slack notifications on failure / fixed
+
 To enable slack notifications when the build fails or is fixed add the following:
+
 ```groovy
 withPipeline(type, product, component) {
   enableSlackNotifications('#my-team-builds')
@@ -62,9 +68,11 @@ withPipeline(type, product, component) {
 ```
 
 #### Secrets for functional / smoke testing
+
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
 `${env}` will be replaced by the pipeline with the environment that it is being run in
+
 ```groovy
 def secrets = [
   'your-app-${env}': [
@@ -126,14 +134,17 @@ withPipeline(type, product, component) {
 ```
 
 #### tf ouput for functional / smoke testing
+
 Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
 If your functional tests require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
-````
+
+```
 output "s2s_url" {
   value = "http://${var.s2s_url}-${local.local_env}.service.core-compute-${local.local_env}.internal"
 }
-````
+```
+
 this output will be transposed to Uppercase s2s_url => S2S_URL and can then be used by functional and smoke test.
 
 #### Security Checks
@@ -156,15 +167,15 @@ It is not possible to remove stages from the pipeline but it is possible to _add
 
 You can use the `before(stage)` and `after(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are
 
- * checkout
- * build
- * test
- * securitychecks
- * sonarscan
- * deploy:dev
- * smoketest:dev
- * deploy:prod
- * smoketest:prod
+- checkout
+- build
+- test
+- securitychecks
+- sonarscan
+- deploy:dev
+- smoketest:dev
+- deploy:prod
+- smoketest:prod
 
 E.g.
 
@@ -185,33 +196,35 @@ withPipeline(type, product, component) {
 If your service contains an API (in Azure Api Management Service), you need to implement
 tests for that API. For the pipeline to run those tests, do the following:
 
- - define `apiGateway` task (gradle/yarn) in you application
- - from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
+- define `apiGateway` task (gradle/yarn) in you application
+- from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
 
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableApiGatewayTest()
-    ...
-  }
-  ```
+```
+withPipeline(type, product, component) {
+  ...
+  enableApiGatewayTest()
+  ...
+}
+```
 
 The API tests run after smoke tests.
 
 ## Application specific infrastructure
+
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
 ## Azure Web Jobs
+
 [Documentation from Azure](https://docs.microsoft.com/en-us/azure/app-service/web-sites-create-web-jobs)
 
 If you want to create a Web Job for your app you need to create the following directory structure in the root of your project:
 
 `App_Data\jobs\{job type}\{job name}`
 
-* `job type` - Either *continuous* or *triggered*
-* `job name` - The name of your Web Job
+- `job type` - Either _continuous_ or _triggered_
+- `job name` - The name of your Web Job
 
 Within your job folder create a file called `run.<supported extention>`. Other files may be present but this is the file Azure will look to contain the runnable job.
 
@@ -226,9 +239,11 @@ For triggered jobs with a schedule, you can add a file called `settings.job` wit
 > Note: This has only been tested for Java applications!
 
 ## Building and Testing
+
 This is a Groovy project, and gradle is used to build and test.
 
 Run
+
 ```bash
 $ ./gradlew build
 $ ./gradlew test
@@ -242,7 +257,60 @@ $ ./start-docker-groovy-env
 
 Then you can run the build and test tasks as described above.
 
+## Container build
+
+If you use AKS deployments, a docker image is build and pushed remotely in ACR.
+
+You can optionally make this build faster by using explicit ACR tasks, in a `acb.tpl.yaml` file located at the root of your project (watch out, the extension is .yaml, not .yml).
+
+This is particularly effective for nodejs projecs pulling loads of npm packages.
+
+Here is a sample file, assuming you use docker multi stage build:
+
+```yaml
+# ./acb.tpl.yaml
+version: 1.0-preview-1
+steps:
+  # Pull previous build images
+  # This is used to leverage on layers re-use for the next steps
+  - id: pull-base
+    cmd: docker pull {{.Run.Registry}}/hmcts/name-your-project-here/base:latest || true
+    when: ["-"]
+    keep: true
+  # (Re)create base image
+  - id: base
+    build: >
+      -t {{.Run.Registry}}/hmcts/name-your-project-here/base
+      --cache-from {{.Run.Registry}}/hmcts/name-your-project-here/base:latest
+      --target base
+      .
+    when:
+      - pull-base
+    keep: true
+  # Create runtime image
+  - id: runtime
+    build: >
+      -t {{.Run.Registry}}/{{CI_IMAGE_TAG}}
+      --cache-from {{.Run.Registry}}/hmcts/name-your-project-here/base:latest
+      --target runtime
+      .
+    when:
+      - base
+    keep: true
+  # Push to registry
+  - id: push-images
+    push:
+      - "{{.Run.Registry}}/hmcts/name-your-project-here/base:latest"
+      - "{{.Run.Registry}}/{{CI_IMAGE_TAG}}"
+    when:
+      - runtime
+```
+
+Notice the `{{CI_IMAGE_TAG}}` which is evaluated in Jenkins.
+
+If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
+
 ## Contributing
 
- 1. Use the Github pull requests to make change
- 2. Test the change by pointing a build, to the branch with the change
+1.  Use the Github pull requests to make change
+2.  Test the change by pointing a build, to the branch with the change
