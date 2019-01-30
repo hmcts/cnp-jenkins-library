@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.azure.Acr
 
 class Helm {
 
+  public static final String HELM_RESOURCES_DIR = "charts"
   def steps
   def acr
   def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $name $options", returnStdout: true)}
@@ -13,14 +14,18 @@ class Helm {
   def subscriptionId
   def resourceGroup
   def registryName
+  String chartLocation
+  def chartName
 
-  Helm(steps) {
+  Helm(steps, String chartName) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
     this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup)
+    this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
+    this.chartName = chartName
   }
 
   def setup() {
@@ -41,29 +46,25 @@ class Helm {
     this.acr.az "acr helm repo add --subscription ${subscriptionId}"
   }
 
-  def installOrUpgradeMulti(String path, List<String> names, List<String> values) {
-    this.installOrUpgradeMulti(path, names, values, null)
+  def lint(List<String> values) {
+    this.execute("lint", this.chartLocation, values, null)
   }
 
-  def installOrUpgradeMulti(String path, List<String> names, List<String> values, List<String> options) {
-    // zip chart name + related values files and execute
-    [names, values].transpose().each { nv ->
-      this.installOrUpgrade(path, nv[0], nv[1..-1], options)
-    }
-  }
-
-  def installOrUpgrade(String path, String name, List<String> values, List<String> options) {
+  def installOrUpgrade(String imageTag, List<String> values, List<String> options) {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
-    this.dependencyUpdate(path)
+
+    dependencyUpdate()
+    lint(values)
+
     def allOptions = ["--install", "--wait", "--timeout 500"] + (options == null ? [] : options)
     def allValues = values.flatten()
-    this.execute("upgrade", "${name} ${path}", allValues, allOptions)
+    this.execute("upgrade", "${this.chartName}-${imageTag} ${this.chartLocation}", allValues, allOptions)
   }
 
-  def dependencyUpdate(String path) {
-    this.execute("dependency update", path)
+  def dependencyUpdate() {
+    this.execute("dependency update", this.chartLocation)
   }
 
   def delete(String name) {
