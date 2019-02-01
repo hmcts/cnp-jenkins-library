@@ -46,6 +46,30 @@ class Helm {
     this.acr.az "acr helm repo add --subscription ${subscriptionId}"
   }
 
+  def publishIfNotExists() {
+    configureAcr()
+    addRepo()
+    dependencyUpdate()
+    lint()
+
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
+    this.steps.echo "Version of chart locally is: ${version}"
+    def resultOfSearch = this.steps.sh(script: "helm search --regexp '\\v${registryName}/${chartName}\\v' --version ${version}", returnStdout: true).trim()
+    this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
+
+    if (resultOfSearch == "No results found") {
+      this.steps.echo "Publishing new version of ${this.chartName}"
+      this.steps.sh """ 
+        helm package ${this.chartLocation}
+        CHART_FILE=\$(ls ${this.chartName}-*)
+        az acr helm push --name ${registryName} ${CHART_FILE}
+      """
+      this.steps.sh "Published ${this.chartName}-${version} to ${registryName}"
+    } else {
+      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+    }
+  }
+
   def lint(List<String> values) {
     this.execute("lint", this.chartLocation, values, null)
   }

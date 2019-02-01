@@ -76,6 +76,22 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
 
+          if (pl.installCharts) {
+            stage('Publish Helm chart') {
+              withAksClient(subscription.nonProdName) {
+                def kubectl = new Kubectl(this, subscription.nonProdName, null)
+                kubectl.login()
+                kubectl.
+
+                String chartName = "${product}-${component}"
+
+                def helm = new Helm(this, chartName)
+                helm.init()
+                helm.publishIfNotExists()
+              }
+            }
+          }
+
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
