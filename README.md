@@ -10,7 +10,7 @@ In your pipeline, import this library.
 ```groovy
   @Library('Infrastructure')
 ```
-
+  
 To refer to a branch use
 ```groovy
 @Library('Infrastructure@<branch-name>')
