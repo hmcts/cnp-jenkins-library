@@ -27,14 +27,14 @@ node {
     parallel (
       backend: {
         stage('Run pipeline for backend') {
-          build job: 'HMCTS_pipeline_test/cnp-rhubarb-recipes-service/master',
+          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-rhubarb-recipes-service/master',
             parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
         }
       },
 
       frontend: {
         stage('Run pipeline for frontend') {
-          build job: 'HMCTS_pipeline_test/cnp-rhubarb-frontend/master',
+          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-rhubarb-frontend/master',
             parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
         }
       }
