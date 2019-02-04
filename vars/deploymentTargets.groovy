@@ -20,7 +20,7 @@ def call(String subscription, String environment) {
       preview: []
     ],
     prod: [
-      prod: []
+      prod: ["-v2"]
     ]]
   return deploymentTargets[subscription][environment]
 }
