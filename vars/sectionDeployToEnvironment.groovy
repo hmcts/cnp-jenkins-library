@@ -46,12 +46,12 @@ def call(params) {
   Deployer deployer = pipelineType.deployer
 
   lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
-    stage("Build Infrastructure - ${environment}") {
-      onPreview {
-        deploymentNumber = githubCreateDeployment()
-      }
+    folderExists('infrastructure') {
+      stage("Build Infrastructure - ${environment}") {
+        onPreview {
+          deploymentNumber = githubCreateDeployment()
+        }
 
-      folderExists('infrastructure') {
         withSubscription(subscription) {
           dir('infrastructure') {
             pl.callAround("buildinfra:${environment}") {
@@ -75,127 +75,127 @@ def call(params) {
           }
         }
       }
-    }
 
-    stage("Deploy - ${environment} (staging slot)") {
+      stage("Deploy - ${environment} (staging slot)") {
+        withSubscription(subscription) {
+          pl.callAround("deploy:${environment}") {
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: "Deploy - ${environment} (staging slot)") {
+              deployer.deploy(environment)
+              deployer.healthCheck(environment, "staging")
+
+              onPreview {
+                githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
+              }
+            }
+          }
+        }
+      }
+
       withSubscription(subscription) {
-        pl.callAround("deploy:${environment}") {
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: "Deploy - ${environment} (staging slot)") {
-            deployer.deploy(environment)
-            deployer.healthCheck(environment, "staging")
-
-            onPreview {
-              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "staging"))
-            }
-          }
-        }
-      }
-    }
-
-    withSubscription(subscription) {
-      withTeamSecrets(pl, environment, tfOutput?.vaultUri?.value) {
-        stage("Smoke Test - ${environment} (staging slot)") {
-          testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-            pl.callAround("smoketest:${environment}-staging") {
-              timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'smoke test') {
-                builder.smokeTest()
-              }
-            }
-          }
-        }
-
-        onFunctionalTestEnvironment(environment) {
-          stage("Functional Test - ${environment} (staging slot)") {
+        withTeamSecrets(pl, environment, tfOutput?.vaultUri?.value) {
+          stage("Smoke Test - ${environment} (staging slot)") {
             testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-              pl.callAround("functionalTest:${environment}") {
-                timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
-                  builder.functionalTest()
+              pl.callAround("smoketest:${environment}-staging") {
+                timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'smoke test') {
+                  builder.smokeTest()
                 }
               }
             }
           }
-          if (pl.performanceTest) {
-            stage("Performance Test - ${environment} (staging slot)") {
+
+          onFunctionalTestEnvironment(environment) {
+            stage("Functional Test - ${environment} (staging slot)") {
               testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                pl.callAround("performanceTest:${environment}") {
-                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
-                    builder.performanceTest()
-                    publishPerformanceReports(this, params)
+                pl.callAround("functionalTest:${environment}") {
+                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
+                    builder.functionalTest()
+                  }
+                }
+              }
+            }
+            if (pl.performanceTest) {
+              stage("Performance Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("performanceTest:${environment}") {
+                    timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
+                      builder.performanceTest()
+                      publishPerformanceReports(this, params)
+                    }
+                  }
+                }
+              }
+            }
+            if (pl.crossBrowserTest) {
+              stage("CrossBrowser Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("crossBrowserTest:${environment}") {
+                    builder.crossBrowserTest()
+                  }
+                }
+              }
+            }
+            if (pl.mutationTest) {
+              stage("Mutation Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("mutationTest:${environment}") {
+                    builder.mutationTest()
+                  }
+                }
+              }
+            }
+            if (pl.fullFunctionalTest) {
+              stage("FullFunctional Test - ${environment} (staging slot)") {
+                testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
+                  pl.callAround("crossBrowserTest:${environment}") {
+                    builder.fullFunctionalTest()
+                  }
+                }
+              }
+            }
+
+          }
+
+          stage("Promote - ${environment} (staging -> production slot)") {
+            withSubscription(subscription) {
+              pl.callAround("promote:${environment}") {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: "Promote - ${environment} (staging -> production slot)") {
+                  sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
+                  deployer.healthCheck(environment, "production")
+
+                  onPreview {
+                    githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
                   }
                 }
               }
             }
           }
-          if (pl.crossBrowserTest) {
-            stage("CrossBrowser Test - ${environment} (staging slot)") {
-              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                pl.callAround("crossBrowserTest:${environment}") {
-                  builder.crossBrowserTest()
-                }
-              }
-            }
-          }
-          if (pl.mutationTest) {
-            stage("Mutation Test - ${environment} (staging slot)") {
-              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                pl.callAround("mutationTest:${environment}") {
-                  builder.mutationTest()
-                }
-              }
-            }
-          }
-          if (pl.fullFunctionalTest) {
-            stage("FullFunctional Test - ${environment} (staging slot)") {
-              testEnv(deployer.getServiceUrl(environment, "staging"), tfOutput) {
-                pl.callAround("crossBrowserTest:${environment}") {
-                  builder.fullFunctionalTest()
+
+          stage("Smoke Test - ${environment} (production slot)") {
+            testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
+              pl.callAround("smoketest:${environment}") {
+                timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke test (prod slot)') {
+                  builder.smokeTest()
                 }
               }
             }
           }
 
-        }
-
-        stage("Promote - ${environment} (staging -> production slot)") {
-          withSubscription(subscription) {
-            pl.callAround("promote:${environment}") {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: "Promote - ${environment} (staging -> production slot)") {
-                sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environment}\" --resource-group \"${product}-${component}-${environment}\" --slot staging --target-slot production"
-                deployer.healthCheck(environment, "production")
-
-                onPreview {
-                  githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environment, "production"))
-                }
-              }
-            }
-          }
-        }
-
-        stage("Smoke Test - ${environment} (production slot)") {
-          testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
-            pl.callAround("smoketest:${environment}") {
-              timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke test (prod slot)') {
-                builder.smokeTest()
-              }
-            }
-          }
-        }
-
-        onNonPR() {
-          if (pl.apiGatewayTest) {
-            stage("API Gateway Test - ${environment} (production slot)") {
-              testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
-                pl.callAround("apiGatewayTest:${environment}") {
-                  timeoutWithMsg(time: pl.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environment} (production slot)") {
-                    builder.apiGatewayTest()
+          onNonPR() {
+            if (pl.apiGatewayTest) {
+              stage("API Gateway Test - ${environment} (production slot)") {
+                testEnv(deployer.getServiceUrl(environment, "production"), tfOutput) {
+                  pl.callAround("apiGatewayTest:${environment}") {
+                    timeoutWithMsg(time: pl.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environment} (production slot)") {
+                      builder.apiGatewayTest()
+                    }
                   }
                 }
               }
             }
           }
         }
+        milestone()
       }
-      milestone()
     }
   }
 }
