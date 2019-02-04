@@ -46,11 +46,11 @@ class Helm {
     this.acr.az "acr helm repo add --subscription ${subscriptionId}"
   }
 
-  def publishIfNotExists() {
+  def publishIfNotExists(List<String> values) {
     configureAcr()
     addRepo()
     dependencyUpdate()
-    lint()
+    lint(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
