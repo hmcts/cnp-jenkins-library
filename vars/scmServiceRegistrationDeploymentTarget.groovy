@@ -75,6 +75,9 @@ def call(environment, deploymentTarget) {
 
 // Get ILB internal IP address
   println "Getting the ILB internal IP address ..."
+  echo "dbg  env.ARM_SUBSCRIPTION_ID ${env.ARM_SUBSCRIPTION_ID}"
+  echo "dbg  environmentDt ${environmentDt}"
+
   Request requestilbip = new Request.Builder()
     .url("https://management.azure.com/subscriptions/" + env.ARM_SUBSCRIPTION_ID + "/resourceGroups/core-infra-" + environmentDt + "/providers/Microsoft.Web/hostingEnvironments/core-compute-" + environmentDt + "/capacities/virtualip?api-version=2016-09-01")
     .get()
@@ -83,8 +86,11 @@ def call(environment, deploymentTarget) {
     .build()
 
   Response responseilbip = client.newCall(requestilbip).execute()
+  echo "dbg  responseilbip.body().string() ${responseilbip.body().string()}"
 
   def responseilbipbody = new JsonSlurper().parseText(responseilbip.body().string())
+  echo "dbg  responseilbipbody ${responseilbipbody}"
+
   String ilbinternalip = responseilbipbody.internalIpAddress
 
   echo "ILB address is ${ilbinternalip}"
