@@ -16,6 +16,7 @@ class Helm {
   def registryName
   String chartLocation
   def chartName
+  def notFoundMessage = "Not found"
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -57,18 +58,12 @@ class Helm {
     def resultOfSearch
     try {
       resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
-    } catch(err) {
-      this.steps.echo err.getMessage()
-
-      if (err.getMessage().contains("You have requested chart that does not exist")) {
-        resultOfSearch = "Not found"
-      } else {
-        throw err
-      }
+    } catch(ignored) {
+      resultOfSearch = notFoundMessage
     }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    if (resultOfSearch == "Not found") {
+    if (resultOfSearch == notFoundMessage) {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
