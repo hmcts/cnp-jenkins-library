@@ -58,6 +58,8 @@ class Helm {
     try {
       resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
     } catch(err) {
+      this.steps.echo err.getMessage()
+
       if (err.getMessage().contains("You have requested chart that does not exist")) {
         resultOfSearch = "Not found"
       } else {
