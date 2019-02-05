@@ -44,10 +44,8 @@ def call(environment, deploymentTarget) {
 
   Response response = client.newCall(request).execute()
 
-  String dbg_response_body1 = response.body().string()
-  echo "dbg  dbg_response_body1 ${dbg_response_body1}"
 
-  def responsebody = new JsonSlurper().parseText(dbg_response_body1)
+  def responsebody = new JsonSlurper().parseText(response.body().string())
   def authtoken = responsebody.access_token
 
 // Get ServerFarms list
