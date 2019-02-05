@@ -16,6 +16,7 @@ class Helm {
   def registryName
   String chartLocation
   def chartName
+  def notFoundMessage = "Not found"
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -44,6 +45,34 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${subscriptionId}"
+  }
+
+  def publishIfNotExists(List<String> values) {
+    configureAcr()
+    addRepo()
+    dependencyUpdate()
+    lint(values)
+
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
+    this.steps.echo "Version of chart locally is: ${version}"
+    def resultOfSearch
+    try {
+      resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
+    } catch(ignored) {
+      resultOfSearch = notFoundMessage
+    }
+    this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
+
+    if (resultOfSearch == notFoundMessage) {
+      this.steps.echo "Publishing new version of ${this.chartName}"
+
+      this.steps.sh "helm package ${this.chartLocation}"
+      this.acr.az "acr helm push --name ${registryName} ${this.chartName}-${version}.tgz"
+
+      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
+    } else {
+      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+    }
   }
 
   def lint(List<String> values) {

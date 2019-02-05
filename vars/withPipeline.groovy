@@ -1,12 +1,12 @@
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
-import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
-import uk.gov.hmcts.contino.Environment
 
 def call(type, String product, String component, Closure body) {
 
@@ -75,6 +75,17 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component)
+
+          if (pl.installCharts) {
+            stage('Publish Helm chart') {
+              helmPublish(
+                subscriptionName: subscription.nonProdName,
+                environmentName: environment.nonProdName,
+                product: product,
+                component: component
+              )
+            }
+          }
 
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
