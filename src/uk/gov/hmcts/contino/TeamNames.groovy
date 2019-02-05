@@ -39,7 +39,8 @@ class TeamNames {
                       'sscs-tribunals':'SSCS',
                       'snl':'SnL',
                       'am':'AM',
-                      'fpl': 'Family Public Law'
+                      'fpl': 'Family Public Law',
+                      'ctsc': 'CTSC'
   ]
 
   def getName (String product) {
