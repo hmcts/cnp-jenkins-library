@@ -54,10 +54,19 @@ class Helm {
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
-    def resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
+    def resultOfSearch
+    try {
+      resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
+    } catch(err) {
+      if (err.getMessage().contains("You have requested chart that does not exist")) {
+        resultOfSearch = "Not found"
+      } else {
+        throw err
+      }
+    }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    if (resultOfSearch?.trim() != version.trim()) {
+    if (resultOfSearch == "Not found") {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
