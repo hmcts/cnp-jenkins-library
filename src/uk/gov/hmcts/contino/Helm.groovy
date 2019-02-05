@@ -62,8 +62,8 @@ class Helm {
 
       this.steps.sh "helm package ${this.chartLocation}"
       this.acr.az "acr helm push --name ${registryName} ${this.chartName}-${version}.tgz"
-      
-      this.steps.sh "Published ${this.chartName}-${version} to ${registryName}"
+
+      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
       this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
