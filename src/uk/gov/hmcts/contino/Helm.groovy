@@ -57,7 +57,7 @@ class Helm {
     def resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    if (resultOfSearch != "${version}") {
+    if (resultOfSearch != version) {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
