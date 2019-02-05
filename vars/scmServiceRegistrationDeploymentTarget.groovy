@@ -86,16 +86,14 @@ def call(environment, deploymentTarget) {
     .build()
 
   Response responseilbip = client.newCall(requestilbip).execute()
-  String dbg_response_body = responseilbip.body().string()
-  echo "dbg  dbg_response_body ${dbg_response_body}"
+  echo "dbg  responseilbip.body().string() ${responseilbip.body().string()}"
 
-  def responseilbipbody = new JsonSlurper().parseText(dbg_response_body)
+  def responseilbipbody = new JsonSlurper().parseText(responseilbip.body().string())
   echo "dbg  responseilbipbody ${responseilbipbody}"
 
   String ilbinternalip = responseilbipbody.internalIpAddress
 
   echo "ILB address is ${ilbinternalip}"
-
   boolean validIpAddress = IPV4Validator.validate(ilbinternalip)
   if (!validIpAddress) {
     error "IP address for the ILB of the ASE failed validation, exiting to prevent corruption of the scm records"
