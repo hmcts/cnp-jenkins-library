@@ -1,7 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Environment
-import uk.gov.hmcts.contino.Helm
-import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineCallbacks
@@ -80,45 +78,12 @@ def call(type, String product, String component, Closure body) {
 
           if (pl.installCharts) {
             stage('Publish Helm chart') {
-              withAksClient(subscription.nonProdName) {
-                Kubectl kubectl = new Kubectl(this, subscription.nonProdName, null)
-                kubectl.login()
-                def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
-                def consul = new Consul(this)
-                def consulApiAddr = consul.getConsulIP()
-
-                String chartName = "${product}-${component}"
-
-                Helm helm = new Helm(this, chartName)
-                helm.init()
-
-                def templateEnvVars = [
-                  "IMAGE_NAME=https://hmcts.azurecr.io/hmcts/${product}-${component}:latest",
-                  "CONSUL_LB_IP=${consulApiAddr}",
-                  "INGRESS_IP=${ingressIP}"
-                ]
-
-                withEnv(templateEnvVars) {
-                  def values = []
-                  def helmResourcesDir = Helm.HELM_RESOURCES_DIR
-
-                  def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
-                  def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
-                  if (fileExists(templateValues)) {
-                    sh "envsubst < ${templateValues} > ${defaultValues}"
-                  }
-                  values << defaultValues
-
-                  def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${environment.nonProdName}.template.yaml"
-                  def valuesEnv = "${helmResourcesDir}/${chartName}/values.${environment.nonProdName}.yaml"
-                  if (fileExists(valuesEnvTemplate)) {
-                    sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
-                    values << valuesEnv
-                  }
-
-                  helm.publishIfNotExists(values)
-                }
-              }
+              helmPublish(
+                subscriptionName: subscription.nonProdName,
+                environmentName: environment.nonProdName,
+                product: product,
+                component: component
+              )
             }
           }
 
