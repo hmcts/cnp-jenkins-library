@@ -60,8 +60,8 @@ class Helm {
     if (resultOfSearch != version) {
       this.steps.echo resultOfSearch
       this.steps.echo version
-      this.steps.echo resultOfSearch.length()
-      this.steps.echo version.length()
+      this.steps.echo " " + resultOfSearch.length()
+      this.steps.echo " " + version.length()
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
