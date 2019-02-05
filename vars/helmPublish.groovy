@@ -33,7 +33,7 @@ def call(Map params) {
       values << defaultValues
 
       def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${params.environmentName}.template.yaml"
-      def valuesEnv = "${helmResourcesDir}/${chartName}/values.${environmentName}.yaml"
+      def valuesEnv = "${helmResourcesDir}/${chartName}/values.${params.environmentName}.yaml"
       if (fileExists(valuesEnvTemplate)) {
         sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
         values << valuesEnv
