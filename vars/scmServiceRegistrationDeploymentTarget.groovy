@@ -44,8 +44,10 @@ def call(environment, deploymentTarget) {
 
   Response response = client.newCall(request).execute()
 
+  String dbg_response_body1 = response.body().string()
+  echo "dbg  dbg_response_body1 ${dbg_response_body1}"
 
-  def responsebody = new JsonSlurper().parseText(response.body().string())
+  def responsebody = new JsonSlurper().parseText(dbg_response_body1)
   def authtoken = responsebody.access_token
 
 // Get ServerFarms list
@@ -84,8 +86,12 @@ def call(environment, deploymentTarget) {
 
   Response responseilbip = client.newCall(requestilbip).execute()
 
-  def responseilbipbody = new JsonSlurper().parseText(responseilbip.body().string())
+  String dbg_response_body = responseilbip.body().string()
+  echo "dbg  dbg_response_body ${dbg_response_body}"
+
+  def responseilbipbody = new JsonSlurper().parseText(dbg_response_body)
   String ilbinternalip = responseilbipbody.internalIpAddress
+
 
   echo "ILB address is ${ilbinternalip}"
   boolean validIpAddress = IPV4Validator.validate(ilbinternalip)
