@@ -57,7 +57,7 @@ class Helm {
     def resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    if (resultOfSearch != version.trim()) {
+    if (resultOfSearch.trim() != version.trim()) {
       this.steps.echo resultOfSearch
       this.steps.echo version
       this.steps.echo " " + resultOfSearch.length()
