@@ -54,10 +54,10 @@ class Helm {
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
-    def resultOfSearch = this.steps.sh(script: "helm search --regexp '\\v${registryName}/${chartName}\\v' --version ${version}", returnStdout: true).trim()
+    def resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    if (resultOfSearch == "No results found") {
+    if (resultOfSearch != "${version}") {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
