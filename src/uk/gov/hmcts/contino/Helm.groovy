@@ -61,7 +61,6 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
       this.steps.sh """ 
         helm package ${this.chartLocation}
-        CHART_FILE=\$(ls ${this.chartName}-*)
         az acr helm push --name ${registryName} ${this.chartName}-${version}.tgz
       """
       this.steps.sh "Published ${this.chartName}-${version} to ${registryName}"
