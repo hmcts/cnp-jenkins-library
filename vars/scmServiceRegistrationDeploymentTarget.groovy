@@ -39,7 +39,8 @@ def call(environment, deploymentTarget) {
   echo "dbg  dbg_aa ${dbg_aa}"
 
   MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
-  RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + env.ARM_CLIENT_SECRET)
+  def urlSafeClientSecret = java.net.URLEncoder.encode(env.ARM_CLIENT_SECRET, "UTF-8")
+  RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + urlSafeClientSecret)
   Request request = new Request.Builder()
     .url("https://login.microsoftonline.com/" + env.ARM_TENANT_ID + "/oauth2/token")
     .post(body)
