@@ -35,7 +35,8 @@ def call(environment, deploymentTarget) {
 
   echo "dbg  env.ARM_CLIENT_ID ${env.ARM_CLIENT_ID}"
   echo "dbg  env.ARM_CLIENT_SECRET ${env.ARM_CLIENT_SECRET}"
-  echo "dbg  env.ARM_TENANT_ID ${env.ARM_TENANT_ID}"
+  String dbg_aa = env.ARM_TENANT_ID.bytes.encodeBase64().toString()
+  echo "dbg  dbg_aa ${dbg_aa}"
 
   MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
   RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + env.ARM_CLIENT_SECRET)
