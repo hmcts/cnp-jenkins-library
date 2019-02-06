@@ -33,11 +33,6 @@ def call(environment, deploymentTarget) {
     .readTimeout(90, TimeUnit.SECONDS)
     .build()
 
-  //echo "dbg  env.ARM_CLIENT_ID ${env.ARM_CLIENT_ID}"
-  //echo "dbg  env.ARM_CLIENT_SECRET ${env.ARM_CLIENT_SECRET}"
-  //String dbg_aa = env.ARM_TENANT_ID.bytes.encodeBase64().toString()
-  //echo "dbg  dbg_aa ${dbg_aa}"
-
   MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
   def urlSafeClientSecret = java.net.URLEncoder.encode(env.ARM_CLIENT_SECRET, "UTF-8")
   RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + urlSafeClientSecret)
@@ -49,9 +44,6 @@ def call(environment, deploymentTarget) {
     .build()
 
   Response response = client.newCall(request).execute()
-
-  //String dbg_response_body1 = response.body().string()
-  //echo "dbg  dbg_response_body1 ${dbg_response_body1}"
 
   def responsebody = new JsonSlurper().parseText(response.body().string())
   def authtoken = responsebody.access_token
@@ -91,9 +83,6 @@ def call(environment, deploymentTarget) {
     .build()
 
   Response responseilbip = client.newCall(requestilbip).execute()
-
-  //String dbg_response_body = responseilbip.body().string()
-  //echo "dbg  dbg_response_body ${dbg_response_body}"
 
   def responseilbipbody = new JsonSlurper().parseText(responseilbip.body().string())
   String ilbinternalip = responseilbipbody.internalIpAddress
