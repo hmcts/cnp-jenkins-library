@@ -23,12 +23,12 @@ def call(params) {
   def tfOutput
 
   lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
-    stage("Build Infrastructure - ${environment}") {
-      onPreview {
-        deploymentNumber = githubCreateDeployment()
-      }
+    folderExists('infrastructure') {
+      stage("Build Infrastructure - ${environment}") {
+        onPreview {
+          deploymentNumber = githubCreateDeployment()
+        }
 
-      folderExists('infrastructure') {
         withSubscription(subscription) {
           dir('infrastructure') {
             pl.callAround("buildinfra:${environment}") {
@@ -40,7 +40,7 @@ def call(params) {
                   }
                   if (pl.legacyDeployment) {
                     scmServiceRegistration(environment)
-                  }  
+                  }
                 }
               }
             }
@@ -54,31 +54,31 @@ def call(params) {
           }
         }
       }
-    }
 
-    notFolderExists('infrastructure/deploymentTarget') {
-      // if there's no deployment target infrastructure code then don't run deployment code for deployment targets
-      deploymentTargets.clear()
-    }
+      notFolderExists('infrastructure/deploymentTarget') {
+        // if there's no deployment target infrastructure code then don't run deployment code for deployment targets
+        deploymentTargets.clear()
+      }
 
-    if (pl.legacyDeployment) {
-      deploymentTargets.add(0, '')
-    }
+      if (pl.legacyDeployment) {
+        deploymentTargets.add(0, '')
+      }
 
-    for (int i = 0; i < deploymentTargets.size() ; i++) {
-      
-      //TODO: remove
-      echo "INFO: inside for loop sectionDeployToEnvironment ${deploymentTargets[i]}"
-      
-      sectionDeployToDeploymentTarget(
-        pipelineCallbacks: pl,
-        pipelineType: pipelineType,
-        subscription: subscription,
-        environment: environment,
-        product: product,
-        component: component,
-        envTfOutput: tfOutput,
-        deploymentTarget: deploymentTargets[i])
+      for (int i = 0; i < deploymentTargets.size() ; i++) {
+
+        //TODO: remove
+        echo "INFO: inside for loop sectionDeployToEnvironment ${deploymentTargets[i]}"
+
+        sectionDeployToDeploymentTarget(
+          pipelineCallbacks: pl,
+          pipelineType: pipelineType,
+          subscription: subscription,
+          environment: environment,
+          product: product,
+          component: component,
+          envTfOutput: tfOutput,
+          deploymentTarget: deploymentTargets[i])
+      }
     }
   }
 }

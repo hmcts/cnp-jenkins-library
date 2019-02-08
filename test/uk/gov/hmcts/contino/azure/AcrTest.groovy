@@ -65,4 +65,35 @@ class AcrTest extends Specification {
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
+
+  def "run() should call the run command with the right registry group and resource group"() {
+    when:
+      acr.run()
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
+
+  def "runWithTemplate() should evaluate the acb.yaml file from the passed template then run the acr run command"() {
+    given:
+      def mockFile = Mock(File, constructorArgs :["./acb.tpl.yaml"])
+
+    when:
+      acr.runWithTemplate("acb.tpl.yaml", dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" acb.tpl.yaml > acb.yaml") &&
+                    it.get('returnStdout').equals(true)
+                  })
+    and:
+      1 * steps.sh({it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
+                    it.get('returnStdout').equals(true)
+                  })
+
+  }
+
 }

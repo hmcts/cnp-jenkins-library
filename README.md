@@ -27,6 +27,7 @@ and NodeJS applications. The pipeline contains the following stages:
 * Security Checks
 * Lint (nodejs only)
 * Sonar Scan
+* Docker build (for AKS deployments, optional ACR steps)
 * Deploy Dev
 * Smoke Tests - Dev
 * (Optional) API (gateway) Tests - Dev
@@ -241,6 +242,59 @@ $ ./start-docker-groovy-env
 ```
 
 Then you can run the build and test tasks as described above.
+
+## Container build
+
+If you use AKS deployments, a docker image is built and pushed remotely to ACR.
+
+You can optionally make this build faster by using explicit ACR tasks, in a `acb.tpl.yaml` file located at the root of your project (watch out, the extension is .yaml, not .yml).
+
+This is particularly effective for nodejs projecs pulling loads of npm packages.
+
+Here is a sample file, assuming you use docker multi stage build:
+
+```yaml
+# ./acb.tpl.yaml
+version: 1.0-preview-1
+steps:
+  # Pull previous build images
+  # This is used to leverage on layers re-use for the next steps
+  - id: pull-base
+    cmd: docker pull {{.Run.Registry}}/hmcts/name-your-project-here/base:latest || true
+    when: ["-"]
+    keep: true
+  # (Re)create base image
+  - id: base
+    build: >
+      -t {{.Run.Registry}}/hmcts/name-your-project-here/base
+      --cache-from {{.Run.Registry}}/hmcts/name-your-project-here/base:latest
+      --target base
+      .
+    when:
+      - pull-base
+    keep: true
+  # Create runtime image
+  - id: runtime
+    build: >
+      -t {{.Run.Registry}}/{{CI_IMAGE_TAG}}
+      --cache-from {{.Run.Registry}}/hmcts/name-your-project-here/base:latest
+      --target runtime
+      .
+    when:
+      - base
+    keep: true
+  # Push to registry
+  - id: push-images
+    push:
+      - "{{.Run.Registry}}/hmcts/name-your-project-here/base:latest"
+      - "{{.Run.Registry}}/{{CI_IMAGE_TAG}}"
+    when:
+      - runtime
+```
+
+Notice the `{{CI_IMAGE_TAG}}` which is evaluated in Jenkins.
+
+If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
 
 ## Contributing
 

@@ -63,6 +63,26 @@ class Acr extends Az {
   }
 
   /**
+   * Run ACR scripts using the current subscription,
+   * registry name and resource group
+   *
+   * @return
+   *   stdout of the step
+   */
+  def run() {
+    this.az "acr run -r ${registryName} -g ${resourceGroup} ."
+  }
+
+  def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
+    def defaultAcrScriptFilePath = "acb.yaml"
+    steps.sh(
+      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
+      returnStdout: true
+    )?.trim()
+    this.run()
+  }
+
+  /**
    * get the hostname of the ACR
    *
    * @return

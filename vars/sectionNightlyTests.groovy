@@ -35,8 +35,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
         }
       }
     } catch (err) {
-      err.printStackTrace()
-      currentBuild.result = "UNSTABLE"
+      echo "Failure in DependencyCheckNightly, continuing build will fail at the end"
     }
 
     if (pl.crossBrowserTest) {
@@ -50,8 +49,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
         }
       }
       catch (err) {
-        err.printStackTrace()
-        currentBuild.result = "UNSTABLE"
+        echo "Failure in crossBrowserTest, continuing build will fail at the end"
       }
     }
 
@@ -65,8 +63,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
           }
         }
       } catch (err) {
-        err.printStackTrace()
-        currentBuild.result = "UNSTABLE"
+        echo "Failure in performanceTest, continuing build will fail at the end"
       }
     }
 
@@ -81,8 +78,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
         }
       }
       catch (err) {
-        err.printStackTrace()
-        currentBuild.result = "UNSTABLE"
+        echo "Failure in securityScan, continuing build will fail at the end"
       }
     }
 
@@ -97,8 +93,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
         }
       }
       catch (err) {
-        err.printStackTrace()
-        currentBuild.result = "UNSTABLE"
+        echo "Failure in mutationTest, continuing build will fail at the end"
       }
     }
 
@@ -113,10 +108,12 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
         }
       }
       catch (err) {
-        err.printStackTrace()
-        currentBuild.result = "UNSTABLE"
+        echo "Failure in fullFunctionalTest, continuing build will fail at the end"
       }
     }
 
+    if (currentBuild.result == "FAILURE") {
+      error "At least one stage failed, check the logs to see why"
+    }
   }
 }
