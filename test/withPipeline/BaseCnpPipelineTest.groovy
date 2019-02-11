@@ -40,17 +40,22 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
     helper.registerAllowedMethod("usernamePassword", [LinkedHashMap], null)
-    helper.registerAllowedMethod('fileExists', [String.class], { c -> true })
+    helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' })
     helper.registerAllowedMethod("timestamps", [Closure.class], null)
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
     helper.registerAllowedMethod("scmServiceRegistration", [String.class], {})
+    helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class], {})
     helper.registerAllowedMethod("wrap", [LinkedHashMap, Closure.class], null)
-    helper.registerAllowedMethod("sh", [Map.class], {
-      return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
-        '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}'
+    helper.registerAllowedMethod("sh", [Map.class], { m ->
+      if (m.get('script') == 'pwd') {
+        return 'localPath'
+      } else {
+        return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
+          '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}'
+      }
     })
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], {
       return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
