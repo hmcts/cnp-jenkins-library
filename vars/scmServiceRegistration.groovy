@@ -101,8 +101,7 @@ def call(environment, deploymentTarget) {
   }
 
 // Get details about the consul vm scale set i.e. IP address
-  println "Getting consul's IP address ...(scmServiceRegistration)"
-  println environment
+  println "Getting consul's IP address ..."
   Request requestvmss = new Request.Builder()
     .url("https://management.azure.com/subscriptions/${env.ARM_SUBSCRIPTION_ID}/resourceGroups/$envInfraRg/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
     .get()
