@@ -15,9 +15,6 @@ def call(params) {
   def deploymentTargets = params.deploymentTargets ?: deploymentTargets(subscription, environment)
   Long deploymentNumber
 
-  //TODO: remove
-  echo "INFO: main file inside sectionDeployToEnvironment ${deploymentTargets}"
-
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
   def tfOutput
@@ -65,9 +62,6 @@ def call(params) {
       }
 
       for (int i = 0; i < deploymentTargets.size() ; i++) {
-
-        //TODO: remove
-        echo "INFO: inside for loop sectionDeployToEnvironment ${deploymentTargets[i]}"
 
         sectionDeployToDeploymentTarget(
           pipelineCallbacks: pl,

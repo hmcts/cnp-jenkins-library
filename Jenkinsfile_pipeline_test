@@ -18,7 +18,7 @@ node {
 
     stage('Test') {
       try {
-        builder.gradle('test --info')
+        builder.gradle('test')
       } finally {
         steps.junit '**/test-results/**/*.xml'
       }
