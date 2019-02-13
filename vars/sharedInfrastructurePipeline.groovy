@@ -6,7 +6,7 @@ def call(String product, String environment, String subscription) {
 }
 
 def call(String product, String environment, String subscription, boolean planOnly) {
-  call(product, environment, subcription, planOnly, null)
+  call(product, environment, subscription, planOnly, null)
 }
 
 def call(String product, String environment, String subscription, boolean planOnly, String deploymentTarget) {
