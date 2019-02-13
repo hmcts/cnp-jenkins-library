@@ -6,7 +6,10 @@ def call(String product, String environment, String subscription) {
 }
 
 def call(String product, String environment, String subscription, boolean planOnly) {
+  call(product, environment, subcription, planOnly, null)
+}
 
+def call(String product, String environment, String subscription, boolean planOnly, String deploymentTarget) {
   node {
     env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -20,6 +23,13 @@ def call(String product, String environment, String subscription, boolean planOn
     withSubscription(subscription) {
       withIlbIp(environment) {
         tfOutput = spinInfra(product, null, environment, planOnly, subscription)
+        if (deploymentTarget) {
+          folderExists('deploymentTarget') {
+            dir('deploymentTarget') {
+              spinInfra(product, null, environment, planOnly, subscription, deploymentTarget)
+            }
+          }
+        }
       }
 
       if (!planOnly) {
@@ -32,45 +42,6 @@ def call(String product, String environment, String subscription, boolean planOn
             }
           } else {
             echo "No vault name, skipping storing vault secrets"
-          }
-        }
-      }
-    }
-  }
-}
-
-def call(String product, String environment, String subscription, boolean planOnly, String deploymentTarget) {
-
-  node {
-    env.PATH = "$env.PATH:/usr/local/bin"
-
-    def tfOutput
-
-    stage('Checkout') {
-      deleteDir()
-      checkout scm
-    }
-
-    withSubscription(subscription) {
-      withIlbIp(environment) {
-        tfOutput = spinInfra(product, null, environment, planOnly, subscription)
-        folderExists('deploymentTarget') {
-          dir('deploymentTarget') {
-            spinInfra(product, null, environment, planOnly, subscription, deploymentTarget)
-          }
-        }
-      }
-
-      if (!planOnly) {
-        stage('Store shared product secrets') {
-          if (!tfOutput.vaultName) {
-            throw new IllegalStateException("No vault has been created to store the secrets in")
-          }
-
-          KeyVault keyVault = new KeyVault(this, subscription, tfOutput.vaultName.value)
-
-          if (tfOutput.appInsightsInstrumentationKey) {
-            keyVault.store(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY, tfOutput.appInsightsInstrumentationKey.value)
           }
         }
       }
