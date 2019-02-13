@@ -1,5 +1,7 @@
 
-def call(String product, String environment, String subscription) {
+def call(String product, String environment, String subscription, String deploymentTarget = "") {
+
+  def environmentDeploymentTarget = "$environment$deploymentTarget"
 
   node {
     env.PATH = "$env.PATH:/usr/local/bin"
@@ -9,8 +11,8 @@ def call(String product, String environment, String subscription) {
       checkout scm
     }
     withSubscription(subscription) {
-      withIlbIp(environment) {
-        spinInfra(product, environment, false, subscription)
+      withIlbIp(environmentDeploymentTarget) {
+        spinInfra(product, environment, false, subscription, deploymentTarget)
       }
     }
   }

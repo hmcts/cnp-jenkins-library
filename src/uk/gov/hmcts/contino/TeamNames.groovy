@@ -33,6 +33,8 @@ class TeamNames {
                       'ref': 'Professional Applications',
                       'rhubarb':'CNP',
                       'rhubarb-shared-infrastructure' : 'CNP',
+                      'plum':'CNP',
+                      'plum-shared-infrastructure' : 'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
                       'sscs-tya':'SSCS',

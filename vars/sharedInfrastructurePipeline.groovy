@@ -6,7 +6,10 @@ def call(String product, String environment, String subscription) {
 }
 
 def call(String product, String environment, String subscription, boolean planOnly) {
+  call(product, environment, subcription, planOnly, null)
+}
 
+def call(String product, String environment, String subscription, boolean planOnly, String deploymentTarget) {
   node {
     env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -20,6 +23,13 @@ def call(String product, String environment, String subscription, boolean planOn
     withSubscription(subscription) {
       withIlbIp(environment) {
         tfOutput = spinInfra(product, null, environment, planOnly, subscription)
+        if (deploymentTarget) {
+          folderExists('deploymentTarget') {
+            dir('deploymentTarget') {
+              spinInfra(product, null, environment, planOnly, subscription, deploymentTarget)
+            }
+          }
+        }
       }
 
       if (!planOnly) {

@@ -8,6 +8,10 @@ import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
+  call(type, product,component,environment,subscription,'',body)
+}
+
+def call(type, String product, String component, String environment, String subscription, String deploymentTargets, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
@@ -37,6 +41,8 @@ def call(type, String product, String component, String environment, String subs
     currentBuild.result = "FAILURE"
   }
 
+  def deploymentTargetList = deploymentTargets.split(',') as List
+
   timestamps {
     try {
       node {
@@ -61,7 +67,8 @@ def call(type, String product, String component, String environment, String subs
           subscription: subscription,
           environment: environment,
           product: product,
-          component: component)
+          component: component,
+          deploymentTargets: deploymentTargetList)
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
