@@ -22,5 +22,5 @@ def call(String subscription, String environment) {
     prod: [
       prod: ["-v2"]
     ]]
-  return deploymentTargets[subscription][environment]
+  return deploymentTargets[subscription]?.get(environment, [])
 }
