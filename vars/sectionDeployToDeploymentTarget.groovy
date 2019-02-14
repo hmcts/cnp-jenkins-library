@@ -28,7 +28,7 @@ def call(params) {
   def component = params.component
   def deploymentTarget = params.deploymentTarget
   def envTfOutput = params.envTfOutput
-  Long deploymentNumber
+  def deploymentNumber = params.deploymentNumber
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
@@ -39,9 +39,6 @@ def call(params) {
 
   if (deploymentTarget != '') {
     stage("Build Infrastructure - ${environmentDt}") {
-      onPreview {
-        deploymentNumber = githubCreateDeployment()
-      }
 
       folderExists('infrastructure/deploymentTarget') {
 
