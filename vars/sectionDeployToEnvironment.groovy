@@ -71,7 +71,8 @@ def call(params) {
           product: product,
           component: component,
           envTfOutput: tfOutput,
-          deploymentTarget: deploymentTargets[i])
+          deploymentTarget: deploymentTargets[i],
+          deploymentNumber: deploymentNumber)
       }
     }
   }
