@@ -1,14 +1,17 @@
 import uk.gov.hmcts.contino.azure.KeyVault
 import uk.gov.hmcts.contino.azure.ProductVaultEntries
 
+@Deprecated
 def call(String product, String environment, String subscription) {
   call(product, environment, subscription, false)
 }
 
+@Deprecated
 def call(String product, String environment, String subscription, boolean planOnly) {
   call(product, environment, subscription, planOnly, null)
 }
 
+@Deprecated
 def call(String product, String environment, String subscription, boolean planOnly, String deploymentTarget) {
   node {
     env.PATH = "$env.PATH:/usr/local/bin"
