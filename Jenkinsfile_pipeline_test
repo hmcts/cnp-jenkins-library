@@ -5,6 +5,8 @@ import uk.gov.hmcts.contino.GradleBuilder
 def channel = '#cnp-build-status'
 GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
+def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+
 node {
   try {
     stage('Checkout') {
@@ -28,14 +30,14 @@ node {
       backend: {
         stage('Run pipeline for backend') {
           build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-rhubarb-recipes-service/master',
-            parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
+            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
         }
       },
 
       frontend: {
         stage('Run pipeline for frontend') {
           build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-rhubarb-frontend/master',
-            parameters: [string(name: 'LIB_VERSION', value: env.CHANGE_BRANCH)]
+            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
         }
       }
     )
