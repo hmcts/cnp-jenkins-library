@@ -187,6 +187,7 @@ class WebAppDeploy implements Serializable {
     def result = az "webapp deployment list-publishing-profiles --name ${serviceName} --slot staging --resource-group ${serviceName} --query \"[?publishMethod=='MSDeploy'].{publishUrl:publishUrl,userName:userName,userPWD:userPWD}|[0]\""
     def profile = new JsonSlurperClassic().parseText(result)
 
+    // the "|| true" is required here to allow the pipeline to use the same env for both aat and prod stages
     steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} 'https://${profile.userName}:${profile.userPWD}@${profile.publishUrl}/${serviceName}.git' || true")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
   }
