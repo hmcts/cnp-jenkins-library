@@ -59,7 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
   }
 
   /**
@@ -76,7 +76,7 @@ class Acr extends Az {
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
     def defaultAcrScriptFilePath = "acb.yaml"
     steps.sh(
-      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
+      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
       returnStdout: true
     )?.trim()
     this.run()
