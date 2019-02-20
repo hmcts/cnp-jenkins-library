@@ -12,7 +12,7 @@ def call(String product, String environment, String subscription, String deploym
     }
     withSubscription(subscription) {
       withIlbIp(environmentDeploymentTarget) {
-        spinInfra(product, environment, false, subscription, deploymentTarget)
+        spinInfra(product, null, environment, false, subscription, deploymentTarget)
       }
     }
   }
