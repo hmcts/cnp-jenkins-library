@@ -33,7 +33,7 @@ class ProjectBranch implements Serializable {
     if (isPR()) {
       return branchName.toLowerCase()
     }
-    return (branchName == 'master' || branchName == 'masterv2') ? 'latest' : this.branchName.replaceAll('/', '-')
+    return (branchName == 'master') ? 'latest' : this.branchName.replaceAll('/', '-')
   }
 
 }
