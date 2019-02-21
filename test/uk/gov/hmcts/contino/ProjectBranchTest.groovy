@@ -69,14 +69,6 @@ class ProjectBranchTest extends Specification {
     assertThat(branch.imageTag()).isEqualTo('latest')
   }
 
-  def "imageTag should return 'latest' if branch is masterv2"() {
-    when:
-    def branch = new ProjectBranch('masterv2')
-
-    then:
-    assertThat(branch.imageTag()).isEqualTo('latest')
-  }
-
   def "imageTag should return branch name with no slashes in it"() {
     when:
     def branch = new ProjectBranch('feature/blah')
