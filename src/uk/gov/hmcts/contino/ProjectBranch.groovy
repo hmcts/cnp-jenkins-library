@@ -9,9 +9,7 @@ class ProjectBranch implements Serializable {
   }
 
   boolean isMaster() {
-    branchName == 'master' ||
-    branchName == 'cnp' ||
-    branchName == 'masterv2'
+    branchName == 'master'
   }
 
   boolean isPR() {
@@ -35,7 +33,7 @@ class ProjectBranch implements Serializable {
     if (isPR()) {
       return branchName.toLowerCase()
     }
-    return (branchName == 'master' || branchName == 'masterv2') ? 'latest' : this.branchName.replaceAll('/', '-')
+    return (branchName == 'master') ? 'latest' : this.branchName.replaceAll('/', '-')
   }
 
 }
