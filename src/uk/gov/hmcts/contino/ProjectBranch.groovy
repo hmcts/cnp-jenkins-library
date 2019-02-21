@@ -9,9 +9,7 @@ class ProjectBranch implements Serializable {
   }
 
   boolean isMaster() {
-    branchName == 'master' ||
-    branchName == 'cnp' ||
-    branchName == 'masterv2'
+    branchName == 'master'
   }
 
   boolean isPR() {
