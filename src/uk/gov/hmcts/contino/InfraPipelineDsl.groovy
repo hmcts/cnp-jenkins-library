@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-class InfraPipelineDsl implements Serializable {
+class InfraPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   final InfraPipelineConfig config
 

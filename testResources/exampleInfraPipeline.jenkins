@@ -1,0 +1,9 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "product"
+
+withInfraPipeline(product) {
+
+}

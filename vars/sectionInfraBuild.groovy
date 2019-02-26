@@ -5,6 +5,7 @@ def call(params) {
   def pipelineConfig = params.pipelineConfig
   def environment = params.environment
   def subscription = params.subscription
+  def product = params.product
   def planOnly = params.planOnly ?: false
   def deploymentTargets = params.deploymentTargets ?: deploymentTargets(subscription, environment)
 

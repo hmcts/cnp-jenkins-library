@@ -3,10 +3,14 @@ import uk.gov.hmcts.contino.InfraPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.contino.Environment
 
 def call(String product, Closure body) {
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
+  Subscription subscription = new Subscription(env)
+  Environment environment = new Environment(env)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription )
 
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
