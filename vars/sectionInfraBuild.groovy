@@ -1,5 +1,3 @@
-import uk.gov.hmcts.contino.azure.KeyVault
-import uk.gov.hmcts.contino.azure.ProductVaultEntries
 
 def call(params) {
   def pipelineConfig = params.pipelineConfig
@@ -20,21 +18,6 @@ def call(params) {
           for (int i = 0; i < deploymentTargets.size() ; i++) {
             spinInfra(product, null, environment, planOnly, subscription, deploymentTargets[i])
           }
-        }
-      }
-    }
-
-    // TODO get rid of this vault magic?
-    if (!planOnly) {
-      stage('Store shared product secrets') {
-        if (tfOutput.vaultName) {
-          KeyVault keyVault = new KeyVault(this, subscription, tfOutput.vaultName.value)
-
-          if (tfOutput.appInsightsInstrumentationKey) {
-            keyVault.store(ProductVaultEntries.APP_INSIGHTS_INSTRUMENTATION_KEY, tfOutput.appInsightsInstrumentationKey.value)
-          }
-        } else {
-          echo "No vault name, skipping storing vault secrets"
         }
       }
     }
