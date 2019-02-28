@@ -59,7 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
   }
 
   /**
@@ -70,7 +70,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def run() {
-    this.az "acr run -r ${registryName} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
+    this.az "acr run -r ${registryName} -g ${resourceGroup} ."
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {

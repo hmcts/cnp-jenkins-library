@@ -50,7 +50,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} -g ${REGISTRY_RESOURCE_GROUP} --build-arg REGISTRY_NAME=${REGISTRY_NAME} .") &&
+                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
@@ -72,7 +72,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --build-arg REGISTRY_NAME=${REGISTRY_NAME} .") &&
+                    it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
@@ -90,7 +90,7 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)
                   })
     and:
-      1 * steps.sh({it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --build-arg REGISTRY_NAME=${REGISTRY_NAME} .") &&
+      1 * steps.sh({it.get('script').contains("acr run -r ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} .") &&
                     it.get('returnStdout').equals(true)
                   })
 
