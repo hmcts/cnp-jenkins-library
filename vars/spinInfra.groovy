@@ -34,8 +34,8 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
   stateStoreInit(environment, subscription, deploymentTarget)
 
-  lock("${productName}-${environment}") {
-    stage("Plan ${productName}-${environment} in ${environment}") {
+  lock("${productName}-${environmentDeploymentTarget}") {
+    stage("Plan ${productName} in ${environmentDeploymentTarget}") {
       if (env.STORE_rg_name_template != null &&
         env.STORE_sa_name_template != null &&
         env.STORE_sa_container_name_template != null) {
@@ -55,28 +55,26 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         "-backend-config \"key=${productName}/${environmentDeploymentTarget}/terraform.tfstate\""
 
 
-
       sh "terraform get -update=true"
       sh "terraform plan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
-
-      if (!planOnly) {
-        stage("Apply ${productName}-${environment} in ${environment}") {
-          sh "terraform apply -auto-approve -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
-            (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
-          parseResult = null
-          try {
-            result = sh(script: "terraform output -json", returnStdout: true).trim()
-            parseResult = new JsonSlurperClassic().parseText(result)
-            log.info("returning parsed JSON terraform output: ${parseResult}")
-          } catch (err) {
-            log.info("terraform output command failed! ${err} Assuming there was no result...")
-          }
-          return parseResult
-        }
-      } else
-        log.warning "Skipping apply due to planOnly flag set"
     }
+    if (!planOnly) {
+      stage("Apply ${productName} in ${environmentDeploymentTarget}") {
+        sh "terraform apply -auto-approve -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+          (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+        parseResult = null
+        try {
+          result = sh(script: "terraform output -json", returnStdout: true).trim()
+          parseResult = new JsonSlurperClassic().parseText(result)
+          log.info("returning parsed JSON terraform output: ${parseResult}")
+        } catch (err) {
+          log.info("terraform output command failed! ${err} Assuming there was no result...")
+        }
+        return parseResult
+      }
+    } else
+      log.warning "Skipping apply due to planOnly flag set"
   }
 
 }

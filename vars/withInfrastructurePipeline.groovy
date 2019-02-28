@@ -1,4 +1,5 @@
 
+@Deprecated
 def call(String product, String environment, String subscription, String deploymentTarget = "") {
 
   def environmentDeploymentTarget = "$environment$deploymentTarget"
