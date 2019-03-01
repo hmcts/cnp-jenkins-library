@@ -26,7 +26,7 @@ def call(DockerImage dockerImage, Map params) {
   def kubectl = new Kubectl(this, subscription, aksServiceName)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
-  def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
+  def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
 
   def templateEnvVars = [
     "NAMESPACE=${aksServiceName}",

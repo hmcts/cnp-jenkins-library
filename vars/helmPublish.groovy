@@ -6,7 +6,7 @@ def call(Map params) {
   withAksClient(params.subscriptionName) {
     Kubectl kubectl = new Kubectl(this, params.subscriptionName, null)
     kubectl.login()
-    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "kube-system")
+    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
     Consul consul = new Consul(this)
     def consulApiAddr = consul.getConsulIP()
 
