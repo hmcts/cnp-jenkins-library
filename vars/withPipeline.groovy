@@ -96,22 +96,12 @@ def call(type, String product, String component, Closure body) {
             component: component)
         }
 
-        onDemo {
+        onAutoDeployBranch { subscriptionName, environmentName ->
           sectionDeployToEnvironment(
             pipelineCallbacks: pl,
             pipelineType: pipelineType,
-            subscription: subscription.demoName,
-            environment: environment.demoName,
-            product: product,
-            component: component)
-        }
-
-        onHMCTSDemo {
-          sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
-            pipelineType: pipelineType,
-            subscription: subscription.hmctsDemoName,
-            environment: environment.hmctsDemoName,
+            subscription: subscriptionName,
+            environment: environmentName,
             product: product,
             component: component)
         }

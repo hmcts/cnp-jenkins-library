@@ -6,6 +6,7 @@ class Subscription implements Serializable {
   def final demoName
   def final previewName
   def final hmctsDemoName
+  def final qaName
 
   Subscription(Object env) {
     Objects.requireNonNull(env)
@@ -15,5 +16,6 @@ class Subscription implements Serializable {
     demoName = env.DEMO_SUBSCRIPTION_NAME ?: 'nonprod'
     previewName = env.PREVIEW_SUBSCRIPTION_NAME ?: 'nonprod'
     hmctsDemoName = env.HMCTSDEMO_SUBSCRIPTION_NAME ?: 'hmctsdemo'
+    qaName = env.QA_SUBSCRIPTION_NAME ?: 'qa'
   }
 }
