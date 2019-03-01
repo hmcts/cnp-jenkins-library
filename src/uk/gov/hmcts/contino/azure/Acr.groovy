@@ -53,9 +53,10 @@ class Acr extends Az {
    * Build an image
    *
    * Notice that when an image is tagged as 'latest', another tag
-   * with a suffix appended 'latest' is also created to trigger
-   * possible downstream deployments:
-   * e.g. <image-name>:latest will also be tagged <image-name>:latest_dfb02
+   * with a suffix appended to 'latest' is also created.
+   * The intent is to trigger downstream deployments using this tag pattern.
+   *
+   * e.g.: <image-name>:latest will also be tagged as <image-name>:latest_dfb02
    *
    * @param dockerImage
    *   the docker image to build
