@@ -44,19 +44,11 @@ def call(String product, Closure body) {
             product: product)
         }
 
-        onDemo {
+        onAutoDeployBranch { subscriptionName, environmentName ->
           sectionInfraBuild(
             pipelineConfig: pipelineConfig,
-            subscription: subscription.demoName,
-            environment: environment.demoName,
-            product: product)
-        }
-
-        onHMCTSDemo {
-          sectionInfraBuild(
-            pipelineConfig: pipelineConfig,
-            subscription: subscription.hmctsDemoName,
-            environment: environment.hmctsDemoName,
+            subscription: subscriptionName,
+            environment: environmentName,
             product: product)
         }
 
