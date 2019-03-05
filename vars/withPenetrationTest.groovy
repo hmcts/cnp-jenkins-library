@@ -1,4 +1,7 @@
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.AppPipelineDsl
+import uk.gov.hmcts.contino.PipelineCallbacksConfig
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 
@@ -7,12 +10,19 @@ def call(Closure body) {
   Subscription subscription = new Subscription(env)
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, 'pen-test', 'pen-test', subscription)
-  def pl = new PipelineCallbacks(metricsPublisher, this)
+  def pipelineConfig = new AppPipelineConfig()
+  def callbacks = new PipelineCallbacksConfig()
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
-  body.delegate = pl
+  callbacks.registerAfterAll { stage ->
+    metricsPublisher.publish(stage)
+  }
+
+  def dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+  body.delegate = dsl
   body.call() // register callbacks
 
-  pl.onStageFailure() {
+  dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
 
@@ -40,20 +50,20 @@ def call(Closure body) {
         }
       } catch (err) {
         currentBuild.result = "FAILURE"
-        if (pl.slackChannel) {
-          notifyBuildFailure channel: pl.slackChannel
+        if (pipelineConfig.slackChannel) {
+          notifyBuildFailure channel: pipelineConfig.slackChannel
         }
 
-        pl.call('onFailure')
+        callbacksRunner.call('onFailure')
         metricsPublisher.publish('Pipeline Failed')
         throw err
       }
 
-      if (pl.slackChannel) {
-        notifyBuildFixed channel: pl.slackChannel
+      if (pipelineConfig.slackChannel) {
+        notifyBuildFixed channel: pipelineConfig.slackChannel
       }
 
-      pl.call('onSuccess')
+      callbacksRunner.call('onSuccess')
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
