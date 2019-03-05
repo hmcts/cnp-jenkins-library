@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
+import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
@@ -110,24 +111,13 @@ def call(type, String product, String component, Closure body) {
             component: component)
         }
 
-        onDemo {
+        onAutoDeployBranch { subscriptionName, environmentName ->
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
-            subscription: subscription.demoName,
-            environment: environment.demoName,
-            product: product,
-            component: component)
-        }
-
-        onHMCTSDemo {
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.hmctsDemoName,
-            environment: environment.hmctsDemoName,
+            subscription: subscriptionName,
+            environment: environmentName,
             product: product,
             component: component)
         }
