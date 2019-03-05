@@ -2,11 +2,14 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
-import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.AppPipelineDsl
+import uk.gov.hmcts.contino.PipelineCallbacksConfig
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 
 def call(type, String product, String component, Closure body) {
 
@@ -34,12 +37,19 @@ def call(type, String product, String component, Closure body) {
   assert pipelineType != null
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
-  def pl = new PipelineCallbacks(metricsPublisher, this)
+  def pipelineConfig = new AppPipelineConfig()
+  def callbacks = new PipelineCallbacksConfig()
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
-  body.delegate = pl
-  body.call() // register callbacks
+  callbacks.registerAfterAll { stage ->
+    metricsPublisher.publish(stage)
+  }
 
-  pl.onStageFailure() {
+  def dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+  body.delegate = dsl
+  body.call() // register pipeline config
+
+  dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
 
@@ -51,7 +61,8 @@ def call(type, String product, String component, Closure body) {
         env.PATH = "$env.PATH:/usr/local/bin"
 
         sectionBuildAndTest(
-          pipelineCallbacks: pl,
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
           builder: pipelineType.builder,
           subscription: subscription.nonProdName,
           product: product,
@@ -59,7 +70,8 @@ def call(type, String product, String component, Closure body) {
         )
 
         sectionCI(
-          pipelineCallbacks: pl,
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
           pipelineType: pipelineType,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
@@ -69,14 +81,15 @@ def call(type, String product, String component, Closure body) {
 
         onMaster {
           sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
             environment: environment.nonProdName,
             product: product,
             component: component)
 
-          if (pl.installCharts) {
+          if (pipelineConfig.installCharts) {
             stage('Publish Helm chart') {
               helmPublish(
                 subscriptionName: subscription.nonProdName,
@@ -88,7 +101,8 @@ def call(type, String product, String component, Closure body) {
           }
 
           sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.prodName,
             environment: environment.prodName,
@@ -98,7 +112,8 @@ def call(type, String product, String component, Closure body) {
 
         onDemo {
           sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.demoName,
             environment: environment.demoName,
@@ -108,7 +123,8 @@ def call(type, String product, String component, Closure body) {
 
         onHMCTSDemo {
           sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.hmctsDemoName,
             environment: environment.hmctsDemoName,
@@ -118,7 +134,8 @@ def call(type, String product, String component, Closure body) {
 
         onPreview {
           sectionDeployToEnvironment(
-            pipelineCallbacks: pl,
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.previewName,
             environment: environment.previewName,
@@ -127,20 +144,20 @@ def call(type, String product, String component, Closure body) {
         }
       } catch (err) {
         currentBuild.result = "FAILURE"
-        if (pl.slackChannel) {
-          notifyBuildFailure channel: pl.slackChannel
+        if (pipelineConfig.slackChannel) {
+          notifyBuildFailure channel: pipelineConfig.slackChannel
         }
 
-        pl.call('onFailure')
+        callbacksRunner.call('onFailure')
         metricsPublisher.publish('Pipeline Failed')
         throw err
       }
 
-      if (pl.slackChannel) {
-        notifyBuildFixed channel: pl.slackChannel
+      if (pipelineConfig.slackChannel) {
+        notifyBuildFixed channel: pipelineConfig.slackChannel
       }
 
-      pl.call('onSuccess')
+      callbacksRunner.call('onSuccess')
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }

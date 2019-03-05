@@ -1,13 +1,15 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
+import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
 
-  PipelineCallbacks pl = params.pipelineCallbacks
+  PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
+  AppPipelineConfig config = params.appPipelineConfig
   Builder builder = params.builder
 
   def subscription = params.subscription
@@ -15,14 +17,14 @@ def call(params) {
   def component = params.component
 
   stage('Checkout') {
-    pl.callAround('checkout') {
+    pcr.callAround('checkout') {
       deleteDir()
       checkout scm
     }
   }
 
   stage("Build") {
-    pl.callAround('build') {
+    pcr.callAround('build') {
       timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
         builder.build()
       }
@@ -34,13 +36,13 @@ def call(params) {
     parallel(
       "Unit tests and Sonar scan": {
 
-        pl.callAround('test') {
+        pcr.callAround('test') {
           timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
             builder.test()
           }
         }
 
-        pl.callAround('sonarscan') {
+        pcr.callAround('sonarscan') {
           pluginActive('sonar') {
             withSonarQubeEnv("SonarQube") {
               builder.sonarScan()
@@ -58,20 +60,20 @@ def call(params) {
       },
 
       "Security Checks": {
-        pl.callAround('securitychecks') {
+        pcr.callAround('securitychecks') {
           builder.securityCheck()
         }
       },
 
       "Docker Build" : {
-        if (pl.dockerBuild) {
+        if (config.dockerBuild) {
           withAksClient(subscription) {
 
             def acbTemplateFilePath = 'acb.tpl.yaml'
             def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
             def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
-            pl.callAround('dockerbuild') {
+            pcr.callAround('dockerbuild') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
                 fileExists(acbTemplateFilePath) ?
                   acr.runWithTemplate(acbTemplateFilePath, dockerImage)

@@ -24,6 +24,7 @@ class PipelineCallbacksRunner implements Serializable {
       throw err
     } finally {
       callAfter(stage)
+      nullSafeCall('after:all')
     }
   }
 

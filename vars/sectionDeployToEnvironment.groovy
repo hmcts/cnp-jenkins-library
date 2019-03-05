@@ -1,12 +1,14 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Deployer
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 
 
 def call(params) {
-  PipelineCallbacks pl = params.pipelineCallbacks
+  PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
+  AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
   def subscription = params.subscription
   def environment = params.environment
@@ -28,23 +30,23 @@ def call(params) {
 
         withSubscription(subscription) {
           dir('infrastructure') {
-            pl.callAround("buildinfra:${environment}") {
+            pcr.callAround("buildinfra:${environment}") {
               timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
                 withIlbIp(environment) {
                   def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
                   withEnv(additionalInfrastructureVariables) {
                     tfOutput = spinInfra(product, component, environment, false, subscription)
                   }
-                  if (pl.legacyDeployment) {
+                  if (config.legacyDeployment) {
                     scmServiceRegistration(environment)
                   }
                 }
               }
             }
           }
-          if (pl.migrateDb) {
+          if (config.migrateDb) {
             stage("DB Migration - ${environment}") {
-              pl.callAround("dbmigrate:${environment}") {
+              pcr.callAround("dbmigrate:${environment}") {
                 builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
               }
             }
@@ -57,14 +59,15 @@ def call(params) {
         deploymentTargets.clear()
       }
 
-      if (pl.legacyDeployment) {
+      if (config.legacyDeployment) {
         deploymentTargets.add(0, '')
       }
 
       for (int i = 0; i < deploymentTargets.size() ; i++) {
 
         sectionDeployToDeploymentTarget(
-          pipelineCallbacks: pl,
+          appPipelineConfig: config,
+          pipelineCallbacksRunner: pcr,
           pipelineType: pipelineType,
           subscription: subscription,
           environment: environment,

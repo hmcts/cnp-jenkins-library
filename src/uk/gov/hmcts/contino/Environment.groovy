@@ -13,11 +13,11 @@ class Environment implements Serializable {
     Objects.requireNonNull(env)
     org.codehaus.groovy.runtime.NullObject.metaClass.toString = {return ''}
 
-    nonProdName = (env.NONPROD_ENVIRONMENT_NAME ?: 'aat') + env.ENV_SUFFIX ?: ""
-    prodName = (env.PROD_ENVIRONMENT_NAME ?: 'prod') + env.ENV_SUFFIX ?: ""
-    demoName = (env.DEMO_ENVIRONMENT_NAME ?: 'demo') + env.ENV_SUFFIX ?: ""
-    previewName = (env.PREVIEW_ENVIRONMENT_NAME ?: 'preview') + env.ENV_SUFFIX ?: ""
-    hmctsDemoName = (env.HMCTSDEMO_ENVIRONMENT_NAME ?: 'hmctsdemo') + env.ENV_SUFFIX ?: ""
+    nonProdName = env.NONPROD_ENVIRONMENT_NAME ?: 'aat'
+    prodName = env.PROD_ENVIRONMENT_NAME ?: 'prod'
+    demoName = env.DEMO_ENVIRONMENT_NAME ?: 'demo'
+    previewName = env.PREVIEW_ENVIRONMENT_NAME ?: 'preview'
+    hmctsDemoName = env.HMCTSDEMO_ENVIRONMENT_NAME ?: 'hmctsdemo'
 
     functionalTestEnvironments = [nonProdName, previewName]
   }

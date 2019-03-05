@@ -1,7 +1,8 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
+import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.Deployer
-import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 
 def testEnv(String testUrl, tfOutput, block) {
@@ -20,7 +21,8 @@ def testEnv(String testUrl, tfOutput, block) {
 }
 
 def call(params) {
-  PipelineCallbacks pl = params.pipelineCallbacks
+  PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
+  AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
   def subscription = params.subscription
   def environment = params.environment
@@ -44,7 +46,7 @@ def call(params) {
 
         withSubscription(subscription) {
           dir('infrastructure/deploymentTarget') {
-            pl.callAround("buildinfra:${environmentDt}") {
+            pcr.callAround("buildinfra:${environmentDt}") {
               timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environmentDt}") {
                 withIlbIp(environmentDt) {
                   def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
@@ -75,7 +77,7 @@ def call(params) {
 
   stage("Deploy - ${environmentDt} (staging slot)") {
     withSubscription(subscription) {
-      pl.callAround("deploy:${environmentDt}") {
+      pcr.callAround("deploy:${environmentDt}") {
         timeoutWithMsg(time: 30, unit: 'MINUTES', action: "Deploy - ${environmentDt} (staging slot)") {
           deployer.deploy(environmentDt)
           deployer.healthCheck(environmentDt, "staging")
@@ -89,10 +91,10 @@ def call(params) {
   }
 
   withSubscription(subscription) {
-    withTeamSecrets(pl, environment, mergedTfOutput?.vaultUri?.value) {
+    withTeamSecrets(config, environment, mergedTfOutput?.vaultUri?.value) {
       stage("Smoke Test - ${environmentDt} (staging slot)") {
         testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-          pl.callAround("smoketest:${environmentDt}-staging") {
+          pcr.callAround("smoketest:${environmentDt}-staging") {
             timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'smoke test') {
               builder.smokeTest()
             }
@@ -103,17 +105,17 @@ def call(params) {
       onFunctionalTestEnvironment(environment) {
         stage("Functional Test - ${environmentDt} (staging slot)") {
           testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-            pl.callAround("functionalTest:${environmentDt}") {
+            pcr.callAround("functionalTest:${environmentDt}") {
               timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
                 builder.functionalTest()
               }
             }
           }
         }
-        if (pl.performanceTest) {
+        if (config.performanceTest) {
           stage("Performance Test - ${environmentDt} (staging slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pl.callAround("performanceTest:${environmentDt}") {
+              pcr.callAround("performanceTest:${environmentDt}") {
                 timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environmentDt} (staging slot)") {
                   builder.performanceTest()
                   publishPerformanceReports(this, params)
@@ -122,28 +124,28 @@ def call(params) {
             }
           }
         }
-        if (pl.crossBrowserTest) {
+        if (config.crossBrowserTest) {
           stage("CrossBrowser Test - ${environmentDt} (staging slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pl.callAround("crossBrowserTest:${environmentDt}") {
+              pcr.callAround("crossBrowserTest:${environmentDt}") {
                 builder.crossBrowserTest()
               }
             }
           }
         }
-        if (pl.mutationTest) {
+        if (config.mutationTest) {
           stage("Mutation Test - ${environmentDt} (staging slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pl.callAround("mutationTest:${environmentDt}") {
+              pcr.callAround("mutationTest:${environmentDt}") {
                 builder.mutationTest()
               }
             }
           }
         }
-        if (pl.fullFunctionalTest) {
+        if (config.fullFunctionalTest) {
           stage("FullFunctional Test - ${environmentDt} (staging slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pl.callAround("crossBrowserTest:${environmentDt}") {
+              pcr.callAround("crossBrowserTest:${environmentDt}") {
                 builder.fullFunctionalTest()
               }
             }
@@ -154,7 +156,7 @@ def call(params) {
 
       stage("Promote - ${environmentDt} (staging -> production slot)") {
         withSubscription(subscription) {
-          pl.callAround("promote:${environmentDt}") {
+          pcr.callAround("promote:${environmentDt}") {
             timeoutWithMsg(time: 15, unit: 'MINUTES', action: "Promote - ${environmentDt} (staging -> production slot)") {
               sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environmentDt}\" --resource-group \"${product}-${component}-${environmentDt}\" --slot staging --target-slot production"
               deployer.healthCheck(environmentDt, "production")
@@ -169,7 +171,7 @@ def call(params) {
 
       stage("Smoke Test - ${environmentDt} (production slot)") {
         testEnv(deployer.getServiceUrl(environmentDt, "production"), mergedTfOutput) {
-          pl.callAround("smoketest:${environmentDt}") {
+          pcr.callAround("smoketest:${environmentDt}") {
             timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke test (prod slot)') {
               builder.smokeTest()
             }
@@ -178,11 +180,11 @@ def call(params) {
       }
 
       onNonPR() {
-        if (pl.apiGatewayTest) {
+        if (config.apiGatewayTest) {
           stage("API Gateway Test - ${environmentDt} (production slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "production"), mergedTfOutput) {
-              pl.callAround("apiGatewayTest:${environmentDt}") {
-                timeoutWithMsg(time: pl.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environmentDt} (production slot)") {
+              pcr.callAround("apiGatewayTest:${environmentDt}") {
+                timeoutWithMsg(time: config.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environmentDt} (production slot)") {
                   builder.apiGatewayTest()
                 }
               }

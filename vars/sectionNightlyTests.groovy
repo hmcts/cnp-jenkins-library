@@ -1,25 +1,26 @@
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
 
-def call(PipelineCallbacks pl, PipelineType pipelineType) {
+def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType) {
 
   Environment environment = new Environment(env)
 
-  withTeamSecrets(pl, environment.nonProdName) {
+  withTeamSecrets(config, environment.nonProdName) {
     Builder builder = pipelineType.builder
 
     stage('Checkout') {
-      pl.callAround('checkout') {
+      pcr.callAround('checkout') {
         deleteDir()
         checkout scm
       }
     }
 
     stage("Build") {
-      pl.callAround('build') {
+      pcr.callAround('build') {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
           builder.build()
         }
@@ -28,7 +29,7 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
 
     try {
       stage('DependencyCheckNightly') {
-        pl.callAround('DependencyCheckNightly') {
+        pcr.callAround('DependencyCheckNightly') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Dependency check') {
             builder.securityCheck()
           }
@@ -38,11 +39,11 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       echo "Failure in DependencyCheckNightly, continuing build will fail at the end"
     }
 
-    if (pl.crossBrowserTest) {
+    if (config.crossBrowserTest) {
       try {
         stage("crossBrowserTest") {
-          pl.callAround('crossBrowserTest') {
-            timeoutWithMsg(time: pl.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+          pcr.callAround('crossBrowserTest') {
+            timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
               builder.crossBrowserTest()
             }
           }
@@ -53,11 +54,11 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       }
     }
 
-    if (pl.performanceTest) {
+    if (config.performanceTest) {
       try {
         stage("performanceTest") {
-          pl.callAround('PerformanceTest') {
-            timeoutWithMsg(time: pl.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+          pcr.callAround('PerformanceTest') {
+            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
             }
           }
@@ -67,11 +68,11 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       }
     }
 
-    if (pl.securityScan) {
+    if (config.securityScan) {
       try {
         stage('securityScan') {
-          pl.callAround('securityScan') {
-            timeout(time: pl.securityScanTimeout, unit: 'MINUTES') {
+          pcr.callAround('securityScan') {
+            timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan()
             }
           }
@@ -82,11 +83,11 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       }
     }
 
-    if (pl.mutationTest) {
+    if (config.mutationTest) {
       try {
         stage('mutationTest') {
-          pl.callAround('mutationTest') {
-            timeoutWithMsg(time: pl.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
+          pcr.callAround('mutationTest') {
+            timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
               builder.mutationTest()
             }
           }
@@ -97,11 +98,11 @@ def call(PipelineCallbacks pl, PipelineType pipelineType) {
       }
     }
 
-    if (pl.fullFunctionalTest) {
+    if (config.fullFunctionalTest) {
       try {
         stage('fullFunctionalTest') {
-          pl.callAround('fullFunctionalTest') {
-            timeoutWithMsg(time: pl.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+          pcr.callAround('fullFunctionalTest') {
+            timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
               builder.fullFunctionalTest()
             }
           }

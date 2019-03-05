@@ -1,13 +1,13 @@
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.AppPipelineConfig
 
-def call(PipelineCallbacks pl, String environment, Closure block) {
-  call(pl, environment, null, block)
+def call(AppPipelineConfig config, String environment, Closure block) {
+  call(config, environment, null, block)
 }
 
-def call(PipelineCallbacks pl, String environment, String keyVaultURL, Closure body) {
-  Map<String, List<Map<String, Object>>> secrets = pl.vaultSecrets
-  Map<String, String> vaultOverrides = pl.vaultEnvironmentOverrides
-  String vaultName = pl.vaultName
+def call(AppPipelineConfig config, String environment, String keyVaultURL, Closure body) {
+  Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
+  Map<String, String> vaultOverrides = config.vaultEnvironmentOverrides
+  String vaultName = config.vaultName
 
   if (secrets.isEmpty()) {
     body.call()

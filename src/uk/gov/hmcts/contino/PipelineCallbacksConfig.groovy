@@ -23,4 +23,7 @@ class PipelineCallbacksConfig {
     bodies.put('onSuccess', body)
   }
 
+  void registerAfterAll(Closure body) {
+    bodies.put('after:all', body)
+  }
 }
