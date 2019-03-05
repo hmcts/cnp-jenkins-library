@@ -6,6 +6,7 @@ class Environment implements Serializable {
   def final demoName
   def final previewName
   def final hmctsDemoName
+  def final perftestName
 
   def final functionalTestEnvironments
 
@@ -18,6 +19,7 @@ class Environment implements Serializable {
     demoName = (env.DEMO_ENVIRONMENT_NAME ?: 'demo') + env.ENV_SUFFIX ?: ""
     previewName = (env.PREVIEW_ENVIRONMENT_NAME ?: 'preview') + env.ENV_SUFFIX ?: ""
     hmctsDemoName = (env.HMCTSDEMO_ENVIRONMENT_NAME ?: 'hmctsdemo') + env.ENV_SUFFIX ?: ""
+    perftestName = (env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest') + env.ENV_SUFFIX ?: ""
 
     functionalTestEnvironments = [nonProdName, previewName]
   }
