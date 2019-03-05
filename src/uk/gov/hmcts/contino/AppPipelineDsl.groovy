@@ -11,7 +11,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   @Deprecated
   void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
-    this.vaultSecrets = ['unknown': vaultSecrets]
+    config.vaultSecrets = ['unknown': vaultSecrets]
   }
 
   void loadVaultSecrets(Map<String, List<Map<String, Object>>> vaultSecrets) {
