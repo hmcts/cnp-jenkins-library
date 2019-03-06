@@ -110,4 +110,19 @@ class AcrTest extends Specification {
 
   }
 
+  def "retagWithAppendedHash() should call the import command the provided arguments"() {
+    when:
+      when:
+      dockerImage.getTag() >> "sometag"
+      dockerImage.getShortName() >> IMAGE_NAME
+      dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      acr.retagWithAppendedHash("Ac0mpl1catedH4sh", dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("acr import -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-Ac0mpl1catedH4sh") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
+
 }

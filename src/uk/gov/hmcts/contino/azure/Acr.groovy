@@ -100,4 +100,23 @@ class Acr extends Az {
     return host?.trim()
   }
 
+  /**
+   * Retags an image in the registry with an appended hash
+   *
+   * e.g.: <image-name>:latest will also be tagged as <image-name>:latest-dfb02
+   *
+   * @param hash
+   *   a string hash (use only alphanumeric characters)
+   *
+   * @param dockerImage
+   *   the docker image to build
+   *
+   * @return
+   *   stdout of the step
+   */
+  def retagWithAppendedHash(String hash, DockerImage dockerImage) {
+    def additionalTag = "${dockerImage.getShortName()}-${hash}"
+    this.az "acr import -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
+  }
+
 }
