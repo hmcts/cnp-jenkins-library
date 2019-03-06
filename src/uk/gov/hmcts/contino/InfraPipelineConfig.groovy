@@ -1,7 +1,5 @@
 package uk.gov.hmcts.contino
 
-class InfraPipelineConfig implements Serializable {
+class InfraPipelineConfig extends CommonPipelineConfig implements Serializable {
 
-  String slackChannel
-  MetricsPublisher metricsPublisher
 }

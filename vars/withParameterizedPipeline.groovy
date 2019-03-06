@@ -2,10 +2,13 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
-import uk.gov.hmcts.contino.PipelineCallbacks
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.AppPipelineDsl
+import uk.gov.hmcts.contino.PipelineCallbacksConfig
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   call(type, product,component,environment,subscription,'',body)
@@ -32,12 +35,20 @@ def call(type, String product, String component, String environment, String subs
 
   Subscription metricsSubscription = new Subscription(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription)
-  def pl = new PipelineCallbacks(metricsPublisher, this)
+  def pipelineConfig = new AppPipelineConfig()
+  def callbacks = new PipelineCallbacksConfig()
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
-  body.delegate = pl
+  callbacks.registerAfterAll { stage ->
+    metricsPublisher.publish(stage)
+  }
+
+  def dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+
+  body.delegate = dsl
   body.call() // register callbacks
 
-  pl.onStageFailure() {
+  dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
 
@@ -49,20 +60,21 @@ def call(type, String product, String component, String environment, String subs
         env.PATH = "$env.PATH:/usr/local/bin"
 
         stage('Checkout') {
-          pl.callAround('checkout') {
+          callbacksRunner.callAround('checkout') {
             deleteDir()
             checkout scm
           }
         }
 
         stage("Build") {
-          pl.callAround('build') {
+          callbacksRunner.callAround('build') {
             builder.build()
           }
         }
 
         sectionDeployToEnvironment(
-          pipelineCallbacks: pl,
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
           pipelineType: pipelineType,
           subscription: subscription,
           environment: environment,
@@ -72,22 +84,22 @@ def call(type, String product, String component, String environment, String subs
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
-      if (pl.slackChannel) {
-        notifyBuildFailure channel: pl.slackChannel
+      if (pipelineConfig.slackChannel) {
+        notifyBuildFailure channel: pipelineConfig.slackChannel
       }
 
-      pl.call('onFailure')
+      callbacksRunner.call('onFailure')
       node {
         metricsPublisher.publish('Pipeline Failed')
       }
       throw err
     }
 
-    if (pl.slackChannel) {
-      notifyBuildFixed channel: pl.slackChannel
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFixed channel: pipelineConfig.slackChannel
     }
 
-    pl.call('onSuccess')
+    callbacksRunner.call('onSuccess')
     node {
       metricsPublisher.publish('Pipeline Succeeded')
     }

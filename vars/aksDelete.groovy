@@ -1,5 +1,4 @@
 import uk.gov.hmcts.contino.Kubectl
-import uk.gov.hmcts.contino.PipelineCallbacks
 
 def call(List templateEnvVars, String subscription, String namespace) {
   withAksClient(subscription) {

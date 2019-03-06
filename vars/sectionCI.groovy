@@ -1,6 +1,7 @@
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.DockerImage
-import uk.gov.hmcts.contino.PipelineCallbacks
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
@@ -18,7 +19,8 @@ def testEnv(String testUrl, block) {
 }
 
 def call(params) {
-  PipelineCallbacks pl = params.pipelineCallbacks
+  PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
+  AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
 
   def subscription = params.subscription
@@ -28,16 +30,16 @@ def call(params) {
 
   Builder builder = pipelineType.builder
 
-  if (pl.dockerBuild) {
+  if (config.dockerBuild) {
     withAksClient(subscription) {
       def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
 
       onPR {
-        if (pl.deployToAKS) {
-          withTeamSecrets(pl, params.environment) {
+        if (config.deployToAKS) {
+          withTeamSecrets(config, params.environment) {
             stage('Deploy to AKS') {
-              pl.callAround('aksdeploy') {
+              pcr.callAround('aksdeploy') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
                   deploymentNumber = githubCreateDeployment()
 
@@ -49,10 +51,10 @@ def call(params) {
               }
             }
           }
-        } else if (pl.installCharts) {
-          withTeamSecrets(pl, params.environment) {
+        } else if (config.installCharts) {
+          withTeamSecrets(config, params.environment) {
             stage('Install Charts to AKS') {
-              pl.callAround('akschartsinstall') {
+              pcr.callAround('akschartsinstall') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
                   deploymentNumber = githubCreateDeployment()
 
@@ -69,12 +71,12 @@ def call(params) {
     }
 
     onPR {
-      if (pl.deployToAKS || pl.installCharts) {
+      if (config.deployToAKS || config.installCharts) {
         withSubscription(subscription) {
-          withTeamSecrets(pl, params.environment) {
+          withTeamSecrets(config, params.environment) {
             stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
-                pl.callAround("smoketest:aks") {
+                pcr.callAround("smoketest:aks") {
                   timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                     builder.smokeTest()
                   }
@@ -87,7 +89,7 @@ def call(params) {
             onFunctionalTestEnvironment(environment) {
               stage("Functional Test - AKS") {
                 testEnv(aksUrl) {
-                  pl.callAround("functionalTest:${environment}") {
+                  pcr.callAround("functionalTest:${environment}") {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
                       builder.functionalTest()
                     }
@@ -95,10 +97,10 @@ def call(params) {
                 }
               }
             }
-            if (pl.performanceTest) {
+            if (config.performanceTest) {
               stage("Performance Test - ${environment}") {
                 testEnv(aksUrl) {
-                  pl.callAround("performanceTest:${environment}") {
+                  pcr.callAround("performanceTest:${environment}") {
                     timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                       builder.performanceTest()
                       publishPerformanceReports(this, params)

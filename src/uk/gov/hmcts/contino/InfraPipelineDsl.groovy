@@ -5,12 +5,8 @@ class InfraPipelineDsl extends CommonPipelineDsl implements Serializable {
   final InfraPipelineConfig config
 
   InfraPipelineDsl(PipelineCallbacksConfig callbacks, InfraPipelineConfig config) {
-    super(callbacks)
+    super(callbacks, config)
     this.config = config
-  }
-
-  void enableSlackNotifications(String slackChannel) {
-    config.slackChannel = slackChannel
   }
 
 }
