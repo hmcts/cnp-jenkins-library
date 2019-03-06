@@ -52,12 +52,6 @@ class Acr extends Az {
   /**
    * Build an image
    *
-   * Notice that when an image is tagged as 'latest', another tag
-   * with a suffix appended to 'latest' is also created.
-   * The intent is to trigger downstream deployments using this tag pattern.
-   *
-   * e.g.: <image-name>:latest will also be tagged as <image-name>:latest-dfb02
-   *
    * @param dockerImage
    *   the docker image to build
    *
@@ -65,8 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    def additionalTag = (dockerImage.getTag() != "latest") ? "" : "-t ${dockerImage.getShortName()}-{{.Run.ID}} "
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} " + additionalTag + "-g ${resourceGroup} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
   }
 
   /**
