@@ -80,6 +80,16 @@ def call(type, String product, String component, Closure body) {
         )
 
         onMaster {
+
+          sectionTriggerFluxDeployment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component
+          )
+
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
