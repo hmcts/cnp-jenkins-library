@@ -8,6 +8,10 @@ abstract class CommonPipelineDsl implements Serializable {
     this.callbacks = callbacks
     this.config = config
   }
+  
+  void afterCheckout(Closure body) {
+    after('checkout', body)
+  }
 
   void before(String stage, Closure body) {
     callbacks.registerBefore(stage, body)
