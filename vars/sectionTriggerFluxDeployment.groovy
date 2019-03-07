@@ -27,7 +27,7 @@ def call(params) {
   def component = params.component
 
   stage('AAT Flux deployment') {
-    pcr.callAround('fluxdeployment') {
+    if (config.dockerBuild) {
       withAksClient(subscription) {
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
         def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
