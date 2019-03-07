@@ -52,12 +52,6 @@ class Acr extends Az {
   /**
    * Build an image
    *
-   * Notice that when an image is tagged as 'latest', another tag
-   * with a suffix appended to 'latest' is also created.
-   * The intent is to trigger downstream deployments using this tag pattern.
-   *
-   * e.g.: <image-name>:latest will also be tagged as <image-name>:latest-dfb02
-   *
    * @param dockerImage
    *   the docker image to build
    *
@@ -65,8 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    def additionalTag = (dockerImage.getTag() != "latest") ? "" : "-t ${dockerImage.getShortName()}-{{.Run.ID}} "
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} " + additionalTag + "-g ${resourceGroup} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} ."
   }
 
   /**
@@ -98,6 +91,25 @@ class Acr extends Az {
   def getHostname() {
     def host = this.az "acr show -n ${registryName} --query loginServer -otsv"
     return host?.trim()
+  }
+
+  /**
+   * Retags an image in the registry with an appended suffix
+   *
+   * e.g.: <image-name>:latest will also be tagged as <image-name>:latest-dfb02
+   *
+   * @param suffix
+   *   a string suffix (use only alphanumeric characters)
+   *
+   * @param dockerImage
+   *   the docker image to build
+   *
+   * @return
+   *   stdout of the step
+   */
+  def retagWithSuffix(String suffix, DockerImage dockerImage) {
+    def additionalTag = "${dockerImage.getShortName()}-${suffix}"
+    this.az "acr import -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
   }
 
 }

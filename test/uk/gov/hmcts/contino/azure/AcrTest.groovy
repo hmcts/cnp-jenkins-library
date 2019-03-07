@@ -56,19 +56,6 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
-  def "build() should call az with acr build with the right arguments and an extra tag when the image version is marked as latest"() {
-    when:
-      dockerImage.getTag() >> "latest"
-      dockerImage.getShortName() >> IMAGE_NAME
-      acr.build(dockerImage)
-
-    then:
-      1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} -t ${IMAGE_NAME}-{{.Run.ID}} -g ${REGISTRY_RESOURCE_GROUP} .") &&
-                    it.containsKey('returnStdout') &&
-                    it.get('returnStdout').equals(true)})
-  }
-
   def "getHostname() should call az with correct arguments"() {
     when:
       acr.getHostname()
@@ -108,6 +95,20 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)
                   })
 
+  }
+
+  def "retagWithSuffix() should call the import command the provided arguments"() {
+    when:
+      dockerImage.getTag() >> "sometag"
+      dockerImage.getShortName() >> IMAGE_NAME
+      dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      acr.retagWithSuffix("Ac0mpl1catedH4sh", dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("acr import -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-Ac0mpl1catedH4sh") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
   }
 
 }
