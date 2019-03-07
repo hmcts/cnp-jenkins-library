@@ -99,7 +99,6 @@ class AcrTest extends Specification {
 
   def "retagWithSuffix() should call the import command the provided arguments"() {
     when:
-      when:
       dockerImage.getTag() >> "sometag"
       dockerImage.getShortName() >> IMAGE_NAME
       dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
