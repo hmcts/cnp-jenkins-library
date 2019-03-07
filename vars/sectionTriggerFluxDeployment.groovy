@@ -7,7 +7,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 
 /*
- * The image retaging in ACR is used as a trigger for Weaveworks Flux
+ * The image retagging in ACR is used as a trigger for Weaveworks Flux
  * to (re-)deploy the image
  *
  * Any image re-tagged following the pattern displayed below is
