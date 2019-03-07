@@ -29,10 +29,14 @@ def call(params) {
   stage('AAT Flux deployment') {
     if (config.dockerBuild) {
       withAksClient(subscription) {
+
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
         def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
         def randomHash = Long.toUnsignedString(new Random().nextLong(), 16)
-        acr.retagWithSuffix(randomHash, dockerImage)
+
+        pcr.callAround('fluxdeployment') {
+          acr.retagWithSuffix(randomHash, dockerImage)
+        }
       }
     }
   }
