@@ -32,7 +32,7 @@ def call(params) {
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
         def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
         def randomHash = Long.toUnsignedString(new Random().nextLong(), 16)
-        acr.retagWithAppendedHash(randomHash, dockerImage)
+        acr.retagWithSuffix(randomHash, dockerImage)
       }
     }
   }
