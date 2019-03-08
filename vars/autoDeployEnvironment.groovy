@@ -21,6 +21,10 @@ def call() {
     perftest: [
       environmentName: environment.perftestName,
       subscriptionName: subscription.qaName
+    ],
+    ithc: [
+      environmentName: environment.ithcName,
+      subscriptionName: subscription.qaName
     ]
   ]
   return autoDeployEnvironments[branch]
