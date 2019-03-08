@@ -63,14 +63,6 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `preview` (ASE or AKS depending on your config)
 
-#### Slack notifications on failure / fixed
-To enable slack notifications when the build fails or is fixed add the following:
-```groovy
-withPipeline(type, product, component) {
-  enableSlackNotifications('#my-team-builds')
-}
-```
-
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
@@ -234,15 +226,6 @@ withInfraPipeline(product) {
 }
 ```
 
-#### Slack notifications on failure / fixed
-
-To enable slack notifications when the build fails or is fixed add the following:
-```groovy
-withInfraPipeline(product) {
-  enableSlackNotifications('#my-team-builds')
-}
-```
-
 #### Extending the opinionated infratructure pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
@@ -270,6 +253,16 @@ withInfraPipeline(product) {
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
+
+## Slack notifications on failure / fixed
+
+All opinionated pipelines support Slack notifications when the build fails or is fixed.
+
+To enable Slack notifications add the following in the pipeline block:
+
+```groovy
+  enableSlackNotifications('#my-team-builds')
+```
 
 ## Azure Web Jobs
 [Documentation from Azure](https://docs.microsoft.com/en-us/azure/app-service/web-sites-create-web-jobs)
