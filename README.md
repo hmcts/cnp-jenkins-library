@@ -38,6 +38,8 @@ and NodeJS applications. The pipeline contains the following stages:
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
 
+The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
+
 Example `Jenkinsfile` to use the opinionated pipeline:
 ```groovy
 #!groovy
@@ -51,6 +53,7 @@ def product = "rhubarb"
 def component = "recipe-backend" // must match infrastructure module name
 
 withPipeline(type, product, component) {
+  enableSlackNotifications('#my-team-builds')
 }
 ```
 
@@ -87,6 +90,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  ...
   loadVaultSecrets(secrets)
 }
 ```
@@ -122,6 +126,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  ...
   overrideVaultEnvironments(vaultOverrides)
   loadVaultSecrets(secrets)
 }
@@ -172,6 +177,9 @@ E.g.
 
 ```groovy
 withPipeline(type, product, component) {
+
+  ...
+
   after('checkout') {
     echo 'Checked out'
   }
@@ -204,6 +212,8 @@ The API tests run after smoke tests.
 
 For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.
 
+The opinionated infrastructure pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
+
 It uses a similar branch --> environment strategy as the app pipeline but with some differences for PRs
 
 Branch | Environment
@@ -223,6 +233,9 @@ Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 def product = "rhubarb"
 
 withInfraPipeline(product) {
+
+  enableSlackNotifications('#my-team-builds')
+
 }
 ```
 
@@ -239,6 +252,9 @@ E.g.
 
 ```groovy
 withInfraPipeline(product) {
+
+  ...
+
   after('checkout') {
     echo 'Checked out'
   }
@@ -254,15 +270,6 @@ It is possible for applications to build their specific infrastructure elements 
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
-## Slack notifications on failure / fixed
-
-All opinionated pipelines support Slack notifications when the build fails or is fixed.
-
-To enable Slack notifications add the following in the pipeline block:
-
-```groovy
-  enableSlackNotifications('#my-team-builds')
-```
 
 ## Azure Web Jobs
 [Documentation from Azure](https://docs.microsoft.com/en-us/azure/app-service/web-sites-create-web-jobs)
