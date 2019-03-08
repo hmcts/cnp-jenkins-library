@@ -38,6 +38,8 @@ and NodeJS applications. The pipeline contains the following stages:
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
 script and dependencies in source control. NodeJS apps must use Yarn.
 
+The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
+
 Example `Jenkinsfile` to use the opinionated pipeline:
 ```groovy
 #!groovy
@@ -51,16 +53,18 @@ def product = "rhubarb"
 def component = "recipe-backend" // must match infrastructure module name
 
 withPipeline(type, product, component) {
-}
-```
-
-#### Slack notifications on failure / fixed
-To enable slack notifications when the build fails or is fixed add the following:
-```groovy
-withPipeline(type, product, component) {
   enableSlackNotifications('#my-team-builds')
 }
 ```
+
+The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
+
+Branch | Environment
+--- | ---
+`master` | `aat` then `prod`
+`demo` | `demo`
+`perftest` | `perftest`
+PR branch| `preview` (ASE or AKS depending on your config)
 
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
@@ -86,6 +90,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  ...
   loadVaultSecrets(secrets)
 }
 ```
@@ -121,6 +126,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  ...
   overrideVaultEnvironments(vaultOverrides)
   loadVaultSecrets(secrets)
 }
@@ -155,22 +161,25 @@ The smoke tests are to be non-destructive (i.e. have no data impact, such as not
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
 
-You can use the `before(stage)` and `after(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are
+You can use the `before(stage)` and `after(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
 
  * checkout
  * build
  * test
  * securitychecks
  * sonarscan
- * deploy:dev
- * smoketest:dev
- * deploy:prod
- * smoketest:prod
+ * deploy:ENV
+ * smoketest:ENV
+ * functionalTest:ENV
+ * buildinfra:ENV
 
 E.g.
 
 ```groovy
 withPipeline(type, product, component) {
+
+  ...
+
   after('checkout') {
     echo 'Checked out'
   }
@@ -199,10 +208,68 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+### Opinionated infrastructure pipeline
+
+For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.
+
+The opinionated infrastructure pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
+
+It uses a similar branch --> environment strategy as the app pipeline but with some differences for PRs
+
+Branch | Environment
+--- | ---
+`master` | `aat` then `prod`
+`demo` | `demo`
+`perftest` | `perftest`
+PR branch| `aat` (plan only)
+
+
+Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
+```groovy
+#!groovy
+
+@Library("Infrastructure") _
+
+def product = "rhubarb"
+
+withInfraPipeline(product) {
+
+  enableSlackNotifications('#my-team-builds')
+
+}
+```
+
+#### Extending the opinionated infratructure pipeline
+
+It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
+
+You can use the `before(stage)` and `after(stage)` within the `withInfraPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name
+
+ * checkout
+ * buildinfra:ENV
+
+E.g.
+
+```groovy
+withInfraPipeline(product) {
+
+  ...
+
+  after('checkout') {
+    echo 'Checked out'
+  }
+
+  before('buildinfra:aat') {
+    echo 'About to build infra in AAT'
+  }
+}
+```
+
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
+
 
 ## Azure Web Jobs
 [Documentation from Azure](https://docs.microsoft.com/en-us/azure/app-service/web-sites-create-web-jobs)
