@@ -104,7 +104,7 @@ class Helm {
   def exists(String imageTag) {
     def deployments = this.execute("list", "", null, ["-q"])
     this.steps.echo "Current deployments: ${deployments}"
-    return deployments?.contains.("this.chartName}-${imageTag}")
+    return deployments != null && deployments.contains.("${this.chartName}-${imageTag}")
   }
 
   def history(String imageTag) {
