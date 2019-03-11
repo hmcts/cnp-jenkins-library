@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
+import groovy.json.JsonSlurper
 
 
 class Helm {
@@ -98,6 +99,16 @@ class Helm {
 
   def delete(String imageTag) {
     this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge"])
+  }
+
+  def history(String imageTag) {
+    this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json"])
+  }
+
+  def hasAnyDeployed(String imageTag) {
+    def releases = this.history(imageTag)
+    def releasesObject = new JsonSlurper().parseText(releases)
+    return releasesObject != null && releasesObject.any{it.status == "DEPLOYED"}
   }
 
   private Object execute(String command, String name) {

@@ -64,4 +64,16 @@ class HelmTest extends Specification {
     })
   }
 
+  def "delete() should execute with the correct chart and options"() {
+    when:
+    helm.delete("pr-1")
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("helm delete ${CHART}-pr-1  --purge") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)
+    })
+  }
+
 }
