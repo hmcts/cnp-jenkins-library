@@ -107,8 +107,7 @@ class Helm {
 
   def hasAnyDeployed(String imageTag) {
     def releases = this.history(imageTag)
-    def releasesObject = new JsonSlurper().parseText(releases)
-    return releasesObject != null && releasesObject.any{it.status == "DEPLOYED"}
+    return !releases || new JsonSlurper().parseText(releases).any{it.status == "DEPLOYED"}
   }
 
   private Object execute(String command, String name) {

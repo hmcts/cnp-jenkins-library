@@ -76,4 +76,16 @@ class HelmTest extends Specification {
     })
   }
 
+  def "history() should execute with the correct chart and options"() {
+    when:
+    helm.history("pr-1")
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("helm history ${CHART}-pr-1  -o json") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)
+    })
+  }
+
 }
