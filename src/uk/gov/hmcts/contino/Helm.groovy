@@ -104,7 +104,7 @@ class Helm {
   def exists(String imageTag) {
     def deployments = this.execute("list", "", null, ["-q"])
     this.steps.echo "Current deployments: ${deployments}"
-    return deployments && deployments.any{it == "${this.chartName}-${imageTag}"}
+    return deployments && deployments.split("\r?\n").any{it == "${this.chartName}-${imageTag}"}
   }
 
   def history(String imageTag) {
