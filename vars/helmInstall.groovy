@@ -85,7 +85,10 @@ def call(DockerImage dockerImage, Map params) {
 
     // if PR delete first as too many people get caught by the error Helm throws if
     // an upgrade is run when there have only been failed deployments
-    if (new ProjectBranch(this.env.BRANCH_NAME).isPR() && !helm.hasAnyDeployed(dockerImage.imageTag)) {
+    if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
+        helm.exists(dockerImage.imageTag) &&
+        !helm.hasAnyDeployed(dockerImage.imageTag)) {
+
         helm.delete(dockerImage.getTag())
     }
 

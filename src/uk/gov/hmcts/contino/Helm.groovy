@@ -103,7 +103,6 @@ class Helm {
 
   def exists(String imageTag) {
     def deployments = this.execute("list", "", null, ["-q"])
-    this.steps.echo "Current deployments: ${deployments}"
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
