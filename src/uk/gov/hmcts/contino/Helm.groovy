@@ -107,13 +107,13 @@ class Helm {
   }
 
   def history(String imageTag) {
-    if (!exists(imageTag)) {
-      return []
-    }
     this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json"])
   }
 
   def hasAnyDeployed(String imageTag) {
+    if (!exists(imageTag)) {
+      return false
+    }
     def releases = this.history(imageTag)
     return !releases || new JsonSlurper().parseText(releases).any{it.status == "DEPLOYED"}
   }
