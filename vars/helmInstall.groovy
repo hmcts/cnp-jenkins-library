@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TeamNames
 
 def call(DockerImage dockerImage, Map params) {
@@ -81,6 +82,12 @@ def call(DockerImage dockerImage, Map params) {
       "--set global.environment=${environment} ",
       "--namespace ${namespace}"
     ]
+
+    // if PR delete first as too many people get caught by the error Helm throws if
+    // an upgrade is run when there have only been failed deployments
+    if (new ProjectBranch(this.env.BRANCH_NAME).isPR()) {
+      helm.delete(dockerImage.getTag())
+    }
 
     helm.installOrUpgrade(dockerImage.getTag(), values, options)
 

@@ -96,8 +96,8 @@ class Helm {
     this.execute("dependency update", this.chartLocation)
   }
 
-  def delete(String name) {
-    this.execute("delete", name, null, ["--purge"])
+  def delete(String imageTag) {
+    this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge"])
   }
 
   private Object execute(String command, String name) {
