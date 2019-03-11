@@ -101,7 +101,15 @@ class Helm {
     this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge"])
   }
 
+  def exists(String imageTag) {
+    def deployments = this.execute("list", "", null, ["-q"])
+    return deployments && deployments.any{it == "${this.chartName}-${imageTag}"}
+  }
+
   def history(String imageTag) {
+    if (!exists(imageTag)) {
+      return []
+    }
     this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json"])
   }
 
