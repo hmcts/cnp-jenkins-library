@@ -85,14 +85,29 @@ def call(DockerImage dockerImage, Map params) {
 
     // if PR delete first as too many people get caught by the error Helm throws if
     // an upgrade is run when there have only been failed deployments
+    def deleted = false
     if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
-        helm.exists(dockerImage.imageTag) &&
-        !helm.hasAnyDeployed(dockerImage.imageTag)) {
+      helm.exists(dockerImage.imageTag) &&
+      !helm.hasAnyDeployed(dockerImage.imageTag)) {
 
-        helm.delete(dockerImage.getTag())
+      helm.delete(dockerImage.getTag())
+      deleted = true
     }
 
-    helm.installOrUpgrade(dockerImage.getTag(), values, options)
+    // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
+    def attempts = 1
+    while (attempts < 4) {
+      try {
+        helm.installOrUpgrade(dockerImage.getTag(), values, options)
+        break
+      } catch (upgradeError) {
+        if (!deleted || attempts > 3) {
+          throw upgradeError
+        }
+        sleep(attempts * 20_000)
+        attempts++
+      }
+    }
 
     // Register service dns
     consul.registerDns(aksServiceName, ingressIP)
