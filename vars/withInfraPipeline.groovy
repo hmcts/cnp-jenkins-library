@@ -16,6 +16,10 @@ def call(String product, Closure body) {
   def callbacks = new PipelineCallbacksConfig()
   def callbackRunner = new PipelineCallbacksRunner(callbacks)
 
+  callbacks.registerAfterAll { stage ->
+    metricsPublisher.publish(stage)
+  }
+
   def dsl = new InfraPipelineDsl(callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
