@@ -25,6 +25,8 @@ def call(String product, String environment, String subscription, String deploym
   body.delegate = dsl
   body.call() // register pipeline config
 
+  def deploymentTargetList = deploymentTargets.split(',') as List
+
   timestamps {
     node {
       try {
@@ -42,7 +44,7 @@ def call(String product, String environment, String subscription, String deploym
           pipelineConfig: pipelineConfig,
           subscription: subscription,
           environment: environment,
-          deploymentTargets: deploymentTargets,
+          deploymentTargets: deploymentTargetList,
           product: product)
 
 
