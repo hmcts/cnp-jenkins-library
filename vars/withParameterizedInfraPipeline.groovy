@@ -25,7 +25,7 @@ def call(String product, String environment, String subscription, String deploym
   body.delegate = dsl
   body.call() // register pipeline config
 
-  def deploymentTargetList = deploymentTargets.split(',') as List
+  def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
 
   timestamps {
     node {
