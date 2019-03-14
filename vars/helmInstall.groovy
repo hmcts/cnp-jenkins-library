@@ -83,6 +83,8 @@ def call(DockerImage dockerImage, Map params) {
       "--namespace ${namespace}"
     ]
 
+    echo sh(script: 'env |sort', returnStdout: true)
+
     // if PR delete first as too many people get caught by the error Helm throws if
     // an upgrade is run when there have only been failed deployments
     def deleted = false
