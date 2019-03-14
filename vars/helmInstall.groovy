@@ -106,6 +106,7 @@ def call(DockerImage dockerImage, Map params) {
         }
         sleep(attempts * 20_000)
         attempts++
+        echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
       }
     }
 
