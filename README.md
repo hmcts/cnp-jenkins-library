@@ -359,7 +359,13 @@ steps:
       - runtime
 ```
 
-Notice the `{{CI_IMAGE_TAG}}` which is evaluated in Jenkins.
+Properties expanded by Jenkins:
+
+| Property matcher    |                                                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `{{CI_IMAGE_TAG}}`  | is the stadard name of the runtime image                                                                   |
+| `{{REGISTRY_NAME}}` | is the registry name, e.g. hmcts of hmctssandbox. Useful if you want to pass it as `--build-arg` parameter |
+
 
 If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
 
