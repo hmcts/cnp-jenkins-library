@@ -83,8 +83,6 @@ def call(DockerImage dockerImage, Map params) {
       "--namespace ${namespace}"
     ]
 
-    echo sh(script: 'env |sort', returnStdout: true)
-
     // if PR delete first as too many people get caught by the error Helm throws if
     // an upgrade is run when there have only been failed deployments
     def deleted = false
@@ -101,6 +99,7 @@ def call(DockerImage dockerImage, Map params) {
     while (attempts < 4) {
       try {
         helm.installOrUpgrade(dockerImage.getTag(), values, options)
+        echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
         if (!deleted || attempts > 3) {
