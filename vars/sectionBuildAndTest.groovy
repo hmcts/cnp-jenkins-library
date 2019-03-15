@@ -19,7 +19,9 @@ def call(params) {
   stage('Checkout') {
     pcr.callAround('checkout') {
       deleteDir()
-      checkout scm
+      def scmVars = checkout scm
+      params.commit = scmVars.GIT_COMMIT
+      params.branch = scmVars.GIT_BRANCH
     }
   }
 
