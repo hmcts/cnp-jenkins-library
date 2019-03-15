@@ -90,8 +90,8 @@ def call(DockerImage dockerImage, Map params) {
       helm.exists(dockerImage.imageTag) &&
       !helm.hasAnyDeployed(dockerImage.imageTag)) {
 
-      helm.delete(dockerImage.getTag())
       deleted = true
+      helm.delete(dockerImage.getTag())
     }
 
     // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
