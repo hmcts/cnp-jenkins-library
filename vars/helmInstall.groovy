@@ -105,7 +105,7 @@ def call(DockerImage dockerImage, Map params) {
         if (!deleted || attempts > 3) {
           throw upgradeError
         }
-        sleep(attempts * 20_000)
+        sleep(attempts * 20)
         attempts++
         echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
       }
