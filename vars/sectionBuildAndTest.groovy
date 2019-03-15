@@ -19,8 +19,7 @@ def call(params) {
   stage('Checkout') {
     pcr.callAround('checkout') {
       deleteDir()
-      def scmOut = checkout scm
-      echo "SCM_OUT = [${scmOut}]"
+      checkout scm
     }
   }
 
