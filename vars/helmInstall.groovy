@@ -102,12 +102,12 @@ def call(DockerImage dockerImage, Map params) {
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
-        if (!deleted || attempts > 3) {
+        if (!deleted || attempts >= 3) {
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
         helm.delete(dockerImage.getTag())
-        sleep(attempts * 20)
+        sleep(attempts * 60)
         attempts++
         echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
       }
