@@ -199,7 +199,7 @@ class WebAppDeploy implements Serializable {
       consoleLogResponseBody: true,
       requestBody: '''{
     "command": "git gc",
-    "dir": "site\\repository"
+    "dir": "site\\\\repository"
 }''',
       timeout: 600, // seconds
       url: "https://${profile.publishUrl}/api/command", validResponseCodes: '200'
