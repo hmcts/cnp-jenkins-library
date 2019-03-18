@@ -196,6 +196,7 @@ class WebAppDeploy implements Serializable {
       ignoreSslErrors: true,
       customHeaders: [[maskValue: true, name: 'Authorization', value: "Basic " + basicAuthToken]],
       httpMode: 'POST',
+      consoleLogResponseBody: true,
       requestBody: '''{
     "command": "git gc",
     "dir": "site\\repository"
