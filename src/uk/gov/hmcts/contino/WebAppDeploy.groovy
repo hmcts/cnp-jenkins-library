@@ -190,6 +190,15 @@ class WebAppDeploy implements Serializable {
     // the "|| true" is required here to allow the pipeline to use the same env for both aat and prod stages
     steps.sh("git -c http.sslVerify=false remote add ${defaultRemote}-${env} 'https://${profile.userName}:${profile.userPWD}@${profile.publishUrl}/${serviceName}.git' || true")
     steps.sh("git -c http.sslVerify=false push ${defaultRemote}-${env} HEAD:master -f")
+
+    def basicAuthToken = "${profile.userName}:${profile.userPWD}".bytes.encodeBase64().toString()
+    steps.httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
+      customHeaders: [[maskValue: true, name: 'Authorization', value: "Basic " + basicAuthToken]], httpMode: 'POST',
+      requestBody: '''{
+    "command": "git gc",
+    "dir": "site\\repository"
+}''',
+      timeout: 15, url: "${profile.publishUrl}/api/command", validResponseCodes: '200'
   }
 
 }
