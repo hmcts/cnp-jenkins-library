@@ -193,12 +193,15 @@ class WebAppDeploy implements Serializable {
 
     def basicAuthToken = "${profile.userName}:${profile.userPWD}".bytes.encodeBase64().toString()
     steps.httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
-      customHeaders: [[maskValue: true, name: 'Authorization', value: "Basic " + basicAuthToken]], httpMode: 'POST',
+      ignoreSslErrors: true,
+      customHeaders: [[maskValue: true, name: 'Authorization', value: "Basic " + basicAuthToken]],
+      httpMode: 'POST',
       requestBody: '''{
     "command": "git gc",
     "dir": "site\\repository"
 }''',
-      timeout: 600, url: "https://${profile.publishUrl}/api/command", validResponseCodes: '200' // timeout is in seconds
+      timeout: 600, // seconds
+      url: "https://${profile.publishUrl}/api/command", validResponseCodes: '200'
   }
 
 }
