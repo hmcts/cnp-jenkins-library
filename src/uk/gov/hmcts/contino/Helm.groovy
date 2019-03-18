@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
+import groovy.json.JsonSlurper
 
 
 class Helm {
@@ -96,8 +97,25 @@ class Helm {
     this.execute("dependency update", this.chartLocation)
   }
 
-  def delete(String name) {
-    this.execute("delete", name, null, ["--purge"])
+  def delete(String imageTag) {
+    this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge"])
+  }
+
+  def exists(String imageTag) {
+    def deployments = this.execute("list", "", null, ["-q"])
+    return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
+  }
+
+  def history(String imageTag) {
+    this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json"])
+  }
+
+  def hasAnyDeployed(String imageTag) {
+    if (!exists(imageTag)) {
+      return false
+    }
+    def releases = this.history(imageTag)
+    return !releases || new JsonSlurper().parseText(releases).any{it.status == "DEPLOYED"}
   }
 
   private Object execute(String command, String name) {

@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TeamNames
 
 def call(DockerImage dockerImage, Map params) {
@@ -82,7 +83,35 @@ def call(DockerImage dockerImage, Map params) {
       "--namespace ${namespace}"
     ]
 
-    helm.installOrUpgrade(dockerImage.getTag(), values, options)
+    // if PR delete first as too many people get caught by the error Helm throws if
+    // an upgrade is run when there have only been failed deployments
+    def deleted = false
+    if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
+      helm.exists(dockerImage.imageTag) &&
+      !helm.hasAnyDeployed(dockerImage.imageTag)) {
+
+      deleted = true
+      helm.delete(dockerImage.getTag())
+    }
+
+    // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
+    def attempts = 1
+    while (attempts < 4) {
+      try {
+        helm.installOrUpgrade(dockerImage.getTag(), values, options)
+        echo "Install/upgrade completed(${attempts})."
+        break
+      } catch (upgradeError) {
+        if (!deleted || attempts >= 3) {
+          throw upgradeError
+        }
+        // Clean up the latest install/upgrade attempt
+        helm.delete(dockerImage.getTag())
+        sleep(attempts * 60)
+        attempts++
+        echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
+      }
+    }
 
     // Register service dns
     consul.registerDns(aksServiceName, ingressIP)
