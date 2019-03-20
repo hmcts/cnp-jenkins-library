@@ -49,9 +49,9 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
-  
-  
+
+
+
   def "cmc"() {
     def productName = 'cmc'
     def expected = 'Money Claims'
@@ -117,7 +117,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
    def "fees-register"() {
     def productName = 'fees-register'
     def expected = 'Fees/Pay'
@@ -127,8 +127,8 @@ class TeamNamesTest extends Specification {
 
     then:
     assertThat(teamName).isEqualTo(expected)
-  } 
-  
+  }
+
   def "finrem"() {
     def productName = 'finrem'
     def expected = 'Financial Remedy'
@@ -183,7 +183,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
     def "probate"() {
     def productName = 'probate'
     def expected = 'Probate'
@@ -194,7 +194,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
   def "rhubarb"() {
     def productName = 'rhubarb'
     def expected = 'CNP'
@@ -205,7 +205,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
     def "rhubarb-shared-infrastructure"() {
     def productName = 'rhubarb-shared-infrastructure'
     def expected = 'CNP'
@@ -216,9 +216,9 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
-  
-  
+
+
+
 
   def "sscs"() {
     def productName = 'sscs'
@@ -230,9 +230,9 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
-    def "sscs-tya"() {
-    def productName = 'sscs-tya'
+
+  def "sscs-track-your-appeal"() {
+    def productName = 'sscs-track-your-appeal'
     def expected = 'SSCS'
 
     when:
@@ -241,8 +241,8 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
- 
-    def "sscs-tribunals"() {
+
+  def "sscs-tribunals"() {
     def productName = 'sscs-tribunals'
     def expected = 'SSCS'
 
@@ -252,7 +252,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
- 
+
     def "sscs-cor"() {
     def productName = 'sscs-cor'
     def expected = 'SSCS'
@@ -263,7 +263,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
   def "pr-47-sscs-cor"() {
     def productName = 'pr-47-sscs-cor'
     def expected = 'SSCS'
@@ -274,7 +274,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
     def "pr-417-sscs-cor"() {
     def productName = 'pr-417-sscs-cor'
     def expected = 'SSCS'
@@ -285,7 +285,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
- 
+
     def "pr-12-snl"() {
     def productName = 'pr-12-snl'
     def expected = 'SnL'
@@ -327,7 +327,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
     def "jui"() {
     def productName = 'jui'
     def expected = 'Professional Applications'
@@ -338,7 +338,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
     def "pui"() {
     def productName = 'pui'
     def expected = 'Professional Applications'
@@ -349,7 +349,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
    def "coh"() {
     def productName = 'coh'
     def expected = 'Professional Applications'
@@ -360,7 +360,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
    def "ref"() {
     def productName = 'ref'
     def expected = 'Professional Applications'
@@ -371,7 +371,7 @@ class TeamNamesTest extends Specification {
     then:
     assertThat(teamName).isEqualTo(expected)
   }
-  
+
   def "default"() {
     def productName = 'idontexist'
     def expected = TeamNames.DEFAULT_TEAM_NAME
