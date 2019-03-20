@@ -37,7 +37,7 @@ class TeamNames {
                       'plum-shared-infrastructure' : 'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
-                      'sscs-tya':'SSCS',
+                      'sscs-track-your-appeal-frontend':'SSCS',
                       'sscs-tribunals':'SSCS',
                       'snl':'SnL',
                       'am':'AM',
@@ -51,7 +51,7 @@ class TeamNames {
     }
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
   }
-  
+
   def getRawProductName (String product) {
     return product.split('pr-(\\d+)-')[1];
   }
