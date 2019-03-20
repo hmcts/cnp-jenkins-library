@@ -37,7 +37,7 @@ class TeamNames {
                       'plum-shared-infrastructure' : 'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
-                      'sscs-track-your-appeal-frontend':'SSCS',
+                      'sscs-track-your-appeal':'SSCS',
                       'sscs-tribunals':'SSCS',
                       'snl':'SnL',
                       'am':'AM',
