@@ -20,8 +20,11 @@ def call(params) {
     pcr.callAround('checkout') {
       deleteDir()
       def scmVars = checkout scm
-      params.commit = scmVars.GIT_COMMIT
-      params.branch = scmVars.GIT_BRANCH
+      if (scmVars) {
+        env.GIT_COMMIT = scmVars.GIT_COMMIT
+        env.GIT_BRANCH = scmVars.GIT_BRANCH
+        env.GIT_URL = scmVars.GIT_URL
+      }
     }
   }
 
@@ -73,7 +76,7 @@ def call(params) {
 
             def acbTemplateFilePath = 'acb.tpl.yaml'
             def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-            def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
+            def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
             pcr.callAround('dockerbuild') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {

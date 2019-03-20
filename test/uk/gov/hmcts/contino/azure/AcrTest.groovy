@@ -97,16 +97,17 @@ class AcrTest extends Specification {
 
   }
 
-  def "retagWithSuffix() should call the import command the provided arguments"() {
+  def "retagForStage() should call the import command with the provided arguments"() {
     when:
       dockerImage.getTag() >> "sometag"
       dockerImage.getShortName() >> IMAGE_NAME
+      dockerImage.getShortName(DockerImage.DeploymentStage.AAT_RC) >> "${IMAGE_NAME}-aat-rc"
       dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
-      acr.retagWithSuffix("Ac0mpl1catedH4sh", dockerImage)
+      acr.retagForStage(DockerImage.DeploymentStage.AAT_RC, dockerImage)
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("acr import -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-Ac0mpl1catedH4sh") &&
+                    it.get('script').contains("acr import -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-aat-rc") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }

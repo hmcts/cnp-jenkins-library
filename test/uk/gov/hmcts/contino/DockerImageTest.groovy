@@ -11,6 +11,7 @@ class DockerImageTest extends Specification {
   static final String COMPONENT = 'back-end'
   static final String TAG       = 'pr-47'
   static final String REGISTRY_HOST = 'cnpacr.azure.io'
+  static final String COMMIT = '379c53a716b92cf79439db07edac01ba1028535d'
 
   def dockerImage
   def projectBranch
@@ -24,18 +25,18 @@ class DockerImageTest extends Specification {
   def "getTaggedName"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
       def buildName = dockerImage.getTaggedName()
 
     then:
-      assertThat(buildName).isEqualTo('cnpacr.azure.io/hmcts/custard-back-end:pr-47')
+      assertThat(buildName).isEqualTo('cnpacr.azure.io/hmcts/custard-back-end:pr-47-379c53a716b92cf79439db07edac01ba1028535d')
   }
 
   def "getDigestName should have digest"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      acr.getImageDigest('hmcts/custard-back-end:pr-47') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      acr.getImageDigest('hmcts/custard-back-end:pr-47-379c53a716b92cf79439db07edac01ba1028535d') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
       def buildName = dockerImage.getDigestName()
 
     then:
@@ -46,7 +47,7 @@ class DockerImageTest extends Specification {
     when:
       acr.getHostname() >> REGISTRY_HOST
       acr.getImageDigest('hmcts/custard-back-end:pr-47') >> ''
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
       dockerImage.getDigestName()
 
     then:
@@ -56,7 +57,7 @@ class DockerImageTest extends Specification {
   def "getTag should return the tag"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
       def tag = dockerImage.getTag()
 
     then:
@@ -66,7 +67,7 @@ class DockerImageTest extends Specification {
   def "getAksServiceName should return the service name"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG)
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
       def serviceName = dockerImage.getAksServiceName()
 
     then:

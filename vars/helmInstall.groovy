@@ -16,7 +16,7 @@ def call(DockerImage dockerImage, Map params) {
 
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
 
-  def digestName = dockerImage.getDigestName()
+  def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
@@ -32,7 +32,7 @@ def call(DockerImage dockerImage, Map params) {
   def templateEnvVars = [
     "NAMESPACE=${aksServiceName}",
     "SERVICE_NAME=${aksServiceName}",
-    "IMAGE_NAME=${digestName}",
+    "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
     "CONSUL_LB_IP=${consulApiAddr}",
     "INGRESS_IP=${ingressIP}"

@@ -13,11 +13,11 @@ def call(DockerImage dockerImage, Map params) {
   def kubeResourcesDirDefault = "src/kubernetes"
   def kubeResourcesDirAlternate = "kubernetes"
 
-  def digestName = dockerImage.getDigestName()
+  def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
-  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${digestName}", "SERVICE_FQDN=${serviceFqdn}"]
+  def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${imageName}", "SERVICE_FQDN=${serviceFqdn}"]
 
   withEnv(templateEnvVars) {
 

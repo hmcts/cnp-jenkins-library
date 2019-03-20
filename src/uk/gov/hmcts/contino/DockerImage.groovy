@@ -6,17 +6,33 @@ class DockerImage {
 
   static String REPOSITORY = 'hmcts'
 
+  // environment the image has been promoted to
+  enum DeploymentStage {
+    PR('pr'),
+    AAT_RC('aat-rc'),
+    AAT('aat');
+
+    final String label
+
+    private DeploymentStage(String label) {
+      this.label = label
+    }
+  }
+
   def product
   def component
   def imageTag
   Acr acr
+  def commit
   def registryHost
 
-  DockerImage(product, component, acr, tag) {
+
+  DockerImage(product, component, acr, tag, commit) {
     this.product = product
     this.component = component
     this.imageTag = tag
     this.acr = acr
+    this.commit = commit
   }
 
   /**
@@ -83,10 +99,19 @@ class DockerImage {
    *   the short name. e.g. hmcts/product-component:branch
    */
   def getShortName() {
+    return shortName(this.imageTag)
+  }
+
+  def getShortName(DeploymentStage stage) {
+    return shortName(stage.label)
+  }
+
+  private def shortName(String imageTag) {
     return REPOSITORY.concat('/')
       .concat(this.product).concat('-')
       .concat(this.component).concat(':')
-      .concat(this.imageTag)
+      .concat(imageTag).concat('-')
+      .concat(this.commit)
   }
 
   private def getRegistryHostname() {
