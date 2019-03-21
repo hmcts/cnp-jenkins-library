@@ -109,26 +109,7 @@ class Acr extends Az {
    */
   def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
-    deleteTag(dockerImage, stage)
-    this.az "acr import -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
-  }
-
-  private def deleteTag(DockerImage dockerImage, DockerImage.DeploymentStage stage) {
-    def repository = "${registryName}/${dockerImage.getImageName()}"
-    def extraTag = dockerImage.getExtraTag(stage)
-    if (tagExists(repository, extraTag)) {
-      def taggedImage = dockerImage.getExtraImageTag(stage)
-      this.az "acr repository untag --name ${registryName} --image ${taggedImage}"
-    }
-  }
-
-  private def tagExists(String repository, String tag) {
-    try {
-      this.az "acr repository show -n ${registryName} --repository ${repository} --query [imageName]"
-    } catch (notFound) {
-      return false
-    }
-    this.az "acr repository show-tags --repository ${repository} --query \"contains(@, '${tag}')\""
+    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
   }
 
 }

@@ -107,7 +107,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("acr import -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-aat-rc") &&
+                    it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-aat-rc") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
