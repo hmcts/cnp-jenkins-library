@@ -123,6 +123,11 @@ class Acr extends Az {
   }
 
   private def tagExists(String repository, String tag) {
+    try {
+      this.az "acr repository show -n ${registryName} --repository ${repository} --query [imageName]"
+    } catch (notFound) {
+      return false
+    }
     this.az "acr repository show-tags --repository ${repository} --query \"contains(@, '${tag}')\""
   }
 
