@@ -34,7 +34,7 @@ def call(params) {
         def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
         pcr.callAround('fluxdeployment') {
-          acr.retagForStage(DockerImage.DeploymentStage.AAT_RC, dockerImage)
+          acr.retagForStage(DockerImage.DeploymentStage.AAT, dockerImage)
         }
       }
     }

@@ -9,8 +9,8 @@ class DockerImage {
   // environment the image has been promoted to
   enum DeploymentStage {
     PR('pr'),
-    AAT_RC('aat-rc'),
-    AAT('aat');
+    AAT('aat'),
+    PROD('prod');
 
     final String label
 
