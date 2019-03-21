@@ -93,24 +93,48 @@ class DockerImage {
   }
 
   /**
-   * Get the 'short name' of the image, without the registry prefix
+   * Get the image name, based on product + component
+   *
+   * @return
+   *   the name e.g. 'plum-recipe-backend'
+   */
+  def getImageName() {
+    return this.product.concat('-')
+      .concat(this.component)
+  }
+
+  /**
+   * Get the 'short name' of the image, without the registry url
    *
    * @return
    *   the short name. e.g. hmcts/product-component:branch
    */
   def getShortName() {
-    return shortName(this.imageTag)
+    return REPOSITORY.concat('/')
+      .concat(getExtraImageTag(this.imageTag))
   }
 
   def getShortName(DeploymentStage stage) {
-    return shortName(stage.label)
+    return REPOSITORY.concat('/')
+      .concat(getExtraImageTag(stage))
   }
 
-  private def shortName(String imageTag) {
-    return REPOSITORY.concat('/')
-      .concat(this.product).concat('-')
+  def getExtraImageTag(DeploymentStage stage) {
+    return getExtraImageTag(stage.label)
+  }
+
+  def getExtraImageTag(String imageTag) {
+    return this.product.concat('-')
       .concat(this.component).concat(':')
-      .concat(imageTag).concat('-')
+      .concat(getExtraTag(imageTag))
+  }
+
+  def getExtraTag(DeploymentStage stage) {
+    return getExtraTag(stage.label)
+  }
+
+  def getExtraTag(String imageTag) {
+    return imageTag.concat('-')
       .concat(this.commit)
   }
 
