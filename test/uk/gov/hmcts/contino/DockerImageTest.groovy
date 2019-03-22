@@ -29,13 +29,13 @@ class DockerImageTest extends Specification {
       def buildName = dockerImage.getTaggedName()
 
     then:
-      assertThat(buildName).isEqualTo('cnpacr.azure.io/hmcts/custard-back-end:pr-47-379c53a716b92cf79439db07edac01ba1028535d')
+      assertThat(buildName).isEqualTo('cnpacr.azure.io/hmcts/custard-back-end:pr-47-379c53a7')
   }
 
   def "getDigestName should have digest"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      acr.getImageDigest('hmcts/custard-back-end:pr-47-379c53a716b92cf79439db07edac01ba1028535d') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
+      acr.getImageDigest('hmcts/custard-back-end:pr-47-379c53a7') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
       dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
       def buildName = dockerImage.getDigestName()
 

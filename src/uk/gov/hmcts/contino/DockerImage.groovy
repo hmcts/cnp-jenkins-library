@@ -32,7 +32,7 @@ class DockerImage {
     this.component = component
     this.imageTag = tag
     this.acr = acr
-    this.commit = commit
+    this.commit = commit?.substring(0, 8)
   }
 
   /**
