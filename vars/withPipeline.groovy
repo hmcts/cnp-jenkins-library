@@ -90,14 +90,14 @@ def call(type, String product, String component, Closure body) {
             component: component
           )
 
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: product,
-            component: component)
+//          sectionDeployToEnvironment(
+//            appPipelineConfig: pipelineConfig,
+//            pipelineCallbacksRunner: callbacksRunner,
+//            pipelineType: pipelineType,
+//            subscription: subscription.nonProdName,
+//            environment: environment.nonProdName,
+//            product: product,
+//            component: component)
 
           if (pipelineConfig.installCharts) {
             stage('Publish Helm chart') {

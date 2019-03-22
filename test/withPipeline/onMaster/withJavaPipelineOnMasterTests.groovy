@@ -22,19 +22,19 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
-      smokeTest(1) {} //aat-staging
-      functionalTest(1) {}
-      smokeTest(3) {} // aat-prod, prod-staging, prod-prod
+//      smokeTest(1) {} //aat-staging
+//      functionalTest(1) {}
+      smokeTest(2) {} // aat-prod, prod-staging, prod-prod
     }
 
     def mockDeployer = new MockFor(JavaDeployer)
     mockDeployer.ignore.getServiceUrl() { env, slot -> return null} // we don't care when or how often this is called
     mockDeployer.demand.with {
-      // aat-staging
-      deploy() {}
-      healthCheck() { env, slot -> return null }
-      // aat-prod
-      healthCheck() { env, slot -> return null }
+//      // aat-staging
+//      deploy() {}
+//      healthCheck() { env, slot -> return null }
+//      // aat-prod
+//      healthCheck() { env, slot -> return null }
       // prod-staging
       deploy() {}
       healthCheck() { env, slot -> return null }
