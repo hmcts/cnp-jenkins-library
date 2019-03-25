@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.PactBroker
 import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
@@ -53,7 +54,7 @@ def call(params) {
     }
   }
 
-  stage("Tests/Checks/Container Build") {
+  stage("Tests/Checks/Container build") {
 
     when (noSkipImgBuild) {
       parallel(
@@ -106,6 +107,18 @@ def call(params) {
 
         failFast: true
       )
+    }
+  }
+
+  stage("Pact verification") {
+    pcr.callAround('pact-verification') {
+      def version = sh(returnStdout: true, script: 'git rev-parse --verify --short HEAD')
+      def pactBroker = new PactBroker(this, product, component)
+      if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
+        // sh 'yarn test-pact'
+        // sh 'yarn publish-pact'
+        pactBroker.canIDeploy(version)
+      }
     }
   }
 
