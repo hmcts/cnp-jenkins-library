@@ -33,7 +33,7 @@ def call(params) {
   if (config.dockerBuild) {
     withAksClient(subscription) {
       def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-      def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
+      def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
       onPR {
         if (config.deployToAKS) {

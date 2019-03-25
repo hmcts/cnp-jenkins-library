@@ -98,8 +98,8 @@ class Acr extends Az {
    *
    * e.g.: <image-name>:latest will also be tagged as <image-name>:latest-dfb02
    *
-   * @param suffix
-   *   a string suffix (use only alphanumeric characters)
+   * @param stage
+   *   a deployment stage indicating to which environments the image has been promoted to
    *
    * @param dockerImage
    *   the docker image to build
@@ -107,9 +107,9 @@ class Acr extends Az {
    * @return
    *   stdout of the step
    */
-  def retagWithSuffix(String suffix, DockerImage dockerImage) {
-    def additionalTag = "${dockerImage.getShortName()}-${suffix}"
-    this.az "acr import -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
+  def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
+    def additionalTag = dockerImage.getShortName(stage)
+    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
   }
 
 }

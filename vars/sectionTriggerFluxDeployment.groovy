@@ -13,7 +13,7 @@ import uk.gov.hmcts.contino.azure.Acr
  * Any image re-tagged following the pattern displayed below is
  * eventually deployed in Flux AKS cluster:
  *
- * e.g.: <my-app-image>:latest-<random-hash>
+ * e.g.: <my-app-image>:aat-rc-<commit-hash>
  */
 
 def call(params) {
@@ -31,11 +31,10 @@ def call(params) {
       withAksClient(subscription) {
 
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag())
-        def randomHash = Long.toUnsignedString(new Random().nextLong(), 16)
+        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
         pcr.callAround('fluxdeployment') {
-          acr.retagWithSuffix(randomHash, dockerImage)
+          acr.retagForStage(DockerImage.DeploymentStage.AAT, dockerImage)
         }
       }
     }
