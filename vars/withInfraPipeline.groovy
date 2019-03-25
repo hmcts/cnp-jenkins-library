@@ -56,7 +56,7 @@ def call(String product, Closure body) {
             product: product)
         }
 
-        onPreview {
+        onPR {
           sectionInfraBuild(
             pipelineConfig: pipelineConfig,
             subscription: subscription.nonProdName,
