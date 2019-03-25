@@ -13,6 +13,7 @@ class TeamNames {
                       'div':'Divorce',
                       'dm':'CCD',
                       'em':'Evidence Mment',
+                      'dg':'Evidence Mment',
                       'finrem':'Financial Remedy',
                       'ia':'Immigration',
                       'idam':'IdAM',
