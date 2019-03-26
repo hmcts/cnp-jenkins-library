@@ -87,4 +87,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.aksStagingDeployment = true
   }
 
+  void enablePactBroker() {
+    config.pactBrokerEnabled = true
+  }
+
 }

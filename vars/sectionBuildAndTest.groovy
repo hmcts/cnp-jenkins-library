@@ -122,4 +122,16 @@ def call(params) {
     }
   }
 
+  if (config.pactBrokerEnabled) {
+    stage("Pact verification") {
+      pcr.callAround('pact-verification') {
+        def version = sh(returnStdout: true, script: 'git rev-parse --verify --short HEAD')
+        def pactBroker = new PactBroker(this, product, component)
+        if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
+          pactBroker.canIDeploy(version)
+        }
+      }
+    }
+  }
+
 }
