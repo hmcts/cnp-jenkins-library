@@ -87,8 +87,8 @@ def call(DockerImage dockerImage, Map params) {
     // an upgrade is run when there have only been failed deployments
     def deleted = false
     if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
-      helm.exists(dockerImage.imageTag) &&
-      !helm.hasAnyDeployed(dockerImage.imageTag)) {
+      helm.exists(dockerImage.imageTag, namespace) &&
+      !helm.hasAnyDeployed(dockerImage.imageTag, namespace)) {
 
       deleted = true
       helm.delete(dockerImage.getTag())
