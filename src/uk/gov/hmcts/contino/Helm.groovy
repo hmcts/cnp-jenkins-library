@@ -102,7 +102,7 @@ class Helm {
   }
 
   def exists(String imageTag, String namespace) {
-    def deployments = this.execute("list", "", null, ["-q", "-m 1", "--namespace ${namespace}"])
+    def deployments = this.execute("list", "", null, ["-q", "--namespace ${namespace}"])
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
