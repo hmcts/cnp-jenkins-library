@@ -107,11 +107,11 @@ class DockerImage {
   }
 
   private def shortName(String imageTag) {
+    String tag = imageTag == 'latest' ? imageTag : imageTag.concat('-').concat(this.commit)
     return REPOSITORY.concat('/')
       .concat(this.product).concat('-')
       .concat(this.component).concat(':')
-      .concat(imageTag).concat('-')
-      .concat(this.commit)
+      .concat(tag)
   }
 
   private def getRegistryHostname() {
