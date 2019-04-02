@@ -30,9 +30,9 @@ class PipelineCallbacksRunner implements Serializable {
 
   void callAround(String stage, boolean condition, Closure body) {
     if (condition) {
-      callAround(stage, body)
-    } else {
       echo 'Skipped'
+    } else {
+      callAround(stage, body)
     }
   }
 
