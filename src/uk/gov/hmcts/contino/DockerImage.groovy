@@ -21,7 +21,7 @@ class DockerImage {
 
   def product
   def component
-  def imageTag
+  def imageTag  // image tag, based on the current build branch name e.g. 'latest', 'pr-77'
   Acr acr
   def commit
   def registryHost
@@ -80,16 +80,6 @@ class DockerImage {
       .concat(this.product).concat('-')
       .concat(this.component).concat('@')
       .concat(digest)
-  }
-
-  /**
-   * Get the image tag, based on the current build branch name
-   *
-   * @return
-   *   the tag e.g. 'latest', 'pr-77'
-   */
-  def getImageTag() {
-    return this.imageTag
   }
 
   /**

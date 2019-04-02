@@ -109,8 +109,8 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
     // an upgrade is run when there have only been failed deployments
     def deleted = false
     if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
-      helm.exists(dockerImage.imageTag, namespace) &&
-      !helm.hasAnyDeployed(dockerImage.imageTag, namespace)) {
+      helm.exists(dockerImage.getImageTag(), namespace) &&
+      !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
       helm.delete(dockerImage.getImageTag())
