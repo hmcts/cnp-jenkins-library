@@ -11,6 +11,7 @@ def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
+  def aksEnvironment = params.environment
   def product = params.product
   def component = params.component
 
@@ -54,6 +55,26 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
+    if (fileExists(defaultValues)) {
+      onPR{
+        aksEnvironment ="preview"
+      }
+    }else{
+      echo '''
+================================================================================
+
+ ____      ____  _       _______     ____  _____  _____  ____  _____   ______  
+|_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  | 
+  \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_| 
+   \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____ 
+    \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
+     \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.' 
+                                                                               
+
+Provide values.yaml with the chart . Templating will be supported only for env specific values.
+================================================================================
+'''
+    }
     if (!fileExists(templateValues) && !fileExists(defaultValues)) {
       throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
     }
@@ -63,8 +84,8 @@ def call(DockerImage dockerImage, Map params) {
     values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${environment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${environment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
       values << valuesEnv
