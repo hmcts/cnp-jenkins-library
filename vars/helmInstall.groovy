@@ -113,14 +113,14 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       !helm.hasAnyDeployed(dockerImage.imageTag, namespace)) {
 
       deleted = true
-      helm.delete(dockerImage.getTag())
+      helm.delete(dockerImage.getImageTag())
     }
 
     // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
     def attempts = 1
     while (attempts < 4) {
       try {
-        helm.installOrUpgrade(dockerImage.getTag(), values, options)
+        helm.installOrUpgrade(dockerImage.getImageTag(), values, options)
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
@@ -128,7 +128,7 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
-        helm.delete(dockerImage.getTag())
+        helm.delete(dockerImage.getImageTag())
         sleep(attempts * 60)
         attempts++
         echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."

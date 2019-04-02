@@ -45,7 +45,7 @@ class AcrTest extends Specification {
 
   def "build() should call az with acr build and correct arguments"() {
     when:
-      dockerImage.getTag() >> "sometag"
+      dockerImage.getImageTag() >> "sometag"
       dockerImage.getShortName() >> IMAGE_NAME
       acr.build(dockerImage)
 
@@ -99,7 +99,7 @@ class AcrTest extends Specification {
 
   def "retagForStage() should call the import command with the provided arguments"() {
     when:
-      dockerImage.getTag() >> "sometag"
+      dockerImage.getImageTag() >> "sometag"
       dockerImage.getShortName() >> IMAGE_NAME
       dockerImage.getShortName(DockerImage.DeploymentStage.AAT) >> "${IMAGE_NAME}-aat"
       dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"

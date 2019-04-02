@@ -54,14 +54,35 @@ class DockerImageTest extends Specification {
       thrown IllegalStateException
   }
 
-  def "getTag should return the tag"() {
+  def "getImageTag should return the image tag"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
       dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
-      def tag = dockerImage.getTag()
+      def tag = dockerImage.getImageTag()
 
     then:
       assertThat(tag).isEqualTo(TAG)
+  }
+
+  def "getTag should return the tag with commit hash"() {
+    when:
+      acr.getHostname() >> REGISTRY_HOST
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT)
+      String tag = dockerImage.getTag()
+
+    then:
+      String expectedTag = "${TAG}-${COMMIT.substring(0,8)}"
+      assertThat(tag).isEqualTo(expectedTag)
+  }
+
+  def "getTag for latest should return the tag without commit"() {
+    when:
+      acr.getHostname() >> REGISTRY_HOST
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, 'latest', COMMIT)
+      def tag = dockerImage.getTag()
+
+    then:
+      assertThat(tag).isEqualTo('latest')
   }
 
   def "getAksServiceName should return the service name"() {

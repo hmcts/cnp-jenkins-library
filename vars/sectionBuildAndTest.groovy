@@ -26,8 +26,12 @@ def call(params) {
     }
   }
 
+  def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+  def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
+  def skipStage = acr.hasTag(dockerImage)
+
   stage("Build") {
-    pcr.callAround('build') {
+    pcr.callAround('build', skipStage) {
       timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
         builder.build()
       }
@@ -39,13 +43,13 @@ def call(params) {
     parallel(
       "Unit tests and Sonar scan": {
 
-        pcr.callAround('test') {
+        pcr.callAround('test', skipStage) {
           timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
             builder.test()
           }
         }
 
-        pcr.callAround('sonarscan') {
+        pcr.callAround('sonarscan', skipStage) {
           pluginActive('sonar') {
             withSonarQubeEnv("SonarQube") {
               builder.sonarScan()
@@ -63,7 +67,7 @@ def call(params) {
       },
 
       "Security Checks": {
-        pcr.callAround('securitychecks') {
+        pcr.callAround('securitychecks', skipStage) {
           builder.securityCheck()
         }
       },
@@ -73,10 +77,8 @@ def call(params) {
           withAksClient(subscription) {
 
             def acbTemplateFilePath = 'acb.tpl.yaml'
-            def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-            def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
-            pcr.callAround('dockerbuild') {
+            pcr.callAround('dockerbuild', skipStage) {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
                 fileExists(acbTemplateFilePath) ?
                   acr.runWithTemplate(acbTemplateFilePath, dockerImage)

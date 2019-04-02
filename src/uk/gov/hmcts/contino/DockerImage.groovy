@@ -88,8 +88,26 @@ class DockerImage {
    * @return
    *   the tag e.g. 'latest', 'pr-77'
    */
-  def getTag() {
+  def getImageTag() {
     return this.imageTag
+  }
+
+  /**
+   * Get the image tag, based on the current build branch name and commit
+   *
+   * @return
+   *   the tag e.g. 'latest', 'pr-77-tr123456'
+   */
+  def getTag() {
+    return getTag(this.imageTag)
+  }
+
+  def getTag(DeploymentStage stage) {
+    return getTag(stage.label)
+  }
+
+  def getTag(String imageTag) {
+    return (imageTag == 'latest' ? imageTag : "${imageTag}-${this.commit}")
   }
 
   /**
@@ -107,11 +125,18 @@ class DockerImage {
   }
 
   private def shortName(String imageTag) {
-    String tag = imageTag == 'latest' ? imageTag : imageTag.concat('-').concat(this.commit)
+    return repositoryName().concat(':')
+      .concat(getTag(imageTag))
+  }
+
+  def getRepositoryName() {
+    return repositoryName()
+  }
+
+  private def repositoryName() {
     return REPOSITORY.concat('/')
       .concat(this.product).concat('-')
-      .concat(this.component).concat(':')
-      .concat(tag)
+      .concat(this.component)
   }
 
   private def getRegistryHostname() {
