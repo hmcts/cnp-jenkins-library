@@ -104,6 +104,14 @@ EOF
 '''
   }
 
+  def runProviderVerification() {
+    gradle('runProviderPactVerification')
+  }
+
+  def runConsumerTests() {
+    gradle('runConsumerPactTests')
+  }
+
   def gradle(String task) {
     addInitScript()
     steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}")

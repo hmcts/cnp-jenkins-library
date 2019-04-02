@@ -110,22 +110,23 @@ def call(params) {
     }
   }
 
-  stage("Pact verification") {
-    pcr.callAround('pact-verification') {
-      def version = sh(returnStdout: true, script: 'git rev-parse --verify --short HEAD')
-      def pactBroker = new PactBroker(this, product, component)
-      if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
-        // sh 'yarn test-pact'
-        // sh 'yarn publish-pact'
-        pactBroker.canIDeploy(version)
-      }
-    }
-  }
-
   if (config.pactBrokerEnabled) {
     stage("Pact verification") {
-      pcr.callAround('pact-verification') {
-        def version = sh(returnStdout: true, script: 'git rev-parse --verify --short HEAD')
+      def version = sh(returnStdout: true, script: 'git rev-parse --verify --short HEAD')
+
+      if (config.pactConsumerTestsEnabled) {
+        pcr.callAround('pact-consumer-tests') {
+          builder.runConsumerTests()
+        }
+      }
+
+      if (config.pactProviderVerificationsEnabled) {
+        pcr.callAround('pact-provider-verification') {
+          builder.runProviderVerification()
+        }
+      }
+
+      pcr.callAround('pact-deployment-verification') {
         def pactBroker = new PactBroker(this, product, component)
         if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
           pactBroker.canIDeploy(version)

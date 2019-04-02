@@ -117,5 +117,19 @@ class YarnBuilderTest extends Specification {
         1*steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:fullfunctional') })
   }
 
+  def "runProviderVerification triggers a yarn hook"() {
+    when:
+      builder.runProviderVerification()
+    then:
+      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains("test:pact-verify") })
+  }
+
+  def "runConsumerTests triggers a yarn hook"() {
+    when:
+      builder.runConsumerTests()
+    then:
+      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains("test:pact") })
+  }
+
 
 }

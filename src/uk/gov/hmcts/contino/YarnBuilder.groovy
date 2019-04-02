@@ -84,7 +84,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def securityCheck() {
     // no-op
-    // to be replaced with yarn audit once suppressing vulnerabilities is possible 
+    // to be replaced with yarn audit once suppressing vulnerabilities is possible
     // https://github.com/yarnpkg/yarn/issues/6669
   }
 
@@ -97,6 +97,14 @@ commit: $(git rev-parse HEAD)
 date: $(date)
 EOF
     '''
+  }
+
+  def runProviderVerification() {
+    runYarn('test:pact-verify')
+  }
+
+  def runConsumerTests() {
+    runYarn('test:pact')
   }
 
   private runYarn(task){

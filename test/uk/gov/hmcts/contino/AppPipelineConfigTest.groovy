@@ -30,6 +30,9 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
+      assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
   }
 
   def "ensure securityScan can be set in steps"() {

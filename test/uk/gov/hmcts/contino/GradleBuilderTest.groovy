@@ -79,4 +79,18 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') })
   }
 
+  def "runProviderVerification triggers a gradlew hook"() {
+    when:
+      builder.runProviderVerification()
+    then:
+      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains("runProviderPactVerification") })
+  }
+
+  def "runConsumerTests triggers a gradlew hook"() {
+    when:
+      builder.runConsumerTests()
+    then:
+      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains("runConsumerPactTests") })
+  }
+
 }

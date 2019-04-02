@@ -95,6 +95,16 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def runProviderVerification() {
+      return null
+    }
+
+    @Override
+    def runConsumerTests() {
+      return null
+    }
+
+    @Override
     def setupToolVersion() {
       return null
     }
