@@ -38,65 +38,67 @@ def call(params) {
 
 
   stage("Build") {
-    pcr.callAround('build', tagMissing) {
-      timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-        builder.build()
+    when (tagMissing) {
+      pcr.callAround('build') {
+        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+          builder.build()
+        }
       }
     }
   }
 
   stage("Tests/Checks/Container build") {
+    when (tagMissing) {
+      parallel(
+        "Unit tests and Sonar scan": {
 
-    parallel(
-      "Unit tests and Sonar scan": {
-
-        pcr.callAround('test', tagMissing) {
-          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-            builder.test()
-          }
-        }
-
-        pcr.callAround('sonarscan', tagMissing) {
-          pluginActive('sonar') {
-            withSonarQubeEnv("SonarQube") {
-              builder.sonarScan()
+          pcr.callAround('test') {
+            timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+              builder.test()
             }
+          }
 
-            timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Sonar Scan') {
-              def qg = waitForQualityGate()
-              if (qg.status != 'OK') {
-                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+          pcr.callAround('sonarscan') {
+            pluginActive('sonar') {
+              withSonarQubeEnv("SonarQube") {
+                builder.sonarScan()
+              }
+
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Sonar Scan') {
+                def qg = waitForQualityGate()
+                if (qg.status != 'OK') {
+                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                }
+              }
+            }
+          }
+
+        },
+
+        "Security Checks": {
+          pcr.callAround('securitychecks') {
+            builder.securityCheck()
+          }
+        },
+
+        "Docker Build": {
+          if (config.dockerBuild) {
+            withAksClient(subscription) {
+
+              def acbTemplateFilePath = 'acb.tpl.yaml'
+
+              pcr.callAround('dockerbuild') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+                  fileExists(acbTemplateFilePath) ?
+                    acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                    : acr.build(dockerImage)
+                }
               }
             }
           }
         }
-
-      },
-
-      "Security Checks": {
-        pcr.callAround('securitychecks', tagMissing) {
-          builder.securityCheck()
-        }
-      },
-
-      "Docker Build" : {
-        if (config.dockerBuild) {
-          withAksClient(subscription) {
-
-            def acbTemplateFilePath = 'acb.tpl.yaml'
-
-            pcr.callAround('dockerbuild', tagMissing) {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
-                fileExists(acbTemplateFilePath) ?
-                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-                  : acr.build(dockerImage)
-              }
-            }
-          }
-        }
-      }
-    )
-
+      )
+    }
   }
 
 }
