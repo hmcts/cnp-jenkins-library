@@ -56,7 +56,7 @@ def call(DockerImage dockerImage, Map params) {
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
     if (fileExists(defaultValues)) {
-      onPR{
+      onPR {
         aksEnvironment ="preview"
       }
     } else {
