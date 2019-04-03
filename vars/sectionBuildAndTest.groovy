@@ -28,10 +28,10 @@ def call(params) {
 
   def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
   def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
-  def skipStage = acr.hasTag(dockerImage)
+  def tagMissing = !acr.hasTag(dockerImage)
 
   stage("Build") {
-    pcr.callAround('build', skipStage) {
+    pcr.callAround('build', tagMissing) {
       timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
         builder.build()
       }
@@ -43,13 +43,13 @@ def call(params) {
     parallel(
       "Unit tests and Sonar scan": {
 
-        pcr.callAround('test', skipStage) {
+        pcr.callAround('test', tagMissing) {
           timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
             builder.test()
           }
         }
 
-        pcr.callAround('sonarscan', skipStage) {
+        pcr.callAround('sonarscan', tagMissing) {
           pluginActive('sonar') {
             withSonarQubeEnv("SonarQube") {
               builder.sonarScan()
@@ -67,7 +67,7 @@ def call(params) {
       },
 
       "Security Checks": {
-        pcr.callAround('securitychecks', skipStage) {
+        pcr.callAround('securitychecks', tagMissing) {
           builder.securityCheck()
         }
       },
@@ -78,7 +78,7 @@ def call(params) {
 
             def acbTemplateFilePath = 'acb.tpl.yaml'
 
-            pcr.callAround('dockerbuild', skipStage) {
+            pcr.callAround('dockerbuild', tagMissing) {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
                 fileExists(acbTemplateFilePath) ?
                   acr.runWithTemplate(acbTemplateFilePath, dockerImage)
