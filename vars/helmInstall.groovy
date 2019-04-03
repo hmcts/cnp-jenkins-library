@@ -59,7 +59,7 @@ def call(DockerImage dockerImage, Map params) {
       onPR{
         aksEnvironment ="preview"
       }
-    }else{
+    } else{
       echo '''
 ================================================================================
 
