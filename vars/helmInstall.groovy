@@ -71,7 +71,7 @@ def call(DockerImage dockerImage, Map params) {
      \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.' 
                                                                                
 
-Provide values.yaml with the chart . Builds will start failing without values.yaml in near future.
+Provide values.yaml with the chart. Builds will start failing without values.yaml in the near future. 
 ================================================================================
 '''
     }
