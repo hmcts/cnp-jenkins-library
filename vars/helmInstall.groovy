@@ -6,11 +6,13 @@ import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TeamNames
+import uk.gov.hmcts.contino.Environment
 
 def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
+  def aksEnvironment = params.environment
   def product = params.product
   def component = params.component
 
@@ -54,6 +56,26 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
+    if (fileExists(defaultValues)) {
+      onPR {
+        aksEnvironment = new Environment(env).previewName
+      }
+    } else {
+      echo '''
+================================================================================
+
+ ____      ____  _       _______     ____  _____  _____  ____  _____   ______  
+|_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  | 
+  \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_| 
+   \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____ 
+    \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
+     \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.' 
+                                                                               
+
+Provide values.yaml with the chart. Builds will start failing without values.yaml in the near future. 
+================================================================================
+'''
+    }
     if (!fileExists(templateValues) && !fileExists(defaultValues)) {
       throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
     }
@@ -63,8 +85,8 @@ def call(DockerImage dockerImage, Map params) {
     values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${environment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${environment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
       values << valuesEnv
