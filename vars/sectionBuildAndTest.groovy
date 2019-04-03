@@ -40,6 +40,7 @@ def call(params) {
   stage("Build") {
     when (tagPresent) {
       echo 'Stage skipped as image available.'
+      return
     }
     pcr.callAround('build') {
       timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
@@ -51,6 +52,7 @@ def call(params) {
   stage("Tests/Checks/Container build") {
     when (tagPresent) {
       echo 'Stage skipped as image available.'
+      return
     }
     parallel(
       "Unit tests and Sonar scan": {
