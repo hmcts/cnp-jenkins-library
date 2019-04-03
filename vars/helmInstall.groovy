@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TeamNames
+import uk.gov.hmcts.contino.Environment
 
 def call(DockerImage dockerImage, Map params) {
 
