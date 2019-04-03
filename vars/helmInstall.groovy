@@ -57,7 +57,7 @@ def call(DockerImage dockerImage, Map params) {
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
     if (fileExists(defaultValues)) {
       onPR {
-        aksEnvironment ="preview"
+        aksEnvironment = "preview"
       }
     } else {
       echo '''
