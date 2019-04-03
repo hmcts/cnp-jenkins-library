@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 class PipelineCallbacksRunner implements Serializable {
   final PipelineCallbacksConfig config
 
@@ -32,7 +34,7 @@ class PipelineCallbacksRunner implements Serializable {
     if (condition) {
       callAround(stage, body)
     } else {
-      echo 'Skipped'
+      Utils.markStageSkippedForConditional(stage)
     }
   }
 
