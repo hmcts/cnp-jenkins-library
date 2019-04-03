@@ -131,6 +131,7 @@ class Acr extends Az {
       return false
     }
     def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
+    echo "Found tags: ${tags}. Searching ${tag} ..."
     return tag in tags
   }
 
