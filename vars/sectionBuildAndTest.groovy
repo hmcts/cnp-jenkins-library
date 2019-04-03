@@ -17,7 +17,7 @@ def call(params) {
   def component = params.component
   def acr
   def dockerImage
-  def tagMissing
+  def tagMissing = true
 
   stage('Checkout') {
     pcr.callAround('checkout') {
@@ -26,9 +26,13 @@ def call(params) {
       if (scmVars) {
         env.GIT_COMMIT = scmVars.GIT_COMMIT
       }
-      acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-      dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
-      tagMissing = !acr.hasTag(dockerImage)
+      if (config.dockerBuild) {
+        withAksClient(subscription) {
+          acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+          dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
+          tagMissing = !acr.hasTag(dockerImage)
+        }
+      }
     }
   }
 
