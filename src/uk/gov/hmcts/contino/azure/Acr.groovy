@@ -130,8 +130,8 @@ class Acr extends Az {
     if (tag == 'latest') {
       return false
     }
-    def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
-    echo "Found tags: ${tags}. Searching ${tag} ..."
+    List<String> tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
+    steps.echo "Found tags: ${tags}. Searching ${tag} ..."
     return tag in tags
   }
 
