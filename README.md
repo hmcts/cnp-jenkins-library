@@ -28,6 +28,7 @@ and NodeJS applications. The pipeline contains the following stages:
 * Lint (nodejs only)
 * Sonar Scan
 * Docker build (for AKS deployments, optional ACR steps)
+* Contract testing
 * Deploy Dev
 * Smoke Tests - Dev
 * (Optional) API (gateway) Tests - Dev
@@ -369,7 +370,49 @@ Properties expanded by Jenkins:
 
 If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
 
+## Contract testing with Pact
+
+You can activate contract testing lifecycle hooks in the CI using the `enablePactAs()` method.
+
+The different hooks are based on roles that you can assign to your project: `CONSUMER` and/or `PROVIDER`. A common broker will be used as well as the naming and tagging conventions.
+
+Here is an example of a project which acts a consumer and provider (for example a backend-for-frontend):
+
+```groovy
+import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
+
+/* … */
+
+withInfraPipeline(product) {
+
+  /* … */
+
+  enablePactAs([
+    PactRoles.CONSUMER,
+    PactRoles.PROVIDER
+  ])
+}
+```
+
+The following hooks will then be ran before the deployment:
+
+| Role           | Order | Yarn               | Gradle                        |
+| -------------- | ----- | ------------------ | ----------------------------- |
+| Provider       | 1     | `test:pact-verify` | `runProviderPactVerification` |
+| Consumer       | 2     | `test:pact`        | `runConsumerPactTests`        |
+
+Notice that the Pact broker url is passed to these hooks as following:
+
+- `yarn`: `PACT_BROKER_URL` environment variable
+- `gradlew`: `-Dpact.broker.url` parameter
+
+It is expected that the scripts are responsible for figuring out what version (git revision, tag, branch) is currently tested.
+
+In any case the `can-i-deploy` pact-broker command is run after these ones.
+
+
 ## Contributing
 
  1. Use the Github pull requests to make change
  2. Test the change by pointing a build, to the branch with the change
+
