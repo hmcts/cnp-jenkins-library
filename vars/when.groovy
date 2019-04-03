@@ -1,4 +1,4 @@
-//import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def call(boolean condition, body) {
   def config = [:]
@@ -8,6 +8,6 @@ def call(boolean condition, body) {
   if (condition) {
     body()
   } else {
-    //Utils.markStageSkippedForConditional(STAGE_NAME)
+    Utils.markStageSkippedForConditional(STAGE_NAME)
   }
 }
