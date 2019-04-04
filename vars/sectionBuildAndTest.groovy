@@ -39,7 +39,7 @@ def call(params) {
 
   stage("Build") {
     when (tagMissing) {
-      pcr.callAround('build') {
+      pcr.callAround('build', tagMissing) {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
           builder.build()
         }
@@ -52,13 +52,13 @@ def call(params) {
       parallel(
         "Unit tests and Sonar scan": {
 
-          pcr.callAround('test') {
+          pcr.callAround('test', tagMissing) {
             timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
               builder.test()
             }
           }
 
-          pcr.callAround('sonarscan') {
+          pcr.callAround('sonarscan', tagMissing) {
             pluginActive('sonar') {
               withSonarQubeEnv("SonarQube") {
                 builder.sonarScan()
@@ -76,7 +76,7 @@ def call(params) {
         },
 
         "Security Checks": {
-          pcr.callAround('securitychecks') {
+          pcr.callAround('securitychecks', tagMissing) {
             builder.securityCheck()
           }
         },
@@ -87,7 +87,7 @@ def call(params) {
 
               def acbTemplateFilePath = 'acb.tpl.yaml'
 
-              pcr.callAround('dockerbuild') {
+              pcr.callAround('dockerbuild', tagMissing) {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
                   fileExists(acbTemplateFilePath) ?
                     acr.runWithTemplate(acbTemplateFilePath, dockerImage)

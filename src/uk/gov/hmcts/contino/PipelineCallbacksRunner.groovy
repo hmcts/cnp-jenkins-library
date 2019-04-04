@@ -28,6 +28,14 @@ class PipelineCallbacksRunner implements Serializable {
     }
   }
 
+  void callAround(String stage, boolean condition, Closure body) {
+    if (condition) {
+      callAround(stage, body)
+    } else {
+      echo "Stage ${stage} skipped"
+    }
+  }
+
   void call(String callback) {
     nullSafeCall(callback)
   }
