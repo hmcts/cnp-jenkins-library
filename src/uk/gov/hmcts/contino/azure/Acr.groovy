@@ -112,4 +112,29 @@ class Acr extends Az {
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
   }
 
+  def hasTag(DockerImage dockerImage) {
+    return hasTag(dockerImage.getTag(), dockerImage.getRepositoryName())
+  }
+
+  def hasTag(String imageTag, DockerImage dockerImage) {
+    String tag = dockerImage.getTag(imageTag)
+    return hasTag(tag, dockerImage.getRepositoryName())
+  }
+
+  def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
+    String tag = dockerImage.getTag(stage)
+    return hasTag(tag, dockerImage.getRepositoryName())
+  }
+
+  def hasTag(String tag, String repository) {
+    // latest is not really a tag for our purposes, it just marks the most recent tag
+    if (tag == 'latest') {
+      return false
+    }
+    def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
+    def tagFound = tags.contains(tag)
+    steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
+    return tagFound
+  }
+
 }
