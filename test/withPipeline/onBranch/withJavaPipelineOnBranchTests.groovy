@@ -67,5 +67,28 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
 
     stubBuilder.expect.verify()
   }
+
+  @Test
+  void PipelineExecutesExpectedStepsInExpectedOrderWithSkips() {
+    helper.registerAllowedMethod("when", [boolean, Closure.class], {})
+
+    def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.build(0) {}
+    stubBuilder.demand.test(0) {}
+    stubBuilder.demand.securityCheck(0) {}
+    stubBuilder.demand.sonarScan(0) {}
+
+    // ensure no deployer methods are called
+    def mockDeployer = new MockFor(JavaDeployer)
+
+    mockDeployer.use {
+      stubBuilder.use {
+          runScript("testResources/exampleJavaPipeline.jenkins")
+      }
+    }
+
+    stubBuilder.expect.verify()
+  }
+
 }
 
