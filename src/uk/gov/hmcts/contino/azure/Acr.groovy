@@ -127,6 +127,7 @@ class Acr extends Az {
   }
 
   def hasTag(String tag, String repository) {
+    // latest is not really a tag for our purposes, it just marks the most recent tag
     if (tag == 'latest') {
       return false
     }
