@@ -120,7 +120,7 @@ class Acr extends Az {
 
   def hasTag(DockerImage dockerImage) {
     // on the master branch we search for an AAT tagged image with the same commit hash
-    if (tag == 'latest') {
+    if (dockerImage.getTag() == 'latest') {
       return hasTag(DockerImage.DeploymentStage.AAT, dockerImage)
     } else {
       return hasRepoTag(dockerImage.getTag(), dockerImage.getRepositoryName())
