@@ -47,7 +47,7 @@ def call(params) {
     }
   }
 
-  stage("Tests/Checks") {
+  stage("Tests/Checks/Container Build") {
     pcr.config.registerOnStageFailure {
       if (config.dockerBuild) {
         withAksClient(subscription) {
