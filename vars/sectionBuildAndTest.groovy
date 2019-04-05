@@ -103,8 +103,9 @@ def call(params) {
               }
             }
           }
-        }
+        },
 
+        failFast: true
       )
     }
   }

@@ -114,7 +114,7 @@ class Acr extends Az {
 
   def untag(DockerImage dockerImage) {
     if (!dockerImage.isLatest()) {
-      this.az "acr untag -n ${registryName} -g ${resourceGroup} --image ${dockerImage.getShortName()}"
+      this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --image ${dockerImage.getShortName()}"
     }
   }
 
