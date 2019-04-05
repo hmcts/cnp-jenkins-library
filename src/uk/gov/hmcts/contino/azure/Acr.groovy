@@ -112,6 +112,12 @@ class Acr extends Az {
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
   }
 
+  def untag(DockerImage dockerImage) {
+    if (!dockerImage.isLatest()) {
+      this.az "acr untag -n ${registryName} -g ${resourceGroup} --image ${dockerImage.getShortName()}"
+    }
+  }
+
   def hasTag(DockerImage dockerImage) {
     return hasTag(dockerImage.getTag(), dockerImage.getRepositoryName())
   }

@@ -48,10 +48,18 @@ def call(params) {
   }
 
   stage("Tests/Checks") {
+    pcr.config.registerOnStageFailure {
+      if (config.dockerBuild) {
+        withAksClient(subscription) {
+          acr.untag(dockerImage)
+        }
+      }
+    }
+
     when (tagMissing) {
       parallel(
-        "Unit tests and Sonar scan": {
 
+        "Unit tests and Sonar scan": {
           pcr.callAround('test') {
             timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
               builder.test()
@@ -72,34 +80,32 @@ def call(params) {
               }
             }
           }
-
         },
 
         "Security Checks": {
           pcr.callAround('securitychecks') {
             builder.securityCheck()
           }
-        }
-      )
-    }
-  }
+        },
 
-  stage("Docker Build") {
-    when(tagMissing) {
-      if (config.dockerBuild) {
-        withAksClient(subscription) {
+        "Docker Build": {
+          if (config.dockerBuild) {
+            withAksClient(subscription) {
 
-          def acbTemplateFilePath = 'acb.tpl.yaml'
+              def acbTemplateFilePath = 'acb.tpl.yaml'
 
-          pcr.callAround('dockerbuild') {
-            timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
-              fileExists(acbTemplateFilePath) ?
-                acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-                : acr.build(dockerImage)
+              pcr.callAround('dockerbuild') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+                  fileExists(acbTemplateFilePath) ?
+                    acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                    : acr.build(dockerImage)
+                }
+              }
             }
           }
         }
-      }
+
+      )
     }
   }
 
