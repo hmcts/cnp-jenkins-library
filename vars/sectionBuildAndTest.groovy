@@ -38,11 +38,9 @@ def call(params) {
 
 
   stage("Build") {
-    when (tagMissing) {
-      pcr.callAround('build') {
-        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-          builder.build()
-        }
+    pcr.callAround('build') {
+      timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+        builder.build()
       }
     }
   }
