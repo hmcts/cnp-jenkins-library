@@ -17,7 +17,8 @@ def call(params) {
   def component = params.component
   def acr
   def dockerImage
-  boolean tagMissing = true
+  def projectBranch
+  boolean noSkipImgBuild = true
 
   stage('Checkout') {
     pcr.callAround('checkout') {
@@ -28,9 +29,10 @@ def call(params) {
       }
       if (config.dockerBuild) {
         withAksClient(subscription) {
+          projectBranch = new ProjectBranch(env.BRANCH_NAME)
           acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-          dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
-          tagMissing = !acr.hasTag(dockerImage)
+          dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
+          noSkipImgBuild = !acr.hasTag(dockerImage) && !env.NO_SKIP_IMG_BUILD?.trim()
         }
       }
     }
@@ -38,6 +40,7 @@ def call(params) {
 
 
   stage("Build") {
+    // always build as some projects depend on this to run their smoke/functional tests
     pcr.callAround('build') {
       timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
         builder.build()
@@ -54,7 +57,7 @@ def call(params) {
       }
     }
 
-    when (tagMissing) {
+    when (noSkipImgBuild) {
       parallel(
 
         "Unit tests and Sonar scan": {
