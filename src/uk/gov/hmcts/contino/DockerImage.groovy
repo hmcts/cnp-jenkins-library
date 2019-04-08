@@ -100,6 +100,10 @@ class DockerImage {
     return (imageTag == 'latest' ? imageTag : "${imageTag}-${this.commit}")
   }
 
+  def isLatest() {
+    return getTag() == 'latest'
+  }
+
   /**
    * Get the 'short name' of the image, without the registry prefix
    *
