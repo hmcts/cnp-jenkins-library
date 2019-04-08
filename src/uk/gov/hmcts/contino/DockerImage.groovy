@@ -40,11 +40,23 @@ class DockerImage {
    * need to build an image
    *
    * @return
-   *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag'
+   *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag-commit'
    */
   def getTaggedName() {
     return this.getRegistryHostname().concat('/')
       .concat(this.getShortName())
+  }
+
+  /**
+   * Get the full image name, including the tag but excluding the commit.
+   * Use when you need to retag (promote) a pr image
+   *
+   * @return
+   *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag'
+   */
+  def getBaseTaggedName() {
+    return this.getRegistryHostname().concat('/')
+      .concat(this.getBaseShortName())
   }
 
   /**
