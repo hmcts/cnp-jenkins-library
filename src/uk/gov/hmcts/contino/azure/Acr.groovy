@@ -59,7 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
   }
 
   /**
@@ -109,7 +109,8 @@ class Acr extends Az {
    */
   def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
-    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
+    def baseTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
+    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 
   def untag(DockerImage dockerImage) {

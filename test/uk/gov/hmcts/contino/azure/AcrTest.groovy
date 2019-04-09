@@ -46,7 +46,7 @@ class AcrTest extends Specification {
   def "build() should call az with acr build and correct arguments"() {
     when:
       dockerImage.getImageTag() >> "sometag"
-      dockerImage.getShortName() >> IMAGE_NAME
+      dockerImage.getBaseShortName() >> IMAGE_NAME
       acr.build(dockerImage)
 
     then:

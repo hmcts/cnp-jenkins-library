@@ -36,6 +36,8 @@ def call(params) {
       def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
       onPR {
+        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+
         if (config.deployToAKS) {
           withTeamSecrets(config, params.environment) {
             stage('Deploy to AKS') {

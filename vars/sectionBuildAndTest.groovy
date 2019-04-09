@@ -49,13 +49,6 @@ def call(params) {
   }
 
   stage("Tests/Checks/Container Build") {
-    pcr.config.registerOnStageFailure {
-      if (config.dockerBuild) {
-        withAksClient(subscription) {
-          acr.untag(dockerImage)
-        }
-      }
-    }
 
     when (noSkipImgBuild) {
       parallel(
