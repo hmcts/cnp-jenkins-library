@@ -42,6 +42,8 @@ class YarnBuilderTest extends Specification {
     when:
       builder.smokeTest()
     then:
+      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('check') })
+      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
       1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:smoke') })
   }
 

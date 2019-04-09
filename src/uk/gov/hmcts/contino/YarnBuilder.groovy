@@ -2,6 +2,8 @@ package uk.gov.hmcts.contino;
 
 class YarnBuilder extends AbstractBuilder {
 
+  private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
+
   YarnBuilder(steps) {
     super(steps)
   }
@@ -25,7 +27,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def smokeTest() {
     try {
-      yarn("test:smoke")
+      yarnWithCheck("test:smoke")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './smoke-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/**'
@@ -34,7 +36,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def functionalTest() {
     try {
-      yarn("test:functional")
+      yarnWithCheck("test:functional")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
@@ -43,7 +45,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def apiGatewayTest() {
     try {
-      yarn("test:apiGateway")
+      yarnWithCheck("test:apiGateway")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './api-output/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'api-output/*'
@@ -53,7 +55,7 @@ class YarnBuilder extends AbstractBuilder {
   def crossBrowserTest() {
     try {
       steps.withSauceConnect("reform_tunnel") {
-        yarn("test:crossbrowser")
+        yarnWithCheck("test:crossbrowser")
       }
     }
     finally {
@@ -64,7 +66,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def fullFunctionalTest(){
     try{
-      yarn("test:fullfunctional")
+      yarnWithCheck("test:fullfunctional")
     }
     finally {
       steps.junit allowEmptyResults: true, testResults: './functional-output/**/*result.xml'
@@ -74,7 +76,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def mutationTest() {
     try{
-      yarn("test:mutation")
+      yarnWithCheck("test:mutation")
     }
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
@@ -103,12 +105,13 @@ EOF
   }
 
   def yarnQuiet(task){
-    steps.sh(returnStatus: true, script: "yarn ${task} &> /dev/null")
+    return steps.sh(returnStatus: true, script: "yarn ${task} &> /dev/null")
   }
 
   def yarnWithCheck(task) {
-    if (!yarnQuiet("check")) {
+    if (!steps.fileExists(INSTALL_CHECK_FILE) && !yarnQuiet("check")) {
       yarn("--mutex network install --frozen-lockfile")
+      steps.sh("touch ${INSTALL_CHECK_FILE}")
     }
     yarn(task)
   }
