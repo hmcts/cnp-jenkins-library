@@ -76,7 +76,7 @@ class Acr extends Az {
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
     def defaultAcrScriptFilePath = "acb.yaml"
     steps.sh(
-      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
+      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getBaseShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
       returnStdout: true
     )?.trim()
     this.run()

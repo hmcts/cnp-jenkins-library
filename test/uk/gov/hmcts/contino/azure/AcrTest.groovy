@@ -87,7 +87,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${REGISTRY_NAME}@g\" acb.tpl.yaml > acb.yaml") &&
+                    it.get('script').contains("sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getBaseShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${REGISTRY_NAME}@g\" acb.tpl.yaml > acb.yaml") &&
                     it.get('returnStdout').equals(true)
                   })
     and:
