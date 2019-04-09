@@ -101,4 +101,16 @@ EOF
   def yarn(task){
     steps.sh("yarn ${task}")
   }
+
+  def yarnQuiet(task){
+    steps.sh(returnStatus: true, script: "yarn ${task} &> /dev/null")
+  }
+
+  def yarnWithCheck(task) {
+    if (!yarnQuiet("check")) {
+      yarn("--mutex network install --frozen-lockfile")
+    }
+    yarn(task)
+  }
+
 }
