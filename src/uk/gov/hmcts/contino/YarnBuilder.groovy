@@ -104,7 +104,7 @@ EOF
     steps.sh("yarn ${task}")
   }
 
-  def yarnQuiet(task){
+  def yarnQuiet(task) {
     return steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
   }
 
