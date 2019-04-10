@@ -12,7 +12,7 @@ class AngularBuilder extends AbstractBuilder {
   @Override
   def build() {
     builder.build()
-    builder.yarn("build:ssr")
+    builder.runYarn("build:ssr")
   }
 
   @Override

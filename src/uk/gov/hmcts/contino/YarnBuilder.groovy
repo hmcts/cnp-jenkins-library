@@ -9,25 +9,25 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def build() {
-    yarn("--mutex network install --frozen-lockfile")
-    yarn("lint")
+    runYarn("--mutex network install --frozen-lockfile")
+    runYarn("lint")
 
     addVersionInfo()
   }
 
   def test() {
-    yarn("test")
-    yarn("test:coverage")
-    yarn("test:a11y")
+    runYarn("test")
+    runYarn("test:coverage")
+    runYarn("test:a11y")
   }
 
   def sonarScan() {
-    yarn('sonar-scan')
+    runYarn('sonar-scan')
   }
 
   def smokeTest() {
     try {
-      yarnWithCheck("test:smoke")
+      yarn("test:smoke")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './smoke-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/**'
@@ -36,7 +36,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def functionalTest() {
     try {
-      yarnWithCheck("test:functional")
+      yarn("test:functional")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
@@ -45,7 +45,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def apiGatewayTest() {
     try {
-      yarnWithCheck("test:apiGateway")
+      yarn("test:apiGateway")
     } finally {
       steps.junit allowEmptyResults: true, testResults: './api-output/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'api-output/*'
@@ -55,7 +55,7 @@ class YarnBuilder extends AbstractBuilder {
   def crossBrowserTest() {
     try {
       steps.withSauceConnect("reform_tunnel") {
-        yarnWithCheck("test:crossbrowser")
+        yarn("test:crossbrowser")
       }
     }
     finally {
@@ -66,7 +66,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def fullFunctionalTest(){
     try{
-      yarnWithCheck("test:fullfunctional")
+      yarn("test:fullfunctional")
     }
     finally {
       steps.junit allowEmptyResults: true, testResults: './functional-output/**/*result.xml'
@@ -76,7 +76,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def mutationTest() {
     try{
-      yarnWithCheck("test:mutation")
+      yarn("test:mutation")
     }
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
@@ -100,7 +100,7 @@ EOF
     '''
   }
 
-  def yarn(task){
+  def runYarn(task){
     steps.sh("yarn ${task}")
   }
 
@@ -108,12 +108,12 @@ EOF
     return steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
   }
 
-  def yarnWithCheck(task) {
+  def yarn(task) {
     if (!steps.fileExists(INSTALL_CHECK_FILE) && !yarnQuiet("check")) {
-      yarn("--mutex network install --frozen-lockfile")
+      runYarn("--mutex network install --frozen-lockfile")
       steps.sh("touch ${INSTALL_CHECK_FILE}")
     }
-    yarn(task)
+    runYarn(task)
   }
 
 }

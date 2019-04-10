@@ -74,7 +74,7 @@ class YarnBuilderTest extends Specification {
     then:
     1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
     when:
-    builder.yarnWithCheck("test:crossbrowser")
+    builder.yarn("test:crossbrowser")
     then:
     1 * steps.sh(['script': 'yarn check &> /dev/null', 'returnStatus': true])
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
