@@ -112,4 +112,17 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "hasTag should return false in case of error"() {
+    when:
+      dockerImage.getTag() >> "some_tag"
+      dockerImage.getRepositoryName() >> "some_repo_name"
+      acr.steps.sh(_) >> ''
+      acr.steps.error(_) >> { throw new Exception(_ as String) }
+
+      def hasTag = acr.hasTag(dockerImage)
+
+    then:
+      assert hasTag == false
+  }
+
 }
