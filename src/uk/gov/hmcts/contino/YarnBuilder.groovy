@@ -9,20 +9,19 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def build() {
-    runYarn("--mutex network install --frozen-lockfile")
-    runYarn("lint")
+    yarn("lint")
 
     addVersionInfo()
   }
 
   def test() {
-    runYarn("test")
-    runYarn("test:coverage")
-    runYarn("test:a11y")
+    yarn("test")
+    yarn("test:coverage")
+    yarn("test:a11y")
   }
 
   def sonarScan() {
-    runYarn('sonar-scan')
+    yarn('sonar-scan')
   }
 
   def smokeTest() {
@@ -100,7 +99,7 @@ EOF
     '''
   }
 
-  def runYarn(task){
+  private runYarn(task){
     steps.sh("yarn ${task}")
   }
 
