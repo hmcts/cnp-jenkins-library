@@ -138,9 +138,15 @@ class Acr extends Az {
     if (tag == 'latest') {
       steps.echo "Warning: matching 'latest' tag for ${repository}"
     }
-    def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
-    def tagFound = tags.contains(tag)
-    //steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
+
+    def tagFound = false
+    try {
+      def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
+      //steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
+      tagFound = tags.contains(tag)
+    } catch (noTagsError) {
+    } // Do nothing -> return false
+
     return tagFound
   }
 
