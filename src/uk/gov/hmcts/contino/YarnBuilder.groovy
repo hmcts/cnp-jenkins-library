@@ -103,12 +103,14 @@ EOF
     steps.sh("yarn ${task}")
   }
 
-  def yarnQuiet(task) {
-    return steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
+  private runYarnQuiet(task) {
+    def status = steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
+    steps.echo("yarnQuiet ${task} -> ${status}")
+    return status
   }
 
   def yarn(task) {
-    if (!steps.fileExists(INSTALL_CHECK_FILE) && !yarnQuiet("check")) {
+    if (!steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
       runYarn("--mutex network install --frozen-lockfile")
       steps.sh("touch ${INSTALL_CHECK_FILE}")
     }
