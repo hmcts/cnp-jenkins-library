@@ -40,11 +40,23 @@ class DockerImage {
    * need to build an image
    *
    * @return
-   *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag'
+   *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag-commit'
    */
   def getTaggedName() {
     return this.getRegistryHostname().concat('/')
       .concat(this.getShortName())
+  }
+
+  /**
+   * Get the full image name, including the tag but excluding the commit.
+   * Use when you need to retag (promote) a pr image
+   *
+   * @return
+   *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag'
+   */
+  def getBaseTaggedName() {
+    return this.getRegistryHostname().concat('/')
+      .concat(this.getBaseShortName())
   }
 
   /**
@@ -93,6 +105,10 @@ class DockerImage {
   }
 
   def getTag(DeploymentStage stage) {
+    // if it's a PR use the full imageTag (e.g. pr-42)
+    if (stage == DeploymentStage.PR) {
+      return getTag(this.imageTag)
+    }
     return getTag(stage.label)
   }
 
@@ -100,23 +116,42 @@ class DockerImage {
     return (imageTag == 'latest' ? imageTag : "${imageTag}-${this.commit}")
   }
 
+  def isLatest() {
+    return getTag() == 'latest'
+  }
+
   /**
    * Get the 'short name' of the image, without the registry prefix
    *
    * @return
-   *   the short name. e.g. hmcts/product-component:branch
+   *   the short name. e.g. hmcts/product-component:branch-commit or hmcts/product-component:latest
    */
   def getShortName() {
     return shortName(this.imageTag)
   }
 
   def getShortName(DeploymentStage stage) {
+    // if it's a PR use the full imageTag (e.g. pr-42)
+    if (stage == DeploymentStage.PR) {
+      return shortName(this.imageTag)
+    }
     return shortName(stage.label)
   }
 
   private def shortName(String imageTag) {
     return repositoryName().concat(':')
       .concat(getTag(imageTag))
+  }
+
+  /**
+   * Get the 'short name' of the image, without the registry prefix and the commit suffix
+   *
+   * @return
+   *   the short name. e.g. hmcts/product-component:branch
+   */
+  def getBaseShortName() {
+    return repositoryName().concat(':')
+      .concat(imageTag)
   }
 
   def getRepositoryName() {

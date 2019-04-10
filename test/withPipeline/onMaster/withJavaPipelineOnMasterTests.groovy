@@ -50,5 +50,44 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     stubBuilder.expect.verify()
   }
+
+  @Test
+  void PipelineExecutesExpectedStepsInExpectedOrderWithSkips() {
+    helper.registerAllowedMethod("when", [boolean, Closure.class], {})
+
+    def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.with {
+      build(1) {}
+      test(0) {}
+      securityCheck(0) {}
+      sonarScan(0) {}
+      smokeTest(1) {} //aat-staging
+      functionalTest(1) {}
+      smokeTest(3) {} // aat-prod, prod-staging, prod-prod
+    }
+
+    def mockDeployer = new MockFor(JavaDeployer)
+    mockDeployer.ignore.getServiceUrl() { env, slot -> return null} // we don't care when or how often this is called
+    mockDeployer.demand.with {
+      // aat-staging
+      deploy() {}
+      healthCheck() { env, slot -> return null }
+      // aat-prod
+      healthCheck() { env, slot -> return null }
+      // prod-staging
+      deploy() {}
+      healthCheck() { env, slot -> return null }
+      // prod-prod
+      healthCheck() { env, slot -> return null }
+    }
+
+    stubBuilder.use {
+      mockDeployer.use {
+        runScript("testResources/$jenkinsFile")
+      }
+    }
+
+    stubBuilder.expect.verify()
+  }
 }
 

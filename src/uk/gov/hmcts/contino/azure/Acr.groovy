@@ -59,7 +59,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
   }
 
   /**
@@ -76,7 +76,7 @@ class Acr extends Az {
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
     def defaultAcrScriptFilePath = "acb.yaml"
     steps.sh(
-      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
+      script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getBaseShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
       returnStdout: true
     )?.trim()
     this.run()
@@ -109,31 +109,38 @@ class Acr extends Az {
    */
   def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
-    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${dockerImage.getTaggedName()} -t ${additionalTag}"?.trim()
+    def baseTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
+    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${baseTag} -t ${additionalTag}"?.trim()
+  }
+
+  def untag(DockerImage dockerImage) {
+    if (!dockerImage.isLatest()) {
+      this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --image ${dockerImage.getShortName()}"
+    }
   }
 
   def hasTag(DockerImage dockerImage) {
-    return hasTag(dockerImage.getTag(), dockerImage.getRepositoryName())
-  }
-
-  def hasTag(String imageTag, DockerImage dockerImage) {
-    String tag = dockerImage.getTag(imageTag)
-    return hasTag(tag, dockerImage.getRepositoryName())
+    // on the master branch we search for an AAT tagged image with the same commit hash
+    if (dockerImage.getTag() == 'latest') {
+      return hasTag(DockerImage.DeploymentStage.AAT, dockerImage)
+    } else {
+      return hasRepoTag(dockerImage.getTag(), dockerImage.getRepositoryName())
+    }
   }
 
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     String tag = dockerImage.getTag(stage)
-    return hasTag(tag, dockerImage.getRepositoryName())
+    return hasRepoTag(tag, dockerImage.getRepositoryName())
   }
 
-  def hasTag(String tag, String repository) {
+  private def hasRepoTag(String tag, String repository) {
     // latest is not really a tag for our purposes, it just marks the most recent tag
     if (tag == 'latest') {
-      return false
+      steps.echo "Warning: matching 'latest' tag for ${repository}"
     }
     def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
     def tagFound = tags.contains(tag)
-    steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
+    //steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
     return tagFound
   }
 
