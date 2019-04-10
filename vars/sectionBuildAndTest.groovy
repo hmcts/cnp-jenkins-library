@@ -40,10 +40,12 @@ def call(params) {
 
 
   stage("Build") {
-    // always build as some projects depend on this to run their smoke/functional tests
-    pcr.callAround('build') {
-      timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-        builder.build()
+    // always build master as we currently do not deploy an image there
+    when(noSkipImgBuild || projectBranch.isMaster()) {
+      pcr.callAround('build') {
+        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+          builder.build()
+        }
       }
     }
   }
