@@ -16,8 +16,8 @@ class YarnBuilder extends AbstractBuilder {
 
   def test() {
     yarn("test")
-    yarn("test:coverage")
-    yarn("test:a11y")
+    runYarn("test:coverage")
+    runYarn("test:a11y")
   }
 
   def sonarScan() {
