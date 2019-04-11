@@ -7,9 +7,17 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 
 /*
- * The image retagging in ACR is used to promote an image to Prod.
- * This will mark the image as having passed all the prior stages.
+ * Retagging in ACR is used to promote an image to a
+ * deployment stage. These are currently AAT and Prod.
+ * Promotion marks the image as having passed all the prior stages.
  *
+ * For AAT any image re-tagged following the pattern displayed below is
+ * not going to be rebuilt unless the commit hash changes (i.e.
+ * there is a new commit) or the environment variable NO_SKIP_IMG_BUILD
+ * is set:
+ *
+ * e.g.: <my-app-image>:aat-<commit-hash>
+ * 
  * The prod tag marks the image as having passed all the verification
  * and build stages and should be assigned only at the end of the pipeline.
  *
@@ -25,16 +33,17 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  DockerImage.DeploymentStage stage = params.stage
 
-  stage('Prod build promotion') {
+  stage("${stage.label} build promotion") {
     if (config.dockerBuild) {
       withAksClient(subscription) {
 
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
         def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
-        pcr.callAround('prodpromotion') {
-          acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage)
+        pcr.callAround("${stage.label}promotion") {
+          acr.retagForStage(stage, dockerImage)
         }
       }
     }
