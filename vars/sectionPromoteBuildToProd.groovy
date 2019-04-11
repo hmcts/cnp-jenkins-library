@@ -7,15 +7,13 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 
 /*
- * The image retagging in ACR is used to promote an image to AAT.
+ * The image retagging in ACR is used to promote an image to Prod.
  * This will mark the image as having passed all the prior stages.
  *
- * Any image re-tagged following the pattern displayed below is
- * not going to be rebuilt unless the commit hash changes (i.e.
- * there is a new commit) or the environment variable NO_SKIP_IMG_BUILD
- * is set:
+ * The prod tag marks the image as having passed all the verification
+ * and build stages and should be assigned only at the end of the pipeline.
  *
- * e.g.: <my-app-image>:aat-<commit-hash>
+ * e.g.: <my-app-image>:prod-<commit-hash>
  */
 
 def call(params) {
