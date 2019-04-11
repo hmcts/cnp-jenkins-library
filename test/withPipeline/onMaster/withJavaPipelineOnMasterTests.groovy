@@ -57,7 +57,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
-      build(0) {}
+      build(1) {}
       test(0) {}
       securityCheck(0) {}
       sonarScan(0) {}

@@ -40,12 +40,9 @@ def call(params) {
 
 
   stage("Build") {
-    // always build master as we currently do not deploy an image there
-    when(noSkipImgBuild || projectBranch.isMaster()) {
-      pcr.callAround('build') {
-        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-          builder.build()
-        }
+    pcr.callAround('build') {
+      timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+        builder.build()
       }
     }
   }
