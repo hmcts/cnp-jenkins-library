@@ -118,6 +118,15 @@ def call(type, String product, String component, Closure body) {
             environment: environment.prodName,
             product: product,
             component: component)
+
+          sectionPromoteBuildToProd(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component
+          )
         }
 
         onAutoDeployBranch { subscriptionName, environmentName ->
