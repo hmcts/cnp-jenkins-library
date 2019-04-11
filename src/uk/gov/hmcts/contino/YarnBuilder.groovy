@@ -106,7 +106,7 @@ EOF
   private runYarnQuiet(task) {
     def status = steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
-    return status
+    return status == 0  // only a 0 return status is success
   }
 
   def yarn(task) {
