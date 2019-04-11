@@ -33,17 +33,17 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
-  DockerImage.DeploymentStage stage = params.stage
+  DockerImage.DeploymentStage deploymentStage = params.stage
 
-  stage("${stage.label} build promotion") {
+  stage("${deploymentStage.label} build promotion") {
     if (config.dockerBuild) {
       withAksClient(subscription) {
 
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
         def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
-        pcr.callAround("${stage.label}promotion") {
-          acr.retagForStage(stage, dockerImage)
+        pcr.callAround("${deploymentStage.label}promotion") {
+          acr.retagForStage(deploymentStage, dockerImage)
         }
       }
     }

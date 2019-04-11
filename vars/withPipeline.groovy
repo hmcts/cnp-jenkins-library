@@ -82,7 +82,7 @@ def call(type, String product, String component, Closure body) {
 
         onMaster {
 
-          sectionPromoteBuildToEnv(
+          sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
@@ -121,7 +121,7 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
 
-          sectionPromoteBuildToEnv(
+          sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
