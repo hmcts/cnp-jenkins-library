@@ -73,7 +73,7 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
     helper.registerAllowedMethod("when", [boolean, Closure.class], {})
 
     def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.build(1) {}
+    stubBuilder.demand.build(0) {}
     stubBuilder.demand.test(0) {}
     stubBuilder.demand.securityCheck(0) {}
     stubBuilder.demand.sonarScan(0) {}

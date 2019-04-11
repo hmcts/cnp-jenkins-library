@@ -2,12 +2,13 @@ package uk.gov.hmcts.contino;
 
 class YarnBuilder extends AbstractBuilder {
 
+  private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
+
   YarnBuilder(steps) {
     super(steps)
   }
 
   def build() {
-    yarn("--mutex network install --frozen-lockfile")
     yarn("lint")
 
     addVersionInfo()
@@ -15,8 +16,8 @@ class YarnBuilder extends AbstractBuilder {
 
   def test() {
     yarn("test")
-    yarn("test:coverage")
-    yarn("test:a11y")
+    runYarn("test:coverage")
+    runYarn("test:a11y")
   }
 
   def sonarScan() {
@@ -98,7 +99,22 @@ EOF
     '''
   }
 
-  def yarn(task){
+  private runYarn(task){
     steps.sh("yarn ${task}")
   }
+
+  private runYarnQuiet(task) {
+    def status = steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
+    steps.echo("yarnQuiet ${task} -> ${status}")
+    return status == 0  // only a 0 return status is success
+  }
+
+  def yarn(task) {
+    if (!steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
+      runYarn("--mutex network install --frozen-lockfile")
+      steps.sh("touch ${INSTALL_CHECK_FILE}")
+    }
+    runYarn(task)
+  }
+
 }
