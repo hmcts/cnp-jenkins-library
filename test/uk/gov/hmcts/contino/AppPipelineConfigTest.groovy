@@ -29,6 +29,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
+      assertThat(pipelineConfig.serviceApp).isTrue()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -135,4 +136,10 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.legacyDeployment).isFalse()
   }
 
+  def "ensure non service app"() {
+    when:
+      dsl.nonServiceApp()
+    then:
+      assertThat(pipelineConfig.serviceApp).isFalse()
+  }
 }

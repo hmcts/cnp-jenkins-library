@@ -75,6 +75,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.legacyDeployment = false
   }
 
+  void nonServiceApp() {
+    config.serviceApp = false
+  }
+
   void overrideVaultEnvironments(Map<String, String> vaultOverrides) {
     config.vaultEnvironmentOverrides = vaultOverrides
   }
