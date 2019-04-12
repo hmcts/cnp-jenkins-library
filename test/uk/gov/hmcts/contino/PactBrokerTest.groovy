@@ -20,7 +20,7 @@ class PactBrokerTest extends Specification {
 
   def "canIDeploy calls the pack-broker command in a container with the right parameters"() {
     given:
-      pactBroker = new PactBroker(steps, PRODUCT, COMPONENT)
+      pactBroker = new PactBroker(steps, PRODUCT, COMPONENT, PACT_BROKER_URL)
       version = "rand0mha5h"
       def closure
 

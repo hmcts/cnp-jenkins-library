@@ -99,12 +99,12 @@ EOF
     '''
   }
 
-  def runProviderVerification() {
-    runYarn('test:pact-verify')
+  def runProviderVerification(pactBrokerUrl) {
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} yarn test:pact-verify")
   }
 
-  def runConsumerTests() {
-    runYarn('test:pact')
+  def runConsumerTests(pactBrokerUrl) {
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} yarn test:pact")
   }
 
   private runYarn(task){

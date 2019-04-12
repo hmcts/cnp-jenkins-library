@@ -25,4 +25,10 @@ abstract class AbstractBuilder implements Builder, Serializable {
   def securityScan(){
     this.securitytest.execute()
   }
+
+  @Override
+  def runProviderVerification() {}
+
+  @Override
+  def runConsumerTests() {}
 }

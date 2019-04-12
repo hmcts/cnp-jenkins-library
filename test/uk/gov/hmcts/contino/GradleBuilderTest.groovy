@@ -5,6 +5,7 @@ import spock.lang.Specification
 class GradleBuilderTest extends Specification {
 
   static final String GRADLE_CMD = './gradlew'
+  static final String PACT_BROKER_URL = "https://pact-broker.platform.hmcts.net"
 
   def steps
 
@@ -81,16 +82,16 @@ class GradleBuilderTest extends Specification {
 
   def "runProviderVerification triggers a gradlew hook"() {
     when:
-      builder.runProviderVerification()
+      builder.runProviderVerification(PACT_BROKER_URL)
     then:
-      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains("runProviderPactVerification") })
+      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains("-Dpact.broker.url=${PACT_BROKER_URL} runProviderPactVerification") })
   }
 
   def "runConsumerTests triggers a gradlew hook"() {
     when:
-      builder.runConsumerTests()
+      builder.runConsumerTests(PACT_BROKER_URL)
     then:
-      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains("runConsumerPactTests") })
+      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains("-Dpact.broker.url=${PACT_BROKER_URL} runConsumerPactTests") })
   }
 
 }

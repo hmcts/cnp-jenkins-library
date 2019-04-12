@@ -16,6 +16,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def pactBrokerUrl = params.pactBrokerUrl
   def acr
   def dockerImage
   def projectBranch
@@ -116,18 +117,18 @@ def call(params) {
 
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-consumer-tests') {
-          builder.runConsumerTests()
+          builder.runConsumerTests(pactBrokerUrl)
         }
       }
 
       if (config.pactProviderVerificationsEnabled) {
         pcr.callAround('pact-provider-verification') {
-          builder.runProviderVerification()
+          builder.runProviderVerification(pactBrokerUrl)
         }
       }
 
       pcr.callAround('pact-deployment-verification') {
-        def pactBroker = new PactBroker(this, product, component)
+        def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
         if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
           pactBroker.canIDeploy(version)
         }

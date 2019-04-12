@@ -104,12 +104,12 @@ EOF
 '''
   }
 
-  def runProviderVerification() {
-    gradle('runProviderPactVerification')
+  def runProviderVerification(pactBrokerUrl) {
+    gradle("-Dpact.broker.url=${pactBrokerUrl} runProviderPactVerification")
   }
 
-  def runConsumerTests() {
-    gradle('runConsumerPactTests')
+  def runConsumerTests(pactBrokerUrl) {
+    gradle("-Dpact.broker.url=${pactBrokerUrl} runConsumerPactTests")
   }
 
   def gradle(String task) {
