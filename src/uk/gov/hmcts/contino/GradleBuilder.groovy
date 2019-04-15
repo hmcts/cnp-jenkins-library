@@ -78,7 +78,7 @@ class GradleBuilder extends AbstractBuilder {
   def securityCheck() {
     steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-db-login', passwordVariable: 'OWASPDB_PASSWORD', usernameVariable: 'OWASPDB_ACCOUNT')]) {
       try {
-        gradle("-DfailBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='com.microsoft.sqlserver.jdbc.SQLServerDriver' -Ddata.connection_string='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -Ddata.user='${steps.env.OWASPDB_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_PASSWORD}' dependencyCheckAnalyze")
+        gradle("-DfailBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='com.microsoft.sqlserver.jdbc.SQLServerDriver' -Ddata.connection_string='jdbc:sqlserver://owaspdependencycheck.database.windows.net:1433;database=owaspdependencycheck;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;' -Ddata.user='${steps.env.OWASPDB_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_PASSWORD}' -Dautoupdate='false' dependencyCheckAnalyze")
       }
       finally {
         steps.archiveArtifacts 'build/reports/dependency-check-report.html'
