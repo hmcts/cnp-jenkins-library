@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
@@ -81,13 +82,14 @@ def call(type, String product, String component, Closure body) {
 
         onMaster {
 
-          sectionPromoteBuildToAAT(
+          sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
             product: product,
-            component: component
+            component: component,
+            stage: DockerImage.DeploymentStage.AAT
           )
 
           sectionDeployToEnvironment(
@@ -118,6 +120,16 @@ def call(type, String product, String component, Closure body) {
             environment: environment.prodName,
             product: product,
             component: component)
+
+          sectionPromoteBuildToStage(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component,
+            stage: DockerImage.DeploymentStage.PROD
+          )
         }
 
         onAutoDeployBranch { subscriptionName, environmentName ->
