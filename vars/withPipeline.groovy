@@ -66,6 +66,7 @@ def call(type, String product, String component, Closure body) {
           pipelineCallbacksRunner: callbacksRunner,
           builder: pipelineType.builder,
           subscription: subscription.nonProdName,
+          environment: environment.nonProdName,
           product: product,
           component: component
         )
@@ -89,7 +90,8 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.nonProdName,
             product: product,
             component: component,
-            stage: DockerImage.DeploymentStage.AAT
+            stage: DockerImage.DeploymentStage.AAT,
+            environment: environment.nonProdName
           )
 
           sectionDeployToEnvironment(
@@ -128,7 +130,8 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.nonProdName,
             product: product,
             component: component,
-            stage: DockerImage.DeploymentStage.PROD
+            stage: DockerImage.DeploymentStage.PROD,
+            environment: environment.nonProdName
           )
         }
 
