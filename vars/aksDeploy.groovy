@@ -7,7 +7,7 @@ import uk.gov.hmcts.contino.Consul
 def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
-  def environment = params.environment
+  def environment = params.parentEnvionment
 
   def kubeResourcesDir
   def kubeResourcesDirDefault = "src/kubernetes"

@@ -76,7 +76,8 @@ def call(type, String product, String component, Closure body) {
           pipelineCallbacksRunner: callbacksRunner,
           pipelineType: pipelineType,
           subscription: subscription.nonProdName,
-          environment: environment.nonProdName,
+          environment: environment.previewName,
+          parentEnvironment: environment.nonProdName,
           product: product,
           component: component
         )

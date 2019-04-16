@@ -27,11 +27,13 @@ def call(params) {
   def product = params.product
   def component = params.component
   def aksUrl
+  def environment = params.environment;
+  def parentEnvionment = params.parentEnvironment; //Used for secrets which are maintained only in parent environments.
 
   Builder builder = pipelineType.builder
 
   if (config.dockerBuild) {
-    withAksClient(subscription,params.environment) {
+    withAksClient(subscription,environment) {
       def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
@@ -39,7 +41,7 @@ def call(params) {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
 
         if (config.deployToAKS) {
-          withTeamSecrets(config, params.environment) {
+          withTeamSecrets(config, parentEnvionment) {
             stage('Deploy to AKS') {
               pcr.callAround('aksdeploy') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
@@ -54,7 +56,7 @@ def call(params) {
             }
           }
         } else if (config.installCharts) {
-          withTeamSecrets(config, params.environment) {
+          withTeamSecrets(config, parentEnvionment) {
             stage('Install Charts to AKS') {
               pcr.callAround('akschartsinstall') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
@@ -75,7 +77,7 @@ def call(params) {
     onPR {
       if (config.deployToAKS || config.installCharts) {
         withSubscription(subscription) {
-          withTeamSecrets(config, params.environment) {
+          withTeamSecrets(config, parentEnvionment) {
             stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
                 pcr.callAround("smoketest:aks") {
@@ -85,8 +87,6 @@ def call(params) {
                 }
               }
             }
-
-            def environment = subscription == 'nonprod' ? 'preview' : 'saat'
 
             onFunctionalTestEnvironment(environment) {
               stage("Functional Test - AKS") {
