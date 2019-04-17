@@ -41,7 +41,7 @@ def call(params) {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
 
         if (config.deployToAKS) {
-          withTeamSecrets(config, parentEnvionment) {
+          withTeamSecrets(config, parentEnvironment) {
             stage('Deploy to AKS') {
               pcr.callAround('aksdeploy') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
@@ -56,7 +56,7 @@ def call(params) {
             }
           }
         } else if (config.installCharts) {
-          withTeamSecrets(config, parentEnvionment) {
+          withTeamSecrets(config, parentEnvironment) {
             stage('Install Charts to AKS') {
               pcr.callAround('akschartsinstall') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
