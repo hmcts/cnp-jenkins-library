@@ -28,7 +28,7 @@ def call(params) {
   def component = params.component
   def aksUrl
   def environment = params.environment;
-  def parentEnvionment = params.parentEnvironment; //Used for secrets which are maintained only in parent environments.
+  def parentEnvironment = params.parentEnvironment; // Used for secrets which are maintained only in parent environments.
 
   Builder builder = pipelineType.builder
 
