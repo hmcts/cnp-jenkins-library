@@ -77,7 +77,7 @@ def call(params) {
     onPR {
       if (config.deployToAKS || config.installCharts) {
         withSubscription(subscription) {
-          withTeamSecrets(config, parentEnvionment) {
+          withTeamSecrets(config, parentEnvironment) {
             stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
                 pcr.callAround("smoketest:aks") {
