@@ -28,7 +28,6 @@ def call(params) {
   def component = params.component
   def aksUrl
   def environment = params.environment;
-  def parentEnvironment = params.parentEnvironment; // Used for secrets which are maintained only in parent environments.
 
   Builder builder = pipelineType.builder
 
@@ -41,7 +40,7 @@ def call(params) {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
 
         if (config.deployToAKS) {
-          withTeamSecrets(config, parentEnvironment) {
+          withTeamSecrets(config, environment) {
             stage('Deploy to AKS') {
               pcr.callAround('aksdeploy') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
@@ -56,7 +55,7 @@ def call(params) {
             }
           }
         } else if (config.installCharts) {
-          withTeamSecrets(config, parentEnvironment) {
+          withTeamSecrets(config, environment) {
             stage('Install Charts to AKS') {
               pcr.callAround('akschartsinstall') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
@@ -77,7 +76,7 @@ def call(params) {
     onPR {
       if (config.deployToAKS || config.installCharts) {
         withSubscription(subscription) {
-          withTeamSecrets(config, parentEnvironment) {
+          withTeamSecrets(config, environment) {
             stage("Smoke Test - AKS") {
               testEnv(aksUrl) {
                 pcr.callAround("smoketest:aks") {

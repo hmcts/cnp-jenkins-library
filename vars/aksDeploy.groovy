@@ -3,11 +3,15 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.Consul
+import uk.gov.hmcts.contino.Environment
 
 def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
-  def environment = params.parentEnvironment
+  def environment = params.environment
+  onPR {
+    environment = new Environment(env).nonProdName;
+  }
 
   def kubeResourcesDir
   def kubeResourcesDirDefault = "src/kubernetes"
