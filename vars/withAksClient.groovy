@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.Environment
 
 def withRegistrySecrets(Closure block) {
   def registrySecrets = [
