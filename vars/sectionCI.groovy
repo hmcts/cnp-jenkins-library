@@ -27,7 +27,7 @@ def call(params) {
   def product = params.product
   def component = params.component
   def aksUrl
-  def environment = params.environment;
+  def environment = params.environment
 
   Builder builder = pipelineType.builder
 
