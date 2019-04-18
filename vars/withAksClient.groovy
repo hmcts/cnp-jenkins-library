@@ -3,8 +3,6 @@ def withRegistrySecrets(Closure block) {
   def registrySecrets = [
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-name', version: '', envVariable: 'REGISTRY_NAME'],
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'registry-resource-group', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-resource-group', version: '', envVariable: 'AKS_RESOURCE_GROUP'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'aks-cluster-name', version: '', envVariable: 'AKS_CLUSTER_NAME'],
   ]
 
   wrap([$class                   : 'AzureKeyVaultBuildWrapper',
@@ -18,10 +16,13 @@ def withRegistrySecrets(Closure block) {
 }
 
 
-def call(String subscription, Closure block) {
+def call(String subscription, String environment, Closure block) {
   withDocker('hmcts/cnp-aks-client:az-2.0.50-kubectl-1.12.2-helm-2.11', null) {
     withSubscription(subscription) {
       withRegistrySecrets {
+        def envName = environment.toUpperCase()
+        env.AKS_CLUSTER_NAME = env."${envName}_AKS_CLUSTER_NAME" ?: "cnp-${environment}-cluster"
+        env.AKS_RESOURCE_GROUP = env."${envName}_AKS_RESOURCE_GROUP" ?: "cnp-${environment}-rg"
         block.call()
       }
     }

@@ -12,7 +12,8 @@ def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
-  def aksEnvironment = params.environment
+  def templateOverrideEnvironment = params.environment
+  def helmOptionEnvironment = params.environment
   def product = params.product
   def component = params.component
 
@@ -56,11 +57,11 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
-    if (fileExists(defaultValues)) {
+    if (! fileExists(defaultValues)) {
+
       onPR {
-        aksEnvironment = new Environment(env).previewName
+        templateOverrideEnvironment = new Environment(env).nonProdName
       }
-    } else {
       echo '''
 ================================================================================
 
@@ -85,8 +86,8 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
     values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${templateOverrideEnvironment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${templateOverrideEnvironment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
       values << valuesEnv
@@ -98,10 +99,14 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
+    onPR {
+      helmOptionEnvironment = new Environment(env).nonProdName
+    }
+
     def options = [
       "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
-      "--set global.environment=${environment} ",
+      "--set global.environment=${helmOptionEnvironment} ",
       "--namespace ${namespace}"
     ]
 

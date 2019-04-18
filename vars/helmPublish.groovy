@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.Kubectl
 
 def call(Map params) {
-  withAksClient(params.subscriptionName) {
+  withAksClient(params.subscriptionName, params.environmentName) {
     Kubectl kubectl = new Kubectl(this, params.subscriptionName, null)
     kubectl.login()
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")

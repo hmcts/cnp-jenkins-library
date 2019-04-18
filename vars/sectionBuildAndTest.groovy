@@ -28,7 +28,7 @@ def call(params) {
         env.GIT_COMMIT = scmVars.GIT_COMMIT
       }
       if (config.dockerBuild) {
-        withAksClient(subscription) {
+        withAksClient(subscription, params.environment) {
           projectBranch = new ProjectBranch(env.BRANCH_NAME)
           acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
           dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
@@ -87,7 +87,7 @@ def call(params) {
 
         "Docker Build": {
           if (config.dockerBuild) {
-            withAksClient(subscription) {
+            withAksClient(subscription, params.environment) {
 
               def acbTemplateFilePath = 'acb.tpl.yaml'
 
