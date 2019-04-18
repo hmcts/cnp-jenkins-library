@@ -10,7 +10,7 @@ def call(DockerImage dockerImage, Map params) {
   def subscription = params.subscription
   def environment = params.environment
   onPR {
-    environment = new Environment(env).nonProdName;
+    environment = new Environment(env).nonProdName
   }
 
   def kubeResourcesDir
