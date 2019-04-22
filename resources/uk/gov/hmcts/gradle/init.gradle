@@ -15,7 +15,7 @@ allprojects {
       mavenCentral()
     }
     dependencies {
-      classpath  group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
+      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
     }
   }
 
