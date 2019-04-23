@@ -6,8 +6,6 @@ class Gatling implements Serializable {
   public static final String GATLING_REPORTS_DIR   = '$WORKSPACE/' + GATLING_REPORTS_PATH
   public static final String GATLING_BINARIES_DIR  = '$WORKSPACE/build/gatling/binaries'
   public static final String GATLING_SIMS_DIR      = '$WORKSPACE/src/gatling/simulations'
-  public static final String GATLING_DATA_DIR      = '$WORKSPACE/src/gatling/data'
-  public static final String GATLING_BODIES_DIR    = '$WORKSPACE/src/gatling/bodies'
   public static final String GATLING_CONF_DIR      = '$WORKSPACE/src/gatling/conf'
   public static final String GATLING_JAVA_8_IMAGE  = 'hmcts/gatling:3.1.1-java-8-1.0'
   public static final String GATLING_JAVA_11_IMAGE  = 'hmcts/gatling:3.1.1-java-11-1.0'
