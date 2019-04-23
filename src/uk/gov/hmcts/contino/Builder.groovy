@@ -14,4 +14,13 @@ interface Builder {
   def mutationTest()
   def fullFunctionalTest()
   def securityScan()
+
+  /**
+   * Setup any required versions of a tool
+   * This is run before any code is built
+   *
+   * i.e. detect java version for java, or use a tool like nvm to setup the nodejs version
+   * @return
+   */
+  def setupToolVersion()
 }

@@ -22,6 +22,10 @@ allprojects {
   task printVersionInit {
     doLast { println project.version }
   }
+
+  task javaVersion {
+    doLast { println project.sourceCompatibility }
+  }
 }
 
 settingsEvaluated { settings ->

@@ -32,7 +32,7 @@ def call(params) {
           projectBranch = new ProjectBranch(env.BRANCH_NAME)
           acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
           dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
-          noSkipImgBuild = !acr.hasTag(dockerImage) && !env.NO_SKIP_IMG_BUILD?.trim()
+          noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
         }
       }
     }
@@ -40,6 +40,8 @@ def call(params) {
 
 
   stage("Build") {
+    builder.setupToolVersion()
+
     // always build master and demo as we currently do not deploy an image there
       boolean envSub = autoDeployEnvironment() != null
       when(noSkipImgBuild || projectBranch.isMaster() || envSub) {

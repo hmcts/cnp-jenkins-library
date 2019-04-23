@@ -93,5 +93,10 @@ class AbstractBuilderTest extends Specification {
     def fullFunctionalTest() {
       return null
     }
+
+    @Override
+    def setupToolVersion() {
+      return null
+    }
   }
 }
