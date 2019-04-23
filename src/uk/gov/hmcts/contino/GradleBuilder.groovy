@@ -138,6 +138,9 @@ EOF
     if (javaVersion == java11) {
       steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      steps.env.JAVA_MAJOR_VERSION = "11"
+    } else {
+      steps.env.JAVA_MAJOR_VERSION = "8"
     }
     steps.sh "java -version"
   }
