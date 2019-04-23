@@ -26,9 +26,12 @@ class Gatling implements Serializable {
 
   def execute() {
     def gatlingImage = steps.env?.JAVA_MAJOR_VERSION == "11" ? GATLING_JAVA_11_IMAGE : GATLING_JAVA_8_IMAGE
-    
+
     this.steps.withDocker(gatlingImage, GATLING_RUN_ARGS) {
-      this.steps.sh "gatling.sh -m -sf ${GATLING_SIMS_DIR} -df ${GATLING_DATA_DIR} -bdf ${GATLING_BODIES_DIR} -bf ${GATLING_BINARIES_DIR} -rf ${GATLING_REPORTS_DIR}"
+      this.steps.sh """
+        export JAVA_HOME=''
+        gatling.sh -m -sf ${GATLING_SIMS_DIR} -df ${GATLING_DATA_DIR} -bdf ${GATLING_BODIES_DIR} -bf ${GATLING_BINARIES_DIR} -rf ${GATLING_REPORTS_DIR}
+      """
     }
 
     // jenkins gatling plugin
