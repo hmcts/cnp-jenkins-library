@@ -18,6 +18,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
   void PipelineExecutesExpectedStepsInExpectedOrder() {
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
+      setupToolVersion(1) {}
       build(1) {}
       test(1) {}
       securityCheck(1) {}
@@ -57,6 +58,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
+      setupToolVersion(1) {}
       build(0) {}
       test(0) {}
       securityCheck(0) {}

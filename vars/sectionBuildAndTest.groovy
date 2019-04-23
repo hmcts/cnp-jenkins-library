@@ -40,6 +40,8 @@ def call(params) {
 
 
   stage("Build") {
+    builder.setupToolVersion()
+
     // always build master and demo as we currently do not deploy an image there
       boolean envSub = autoDeployEnvironment() != null
       when(noSkipImgBuild || projectBranch.isMaster() || envSub) {

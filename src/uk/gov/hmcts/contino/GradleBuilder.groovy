@@ -4,6 +4,8 @@ class GradleBuilder extends AbstractBuilder {
 
   def product
 
+  def java11 = "11"
+
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
@@ -107,10 +109,16 @@ EOF
     steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
+  private String gradleWithOutput(String task) {
+    addInitScript()
+    steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+  }
+
   def fullFunctionalTest() {
 
   }
-    def dbMigrate(String vaultName, String microserviceName) {
+
+  def dbMigrate(String vaultName, String microserviceName) {
     def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
 
     def dbName = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-DATABASE' --query value -o tsv"
@@ -120,6 +128,18 @@ EOF
     def dbUser = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv"
 
     gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}?ssl=true&sslmode=require' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
+  }
+
+  @Override
+  def setupToolVersion() {
+    gradle("--version") // ensure wrapper has been downloaded
+    def javaVersion = gradleWithOutput("-q :javaVersion")
+    steps.echo "Found java version: ${javaVersion}"
+    if (javaVersion == java11) {
+      steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+    steps.sh "java -version"
   }
 
 }

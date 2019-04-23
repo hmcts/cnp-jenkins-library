@@ -47,6 +47,7 @@ class withNodeJsPipelineOnBranchTests extends BasePipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(YarnBuilder)
+    stubBuilder.demand.setupToolVersion() {}
     stubBuilder.demand.build() {}
     stubBuilder.demand.test() {}
     stubBuilder.demand.securityCheck() {}

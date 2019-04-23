@@ -69,4 +69,9 @@ class AngularBuilder extends AbstractBuilder {
   def fullFunctionalTest(){
     builder.fullFunctionalTest()
   }
+
+  @Override
+  def setupToolVersion() {
+    builder.setupToolVersion()
+  }
 }

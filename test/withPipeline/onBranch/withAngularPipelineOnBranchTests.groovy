@@ -47,6 +47,7 @@ class withAngularPipelineOnBranchTests extends BasePipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(AngularBuilder)
+    stubBuilder.demand.setupToolVersion() {}
     stubBuilder.demand.build() {}
     stubBuilder.demand.test() {}
     stubBuilder.demand.securityCheck() {}

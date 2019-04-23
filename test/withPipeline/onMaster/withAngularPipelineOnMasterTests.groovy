@@ -20,6 +20,7 @@ class withAngularPipelineOnMasterTests extends BaseCnpPipelineTest {
   void PipelineExecutesExpectedStepsInExpectedOrder() {
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
+      setupToolVersion(1) {}
       build(1) {}
       test(1) {}
       securityCheck(1) {}
