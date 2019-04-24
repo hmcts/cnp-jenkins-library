@@ -9,6 +9,7 @@ class DockerImage {
   // environment the image has been promoted to
   enum DeploymentStage {
     PR('pr'),
+    STAGING('staging'),
     PROD('prod'),
     LATEST('latest')
 

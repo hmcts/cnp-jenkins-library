@@ -35,6 +35,7 @@ class TeamNames {
                       'rhubarb':'CNP',
                       'rhubarb-shared-infrastructure' : 'CNP',
                       'plum':'CNP',
+                      'crumble':'CNP',
                       'plum-shared-infrastructure' : 'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
