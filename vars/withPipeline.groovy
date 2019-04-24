@@ -71,7 +71,7 @@ def call(type, String product, String component, Closure body) {
           component: component
         )
 
-        onPR{
+        onPR {
 
           sectionCI(
             appPipelineConfig: pipelineConfig,
