@@ -64,7 +64,7 @@ def call(params) {
     }
   }
 
-  if(config.legacyDeployment || !(new Environment(env).nonProdName == environment)) {
+  if (config.legacyDeployment || !(new Environment(env).nonProdName == environment)) {
     // merge env and deployment target tf output using some groovy magic
     def mergedTfOutput
     if (tfOutput) {
