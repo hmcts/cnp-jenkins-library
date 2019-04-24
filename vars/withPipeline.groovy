@@ -95,7 +95,7 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component)
 
-          if (pipelineConfig.installChartsToNonProd) {
+          if (pipelineConfig.aksStagingDeployment) {
             sectionCI(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
