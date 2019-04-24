@@ -35,11 +35,11 @@ def call(params) {
     withAksClient(subscription, environment) {
       def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
-
+      onPR {
+        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+      }
       if (config.deployToAKS) {
-        onPR {
-          acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
-        }
+
         withTeamSecrets(config, environment) {
           stage('Deploy to AKS') {
             pcr.callAround('aksdeploy') {
