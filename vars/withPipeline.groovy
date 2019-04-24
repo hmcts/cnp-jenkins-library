@@ -71,17 +71,7 @@ def call(type, String product, String component, Closure body) {
           component: component
         )
 
-        sectionCI(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          environment: environment.previewName,
-          product: product,
-          component: component
-        )
-
-        onMaster {
+        onPR{
 
           sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
@@ -90,9 +80,22 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.nonProdName,
             product: product,
             component: component,
-            stage: DockerImage.DeploymentStage.AAT,
+            stage: DockerImage.DeploymentStage.PR,
             environment: environment.nonProdName
           )
+
+          sectionCI(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.previewName,
+            product: product,
+            component: component
+          )
+        }
+
+        onMaster {
 
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
@@ -102,6 +105,18 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component)
+
+          if (pipelineConfig.installChartsToNonProd) {
+            sectionCI(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
 
           if (pipelineConfig.installCharts) {
             stage('Publish Helm chart') {

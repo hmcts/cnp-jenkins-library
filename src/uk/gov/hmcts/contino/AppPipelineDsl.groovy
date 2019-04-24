@@ -79,4 +79,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.vaultEnvironmentOverrides = vaultOverrides
   }
 
+  void installChartsToNonProd() {
+    config.installChartsToNonProd = true
+  }
+
 }

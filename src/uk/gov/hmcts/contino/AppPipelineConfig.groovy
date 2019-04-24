@@ -15,6 +15,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean installCharts = false
   boolean fullFunctionalTest = false
   boolean securityScan = false
+  boolean installChartsToNonProd =false
 
   boolean legacyDeployment = true
 

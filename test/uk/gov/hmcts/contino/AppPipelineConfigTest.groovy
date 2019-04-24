@@ -135,4 +135,11 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.legacyDeployment).isFalse()
   }
 
+  def "ensure enable deploy to AAT AKS"() {
+    when:
+    dsl.installChartsToNonProd()
+    then:
+    assertThat(pipelineConfig.installChartsToNonProd).isTrue()
+  }
+
 }

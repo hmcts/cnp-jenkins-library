@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.Deployer
+import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.PipelineType
 
 def testEnv(String testUrl, tfOutput, block) {
@@ -63,136 +64,137 @@ def call(params) {
     }
   }
 
-  // merge env and deployment target tf output using some groovy magic
-  def mergedTfOutput
-  if (tfOutput) {
-    envTfOutput.properties.each {
-      tfOutput.metaClass[it.key] = it.value
+  if(config.legacyDeployment || !(new Environment(env).nonProdName == environment)) {
+    // merge env and deployment target tf output using some groovy magic
+    def mergedTfOutput
+    if (tfOutput) {
+      envTfOutput.properties.each {
+        tfOutput.metaClass[it.key] = it.value
+      }
+      mergedTfOutput = tfOutput
+    } else {
+      mergedTfOutput = envTfOutput
     }
-    mergedTfOutput = tfOutput
-  } else {
-    mergedTfOutput = envTfOutput
-  }
 
+    stage("Deploy - ${environmentDt} (staging slot)") {
+      withSubscription(subscription) {
+        pcr.callAround("deploy:${environmentDt}") {
+          timeoutWithMsg(time: 30, unit: 'MINUTES', action: "Deploy - ${environmentDt} (staging slot)") {
+            deployer.deploy(environmentDt)
+            deployer.healthCheck(environmentDt, "staging")
 
-  stage("Deploy - ${environmentDt} (staging slot)") {
+            onPreview {
+              githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environmentDt, "staging"))
+            }
+          }
+        }
+      }
+    }
+
     withSubscription(subscription) {
-      pcr.callAround("deploy:${environmentDt}") {
-        timeoutWithMsg(time: 30, unit: 'MINUTES', action: "Deploy - ${environmentDt} (staging slot)") {
-          deployer.deploy(environmentDt)
-          deployer.healthCheck(environmentDt, "staging")
-
-          onPreview {
-            githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environmentDt, "staging"))
-          }
-        }
-      }
-    }
-  }
-
-  withSubscription(subscription) {
-    withTeamSecrets(config, environment, mergedTfOutput?.vaultUri?.value) {
-      stage("Smoke Test - ${environmentDt} (staging slot)") {
-        testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-          pcr.callAround("smoketest:${environmentDt}-staging") {
-            timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'smoke test') {
-              builder.smokeTest()
-            }
-          }
-        }
-      }
-
-      onFunctionalTestEnvironment(environment) {
-        stage("Functional Test - ${environmentDt} (staging slot)") {
+      withTeamSecrets(config, environment, mergedTfOutput?.vaultUri?.value) {
+        stage("Smoke Test - ${environmentDt} (staging slot)") {
           testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-            pcr.callAround("functionalTest:${environmentDt}") {
-              timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
-                builder.functionalTest()
+            pcr.callAround("smoketest:${environmentDt}-staging") {
+              timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'smoke test') {
+                builder.smokeTest()
               }
             }
           }
         }
-        if (config.performanceTest) {
-          stage("Performance Test - ${environmentDt} (staging slot)") {
+
+        onFunctionalTestEnvironment(environment) {
+          stage("Functional Test - ${environmentDt} (staging slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pcr.callAround("performanceTest:${environmentDt}") {
-                timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environmentDt} (staging slot)") {
-                  builder.performanceTest()
-                  publishPerformanceReports(this, params)
+              pcr.callAround("functionalTest:${environmentDt}") {
+                timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
+                  builder.functionalTest()
+                }
+              }
+            }
+          }
+          if (config.performanceTest) {
+            stage("Performance Test - ${environmentDt} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
+                pcr.callAround("performanceTest:${environmentDt}") {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environmentDt} (staging slot)") {
+                    builder.performanceTest()
+                    publishPerformanceReports(this, params)
+                  }
+                }
+              }
+            }
+          }
+          if (config.crossBrowserTest) {
+            stage("CrossBrowser Test - ${environmentDt} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
+                pcr.callAround("crossBrowserTest:${environmentDt}") {
+                  builder.crossBrowserTest()
+                }
+              }
+            }
+          }
+          if (config.mutationTest) {
+            stage("Mutation Test - ${environmentDt} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
+                pcr.callAround("mutationTest:${environmentDt}") {
+                  builder.mutationTest()
+                }
+              }
+            }
+          }
+          if (config.fullFunctionalTest) {
+            stage("FullFunctional Test - ${environmentDt} (staging slot)") {
+              testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
+                pcr.callAround("crossBrowserTest:${environmentDt}") {
+                  builder.fullFunctionalTest()
+                }
+              }
+            }
+          }
+
+        }
+
+        stage("Promote - ${environmentDt} (staging -> production slot)") {
+          withSubscription(subscription) {
+            pcr.callAround("promote:${environmentDt}") {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: "Promote - ${environmentDt} (staging -> production slot)") {
+                sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environmentDt}\" --resource-group \"${product}-${component}-${environmentDt}\" --slot staging --target-slot production"
+                deployer.healthCheck(environmentDt, "production")
+
+                onPreview {
+                  githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environmentDt, "production"))
                 }
               }
             }
           }
         }
-        if (config.crossBrowserTest) {
-          stage("CrossBrowser Test - ${environmentDt} (staging slot)") {
-            testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pcr.callAround("crossBrowserTest:${environmentDt}") {
-                builder.crossBrowserTest()
-              }
-            }
-          }
-        }
-        if (config.mutationTest) {
-          stage("Mutation Test - ${environmentDt} (staging slot)") {
-            testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pcr.callAround("mutationTest:${environmentDt}") {
-                builder.mutationTest()
-              }
-            }
-          }
-        }
-        if (config.fullFunctionalTest) {
-          stage("FullFunctional Test - ${environmentDt} (staging slot)") {
-            testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
-              pcr.callAround("crossBrowserTest:${environmentDt}") {
-                builder.fullFunctionalTest()
+
+        stage("Smoke Test - ${environmentDt} (production slot)") {
+          testEnv(deployer.getServiceUrl(environmentDt, "production"), mergedTfOutput) {
+            pcr.callAround("smoketest:${environmentDt}") {
+              timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke test (prod slot)') {
+                builder.smokeTest()
               }
             }
           }
         }
 
-      }
-
-      stage("Promote - ${environmentDt} (staging -> production slot)") {
-        withSubscription(subscription) {
-          pcr.callAround("promote:${environmentDt}") {
-            timeoutWithMsg(time: 15, unit: 'MINUTES', action: "Promote - ${environmentDt} (staging -> production slot)") {
-              sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${subscription} az webapp deployment slot swap --name \"${product}-${component}-${environmentDt}\" --resource-group \"${product}-${component}-${environmentDt}\" --slot staging --target-slot production"
-              deployer.healthCheck(environmentDt, "production")
-
-              onPreview {
-                githubUpdateDeploymentStatus(deploymentNumber, deployer.getServiceUrl(environmentDt, "production"))
-              }
-            }
-          }
-        }
-      }
-
-      stage("Smoke Test - ${environmentDt} (production slot)") {
-        testEnv(deployer.getServiceUrl(environmentDt, "production"), mergedTfOutput) {
-          pcr.callAround("smoketest:${environmentDt}") {
-            timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke test (prod slot)') {
-              builder.smokeTest()
-            }
-          }
-        }
-      }
-
-      onNonPR() {
-        if (config.apiGatewayTest) {
-          stage("API Gateway Test - ${environmentDt} (production slot)") {
-            testEnv(deployer.getServiceUrl(environmentDt, "production"), mergedTfOutput) {
-              pcr.callAround("apiGatewayTest:${environmentDt}") {
-                timeoutWithMsg(time: config.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environmentDt} (production slot)") {
-                  builder.apiGatewayTest()
+        onNonPR() {
+          if (config.apiGatewayTest) {
+            stage("API Gateway Test - ${environmentDt} (production slot)") {
+              testEnv(deployer.getServiceUrl(environmentDt, "production"), mergedTfOutput) {
+                pcr.callAround("apiGatewayTest:${environmentDt}") {
+                  timeoutWithMsg(time: config.apiGatewayTestTimeout, unit: 'MINUTES', action: "API Gateway Test - ${environmentDt} (production slot)") {
+                    builder.apiGatewayTest()
+                  }
                 }
               }
             }
           }
         }
       }
+      milestone()
     }
-    milestone()
   }
 }

@@ -36,36 +36,32 @@ def call(params) {
       def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
-      onPR {
-        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+      if (config.deployToAKS) {
+        withTeamSecrets(config, environment) {
+          stage('Deploy to AKS') {
+            pcr.callAround('aksdeploy') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
+                deploymentNumber = githubCreateDeployment()
 
-        if (config.deployToAKS) {
-          withTeamSecrets(config, environment) {
-            stage('Deploy to AKS') {
-              pcr.callAround('aksdeploy') {
-                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
-                  deploymentNumber = githubCreateDeployment()
+                aksUrl = aksDeploy(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
 
-                  aksUrl = aksDeploy(dockerImage, params)
-                  log.info("deployed component URL: ${aksUrl}")
-
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-                }
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
               }
             }
           }
-        } else if (config.installCharts) {
-          withTeamSecrets(config, environment) {
-            stage('Install Charts to AKS') {
-              pcr.callAround('akschartsinstall') {
-                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
-                  deploymentNumber = githubCreateDeployment()
+        }
+      } else if (config.installCharts) {
+        withTeamSecrets(config, environment) {
+          stage('Install Charts to AKS') {
+            pcr.callAround('akschartsinstall') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
+                deploymentNumber = githubCreateDeployment()
 
-                  aksUrl = helmInstall(dockerImage, params)
-                  log.info("deployed component URL: ${aksUrl}")
+                aksUrl = helmInstall(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
 
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-                }
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
               }
             }
           }
@@ -73,39 +69,66 @@ def call(params) {
       }
     }
 
-    onPR {
-      if (config.deployToAKS || config.installCharts) {
-        withSubscription(subscription) {
-          withTeamSecrets(config, environment) {
-            stage("Smoke Test - AKS") {
-              testEnv(aksUrl) {
-                pcr.callAround("smoketest:aks") {
-                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                    builder.smokeTest()
-                  }
+    if (config.deployToAKS || config.installCharts) {
+      withSubscription(subscription) {
+        withTeamSecrets(config, environment) {
+          stage("Smoke Test - AKS") {
+            testEnv(aksUrl) {
+              pcr.callAround("smoketest:aks") {
+                timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  builder.smokeTest()
                 }
               }
             }
+          }
 
-            onFunctionalTestEnvironment(environment) {
-              stage("Functional Test - AKS") {
-                testEnv(aksUrl) {
-                  pcr.callAround("functionalTest:${environment}") {
-                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                      builder.functionalTest()
-                    }
+          onFunctionalTestEnvironment(environment) {
+            stage("Functional Test - AKS") {
+              testEnv(aksUrl) {
+                pcr.callAround("functionalTest:${environment}") {
+                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                    builder.functionalTest()
                   }
                 }
               }
             }
-            if (config.performanceTest) {
-              stage("Performance Test - ${environment}") {
+          }
+          if (config.performanceTest) {
+            stage("Performance Test - ${environment}") {
+              testEnv(aksUrl) {
+                pcr.callAround("performanceTest:${environment}") {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
+                    builder.performanceTest()
+                    publishPerformanceReports(this, params)
+                  }
+                }
+              }
+            }
+          }
+          onMaster {
+            if (config.crossBrowserTest) {
+              stage("CrossBrowser Test - ${environment} (staging slot)") {
                 testEnv(aksUrl) {
-                  pcr.callAround("performanceTest:${environment}") {
-                    timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
-                      builder.performanceTest()
-                      publishPerformanceReports(this, params)
-                    }
+                  pcr.callAround("crossBrowserTest:${environment}") {
+                    builder.crossBrowserTest()
+                  }
+                }
+              }
+            }
+            if (config.mutationTest) {
+              stage("Mutation Test - ${environment} (staging slot)") {
+                testEnv(aksUrl) {
+                  pcr.callAround("mutationTest:${environment}") {
+                    builder.mutationTest()
+                  }
+                }
+              }
+            }
+            if (config.fullFunctionalTest) {
+              stage("FullFunctional Test - ${environment} (staging slot)") {
+                testEnv(aksUrl) {
+                  pcr.callAround("crossBrowserTest:${environment}") {
+                    builder.fullFunctionalTest()
                   }
                 }
               }
