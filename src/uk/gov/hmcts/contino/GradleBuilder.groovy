@@ -141,7 +141,7 @@ EOF
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
       }
     } catch(err) {
-      echo "Failed to detect java version, ensure the root project has sourceCompatibility set" 
+      steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set" 
     }
     steps.sh "java -version"
     

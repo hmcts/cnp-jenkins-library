@@ -43,7 +43,8 @@ class TeamNames {
                       'snl':'SnL',
                       'am':'AM',
                       'fpl': 'Family Public Law',
-                      'ctsc': 'CTSC'
+                      'ctsc': 'CTSC',
+                      'rd': 'Reference Data'
   ]
 
   def getName (String product) {
