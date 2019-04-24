@@ -27,6 +27,9 @@ class Gatling implements Serializable {
 
     this.steps.withDocker(gatlingImage, GATLING_RUN_ARGS) {
       this.steps.sh """
+        echo ${GATLING_SIMS_DIR}
+        ls -la ${GATLING_SIMS_DIR}
+
         export JAVA_HOME=''
         gatling.sh --simulations-folder ${GATLING_SIMS_DIR} \
            --binaries-folder ${GATLING_BINARIES_DIR} \
