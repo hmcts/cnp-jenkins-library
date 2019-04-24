@@ -133,16 +133,18 @@ EOF
   @Override
   def setupToolVersion() {
     gradle("--version") // ensure wrapper has been downloaded
-    def javaVersion = gradleWithOutput("-q :javaVersion")
-    steps.echo "Found java version: ${javaVersion}"
-    if (javaVersion == java11) {
-      steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
-      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-      steps.env.JAVA_MAJOR_VERSION = "11"
-    } else {
-      steps.env.JAVA_MAJOR_VERSION = "8"
+    try {
+      def javaVersion = gradleWithOutput("-q :javaVersion")
+      steps.echo "Found java version: ${javaVersion}"
+      if (javaVersion == java11) {
+        steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
+        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      }
+    } catch(err) {
+      steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set" 
     }
     steps.sh "java -version"
+    
   }
 
 }
