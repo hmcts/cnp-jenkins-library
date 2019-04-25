@@ -44,12 +44,16 @@ def call(params) {
           stage('Deploy to AKS') {
             pcr.callAround('aksdeploy') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
-                deploymentNumber = githubCreateDeployment()
+                onPR {
+                  deploymentNumber = githubCreateDeployment()
+                }
 
                 aksUrl = aksDeploy(dockerImage, params)
                 log.info("deployed component URL: ${aksUrl}")
 
-                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                onPR {
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
               }
             }
           }
@@ -59,12 +63,16 @@ def call(params) {
           stage('Install Charts to AKS') {
             pcr.callAround('akschartsinstall') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
-                deploymentNumber = githubCreateDeployment()
+                onPR {
+                  deploymentNumber = githubCreateDeployment()
+                }
 
                 aksUrl = helmInstall(dockerImage, params)
                 log.info("deployed component URL: ${aksUrl}")
 
-                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                onPR {
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
               }
             }
           }
