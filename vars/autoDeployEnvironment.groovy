@@ -10,6 +10,10 @@ def call() {
 
   // map of branch name to environment
   def autoDeployEnvironments = [
+    preview: [
+      environmentName: environment.previewName,
+      subscriptionName: subscription.nonProdName
+    ],
     demo: [
       environmentName: environment.demoName,
       subscriptionName: subscription.nonProdName

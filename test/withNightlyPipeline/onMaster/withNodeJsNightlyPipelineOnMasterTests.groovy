@@ -16,6 +16,7 @@ class withNodeJsNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
     def mockBuilder = new MockFor(YarnBuilder)
     mockBuilder.demand.with {
+      setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
       crossBrowserTest(1) {}
