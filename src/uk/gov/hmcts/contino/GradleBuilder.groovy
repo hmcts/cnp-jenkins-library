@@ -105,11 +105,11 @@ EOF
   }
 
   def runProviderVerification(pactBrokerUrl, version) {
-    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} runProviderPactVerification")
+    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} runAndPublishProviderPactVerification")
   }
 
   def runConsumerTests(pactBrokerUrl, version) {
-    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runConsumerPactTests")
+    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
   }
 
   def gradle(String task) {

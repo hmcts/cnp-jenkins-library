@@ -396,10 +396,10 @@ withInfraPipeline(product) {
 
 The following hooks will then be ran before the deployment:
 
-| Role     | Order | Yarn               | Gradle                        |
-| -------- | ----- | ------------------ | ----------------------------- |
-| Provider | 1     | `test:pact-verify` | `runProviderPactVerification` |
-| Consumer | 2     | `test:pact`        | `runConsumerPactTests`        |
+| Role     | Order | Yarn                           | Gradle                                  |
+| -------- | ----- | ------------------------------ | --------------------------------------- |
+| Provider | 1     | `test:pact:verify-and-publish` | `runAndPublishProviderPactVerification` |
+| Consumer | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`        |
 
 Notice that the Pact broker url is passed to these hooks as following:
 
@@ -408,7 +408,7 @@ Notice that the Pact broker url is passed to these hooks as following:
 
 It is expected that the scripts are responsible for figuring out what version (git revision, tag, branch) is currently tested.
 
-The `can-i-deploy` pact-broker command is run after if the project is tagged as `PROVIDER`.
+The `can-i-deploy` pact-broker command is run after if the project is tagged as `CONSUMER`.
 
 ## Contributing
 

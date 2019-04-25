@@ -106,7 +106,7 @@ EOF
    * @return
    */
   def runProviderVerification(pactBrokerUrl, version) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact-verify")
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish")
   }
 
   /**
@@ -116,7 +116,7 @@ EOF
    * @return
    */
   def runConsumerTests(pactBrokerUrl, version) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact")
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish")
   }
 
   private runYarn(task){

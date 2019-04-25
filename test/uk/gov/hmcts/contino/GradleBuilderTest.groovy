@@ -87,7 +87,7 @@ class GradleBuilderTest extends Specification {
       builder.runProviderVerification(PACT_BROKER_URL, version)
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
-                    it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.provider.version=${version} runProviderPactVerification")})
+                    it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.provider.version=${version} runAndPublishProviderPactVerification")})
   }
 
   def "runConsumerTests triggers a gradlew hook"() {
@@ -97,6 +97,6 @@ class GradleBuilderTest extends Specification {
       builder.runConsumerTests(PACT_BROKER_URL, version)
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
-                    it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.consumer.version=${version} runConsumerPactTests")})
+                    it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")})
   }
 }
