@@ -17,13 +17,11 @@ class Gatling implements Serializable {
   public static final String GATLING_RUN_ARGS     = '--network=host -v ' + GATLING_CONF_DIR + ':/etc/gatling/conf'
 
   def steps
-  def reportsPath
-  def reportsDir
 
   Gatling(steps) {
     this.steps = steps
-    this.reportsPath = DEFAULT_GATLING_REPORTS_PATH
-    this.reportsDir =  '$WORKSPACE/' + reportsPath
+    this.steps.env.GATLING_REPORTS_PATH = DEFAULT_GATLING_REPORTS_PATH
+    this.steps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + DEFAULT_GATLING_REPORTS_PATH
   }
 
   def execute() {
@@ -35,7 +33,7 @@ class Gatling implements Serializable {
         # nullpointer if no description passed with no stdin attached so pass empty string
         echo "" | gatling.sh --simulations-folder ${GATLING_SIMS_DIR} \
            --binaries-folder ${GATLING_BINARIES_DIR} \
-           --results-folder ${this.reportsDir} \
+           --results-folder ${steps.env.GATLING_REPORTS_DIR} \
            --resources-folder ${GATLING_RESOURCES_DIR}
       """
     }
