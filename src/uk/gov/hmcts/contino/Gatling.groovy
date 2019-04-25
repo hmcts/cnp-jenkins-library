@@ -2,8 +2,7 @@ package uk.gov.hmcts.contino
 
 class Gatling implements Serializable {
 
-  public static final String GATLING_REPORTS_PATH  = 'build/gatling/reports'
-  public static final String GATLING_REPORTS_DIR   = '$WORKSPACE/' + GATLING_REPORTS_PATH
+  public static final String DEFAULT_GATLING_REPORTS_PATH  = 'build/gatling/reports'
   public static final String GATLING_BINARIES_DIR  = '$WORKSPACE/build/gatling/binaries'
   public static final String GATLING_SIMS_DIR      = '$WORKSPACE/src/gatling/simulations'
   public static final String GATLING_RESOURCES_DIR = '$WORKSPACE/src/gatling/resources'
@@ -18,9 +17,13 @@ class Gatling implements Serializable {
   public static final String GATLING_RUN_ARGS     = '--network=host -v ' + GATLING_CONF_DIR + ':/etc/gatling/conf'
 
   def steps
+  def reportsPath
+  def reportsDir
 
   Gatling(steps) {
     this.steps = steps
+    this.reportsPath = DEFAULT_GATLING_REPORTS_PATH
+    this.reportsDir =  '$WORKSPACE/' + reportsPath
   }
 
   def execute() {
@@ -32,7 +35,7 @@ class Gatling implements Serializable {
         # nullpointer if no description passed with no stdin attached so pass empty string
         echo "" | gatling.sh --simulations-folder ${GATLING_SIMS_DIR} \
            --binaries-folder ${GATLING_BINARIES_DIR} \
-           --results-folder ${GATLING_REPORTS_DIR} \
+           --results-folder ${this.reportsDir} \
            --resources-folder ${GATLING_RESOURCES_DIR}
       """
     }

@@ -154,7 +154,10 @@ EOF
   @Override
   def performanceTest() {
     if (hasPlugin("gradle-gatling-plugin")) {
+      gatling.reportsPath = 'build/reports/gatling'
+      gatling.reportsDir =  '$WORKSPACE/' + gatling.reportsPath
       gradle("gatlingRun")
+      this.steps.gatlingArchive()
     } else {
       super.performanceTest()
     }
