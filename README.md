@@ -408,7 +408,7 @@ Notice that the Pact broker url is passed to these hooks as following:
 
 It is expected that the scripts are responsible for figuring out what version (git revision, tag, branch) is currently tested.
 
-In any case the `can-i-deploy` pact-broker command is run after these ones.
+The `can-i-deploy` pact-broker command is run after if the project is tagged as `PROVIDER`.
 
 ## Contributing
 

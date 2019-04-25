@@ -115,6 +115,10 @@ def call(params) {
     stage("Pact verification") {
       def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
 
+      /*
+       * These instructions have to be kept in that order
+       */
+
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-consumer-tests') {
           builder.runConsumerTests(pactBrokerUrl, version)
@@ -127,10 +131,12 @@ def call(params) {
         }
       }
 
-      pcr.callAround('pact-deployment-verification') {
-        def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
-        if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
-          pactBroker.canIDeploy(version)
+      if (config.pactConsumerTestsEnabled) {
+        pcr.callAround('pact-deployment-verification') {
+          def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
+          if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
+            pactBroker.canIDeploy(version)
+          }
         }
       }
     }
