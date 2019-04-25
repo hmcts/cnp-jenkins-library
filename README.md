@@ -396,23 +396,21 @@ withInfraPipeline(product) {
 
 The following hooks will then be ran before the deployment:
 
-| Role           | Order | Yarn               | Gradle                        |
-| -------------- | ----- | ------------------ | ----------------------------- |
-| Provider       | 1     | `test:pact-verify` | `runProviderPactVerification` |
-| Consumer       | 2     | `test:pact`        | `runConsumerPactTests`        |
+| Role     | Order | Yarn               | Gradle                        |
+| -------- | ----- | ------------------ | ----------------------------- |
+| Provider | 1     | `test:pact-verify` | `runProviderPactVerification` |
+| Consumer | 2     | `test:pact`        | `runConsumerPactTests`        |
 
 Notice that the Pact broker url is passed to these hooks as following:
 
-- `yarn`: `PACT_BROKER_URL` environment variable
-- `gradlew`: `-Dpact.broker.url` parameter
+- `yarn`: `PACT_BROKER_URL` and `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION` environment variables
+- `gradlew`: `-Dpact.broker.url` and `-Dpact.consumer.version`/`-Dpact.provider.version` parameters
 
 It is expected that the scripts are responsible for figuring out what version (git revision, tag, branch) is currently tested.
 
 In any case the `can-i-deploy` pact-broker command is run after these ones.
 
-
 ## Contributing
 
  1. Use the Github pull requests to make change
  2. Test the change by pointing a build, to the branch with the change
-

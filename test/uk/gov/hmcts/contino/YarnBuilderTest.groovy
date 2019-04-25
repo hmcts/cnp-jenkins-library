@@ -119,18 +119,20 @@ class YarnBuilderTest extends Specification {
   }
 
   def "runProviderVerification triggers a yarn hook"() {
+    setup:
+      def version = "v3r510n"
     when:
-      builder.runProviderVerification("${PACT_BROKER_URL}")
+      builder.runProviderVerification(PACT_BROKER_URL, version)
     then:
-      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} yarn test:pact-verify") })
+      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact-verify") })
   }
 
   def "runConsumerTests triggers a yarn hook"() {
+    setup:
+      def version = "v3r510n"
     when:
-      builder.runConsumerTests("${PACT_BROKER_URL}")
+      builder.runConsumerTests(PACT_BROKER_URL, version)
     then:
-      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} yarn test:pact") })
+      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_CONSUMER_VERSION=${version} yarn test:pact") })
   }
-
-
 }

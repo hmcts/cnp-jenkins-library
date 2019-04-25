@@ -104,12 +104,12 @@ EOF
 '''
   }
 
-  def runProviderVerification(pactBrokerUrl) {
-    gradle("-Dpact.broker.url=${pactBrokerUrl} runProviderPactVerification")
+  def runProviderVerification(pactBrokerUrl, version) {
+    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} runProviderPactVerification")
   }
 
-  def runConsumerTests(pactBrokerUrl) {
-    gradle("-Dpact.broker.url=${pactBrokerUrl} runConsumerPactTests")
+  def runConsumerTests(pactBrokerUrl, version) {
+    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runConsumerPactTests")
   }
 
   def gradle(String task) {
@@ -149,10 +149,10 @@ EOF
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
       }
     } catch(err) {
-      steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set" 
+      steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set"
     }
     steps.sh "java -version"
-    
+
   }
 
   def hasPlugin(String pluginName) {

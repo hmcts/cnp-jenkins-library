@@ -99,12 +99,24 @@ EOF
     '''
   }
 
-  def runProviderVerification(pactBrokerUrl) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} yarn test:pact-verify")
+  /**
+   * Triggers a yarn hook
+   * @param pactBrokerUrl the url of the pact broker
+   * @param version the version of the current project, usually a git commit hash
+   * @return
+   */
+  def runProviderVerification(pactBrokerUrl, version) {
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact-verify")
   }
 
-  def runConsumerTests(pactBrokerUrl) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} yarn test:pact")
+  /**
+   * Triggers a yarn hook
+   * @param pactBrokerUrl the url of the pact broker
+   * @param version the version of the current project, usually a git commit hash
+   * @return
+   */
+  def runConsumerTests(pactBrokerUrl, version) {
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact")
   }
 
   private runYarn(task){

@@ -113,17 +113,17 @@ def call(params) {
 
   if (config.pactBrokerEnabled) {
     stage("Pact verification") {
-      def version = sh(returnStdout: true, script: 'git rev-parse --verify --short HEAD')
+      def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
 
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-consumer-tests') {
-          builder.runConsumerTests(pactBrokerUrl)
+          builder.runConsumerTests(pactBrokerUrl, version)
         }
       }
 
       if (config.pactProviderVerificationsEnabled) {
         pcr.callAround('pact-provider-verification') {
-          builder.runProviderVerification(pactBrokerUrl)
+          builder.runProviderVerification(pactBrokerUrl, version)
         }
       }
 
