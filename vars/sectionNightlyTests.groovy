@@ -22,6 +22,8 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     stage("Build") {
       pcr.callAround('build') {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+          builder.setupToolVersion()
+
           builder.build()
         }
       }
