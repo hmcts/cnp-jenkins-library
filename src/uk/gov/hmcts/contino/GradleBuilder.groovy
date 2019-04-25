@@ -147,4 +147,17 @@ EOF
     
   }
 
+  def hasPlugin(String pluginName) {
+    gradleWithOutput("buildEnvironment").contains(pluginName)
+  }
+
+  @Override
+  def performanceTest() {
+    if (hasPlugin("gradle-gatling-plugin")) {
+      gradle("gatlingRun")
+    } else {
+      super.performanceTest()
+    }
+  }
+
 }
