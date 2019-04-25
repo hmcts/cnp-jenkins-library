@@ -148,9 +148,7 @@ EOF
   }
 
   def hasPlugin(String pluginName) {
-    def buildEnv = gradleWithOutput("buildEnvironment")
-    steps.echo "Build Env:\n ${buildEnv}"
-    return buildEnv.contains(pluginName)
+    return gradleWithOutput("buildEnvironment").contains(pluginName)
   }
 
   @Override
