@@ -60,7 +60,7 @@ def call(params) {
         }
       } else if (config.installCharts) {
         withTeamSecrets(config, environment) {
-          stage('Install Charts to AKS ${environment}') {
+          stage('AKS deploy - ${environment}') {
             pcr.callAround('akschartsinstall') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
                 onPR {
