@@ -14,7 +14,6 @@ abstract class AbstractBuilder implements Builder, Serializable {
 
   @Override
   def performanceTest() {
-    //this.gatling.execute()
     executeGatling()
   }
 
