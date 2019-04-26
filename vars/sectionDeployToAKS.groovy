@@ -60,7 +60,7 @@ def call(params) {
         }
       } else if (config.installCharts) {
         withTeamSecrets(config, environment) {
-          stage('Install Charts to AKS ${environment}') {
+          stage('AKS deploy - ${environment}') {
             pcr.callAround('akschartsinstall') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
                 onPR {
@@ -85,7 +85,7 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
             testEnv(aksUrl) {
-              pcr.callAround("smoketest:aks") {
+              pcr.callAround("smoketest:${environment}-staging") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                   builder.smokeTest()
                 }
