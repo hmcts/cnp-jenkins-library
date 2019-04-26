@@ -64,6 +64,7 @@ def call(params) {
     }
   }
 
+  // Added env name check so that legacy deployments are disabled only on nonprod and prod still works as before.
   if (config.legacyDeployment || !(new Environment(env).nonProdName == environment)) {
     // merge env and deployment target tf output using some groovy magic
     def mergedTfOutput
