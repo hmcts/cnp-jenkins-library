@@ -147,4 +147,20 @@ EOF
     
   }
 
+  def hasPlugin(String pluginName) {
+    return gradleWithOutput("buildEnvironment").contains(pluginName)
+  }
+
+  @Override
+  def performanceTest() {
+    if (hasPlugin("gradle-gatling-plugin")) {
+      steps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
+      steps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + steps.env.GATLING_REPORTS_PATH
+      gradle("gatlingRun")
+      this.steps.gatlingArchive()
+    } else {
+      super.performanceTest()
+    }
+  }
+
 }
