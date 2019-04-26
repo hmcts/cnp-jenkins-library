@@ -60,7 +60,7 @@ def call(params) {
         }
       } else if (config.installCharts) {
         withTeamSecrets(config, environment) {
-          stage('Install Charts to AKS') {
+          stage('Install Charts to AKS ${environment}') {
             pcr.callAround('akschartsinstall') {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
                 onPR {
@@ -83,7 +83,7 @@ def call(params) {
     if (config.deployToAKS || config.installCharts) {
       withSubscription(subscription) {
         withTeamSecrets(config, environment) {
-          stage("Smoke Test - AKS") {
+          stage("Smoke Test - AKS ${environment}") {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:aks") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
@@ -94,7 +94,7 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - AKS") {
+            stage("Functional Test - AKS ${environment}") {
               testEnv(aksUrl) {
                 pcr.callAround("functionalTest:${environment}") {
                   timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
@@ -105,7 +105,7 @@ def call(params) {
             }
           }
           if (config.performanceTest) {
-            stage("Performance Test - ${environment}") {
+            stage("Performance Test - AKS ${environment}") {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
@@ -118,7 +118,7 @@ def call(params) {
           }
           onMaster {
             if (config.crossBrowserTest) {
-              stage("CrossBrowser Test - ${environment} (staging slot)") {
+              stage("CrossBrowser Test - AKS ${environment}") {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.crossBrowserTest()
@@ -127,7 +127,7 @@ def call(params) {
               }
             }
             if (config.mutationTest) {
-              stage("Mutation Test - ${environment} (staging slot)") {
+              stage("Mutation Test - AKS ${environment}") {
                 testEnv(aksUrl) {
                   pcr.callAround("mutationTest:${environment}") {
                     builder.mutationTest()
@@ -136,7 +136,7 @@ def call(params) {
               }
             }
             if (config.fullFunctionalTest) {
-              stage("FullFunctional Test - ${environment} (staging slot)") {
+              stage("FullFunctional Test - AKS ${environment}") {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.fullFunctionalTest()
