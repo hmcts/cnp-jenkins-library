@@ -159,7 +159,7 @@ EOF
       gradle("gatlingRun")
       this.steps.gatlingArchive()
     } else {
-      super.performanceTest()
+      super.executeGatling()
     }
   }
 
