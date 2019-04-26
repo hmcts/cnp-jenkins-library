@@ -73,7 +73,7 @@ def call(type, String product, String component, Closure body) {
 
         onPR {
 
-          sectionCI(
+          sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
@@ -96,7 +96,7 @@ def call(type, String product, String component, Closure body) {
             component: component)
 
           if (pipelineConfig.aksStagingDeployment) {
-            sectionCI(
+            sectionDeployToAKS(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
