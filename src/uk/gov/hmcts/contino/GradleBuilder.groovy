@@ -159,6 +159,8 @@ EOF
       gradle("gatlingRun")
       this.steps.gatlingArchive()
     } else {
+      steps.echo "Should call super.performanceTest()"
+      steps.echo "Super methods: ${super.metaClass.getMethods()}"
       super.performanceTest()
     }
   }
