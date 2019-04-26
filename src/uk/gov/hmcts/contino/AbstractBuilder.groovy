@@ -1,7 +1,5 @@
 package uk.gov.hmcts.contino
 
-import com.cloudbees.groovy.cps.NonCPS
-
 abstract class AbstractBuilder implements Builder, Serializable {
 
   def steps
@@ -15,8 +13,12 @@ abstract class AbstractBuilder implements Builder, Serializable {
   }
 
   @Override
-  @NonCPS
   def performanceTest() {
+    //this.gatling.execute()
+    executeGatling()
+  }
+
+  def executeGatling() {
     this.gatling.execute()
   }
 
