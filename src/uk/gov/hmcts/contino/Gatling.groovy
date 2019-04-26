@@ -20,8 +20,11 @@ class Gatling implements Serializable {
 
   Gatling(steps) {
     this.steps = steps
+    if (this.steps.env == null) {
+      this.steps.metaClass.env = [:]
+    }
     this.steps.env.GATLING_REPORTS_PATH = DEFAULT_GATLING_REPORTS_PATH
-    this.steps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + DEFAULT_GATLING_REPORTS_PATH
+    this.steps.env.GATLING_REPORTS_DIR = '$WORKSPACE/' + DEFAULT_GATLING_REPORTS_PATH
   }
 
   def execute() {
