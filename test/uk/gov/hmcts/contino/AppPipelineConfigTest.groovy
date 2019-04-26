@@ -141,5 +141,4 @@ class AppPipelineConfigTest extends Specification {
     then:
     assertThat(pipelineConfig.aksStagingDeployment).isTrue()
   }
-
 }
