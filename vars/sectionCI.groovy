@@ -85,7 +85,7 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
             testEnv(aksUrl) {
-              pcr.callAround("smoketest:aks") {
+              pcr.callAround("smoketest:${environment}-staging") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                   builder.smokeTest()
                 }
