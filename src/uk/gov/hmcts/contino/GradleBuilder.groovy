@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
+
 class GradleBuilder extends AbstractBuilder {
 
   def product
@@ -152,6 +154,7 @@ EOF
   }
 
   @Override
+  @NonCPS
   def performanceTest() {
     if (hasPlugin("gradle-gatling-plugin")) {
       steps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
