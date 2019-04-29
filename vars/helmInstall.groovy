@@ -146,8 +146,10 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
-    if (subscription != 'sandbox') {
-      addGithubLabels()
+    onPR {
+      if (subscription != 'sandbox') {
+        addGithubLabels()
+      }
     }
 
     def url = env.AKS_TEST_URL + '/health'
