@@ -101,13 +101,13 @@ class AcrTest extends Specification {
     when:
       dockerImage.getImageTag() >> "sometag"
       dockerImage.getShortName() >> IMAGE_NAME
-      dockerImage.getShortName(DockerImage.DeploymentStage.AAT) >> "${IMAGE_NAME}-aat"
+      dockerImage.getShortName(DockerImage.DeploymentStage.PROD) >> "${IMAGE_NAME}-prod"
       dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
-      acr.retagForStage(DockerImage.DeploymentStage.AAT, dockerImage)
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage)
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-aat") &&
+                    it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-prod") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }

@@ -71,28 +71,20 @@ def call(type, String product, String component, Closure body) {
           component: component
         )
 
-        sectionCI(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          environment: environment.previewName,
-          product: product,
-          component: component
-        )
+        onPR {
 
-        onMaster {
-
-          sectionPromoteBuildToStage(
+          sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
+            environment: environment.previewName,
             product: product,
-            component: component,
-            stage: DockerImage.DeploymentStage.AAT,
-            environment: environment.nonProdName
+            component: component
           )
+        }
+
+        onMaster {
 
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
@@ -102,6 +94,18 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component)
+
+          if (pipelineConfig.aksStagingDeployment) {
+            sectionDeployToAKS(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
 
           if (pipelineConfig.installCharts) {
             stage('Publish Helm chart') {

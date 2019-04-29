@@ -44,6 +44,9 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
+          if (DockerImage.DeploymentStage.PROD == deploymentStage) {
+            acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
+          }
         }
       }
     }
