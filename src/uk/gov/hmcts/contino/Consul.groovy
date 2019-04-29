@@ -7,12 +7,14 @@ import uk.gov.hmcts.contino.azure.Az
 class Consul {
 
   def steps
+  def subscription
   def environment
   def az
   private consulApiAddr
 
   Consul(steps) {
     this.steps = steps
+    this.subscription = this.steps.env.SUBSCRIPTION_NAME
     this.environment = this.steps.env.ENVIRONMENT_NAME
     this.az = new Az(this.steps, this.subscription)
   }
