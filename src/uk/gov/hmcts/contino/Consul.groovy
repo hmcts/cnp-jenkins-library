@@ -12,10 +12,10 @@ class Consul {
   def az
   private consulApiAddr
 
-  Consul(steps) {
+  Consul(steps, environment) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
-    this.environment = this.steps.env.ENVIRONMENT_NAME
+    this.environment = environment
     this.az = new Az(this.steps, this.subscription)
   }
 
