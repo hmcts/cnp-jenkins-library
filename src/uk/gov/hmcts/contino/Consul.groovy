@@ -7,13 +7,13 @@ import uk.gov.hmcts.contino.azure.Az
 class Consul {
 
   def steps
-  def subscription
+  def environment
   def az
   private consulApiAddr
 
   Consul(steps) {
     this.steps = steps
-    this.subscription = this.steps.env.SUBSCRIPTION_NAME
+    this.environment = this.steps.env.ENVIRONMENT_NAME
     this.az = new Az(this.steps, this.subscription)
   }
 
@@ -23,7 +23,7 @@ class Consul {
     }
     this.steps.log.info "Getting consul's IP address ..."
 
-    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g core-infra-${subscription  == 'nonprod' ? 'preview' : 'saat'}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv"
+    def tempConsulIpAddr = this.az.az "network lb frontend-ip show  -g core-infra-${environment}  --lb-name consul-server_dns --name PrivateIPAddress --query privateIpAddress -o tsv"
     this.consulApiAddr = tempConsulIpAddr?.trim()
     if (this.consulApiAddr == null || "".equals(this.consulApiAddr)) {
       throw new RuntimeException("Failed to retrieve Consul LB IP")
