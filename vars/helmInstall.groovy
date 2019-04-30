@@ -24,7 +24,7 @@ def call(DockerImage dockerImage, Map params) {
   def aksDomain = "${(subscription in ['nonprod', 'prod']) ? "service.core-compute-${environment}.internal" : "service.core-compute-saat.internal"}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
 
-  def consul = new Consul(this)
+  def consul = new Consul(this, environment)
   def consulApiAddr = consul.getConsulIP()
 
   def kubectl = new Kubectl(this, subscription, aksServiceName)

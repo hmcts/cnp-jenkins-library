@@ -7,7 +7,7 @@ def call(Map params) {
     Kubectl kubectl = new Kubectl(this, params.subscriptionName, null)
     kubectl.login()
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-    Consul consul = new Consul(this)
+    Consul consul = new Consul(this, params.environmentName)
     def consulApiAddr = consul.getConsulIP()
 
     String chartName = "${params.product}-${params.component}"
