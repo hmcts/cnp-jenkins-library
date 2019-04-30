@@ -10,6 +10,7 @@ class DockerImage {
   enum DeploymentStage {
     PR('pr'),
     STAGING('staging'),
+    AAT('aat'),
     PROD('prod'),
     LATEST('latest')
 
