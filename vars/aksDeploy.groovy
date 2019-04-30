@@ -9,8 +9,9 @@ def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
+  def templateOverrideEnvironment = params.environment
   onPR {
-    environment = new Environment(env).nonProdName
+    templateOverrideEnvironment = new Environment(env).nonProdName
   }
 
   def kubeResourcesDir
@@ -40,7 +41,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     // environment specific config is optional
-    def configTemplate = "${kubeResourcesDir}/config.${environment}.yaml"
+    def configTemplate = "${kubeResourcesDir}/config.${templateOverrideEnvironment}.yaml"
     if (fileExists(configTemplate)) {
       sh "envsubst < ${configTemplate} > ${kubeResourcesDir}/config.yaml"
       kubectl.apply("${kubeResourcesDir}/config.yaml")
