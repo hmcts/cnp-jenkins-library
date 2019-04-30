@@ -19,6 +19,10 @@ class Consul {
     this.az = new Az(this.steps, this.subscription)
   }
 
+  Consul(steps) {
+    Consul (steps, new Environment(steps).nonProdName)
+  }
+
   def getConsulIP() {
     if (this.consulApiAddr) {
       return this.consulApiAddr
