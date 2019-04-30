@@ -93,7 +93,7 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.nonProdName,
             product: product,
             component: component,
-            stage: DockerImage.DeploymentStage.STAGING,
+            stage: DockerImage.DeploymentStage.AAT,
             environment: environment.nonProdName
           )
 

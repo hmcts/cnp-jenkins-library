@@ -10,6 +10,7 @@ class DockerImage {
   enum DeploymentStage {
     PR('pr'),
     STAGING('staging'),
+    AAT('aat'),
     PROD('prod'),
     LATEST('latest')
 
@@ -114,7 +115,7 @@ class DockerImage {
   }
 
   def getTag(String imageTag) {
-    return (imageTag == 'latest' ? imageTag : "${imageTag}-${this.commit}")
+    return (imageTag in ['staging' , 'latest'] ? imageTag : "${imageTag}-${this.commit}")
   }
 
   def isLatest() {

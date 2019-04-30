@@ -122,7 +122,7 @@ class Acr extends Az {
   def hasTag(DockerImage dockerImage) {
     // on the master branch we search for an AAT tagged image with the same commit hash
     if (dockerImage.getTag() == 'staging') {
-      return hasTag(DockerImage.DeploymentStage.STAGING, dockerImage)
+      return hasTag(DockerImage.DeploymentStage.AAT, dockerImage)
     } else {
       return hasRepoTag(dockerImage.getTag(), dockerImage.getRepositoryName())
     }
@@ -134,9 +134,9 @@ class Acr extends Az {
   }
 
   private def hasRepoTag(String tag, String repository) {
-    // latest is not really a tag for our purposes, it just marks the most recent tag
-    if (tag == 'staging') {
-      steps.echo "Warning: matching 'latest' tag for ${repository}"
+    // staging and latest are not really tags for our purposes, it just marks the most recent master build before and after tests are run in AAT.
+    if (tag in ['staging' , 'latest'] ) {
+      steps.echo "Warning: matching '${tag}' tag for ${repository}"
     }
 
     def tagFound = false
