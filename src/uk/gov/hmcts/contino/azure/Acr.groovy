@@ -135,7 +135,7 @@ class Acr extends Az {
 
   private def hasRepoTag(String tag, String repository) {
     // latest is not really a tag for our purposes, it just marks the most recent tag
-    if (tag == 'latest') {
+    if (tag == 'staging') {
       steps.echo "Warning: matching 'latest' tag for ${repository}"
     }
 
