@@ -134,7 +134,7 @@ def call(params) {
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-deployment-verification') {
           def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
-          if (env.CHANGE_BRANCH || env.BRANCH_NAME == 'master') {
+          if (env.CHANGE_BRANCH && env.BRANCH_NAME == 'master') {
             pactBroker.canIDeploy(version)
           }
         }
