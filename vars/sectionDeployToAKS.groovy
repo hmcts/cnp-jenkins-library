@@ -80,7 +80,7 @@ def call(params) {
       }
     }
 
-    if (config.deployToAKS || config.installCharts) {
+    if ((config.deployToAKS || config.installCharts) && config.serviceApp) {
       withSubscription(subscription) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
@@ -148,5 +148,7 @@ def call(params) {
         }
       }
     }
+
+
   }
 }
