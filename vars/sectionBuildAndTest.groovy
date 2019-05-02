@@ -114,6 +114,7 @@ def call(params) {
   if (config.pactBrokerEnabled) {
     stage("Pact verification") {
       def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
+      def isOnMaster = (env.BRANCH_NAME == 'master')
 
       /*
        * These instructions have to be kept in that order
@@ -125,7 +126,7 @@ def call(params) {
         }
       }
 
-      if (config.pactProviderVerificationsEnabled) {
+      if (config.pactProviderVerificationsEnabled && isOnMaster) {
         pcr.callAround('pact-provider-verification') {
           builder.runProviderVerification(pactBrokerUrl, version)
         }
@@ -134,9 +135,7 @@ def call(params) {
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-deployment-verification') {
           def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
-          if (env.CHANGE_BRANCH && env.BRANCH_NAME == 'master') {
-            pactBroker.canIDeploy(version)
-          }
+          pactBroker.canIDeploy(version)
         }
       }
     }
