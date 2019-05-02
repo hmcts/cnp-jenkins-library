@@ -24,6 +24,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int perfTestTimeout
   int apiGatewayTestTimeout
   int mutationTestTimeout
-  int fullFunctionalTestTimeoutO
+  int fullFunctionalTestTimeout
   int securityScanTimeout
 }
