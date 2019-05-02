@@ -138,8 +138,15 @@ class AppPipelineConfigTest extends Specification {
 
   def "ensure non service app"() {
     when:
-      dsl.nonServiceApp()
+    dsl.nonServiceApp()
     then:
-      assertThat(pipelineConfig.serviceApp).isFalse()
+    assertThat(pipelineConfig.serviceApp).isFalse()
+  }
+
+  def "ensure enable deploy to AKS Staging"() {
+    when:
+    dsl.enableAksStagingDeployment()
+    then:
+    assertThat(pipelineConfig.aksStagingDeployment).isTrue()
   }
 }

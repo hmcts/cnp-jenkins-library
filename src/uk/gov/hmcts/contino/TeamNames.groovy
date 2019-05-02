@@ -35,6 +35,7 @@ class TeamNames {
                       'rhubarb':'CNP',
                       'rhubarb-shared-infrastructure' : 'CNP',
                       'plum':'CNP',
+                      'crumble':'CNP',
                       'plum-shared-infrastructure' : 'CNP',
                       'sscs':'SSCS',
                       'sscs-cor':'SSCS',
@@ -43,7 +44,8 @@ class TeamNames {
                       'snl':'SnL',
                       'am':'AM',
                       'fpl': 'Family Public Law',
-                      'ctsc': 'CTSC'
+                      'ctsc': 'CTSC',
+                      'rd': 'Reference Data'
   ]
 
   def getName (String product) {

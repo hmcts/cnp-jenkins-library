@@ -4,4 +4,7 @@ out
 .idea
 *.iml
 .gradle
-
+.classpath
+.project
+bin
+.settings

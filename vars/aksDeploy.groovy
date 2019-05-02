@@ -3,11 +3,16 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.Consul
+import uk.gov.hmcts.contino.Environment
 
 def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
+  def templateOverrideEnvironment = params.environment
+  onPR {
+    templateOverrideEnvironment = new Environment(env).nonProdName
+  }
 
   def kubeResourcesDir
   def kubeResourcesDirDefault = "src/kubernetes"
@@ -36,7 +41,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     // environment specific config is optional
-    def configTemplate = "${kubeResourcesDir}/config.${environment}.yaml"
+    def configTemplate = "${kubeResourcesDir}/config.${templateOverrideEnvironment}.yaml"
     if (fileExists(configTemplate)) {
       sh "envsubst < ${configTemplate} > ${kubeResourcesDir}/config.yaml"
       kubectl.apply("${kubeResourcesDir}/config.yaml")
@@ -47,7 +52,7 @@ def call(DockerImage dockerImage, Map params) {
 
     // Get the IP of the Traefik Ingress Controller
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-    new Consul(this).registerDns(aksServiceName, ingressIP)
+    new Consul(this, environment).registerDns(aksServiceName, ingressIP)
 
     env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
     echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"

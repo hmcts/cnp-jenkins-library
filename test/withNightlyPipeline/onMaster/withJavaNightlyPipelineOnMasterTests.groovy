@@ -16,6 +16,7 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
     def mockBuilder = new MockFor(GradleBuilder)
     mockBuilder.demand.with {
+      setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
       crossBrowserTest(0) {}

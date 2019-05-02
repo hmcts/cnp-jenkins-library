@@ -83,4 +83,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.vaultEnvironmentOverrides = vaultOverrides
   }
 
+  void enableAksStagingDeployment() {
+    config.aksStagingDeployment = true
+  }
+
 }

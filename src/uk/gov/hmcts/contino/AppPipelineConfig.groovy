@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
-  Map<String, String> vaultEnvironmentOverrides = [:]
+  Map<String, String> vaultEnvironmentOverrides = ['preview':'aat']
   String vaultName
   boolean migrateDb = false
 
@@ -16,6 +16,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean fullFunctionalTest = false
   boolean securityScan = false
   boolean serviceApp = true
+  boolean aksStagingDeployment = false
 
   boolean legacyDeployment = true
 
@@ -23,6 +24,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int perfTestTimeout
   int apiGatewayTestTimeout
   int mutationTestTimeout
-  int fullFunctionalTestTimeout
+  int fullFunctionalTestTimeoutO
   int securityScanTimeout
 }

@@ -12,11 +12,19 @@ allprojects {
       maven {
         url mirrorUrl
       }
+      mavenCentral()
+    }
+    dependencies {
+      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
     }
   }
 
   task printVersionInit {
     doLast { println project.version }
+  }
+
+  task javaVersion {
+    doLast { println project.sourceCompatibility }
   }
 }
 

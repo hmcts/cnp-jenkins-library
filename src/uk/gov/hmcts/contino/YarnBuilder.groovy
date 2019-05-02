@@ -117,4 +117,9 @@ EOF
     runYarn(task)
   }
 
+  @Override
+  def setupToolVersion() {
+    // TODO setup nvm support here, PRs welcome
+  }
+
 }

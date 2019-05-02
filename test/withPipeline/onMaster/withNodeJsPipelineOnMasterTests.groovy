@@ -20,6 +20,7 @@ class withNodeJsPipelineOnMasterTests extends BaseCnpPipelineTest {
   void PipelineExecutesExpectedStepsInExpectedOrder() {
     def stubBuilder = new StubFor(YarnBuilder)
     stubBuilder.demand.with {
+      setupToolVersion(1) {}
       build(1) {}
       test(1) {}
       securityCheck(1) {}

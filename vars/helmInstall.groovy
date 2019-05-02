@@ -14,7 +14,8 @@ def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
-  def aksEnvironment = params.environment
+  def templateOverrideEnvironment = params.environment
+  def helmOptionEnvironment = params.environment
   def product = params.product
   def component = params.component
   AppPipelineConfig config = params.appPipelineConfig
@@ -23,10 +24,10 @@ def call(DockerImage dockerImage, Map params) {
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
+  def aksDomain = "${(subscription in ['nonprod', 'prod']) ? "service.core-compute-${environment}.internal" : "service.core-compute-saat.internal"}"
   def serviceFqdn = "${aksServiceName}.${aksDomain}"
 
-  def consul = new Consul(this)
+  def consul = new Consul(this, environment)
   def consulApiAddr = consul.getConsulIP()
 
   def kubectl = new Kubectl(this, subscription, aksServiceName)
@@ -59,11 +60,11 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
-    if (fileExists(defaultValues)) {
+    if (! fileExists(defaultValues)) {
+
       onPR {
-        aksEnvironment = new Environment(env).previewName
+        templateOverrideEnvironment = new Environment(env).nonProdName
       }
-    } else {
       echo '''
 ================================================================================
 
@@ -88,8 +89,8 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
     values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${aksEnvironment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${templateOverrideEnvironment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${templateOverrideEnvironment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
       values << valuesEnv
@@ -101,10 +102,14 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       sh "envsubst < ${requirementsEnv} > ${requirements}"
     }
 
+    onPR {
+      helmOptionEnvironment = new Environment(env).nonProdName
+    }
+
     def options = [
       "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
-      "--set global.environment=${environment} ",
+      "--set global.environment=${helmOptionEnvironment} ",
       "--namespace ${namespace}"
     ]
 
@@ -145,10 +150,11 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
+    onPR {
       if (subscription != 'sandbox') {
         addGithubLabels()
       }
-
+    }
       def url = env.AKS_TEST_URL + '/health'
       def healthChecker = new HealthChecker(this)
       healthChecker.check(url, 10, 40)

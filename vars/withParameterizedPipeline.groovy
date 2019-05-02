@@ -67,6 +67,8 @@ def call(type, String product, String component, String environment, String subs
         }
 
         stage("Build") {
+          builder.setupToolVersion()
+
           callbacksRunner.callAround('build') {
             builder.build()
           }

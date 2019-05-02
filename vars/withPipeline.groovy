@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
@@ -65,29 +66,35 @@ def call(type, String product, String component, Closure body) {
           pipelineCallbacksRunner: callbacksRunner,
           builder: pipelineType.builder,
           subscription: subscription.nonProdName,
-          product: product,
-          component: component
-        )
-
-        sectionCI(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
           component: component
         )
 
+        onPR {
+
+          sectionDeployToAKS(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            environment: environment.previewName,
+            product: product,
+            component: component
+          )
+        }
+
         onMaster {
 
-          sectionPromoteBuildToAAT(
+          sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
             product: product,
-            component: component
+            component: component,
+            stage: DockerImage.DeploymentStage.AAT,
+            environment: environment.nonProdName
           )
 
           sectionDeployToEnvironment(
@@ -98,6 +105,18 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component)
+
+          if (pipelineConfig.aksStagingDeployment) {
+            sectionDeployToAKS(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
 
           if (pipelineConfig.installCharts) {
             stage('Publish Helm chart') {
@@ -118,6 +137,17 @@ def call(type, String product, String component, Closure body) {
             environment: environment.prodName,
             product: product,
             component: component)
+
+          sectionPromoteBuildToStage(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component,
+            stage: DockerImage.DeploymentStage.PROD,
+            environment: environment.nonProdName
+          )
         }
 
         onAutoDeployBranch { subscriptionName, environmentName ->

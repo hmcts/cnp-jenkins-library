@@ -51,6 +51,7 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.setupToolVersion() {}
     stubBuilder.demand.build() {}
     stubBuilder.demand.test() {}
     stubBuilder.demand.securityCheck() {}
@@ -73,6 +74,7 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
     helper.registerAllowedMethod("when", [boolean, Closure.class], {})
 
     def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.setupToolVersion(1) {}
     stubBuilder.demand.build(0) {}
     stubBuilder.demand.test(0) {}
     stubBuilder.demand.securityCheck(0) {}

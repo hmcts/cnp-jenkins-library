@@ -28,11 +28,11 @@ def call(params) {
         env.GIT_COMMIT = scmVars.GIT_COMMIT
       }
       if (config.dockerBuild) {
-        withAksClient(subscription) {
+        withAksClient(subscription, params.environment) {
           projectBranch = new ProjectBranch(env.BRANCH_NAME)
           acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
           dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
-          noSkipImgBuild = !acr.hasTag(dockerImage) && !env.NO_SKIP_IMG_BUILD?.trim()
+          noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
         }
       }
     }
@@ -40,8 +40,11 @@ def call(params) {
 
 
   stage("Build") {
-    // always build master as we currently do not deploy an image there
-    when(noSkipImgBuild || projectBranch.isMaster()) {
+    builder.setupToolVersion()
+
+    // always build master and demo as we currently do not deploy an image there
+      boolean envSub = autoDeployEnvironment() != null
+      when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
       pcr.callAround('build') {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
           builder.build()
@@ -86,7 +89,7 @@ def call(params) {
 
         "Docker Build": {
           if (config.dockerBuild) {
-            withAksClient(subscription) {
+            withAksClient(subscription, params.environment) {
 
               def acbTemplateFilePath = 'acb.tpl.yaml'
 
