@@ -10,17 +10,17 @@
 def call(String subscription, String environment) {
   def deploymentTargets = [
     sandbox: [
-      sandbox: ["-v2"],
-      saat: ["-v2"],
-      sprod: ["-v2"]
+      sandbox: [],
+      saat: [],
+      sprod: []
     ],
     nonprod: [
-      aat: ["-v2"],
+      aat: [],
       demo: [],
       preview: []
     ],
     prod: [
-      prod: ["-v2"]
+      prod: []
     ]]
   return deploymentTargets.get(subscription, [:])?.get(environment, [])
 }
