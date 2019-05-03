@@ -112,6 +112,11 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       "--namespace ${namespace}"
     ]
 
+    if (!config.serviceApp) {
+      //Forcing Jobs deployed through Jenkins to be Job to avoid crobJobs being run forever.
+      options.add("--set global.job.kind=Job")
+    }
+
     // if PR delete first as too many people get caught by the error Helm throws if
     // an upgrade is run when there have only been failed deployments
     def deleted = false
