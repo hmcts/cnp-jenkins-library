@@ -7,6 +7,8 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TeamNames
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.AppPipelineConfig
+
 
 def call(DockerImage dockerImage, Map params) {
 
@@ -16,6 +18,7 @@ def call(DockerImage dockerImage, Map params) {
   def helmOptionEnvironment = params.environment
   def product = params.product
   def component = params.component
+  AppPipelineConfig config = params.appPipelineConfig
 
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
 
@@ -139,23 +142,26 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       }
     }
 
-    // Register service dns
-    consul.registerDns(aksServiceName, ingressIP)
+    if (config.serviceApp) {
+      // Register service dns
+      consul.registerDns(aksServiceName, ingressIP)
 
-    env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
-    echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
+      env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
+      echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
     onPR {
       if (subscription != 'sandbox') {
         addGithubLabels()
       }
     }
+      def url = env.AKS_TEST_URL + '/health'
+      def healthChecker = new HealthChecker(this)
+      healthChecker.check(url, 10, 40)
 
-    def url = env.AKS_TEST_URL + '/health'
-    def healthChecker = new HealthChecker(this)
-    healthChecker.check(url, 10, 40)
-
-    return env.AKS_TEST_URL
+      return env.AKS_TEST_URL
+    } else {
+      return null
+    }
   }
 }
 
