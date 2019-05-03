@@ -20,8 +20,7 @@ def call(DockerImage dockerImage, Map params) {
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def aksDomain = "${(subscription in ['nonprod', 'prod']) ? 'service.core-compute-preview.internal' : 'service.core-compute-saat.internal'}"
-  def serviceFqdn = "${aksServiceName}.${aksDomain}"
+  def serviceFqdn = "${aksServiceName}.service.core-compute-${environment}.internal"
   def templateEnvVars = ["NAMESPACE=${aksServiceName}", "SERVICE_NAME=${aksServiceName}", "IMAGE_NAME=${imageName}", "SERVICE_FQDN=${serviceFqdn}"]
 
   withEnv(templateEnvVars) {
