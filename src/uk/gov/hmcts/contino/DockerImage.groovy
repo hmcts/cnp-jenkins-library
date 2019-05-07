@@ -146,14 +146,16 @@ class DockerImage {
   }
 
   /**
-   * Get the 'short name' of the image, without the registry prefix and the commit suffix
+   * Get the 'short name' of the image, without the registry prefix ,commit suffix is added only for staging.
+   * Use this while resolving name for the base image for building or re-tagging.
    *
    * @return
    *   the short name. e.g. hmcts/product-component:branch
    */
   def getBaseShortName() {
+    def baseShortName = imageTag == 'staging' ? getTag(this.imageTag) : imageTag
     return repositoryName().concat(':')
-      .concat(imageTag)
+      .concat(baseShortName)
   }
 
   def getRepositoryName() {
