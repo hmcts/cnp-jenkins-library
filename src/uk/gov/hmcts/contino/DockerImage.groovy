@@ -153,7 +153,7 @@ class DockerImage {
    *   the short name. e.g. hmcts/product-component:branch
    */
   def getBaseShortName() {
-    def baseShortName = imageTag == 'staging' ? getTag(this.imageTag) : imageTag
+    def baseShortName = this.imageTag == 'staging' ? "${this.imageTag}-${this.commit}" : imageTag
     return repositoryName().concat(':')
       .concat(baseShortName)
   }
