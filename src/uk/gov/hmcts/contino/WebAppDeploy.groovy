@@ -204,7 +204,7 @@ class WebAppDeploy implements Serializable {
         timeout: 600, // seconds
         url: "https://${profile.publishUrl}/api/command", validResponseCodes: '200'
     } catch (Exception ex) {
-      echo "ERROR: Failed to run git gc: ${ex}"
+      steps.echo "ERROR: Failed to run git gc: ${ex}"
     }
   }
 
