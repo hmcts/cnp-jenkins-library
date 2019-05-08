@@ -31,6 +31,7 @@ class TeamNames {
                       'pui': 'Professional Applications',
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
+                      'rpx': 'Professional Applications',
                       'ref': 'Professional Applications',
                       'rhubarb':'CNP',
                       'rhubarb-shared-infrastructure' : 'CNP',
@@ -55,7 +56,7 @@ class TeamNames {
     }
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
   }
-  
+
   def getRawProductName (String product) {
     return product.split('pr-(\\d+)-')[1];
   }
