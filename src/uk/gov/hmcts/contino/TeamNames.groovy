@@ -45,7 +45,8 @@ class TeamNames {
                       'am':'AM',
                       'fpl': 'Family Public Law',
                       'ctsc': 'CTSC',
-                      'rd': 'Reference Data'
+                      'rd': 'Reference Data',
+                      'data-extractor' : 'Software Engineering'
   ]
 
   def getName (String product) {
