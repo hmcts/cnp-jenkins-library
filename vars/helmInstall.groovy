@@ -151,6 +151,12 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       }
     }
 
+    onPR {
+      if (subscription != 'sandbox') {
+        addGithubLabels()
+      }
+    }
+
     if (config.serviceApp) {
       // Register service dns
       consul.registerDns(aksServiceName, ingressIP)
@@ -158,11 +164,6 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
-    onPR {
-      if (subscription != 'sandbox') {
-        addGithubLabels()
-      }
-    }
       def url = env.AKS_TEST_URL + '/health'
       def healthChecker = new HealthChecker(this)
       healthChecker.check(url, 10, 40)
