@@ -113,8 +113,12 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
     ]
 
     if (!config.serviceApp) {
-      //Forcing Jobs deployed through Jenkins to be Job to avoid crobJobs being run forever.
+      //Forcing Jobs deployed through Jenkins to be Job to avoid cronJobs being run forever.
       options.add("--set global.job.kind=Job")
+      //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
+      if( helm.exists(dockerImage.getImageTag(), namespace)){
+        helm.delete(dockerImage.getImageTag())
+      }
     }
 
     // if PR delete first as too many people get caught by the error Helm throws if
