@@ -112,7 +112,7 @@ def call(params) {
   }
 
   if (config.pactBrokerEnabled) {
-    stage("Pact verification") {
+    stage("Pact") {
       def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
       def isOnMaster = (env.BRANCH_NAME == 'master')
 
