@@ -115,7 +115,7 @@ class DockerImage {
   }
 
   def getTag(String imageTag) {
-    return (imageTag in ['staging' , 'latest'] ? imageTag : "${imageTag}-${this.commit}")
+    return (imageTag ==  'latest' ? imageTag : "${imageTag}-${this.commit}")
   }
 
   def isLatest() {
