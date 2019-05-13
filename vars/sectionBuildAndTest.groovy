@@ -135,7 +135,7 @@ def call(params) {
         }
       }
 
-      if (config.pactConsumerTestsEnabled) {
+      if (config.pactConsumerTestsEnabled && isOnMaster) {
         pcr.callAround('pact-deployment-verification') {
           def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
           pactBroker.canIDeploy(version)

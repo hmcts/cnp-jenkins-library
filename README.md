@@ -398,10 +398,13 @@ withInfraPipeline(product) {
 
 The following hooks will then be ran before the deployment:
 
-| Role     | Order | Yarn                           | Gradle                                  | Active on branch |
-| -------- | ----- | ------------------------------ | --------------------------------------- | ---------------- |
-| Provider | 1     | `test:pact:verify-and-publish` | `runAndPublishProviderPactVerification` | `master` only    |
-| Consumer | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`        | Any branch       |
+| Role       | Order | Yarn                           | Gradle                                  | Active on branch |
+| ---------- | ----- | ------------------------------ | --------------------------------------- | ---------------- |
+| `PROVIDER` | 1     | `test:pact:verify-and-publish` | `runAndPublishProviderPactVerification` | `master` only    |
+| `CONSUMER` | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`        | Any branch       |
+| `CONSUMER` | 3     | `can-i-deploy`\*               | `can-i-deploy`\*                        | `master` only    |
+
+\*: `can-i-deploy` is already available in the CI and doesn't need any hook or installation process.
 
 #### Notes
 
@@ -416,8 +419,6 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `-Dpact.verifier.publishResults=true` is passed by default for providers
 
 🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
-
-The `can-i-deploy` pact-broker command is run after if the project is tagged as `CONSUMER`.
 
 ## Contributing
 
