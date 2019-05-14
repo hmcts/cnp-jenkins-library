@@ -117,11 +117,9 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       options.add("--set global.job.kind=Job")
     }
 
-    // if PR delete first as too many people get caught by the error Helm throws if
-    // an upgrade is run when there have only been failed deployments
+    // Helm throws error if trying to upgrade , when there have only been failed deployments
     def deleted = false
-    if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
-      helm.exists(dockerImage.getImageTag(), namespace) &&
+    if (helm.exists(dockerImage.getImageTag(), namespace) &&
       !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
