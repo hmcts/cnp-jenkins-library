@@ -385,7 +385,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
 
 /* … */
 
-withInfraPipeline(product) {
+withPipeline(product) {
 
   /* … */
 
