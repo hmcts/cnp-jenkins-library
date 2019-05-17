@@ -24,6 +24,14 @@ class ProjectBranch implements Serializable {
     branchName == 'hmctsdemo'
   }
 
+  boolean isPerftest() {
+    branchName == 'perftest'
+  }
+
+  boolean isIthc() {
+    branchName == 'ithc'
+  }
+
   String deploymentNamespace() {
     // lowercase because some Azure resource names require lowercase
     return (isPR()) ? branchName.toLowerCase() : ""

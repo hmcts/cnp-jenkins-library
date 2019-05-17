@@ -113,15 +113,17 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
     ]
 
     if (!config.serviceApp) {
-      //Forcing Jobs deployed through Jenkins to be Job to avoid crobJobs being run forever.
+      //Forcing Jobs deployed through Jenkins to be Job to avoid cronJobs being run forever.
       options.add("--set global.job.kind=Job")
+      //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
+      if(helm.exists(dockerImage.getImageTag(), namespace)){
+        helm.delete(dockerImage.getImageTag())
+      }
     }
 
-    // if PR delete first as too many people get caught by the error Helm throws if
-    // an upgrade is run when there have only been failed deployments
+    // Helm throws error if trying to upgrade , when there have only been failed deployments
     def deleted = false
-    if (new ProjectBranch(this.env.BRANCH_NAME).isPR() &&
-      helm.exists(dockerImage.getImageTag(), namespace) &&
+    if (helm.exists(dockerImage.getImageTag(), namespace) &&
       !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
@@ -147,6 +149,12 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       }
     }
 
+    onPR {
+      if (subscription != 'sandbox') {
+        addGithubLabels()
+      }
+    }
+
     if (config.serviceApp) {
       // Register service dns
       consul.registerDns(aksServiceName, ingressIP)
@@ -154,11 +162,6 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
 
-    onPR {
-      if (subscription != 'sandbox') {
-        addGithubLabels()
-      }
-    }
       def url = env.AKS_TEST_URL + '/health'
       def healthChecker = new HealthChecker(this)
       healthChecker.check(url, 10, 40)
