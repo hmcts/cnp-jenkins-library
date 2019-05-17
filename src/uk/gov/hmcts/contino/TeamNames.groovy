@@ -29,6 +29,7 @@ class TeamNames {
                       'pbi':'Software Engineering',
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
+                      'xui': 'Professional Applications',
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
                       'ref': 'Professional Applications',
@@ -55,7 +56,7 @@ class TeamNames {
     }
     return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
   }
-  
+
   def getRawProductName (String product) {
     return product.split('pr-(\\d+)-')[1];
   }
