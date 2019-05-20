@@ -17,8 +17,10 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean securityScan = false
   boolean serviceApp = true
   boolean aksStagingDeployment = false
-
   boolean legacyDeployment = true
+  boolean pactBrokerEnabled = false
+  boolean pactProviderVerificationsEnabled = false
+  boolean pactConsumerTestsEnabled = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout

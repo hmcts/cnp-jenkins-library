@@ -14,6 +14,8 @@ interface Builder {
   def mutationTest()
   def fullFunctionalTest()
   def securityScan()
+  def runProviderVerification()
+  def runConsumerTests()
 
   /**
    * Setup any required versions of a tool

@@ -8,6 +8,7 @@ class Environment implements Serializable {
   def final hmctsDemoName
   def final perftestName
   def final ithcName
+  def final pactBrokerUrl
 
   def final functionalTestEnvironments
 
@@ -22,6 +23,7 @@ class Environment implements Serializable {
     hmctsDemoName = env.HMCTSDEMO_ENVIRONMENT_NAME ?: 'hmctsdemo'
     perftestName = env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest'
     ithcName = env.ITHC_ENVIRONMENT_NAME ?: 'ithc'
+    pactBrokerUrl = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
 
     functionalTestEnvironments = [nonProdName, previewName]
   }
