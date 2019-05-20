@@ -84,7 +84,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def securityCheck() {
     // no-op
-    // to be replaced with yarn audit once suppressing vulnerabilities is possible 
+    // to be replaced with yarn audit once suppressing vulnerabilities is possible
     // https://github.com/yarnpkg/yarn/issues/6669
   }
 
@@ -97,6 +97,26 @@ commit: $(git rev-parse HEAD)
 date: $(date)
 EOF
     '''
+  }
+
+  /**
+   * Triggers a yarn hook
+   * @param pactBrokerUrl the url of the pact broker
+   * @param version the version of the current project, usually a git commit hash
+   * @return
+   */
+  def runProviderVerification(pactBrokerUrl, version) {
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish")
+  }
+
+  /**
+   * Triggers a yarn hook
+   * @param pactBrokerUrl the url of the pact broker
+   * @param version the version of the current project, usually a git commit hash
+   * @return
+   */
+  def runConsumerTests(pactBrokerUrl, version) {
+    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish")
   }
 
   private runYarn(task){

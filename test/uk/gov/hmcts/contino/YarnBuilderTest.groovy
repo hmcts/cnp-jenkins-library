@@ -4,6 +4,7 @@ import spock.lang.Specification
 
 class YarnBuilderTest extends Specification {
   static final String YARN_CMD = 'yarn'
+  static final String PACT_BROKER_URL = "https://pact-broker.platform.hmcts.net"
 
   def steps
 
@@ -117,5 +118,21 @@ class YarnBuilderTest extends Specification {
         1*steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:fullfunctional') })
   }
 
+  def "runProviderVerification triggers a yarn hook"() {
+    setup:
+      def version = "v3r510n"
+    when:
+      builder.runProviderVerification(PACT_BROKER_URL, version)
+    then:
+      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish") })
+  }
 
+  def "runConsumerTests triggers a yarn hook"() {
+    setup:
+      def version = "v3r510n"
+    when:
+      builder.runConsumerTests(PACT_BROKER_URL, version)
+    then:
+      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish") })
+  }
 }

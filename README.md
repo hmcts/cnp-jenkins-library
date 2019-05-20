@@ -28,6 +28,7 @@ and NodeJS applications. The pipeline contains the following stages:
 * Lint (nodejs only)
 * Sonar Scan
 * Docker build (for AKS deployments, optional ACR steps)
+* Contract testing
 * Deploy Dev
 * Smoke Tests - Dev
 * (Optional) API (gateway) Tests - Dev
@@ -368,6 +369,56 @@ Properties expanded by Jenkins:
 
 
 If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
+
+## Contract testing with Pact
+
+#### Usage
+
+You can activate contract testing lifecycle hooks in the CI using the `enablePactAs()` method.
+
+The different hooks are based on roles that you can assign to your project: `CONSUMER` and/or `PROVIDER`. A common broker will be used as well as the naming and tagging conventions.
+
+Here is an example of a project which acts a consumer and provider (for example a backend-for-frontend):
+
+```groovy
+import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
+
+/* … */
+
+withPipeline(product) {
+
+  /* … */
+
+  enablePactAs([
+    PactRoles.CONSUMER,
+    PactRoles.PROVIDER
+  ])
+}
+```
+
+The following hooks will then be ran before the deployment:
+
+| Role       | Order | Yarn                           | Gradle                                  | Active on branch |
+| ---------- | ----- | ------------------------------ | --------------------------------------- | ---------------- |
+| `PROVIDER` | 1     | `test:pact:verify-and-publish` | `runAndPublishProviderPactVerification` | `master` only    |
+| `CONSUMER` | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`        | Any branch       |
+| `CONSUMER` | 3     | `can-i-deploy`\*               | `can-i-deploy`\*                        | `master` only    |
+
+\*: `can-i-deploy` is already available in the CI and doesn't need any hook or installation process.
+
+#### Notes
+
+The Pact broker url and other parameters are passed to these hooks as following:
+
+- `yarn`:
+  - `PACT_BROKER_URL`
+  - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
+- `gradlew`:
+  - `-Dpact.broker.url`
+  - `-Dpact.consumer.version`/`-Dpact.provider.version`
+  - `-Dpact.verifier.publishResults=true` is passed by default for providers
+
+🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
 
 ## Contributing
 
