@@ -29,6 +29,7 @@ class TeamNames {
                       'pbi':'Software Engineering',
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
+                      'xui': 'Professional Applications',
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
                       'rpx': 'Professional Applications',

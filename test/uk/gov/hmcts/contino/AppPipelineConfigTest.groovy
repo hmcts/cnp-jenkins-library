@@ -30,6 +30,9 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
+      assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -50,7 +53,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
   }
 
-  def "load vault secrets (deprecated)"() {
+  def "load vault secrets - deprecated"() {
     given:
       def secrets = [['secretName': 'name', 'var': 'var']]
     when:
@@ -149,4 +152,46 @@ class AppPipelineConfigTest extends Specification {
     then:
     assertThat(pipelineConfig.aksStagingDeployment).isTrue()
   }
+
+  def "ensure enable pact broker deployment check"() {
+    given:
+      assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
+    when:
+      dsl.enablePactAs([])
+    then:
+      assertThat(pipelineConfig.pactBrokerEnabled).isTrue()
+  }
+
+  def "ensure enable pact consumer tests"() {
+    given:
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
+    when:
+      dsl.enablePactAs([AppPipelineDsl.PactRoles.CONSUMER])
+    then:
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
+  }
+
+  def "ensure enable pact provider verification"() {
+    given:
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
+    when:
+      dsl.enablePactAs([AppPipelineDsl.PactRoles.PROVIDER])
+    then:
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
+  }
+
+  def "ensure enable pact consumer tests and provider verification"() {
+    given:
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
+      assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
+    when:
+      dsl.enablePactAs([
+        AppPipelineDsl.PactRoles.CONSUMER,
+        AppPipelineDsl.PactRoles.PROVIDER
+      ])
+    then:
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
+  }
+
 }

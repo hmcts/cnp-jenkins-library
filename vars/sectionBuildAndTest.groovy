@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.PactBroker
 import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
@@ -15,6 +16,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def pactBrokerUrl = params.pactBrokerUrl
   def acr
   def dockerImage
   def projectBranch
@@ -53,7 +55,7 @@ def call(params) {
     }
   }
 
-  stage("Tests/Checks/Container Build") {
+  stage("Tests/Checks/Container build") {
 
     when (noSkipImgBuild) {
       parallel(
@@ -106,6 +108,39 @@ def call(params) {
 
         failFast: true
       )
+    }
+  }
+
+  if (config.pactBrokerEnabled) {
+    stage("Pact") {
+      def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
+      def isOnMaster = (env.BRANCH_NAME == 'master')
+
+      env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+      env.PACT_BROKER_URL = pactBrokerUrl
+
+      /*
+       * These instructions have to be kept in order
+       */
+
+      if (config.pactConsumerTestsEnabled) {
+        pcr.callAround('pact-consumer-tests') {
+          builder.runConsumerTests(pactBrokerUrl, version)
+        }
+      }
+
+      if (config.pactProviderVerificationsEnabled && isOnMaster) {
+        pcr.callAround('pact-provider-verification') {
+          builder.runProviderVerification(pactBrokerUrl, version)
+        }
+      }
+
+      if (config.pactConsumerTestsEnabled && isOnMaster) {
+        pcr.callAround('pact-deployment-verification') {
+          def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
+          pactBroker.canIDeploy(version)
+        }
+      }
     }
   }
 
