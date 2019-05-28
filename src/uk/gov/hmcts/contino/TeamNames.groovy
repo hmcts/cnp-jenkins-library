@@ -32,6 +32,7 @@ class TeamNames {
                       'xui': 'Professional Applications',
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
+                      'rpx': 'Professional Applications',
                       'ref': 'Professional Applications',
                       'rhubarb':'CNP',
                       'rhubarb-shared-infrastructure' : 'CNP',
