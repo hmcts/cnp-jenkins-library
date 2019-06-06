@@ -91,7 +91,7 @@ def call(params) {
 
         "Docker Build": {
           if (config.dockerBuild) {
-            withAcrClient(subscription, params.environment) {
+            withAcrClient(subscription) {
 
               def acbTemplateFilePath = 'acb.tpl.yaml'
 
