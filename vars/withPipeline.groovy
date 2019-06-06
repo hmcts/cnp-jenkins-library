@@ -26,6 +26,7 @@ def call(type, String product, String component, Closure body) {
   ]
 
   Subscription subscription = new Subscription(env)
+  AKSSubscription aksSubscription = new AKSSubscription(env)
 
   PipelineType pipelineType
 
@@ -79,6 +80,7 @@ def call(type, String product, String component, Closure body) {
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
+            aksSubscription: aksSubscription.aksPreviewName,
             environment: environment.previewName,
             product: product,
             component: component
@@ -113,6 +115,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
               subscription: subscription.nonProdName,
+              aksSubscription: aksSubscription.aksAatName,
               environment: environment.nonProdName,
               product: product,
               component: component
@@ -125,7 +128,8 @@ def call(type, String product, String component, Closure body) {
                 subscriptionName: subscription.nonProdName,
                 environmentName: environment.nonProdName,
                 product: product,
-                component: component
+                component: component,
+                aksSubscription: aksSubscription.aksPreviewName
               )
             }
           }
