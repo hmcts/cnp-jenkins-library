@@ -17,7 +17,7 @@ class AKSSubscriptionTest extends Specification {
     def aksSubscription = new AKSSubscription(["unusedVar": "unused"])
 
     then:
-    assert aksSubscription.aksPreviewName == "DCD-CNP-DEV"
+    assert aksSubscription.previewName == "DCD-CNP-DEV"
   }
 
   def "Defaults to 'DCD-CNP-DEV' for aat env when aat aksSubscription var override not set"() {
@@ -25,7 +25,7 @@ class AKSSubscriptionTest extends Specification {
     def aksSubscription = new AKSSubscription(["unusedVar": "unused"])
 
     then:
-    assert aksSubscription.aksAatName == "DCD-CNP-DEV"
+    assert aksSubscription.aatName == "DCD-CNP-DEV"
   }
   
   def "Overrides preview env name when aksSubscription var override is set"() {
@@ -33,7 +33,7 @@ class AKSSubscriptionTest extends Specification {
     def aksSubscription = new AKSSubscription(["AKS_PREVIEW_SUBSCRIPTION_NAME": "DCD-CFTAPPS-SBOX"])
 
     then:
-    assert aksSubscription.aksPreviewName == "DCD-CFTAPPS-SBOX"
+    assert aksSubscription.previewName == "DCD-CFTAPPS-SBOX"
   }
 
   def "Overrides aat env name when aksSubscription var override is set"() {
@@ -41,7 +41,7 @@ class AKSSubscriptionTest extends Specification {
     def aksSubscription = new AKSSubscription(["AKS_AAT_SUBSCRIPTION_NAME": "DCD-CFTAPPS-SBOX"])
 
     then:
-    assert aksSubscription.aksAatName == "DCD-CFTAPPS-SBOX"
+    assert aksSubscription.aatName == "DCD-CFTAPPS-SBOX"
   }
 
 }

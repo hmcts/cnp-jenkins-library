@@ -13,7 +13,7 @@ class Kubectl {
   def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
-    Kubectl (steps, subscription, namespace , new AKSSubscription().aksPreviewName)
+    Kubectl (steps, subscription, namespace , new AKSSubscription().previewName)
   }
 
   Kubectl(steps, subscription, namespace, aksSubscription) {

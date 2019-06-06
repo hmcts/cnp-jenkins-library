@@ -80,7 +80,7 @@ def call(type, String product, String component, Closure body) {
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
-            aksSubscription: aksSubscription.aksPreviewName,
+            aksSubscription: aksSubscription.previewName,
             environment: environment.previewName,
             product: product,
             component: component
@@ -115,7 +115,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
               subscription: subscription.nonProdName,
-              aksSubscription: aksSubscription.aksAatName,
+              aksSubscription: aksSubscription.aatName,
               environment: environment.nonProdName,
               product: product,
               component: component
@@ -129,7 +129,7 @@ def call(type, String product, String component, Closure body) {
                 environmentName: environment.nonProdName,
                 product: product,
                 component: component,
-                aksSubscription: aksSubscription.aksPreviewName
+                aksSubscription: aksSubscription.previewName
               )
             }
           }
