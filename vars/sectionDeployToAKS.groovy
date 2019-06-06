@@ -28,14 +28,16 @@ def call(params) {
   def component = params.component
   def aksUrl
   def environment = params.environment
+  def acr
+  def dockerImage
 
   Builder builder = pipelineType.builder
 
   if (config.dockerBuild) {
-    def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
-    def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
 
     withAcrClient(subscription) {
+      acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+      dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
       onPR {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
       }
