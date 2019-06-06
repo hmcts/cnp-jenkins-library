@@ -13,10 +13,14 @@ class Kubectl {
   def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
-    Kubectl (steps, subscription, namespace , new AKSSubscription(steps.env).previewName)
+    setVariables(steps, subscription, namespace, new AKSSubscription(steps.env).previewName)
   }
 
   Kubectl(steps, subscription, namespace, aksSubscription) {
+    setVariables(steps, subscription, namespace, aksSubscription)
+  }
+
+  private void setVariables(steps, subscription, namespace, aksSubscription) {
     this.steps = steps
     this.subscription = subscription
     this.namespace = namespace
