@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.contino.AKSSubscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
