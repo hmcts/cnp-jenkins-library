@@ -4,7 +4,6 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TeamNames
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -29,7 +28,7 @@ def call(DockerImage dockerImage, Map params) {
   def consul = new Consul(this, environment)
   def consulApiAddr = consul.getConsulIP()
 
-  def kubectl = new Kubectl(this, subscription, aksServiceName)
+  def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")

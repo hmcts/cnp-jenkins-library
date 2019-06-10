@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.contino.AKSSubscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
@@ -26,6 +27,7 @@ def call(type, String product, String component, Closure body) {
   ]
 
   Subscription subscription = new Subscription(env)
+  AKSSubscription aksSubscription = new AKSSubscription(env)
 
   PipelineType pipelineType
 
@@ -79,6 +81,7 @@ def call(type, String product, String component, Closure body) {
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
+            aksSubscription: aksSubscription.previewName,
             environment: environment.previewName,
             product: product,
             component: component
@@ -113,6 +116,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
               subscription: subscription.nonProdName,
+              aksSubscription: aksSubscription.aatName,
               environment: environment.nonProdName,
               product: product,
               component: component
@@ -125,7 +129,8 @@ def call(type, String product, String component, Closure body) {
                 subscriptionName: subscription.nonProdName,
                 environmentName: environment.nonProdName,
                 product: product,
-                component: component
+                component: component,
+                aksSubscription: aksSubscription.previewName
               )
             }
           }

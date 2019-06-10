@@ -6,6 +6,7 @@ class Kubectl {
 
   def steps
   def subscription
+  def aksSubscription
   def namespace
   def resourceGroup
   def clusterName
@@ -17,6 +18,16 @@ class Kubectl {
     this.namespace = namespace
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
+    this.aksSubscription = new AKSSubscription(steps.env).previewName
+  }
+
+  Kubectl(steps, subscription, namespace, aksSubscription) {
+    this.steps = steps
+    this.subscription = subscription
+    this.namespace = namespace
+    this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
+    this.clusterName = steps.env.AKS_CLUSTER_NAME
+    this.aksSubscription = aksSubscription
   }
 
   // ignore return status so doesn't fail if namespace already exists
@@ -72,7 +83,7 @@ class Kubectl {
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName}", returnStdout: true)
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a ", returnStdout: true)
   }
 
   private String getILBIP(String serviceName, String namespace) {
