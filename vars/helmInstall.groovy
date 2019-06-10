@@ -108,6 +108,7 @@ Provide values.yaml with the chart. Builds will start failing without values.yam
       "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
+      "--set global.enableKeyVaults=true",
       "--namespace ${namespace}"
     ]
 
