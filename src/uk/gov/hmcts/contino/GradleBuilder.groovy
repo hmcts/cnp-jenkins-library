@@ -78,12 +78,27 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-postgresdb-login', usernameVariable: 'OWASPDB_ACCOUNT', passwordVariable: 'OWASPDB_PASSWORD')]) {
-      try {
-        gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_PASSWORD}' -Dautoupdate='false' dependencyCheckAnalyze")
+    if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:5")) {
+      def secrets = [
+        [ secretType: 'Secret', name: 'OWASPPostgresDb-v5-Account', version: '', envVariable: 'OWASPDB_V5_ACCOUNT' ],
+        [ secretType: 'Secret', name: 'OWASPPostgresDb-v5-Password', version: '', envVariable: 'OWASPDB_V5_PASSWORD' ]
+      ]
+      steps.withAzureKeyVault(secrets) {
+        try {
+          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_PASSWORD}' -Dautoupdate='false' dependencyCheckAnalyze")
+        }
+        finally {
+          steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        }
       }
-      finally {
-        steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+    } else {
+      steps.withCredentials([steps.usernamePassword(credentialsId: 'owasp-postgresdb-login', usernameVariable: 'OWASPDB_ACCOUNT', passwordVariable: 'OWASPDB_PASSWORD')]) {
+        try {
+          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_PASSWORD}' -Dautoupdate='false' dependencyCheckAnalyze")
+        }
+        finally {
+          steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        }
       }
     }
   }
