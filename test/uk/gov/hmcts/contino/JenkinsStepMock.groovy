@@ -16,7 +16,7 @@ interface JenkinsStepMock {
   String libraryResource(String)
   Object writeFile(Map)
   Object withCredentials(ArrayList, Closure)
-  Object withAzureKeyVault(ArrayList, Closure)
+  Object withAzureKeyvault(ArrayList, Closure)
   Object httpRequest(LinkedHashMap)
 
   Object ansiColor(String, Closure)

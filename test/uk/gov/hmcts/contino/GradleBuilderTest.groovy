@@ -69,7 +69,7 @@ class GradleBuilderTest extends Specification {
   def "securityCheck calls 'gradle dependencyCheckAnalyze 5 if hasPlugin version 5'"() {
     setup:
       def closure
-      steps.withAzureKeyVault(_, { closure = it }) >> { closure.call() }
+      steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
       def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
         hasPlugin(_) >> true
       }
@@ -86,7 +86,7 @@ class GradleBuilderTest extends Specification {
   def "securityCheck calls 'gradle dependencyCheckAnalyze 4 if not hasPlugin version 5'"() {
     setup:
     def closure
-    steps.withAzureKeyVault(_, { closure = it }) >> { closure.call() }
+    steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
     def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
       hasPlugin(_) >> false
     }

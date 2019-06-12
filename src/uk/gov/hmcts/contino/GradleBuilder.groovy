@@ -84,7 +84,7 @@ class GradleBuilder extends AbstractBuilder {
       [ secretType: 'Secret', name: 'OWASPPostgresDb-Account', version: '', envVariable: 'OWASPDB_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-Password', version: '', envVariable: 'OWASPDB_PASSWORD' ]
     ]
-    steps.withAzureKeyVault(secrets) {
+    steps.withAzureKeyvault(secrets) {
       try {
         if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:5")) {
           gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' dependencyCheckAnalyze")
