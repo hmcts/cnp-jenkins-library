@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import org.joda.time.LocalDate
+
 class GradleBuilder extends AbstractBuilder {
 
   def product
@@ -87,8 +89,11 @@ class GradleBuilder extends AbstractBuilder {
     steps.withAzureKeyvault(secrets) {
       try {
         if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:5")) {
-          gradle("--info --stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAnalyze")
+          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAnalyze")
         } else {
+          if (new Date() > new Date().parse("dd.MM.yyyy", "17.07.2019")) {
+            throw new RuntimeException("Owasp dependency check version 4 is not available anymore. Please update your build to use version 5.")
+          }
           gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_PASSWORD}' -Dautoupdate='false' dependencyCheckAnalyze")
         }
       }

@@ -2,6 +2,8 @@ package uk.gov.hmcts.contino
 
 import spock.lang.Specification
 
+import java.time.LocalDate
+
 class GradleBuilderTest extends Specification {
 
   static final String GRADLE_CMD = './gradlew'
@@ -83,6 +85,7 @@ class GradleBuilderTest extends Specification {
       })
   }
 
+  // NOTE: delete this test after 17/07/2019
   def "securityCheck calls 'gradle dependencyCheckAnalyze 4 if not hasPlugin version 5'"() {
     setup:
     def closure
@@ -98,6 +101,23 @@ class GradleBuilderTest extends Specification {
       GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') &&
         it.contains('jdbc:postgresql://owaspdependency-prod')
     })
+  }
+
+  // NOTE: delete this test after 17/07/2019
+  def "securityCheck throws Exception if 'gradle dependencyCheckAnalyze 4 is called after 17.07.2019'"() {
+    setup:
+    def closure
+    steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
+    def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
+      hasPlugin(_) >> false
+    }
+    GroovySpy(Date, global: true)
+    new Date() >> new Date().parse("dd.MM.yyyy", "17.08.2019")
+
+    when:
+      b.securityCheck()
+    then:
+      thrown RuntimeException
   }
 
   def "runProviderVerification triggers a gradlew hook"() {
