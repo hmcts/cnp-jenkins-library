@@ -2,8 +2,6 @@ package uk.gov.hmcts.contino
 
 import spock.lang.Specification
 
-import java.time.LocalDate
-
 class GradleBuilderTest extends Specification {
 
   static final String GRADLE_CMD = './gradlew'
