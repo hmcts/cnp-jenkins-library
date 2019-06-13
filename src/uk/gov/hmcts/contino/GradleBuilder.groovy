@@ -1,7 +1,5 @@
 package uk.gov.hmcts.contino
 
-import org.joda.time.LocalDate
-
 class GradleBuilder extends AbstractBuilder {
 
   def product
