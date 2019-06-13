@@ -83,7 +83,7 @@ class GradleBuilderTest extends Specification {
       })
   }
 
-  // NOTE: delete this test after 17/07/2019
+  // NOTE: delete this test after 15/07/2019
   def "securityCheck calls 'gradle dependencyCheckAnalyze 4 if not hasPlugin version 5'"() {
     setup:
     def closure
@@ -101,7 +101,7 @@ class GradleBuilderTest extends Specification {
     })
   }
 
-  // NOTE: delete this test after 17/07/2019
+  // NOTE: delete this test after 15/07/2019
   def "securityCheck throws Exception if 'gradle dependencyCheckAnalyze 4 is called after 17.07.2019'"() {
     setup:
     def closure
@@ -110,7 +110,7 @@ class GradleBuilderTest extends Specification {
       hasPlugin(_) >> false
     }
     GroovySpy(Date, global: true)
-    new Date() >> new Date().parse("dd.MM.yyyy", "17.08.2019")
+    new Date() >> new Date().parse("dd.MM.yyyy", "16.07.2019")
 
     when:
       b.securityCheck()
