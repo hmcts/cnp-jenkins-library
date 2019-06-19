@@ -30,6 +30,8 @@ class TeamNames {
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
                       'xui': 'Professional Applications',
+                      'xuiao': 'Professional Applications',
+                      'xuimo': 'Professional Applications',
                       'coh': 'Professional Applications',
                       'rpa': 'Professional Applications',
                       'rpx': 'Professional Applications',
