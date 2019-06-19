@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 
 def call(Map params) {
   withAksClient(params.subscriptionName, params.environmentName) {
-    Kubectl kubectl = new Kubectl(this, params.subscriptionName, null)
+    Kubectl kubectl = new Kubectl(this, params.subscriptionName, null, params.aksSubscription )
     kubectl.login()
     def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
     Consul consul = new Consul(this, params.environmentName)
