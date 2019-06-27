@@ -12,7 +12,8 @@ def call(Long deploymentNumber, String url) {
         "environment_url": "${url}"
       }""",
       timeout: 15, url: "https://api.github.com/repos/${repositoryShortUrl}/deployments/${deploymentNumber}/statuses",
-      validResponseCodes: '200:201'
+      validResponseCodes: '200:201',
+      consoleLogResponseBody: true
 
   }
 }
