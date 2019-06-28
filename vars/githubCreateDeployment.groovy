@@ -15,7 +15,8 @@ def call() {
         "auto_merge": false,
         "transient_environment": true
       }""",
-      timeout: 15, url: "https://api.github.com/repos/${repositoryShortUrl}/deployments", validResponseCodes: '200:201'
+      timeout: 15, url: "https://api.github.com/repos/${repositoryShortUrl}/deployments", validResponseCodes: '200:201',
+      consoleLogResponseBody: true
 
     def deploymentId = new JsonSlurperClassic().parseText(response.content).id
     return deploymentId
