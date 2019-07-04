@@ -123,9 +123,11 @@ class Helm {
   }
 
   private Object execute(String command, String name, List<String> values, List<String> options) {
-    def optionsStr = "${options == null ?  '' : options.join(' ')}"
-    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
-    helm command, name, "${valuesStr} ${optionsStr}"
+    steps.retry(3) {
+      def optionsStr = "${options == null ?  '' : options.join(' ')}"
+      def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
+      helm command, name, "${valuesStr} ${optionsStr}"
+    }
   }
 
 }
