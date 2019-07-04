@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import spock.lang.Shared
 import spock.lang.Specification
 
 class HelmTest extends Specification {
@@ -8,6 +9,7 @@ class HelmTest extends Specification {
   static final String CHART_PATH = "charts/${CHART}"
   static final String SUBSCRIPTION = "sandbox"
 
+  @Shared
   def steps
   def helm
 
@@ -17,6 +19,9 @@ class HelmTest extends Specification {
                   AKS_CLUSTER_NAME: "cnp-aks-cluster",
                   SUBSCRIPTION_NAME: "${SUBSCRIPTION}"]
     helm = new Helm(steps, CHART)
+
+    def closure
+    steps.retry(3, { closure = it }) >> { closure.call() }
   }
 
   def "dependencyUpdate() should execute with the correct chart"() {

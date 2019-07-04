@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 import static org.assertj.core.api.Assertions.*
