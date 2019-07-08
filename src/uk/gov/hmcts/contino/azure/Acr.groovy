@@ -21,8 +21,8 @@ class Acr extends Az {
    */
   Acr(steps, subscription, registryName, resourceGroup) {
     super(steps, subscription)
-    this.registryName = registryName
-    this.resourceGroup = resourceGroup
+    this.registryName = 'hmctspublic'
+    this.resourceGroup = 'rpe-acr-prod-rg'
   }
 
   /**

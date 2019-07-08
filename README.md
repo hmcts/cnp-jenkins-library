@@ -328,14 +328,14 @@ steps:
   # Pull previous build images
   # This is used to leverage on layers re-use for the next steps
   - id: pull-base
-    cmd: docker pull {{.Run.Registry}}/hmcts/name-your-project-here/base:latest || true
+    cmd: docker pull {{.Run.Registry}}/product/component/base:latest || true
     when: ["-"]
     keep: true
   # (Re)create base image
   - id: base
     build: >
-      -t {{.Run.Registry}}/hmcts/name-your-project-here/base
-      --cache-from {{.Run.Registry}}/hmcts/name-your-project-here/base:latest
+      -t {{.Run.Registry}}/product/component/base
+      --cache-from {{.Run.Registry}}/product/component/base:latest
       --target base
       .
     when:
@@ -345,7 +345,7 @@ steps:
   - id: runtime
     build: >
       -t {{.Run.Registry}}/{{CI_IMAGE_TAG}}
-      --cache-from {{.Run.Registry}}/hmcts/name-your-project-here/base:latest
+      --cache-from {{.Run.Registry}}/product/component/base:latest
       --target runtime
       .
     when:
@@ -354,7 +354,7 @@ steps:
   # Push to registry
   - id: push-images
     push:
-      - "{{.Run.Registry}}/hmcts/name-your-project-here/base:latest"
+      - "{{.Run.Registry}}/product/component/base:latest"
       - "{{.Run.Registry}}/{{CI_IMAGE_TAG}}"
     when:
       - runtime
