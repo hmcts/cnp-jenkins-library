@@ -67,8 +67,7 @@ def call(type, String product, String component, Closure body) {
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
           builder: pipelineType.builder,
-          subscription: subscription.nonProdName,
-          environment: environment.nonProdName,
+          subscription: subscription.prodName, // used for docker images
           product: product,
           component: component,
           pactBrokerUrl: environment.pactBrokerUrl
