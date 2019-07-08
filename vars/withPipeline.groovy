@@ -81,6 +81,7 @@ def call(type, String product, String component, Closure body) {
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
             registrySubscription: subscription.prodName,
+            aksSubscription: aksSubscription.previewName,
             environment: environment.previewName,
             product: product,
             component: component
@@ -116,6 +117,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.nonProdName,
               registrySubscription: subscription.prodName,
+              aksSubscription: aksSubscription.aatName,
               environment: environment.nonProdName,
               product: product,
               component: component
