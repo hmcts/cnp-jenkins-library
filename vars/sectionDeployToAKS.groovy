@@ -35,14 +35,14 @@ def call(params) {
 
   if (config.dockerBuild) {
 
-    withAcrClient(subscription) {
-      acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+    withAcrClient(params.registrySubscription) {
+      acr = new Acr(this, params.registrySubscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
       onPR {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
       }
     }
-    withAksClient(subscription, environment) {
+    withAksClient(params.registrySubscription, environment) {
 
       if (config.deployToAKS) {
 

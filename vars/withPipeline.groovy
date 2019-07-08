@@ -94,6 +94,7 @@ def call(type, String product, String component, Closure body) {
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
+            registrySubscription: subscription.prodName,
             product: product,
             component: component,
             stage: DockerImage.DeploymentStage.AAT,
