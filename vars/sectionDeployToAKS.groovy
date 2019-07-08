@@ -46,39 +46,42 @@ def call(params) {
     withAksClient(registrySubscription, environment) {
 
       if (config.deployToAKS) {
+        withSubscription(subscription) {
+          withTeamSecrets(config, environment) {
+            stage('Deploy to AKS') {
+              pcr.callAround('aksdeploy') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
+                  onPR {
+                    deploymentNumber = githubCreateDeployment()
+                  }
 
-        withTeamSecrets(config, environment) {
-          stage('Deploy to AKS') {
-            pcr.callAround('aksdeploy') {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
-                onPR {
-                  deploymentNumber = githubCreateDeployment()
-                }
+                  aksUrl = aksDeploy(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
 
-                aksUrl = aksDeploy(dockerImage, params)
-                log.info("deployed component URL: ${aksUrl}")
-
-                onPR {
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                  onPR {
+                    githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                  }
                 }
               }
             }
           }
         }
       } else if (config.installCharts) {
-        withTeamSecrets(config, environment) {
-          stage("AKS deploy - ${environment}") {
-            pcr.callAround('akschartsinstall') {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
-                onPR {
-                  deploymentNumber = githubCreateDeployment()
-                }
+        withSubscription(subscription) {
+          withTeamSecrets(config, environment) {
+            stage("AKS deploy - ${environment}") {
+              pcr.callAround('akschartsinstall') {
+                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
+                  onPR {
+                    deploymentNumber = githubCreateDeployment()
+                  }
 
-                aksUrl = helmInstall(dockerImage, params)
-                log.info("deployed component URL: ${aksUrl}")
+                  aksUrl = helmInstall(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
 
-                onPR {
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                  onPR {
+                    githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                  }
                 }
               }
             }
