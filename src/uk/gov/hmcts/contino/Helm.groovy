@@ -48,6 +48,9 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+
+    // to be removed when hmcts registry is deleted, kept in to maintain backwards compatibility
+    this.acr.az "acr helm repo add --subscription DCD-CNP-DEV --name hmcts"
   }
 
   def publishIfNotExists(List<String> values) {
