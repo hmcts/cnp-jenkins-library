@@ -17,5 +17,6 @@ class Subscription implements Serializable {
     previewName = env.PREVIEW_SUBSCRIPTION_NAME ?: 'nonprod'
     hmctsDemoName = env.HMCTSDEMO_SUBSCRIPTION_NAME ?: 'hmctsdemo'
     qaName = env.QA_SUBSCRIPTION_NAME ?: 'qa'
+    ethosLdataName = env.ETHOSLDATA_SUBSCRIPTION_NAME ?: 'ethosldata'
   }
 }
