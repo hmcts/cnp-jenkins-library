@@ -8,6 +8,7 @@ class Environment implements Serializable {
   def final hmctsDemoName
   def final perftestName
   def final ithcName
+  def final ethosLdataName
   def final pactBrokerUrl
 
   def final functionalTestEnvironments
