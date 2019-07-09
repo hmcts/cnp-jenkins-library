@@ -18,6 +18,7 @@ class Helm {
   String chartLocation
   def chartName
   def notFoundMessage = "Not found"
+  String tlsOptions = ""
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -46,6 +47,15 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${subscriptionId}"
+  }
+
+  def enableTLS(String aksSubscription, String keyVaultName){
+    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
+    def helmRoot = this.helm "home", "", ""
+    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-ca-cert' --subscription '$aksSubscription' --file '$helmRoot/ca.pem' "
+    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-cert' --subscription '$aksSubscription' --file '$helmRoot/cert.pem' "
+    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-key' --subscription '$aksSubscription' --file '$helmRoot/key.pem' "
+    this.tlsOptions = "--tls"
   }
 
   def publishIfNotExists(List<String> values) {
@@ -88,7 +98,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def allOptions = ["--install", "--wait", "--timeout 500"] + (options == null ? [] : options)
+    def allOptions = ["--install", "--wait", "--timeout 500", this.tlsOptions] + (options == null ? [] : options)
     def allValues = values.flatten()
     this.execute("upgrade", "${this.chartName}-${imageTag} ${this.chartLocation}", allValues, allOptions)
   }
@@ -98,16 +108,16 @@ class Helm {
   }
 
   def delete(String imageTag) {
-    this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge"])
+    this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge", this.tlsOptions])
   }
 
   def exists(String imageTag, String namespace) {
-    def deployments = this.execute("list", "", null, ["-q", "--namespace ${namespace}"])
+    def deployments = this.execute("list", "", null, ["-q", "--namespace ${namespace}", this.tlsOptions])
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
   def history(String imageTag) {
-    this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json"])
+    this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json", this.tlsOptions])
   }
 
   def hasAnyDeployed(String imageTag, String namespace) {
