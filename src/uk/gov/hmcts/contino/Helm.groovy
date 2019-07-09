@@ -52,8 +52,9 @@ class Helm {
   def enableTLS(String aksSubscription, String keyVaultName){
     def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
     def helmRoot = (this.helm ("home", "", "" )).trim()
-    this.steps.echo "Helm root is : ${helmRoot} and this is debug statement "
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-ca-cert' --subscription '$aksSubscription' --file $helmRoot/ca.pem "
+    def localPath = sh(script: 'pwd', returnStdout: true).trim()
+    this.steps.echo "Helm root is : ${helmRoot} and current path is ${localPath} --> debug statement "
+    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-ca-cert' --subscription '$aksSubscription' --file ca.pem "
     az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-cert' --subscription '$aksSubscription' --file $helmRoot/cert.pem "
     az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-key' --subscription '$aksSubscription' --file $helmRoot/key.pem "
     this.tlsOptions = "--tls"
