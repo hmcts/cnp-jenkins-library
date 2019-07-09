@@ -7,6 +7,7 @@ class Subscription implements Serializable {
   def final previewName
   def final hmctsDemoName
   def final qaName
+  def final ethosLdataName
 
   Subscription(Object env) {
     Objects.requireNonNull(env)
