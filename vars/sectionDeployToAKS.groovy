@@ -24,7 +24,6 @@ def call(params) {
   PipelineType pipelineType = params.pipelineType
 
   def subscription = params.subscription
-  def registrySubscription = params.registrySubscription
   def product = params.product
   def component = params.component
   def aksUrl
@@ -36,8 +35,8 @@ def call(params) {
 
   if (config.dockerBuild) {
 
-    withAcrClient(registrySubscription) {
-      acr = new Acr(this, registrySubscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
+    withAcrClient(subscription) {
+      acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP)
       dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
       onPR {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
@@ -46,6 +45,7 @@ def call(params) {
     withAksClient(subscription, environment) {
 
       if (config.deployToAKS) {
+
         withTeamSecrets(config, environment) {
           stage('Deploy to AKS') {
             pcr.callAround('aksdeploy') {

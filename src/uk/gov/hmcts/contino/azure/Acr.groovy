@@ -6,6 +6,7 @@ class Acr extends Az {
 
   def registryName
   def resourceGroup
+  def registrySubscription
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -23,6 +24,7 @@ class Acr extends Az {
     super(steps, subscription)
     this.registryName = registryName
     this.resourceGroup = resourceGroup
+    this.registrySubscription = subscription == "sandbox" ? 'DCD-CFT-Sandbox' : 'DCD-CNP-PROD'
   }
 
   /**
@@ -45,7 +47,7 @@ class Acr extends Az {
    *   The raw value of the digest e.g. sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa
    */
   def getImageDigest(imageName) {
-    def digest = this.az "acr repository show --name ${registryName} --image ${imageName} --query [digest] -otsv"
+    def digest = this.az "acr repository show --name ${registryName} --image ${imageName} --subscription ${registrySubscription} --query [digest] -o tsv"
     return digest?.trim()
   }
 
@@ -59,7 +61,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
+    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName} ."
   }
 
   /**
@@ -89,7 +91,7 @@ class Acr extends Az {
    *   the hostname. e.g. cnpacr.azurecr.io
    */
   def getHostname() {
-    def host = this.az "acr show -n ${registryName} --query loginServer -otsv"
+    def host = this.az "acr show -n ${registryName} --subscription ${registrySubscription} --query loginServer -otsv"
     return host?.trim()
   }
 
@@ -110,12 +112,12 @@ class Acr extends Az {
   def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
     def baseTag = (stage == DockerImage.DeploymentStage.PR  || dockerImage.imageTag == 'staging') ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
-    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --source ${baseTag} -t ${additionalTag}"?.trim()
+    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 
   def untag(DockerImage dockerImage) {
     if (!dockerImage.isLatest()) {
-      this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --image ${dockerImage.getShortName()}"
+      this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --image ${dockerImage.getShortName()}"
     }
   }
 
@@ -141,7 +143,7 @@ class Acr extends Az {
 
     def tagFound = false
     try {
-      def tags = this.az "acr repository show-tags -n ${registryName} -g ${resourceGroup} --repository ${repository}"
+      def tags = this.az "acr repository show-tags -n ${registryName} --subscription ${registrySubscription} -g ${resourceGroup} --repository ${repository}"
       //steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
       tagFound = tags.contains(tag)
     } catch (noTagsError) {
