@@ -9,6 +9,7 @@ class AcrTest extends Specification {
   static final String SUBSCRIPTION  = 'sandbox'
   static final String REGISTRY_NAME = 'cnpacr'
   static final String REGISTRY_RESOURCE_GROUP = 'cnp-acr-rg'
+  static final String REGISTRY_SUBSCRIPTION = 'a-sub'
   static final String IMAGE_NAME    = 'hmcts/alpine:sometag'
 
   def steps
@@ -18,7 +19,7 @@ class AcrTest extends Specification {
   def setup() {
     steps = Mock(JenkinsStepMock.class)
     dockerImage = Mock(DockerImage.class)
-    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP)
+    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
   }
 
   def "login() should login with registry name"() {
@@ -38,7 +39,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr repository show --name ${REGISTRY_NAME} --image ${IMAGE_NAME} --query [digest] -otsv") &&
+                    it.get('script').contains("az acr repository show --name ${REGISTRY_NAME} --image ${IMAGE_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --query [digest] -o tsv") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
@@ -51,7 +52,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} -g ${REGISTRY_RESOURCE_GROUP} --build-arg REGISTRY_NAME=${REGISTRY_NAME} .") &&
+                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} --subscription ${REGISTRY_SUBSCRIPTION} -g ${REGISTRY_RESOURCE_GROUP} --build-arg REGISTRY_NAME=${REGISTRY_NAME} .") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
@@ -62,7 +63,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr show -n ${REGISTRY_NAME} --query loginServer -otsv") &&
+                    it.get('script').contains("az acr show -n ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --query loginServer -otsv") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }
@@ -107,7 +108,7 @@ class AcrTest extends Specification {
 
     then:
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-prod") &&
+                    it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --subscription ${REGISTRY_SUBSCRIPTION} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME} -t ${IMAGE_NAME}-prod") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)})
   }

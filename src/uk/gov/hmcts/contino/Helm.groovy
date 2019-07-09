@@ -25,7 +25,7 @@ class Helm {
     this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
-    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup)
+    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, this.steps.env.REGISTRY_SUBSCRIPTION)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
   }

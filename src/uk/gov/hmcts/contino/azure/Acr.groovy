@@ -20,11 +20,11 @@ class Acr extends Az {
    * @param registryName
    *   the 'resource name' of the ACR registry.  i.e. 'cnpacr' not 'cnpacr.azurecr.io'
    */
-  Acr(steps, subscription, registryName, resourceGroup) {
+  Acr(steps, subscription, registryName, resourceGroup, registrySubscription) {
     super(steps, subscription)
     this.registryName = registryName
     this.resourceGroup = resourceGroup
-    this.registrySubscription = subscription == "sandbox" ? 'DCD-CFT-Sandbox' : 'DCD-CNP-PROD'
+    this.registrySubscription = registrySubscription
   }
 
   /**
@@ -34,7 +34,7 @@ class Acr extends Az {
    *   stdout/stderr of login command
    */
   def login() {
-    this.az "acr login --name ${registryName}"
+    this.az "acr login --name ${registryName} --subscription ${registrySubscription}"
   }
 
   /**
