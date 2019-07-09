@@ -58,7 +58,7 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
-    if (! fileExists(defaultValues)) {
+    if (!fileExists(defaultValues)) {
 
       onPR {
         templateOverrideEnvironment = new Environment(env).nonProdName

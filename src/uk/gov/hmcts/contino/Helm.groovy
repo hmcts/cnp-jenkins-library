@@ -18,14 +18,16 @@ class Helm {
   String chartLocation
   def chartName
   def notFoundMessage = "Not found"
+  String registrySubscription
 
   Helm(steps, String chartName) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
     this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
-    this.registryName = (subscription == "sandbox" ? "hmctssandbox" : "hmcts")
-    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, this.steps.env.REGISTRY_SUBSCRIPTION)
+    this.registryName = this.steps.env.REGISTRY_NAME
+    this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
+    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
   }
@@ -45,7 +47,7 @@ class Helm {
   }
 
   def addRepo() {
-    this.acr.az "acr helm repo add --subscription ${subscriptionId}"
+    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
   }
 
   def publishIfNotExists(List<String> values) {
@@ -58,7 +60,7 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-      resultOfSearch = this.acr.az "acr helm show --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
+      resultOfSearch = this.acr.az "acr helm show --subscription ${registrySubscription} --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
     } catch(ignored) {
       resultOfSearch = notFoundMessage
     }
@@ -68,7 +70,7 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
-      this.acr.az "acr helm push --name ${registryName} ${this.chartName}-${version}.tgz"
+      this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
