@@ -55,7 +55,7 @@ def call(DockerImage dockerImage, Map params) {
 
     def helm = new Helm(this, chartName)
     helm.setup()
-    if(params.aksSubscription == new AKSSubscription(this.env).aatName) {
+    if(subscription != "sandbox" && params.aksSubscription == new AKSSubscription(this.env).aatName) {
       helm.enableTLS(params.aksSubscription, this.env.AAT_TLS_KEY_VAULT)
     }
 
