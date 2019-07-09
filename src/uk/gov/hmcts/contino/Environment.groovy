@@ -23,6 +23,7 @@ class Environment implements Serializable {
     hmctsDemoName = env.HMCTSDEMO_ENVIRONMENT_NAME ?: 'hmctsdemo'
     perftestName = env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest'
     ithcName = env.ITHC_ENVIRONMENT_NAME ?: 'ithc'
+    ethosLdataName = env.ETHOSLDATA_ENVIRONMENT_NAME ?: 'ethosldata'
     pactBrokerUrl = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
 
     functionalTestEnvironments = [nonProdName, previewName]
