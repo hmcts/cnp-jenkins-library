@@ -126,6 +126,7 @@ def call(type, String product, String component, Closure body) {
           if (pipelineConfig.installCharts) {
             stage('Publish Helm chart') {
               helmPublish(
+                appPipelineConfig: pipelineConfig,
                 subscriptionName: subscription.nonProdName,
                 environmentName: environment.nonProdName,
                 product: product,

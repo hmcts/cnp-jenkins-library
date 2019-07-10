@@ -1,6 +1,8 @@
 import uk.gov.hmcts.contino.Helm
 
 def call(Map params) {
+  AppPipelineConfig config = params.appPipelineConfig
+
   withAksClient(params.subscriptionName, params.environmentName) {
 
     String chartName = "${params.product}-${params.component}"
@@ -31,6 +33,13 @@ def call(Map params) {
       }
 
       helm.publishIfNotExists(values)
+
+      if (!config.legacyDeployment) {
+        consul.registerDns("${params.product}-${params.component}-${params.environmentName}", ingressIP)
+      }
+      if (config.aksStagingDeployment) {
+        consul.registerDns("${params.product}-${params.component}", ingressIP)
+      }
     }
   }
 }

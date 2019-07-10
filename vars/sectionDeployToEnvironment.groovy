@@ -40,6 +40,20 @@ def call(params) {
                   if (config.legacyDeployment) {
                     scmServiceRegistration(environment)
                   }
+                  withAksClient(subscription, environment) {
+                    Kubectl kubectl = new Kubectl(this, subscription, null, params.aksSubscription)
+                    kubectl.login()
+                    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
+                    Consul consul = new Consul(this, environment)
+                    if (!config.legacyDeployment) {
+                      consul.registerDns("${params.product}-${params.component}-${params.environmentName}", ingressIP)
+                    } else {
+                      consul.registerDns("${params.product}-${params.component}-${params.environmentName}", env.TF_VAR_ilbIp)
+                    }
+                    if (config.aksStagingDeployment) {
+                      consul.registerDns("${params.product}-${params.component}", ingressIP)
+                    }
+                  }
                 }
               }
             }
