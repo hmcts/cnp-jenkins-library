@@ -1,6 +1,4 @@
-import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.Helm
-import uk.gov.hmcts.contino.Kubectl
 
 def call(Map params) {
   withAksClient(params.subscriptionName, params.environmentName) {
