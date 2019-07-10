@@ -4,11 +4,6 @@ import uk.gov.hmcts.contino.Kubectl
 
 def call(Map params) {
   withAksClient(params.subscriptionName, params.environmentName) {
-    Kubectl kubectl = new Kubectl(this, params.subscriptionName, null, params.aksSubscription )
-    kubectl.login()
-    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-    Consul consul = new Consul(this, params.environmentName)
-    def consulApiAddr = consul.getConsulIP()
 
     String chartName = "${params.product}-${params.component}"
 
@@ -17,8 +12,6 @@ def call(Map params) {
 
     def templateEnvVars = [
       "IMAGE_NAME=https://hmcts.azurecr.io/hmcts/${params.product}-${params.component}:latest",
-      "CONSUL_LB_IP=${consulApiAddr}",
-      "INGRESS_IP=${ingressIP}"
     ]
 
     withEnv(templateEnvVars) {
