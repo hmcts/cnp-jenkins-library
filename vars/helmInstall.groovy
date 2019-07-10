@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.AKSSubscription
 
 
 def call(DockerImage dockerImage, Map params) {
@@ -54,6 +55,10 @@ def call(DockerImage dockerImage, Map params) {
 
     def helm = new Helm(this, chartName)
     helm.setup()
+    if(subscription != "sandbox" && params.aksSubscription == new AKSSubscription(this.env).aatName) {
+      helm.enableTLS(params.aksSubscription, this.env.AAT_AKS_KEY_VAULT)
+    }
+
 
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
