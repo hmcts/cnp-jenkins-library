@@ -30,6 +30,10 @@ def call() {
       environmentName: environment.ithcName,
       subscriptionName: subscription.qaName
     ]
+    ethosldata: [
+      environmentName: environment.ethosLdataName,
+      subscriptionName: subscription.ethosLdataName
+    ]
   ]
   return autoDeployEnvironments[branch]
 }
