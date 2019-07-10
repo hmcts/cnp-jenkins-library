@@ -23,10 +23,10 @@ class TeamNames {
                       'ccpay':'Fees/Pay',
                       'bar':'Fees/Pay',
                       'probate':'Probate',
-                      'bulk-scan':'Software Engineering',
-                      'rpe':'Software Engineering',
-                      'draft-store':'Software Engineering',
-                      'pbi':'Software Engineering',
+                      'bulk-scan':'RPE',
+                      'rpe':'RPE',
+                      'draft-store':'RPE',
+                      'pbi':'RPE',
                       'jui': 'Professional Applications',
                       'pui': 'Professional Applications',
                       'xui': 'Professional Applications',
@@ -48,7 +48,7 @@ class TeamNames {
                       'fpl': 'Family Public Law',
                       'ctsc': 'CTSC',
                       'rd': 'Reference Data',
-                      'data-extractor' : 'Software Engineering'
+                      'data-extractor' : 'RPE'
   ]
 
   def getName (String product) {
