@@ -54,7 +54,7 @@ class SubscriptionTest extends Specification {
 
   def "Overrides ethosldata env name when subscription var override is set"() {
     when:
-    def subscription = new Subscription(["ETHOSLDATA_SUBSCRIPTION_NAMEr": "ethosldata"])
+    def subscription = new Subscription(["ETHOSLDATA_SUBSCRIPTION_NAME": "ethosldata"])
 
     then:
     assert subscription.ethosLdataName == "ethosldata"
