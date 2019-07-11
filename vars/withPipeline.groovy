@@ -143,7 +143,9 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.prodName,
             environment: environment.prodName,
             product: product,
-            component: component)
+            component: component,
+            aksSubscription: aksSubscription.aatName
+          )
 
           sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,

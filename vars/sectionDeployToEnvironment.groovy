@@ -5,7 +5,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 
-
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
@@ -40,20 +39,8 @@ def call(params) {
                   if (config.legacyDeployment) {
                     scmServiceRegistration(environment)
                   }
-                  withAksClient(subscription, environment) {
-                    Kubectl kubectl = new Kubectl(this, subscription, null, params.aksSubscription)
-                    kubectl.login()
-                    def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-                    Consul consul = new Consul(this, environment)
-                    if (!config.legacyDeployment) {
-                      consul.registerDns("${params.product}-${params.component}-${params.environmentName}", ingressIP)
-                    } else {
-                      consul.registerDns("${params.product}-${params.component}-${params.environmentName}", env.TF_VAR_ilbIp)
-                    }
-                    if (config.aksStagingDeployment) {
-                      consul.registerDns("${params.product}-${params.component}", ingressIP)
-                    }
-                  }
+                  params.registerAse = !config.legacyDeployment
+                  registerDns(params)
                 }
               }
             }
