@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.Helm
 
 def call(Map params) {
-  withAksClient(params.subscriptionName, params.environmentName) {
+  withAksClient(params.subscription, params.environment) {
 
     String chartName = "${params.product}-${params.component}"
 
@@ -23,8 +23,8 @@ def call(Map params) {
       }
       values << defaultValues
 
-      def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${params.environmentName}.template.yaml"
-      def valuesEnv = "${helmResourcesDir}/${chartName}/values.${params.environmentName}.yaml"
+      def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${params.environment}.template.yaml"
+      def valuesEnv = "${helmResourcesDir}/${chartName}/values.${params.environment}.yaml"
       if (fileExists(valuesEnvTemplate)) {
         sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
         values << valuesEnv

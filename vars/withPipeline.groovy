@@ -127,8 +127,8 @@ def call(type, String product, String component, Closure body) {
             stage('Publish Helm chart') {
               helmPublish(
                 appPipelineConfig: pipelineConfig,
-                subscriptionName: subscription.nonProdName,
-                environmentName: environment.nonProdName,
+                subscription: subscription.nonProdName,
+                environment: environment.nonProdName,
                 product: product,
                 component: component,
                 aksSubscription: aksSubscription.previewName
