@@ -132,7 +132,7 @@ def call(type, String product, String component, Closure body) {
                 environment: environment.nonProdName,
                 product: product,
                 component: component,
-                aksSubscription: aksSubscription.previewName
+                aksSubscription: aksSubscription.aatName
               )
             }
           }
