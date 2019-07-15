@@ -119,6 +119,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscription.aatName,
               environment: environment.nonProdName,
+              isStaging: true,
               product: product,
               component: component
             )

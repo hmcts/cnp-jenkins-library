@@ -39,7 +39,6 @@ def call(params) {
                   if (config.legacyDeployment) {
                     scmServiceRegistration(environment)
                   }
-                  params.registerAse = !config.legacyDeployment
                   registerDns(params)
                 }
               }
