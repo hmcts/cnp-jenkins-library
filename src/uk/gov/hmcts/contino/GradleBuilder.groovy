@@ -90,7 +90,7 @@ class GradleBuilder extends AbstractBuilder {
           gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAnalyze")
         } else {
           // NOTE: delete owasp 4 dependency check and its tests in GradleBuilderTest some time after 15/07/2019
-          if (ew Date() > new Date().parse("dd.MM.yyyy", "15.07.2019")) {
+          if (new Date() > new Date().parse("dd.MM.yyyy", "15.07.2019")) {
             throw new RuntimeException("Owasp dependency check version 4 is not available anymore. Please update your build to use version 5.")
           }
         }
