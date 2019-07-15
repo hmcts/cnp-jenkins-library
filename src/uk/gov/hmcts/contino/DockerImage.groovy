@@ -4,8 +4,6 @@ import uk.gov.hmcts.contino.azure.Acr
 
 class DockerImage {
 
-  static String REPOSITORY = 'hmcts'
-
   // environment the image has been promoted to
   enum DeploymentStage {
     PR('pr'),
@@ -90,8 +88,7 @@ class DockerImage {
     }
 
     return this.getRegistryHostname().concat('/')
-      .concat(REPOSITORY).concat('/')
-      .concat(this.product).concat('-')
+      .concat(this.product).concat('/')
       .concat(this.component).concat('@')
       .concat(digest)
   }
@@ -126,7 +123,7 @@ class DockerImage {
    * Get the 'short name' of the image, without the registry prefix
    *
    * @return
-   *   the short name. e.g. hmcts/product-component:branch-commit or hmcts/product-component:latest
+   *   the short name. e.g. product/component:branch-commit or product/component:latest
    */
   def getShortName() {
     return shortName(this.imageTag)
@@ -163,8 +160,8 @@ class DockerImage {
   }
 
   private def repositoryName() {
-    return REPOSITORY.concat('/')
-      .concat(this.product).concat('-')
+    return this.product
+      .concat('/')
       .concat(this.component)
   }
 
