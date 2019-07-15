@@ -83,6 +83,23 @@ class GradleBuilderTest extends Specification {
       })
   }
 
+  // NOTE: delete this test some time after 15/07/2019 together with the related code in GradleBuilder
+  def "securityCheck throws Exception if 'gradle dependencyCheckAnalyze 4 is called after 15.07.2019'"() {
+    setup:
+    def closure
+    steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
+    def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
+      hasPlugin(_) >> false
+    }
+    GroovySpy(Date, global: true)
+    new Date() >> new Date().parse("dd.MM.yyyy", "16.07.2019")
+
+    when:
+      b.securityCheck()
+    then:
+      thrown RuntimeException
+  }
+
   def "runProviderVerification triggers a gradlew hook"() {
     setup:
       def version = "v3r510n"
