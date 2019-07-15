@@ -107,6 +107,7 @@ def call(type, String product, String component, Closure body) {
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
             aksSubscription: aksSubscription.aatName,
+            aksInfraRg: aksSubscription.aatInfraRgName,
             environment: environment.nonProdName,
             product: product,
             component: component)
@@ -118,6 +119,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscription.aatName,
+              aksInfraRg: aksSubscription.aatInfraRgName,
               environment: environment.nonProdName,
               isStaging: true,
               product: product,
@@ -133,7 +135,8 @@ def call(type, String product, String component, Closure body) {
                 environment: environment.nonProdName,
                 product: product,
                 component: component,
-                aksSubscription: aksSubscription.aatName
+                aksSubscription: aksSubscription.aatName,
+                aksInfraRg: aksSubscription.aatInfraRgName
               )
             }
           }
@@ -146,7 +149,8 @@ def call(type, String product, String component, Closure body) {
             environment: environment.prodName,
             product: product,
             component: component,
-            aksSubscription: aksSubscription.aatName
+            aksSubscription: aksSubscription.prodName,
+            aksInfraRg: aksSubscription.prodInfraRgName
           )
 
           sectionPromoteBuildToStage(
