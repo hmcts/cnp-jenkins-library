@@ -15,4 +15,13 @@ class AKSSubscription implements Serializable {
     aatInfraRgName = env.AKS_AAT_INFRA_RESOURCE_GROUP ?: 'aks-infra-aat-rg'
     prodInfraRgName = env.AKS_PROD_INFRA_RESOURCE_GROUP ?: 'aks-infra-prod-rg'
   }
+
+  public static String aksEnvironment(String env) {
+    String environment = env.toLowerCase()
+    switch (environment) {
+      case "sandbox": "sbox"
+      break
+      default: environment
+    }
+  }
 }
