@@ -25,7 +25,7 @@ def call(Map params) {
     // AAT + PROD DNS registration
     else {
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${params.subscription} az $cmd", returnStdout: true).trim() }
-      appGwIp = az "network application-gateway frontend-ip show  -g ${env.AKS_RESOURCE_GROUP} --gateway-name aks-${params.environment}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${params.environment}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
 
       // Note: remove this when we get a PROD subscription
       if (params.aksSubscrption.contains('PROD')) {
