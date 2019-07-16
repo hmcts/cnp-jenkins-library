@@ -78,7 +78,7 @@ class Consul {
       acceptType: 'APPLICATION_JSON',
       url: "http://${getConsulIP()}:8500/v1/agent/service/${serviceName}",
       consoleLogResponseBody: true,
-      validResponseCodes: '200'
+      validResponseCodes: '100:599'
     )
     this.steps.log.info("Got consul record: $res")
   }
@@ -86,6 +86,9 @@ class Consul {
   def getIpAddresses(String serviceName) {
     this.steps.log.info("Getting ip address(es) for service: $serviceName")
     def res = getDnsRecord(serviceName)
+    if (!res) {
+      return []
+    }
     def taggedAddresses = new JsonSlurperClassic().parseText(res.content).taggedAddresses
     if (!taggedAddresses) {
       return []
@@ -94,8 +97,11 @@ class Consul {
   }
 
   def deregisterDns(String serviceName) {
+    if (!serviceName) {
+      return
+    }
     this.steps.log.info("Deregistering from consul record for service: $serviceName")
-    return this.steps.httpRequest(
+    this.steps.httpRequest(
       httpMode: 'PUT',
       acceptType: 'APPLICATION_JSON',
       url: "http://${getConsulIP()}:8500/v1/agent/service/deregister/${serviceName}",
