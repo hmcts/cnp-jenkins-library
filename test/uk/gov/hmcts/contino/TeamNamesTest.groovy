@@ -8,16 +8,15 @@ class TeamNamesTest extends Specification {
 
   def steps
   def teamNames
-  static def teamNamesMap = ["cmc":["team":"Money Claims","namespace":"money-claims"],
-                      "bar":["team":"Fees/Pay","namespace":"fees-pay"],
-                      "ccd":["namespace":"ccd"],
-                      "dm":["team":"CCD"],
-                      "bulk-scan":["team":"Software Engineering","namespace":"rpe"]
-  ]
-
+  static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims"],
+                                     "bar":["team":"Fees/Pay","namespace":"fees-pay"],
+                                     "ccd":["namespace":"ccd"],
+                                     "dm":["team":"CCD"],
+                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe"]]]
   void setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.readYaml(_) >> teamNamesMap
+    steps.readYaml(_) >> response.content
+    steps.httpRequest(_) >> response
     teamNames = new TeamNames(steps)
   }
 

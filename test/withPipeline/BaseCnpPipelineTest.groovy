@@ -61,7 +61,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
       if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
-        return TeamNamesTest.teamNamesMap
+        return TeamNamesTest.response
       } else {
         return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
           '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
@@ -70,6 +70,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("milestone", null)
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
     helper.registerAllowedMethod("readYaml", [Map.class], {c ->
-      return TeamNamesTest.teamNamesMap})
+      return TeamNamesTest.response.content})
   }
 }
