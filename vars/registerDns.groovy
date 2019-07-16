@@ -7,13 +7,6 @@ def call(Map params) {
   AppPipelineConfig config = params.appPipelineConfig
 
   withAksClient(params.subscription, params.environment) {
-
-    def ingressIP
-    if (config.aksStagingDeployment) {
-      Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription)
-      kubectl.login()
-      ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-    }
     Consul consul = new Consul(this, params.environment)
 
     // Staging DNS registration
@@ -24,6 +17,9 @@ def call(Map params) {
         }
       }
       if (config.aksStagingDeployment) {
+        Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription)
+        kubectl.login()
+        def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
         consul.registerDns("${params.product}-${params.component}", ingressIP)
       }
     }
@@ -31,7 +27,6 @@ def call(Map params) {
     else {
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${params.subscription} az $cmd", returnStdout: true).trim() }
       def aksEnv = AKSSubscription.aksEnvironment(params.environment)
-      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
 
       if (config.legacyDeployment) {
         withIlbIp(params.environment) {
@@ -42,6 +37,7 @@ def call(Map params) {
         if (params.aksSubscription.contains('PROD')) {
           return
         }
+        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
         consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
       }
       if (config.aksStagingDeployment) {
@@ -49,7 +45,8 @@ def call(Map params) {
         if (params.aksSubscription.contains('PROD')) {
           return
         }
-        consul.registerDns("${params.product}-${params.component}", ingressIP)
+        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+        consul.registerDns("${params.product}-${params.component}", appGwIp)
       }
     }
   }
