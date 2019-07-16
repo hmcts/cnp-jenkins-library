@@ -7,12 +7,13 @@ def call(Map params) {
   AppPipelineConfig config = params.appPipelineConfig
 
   withAksClient(params.subscription, params.environment) {
+    Consul consul = new Consul(this, params.environment)
+
     // Staging DNS registration
     if (params.isStaging) {
       Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription)
       kubectl.login()
       def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-      Consul consul = new Consul(this, params.environment)
 
       if (config.legacyDeployment) {
         withIlbIp(params.environment) {
