@@ -22,7 +22,7 @@ class TeamNames {
         url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml",
         validResponseCodes: '200'
       )
-      teamNamesMap = steps.readYaml (text: response)
+      teamNamesMap = steps.readYaml (text: response.content)
     }
     return teamNamesMap
   }
