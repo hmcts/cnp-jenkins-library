@@ -1,8 +1,9 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
-
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.azure.Az
+
 
 class Consul {
 
@@ -40,6 +41,16 @@ class Consul {
   }
 
   def registerDns(serviceName, serviceIP) {
+    if (!IPV4Validator.validate(serviceIP)) {
+      throw new RuntimeException("Invalid IP address [${serviceIP}].")
+    }
+
+    def addresses = getIpAddresses(serviceName)
+    if (addresses.contains(serviceIP) && addresses.size() == 1) {
+      return   // service is already registered, nothing to do
+    }
+    deregisterDns(serviceName)
+
     // Build json payload for aks service record
     def json = JsonOutput.toJson(
       ["Name": serviceName,
@@ -55,6 +66,39 @@ class Consul {
       contentType: 'APPLICATION_JSON',
       url: "http://${getConsulIP()}:8500/v1/agent/service/register",
       requestBody: "${json}",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200'
+    )
+  }
+
+  def getDnsRecord(String serviceName) {
+    this.steps.log.info("Getting consul record for service: $serviceName")
+    def res = this.steps.httpRequest(
+      httpMode: 'GET',
+      acceptType: 'APPLICATION_JSON',
+      url: "http://${getConsulIP()}:8500/v1/agent/service/${serviceName}",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200'
+    )
+    this.steps.log.info("Got consul record: $res")
+  }
+
+  def getIpAddresses(String serviceName) {
+    this.steps.log.info("Getting ip address(es) for service: $serviceName")
+    def res = getDnsRecord(serviceName)
+    def taggedAddresses = new JsonSlurperClassic().parseText(res.content).taggedAddresses
+    if (!taggedAddresses) {
+      return []
+    }
+    return taggedAddresses.each { ta -> ta.address }
+  }
+
+  def deregisterDns(String serviceName) {
+    this.steps.log.info("Deregistering from consul record for service: $serviceName")
+    return this.steps.httpRequest(
+      httpMode: 'PUT',
+      acceptType: 'APPLICATION_JSON',
+      url: "http://${getConsulIP()}:8500/v1/agent/service/deregister/${serviceName}",
       consoleLogResponseBody: true,
       validResponseCodes: '200'
     )
