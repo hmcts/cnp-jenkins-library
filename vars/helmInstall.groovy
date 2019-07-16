@@ -51,7 +51,7 @@ def call(DockerImage dockerImage, Map params) {
 
     def values = []
     def chartName = "${product}-${component}"
-    def namespace = new TeamNames().getNameNormalizedOrThrow(product)
+    def namespace = new TeamNames(this).getNameSpace(product)
 
     def helm = new Helm(this, chartName)
     helm.setup()
