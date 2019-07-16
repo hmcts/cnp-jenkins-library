@@ -16,12 +16,11 @@ class AKSSubscription implements Serializable {
     prodInfraRgName = env.AKS_PROD_INFRA_RESOURCE_GROUP ?: 'aks-infra-prod-rg'
   }
 
-  public static String aksEnvironment(String env) {
+  static String aksEnvironment(String env) {
     String environment = env.toLowerCase()
     switch (environment) {
-      case "sandbox": "sbox"
-      break
-      default: environment
+      case "sandbox": return "sbox"
+      default: return environment
     }
   }
 }
