@@ -87,8 +87,9 @@ def call(params) {
     }
 
     if ((config.deployToAKS || config.installCharts) && config.serviceApp) {
-      registerDns(params)
-      
+      onMaster {
+        registerDns(params)
+      }
       withSubscription(subscription) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
