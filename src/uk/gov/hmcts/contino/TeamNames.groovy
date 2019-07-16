@@ -11,6 +11,9 @@ class TeamNames {
 
   TeamNames (steps){
     this.steps = steps
+  }
+
+  def getTeamNamesMap() {
     if (teamNamesMap ==null ){
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
@@ -21,17 +24,19 @@ class TeamNames {
       )
       teamNamesMap = steps.readYaml (text: response)
     }
+    return teamNamesMap
   }
 
 
   def getName (String product) {
+    def teamNames = getTeamNamesMap()
     if (product.startsWith('pr-')) {
       product = getRawProductName(product)
     }
-    if (!teamNamesMap.containsKey(product)) {
+    if (!teamNames.containsKey(product)) {
       return DEFAULT_TEAM_NAME
     }
-    return teamNamesMap.get(product).get(TEAM_KEY,DEFAULT_TEAM_NAME)
+    return teamNames.get(product).get(TEAM_KEY,DEFAULT_TEAM_NAME)
   }
 
   def getRawProductName (String product) {
@@ -39,16 +44,17 @@ class TeamNames {
   }
 
   def getNameSpace(String product) {
+    def teamNames = getTeamNamesMap()
     if (product.startsWith('pr-')) {
       product = getRawProductName(product)
     }
-    if (!teamNamesMap.containsKey(product) || !teamNamesMap.get(product).get(NAMESPACE_KEY)) {
+    if (!teamNames.containsKey(product) || !teamNames.get(product).get(NAMESPACE_KEY)) {
       throw new RuntimeException(
         "Product ${product} does not belong to any team. "
           + "Please create a PR to update TeamNames in cnp-jenkins-config."
       )
     }
-    return teamNamesMap.get(product).get(NAMESPACE_KEY)
+    return teamNames.get(product).get(NAMESPACE_KEY)
       .toLowerCase()
       .replace("/", "-")
       .replace(" ", "-")
