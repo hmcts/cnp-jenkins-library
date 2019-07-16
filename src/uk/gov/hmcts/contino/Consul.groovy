@@ -46,10 +46,12 @@ class Consul {
     }
 
     def addresses = getIpAddresses(serviceName)
-    if (addresses.contains(serviceIP) && addresses.size() == 1) {
-      return   // service is already registered, nothing to do
+    if (addresses) {
+      if (addresses.contains(serviceIP) && addresses.size() == 1) {
+        return   // service is already registered, nothing to do
+      }
+      deregisterDns(serviceName)
     }
-    deregisterDns(serviceName)
 
     // Build json payload for aks service record
     def json = JsonOutput.toJson(
@@ -86,7 +88,7 @@ class Consul {
   def getIpAddresses(String serviceName) {
     this.steps.log.info("Getting ip address(es) for service: $serviceName")
     def res = getDnsRecord(serviceName)
-    if (!res) {
+    if (!res.content) {
       return []
     }
     def taggedAddresses = new JsonSlurperClassic().parseText(res.content).taggedAddresses
