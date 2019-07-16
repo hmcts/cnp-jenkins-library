@@ -16,7 +16,8 @@ def call(Map params) {
       }
     }
 
-    if (config.aksStagingDeployment) {
+    // Note: update this when we get a PROD subscription
+    if (config.aksStagingDeployment && !params.aksSubscription.contains('PROD')) {
       Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription)
       kubectl.login()
       def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
@@ -31,19 +32,15 @@ def call(Map params) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
       }
     } else {
-      // Note: remove this when we get a PROD subscription
-      if (params.aksSubscription.contains('PROD')) {
-        return
+      // Note: update this when we get a PROD subscription
+      if (!params.aksSubscription.contains('PROD')) {
+        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+        consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
       }
-      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
-      consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
     }
 
-    if (config.aksStagingDeployment) {
-      // Note: remove this when we get a PROD subscription
-      if (params.aksSubscription.contains('PROD')) {
-        return
-      }
+    // Note: update this when we get a PROD subscription
+    if (config.aksStagingDeployment && !params.aksSubscription.contains('PROD')) {
       appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
       consul.registerDns("${params.product}-${params.component}", appGwIp)
     }
