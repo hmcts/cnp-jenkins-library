@@ -119,9 +119,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscription.aatName,
-              aksInfraRg: aksSubscription.aatInfraRgName,
               environment: environment.nonProdName,
-              isStaging: true,
               product: product,
               component: component
             )

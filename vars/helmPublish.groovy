@@ -33,5 +33,4 @@ def call(Map params) {
       helm.publishIfNotExists(values)
     }
   }
-  registerDns(params)
 }

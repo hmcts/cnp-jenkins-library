@@ -39,11 +39,13 @@ def call(params) {
                   if (config.legacyDeployment) {
                     scmServiceRegistration(environment)
                   }
-                  registerDns(params)
                 }
               }
             }
           }
+
+          registerDns(params)
+
           if (config.migrateDb) {
             stage("DB Migration - ${environment}") {
               pcr.callAround("dbmigrate:${environment}") {
