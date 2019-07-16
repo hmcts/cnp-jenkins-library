@@ -72,7 +72,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def run() {
-    this.az "acr run -r ${registryName} -g ${resourceGroup} ."
+    this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
