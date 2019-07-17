@@ -29,7 +29,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    stage('DependencyCheckNightly') {
+    stage('Dependency check') {
       warnError('Failure in DependencyCheckNightly') {
         pcr.callAround('DependencyCheckNightly') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Dependency check') {
@@ -40,7 +40,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.crossBrowserTest) {
-      stage("crossBrowserTest") {
+      stage("Cross browser tests") {
         warnError('Failure in crossBrowserTest') {
           pcr.callAround('crossBrowserTest') {
             timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
@@ -52,7 +52,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.performanceTest) {
-      stage("performanceTest") {
+      stage("Performance test") {
         warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
@@ -64,7 +64,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.securityScan) {
-      stage('securityScan') {
+      stage('Security scan') {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
@@ -76,7 +76,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.mutationTest) {
-        stage('mutationTest') {
+        stage('Mutation tests') {
           warnError('Failure in mutationTest') {
             pcr.callAround('mutationTest') {
               timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
@@ -88,7 +88,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.fullFunctionalTest) {
-      stage('fullFunctionalTest') {
+      stage('Full functional tests') {
         warnError('Failure in fullFunctionalTest') {
           pcr.callAround('fullFunctionalTest') {
             timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
