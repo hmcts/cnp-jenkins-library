@@ -58,142 +58,142 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-  timestamps {
-    node {
-      try {
-        env.PATH = "$env.PATH:/usr/local/bin"
+  node {
+    try {
+      env.PATH = "$env.PATH:/usr/local/bin"
 
-        sectionBuildAndTest(
+      sectionBuildAndTest(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        builder: pipelineType.builder,
+        subscription: subscription.nonProdName,
+        environment: environment.nonProdName,
+        product: product,
+        component: component,
+        pactBrokerUrl: environment.pactBrokerUrl
+      )
+
+      onPR {
+
+        sectionDeployToAKS(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
-          builder: pipelineType.builder,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          aksSubscription: aksSubscription.previewName,
+          environment: environment.previewName,
+          product: product,
+          component: component
+        )
+      }
+
+      onMaster {
+
+        sectionPromoteBuildToStage(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          product: product,
+          component: component,
+          stage: DockerImage.DeploymentStage.AAT,
+          environment: environment.nonProdName
+        )
+
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
-          component: component,
-          pactBrokerUrl: environment.pactBrokerUrl
-        )
+          component: component)
 
-        onPR {
-
+        if (pipelineConfig.aksStagingDeployment) {
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
-            aksSubscription: aksSubscription.previewName,
-            environment: environment.previewName,
+            aksSubscription: aksSubscription.aatName,
+            environment: environment.nonProdName,
             product: product,
             component: component
           )
         }
 
-        onMaster {
-
-          sectionPromoteBuildToStage(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            product: product,
-            component: component,
-            stage: DockerImage.DeploymentStage.AAT,
-            environment: environment.nonProdName
-          )
-
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: product,
-            component: component)
-
-          if (pipelineConfig.aksStagingDeployment) {
-            sectionDeployToAKS(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              aksSubscription: aksSubscription.aatName,
-              environment: environment.nonProdName,
+        if (pipelineConfig.installCharts) {
+          stage('Publish Helm chart') {
+            helmPublish(
+              subscriptionName: subscription.nonProdName,
+              environmentName: environment.nonProdName,
               product: product,
-              component: component
+              component: component,
+              aksSubscription: aksSubscription.previewName
             )
           }
-
-          if (pipelineConfig.installCharts) {
-            stage('Publish Helm chart') {
-              helmPublish(
-                subscriptionName: subscription.nonProdName,
-                environmentName: environment.nonProdName,
-                product: product,
-                component: component,
-                aksSubscription: aksSubscription.previewName
-              )
-            }
-          }
-
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.prodName,
-            environment: environment.prodName,
-            product: product,
-            component: component)
-
-          sectionPromoteBuildToStage(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            product: product,
-            component: component,
-            stage: DockerImage.DeploymentStage.PROD,
-            environment: environment.nonProdName
-          )
         }
 
-        onAutoDeployBranch { subscriptionName, environmentName ->
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscriptionName,
-            environment: environmentName,
-            product: product,
-            component: component)
-        }
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.prodName,
+          environment: environment.prodName,
+          product: product,
+          component: component)
 
-        onPreview {
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.previewName,
-            environment: environment.previewName,
-            product: deploymentProduct,
-            component: component)
-        }
-      } catch (err) {
-        currentBuild.result = "FAILURE"
-        if (pipelineConfig.slackChannel) {
-          notifyBuildFailure channel: pipelineConfig.slackChannel
-        }
-
-        callbacksRunner.call('onFailure')
-        metricsPublisher.publish('Pipeline Failed')
-        throw err
+        sectionPromoteBuildToStage(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          product: product,
+          component: component,
+          stage: DockerImage.DeploymentStage.PROD,
+          environment: environment.nonProdName
+        )
       }
 
+      onAutoDeployBranch { subscriptionName, environmentName ->
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscriptionName,
+          environment: environmentName,
+          product: product,
+          component: component)
+      }
+
+      onPreview {
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.previewName,
+          environment: environment.previewName,
+          product: deploymentProduct,
+          component: component)
+      }
+    } catch (err) {
+      currentBuild.result = "FAILURE"
       if (pipelineConfig.slackChannel) {
-        notifyBuildFixed channel: pipelineConfig.slackChannel
+        notifyBuildFailure channel: pipelineConfig.slackChannel
       }
 
-      callbacksRunner.call('onSuccess')
-      metricsPublisher.publish('Pipeline Succeeded')
+      callbacksRunner.call('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
+      throw err
+    } finally {
+      deleteDir()
     }
+
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFixed channel: pipelineConfig.slackChannel
+    }
+
+    callbacksRunner.call('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

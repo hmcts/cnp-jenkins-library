@@ -27,44 +27,44 @@ def call(String product, String environment, String subscription, String deploym
 
   def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
 
-  timestamps {
-    node {
-      try {
-        env.PATH = "$env.PATH:/usr/local/bin"
+  node {
+    try {
+      env.PATH = "$env.PATH:/usr/local/bin"
 
-        stage('Checkout') {
-          callbacksRunner.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
+      stage('Checkout') {
+        callbacksRunner.callAround('checkout') {
+          deleteDir()
+          checkout scm
         }
-
-
-        sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
-          subscription: subscription,
-          environment: environment,
-          deploymentTargets: deploymentTargetList,
-          product: product)
-
-
-      } catch (err) {
-        currentBuild.result = "FAILURE"
-        if (pipelineConfig.slackChannel) {
-          notifyBuildFailure channel: pipelineConfig.slackChannel
-        }
-
-        callbacksRunner.call('onFailure')
-        metricsPublisher.publish('Pipeline Failed')
-        throw err
       }
 
+
+      sectionInfraBuild(
+        pipelineConfig: pipelineConfig,
+        subscription: subscription,
+        environment: environment,
+        deploymentTargets: deploymentTargetList,
+        product: product)
+
+
+    } catch (err) {
+      currentBuild.result = "FAILURE"
       if (pipelineConfig.slackChannel) {
-        notifyBuildFixed channel: pipelineConfig.slackChannel
+        notifyBuildFailure channel: pipelineConfig.slackChannel
       }
 
-      callbacksRunner.call('onSuccess')
-      metricsPublisher.publish('Pipeline Succeeded')
+      callbacksRunner.call('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
+      throw err
+    } finally {
+      deleteDir()
     }
+
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFixed channel: pipelineConfig.slackChannel
+    }
+
+    callbacksRunner.call('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

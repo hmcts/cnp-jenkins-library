@@ -54,56 +54,56 @@ def call(type, String product, String component, String environment, String subs
 
   def deploymentTargetList = deploymentTargets.split(',') as List
 
-  timestamps {
-    try {
-      node {
-        env.PATH = "$env.PATH:/usr/local/bin"
-
-        stage('Checkout') {
-          callbacksRunner.callAround('checkout') {
-            deleteDir()
-            checkout scm
-          }
-        }
-
-        stage("Build") {
-          builder.setupToolVersion()
-
-          callbacksRunner.callAround('build') {
-            builder.build()
-          }
-        }
-
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription,
-          environment: environment,
-          product: product,
-          component: component,
-          deploymentTargets: deploymentTargetList)
-      }
-    } catch (err) {
-      currentBuild.result = "FAILURE"
-      if (pipelineConfig.slackChannel) {
-        notifyBuildFailure channel: pipelineConfig.slackChannel
-      }
-
-      callbacksRunner.call('onFailure')
-      node {
-        metricsPublisher.publish('Pipeline Failed')
-      }
-      throw err
-    }
-
-    if (pipelineConfig.slackChannel) {
-      notifyBuildFixed channel: pipelineConfig.slackChannel
-    }
-
-    callbacksRunner.call('onSuccess')
+  try {
     node {
-      metricsPublisher.publish('Pipeline Succeeded')
+      env.PATH = "$env.PATH:/usr/local/bin"
+
+      stage('Checkout') {
+        callbacksRunner.callAround('checkout') {
+          deleteDir()
+          checkout scm
+        }
+      }
+
+      stage("Build") {
+        builder.setupToolVersion()
+
+        callbacksRunner.callAround('build') {
+          builder.build()
+        }
+      }
+
+      sectionDeployToEnvironment(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        pipelineType: pipelineType,
+        subscription: subscription,
+        environment: environment,
+        product: product,
+        component: component,
+        deploymentTargets: deploymentTargetList)
     }
+  } catch (err) {
+    currentBuild.result = "FAILURE"
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFailure channel: pipelineConfig.slackChannel
+    }
+
+    callbacksRunner.call('onFailure')
+    node {
+      metricsPublisher.publish('Pipeline Failed')
+    }
+    throw err
+  } finally {
+    deleteDir()
+  }
+
+  if (pipelineConfig.slackChannel) {
+    notifyBuildFixed channel: pipelineConfig.slackChannel
+  }
+
+  callbacksRunner.call('onSuccess')
+  node {
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

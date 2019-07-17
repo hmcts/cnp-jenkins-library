@@ -24,63 +24,63 @@ def call(String product, Closure body) {
   body.delegate = dsl
   body.call() // register pipeline config
 
-  timestamps {
-    node {
-      try {
-        env.PATH = "$env.PATH:/usr/local/bin"
+  node {
+    try {
+      env.PATH = "$env.PATH:/usr/local/bin"
 
-        stage('Checkout') {
-          deleteDir()
-          checkout scm
-        }
-
-        onMaster {
-          sectionInfraBuild(
-            pipelineConfig: pipelineConfig,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: product)
-
-          sectionInfraBuild(
-            pipelineConfig: pipelineConfig,
-            subscription: subscription.prodName,
-            environment: environment.prodName,
-            product: product)
-        }
-
-        onAutoDeployBranch { subscriptionName, environmentName ->
-          sectionInfraBuild(
-            pipelineConfig: pipelineConfig,
-            subscription: subscriptionName,
-            environment: environmentName,
-            product: product)
-        }
-
-        onPR {
-          sectionInfraBuild(
-            pipelineConfig: pipelineConfig,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: product,
-            planOnly: true)
-        }
-      } catch (err) {
-        currentBuild.result = "FAILURE"
-        if (pipelineConfig.slackChannel) {
-          notifyBuildFailure channel: pipelineConfig.slackChannel
-        }
-
-        callbackRunner.call('onFailure')
-        metricsPublisher.publish('Pipeline Failed')
-        throw err
+      stage('Checkout') {
+        deleteDir()
+        checkout scm
       }
 
+      onMaster {
+        sectionInfraBuild(
+          pipelineConfig: pipelineConfig,
+          subscription: subscription.nonProdName,
+          environment: environment.nonProdName,
+          product: product)
+
+        sectionInfraBuild(
+          pipelineConfig: pipelineConfig,
+          subscription: subscription.prodName,
+          environment: environment.prodName,
+          product: product)
+      }
+
+      onAutoDeployBranch { subscriptionName, environmentName ->
+        sectionInfraBuild(
+          pipelineConfig: pipelineConfig,
+          subscription: subscriptionName,
+          environment: environmentName,
+          product: product)
+      }
+
+      onPR {
+        sectionInfraBuild(
+          pipelineConfig: pipelineConfig,
+          subscription: subscription.nonProdName,
+          environment: environment.nonProdName,
+          product: product,
+          planOnly: true)
+      }
+    } catch (err) {
+      currentBuild.result = "FAILURE"
       if (pipelineConfig.slackChannel) {
-        notifyBuildFixed channel: pipelineConfig.slackChannel
+        notifyBuildFailure channel: pipelineConfig.slackChannel
       }
 
-      callbackRunner.call('onSuccess')
-      metricsPublisher.publish('Pipeline Succeeded')
+      callbackRunner.call('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
+      throw err
+    } finally {
+      deleteDir()
     }
+
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFixed channel: pipelineConfig.slackChannel
+    }
+
+    callbackRunner.call('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

@@ -42,7 +42,6 @@ class withJavaPipelineOnBranchTests extends BasePipelineTest {
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap, Closure.class], { c -> c.call()})
     helper.registerAllowedMethod("sh", [Map.class], { return "" })
     helper.registerAllowedMethod('fileExists', [String.class], { c -> true })
-    helper.registerAllowedMethod("timestamps", [Closure.class], { c -> c.call() })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], { s, c -> c.call() })
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("checkout", [Class.class], { return [GIT_BRANCH: "pr-47", GIT_COMMIT:"379c53a716b92cf79439db07edac01ba1028535d", GIT_URL:"https://github.com/HMCTS/custard-backend.git"] })

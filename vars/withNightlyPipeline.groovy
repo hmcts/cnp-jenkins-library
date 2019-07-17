@@ -41,36 +41,35 @@ def call(type,product,component,Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  timestamps {
-    try {
-      node {
-        env.PATH = "$env.PATH:/usr/local/bin"
-        withSubscription(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType)
-        }
-        assert  pipelineType!= null
-      }
-    }
-    catch (err) {
-      currentBuild.result = "FAILURE"
-      if (pipelineConfig.slackChannel) {
-        notifyBuildFailure channel: pipelineConfig.slackChannel
-      }
-
-      callbacksRunner.call('onFailure')
-      node {
-        metricsPublisher.publish('Pipeline Failed')
-      }
-      throw err
-    }
-
-    if (pipelineConfig.slackChannel) {
-      notifyBuildFixed channel: pipelineConfig.slackChannel
-    }
-
-    callbacksRunner.call('onSuccess')
+  try {
     node {
-      metricsPublisher.publish('Pipeline Succeeded')
+      env.PATH = "$env.PATH:/usr/local/bin"
+      withSubscription(subscription.nonProdName) {
+        sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType)
+      }
+      assert  pipelineType!= null
     }
+  } catch (err) {
+    currentBuild.result = "FAILURE"
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFailure channel: pipelineConfig.slackChannel
+    }
+
+    callbacksRunner.call('onFailure')
+    node {
+      metricsPublisher.publish('Pipeline Failed')
+    }
+    throw err
+  } finally {
+    deleteDir()
+  }
+
+  if (pipelineConfig.slackChannel) {
+    notifyBuildFixed channel: pipelineConfig.slackChannel
+  }
+
+  callbacksRunner.call('onSuccess')
+  node {
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }
