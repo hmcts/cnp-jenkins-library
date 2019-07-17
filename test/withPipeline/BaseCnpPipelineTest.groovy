@@ -47,6 +47,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
+    helper.registerAllowedMethod("warnError", [String.class, Closure.class], null)
     helper.registerAllowedMethod("scmServiceRegistration", [String.class], {})
     helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class], {})
     helper.registerAllowedMethod("wrap", [LinkedHashMap, Closure.class], null)
