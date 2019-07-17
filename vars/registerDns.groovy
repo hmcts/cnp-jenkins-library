@@ -34,14 +34,14 @@ def call(Map params) {
     } else {
       // Note: update this when we get a PROD subscription
       if (!params.aksSubscription.contains('PROD')) {
-        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
         consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
       }
     }
 
     // Note: update this when we get a PROD subscription
     if (config.aksStagingDeployment && !params.aksSubscription.contains('PROD')) {
-      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGatewayFrontendIP --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
       consul.registerDns("${params.product}-${params.component}", appGwIp)
     }
   }
