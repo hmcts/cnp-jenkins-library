@@ -6,399 +6,120 @@ import static org.assertj.core.api.Assertions.assertThat
 
 class TeamNamesTest extends Specification {
 
-  def "bar"() {
-    def productName = 'bar'
-    def expected = 'Fees/Pay'
+  def steps
+  def teamNames
+  static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims"],
+                                     "bar":["team":"Fees/Pay","namespace":"fees-pay"],
+                                     "ccd":["namespace":"ccd"],
+                                     "dm":["team":"CCD"],
+                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe"]]]
+  void setup() {
+    steps = Mock(JenkinsStepMock.class)
+    steps.readYaml(_) >> response.content
+    steps.httpRequest(_) >> response
+    teamNames = new TeamNames(steps)
+  }
 
+  def "getName() with product name starting pr- should return correct teamname"() {
+    def productName = 'pr-12-bar'
+    def expected = 'Fees/Pay'
     when:
-    def teamName = new TeamNames().getName(productName)
+    def teamName = teamNames.getName(productName)
 
     then:
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "bulk-scan"() {
+  def "getName() with non existing product name starting pr- should return default teamname"() {
+    def productName = 'pr-12-nonexisting'
+    def expected = TeamNames.DEFAULT_TEAM_NAME
+    when:
+    def teamName = teamNames.getName(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+
+  def "getName() with valid product name should return correct team name"() {
     def productName = 'bulk-scan'
     def expected = 'Software Engineering'
 
     when:
-    def teamName = new TeamNames().getName(productName)
+    def teamName = teamNames.getName(productName)
 
     then:
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "ccd"() {
+  def "getName() with valid product name without name should return default team name"() {
     def productName = 'ccd'
-    def expected = 'CCD'
+    def expected = TeamNames.DEFAULT_TEAM_NAME
 
     when:
-    def teamName = new TeamNames().getName(productName)
+    def teamName = teamNames.getName(productName)
 
     then:
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "cet"() {
-    def productName = 'cet'
-    def expected = 'Civil Enforcement'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-  
-  
-  def "cmc"() {
-    def productName = 'cmc'
-    def expected = 'Money Claims'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "custard"() {
-    def productName = 'custard'
-    def expected = 'CNP'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "div"() {
-    def productName = 'div'
-    def expected = 'Divorce'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "dm"() {
-    def productName = 'dm'
-    def expected = 'CCD'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "em"() {
-    def productName = 'em'
-    def expected = 'Evidence Mment'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "fees"() {
-    def productName = 'fees'
-    def expected = 'Fees/Pay'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-   def "fees-register"() {
-    def productName = 'fees-register'
-    def expected = 'Fees/Pay'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  } 
-  
-  def "finrem"() {
-    def productName = 'finrem'
-    def expected = 'Financial Remedy'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "ia"() {
-    def productName = 'ia'
-    def expected = 'Immigration'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "idam"() {
-    def productName = 'idam'
-    def expected = 'IdAM'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "payment"() {
-    def productName = 'payment'
-    def expected = 'Fees/Pay'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-   def "ccpay"() {
-    def productName = 'ccpay'
-    def expected = 'Fees/Pay'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-    def "probate"() {
-    def productName = 'probate'
-    def expected = 'Probate'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-  def "rhubarb"() {
-    def productName = 'rhubarb'
-    def expected = 'CNP'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-    def "rhubarb-shared-infrastructure"() {
-    def productName = 'rhubarb-shared-infrastructure'
-    def expected = 'CNP'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-  
-  
-
-  def "sscs"() {
-    def productName = 'sscs'
-    def expected = 'SSCS'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-    def "sscs-tya"() {
-    def productName = 'sscs-tya'
-    def expected = 'SSCS'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
- 
-    def "sscs-tribunals"() {
-    def productName = 'sscs-tribunals'
-    def expected = 'SSCS'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
- 
-    def "sscs-cor"() {
-    def productName = 'sscs-cor'
-    def expected = 'SSCS'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-  def "pr-47-sscs-cor"() {
-    def productName = 'pr-47-sscs-cor'
-    def expected = 'SSCS'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-    def "pr-417-sscs-cor"() {
-    def productName = 'pr-417-sscs-cor'
-    def expected = 'SSCS'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
- 
-    def "pr-12-snl"() {
-    def productName = 'pr-12-snl'
-    def expected = 'SnL'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  def "snl"() {
-    def productName = 'snl'
-    def expected = 'SnL'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-
-  def "rpe"() {
-    def productName = 'rpe'
-    def expected = 'Software Engineering'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  def "rpa"() {
-    def productName = 'rpa'
-    def expected = 'Professional Applications'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-    def "jui"() {
-    def productName = 'jui'
-    def expected = 'Professional Applications'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-    def "pui"() {
-    def productName = 'pui'
-    def expected = 'Professional Applications'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-   def "coh"() {
-    def productName = 'coh'
-    def expected = 'Professional Applications'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-   def "ref"() {
-    def productName = 'ref'
-    def expected = 'Professional Applications'
-
-    when:
-    def teamName = new TeamNames().getName(productName)
-
-    then:
-    assertThat(teamName).isEqualTo(expected)
-  }
-  
-  def "default"() {
+  def "getName() with non existing product name should return default teamname"() {
     def productName = 'idontexist'
     def expected = TeamNames.DEFAULT_TEAM_NAME
 
     when:
-    def teamName = new TeamNames().getName(productName)
+    def teamName = teamNames.getName(productName)
 
     then:
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "getNameNormalizedOrThow() should return team name if found"() {
+  def "getNameSpace() with product name starting pr- should return correct namespace"() {
+    def productName = 'pr-12-bar'
+    def expected = 'fees-pay'
+    when:
+    def teamName = teamNames.getNameSpace(productName)
+
+    then:
+    assertThat(teamName).isEqualTo(expected)
+  }
+
+  def "getNameSpace() with non existing product name starting pr- should throw exception"() {
+    def productName = 'pr-12-nonexisting'
+    def expected = TeamNames.DEFAULT_TEAM_NAME
+    when:
+    def teamName = teamNames.getNameSpace(productName)
+
+    then:
+    thrown RuntimeException
+  }
+
+  def "getNameSpace() with valid product name should return correct team namespace"() {
     def productName = 'bulk-scan'
-    def expected = "software-engineering"
+    def expected = 'rpe'
 
     when:
-    def teamName = new TeamNames().getNameNormalizedOrThrow(productName)
+    def teamName = teamNames.getNameSpace(productName)
 
     then:
     assertThat(teamName).isEqualTo(expected)
   }
 
-  def "getNameNormalizedOrThow() should throw exception if team name not found"() {
-    def productName = 'idontexist'
+  def "getNameSpace() with valid product name without namespace should throw error"() {
+    def productName = 'dm'
 
     when:
-    new TeamNames().getNameNormalizedOrThrow(productName)
+    teamNames.getNameSpace(productName)
+
+    then:
+    thrown RuntimeException
+  }
+
+  def "getNameSpace() with non existing product name should throw error"() {
+    def productName = 'idontexist'
+    def expected = TeamNames.DEFAULT_TEAM_NAME
+
+    when:
+    def teamName = teamNames.getNameSpace(productName)
 
     then:
     thrown RuntimeException

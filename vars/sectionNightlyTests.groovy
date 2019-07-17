@@ -29,21 +29,19 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    try {
-      stage('DependencyCheckNightly') {
+    stage('Dependency check') {
+      warnError('Failure in DependencyCheckNightly') {
         pcr.callAround('DependencyCheckNightly') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Dependency check') {
             builder.securityCheck()
           }
         }
       }
-    } catch (err) {
-      echo "Failure in DependencyCheckNightly, continuing build will fail at the end"
     }
 
     if (config.crossBrowserTest) {
-      try {
-        stage("crossBrowserTest") {
+      stage("Cross browser tests") {
+        warnError('Failure in crossBrowserTest') {
           pcr.callAround('crossBrowserTest') {
             timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
               builder.crossBrowserTest()
@@ -51,28 +49,23 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
           }
         }
       }
-      catch (err) {
-        echo "Failure in crossBrowserTest, continuing build will fail at the end"
-      }
     }
 
     if (config.performanceTest) {
-      try {
-        stage("performanceTest") {
+      stage("Performance test") {
+        warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
             }
           }
         }
-      } catch (err) {
-        echo "Failure in performanceTest, continuing build will fail at the end"
       }
     }
 
     if (config.securityScan) {
-      try {
-        stage('securityScan') {
+      stage('Security scan') {
+        warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan()
@@ -80,29 +73,23 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
           }
         }
       }
-      catch (err) {
-        echo "Failure in securityScan, continuing build will fail at the end"
-      }
     }
 
     if (config.mutationTest) {
-      try {
-        stage('mutationTest') {
-          pcr.callAround('mutationTest') {
-            timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
-              builder.mutationTest()
+        stage('Mutation tests') {
+          warnError('Failure in mutationTest') {
+            pcr.callAround('mutationTest') {
+              timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
+                builder.mutationTest()
+              }
             }
           }
         }
-      }
-      catch (err) {
-        echo "Failure in mutationTest, continuing build will fail at the end"
-      }
     }
 
     if (config.fullFunctionalTest) {
-      try {
-        stage('fullFunctionalTest') {
+      stage('Full functional tests') {
+        warnError('Failure in fullFunctionalTest') {
           pcr.callAround('fullFunctionalTest') {
             timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
               builder.fullFunctionalTest()
@@ -110,12 +97,9 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
           }
         }
       }
-      catch (err) {
-        echo "Failure in fullFunctionalTest, continuing build will fail at the end"
-      }
     }
 
-    if (currentBuild.result == "FAILURE") {
+    if (currentBuild.result == "UNSTABLE" || currentBuild.result == "FAILURE") {
       error "At least one stage failed, check the logs to see why"
     }
   }

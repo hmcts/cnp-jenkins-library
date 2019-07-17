@@ -22,17 +22,21 @@ https://github.com/hmcts/cnp-jenkins-library#opinionated-infrastructure-pipeline
 
   def environmentDeploymentTarget = "$environment$deploymentTarget"
 
-  node {
-    env.PATH = "$env.PATH:/usr/local/bin"
+  try {
+    node {
+      env.PATH = "$env.PATH:/usr/local/bin"
 
-    stage('Checkout') {
-      deleteDir()
-      checkout scm
-    }
-    withSubscription(subscription) {
-      withIlbIp(environmentDeploymentTarget) {
-        spinInfra(product, null, environment, false, subscription, deploymentTarget)
+      stage('Checkout') {
+        deleteDir()
+        checkout scm
+      }
+      withSubscription(subscription) {
+        withIlbIp(environmentDeploymentTarget) {
+          spinInfra(product, null, environment, false, subscription, deploymentTarget)
+        }
       }
     }
+  } finally {
+    deleteDir()
   }
 }

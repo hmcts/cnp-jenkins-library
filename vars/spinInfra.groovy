@@ -19,15 +19,11 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
   def productName = component ? "$product-$component" : product
   def changeUrl = ""
   def environmentDeploymentTarget = "$environment$deploymentTarget"
-
+  def teamName
+  def pipelineTags
   onPreview {
     changeUrl = env.CHANGE_URL
   }
-
-  def teamName = new TeamNames().getName(product)
-
-  def pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName]).toString()
-  log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; deploymentTarget='$deploymentTarget' environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
   if (env.SUBSCRIPTION_NAME == null)
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
@@ -36,6 +32,12 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
   lock("${productName}-${environmentDeploymentTarget}") {
     stage("Plan ${productName} in ${environmentDeploymentTarget}") {
+
+      teamName = new TeamNames(this).getName(product)
+
+      pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName]).toString()
+      log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; deploymentTarget='$deploymentTarget' environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+
       if (env.STORE_rg_name_template != null &&
         env.STORE_sa_name_template != null &&
         env.STORE_sa_container_name_template != null) {

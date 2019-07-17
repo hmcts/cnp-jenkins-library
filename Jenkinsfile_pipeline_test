@@ -50,6 +50,8 @@ node {
   } catch (err) {
     notifyBuildFailure channel: channel
     throw err
+  } finally {
+    deleteDir()
   }
   notifyBuildFixed channel: channel
 }
