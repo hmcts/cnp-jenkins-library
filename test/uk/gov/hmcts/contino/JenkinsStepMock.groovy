@@ -29,6 +29,7 @@ interface JenkinsStepMock {
   Object withSauceConnect(String, Closure)
   Object saucePublisher()
   Object retry(Integer, Closure)
+  Object readYaml(LinkedHashMap)
 }
 
 

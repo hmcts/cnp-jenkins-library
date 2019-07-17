@@ -2,77 +2,59 @@ package uk.gov.hmcts.contino
 
 class TeamNames {
 
+  def steps
+  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
+  static final String NAMESPACE_KEY = "namespace"
+  static final String TEAM_KEY = "team"
+  static def teamNamesMap
 
-  def teamNamesMap = [
+  TeamNames (steps){
+    this.steps = steps
+  }
 
-                      'ccd':'CCD',
-                      'cmc':'Money Claims',
-                      'custard':'CNP',
-                      'cet': 'Civil Enforcement',
-                      'div':'Divorce',
-                      'dm':'CCD',
-                      'em':'Evidence Mment',
-                      'dg':'Evidence Mment',
-                      'finrem':'Financial Remedy',
-                      'ia':'Immigration',
-                      'idam':'IdAM',
-                      'fees':'Fees/Pay',
-                      'fees-register':'Fees/Pay',
-                      'payment':'Fees/Pay',
-                      'ccpay':'Fees/Pay',
-                      'bar':'Fees/Pay',
-                      'probate':'Probate',
-                      'bulk-scan':'Software Engineering',
-                      'rpe':'Software Engineering',
-                      'draft-store':'Software Engineering',
-                      'pbi':'Software Engineering',
-                      'jui': 'Professional Applications',
-                      'pui': 'Professional Applications',
-                      'xui': 'Professional Applications',
-                      'coh': 'Professional Applications',
-                      'rpa': 'Professional Applications',
-                      'rpx': 'Professional Applications',
-                      'ref': 'Professional Applications',
-                      'rhubarb':'CNP',
-                      'rhubarb-shared-infrastructure' : 'CNP',
-                      'plum':'CNP',
-                      'crumble':'CNP',
-                      'plum-shared-infrastructure' : 'CNP',
-                      'sscs':'SSCS',
-                      'sscs-cor':'SSCS',
-                      'sscs-tya':'SSCS',
-                      'sscs-tribunals':'SSCS',
-                      'snl':'SnL',
-                      'am':'AM',
-                      'fpl': 'Family Public Law',
-                      'ctsc': 'CTSC',
-                      'rd': 'Reference Data',
-                      'data-extractor' : 'Software Engineering'
-  ]
+  def getTeamNamesMap() {
+    if (teamNamesMap ==null ){
+      def response = steps.httpRequest(
+        consoleLogResponseBody: true,
+        authentication: "${GITHUB_CREDENTIAL}",
+        timeout: 10,
+        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml",
+        validResponseCodes: '200'
+      )
+      teamNamesMap = steps.readYaml (text: response.content)
+    }
+    return teamNamesMap
+  }
+
 
   def getName (String product) {
+    def teamNames = getTeamNamesMap()
     if (product.startsWith('pr-')) {
       product = getRawProductName(product)
     }
-    return teamNamesMap.get(product, DEFAULT_TEAM_NAME)
+    if (!teamNames.containsKey(product)) {
+      return DEFAULT_TEAM_NAME
+    }
+    return teamNames.get(product).get(TEAM_KEY,DEFAULT_TEAM_NAME)
   }
 
   def getRawProductName (String product) {
-    return product.split('pr-(\\d+)-')[1];
+    return product.split('pr-(\\d+)-')[1]
   }
 
-  def getNameNormalizedOrThrow(String product) {
+  def getNameSpace(String product) {
+    def teamNames = getTeamNamesMap()
     if (product.startsWith('pr-')) {
       product = getRawProductName(product)
     }
-    if (!teamNamesMap.containsKey(product)) {
+    if (!teamNames.containsKey(product) || !teamNames.get(product).get(NAMESPACE_KEY)) {
       throw new RuntimeException(
         "Product ${product} does not belong to any team. "
-        + "Please create a PR to update TeamNames in the Jenkins library."
+          + "Please create a PR to update TeamNames in cnp-jenkins-config."
       )
     }
-    return teamNamesMap.get(product)
+    return teamNames.get(product).get(NAMESPACE_KEY)
       .toLowerCase()
       .replace("/", "-")
       .replace(" ", "-")
