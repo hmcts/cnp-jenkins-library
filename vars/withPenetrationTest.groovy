@@ -26,46 +26,44 @@ def call(Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  timestamps {
-    node {
-      try {
-        stage('clone') {
-          deleteDir()
-          checkout scm
-        }
-        stage('Penetration Test - Kali Image') {
-          withDocker('hmcts/kali-image:1.1', null) {
-            withSubscription("${params.SUBSCRIPTION}") {
-              env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-${params.SUBSCRIPTION}"
-              def command = getCommand(params)
-              sh "${command}"
+  node {
+    try {
+      stage('clone') {
+        deleteDir()
+        checkout scm
+      }
+      stage('Penetration Test - Kali Image') {
+        withDocker('hmcts/kali-image:1.1', null) {
+          withSubscription("${params.SUBSCRIPTION}") {
+            env.AZURE_CONFIG_DIR = "/opt/jenkins/.azure-${params.SUBSCRIPTION}"
+            def command = getCommand(params)
+            sh "${command}"
 
-              sh "python ITHCReport.py > ./reports/ITHCReport.txt"
-            }
+            sh "python ITHCReport.py > ./reports/ITHCReport.txt"
           }
         }
-        stage('Upload Reports') {
-          def buildNo = currentBuild.number
-          azureBlobUpload('buildlog-storage-account', "${WORKSPACE}/reports", "infra-probe/${params.SUBSCRIPTION}/${buildNo}")
-        }
-      } catch (err) {
-        currentBuild.result = "FAILURE"
-        if (pipelineConfig.slackChannel) {
-          notifyBuildFailure channel: pipelineConfig.slackChannel
-        }
-
-        callbacksRunner.call('onFailure')
-        metricsPublisher.publish('Pipeline Failed')
-        throw err
       }
-
+      stage('Upload Reports') {
+        def buildNo = currentBuild.number
+        azureBlobUpload('buildlog-storage-account', "${WORKSPACE}/reports", "infra-probe/${params.SUBSCRIPTION}/${buildNo}")
+      }
+    } catch (err) {
+      currentBuild.result = "FAILURE"
       if (pipelineConfig.slackChannel) {
-        notifyBuildFixed channel: pipelineConfig.slackChannel
+        notifyBuildFailure channel: pipelineConfig.slackChannel
       }
 
-      callbacksRunner.call('onSuccess')
-      metricsPublisher.publish('Pipeline Succeeded')
+      callbacksRunner.call('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
+      throw err
     }
+
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFixed channel: pipelineConfig.slackChannel
+    }
+
+    callbacksRunner.call('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }
 
