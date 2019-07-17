@@ -105,6 +105,8 @@ def call(type, String product, String component, Closure body) {
           pipelineCallbacksRunner: callbacksRunner,
           pipelineType: pipelineType,
           subscription: subscription.nonProdName,
+          aksSubscription: aksSubscription.aatName,		
+          aksInfraRg: aksSubscription.aatInfraRgName,
           environment: environment.nonProdName,
           product: product,
           component: component)
@@ -122,80 +124,18 @@ def call(type, String product, String component, Closure body) {
           )
         }
 
-        onMaster {
-
-          sectionPromoteBuildToStage(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            product: product,
-            component: component,
-            stage: DockerImage.DeploymentStage.AAT,
-            environment: environment.nonProdName
-          )
-
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            aksSubscription: aksSubscription.aatName,
-            aksInfraRg: aksSubscription.aatInfraRgName,
-            environment: environment.nonProdName,
-            product: product,
-            component: component)
-
-          if (pipelineConfig.aksStagingDeployment) {
-            sectionDeployToAKS(
+        if (pipelineConfig.installCharts) {
+          stage('Publish Helm chart') {
+            helmPublish(
               appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
               subscription: subscription.nonProdName,
-              aksSubscription: aksSubscription.aatName,
-              environment: environment.nonProdName,
+              environment: environment.nonProdName,          
               product: product,
               component: component,
-              aksSubscription: aksSubscription.previewName
+              aksSubscription: aksSubscription.aatName,
+              aksInfraRg: aksSubscription.aatInfraRgName
             )
           }
-
-          if (pipelineConfig.installCharts) {
-            stage('Publish Helm chart') {
-              helmPublish(
-                appPipelineConfig: pipelineConfig,
-                subscription: subscription.nonProdName,
-                environment: environment.nonProdName,
-                product: product,
-                component: component,
-                aksSubscription: aksSubscription.aatName,
-                aksInfraRg: aksSubscription.aatInfraRgName
-              )
-            }
-          }
-
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.prodName,
-            environment: environment.prodName,
-            product: product,
-            component: component,
-            aksSubscription: aksSubscription.prodName,
-            aksInfraRg: aksSubscription.prodInfraRgName
-          )
-
-          sectionPromoteBuildToStage(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            product: product,
-            component: component,
-            stage: DockerImage.DeploymentStage.PROD,
-            environment: environment.nonProdName
-          )
         }
 
         sectionDeployToEnvironment(
@@ -205,7 +145,9 @@ def call(type, String product, String component, Closure body) {
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
-          component: component)
+          component: component,
+          aksSubscription: aksSubscription.prodName,		
+          aksInfraRg: aksSubscription.prodInfraRgName)
 
         sectionPromoteBuildToStage(
           appPipelineConfig: pipelineConfig,
