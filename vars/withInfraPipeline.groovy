@@ -72,6 +72,8 @@ def call(String product, Closure body) {
       callbackRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
       throw err
+    } finally {
+      deleteDir()
     }
 
     if (pipelineConfig.slackChannel) {

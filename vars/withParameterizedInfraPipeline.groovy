@@ -56,6 +56,8 @@ def call(String product, String environment, String subscription, String deploym
       callbacksRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
       throw err
+    } finally {
+      deleteDir()
     }
 
     if (pipelineConfig.slackChannel) {

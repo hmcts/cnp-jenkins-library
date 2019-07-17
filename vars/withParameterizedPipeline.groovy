@@ -94,6 +94,8 @@ def call(type, String product, String component, String environment, String subs
       metricsPublisher.publish('Pipeline Failed')
     }
     throw err
+  } finally {
+    deleteDir()
   }
 
   if (pipelineConfig.slackChannel) {

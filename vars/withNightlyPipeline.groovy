@@ -49,8 +49,7 @@ def call(type,product,component,Closure body) {
       }
       assert  pipelineType!= null
     }
-  }
-  catch (err) {
+  } catch (err) {
     currentBuild.result = "FAILURE"
     if (pipelineConfig.slackChannel) {
       notifyBuildFailure channel: pipelineConfig.slackChannel
@@ -61,6 +60,8 @@ def call(type,product,component,Closure body) {
       metricsPublisher.publish('Pipeline Failed')
     }
     throw err
+  } finally {
+    deleteDir()
   }
 
   if (pipelineConfig.slackChannel) {
