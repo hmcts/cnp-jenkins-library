@@ -54,8 +54,8 @@ def call(type, String product, String component, String environment, String subs
 
   def deploymentTargetList = deploymentTargets.split(',') as List
 
-  try {
-    node {
+  node {
+    try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
@@ -82,28 +82,25 @@ def call(type, String product, String component, String environment, String subs
         product: product,
         component: component,
         deploymentTargets: deploymentTargetList)
-    }
-  } catch (err) {
-    currentBuild.result = "FAILURE"
-    if (pipelineConfig.slackChannel) {
-      notifyBuildFailure channel: pipelineConfig.slackChannel
-    }
+    } catch (err) {
+      currentBuild.result = "FAILURE"
 
-    callbacksRunner.call('onFailure')
-    node {
+      if (pipelineConfig.slackChannel) {
+        notifyBuildFailure channel: pipelineConfig.slackChannel
+      }
+
+      callbacksRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
+      throw err
+    } finally {
+      deleteDir()
     }
-    throw err
-  } finally {
-    deleteDir()
-  }
 
-  if (pipelineConfig.slackChannel) {
-    notifyBuildFixed channel: pipelineConfig.slackChannel
-  }
+    if (pipelineConfig.slackChannel) {
+      notifyBuildFixed channel: pipelineConfig.slackChannel
+    }
 
-  callbacksRunner.call('onSuccess')
-  node {
+    callbacksRunner.call('onSuccess')
     metricsPublisher.publish('Pipeline Succeeded')
   }
 }
