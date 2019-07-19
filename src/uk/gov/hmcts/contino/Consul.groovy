@@ -45,20 +45,29 @@ class Consul {
       throw new RuntimeException("Invalid IP address [${serviceIP}].")
     }
 
-    def addresses = getIpAddresses(serviceName)
-    if (addresses) {
-      if (addresses.contains(serviceIP) && addresses.size() == 1) {
-        return   // service is already registered, nothing to do
+    def consulIP = getConsulIP()
+    def serviceIPs = getServiceIPs(consulIP, serviceName)
+    def validServiceIPs = [:]
+    serviceIPs.each { saIP ->
+      if (saIP.value != serviceIP) {
+        this.steps.log.info("Deregistering IP ${serviceIP} for ${serviceName} from agent: ${saIP.key}.")
+        deregisterDns(saIP.key, serviceName)
+      } else {
+        validServiceIPs[saIP.key] = saIP.value
       }
-      deregisterDns(serviceName)
+    }
+    if (validServiceIPs) {
+      this.steps.log.info("IP ${serviceIP} for ${serviceName} is already registered on agents: ${validServiceIPs.keySet()}.")
+      return
     }
 
     // Build json payload for aks service record
     def json = JsonOutput.toJson(
-      ["Name": serviceName,
-      "Service": serviceName,
-      "Address": "${serviceIP}",
-      "Port": 80
+      ["ID"     : serviceName,
+       "Name"   : serviceName,
+       "Service": serviceName,
+       "Address": "${serviceIP}",
+       "Port"   : 80
       ])
     this.steps.log.info("Registering to consul with following record: $json")
 
@@ -66,39 +75,59 @@ class Consul {
       httpMode: 'PUT',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: "http://${getConsulIP()}:8500/v1/agent/service/register",
+      url: "http://${consulIP}:8500/v1/agent/service/register",
       requestBody: "${json}",
       consoleLogResponseBody: true,
       validResponseCodes: '200'
     )
   }
 
-  def getDnsRecord(String serviceName) {
-    this.steps.log.info("Getting consul record for service: $serviceName")
+  def getServiceIPs(String consulIP, String serviceName) {
+    def agentsIP = getServiceAgents(consulIP, serviceName)
+    if (!agentsIP) {
+      this.steps.log.info("No current registration found for service: $serviceName")
+      return [:]
+    }
+    def agentServiceIps = [:]
+    agentsIP.each { agentIP ->
+      this.steps.log.info("Getting consul ips for service: $serviceName from agent: $agentIP")
+      def res = this.steps.httpRequest(
+        httpMode: 'GET',
+        acceptType: 'APPLICATION_JSON',
+        url: "http://${agentIP}:8500/v1/agent/services",
+        consoleLogResponseBody: true,
+        validResponseCodes: '100:599'
+      )
+      if (res && res.content) {
+        def content = new JsonSlurperClassic().parseText(res.content)
+        def ip = content.find { rec -> rec.key == serviceName } .value.Address
+        agentServiceIps[agentIP] = ip
+      }
+    }
+    this.steps.log.info("Got consul agents and ips for service ${serviceName}: ${agentServiceIps}")
+    return agentServiceIps
+  }
+
+  def getServiceAgents(String consulIP, String serviceName) {
+    if (!serviceName) {
+      this.steps.log.info("Invalid service name.")
+      return
+    }
+    this.steps.log.info("Getting consul nodes holding record for service: $serviceName")
     def res = this.steps.httpRequest(
       httpMode: 'GET',
       acceptType: 'APPLICATION_JSON',
-      url: "http://${getConsulIP()}:8500/v1/agent/service/${serviceName}",
+      url: "http://${consulIP}:8500/v1/catalog/service/${serviceName}",
       consoleLogResponseBody: true,
-      validResponseCodes: '100:599'
+      validResponseCodes: '200'
     )
-    this.steps.log.info("Got consul record: $res")
-  }
-
-  def getIpAddresses(String serviceName) {
-    this.steps.log.info("Getting ip address(es) for service: $serviceName")
-    def res = getDnsRecord(serviceName)
     if (!res || !res.content) {
       return []
     }
-    def taggedAddresses = new JsonSlurperClassic().parseText(res.content).taggedAddresses
-    if (!taggedAddresses) {
-      return []
-    }
-    return taggedAddresses.each { ta -> ta.address }
+    return new JsonSlurperClassic().parseText(res.content).Address
   }
 
-  def deregisterDns(String serviceName) {
+  def deregisterDns(String nodeIP, String serviceName) {
     if (!serviceName) {
       return
     }
@@ -106,7 +135,7 @@ class Consul {
     this.steps.httpRequest(
       httpMode: 'PUT',
       acceptType: 'APPLICATION_JSON',
-      url: "http://${getConsulIP()}:8500/v1/agent/service/deregister/${serviceName}",
+      url: "http://${nodeIP}:8500/v1/agent/service/deregister/${serviceName}",
       consoleLogResponseBody: true,
       validResponseCodes: '200'
     )
