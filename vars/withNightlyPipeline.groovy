@@ -41,35 +41,33 @@ def call(type,product,component,Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  try {
-    node {
+  node {
+    try {
       env.PATH = "$env.PATH:/usr/local/bin"
       withSubscription(subscription.nonProdName) {
         sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType)
       }
       assert  pipelineType!= null
+    } catch (err) {
+      currentBuild.result = "FAILURE"
+      if (pipelineConfig.slackChannel) {
+        notifyBuildFailure channel: pipelineConfig.slackChannel
+      }
+
+      callbacksRunner.call('onFailure')
+      node {
+        metricsPublisher.publish('Pipeline Failed')
+      }
+      throw err
+    } finally {
+      deleteDir()
     }
-  } catch (err) {
-    currentBuild.result = "FAILURE"
+
     if (pipelineConfig.slackChannel) {
-      notifyBuildFailure channel: pipelineConfig.slackChannel
+      notifyBuildFixed channel: pipelineConfig.slackChannel
     }
 
-    callbacksRunner.call('onFailure')
-    node {
-      metricsPublisher.publish('Pipeline Failed')
-    }
-    throw err
-  } finally {
-    deleteDir()
-  }
-
-  if (pipelineConfig.slackChannel) {
-    notifyBuildFixed channel: pipelineConfig.slackChannel
-  }
-
-  callbacksRunner.call('onSuccess')
-  node {
+    callbacksRunner.call('onSuccess')
     metricsPublisher.publish('Pipeline Succeeded')
   }
 }
