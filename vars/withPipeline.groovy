@@ -170,8 +170,8 @@ def call(type, String product, String component, Closure body) {
           environment: environmentName,
           product: product,
           component: component,
-          aksSubscription: aksSubscription.prodName,
-          aksInfraRg: aksSubscription.prodInfraRgName)
+          aksSubscription: aksSubscriptionName,
+          aksInfraRg: aksInfraRgName)
       }
 
       onPreview {
