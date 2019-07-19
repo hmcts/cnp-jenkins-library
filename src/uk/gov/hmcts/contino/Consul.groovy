@@ -50,7 +50,7 @@ class Consul {
     def validServiceIPs = [:]
     serviceIPs.each { saIP ->
       if (saIP.value != serviceIP) {
-        this.steps.log.info("Deregistering IP ${serviceIP} for ${serviceName} from agent: ${saIP.key}.")
+        this.steps.log.info("Deregistering IP ${saIP.value} for ${serviceName} from agent: ${saIP.key}.")
         deregisterDns(saIP.key, serviceName)
       } else {
         validServiceIPs[saIP.key] = saIP.value
@@ -96,7 +96,8 @@ class Consul {
         acceptType: 'APPLICATION_JSON',
         url: "http://${agentIP}:8500/v1/agent/services",
         consoleLogResponseBody: true,
-        validResponseCodes: '100:599'
+        validResponseCodes: '100:599',
+        quiet: true
       )
       if (res && res.content) {
         def content = new JsonSlurperClassic().parseText(res.content)
