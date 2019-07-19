@@ -146,7 +146,7 @@ def call(type, String product, String component, Closure body) {
           environment: environment.prodName,
           product: product,
           component: component,
-          aksSubscription: aksSubscription.prodName,		
+          aksSubscription: aksSubscription.prodName,
           aksInfraRg: aksSubscription.prodInfraRgName)
 
         sectionPromoteBuildToStage(
@@ -161,7 +161,7 @@ def call(type, String product, String component, Closure body) {
         )
       }
 
-      onAutoDeployBranch { subscriptionName, environmentName ->
+      onAutoDeployBranch { subscriptionName, environmentName, aksSubscriptionName, aksInfraRgName ->
         sectionDeployToEnvironment(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
@@ -169,7 +169,9 @@ def call(type, String product, String component, Closure body) {
           subscription: subscriptionName,
           environment: environmentName,
           product: product,
-          component: component)
+          component: component,
+          aksSubscription: aksSubscription.prodName,
+          aksInfraRg: aksSubscription.prodInfraRgName)
       }
 
       onPreview {
@@ -180,7 +182,9 @@ def call(type, String product, String component, Closure body) {
           subscription: subscription.previewName,
           environment: environment.previewName,
           product: deploymentProduct,
-          component: component)
+          component: component,
+          aksSubscription: aksSubscription.previewName,
+          aksInfraRg: null)
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

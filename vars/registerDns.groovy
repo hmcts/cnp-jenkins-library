@@ -31,18 +31,22 @@ def call(Map params) {
       withIlbIp(params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
       }
-    } else {
+    } else if (params && !params.aksSubscription.contains('PROD')) {
       // Note: update this when we get a PROD subscription
-      if (!params.aksSubscription.contains('PROD')) {
-        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
-        consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
-      }
+      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+      consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
+    } else {
+      echo "Skipping dns registration for AKS as this environment is not configured with it: ${params.aksSubscription}"
     }
 
     // Note: update this when we get a PROD subscription
-    if (config.aksStagingDeployment && !params.aksSubscription.contains('PROD')) {
-      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
-      consul.registerDns("${params.product}-${params.component}", appGwIp)
+    if (config.aksStagingDeployment) {
+      if (params.aksSubscription && !params.aksSubscription.contains('PROD')) {
+        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+        consul.registerDns("${params.product}-${params.component}", appGwIp)
+      } else {
+        echo "Skipping dns registration for AKS as this environment is not configured with it: ${params.aksSubscription}"
+      }
     }
   }
 }
