@@ -17,11 +17,15 @@ def call(Map params) {
     }
 
     // Note: update this when we get a PROD subscription
-    if (config.aksStagingDeployment && !params.aksSubscription.contains('PROD')) {
-      Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription)
-      kubectl.login()
-      def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-      consul.registerDns("${params.product}-${params.component}-staging", ingressIP)
+    if (config.aksStagingDeployment) {
+      if (params.aksSubscription && !params.aksSubscription.contains('PROD')) {
+        Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription)
+        kubectl.login()
+        def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
+        consul.registerDns("${params.product}-${params.component}-staging", ingressIP)
+      } else {
+        echo "Skipping dns registration for AKS as this environment is not configured with it: ${params.aksSubscription}"
+      }
     }
     // AAT + PROD DNS registration
     def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${params.subscription} az $cmd", returnStdout: true).trim() }
@@ -31,7 +35,7 @@ def call(Map params) {
       withIlbIp(params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
       }
-    } else if (params && !params.aksSubscription.contains('PROD')) {
+    } else if (params.aksSubscription && !params.aksSubscription.contains('PROD')) {
       // Note: update this when we get a PROD subscription
       appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
       consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
