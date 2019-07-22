@@ -47,7 +47,7 @@ def call(String product, Closure body) {
           product: product)
       }
 
-      onAutoDeployBranch { subscriptionName, environmentName ->
+      onAutoDeployBranch { subscriptionName, environmentName, aksSubscriptionName, aksInfraRgName ->
         sectionInfraBuild(
           pipelineConfig: pipelineConfig,
           subscription: subscriptionName,
