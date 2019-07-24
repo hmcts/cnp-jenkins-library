@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Subscription
-import uk.gov.hmcts.contino.AKSSubscription
+import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 def call() {
 
@@ -8,20 +8,20 @@ def call() {
 
   def environment = new Environment(env)
   def subscription = new Subscription(env)
-  def aksSubscription = new AKSSubscription(env)
+  def aksSubscriptions = new AKSSubscriptions(this)
 
   // map of branch name to environment
   def autoDeployEnvironments = [
     preview: [
       environmentName: environment.previewName,
       subscriptionName: subscription.nonProdName,
-      aksSubscriptionName: aksSubscription.previewName,
+      aksSubscription: aksSubscriptions.preview,
       aksInfraRgName: null
     ],
     demo: [
       environmentName: environment.demoName,
       subscriptionName: subscription.nonProdName,
-      aksSubscriptionName: null,
+      aksSubscription: null,
       aksInfraRgName: null
     ],
     hmctsdemo: [ // TODO delete
@@ -31,19 +31,17 @@ def call() {
     perftest: [
       environmentName: environment.perftestName,
       subscriptionName: subscription.qaName,
-      aksSubscriptionName: aksSubscription.perftestName,
-      aksInfraRgName: aksSubscription.perftestInfraRgName
+      aksSubscription: aksSubscriptions.perftest
     ],
     ithc: [
       environmentName: environment.ithcName,
       subscriptionName: subscription.qaName,
-      aksSubscriptionName: aksSubscription.ithcName,
-      aksInfraRgName: aksSubscription.ithcInfraRgName
+      aksSubscription: aksSubscriptions.ithc
     ],
     ethosldata: [
       environmentName: environment.ethosLdataName,
       subscriptionName: subscription.ethosLdataName,
-      aksSubscriptionName: null,
+      aksSubscription: null,
       aksInfraRgName: null
     ]
   ]

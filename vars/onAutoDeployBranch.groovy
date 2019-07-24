@@ -2,6 +2,6 @@
 def call(Closure block) {
   def envSub = autoDeployEnvironment()
   if (envSub) {
-    return block.call(envSub.subscriptionName, envSub.environmentName, envSub.aksSubscriptionName, envSub.aksInfraRgName)
+    return block.call(envSub.subscriptionName, envSub.environmentName, envSub.aksSubscription)
   }
 }
