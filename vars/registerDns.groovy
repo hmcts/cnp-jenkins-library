@@ -1,5 +1,4 @@
 import uk.gov.hmcts.contino.Consul
-import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(Map params) {
@@ -20,16 +19,13 @@ def call(Map params) {
     // Note: update this when we get a PROD subscription
     if (config.aksStagingDeployment) {
       if (aksSubscriptionName && !aksSubscriptionName.contains('PROD')) {
-        Kubectl kubectl = new Kubectl(this, params.subscription, null, params.aksSubscription.name)
-        kubectl.login()
-        def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
+        def ingressIP = params.aksSubscription.ingressIp()
         consul.registerDns("${params.product}-${params.component}-staging", ingressIP)
       } else {
         echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
       }
     }
     // AAT + PROD DNS registration
-    def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${params.subscription} az $cmd", returnStdout: true).trim() }
     def aksEnv = params.aksSubscription != null && params.aksSubscription.envName
 
     if (config.legacyDeployment) {
@@ -38,7 +34,7 @@ def call(Map params) {
       }
     } else if (aksEnv && !aksSubscriptionName.contains('PROD')) {
       // Note: update this when we get a PROD subscription
-      appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+      appGwIp = params.aksSubscription.loadBalancerIp()
       consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
     } else {
       echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
@@ -47,7 +43,7 @@ def call(Map params) {
     // Note: update this when we get a PROD subscription
     if (aksEnv && config.aksStagingDeployment) {
       if (!aksSubscriptionName.contains('PROD')) {
-        appGwIp = az "network application-gateway frontend-ip show  -g ${params.aksInfraRg} --gateway-name aks-${aksEnv}-appgw --name appGwPrivateFrontendIp --subscription ${params.aksSubscription} --query privateIpAddress -o tsv"
+        appGwIp = params.aksSubscription.loadBalancerIp()
         consul.registerDns("${params.product}-${params.component}", appGwIp)
       } else {
         echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
