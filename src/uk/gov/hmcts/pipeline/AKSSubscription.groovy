@@ -23,7 +23,7 @@ class AKSSubscription implements Serializable {
       azureKeyVaultSecrets: secrets,
       keyVaultURLOverride: "https://${keyvaultName}.vault.azure.net"
     ) {
-      return env.INGRESS_IP
+      return steps.env.INGRESS_IP
     }
   }
 
@@ -35,7 +35,7 @@ class AKSSubscription implements Serializable {
       azureKeyVaultSecrets: secrets,
       keyVaultURLOverride: "https://${keyvaultName}.vault.azure.net"
     ) {
-      return env.LB_IP
+      return steps.env.LB_IP
     }
   }
 }
