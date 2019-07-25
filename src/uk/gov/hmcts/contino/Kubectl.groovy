@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 class Kubectl {
 
@@ -18,7 +19,7 @@ class Kubectl {
     this.namespace = namespace
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
-    this.aksSubscription = new AKSSubscription(steps.env).previewName
+    this.aksSubscription = new AKSSubscriptions(steps).preview
   }
 
   Kubectl(steps, subscription, namespace, aksSubscription) {

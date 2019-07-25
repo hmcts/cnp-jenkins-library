@@ -25,7 +25,7 @@ def call(DockerImage dockerImage, Map params) {
 
   withEnv(templateEnvVars) {
 
-    def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription)
+    def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
     kubectl.login()
 
     kubectl.createNamespace(env.NAMESPACE)

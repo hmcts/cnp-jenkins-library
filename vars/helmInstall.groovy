@@ -7,7 +7,7 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
-import uk.gov.hmcts.contino.AKSSubscription
+import uk.gov.hmcts.pipeline.AKSSubscription
 
 
 def call(DockerImage dockerImage, Map params) {
@@ -29,7 +29,7 @@ def call(DockerImage dockerImage, Map params) {
   def consul = new Consul(this, environment)
   def consulApiAddr = consul.getConsulIP()
 
-  def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription)
+  def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
@@ -55,8 +55,8 @@ def call(DockerImage dockerImage, Map params) {
 
     def helm = new Helm(this, chartName)
     helm.setup()
-    if(subscription != "sandbox" && params.aksSubscription == new AKSSubscription(this.env).aatName) {
-      helm.enableTLS(params.aksSubscription, this.env.AAT_AKS_KEY_VAULT)
+    if(subscription != "sandbox" && params.aksSubscription.tlsEnabled) {
+      helm.enableTLS(params.aksSubscription.name, params.aksSubscription.keyvaultName)
     }
 
 

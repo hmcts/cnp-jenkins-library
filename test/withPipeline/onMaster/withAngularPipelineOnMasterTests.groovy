@@ -4,9 +4,7 @@ import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
-import uk.gov.hmcts.contino.NodeDeployer
 import uk.gov.hmcts.contino.StaticSiteDeployer
-import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
 class withAngularPipelineOnMasterTests extends BaseCnpPipelineTest {

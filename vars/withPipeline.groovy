@@ -7,11 +7,11 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
-import uk.gov.hmcts.contino.AKSSubscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
+import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 def call(type, String product, String component, Closure body) {
 
@@ -27,7 +27,7 @@ def call(type, String product, String component, Closure body) {
   ]
 
   Subscription subscription = new Subscription(env)
-  AKSSubscription aksSubscription = new AKSSubscription(env)
+  AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   PipelineType pipelineType
 
@@ -80,7 +80,7 @@ def call(type, String product, String component, Closure body) {
           pipelineCallbacksRunner: callbacksRunner,
           pipelineType: pipelineType,
           subscription: subscription.nonProdName,
-          aksSubscription: aksSubscription.previewName,
+          aksSubscription: aksSubscriptions.preview,
           environment: environment.previewName,
           product: product,
           component: component
@@ -105,6 +105,7 @@ def call(type, String product, String component, Closure body) {
           pipelineCallbacksRunner: callbacksRunner,
           pipelineType: pipelineType,
           subscription: subscription.nonProdName,
+          aksSubscription: aksSubscriptions.aat,
           environment: environment.nonProdName,
           product: product,
           component: component)
@@ -115,7 +116,7 @@ def call(type, String product, String component, Closure body) {
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
             subscription: subscription.nonProdName,
-            aksSubscription: aksSubscription.aatName,
+            aksSubscription: aksSubscriptions.aat,
             environment: environment.nonProdName,
             product: product,
             component: component
@@ -125,11 +126,11 @@ def call(type, String product, String component, Closure body) {
         if (pipelineConfig.installCharts) {
           stage('Publish Helm chart') {
             helmPublish(
-              subscriptionName: subscription.nonProdName,
-              environmentName: environment.nonProdName,
+              appPipelineConfig: pipelineConfig,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,          
               product: product,
-              component: component,
-              aksSubscription: aksSubscription.previewName
+              component: component
             )
           }
         }
@@ -141,7 +142,9 @@ def call(type, String product, String component, Closure body) {
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
-          component: component)
+          component: component,
+          aksSubscription: aksSubscriptions.prod
+        )
 
         sectionPromoteBuildToStage(
           appPipelineConfig: pipelineConfig,
@@ -155,7 +158,7 @@ def call(type, String product, String component, Closure body) {
         )
       }
 
-      onAutoDeployBranch { subscriptionName, environmentName ->
+      onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
         sectionDeployToEnvironment(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
@@ -163,7 +166,9 @@ def call(type, String product, String component, Closure body) {
           subscription: subscriptionName,
           environment: environmentName,
           product: product,
-          component: component)
+          component: component,
+          aksSubscription: aksSubscription
+        )
       }
 
       onPreview {
@@ -174,7 +179,9 @@ def call(type, String product, String component, Closure body) {
           subscription: subscription.previewName,
           environment: environment.previewName,
           product: deploymentProduct,
-          component: component)
+          component: component,
+          aksSubscription: aksSubscriptions.preview
+        )
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

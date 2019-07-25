@@ -5,7 +5,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 
-
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
@@ -44,6 +43,9 @@ def call(params) {
               }
             }
           }
+
+          registerDns(params)
+
           if (config.migrateDb) {
             stage("DB Migration - ${environment}") {
               pcr.callAround("dbmigrate:${environment}") {

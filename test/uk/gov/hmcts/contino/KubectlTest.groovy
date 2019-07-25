@@ -14,8 +14,18 @@ class KubectlTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
-                  AKS_CLUSTER_NAME: "cnp-aks-cluster"]
+    steps.env >> [
+      AKS_RESOURCE_GROUP: "cnp-aks-rg",
+      AKS_CLUSTER_NAME: "cnp-aks-cluster",
+      AKS_PREVIEW_SUBSCRIPTION_NAME: "preview-sub",
+      AKS_AAT_SUBSCRIPTION_NAME: "aat-sub",
+      AAT_AKS_KEY_VAULT: "aat-kv",
+      AKS_PERFTEST_SUBSCRIPTION_NAME: "perftest-sub",
+      AKS_ITHC_SUBSCRIPTION_NAME: "ithc-sub",
+      AKS_PROD_SUBSCRIPTION_NAME: "prod-sub",
+      PROD_AKS_KEY_VAULT: "prod-kv",
+
+    ]
     kubectl = new Kubectl(steps, SUBSCRIPTION, NAMESPACE)
   }
 
