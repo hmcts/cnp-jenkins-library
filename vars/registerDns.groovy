@@ -11,6 +11,7 @@ def call(Map params) {
     if (config.legacyDeployment) {
       withIlbIp(params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
+        consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
       }
     }
 
@@ -28,26 +29,13 @@ def call(Map params) {
     // AAT + PROD DNS registration
     def aksEnv = params.aksSubscription != null && params.aksSubscription.envName
 
-    if (config.legacyDeployment) {
-      withIlbIp(params.environment) {
-        consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
-      }
-    } else if (aksEnv && !aksSubscriptionName.contains('PROD')) {
+    if (!config.legacyDeployment && aksEnv && !aksSubscriptionName.contains('PROD')) {
       // Note: update this when we get a PROD subscription
       appGwIp = params.aksSubscription.loadBalancerIp()
       consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
+      consul.registerDns("${params.product}-${params.component}", appGwIp)
     } else {
       echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
-    }
-
-    // Note: update this when we get a PROD subscription
-    if (aksEnv && config.aksStagingDeployment) {
-      if (!aksSubscriptionName.contains('PROD')) {
-        appGwIp = params.aksSubscription.loadBalancerIp()
-        consul.registerDns("${params.product}-${params.component}", appGwIp)
-      } else {
-        echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
-      }
     }
   }
 }
