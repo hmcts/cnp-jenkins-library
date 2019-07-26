@@ -10,11 +10,11 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 
-def call(type, String product, String component, String envName, String subscription, Closure body) {
-  call(type, product,component,envName,subscription,'',body)
+def call(type, String product, String component, String environment, String subscription, Closure body) {
+  call(type, product,component,environment,subscription,'',body)
 }
 
-def call(type, String product, String component, String envName, String subscription, String deploymentTargets, Closure body) {
+def call(type, String product, String component, String environment, String subscription, String deploymentTargets, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
@@ -78,11 +78,11 @@ def call(type, String product, String component, String envName, String subscrip
         pipelineCallbacksRunner: callbacksRunner,
         pipelineType: pipelineType,
         subscription: subscription,
-        environment: envName,
+        environment: environment,
         product: product,
         component: component,
         deploymentTargets: deploymentTargetList,
-        pactBrokerUrl: environment.pactBrokerUrl
+        pactBrokerUrl: pactBrokerUrl
       )
     } catch (err) {
       currentBuild.result = "FAILURE"
