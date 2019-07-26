@@ -7,7 +7,6 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.TeamNames
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
-import uk.gov.hmcts.pipeline.AKSSubscription
 
 
 def call(DockerImage dockerImage, Map params) {
