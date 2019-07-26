@@ -32,7 +32,7 @@ def call(type, String product, String component, String envName, String subscrip
   assert pipelineType != null
 
   Builder builder = pipelineType.builder
-  Environment environment = new Environment(env)
+  def pactBrokerUrl = (new Environment(env)).pactBrokerUrl
   Subscription metricsSubscription = new Subscription(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription)
   def pipelineConfig = new AppPipelineConfig()
