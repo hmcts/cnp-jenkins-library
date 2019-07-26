@@ -103,11 +103,12 @@ class GradleBuilderTest extends Specification {
   def "runProviderVerification triggers a gradlew hook"() {
     setup:
       def version = "v3r510n"
+      def publishResults = false
     when:
-      builder.runProviderVerification(PACT_BROKER_URL, version)
+      builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
-                    it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=true runAndPublishProviderPactVerification")})
+                    it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publishResults} runProviderPactVerification")})
   }
 
   def "runConsumerTests triggers a gradlew hook"() {

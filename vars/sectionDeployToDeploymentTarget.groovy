@@ -32,6 +32,7 @@ def call(params) {
   def deploymentTarget = params.deploymentTarget
   def envTfOutput = params.envTfOutput
   def deploymentNumber = params.deploymentNumber
+  def pactBrokerUrl = params.pactBrokerUrl
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
@@ -153,7 +154,21 @@ def call(params) {
               }
             }
           }
+          if (config.pactBrokerEnabled) {
+            stage("Pact Provider Verification") {
+              def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
+              def isOnMaster = (env.BRANCH_NAME == 'master')
 
+              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+              env.PACT_BROKER_URL = pactBrokerUrl
+
+              if (config.pactProviderVerificationsEnabled) {
+                pcr.callAround('pact-provider-verification') {
+                  builder.runProviderVerification(pactBrokerUrl, version, isOnMaster)
+                }
+              }
+            }
+          }
         }
 
         stage("Promote - ${environmentDt} (staging -> production slot)") {

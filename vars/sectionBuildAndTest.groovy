@@ -112,7 +112,7 @@ def call(params) {
   }
 
   if (config.pactBrokerEnabled) {
-    stage("Pact") {
+    stage("Pact Consumer Verification") {
       def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
       def isOnMaster = (env.BRANCH_NAME == 'master')
 
@@ -129,11 +129,11 @@ def call(params) {
         }
       }
 
-      if (config.pactProviderVerificationsEnabled && isOnMaster) {
-        pcr.callAround('pact-provider-verification') {
-          builder.runProviderVerification(pactBrokerUrl, version)
-        }
-      }
+      /*
+       * Replace this with a function that will use a webhook to
+       * call a pact verification on a list of providers that the component
+       * has pacts with
+       */
 
       if (config.pactConsumerTestsEnabled && isOnMaster) {
         pcr.callAround('pact-deployment-verification') {

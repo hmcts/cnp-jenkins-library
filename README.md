@@ -381,7 +381,7 @@ The different hooks are based on roles that you can assign to your project: `CON
 Here is an example of a project which acts a consumer and provider (for example a backend-for-frontend):
 
 ```groovy
-import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
+import uk.gov.hmcts.contino.AppPipelineDsl
 
 /* … */
 
@@ -390,19 +390,20 @@ withPipeline(product) {
   /* … */
 
   enablePactAs([
-    PactRoles.CONSUMER,
-    PactRoles.PROVIDER
+    AppPipelineDsl.PactRoles.CONSUMER,
+    AppPipelineDsl.PactRoles.PROVIDER
   ])
 }
 ```
 
 The following hooks will then be ran before the deployment:
 
-| Role       | Order | Yarn                           | Gradle                                  | Active on branch |
-| ---------- | ----- | ------------------------------ | --------------------------------------- | ---------------- |
-| `PROVIDER` | 1     | `test:pact:verify-and-publish` | `runAndPublishProviderPactVerification` | `master` only    |
-| `CONSUMER` | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`        | Any branch       |
-| `CONSUMER` | 3     | `can-i-deploy`\*               | `can-i-deploy`\*                        | `master` only    |
+| Role       | Order | Yarn                           | Gradle                                      | Active on branch |
+| ---------- | ----- | ------------------------------ | ------------------------------------------- | ---------------- |
+| `PROVIDER` | 1     | `test:pact:verify-and-publish` | `runProviderPactVerification publish true`  | `master` only    |
+| `PROVIDER` | 1     | `test:pact:verify`             | `runProviderPactVerification publish false` | Any branch       |
+| `CONSUMER` | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`            | Any branch       |
+| `CONSUMER` | 3     | `can-i-deploy`\*               | `can-i-deploy`\*                            | `master` only    |
 
 \*: `can-i-deploy` is already available in the CI and doesn't need any hook or installation process.
 
@@ -416,8 +417,9 @@ The Pact broker url and other parameters are passed to these hooks as following:
 - `gradlew`:
   - `-Dpact.broker.url`
   - `-Dpact.consumer.version`/`-Dpact.provider.version`
-  - `-Dpact.verifier.publishResults=true` is passed by default for providers
-
+  - `-Dpact.verifier.publishResults=${onMaster}` is passed by default for providers
+  
+🛎️  `onMaster` is a boolean that is true if the current branch is `master`
 🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
 
 ## Contributing
