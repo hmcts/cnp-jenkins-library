@@ -129,12 +129,6 @@ def call(params) {
         }
       }
 
-      /*
-       * Replace this with a function that will use a webhook to
-       * call a pact verification on a list of providers that the component
-       * has pacts with
-       */
-
       if (config.pactConsumerTestsEnabled && isOnMaster) {
         pcr.callAround('pact-deployment-verification') {
           def pactBroker = new PactBroker(this, product, component, pactBrokerUrl)
