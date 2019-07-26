@@ -55,7 +55,6 @@ class withNodeJsPipelineOnBranchPactTests extends BasePipelineTest {
       sonarScan(1) {}
       securityCheck(1) {}
       runConsumerTests(1) { url, version -> return null }
-      runProviderVerification(1) { url, version, publish -> return null }
     }
 
     stubPactBroker.demand.with {
