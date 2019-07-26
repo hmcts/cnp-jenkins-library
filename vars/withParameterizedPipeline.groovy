@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType

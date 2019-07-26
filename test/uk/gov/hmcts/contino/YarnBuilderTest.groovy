@@ -130,12 +130,12 @@ class YarnBuilderTest extends Specification {
 
   def "runProviderVerification triggers a yarn hook without publish"() {
     setup:
-    def version = "v3r510n"
-    def publishResults = false
+      def version = "v3r510n"
+      def publishResults = false
     when:
-    builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
+      builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
     then:
-    1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify") })
+      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify") })
   }
 
   def "runConsumerTests triggers a yarn hook"() {
