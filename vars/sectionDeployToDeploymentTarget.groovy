@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.ProjectBranch
 
 def testEnv(String testUrl, tfOutput, block) {
   def testEnvVariables = ["TEST_URL=${testUrl}"]
