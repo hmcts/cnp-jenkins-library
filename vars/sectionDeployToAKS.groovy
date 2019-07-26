@@ -123,6 +123,7 @@ def call(params) {
               }
             }
           }
+
           if (config.pactBrokerEnabled) {
             stage("Pact Provider Verification") {
               def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
