@@ -127,7 +127,7 @@ def call(params) {
           if (config.pactBrokerEnabled) {
             stage("Pact Provider Verification") {
               def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
-              def isOnMaster = (env.BRANCH_NAME == 'master')
+              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
               env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
               env.PACT_BROKER_URL = pactBrokerUrl
