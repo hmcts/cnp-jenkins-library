@@ -19,7 +19,7 @@ class Kubectl {
     this.namespace = namespace
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
-    this.aksSubscription = new AKSSubscriptions(steps).preview
+    this.aksSubscription = new AKSSubscriptions(steps).preview.name
   }
 
   Kubectl(steps, subscription, namespace, aksSubscription) {
