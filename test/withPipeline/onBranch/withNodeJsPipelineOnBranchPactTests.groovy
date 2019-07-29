@@ -18,7 +18,7 @@ class withNodeJsPipelineOnBranchPactTests extends BasePipelineTest {
   withNodeJsPipelineOnBranchPactTests() {
     super.setUp()
     binding.setVariable("scm", null)
-    binding.setVariable("env", [BRANCH_NAME: "feature-branch"])
+    binding.setVariable("env", [BRANCH_NAME: "feature-branch", GIT_COMMIT: "379c53a716b92cf79439db07edac01ba1028535d"])
     binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true) ] as MockJenkinsPlugin[]))])
 
     def library = library()
@@ -55,7 +55,6 @@ class withNodeJsPipelineOnBranchPactTests extends BasePipelineTest {
       sonarScan(1) {}
       securityCheck(1) {}
       runConsumerTests(1) { url, version -> return null }
-      runProviderVerification(0) { url, version -> return null }
     }
 
     stubPactBroker.demand.with {

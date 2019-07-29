@@ -112,9 +112,9 @@ def call(params) {
   }
 
   if (config.pactBrokerEnabled) {
-    stage("Pact") {
-      def version = sh(returnStdout: true, script: 'git rev-parse --short HEAD')
-      def isOnMaster = (env.BRANCH_NAME == 'master')
+    stage("Pact Consumer Verification") {
+      def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
       env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
       env.PACT_BROKER_URL = pactBrokerUrl
@@ -126,12 +126,6 @@ def call(params) {
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-consumer-tests') {
           builder.runConsumerTests(pactBrokerUrl, version)
-        }
-      }
-
-      if (config.pactProviderVerificationsEnabled && isOnMaster) {
-        pcr.callAround('pact-provider-verification') {
-          builder.runProviderVerification(pactBrokerUrl, version)
         }
       }
 

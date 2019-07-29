@@ -83,8 +83,10 @@ def call(type, String product, String component, Closure body) {
           aksSubscription: aksSubscriptions.preview,
           environment: environment.previewName,
           product: product,
-          component: component
+          component: component,
+          pactBrokerUrl: environment.pactBrokerUrl
         )
+
       }
 
       onMaster {
@@ -108,7 +110,9 @@ def call(type, String product, String component, Closure body) {
           aksSubscription: aksSubscriptions.aat,
           environment: environment.nonProdName,
           product: product,
-          component: component)
+          component: component,
+          pactBrokerUrl: environment.pactBrokerUrl
+        )
 
         if (pipelineConfig.aksStagingDeployment) {
           sectionDeployToAKS(
@@ -119,7 +123,8 @@ def call(type, String product, String component, Closure body) {
             aksSubscription: aksSubscriptions.aat,
             environment: environment.nonProdName,
             product: product,
-            component: component
+            component: component,
+            pactBrokerUrl: environment.pactBrokerUrl
           )
         }
 
@@ -143,7 +148,8 @@ def call(type, String product, String component, Closure body) {
           environment: environment.prodName,
           product: product,
           component: component,
-          aksSubscription: aksSubscriptions.prod
+          aksSubscription: aksSubscriptions.prod,
+          pactBrokerUrl: environment.pactBrokerUrl
         )
 
         sectionPromoteBuildToStage(
@@ -167,7 +173,8 @@ def call(type, String product, String component, Closure body) {
           environment: environmentName,
           product: product,
           component: component,
-          aksSubscription: aksSubscription
+          aksSubscription: aksSubscription,
+          pactBrokerUrl: environment.pactBrokerUrl
         )
       }
 
@@ -180,7 +187,8 @@ def call(type, String product, String component, Closure body) {
           environment: environment.previewName,
           product: deploymentProduct,
           component: component,
-          aksSubscription: aksSubscriptions.preview
+          aksSubscription: aksSubscriptions.preview,
+          pactBrokerUrl: environment.pactBrokerUrl
         )
       }
     } catch (err) {

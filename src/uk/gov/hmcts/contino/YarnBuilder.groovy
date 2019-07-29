@@ -103,10 +103,15 @@ EOF
    * Triggers a yarn hook
    * @param pactBrokerUrl the url of the pact broker
    * @param version the version of the current project, usually a git commit hash
+   * @param publish should the provider verification publish the results
    * @return
    */
-  def runProviderVerification(pactBrokerUrl, version) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish")
+  def runProviderVerification(pactBrokerUrl, version, publish) {
+    if (publish) {
+      steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish")
+    } else {
+      steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify")
+    }
   }
 
   /**

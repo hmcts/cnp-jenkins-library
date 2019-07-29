@@ -23,6 +23,7 @@ def call(params) {
   AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
 
+  def pactBrokerUrl = params.pactBrokerUrl
   def subscription = params.subscription
   def product = params.product
   def component = params.component
@@ -98,7 +99,7 @@ def call(params) {
               }
             }
           }
-
+          
           onFunctionalTestEnvironment(environment) {
             stage("Functional Test - AKS ${environment}") {
               testEnv(aksUrl) {
@@ -118,6 +119,22 @@ def call(params) {
                     builder.performanceTest()
                     publishPerformanceReports(this, params)
                   }
+                }
+              }
+            }
+          }
+
+          if (config.pactBrokerEnabled) {
+            stage("Pact Provider Verification") {
+              def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+              env.PACT_BROKER_URL = pactBrokerUrl
+
+              if (config.pactProviderVerificationsEnabled) {
+                pcr.callAround('pact-provider-verification') {
+                  builder.runProviderVerification(pactBrokerUrl, version, isOnMaster)
                 }
               }
             }

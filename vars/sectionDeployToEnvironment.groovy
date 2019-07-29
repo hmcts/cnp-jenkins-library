@@ -9,6 +9,7 @@ def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
+  def pactBrokerUrl = params.pactBrokerUrl
   def subscription = params.subscription
   def environment = params.environment
   def product = params.product
@@ -77,7 +78,9 @@ def call(params) {
           component: component,
           envTfOutput: tfOutput,
           deploymentTarget: deploymentTargets[i],
-          deploymentNumber: deploymentNumber)
+          deploymentNumber: deploymentNumber,
+          pactBrokerUrl: pactBrokerUrl
+        )
       }
     }
   }

@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
@@ -32,7 +33,7 @@ def call(type, String product, String component, String environment, String subs
   assert pipelineType != null
 
   Builder builder = pipelineType.builder
-
+  def pactBrokerUrl = (new Environment(env)).pactBrokerUrl
   Subscription metricsSubscription = new Subscription(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription)
   def pipelineConfig = new AppPipelineConfig()
@@ -81,7 +82,9 @@ def call(type, String product, String component, String environment, String subs
         environment: environment,
         product: product,
         component: component,
-        deploymentTargets: deploymentTargetList)
+        deploymentTargets: deploymentTargetList,
+        pactBrokerUrl: pactBrokerUrl
+      )
     } catch (err) {
       currentBuild.result = "FAILURE"
 

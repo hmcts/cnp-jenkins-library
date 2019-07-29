@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.ProjectBranch
 
 def testEnv(String testUrl, tfOutput, block) {
   def testEnvVariables = ["TEST_URL=${testUrl}"]
@@ -32,6 +33,7 @@ def call(params) {
   def deploymentTarget = params.deploymentTarget
   def envTfOutput = params.envTfOutput
   def deploymentNumber = params.deploymentNumber
+  def pactBrokerUrl = params.pactBrokerUrl
 
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
@@ -153,7 +155,21 @@ def call(params) {
               }
             }
           }
+          if (config.pactBrokerEnabled) {
+            stage("Pact Provider Verification") {
+              def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
+              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+              env.PACT_BROKER_URL = pactBrokerUrl
+
+              if (config.pactProviderVerificationsEnabled) {
+                pcr.callAround('pact-provider-verification') {
+                  builder.runProviderVerification(pactBrokerUrl, version, isOnMaster)
+                }
+              }
+            }
+          }
         }
 
         stage("Promote - ${environmentDt} (staging -> production slot)") {
