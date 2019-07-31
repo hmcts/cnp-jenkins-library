@@ -23,16 +23,18 @@ def call(Map params) {
         def ingressIP = params.aksSubscription.ingressIp()
         consul.registerDns("${params.product}-${params.component}-staging", ingressIP)
       } else {
-        echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
+        echo "Skipping staging dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
       }
     }
     // AAT + PROD DNS registration
     def aksEnv = params.aksSubscription != null && params.aksSubscription.envName
 
-    if (!config.legacyDeployment && aksEnv && !aksSubscriptionName.contains('PROD')) {
+    if (aksEnv && !aksSubscriptionName.contains('PROD')) {
       // Note: update this when we get a PROD subscription
       appGwIp = params.aksSubscription.loadBalancerIp()
-      consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
+      if (!config.legacyDeployment) {
+        consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
+      }
       consul.registerDns("${params.product}-${params.component}", appGwIp)
     } else {
       echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
