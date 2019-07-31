@@ -21,7 +21,7 @@ def call(params) {
   Deployer deployer = pipelineType.deployer
   def tfOutput
 
-  approvedEnvironmentReposiitory(environment) {
+  approvedEnvironmentRepository(environment) {
     lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
       folderExists('infrastructure') {
         stage("Build Infrastructure - ${environment}") {
