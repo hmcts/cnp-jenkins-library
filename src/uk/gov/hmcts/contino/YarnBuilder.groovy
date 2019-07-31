@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino;
 class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
+  private static final String NVMRC = '.nvmrc'
 
   YarnBuilder(steps) {
     super(steps)
@@ -125,7 +126,19 @@ EOF
   }
 
   private runYarn(task){
-    steps.sh("yarn ${task}")
+    if (steps.fileExists(NVMRC)) {
+      steps.sh """
+        set +ex
+        source /opt/nvm/nvm.sh || true
+        nvm install
+        nvm use default
+        set -ex
+
+        yarn ${task}
+      """
+    } else {
+      steps.sh("yarn ${task}")
+    }
   }
 
   private runYarnQuiet(task) {
@@ -144,7 +157,6 @@ EOF
 
   @Override
   def setupToolVersion() {
-    // TODO setup nvm support here, PRs welcome
   }
 
 }
