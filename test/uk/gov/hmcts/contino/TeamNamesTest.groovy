@@ -13,9 +13,10 @@ class TeamNamesTest extends Specification {
                                      "ccd":["namespace":"ccd"],
                                      "dm":["team":"CCD"],
                                      "bulk-scan":["team":"Software Engineering","namespace":"rpe"]]]
+
   void setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.readYaml(_) >> response.content
+    steps.readYaml([text: response.content]) >> response.content
     steps.httpRequest(_) >> response
     teamNames = new TeamNames(steps)
   }
