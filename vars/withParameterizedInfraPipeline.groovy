@@ -33,8 +33,7 @@ def call(String product, String environment, String subscription, String deploym
 
       stage('Checkout') {
         callbacksRunner.callAround('checkout') {
-          deleteDir()
-          checkout scm
+          checkoutScm()
         }
       }
 

@@ -29,8 +29,7 @@ def call(String product, Closure body) {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
-        deleteDir()
-        checkout scm
+        checkoutScm()
       }
 
       onMaster {

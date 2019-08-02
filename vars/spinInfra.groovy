@@ -35,7 +35,8 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
       teamName = new TeamNames(this).getName(product)
 
-      pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName]).toString()
+      def builtFrom = env.GIT_URL ?: 'unknown'
+      pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName, BuiltFrom: builtFrom]).toString()
       log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; deploymentTarget='$deploymentTarget' environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
       if (env.STORE_rg_name_template != null &&
