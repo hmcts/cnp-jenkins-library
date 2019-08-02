@@ -14,8 +14,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
 
     stage('Checkout') {
       pcr.callAround('checkout') {
-        deleteDir()
-        checkout scm
+        checkoutScm()
       }
     }
 

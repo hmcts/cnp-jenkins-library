@@ -27,8 +27,7 @@ https://github.com/hmcts/cnp-jenkins-library#opinionated-infrastructure-pipeline
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
-        deleteDir()
-        checkout scm
+        checkoutScm()
       }
       withSubscription(subscription) {
         withIlbIp(environmentDeploymentTarget) {

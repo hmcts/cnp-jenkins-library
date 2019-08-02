@@ -61,8 +61,7 @@ def call(type, String product, String component, String environment, String subs
 
       stage('Checkout') {
         callbacksRunner.callAround('checkout') {
-          deleteDir()
-          checkout scm
+          checkoutScm()
         }
       }
 
