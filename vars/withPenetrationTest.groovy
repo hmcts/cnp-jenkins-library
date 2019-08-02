@@ -28,9 +28,8 @@ def call(Closure body) {
 
   node {
     try {
-      stage('clone') {
-        deleteDir()
-        checkout scm
+      stage('Checkout') {
+        checkoutScm()
       }
       stage('Penetration Test - Kali Image') {
         withDocker('hmcts/kali-image:1.1', null) {

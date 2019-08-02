@@ -36,8 +36,7 @@ ______                              _           _ _
       def tfOutput
 
       stage('Checkout') {
-        deleteDir()
-        checkout scm
+        checkoutScm()
       }
 
       withSubscription(subscription) {

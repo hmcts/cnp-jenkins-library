@@ -24,11 +24,7 @@ def call(params) {
 
   stage('Checkout') {
     pcr.callAround('checkout') {
-      deleteDir()
-      def scmVars = checkout scm
-      if (scmVars) {
-        env.GIT_COMMIT = scmVars.GIT_COMMIT
-      }
+      checkoutScm()
       if (config.dockerBuild) {
         withAcrClient(subscription) {
           projectBranch = new ProjectBranch(env.BRANCH_NAME)
