@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.MockJenkins
 import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
 import uk.gov.hmcts.contino.TeamNamesTest
-
+import uk.gov.hmcts.pipeline.EnvironmentApprovalsTest
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
@@ -63,6 +63,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
       if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
         return TeamNamesTest.response
+      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml') {
+        return EnvironmentApprovalsTest.response
       } else {
         return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
           '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
@@ -70,7 +72,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("milestone", null)
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
-    helper.registerAllowedMethod("readYaml", [Map.class], {c ->
-      return TeamNamesTest.response.content})
+    helper.registerAllowedMethod("readYaml", [Map.class], { c ->
+      return c.get('text')
+    })
   }
 }

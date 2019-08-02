@@ -21,66 +21,68 @@ def call(params) {
   Deployer deployer = pipelineType.deployer
   def tfOutput
 
-  lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
-    folderExists('infrastructure') {
-      stage("Build Infrastructure - ${environment}") {
-        onPreview {
-          deploymentNumber = githubCreateDeployment()
-        }
+  approvedEnvironmentRepository(environment) {
+    lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
+      folderExists('infrastructure') {
+        stage("Build Infrastructure - ${environment}") {
+          onPreview {
+            deploymentNumber = githubCreateDeployment()
+          }
 
-        withSubscription(subscription) {
-          dir('infrastructure') {
-            pcr.callAround("buildinfra:${environment}") {
-              timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
-                withIlbIp(environment) {
-                  def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-                  withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, false, subscription)
-                  }
-                  if (config.legacyDeployment) {
-                    scmServiceRegistration(environment)
+          withSubscription(subscription) {
+            dir('infrastructure') {
+              pcr.callAround("buildinfra:${environment}") {
+                timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
+                  withIlbIp(environment) {
+                    def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+                    withEnv(additionalInfrastructureVariables) {
+                      tfOutput = spinInfra(product, component, environment, false, subscription)
+                    }
+                    if (config.legacyDeployment) {
+                      scmServiceRegistration(environment)
+                    }
                   }
                 }
               }
             }
-          }
 
-          registerDns(params)
+            registerDns(params)
 
-          if (config.migrateDb) {
-            stage("DB Migration - ${environment}") {
-              pcr.callAround("dbmigrate:${environment}") {
-                builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+            if (config.migrateDb) {
+              stage("DB Migration - ${environment}") {
+                pcr.callAround("dbmigrate:${environment}") {
+                  builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+                }
               }
             }
           }
         }
-      }
 
-      notFolderExists('infrastructure/deploymentTarget') {
-        // if there's no deployment target infrastructure code then don't run deployment code for deployment targets
-        deploymentTargets.clear()
-      }
+        notFolderExists('infrastructure/deploymentTarget') {
+          // if there's no deployment target infrastructure code then don't run deployment code for deployment targets
+          deploymentTargets.clear()
+        }
 
-      if (config.legacyDeployment) {
-        deploymentTargets.add(0, '')
-      }
+        if (config.legacyDeployment) {
+          deploymentTargets.add(0, '')
+        }
 
-      for (int i = 0; i < deploymentTargets.size() ; i++) {
+        for (int i = 0; i < deploymentTargets.size(); i++) {
 
-        sectionDeployToDeploymentTarget(
-          appPipelineConfig: config,
-          pipelineCallbacksRunner: pcr,
-          pipelineType: pipelineType,
-          subscription: subscription,
-          environment: environment,
-          product: product,
-          component: component,
-          envTfOutput: tfOutput,
-          deploymentTarget: deploymentTargets[i],
-          deploymentNumber: deploymentNumber,
-          pactBrokerUrl: pactBrokerUrl
-        )
+          sectionDeployToDeploymentTarget(
+            appPipelineConfig: config,
+            pipelineCallbacksRunner: pcr,
+            pipelineType: pipelineType,
+            subscription: subscription,
+            environment: environment,
+            product: product,
+            component: component,
+            envTfOutput: tfOutput,
+            deploymentTarget: deploymentTargets[i],
+            deploymentNumber: deploymentNumber,
+            pactBrokerUrl: pactBrokerUrl
+          )
+        }
       }
     }
   }
