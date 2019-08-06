@@ -35,7 +35,7 @@ def call(type, String product, String component, String environment, String subs
   Builder builder = pipelineType.builder
   def pactBrokerUrl = (new Environment(env)).pactBrokerUrl
   Subscription metricsSubscription = new Subscription(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription.prodName)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)

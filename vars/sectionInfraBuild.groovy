@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.MetricsPublisher
 
 def call(params) {
   def pipelineConfig = params.pipelineConfig
@@ -7,7 +8,8 @@ def call(params) {
   def planOnly = params.planOnly ?: false
   def deploymentTargets = params.deploymentTargets ?: deploymentTargets(subscription, environment)
 
-  approvedEnvironmentRepository(environment) {
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription )
+  approvedEnvironmentRepository(environment, metricsPublisher) {
     withSubscription(subscription) {
       withIlbIp(environment) {
         // build environment infrastructure once

@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.MetricsPublisher
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
@@ -20,8 +21,8 @@ def call(params) {
   Builder builder = pipelineType.builder
   Deployer deployer = pipelineType.deployer
   def tfOutput
-
-  approvedEnvironmentRepository(environment) {
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
+  approvedEnvironmentRepository(environment, metricsPublisher) {
     lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
       folderExists('infrastructure') {
         stage("Build Infrastructure - ${environment}") {
