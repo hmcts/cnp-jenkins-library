@@ -1,4 +1,5 @@
 import uk.gov.hmcts.pipeline.EnvironmentApprovals
+import uk.gov.hmcts.contino.MetricsPublisher
 
 /**
  * approvedEnvironmentRepository(environment)
@@ -9,7 +10,7 @@ import uk.gov.hmcts.pipeline.EnvironmentApprovals
  *   ...
  * }
  */
-def call(String environment, Closure block) {
+def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   if (!new EnvironmentApprovals(this).isApproved(environment, env.GIT_URL)) {
     echo '''
 ================================================================================
@@ -26,7 +27,7 @@ def call(String environment, Closure block) {
 Repo ${env.GIT_URL} is not approved for environment '${environment}'"
 ================================================================================
 """
-
+    metricsPublisher.publish("not-approved-repo")
   }
   return block.call()
 }

@@ -39,7 +39,7 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName )
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
@@ -133,7 +133,7 @@ def call(type, String product, String component, Closure body) {
             helmPublish(
               appPipelineConfig: pipelineConfig,
               subscription: subscription.nonProdName,
-              environment: environment.nonProdName,          
+              environment: environment.nonProdName,
               product: product,
               component: component
             )

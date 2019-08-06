@@ -24,9 +24,9 @@ class MetricsPublisher implements Serializable {
     this.env = steps.env
     this.currentBuild = currentBuild
     this.correlationId = UUID.randomUUID()
-    this.cosmosDbUrl = subscription.prodName == "prod" ?
-      'https://pipeline-metrics.documents.azure.com/' :
-      'https://sandbox-pipeline-metrics.documents.azure.com/'
+    this.cosmosDbUrl = subscription == "sandbox" ?
+      'https://sandbox-pipeline-metrics.documents.azure.com/' :
+      'https://pipeline-metrics.documents.azure.com/'
     this.resourceLink = 'dbs/jenkins/colls/pipeline-metrics'
   }
 
@@ -50,6 +50,7 @@ class MetricsPublisher implements Serializable {
       node_labels                  : env.NODE_LABELS,
       build_url                    : env.BUILD_URL,
       job_url                      : env.JOB_URL,
+      git_url                      : env.GIT_URL,
       current_build_number         : currentBuild.number,
       current_step_name            : currentStepName,
       current_build_result         : currentBuild.result,
@@ -80,7 +81,7 @@ class MetricsPublisher implements Serializable {
 
   }
 
-  def publish(currentStepName) {
+  def publish(eventName) {
     try {
       steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
         if (env.COSMOSDB_TOKEN_KEY == null) {
@@ -89,7 +90,7 @@ class MetricsPublisher implements Serializable {
         }
 
         steps.echo "Publishing Metrics data"
-        createDocument(collectMetrics(currentStepName), cosmosDbUrl)
+        createDocument(collectMetrics(eventName), cosmosDbUrl)
       }
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
