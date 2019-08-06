@@ -10,7 +10,7 @@ import uk.gov.hmcts.contino.MetricsPublisher
  *   ...
  * }
  */
-def call(String environment,MetricsPublisher metricsPublisher, Closure block) {
+def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   if (!new EnvironmentApprovals(this).isApproved(environment, env.GIT_URL)) {
     echo '''
 ================================================================================
