@@ -131,7 +131,6 @@ EOF
         set +ex
         source /opt/nvm/nvm.sh || true
         nvm install
-        nvm use default
         set -ex
 
         yarn ${task}
