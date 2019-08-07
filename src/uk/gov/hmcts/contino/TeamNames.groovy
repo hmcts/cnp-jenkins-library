@@ -6,6 +6,7 @@ class TeamNames {
   static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
   static final String NAMESPACE_KEY = "namespace"
+  static final String DEFAULT_SLACK_CHANNEL_KEY = "defaultSlackChannel"
   static final String TEAM_KEY = "team"
   static def teamNamesMap
 
@@ -58,6 +59,21 @@ class TeamNames {
       .toLowerCase()
       .replace("/", "-")
       .replace(" ", "-")
+  }
+
+  def getDefaultSlackChannel(String product) {
+    def teamNames = getTeamNamesMap()
+    if (!teamNames.containsKey(product) || !teamNames.get(product).get(DEFAULT_SLACK_CHANNEL_KEY) || teamNames.get(product).get(DEFAULT_SLACK_CHANNEL_KEY).isEmpty()) {
+      throw new RuntimeException(
+        "defaultSlackChannel is not configured for Product ${product}"
+          + "Please create a PR to update team-config.yml in cnp-jenkins-config."
+      )
+    }
+    return teamNames.get(product).get(DEFAULT_SLACK_CHANNEL_KEY)
+  }
+
+  def getSlackChannel(String product, String slackChannel) {
+      return slackChannel!=null && !slackChannel.isEmpty() ? slackChannel : getDefaultSlackChannel(product)
   }
 
 }

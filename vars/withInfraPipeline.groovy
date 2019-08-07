@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.TeamNames
 
 def call(String product, Closure body) {
 
@@ -25,7 +26,9 @@ def call(String product, Closure body) {
   body.call() // register pipeline config
 
   node {
+    def slackChannel
     try {
+      slackChannel = new TeamNames(this).getSlackChannel(product,pipelineConfig.slackChannel)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
@@ -64,9 +67,7 @@ def call(String product, Closure body) {
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
-      if (pipelineConfig.slackChannel) {
-        notifyBuildFailure channel: pipelineConfig.slackChannel
-      }
+      notifyBuildFailure channel: slackChannel
 
       callbackRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
@@ -75,9 +76,7 @@ def call(String product, Closure body) {
       deleteDir()
     }
 
-    if (pipelineConfig.slackChannel) {
-      notifyBuildFixed channel: pipelineConfig.slackChannel
-    }
+    notifyBuildFixed channel: slackChannel
 
     callbackRunner.call('onSuccess')
     metricsPublisher.publish('Pipeline Succeeded')

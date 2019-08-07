@@ -8,11 +8,12 @@ class TeamNamesTest extends Specification {
 
   def steps
   def teamNames
-  static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims"],
-                                     "bar":["team":"Fees/Pay","namespace":"fees-pay"],
-                                     "ccd":["namespace":"ccd"],
-                                     "dm":["team":"CCD"],
-                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe"]]]
+  static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims","defaultSlackChannel":"#cmc-builds"],
+                                     "bar":["team":"Fees/Pay","namespace":"fees-pay","defaultSlackChannel":"#fees-builds"],
+                                     "ccd":["namespace":"ccd","defaultSlackChannel":"#ccd-builds"],
+                                     "dm":["team":"CCD","defaultSlackChannel":""],
+                                     "product":["team":"hmcts","defaultSlackChannel":"#product-builds"],
+                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","defaultSlackChannel":"#rpe-builds"]]]
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
@@ -117,10 +118,46 @@ class TeamNamesTest extends Specification {
 
   def "getNameSpace() with non existing product name should throw error"() {
     def productName = 'idontexist'
-    def expected = TeamNames.DEFAULT_TEAM_NAME
 
     when:
     def teamName = teamNames.getNameSpace(productName)
+
+    then:
+    thrown RuntimeException
+  }
+
+  def "getSlackChannel() with non empty default value should return value back"() {
+    def productName = 'idontexist'
+    def channel = "#test-channel"
+    when:
+    def slackChannel = teamNames.getSlackChannel(productName, channel)
+
+    then:
+    assertThat(slackChannel).isEqualTo(channel)
+  }
+
+  def "getSlackChannel() with empty value should return mapping from team config"() {
+
+    when:
+    def slackChannel = teamNames.getSlackChannel('cmc', "")
+
+    then:
+    assertThat(slackChannel).isEqualTo("#cmc-builds")
+  }
+
+  def "getSlackChannel() with non existing product should throw exception"() {
+
+    when:
+    def slackChannel = teamNames.getSlackChannel('idontexist', "")
+
+    then:
+    thrown RuntimeException
+  }
+
+  def "getSlackChannel() with product having empty slackchannel mapping should throw exception"() {
+
+    when:
+    def slackChannel = teamNames.getSlackChannel('dm', "")
 
     then:
     thrown RuntimeException
