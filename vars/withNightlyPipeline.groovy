@@ -8,7 +8,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.contino.TeamNames
+import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(type,product,component,Closure body) {
 
@@ -45,7 +45,7 @@ def call(type,product,component,Closure body) {
   node {
     def slackChannel
     try {
-      slackChannel = new TeamNames(this).getSlackChannel(product,pipelineConfig.slackChannel)
+      slackChannel = new TeamConfig(this, pipelineConfig).getSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
       withSubscription(subscription.nonProdName) {
         sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType)

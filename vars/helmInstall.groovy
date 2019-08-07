@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.contino.TeamNames
+import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
 
@@ -50,7 +50,7 @@ def call(DockerImage dockerImage, Map params) {
 
     def values = []
     def chartName = "${product}-${component}"
-    def namespace = new TeamNames(this).getNameSpace(product)
+    def namespace = new TeamConfig(this).getNameSpace(product)
 
     def helm = new Helm(this, chartName)
     helm.setup()

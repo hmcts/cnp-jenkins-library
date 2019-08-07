@@ -2,7 +2,7 @@
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
-import uk.gov.hmcts.contino.TeamNames
+import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
@@ -33,7 +33,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
   lock("${productName}-${environmentDeploymentTarget}") {
     stage("Plan ${productName} in ${environmentDeploymentTarget}") {
 
-      teamName = new TeamNames(this).getName(product)
+      teamName = new TeamConfig(this).getName(product)
 
       def builtFrom = env.GIT_URL ?: 'unknown'
       pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName, BuiltFrom: builtFrom]).toString()
