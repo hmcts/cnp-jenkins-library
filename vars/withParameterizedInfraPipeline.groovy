@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
+import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(String product, String environment, String subscription, Closure body) {
   call(product, environment, subscription, '', body)
@@ -28,7 +29,9 @@ def call(String product, String environment, String subscription, String deploym
   def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
 
   node {
+    def slackChannel
     try {
+      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
@@ -48,9 +51,7 @@ def call(String product, String environment, String subscription, String deploym
 
     } catch (err) {
       currentBuild.result = "FAILURE"
-      if (pipelineConfig.slackChannel) {
-        notifyBuildFailure channel: pipelineConfig.slackChannel
-      }
+      notifyBuildFailure channel: slackChannel
 
       callbacksRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
@@ -59,9 +60,7 @@ def call(String product, String environment, String subscription, String deploym
       deleteDir()
     }
 
-    if (pipelineConfig.slackChannel) {
-      notifyBuildFixed channel: pipelineConfig.slackChannel
-    }
+    notifyBuildFixed channel: slackChannel
 
     callbacksRunner.call('onSuccess')
     metricsPublisher.publish('Pipeline Succeeded')

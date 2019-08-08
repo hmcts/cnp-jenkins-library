@@ -4,8 +4,9 @@ import com.lesfurets.jenkins.unit.BasePipelineTest
 import uk.gov.hmcts.contino.MockJenkins
 import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
-import uk.gov.hmcts.contino.TeamNamesTest
+
 import uk.gov.hmcts.pipeline.EnvironmentApprovalsTest
+import uk.gov.hmcts.pipeline.TeamConfigTest
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
@@ -62,7 +63,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
       if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
-        return TeamNamesTest.response
+        return TeamConfigTest.response
       } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml') {
         return EnvironmentApprovalsTest.response
       } else {
