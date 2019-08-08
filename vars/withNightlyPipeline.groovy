@@ -45,7 +45,7 @@ def call(type,product,component,Closure body) {
   node {
     def slackChannel
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getSlackChannel(product)
+      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
       withSubscription(subscription.nonProdName) {
         sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType)

@@ -31,7 +31,7 @@ def call(String product, String environment, String subscription, String deploym
   node {
     def slackChannel
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getSlackChannel(product)
+      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {

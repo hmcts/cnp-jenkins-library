@@ -62,7 +62,7 @@ def call(type, String product, String component, Closure body) {
   node {
     def slackChannel
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getSlackChannel(product)
+      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       sectionBuildAndTest(
