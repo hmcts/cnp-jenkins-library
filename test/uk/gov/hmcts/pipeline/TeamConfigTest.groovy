@@ -16,6 +16,7 @@ class TeamConfigTest extends Specification {
                                      "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ]],
                                      "dm":["team":"CCD","slack": ["contact_channel":"", "build_notices_channel":"" ]],
                                      "product":["team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
+                                     "pr-999-product":["team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
                                      "bulk-scan":["team":"Software Engineering","namespace":"rpe","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
 
   void setup() {
@@ -130,22 +131,10 @@ class TeamConfigTest extends Specification {
     thrown RuntimeException
   }
 
-  def "getContactSlackChannel() with non empty default value should return value back"() {
-    def productName = 'idontexist'
-    def config = new AppPipelineConfig()
-    config.slackChannel = "#test-channel"
-    def teamConfigWithChannel = new TeamConfig(steps, config)
-    when:
-    def slackChannel = teamConfigWithChannel.getContactSlackChannel(productName)
-
-    then:
-    assertThat(slackChannel).isEqualTo(config.slackChannel)
-  }
-
   def "getContactSlackChannel() with empty value should return mapping from team config"() {
 
     when:
-    def slackChannel = slackTeamConfig.getContactSlackChannel('cmc')
+    def slackChannel = teamConfig.getContactSlackChannel('cmc')
 
     then:
     assertThat(slackChannel).isEqualTo("#cmc-builds")
@@ -154,7 +143,7 @@ class TeamConfigTest extends Specification {
   def "getContactSlackChannel() with non existing product should throw exception"() {
 
     when:
-    def slackChannel = slackTeamConfig.getContactSlackChannel('idontexist')
+    def slackChannel = teamConfig.getContactSlackChannel('idontexist')
 
     then:
     thrown RuntimeException
@@ -163,7 +152,7 @@ class TeamConfigTest extends Specification {
   def "getContactSlackChannel() with product having empty slackchannel mapping should throw exception"() {
 
     when:
-    def slackChannel = slackTeamConfig.getContactSlackChannel('dm')
+    def slackChannel = teamConfig.getContactSlackChannel('dm')
 
     then:
     thrown RuntimeException

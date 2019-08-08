@@ -86,8 +86,7 @@ class TeamConfig {
   }
 
   def getContactSlackChannel(String product) {
-    String slackChannel = this.appPipelineConfig.slackChannel
-    return slackChannel != null && !slackChannel.isEmpty() ? slackChannel : getDefaultTeamSlackChannel(product,CONTACT_SLACK_CHANNEL_KEY)
+    return getDefaultTeamSlackChannel(product,CONTACT_SLACK_CHANNEL_KEY)
   }
 
 
