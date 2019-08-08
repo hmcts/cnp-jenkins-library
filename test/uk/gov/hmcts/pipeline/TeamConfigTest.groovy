@@ -16,7 +16,6 @@ class TeamConfigTest extends Specification {
                                      "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ]],
                                      "dm":["team":"CCD","slack": ["contact_channel":"", "build_notices_channel":"" ]],
                                      "product":["team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
-                                     "pr-999-product":["team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
                                      "bulk-scan":["team":"Software Engineering","namespace":"rpe","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
 
   void setup() {
