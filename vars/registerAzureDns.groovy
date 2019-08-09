@@ -1,0 +1,1 @@
+//new file for Azure private DNS registration
