@@ -45,7 +45,7 @@ def call(type, String product, String component, String environment, String subs
     metricsPublisher.publish(stage)
   }
 
-  def dsl = new AppPipelineDsl(steps, callbacks, pipelineConfig)
+  def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
 
   body.delegate = dsl
   body.call() // register callbacks
