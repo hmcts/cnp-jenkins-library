@@ -3,12 +3,14 @@ package uk.gov.hmcts.contino
 abstract class CommonPipelineDsl implements Serializable {
   final PipelineCallbacksConfig callbacks
   final CommonPipelineConfig config
+  def final steps
 
-  CommonPipelineDsl(PipelineCallbacksConfig callbacks, CommonPipelineConfig config) {
+  CommonPipelineDsl(Object steps, PipelineCallbacksConfig callbacks, CommonPipelineConfig config) {
     this.callbacks = callbacks
     this.config = config
+    this.steps = steps
   }
-  
+
   void afterCheckout(Closure body) {
     after('checkout', body)
   }
@@ -35,6 +37,7 @@ abstract class CommonPipelineDsl implements Serializable {
 
   void enableSlackNotifications(String slackChannel) {
     config.slackChannel = slackChannel
+    steps.env.BUILD_NOTICE_SLACK_CHANNEL = slackChannel
   }
 
 }

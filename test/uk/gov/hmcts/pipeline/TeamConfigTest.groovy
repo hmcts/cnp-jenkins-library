@@ -10,7 +10,7 @@ class TeamConfigTest extends Specification {
 
   def steps
   def teamConfig
-  def slackTeamConfig
+  def slackContactTeamConfig
   static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims","slack": ["contact_channel":"#cmc-builds", "build_notices_channel":"#cmc-builds" ]],
                                      "bar":["team":"Fees/Pay","namespace":"fees-pay","slack": ["contact_channel":"#fees-builds", "build_notices_channel":"#fees-builds" ]],
                                      "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ]],
@@ -22,8 +22,9 @@ class TeamConfigTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.readYaml([text: response.content]) >> response.content
     steps.httpRequest(_) >> response
+    steps.error(_) >> { throw new Exception(_ as String) }
     teamConfig = new TeamConfig(steps)
-    slackTeamConfig = new TeamConfig(steps, new AppPipelineConfig())
+    slackContactTeamConfig = new TeamConfig(steps)
   }
 
   def "getName() with product name starting pr- should return correct teamname"() {
@@ -159,20 +160,22 @@ class TeamConfigTest extends Specification {
 
   def "getBuildNoticesSlackChannel() with non empty default value should return value back"() {
     def productName = 'idontexist'
-    def config = new AppPipelineConfig()
-    config.slackChannel = "#test-channel"
-    def teamConfigWithChannel = new TeamConfig(steps, config)
+
     when:
-    def slackChannel = teamConfigWithChannel.getBuildNoticesSlackChannel(productName)
+    steps.env >> [
+      BUILD_NOTICE_SLACK_CHANNEL: "#test-channel"
+    ]
+    def slackChannel = slackContactTeamConfig.getBuildNoticesSlackChannel(productName)
 
     then:
-    assertThat(slackChannel).isEqualTo(config.slackChannel)
+    assertThat(slackChannel).isEqualTo("#test-channel")
   }
 
   def "getBuildNoticesSlackChannel() with empty value should return mapping from team config"() {
 
     when:
-    def slackChannel = slackTeamConfig.getBuildNoticesSlackChannel('cmc')
+    steps.env >> []
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel('cmc')
 
     then:
     assertThat(slackChannel).isEqualTo("#cmc-builds")
@@ -181,7 +184,8 @@ class TeamConfigTest extends Specification {
   def "getBuildNoticesSlackChannel() with non existing product should throw exception"() {
 
     when:
-    def slackChannel = slackTeamConfig.getBuildNoticesSlackChannel('idontexist')
+    steps.env >> []
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel('idontexist')
 
     then:
     thrown RuntimeException
@@ -190,7 +194,8 @@ class TeamConfigTest extends Specification {
   def "getBuildNoticesSlackChannel() with product having empty slackchannel mapping should throw exception"() {
 
     when:
-    def slackChannel = slackTeamConfig.getBuildNoticesSlackChannel('dm')
+    steps.env >> []
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel('dm')
 
     then:
     thrown RuntimeException

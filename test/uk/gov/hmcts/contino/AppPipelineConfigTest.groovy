@@ -9,11 +9,15 @@ class AppPipelineConfigTest extends Specification {
   AppPipelineConfig pipelineConfig
   AppPipelineDsl dsl
   PipelineCallbacksConfig callbacks
+  def steps
 
   def setup() {
     pipelineConfig = new AppPipelineConfig()
     callbacks = new PipelineCallbacksConfig()
-    dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+    steps = Mock(JenkinsStepMock.class)
+    steps.env >> []
+    dsl = new AppPipelineDsl(steps, callbacks, pipelineConfig)
+
   }
 
   def "ensure defaults"() {
@@ -151,6 +155,14 @@ class AppPipelineConfigTest extends Specification {
     dsl.enableAksStagingDeployment()
     then:
     assertThat(pipelineConfig.aksStagingDeployment).isTrue()
+  }
+
+  def "ensure enable slack notifications"() {
+    def slackChannel = "#donotdisturb"
+    when:
+    dsl.enableSlackNotifications(slackChannel)
+    then:
+    assertThat(pipelineConfig.slackChannel).isEqualTo(slackChannel)
   }
 
   def "ensure enable pact broker deployment check"() {
