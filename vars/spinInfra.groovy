@@ -33,10 +33,12 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
   lock("${productName}-${environmentDeploymentTarget}") {
     stage("Plan ${productName} in ${environmentDeploymentTarget}") {
 
-      teamName = new TeamConfig(this).getName(product)
+      def teamConfig = new TeamConfig(this)
+      teamName = teamConfig.getName(product)
+      def contactSlackChannel = teamConfig.getContactSlackChannel(product)
 
       def builtFrom = env.GIT_URL ?: 'unknown'
-      pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName, BuiltFrom: builtFrom]).toString()
+      pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, '"Team Name"': teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel]).toString()
       log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; deploymentTarget='$deploymentTarget' environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
       if (env.STORE_rg_name_template != null &&

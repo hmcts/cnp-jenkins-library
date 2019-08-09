@@ -41,17 +41,15 @@ class TeamConfig {
 
   def getName (String product) {
     def teamNames = getTeamNamesMap()
-    if (product.startsWith('pr-')) {
-      product = getRawProductName(product)
-    }
+    product = getRawProductName(product)
     if (!teamNames.containsKey(product)) {
       return DEFAULT_TEAM_NAME
     }
     return teamNames.get(product).get(TEAM_KEY,DEFAULT_TEAM_NAME)
   }
 
-  def getRawProductName (String product) {
-    return product.split('pr-(\\d+)-')[1]
+  def getRawProductName(String product) {
+    return product.startsWith('pr-') ? product.split('pr-(\\d+)-')[1] : product
   }
 
   def getNameSpace(String product) {
@@ -86,8 +84,7 @@ class TeamConfig {
   }
 
   def getContactSlackChannel(String product) {
-    String slackChannel = this.appPipelineConfig.slackChannel
-    return slackChannel != null && !slackChannel.isEmpty() ? slackChannel : getDefaultTeamSlackChannel(product,CONTACT_SLACK_CHANNEL_KEY)
+    return getDefaultTeamSlackChannel(getRawProductName(product),CONTACT_SLACK_CHANNEL_KEY)
   }
 
 
