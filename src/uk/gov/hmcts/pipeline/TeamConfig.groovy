@@ -64,7 +64,7 @@ class TeamConfig {
   def getDefaultTeamSlackChannel(String product, String key) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(SLACK_KEY) || !teamNames.get(product).get(SLACK_KEY).get(key)) {
-      steps.error ("defaultSlackChannel is not configured for Product ${product}"
+      steps.error ("defaultSlackChannel is not configured for Product ${product} ."
           + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
     }
     return teamNames.get(product).get(SLACK_KEY).get(key)
