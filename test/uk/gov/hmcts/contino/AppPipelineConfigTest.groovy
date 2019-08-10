@@ -15,7 +15,7 @@ class AppPipelineConfigTest extends Specification {
     pipelineConfig = new AppPipelineConfig()
     callbacks = new PipelineCallbacksConfig()
     steps = Mock(JenkinsStepMock.class)
-    steps.env >> []
+    steps.env >> [ : ]
     dsl = new AppPipelineDsl(steps, callbacks, pipelineConfig)
 
   }
@@ -163,6 +163,7 @@ class AppPipelineConfigTest extends Specification {
     dsl.enableSlackNotifications(slackChannel)
     then:
     assertThat(pipelineConfig.slackChannel).isEqualTo(slackChannel)
+    assertThat(steps.env.BUILD_NOTICE_SLACK_CHANNEL).isEqualTo(slackChannel)
   }
 
   def "ensure enable pact broker deployment check"() {
