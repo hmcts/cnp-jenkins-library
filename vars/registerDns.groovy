@@ -19,7 +19,7 @@ def call(Map params) {
 
     // Note: update this when we get a PROD subscription
     if (config.aksStagingDeployment) {
-      if (aksSubscriptionName && !aksSubscriptionName.contains('PROD')) {
+      if (aksSubscriptionName) {
         def ingressIP = params.aksSubscription.ingressIp()
         consul.registerDns("${params.product}-${params.component}-staging", ingressIP)
       } else {
@@ -29,8 +29,7 @@ def call(Map params) {
     // AAT + PROD DNS registration
     def aksEnv = params.aksSubscription != null && params.aksSubscription.envName
 
-    if (aksEnv && !aksSubscriptionName.contains('PROD')) {
-      // Note: update this when we get a PROD subscription
+    if (aksEnv) {
       appGwIp = params.aksSubscription.loadBalancerIp()
       if (!config.legacyDeployment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
