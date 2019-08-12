@@ -49,7 +49,7 @@ def call(type, String product, String component, Closure body) {
     metricsPublisher.publish(stage)
   }
 
-  def dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+  def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
 
@@ -60,9 +60,8 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   node {
-    def slackChannel
+    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       sectionBuildAndTest(

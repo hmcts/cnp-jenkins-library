@@ -45,7 +45,7 @@ def call(type, String product, String component, String environment, String subs
     metricsPublisher.publish(stage)
   }
 
-  def dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+  def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
 
   body.delegate = dsl
   body.call() // register callbacks
@@ -57,9 +57,8 @@ def call(type, String product, String component, String environment, String subs
   def deploymentTargetList = deploymentTargets.split(',') as List
 
   node {
-    def slackChannel
+    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {

@@ -2,10 +2,12 @@ package uk.gov.hmcts.contino
 
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   final AppPipelineConfig config
+  def final steps
 
-  AppPipelineDsl(PipelineCallbacksConfig callbacks, AppPipelineConfig config) {
-    super(callbacks, config)
+  AppPipelineDsl(Object steps, PipelineCallbacksConfig callbacks, AppPipelineConfig config) {
+    super(steps, callbacks, config)
     this.config = config
+    this.steps = steps
   }
 
 
