@@ -17,7 +17,7 @@ def call(Map params) {
 
     aksSubscriptionName = params.aksSubscription != null ? params.aksSubscription.name : null
 
-    // Note: update this when we get a PROD subscription
+  
     if (config.aksStagingDeployment) {
       if (aksSubscriptionName) {
         def ingressIP = params.aksSubscription.ingressIp()
