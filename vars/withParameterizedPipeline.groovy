@@ -95,6 +95,7 @@ def call(type, String product, String component, String environment, String subs
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
       deleteDir()
     }
 

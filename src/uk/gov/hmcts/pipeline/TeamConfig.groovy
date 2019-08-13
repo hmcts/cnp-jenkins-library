@@ -1,7 +1,5 @@
 package uk.gov.hmcts.pipeline
 
-import org.apache.commons.lang.StringUtils
-
 class TeamConfig {
 
   def steps
