@@ -9,7 +9,7 @@ class WarningCollector implements Serializable {
   static List<DeprecationWarning> pipelineWarnings = new ArrayList<>()
 
   static void addPipelineWarning(String warningKey, String warningMessage, Date deprecationDate) {
-    if(deprecationDate.before(new Date())){
+    if (deprecationDate.before(new Date())){
       throw new RuntimeException(warningMessage + "This change is enforced from ${deprecationDate.format("dd/MM/yyyy HH:mm", TimeZone.getTimeZone("UTC"))} ")
     }
     pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
@@ -22,9 +22,9 @@ class WarningCollector implements Serializable {
     Date nextDay = DateUtils.addDays(currentDate,1);
 
     String message = "${date}"
-    if(DateUtils.isSameDay(currentDate, deprecationDate)){
+    if (DateUtils.isSameDay(currentDate, deprecationDate)){
       return message.concat(" ( today )")
-    }else if (DateUtils.isSameDay(nextDay, deprecationDate)){
+    } else if (DateUtils.isSameDay(nextDay, deprecationDate)){
       return message.concat(" ( tomorrow )")
     }else{
       def daysBetween = Days.daysBetween(new DateTime(), new DateTime(deprecationDate)).getDays()
@@ -34,7 +34,7 @@ class WarningCollector implements Serializable {
 
   static String getSlackWarningMessage() {
     String slackWarningMessage = ""
-    for(pipelineWarning in pipelineWarnings) {
+    for (pipelineWarning in pipelineWarnings) {
       slackWarningMessage = slackWarningMessage.concat(pipelineWarning.warningMessage).concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate)).concat("\n\n")
     }
     return slackWarningMessage

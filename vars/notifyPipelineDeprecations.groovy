@@ -33,7 +33,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
         slackWarningMessage = slackWarningMessage.concat("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings \n\n ")
       }
     }
-    if(channel == null ){
+    if(channel == null ) {
       channel = teamSlackChannel
     }
     slackWarningMessage = slackWarningMessage.concat("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> \n\n ")
@@ -53,7 +53,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
 }
 
 void publishWarningMetrics(MetricsPublisher metricsPublisher) {
-  for(pipelineWarning in WarningCollector.pipelineWarnings) {
+  for (pipelineWarning in WarningCollector.pipelineWarnings) {
     metricsPublisher.publish(pipelineWarning.warningKey)
   }
 
