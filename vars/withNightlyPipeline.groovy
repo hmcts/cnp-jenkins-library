@@ -60,6 +60,7 @@ def call(type,product,component,Closure body) {
       }
       throw err
     } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
       deleteDir()
     }
 

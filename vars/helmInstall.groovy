@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 
 def call(DockerImage dockerImage, Map params) {
@@ -67,20 +68,7 @@ def call(DockerImage dockerImage, Map params) {
       onPR {
         templateOverrideEnvironment = new Environment(env).nonProdName
       }
-      echo '''
-================================================================================
-
- ____      ____  _       _______     ____  _____  _____  ____  _____   ______  
-|_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  | 
-  \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_| 
-   \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____ 
-    \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
-     \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.' 
-                                                                               
-
-Provide values.yaml with the chart. Builds will start failing without values.yaml in the near future. 
-================================================================================
-'''
+      WarningCollector.addPipelineWarning("deprecated_helm_values_template", "Please provide non-templated values.yaml with helm chart. See https://tools.hmcts.net/confluence/display/CNP/Using+Helm+in+Your+Application+Pipeline", new Date().parse("dd.MM.yyyy", "27.08.2019"))
     }
     if (!fileExists(templateValues) && !fileExists(defaultValues)) {
       throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
