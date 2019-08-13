@@ -39,15 +39,10 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
     slackWarningMessage = slackWarningMessage.concat("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> \n\n ")
       .concat(warningMessage)
 
-    try {
-      slackSend(
-        channel: channel,
-        color: 'warning',
-        message: slackWarningMessage)
-    } catch (Exception ex) {
-      echo "ERROR: Failed to notify ${channel} due to the following error: ${ex}"
-    }
-
+    slackSend(
+      channel: channel,
+      color: 'warning',
+      message: slackWarningMessage)
   }
 
 }
