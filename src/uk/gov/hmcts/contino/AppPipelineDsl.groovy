@@ -15,7 +15,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   @Deprecated
   void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
-    WarningCollector.addPipelineWarning("deprectaed_load_vault_secrets", "loadVaultSecrets(List<Map<String, Object>> vaultSecrets) is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
+    WarningCollector.addPipelineWarning("deprecated_load_vault_secrets", "loadVaultSecrets(List<Map<String, Object>> vaultSecrets) is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
     config.vaultSecrets = ['unknown': vaultSecrets]
   }
 
@@ -26,7 +26,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   @Deprecated
   void setVaultName(String vaultName) {
     config.vaultName = vaultName
-    WarningCollector.addPipelineWarning("deprectaed_set_vault_name", "setVaultName() is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
+    WarningCollector.addPipelineWarning("deprecated_set_vault_name", "setVaultName() is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
   }
 
   void enableDbMigration() {
@@ -59,7 +59,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   @Deprecated
   void enableDeployToAKS() {
-    WarningCollector.addPipelineWarning("deprectaed_enable_deployto_AKS", "enableDeployToAKS() is deprecated, use installCharts instead ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
+    WarningCollector.addPipelineWarning("deprecated_enable_deployto_AKS", "enableDeployToAKS() is deprecated, use installCharts instead ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
     config.deployToAKS = true
     config.installCharts = false
   }
