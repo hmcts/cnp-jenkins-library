@@ -41,6 +41,7 @@ class withNodeJsPipelineOnBranchPactTests extends BasePipelineTest {
     helper.registerAllowedMethod('fileExists', [String.class], { c -> true })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], { s, c -> c.call() })
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
+    helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
   }
 
   @Test
