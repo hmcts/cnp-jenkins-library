@@ -68,7 +68,7 @@ def call(DockerImage dockerImage, Map params) {
       onPR {
         templateOverrideEnvironment = new Environment(env).nonProdName
       }
-      WarningCollector.addPipelineWarning("deprecated_helm_values_template", "Please provide non-templated values.yaml with helm chart", new Date().parse("dd.MM.yyyy", "27.08.2019"))
+      WarningCollector.addPipelineWarning("deprecated_helm_values_template", "Please provide non-templated values.yaml with helm chart. See https://tools.hmcts.net/confluence/display/CNP/Using+Helm+in+Your+Application+Pipeline", new Date().parse("dd.MM.yyyy", "27.08.2019"))
     }
     if (!fileExists(templateValues) && !fileExists(defaultValues)) {
       throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
