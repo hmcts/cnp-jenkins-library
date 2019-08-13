@@ -24,7 +24,7 @@ class AKSSubscriptions {
     ithc = new AKSSubscription(steps, ithcName, 'cftapps-ithc', 'ithc', true)
 
     def prodName = steps.env.AKS_PROD_SUBSCRIPTION_NAME ?: 'DCD-CFTAPPS-PROD'
-    def prodKvName = steps.env.PROD_AKS_KEY_VAULT ?: 'cftapps-prod'
+    def prodKvName = steps.env.PROD_AKS_KEY_VAULT ?: 'cft-apps-prod'
     prod = new AKSSubscription(steps, prodName, prodKvName, 'prod', true)
   }
 }
