@@ -12,19 +12,10 @@ class TerraformInfraApprovalsTest extends Specification {
   def approvalsFile
   static def response = ["content":
   """{
-      "resources": {
-        "azurerm_key_vault_secret": {
-          "type": "azurerm_key_vault_secret",
-          "provider": "azurerm",
-          "mode": "managed"
-        },
-        "azurerm_resource_group": {
-          "type": "azurerm_resource_group",
-          "provider": "azurerm",
-          "mode": "managed"
-        }
-      },
-    
+      "resources": [
+        {"type": "azurerm_key_vault_secret"},
+        {"type": "azurerm_resource_group"}
+      ],
       "module_calls": [
         {"source":  "git@github.com:hmcts/cnp-module-webapp?ref=master"},
         {"source":  "git@github.com:hmcts/cnp-module-postgres?ref=master"}
@@ -33,9 +24,8 @@ class TerraformInfraApprovalsTest extends Specification {
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
-    //steps.readYaml([text: response.content]) >> response.content
     steps.httpRequest(_) >> response
-    steps.env >> [SUBSCRIPTION_NAME: 'aat']
+    steps.env >> [SUBSCRIPTION_NAME: 'aat', CHANGE_URL: 'https://github.com/hmcts/some-project/pull/68']
     approvalsFile = new File("terraform-infra-approvals.json")
     if (approvalsFile.exists()) {
       approvalsFile.delete()
