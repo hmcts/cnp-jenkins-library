@@ -19,7 +19,7 @@ def call(Closure body) {
     metricsPublisher.publish(stage)
   }
 
-  def dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+  def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register callbacks
 
@@ -28,9 +28,8 @@ def call(Closure body) {
   }
 
   node {
-    def slackChannel
+    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       stage('Checkout') {
         checkoutScm()
       }
@@ -57,6 +56,7 @@ def call(Closure body) {
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
       deleteDir()
     }
 

@@ -1,7 +1,5 @@
 package uk.gov.hmcts.pipeline
 
-import org.apache.commons.lang.StringUtils
-
 class TeamConfig {
 
   def steps
@@ -13,15 +11,9 @@ class TeamConfig {
   static final String TEAM_KEY = "team"
   static final String SLACK_KEY ="slack"
   static def teamConfigMap
-  def appPipelineConfig
 
   TeamConfig(steps){
     this.steps = steps
-  }
-
-  TeamConfig(steps, appPipelineConfig){
-    this.steps = steps
-    this.appPipelineConfig= appPipelineConfig
   }
 
   def getTeamNamesMap() {
@@ -58,9 +50,8 @@ class TeamConfig {
       product = getRawProductName(product)
     }
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(NAMESPACE_KEY)) {
-      steps.error
-        "Product ${product} does not belong to any team. "
-          + "Please create a PR to update TeamConfig in cnp-jenkins-config."
+      steps.error ("Product ${product} does not belong to any team. "
+          + "Please create a PR to update TeamConfig in cnp-jenkins-config.")
     }
     return teamNames.get(product).get(NAMESPACE_KEY)
       .toLowerCase()
@@ -71,15 +62,14 @@ class TeamConfig {
   def getDefaultTeamSlackChannel(String product, String key) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(SLACK_KEY) || !teamNames.get(product).get(SLACK_KEY).get(key)) {
-      steps.error
-        "defaultSlackChannel is not configured for Product ${product}"
-          + "Please create a PR to update team-config.yml in cnp-jenkins-config."
+      steps.error ("${key} is not configured for Product ${product} ."
+          + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
     }
     return teamNames.get(product).get(SLACK_KEY).get(key)
   }
 
   def getBuildNoticesSlackChannel(String product) {
-      String slackChannel = this.appPipelineConfig.slackChannel
+      String slackChannel = this.steps.env.BUILD_NOTICE_SLACK_CHANNEL
       return slackChannel != null && !slackChannel.isEmpty() ? slackChannel : getDefaultTeamSlackChannel(product,BUILD_NOTICES_CHANNEL_KEY)
   }
 

@@ -21,14 +21,13 @@ def call(String product, Closure body) {
     metricsPublisher.publish(stage)
   }
 
-  def dsl = new InfraPipelineDsl(callbacks, pipelineConfig)
+  def dsl = new InfraPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
 
   node {
-    def slackChannel
+    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
@@ -73,6 +72,7 @@ def call(String product, Closure body) {
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
       deleteDir()
     }
 

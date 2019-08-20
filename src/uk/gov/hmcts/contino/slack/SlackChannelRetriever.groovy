@@ -21,17 +21,12 @@ class SlackChannelRetriever implements Serializable {
     if (changeAuthor == null || changeAuthor.empty) {
       return channel
     }
-
     def response = steps.httpRequest url: "https://raw.githubusercontent.com/hmcts/github-slack-user-mappings/master/slack.json", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
 
     SlackUserMapping[] slackUserMapping = new JsonSlurperClassic()
       .parseText(response.content).users
 
     SlackUserMapping mappedUser = slackUserMapping.find { user -> user.github == changeAuthor }
-    if (mappedUser != null) {
-      return '@' + mappedUser.slack
-    } else {
-      return '@'  + changeAuthor
-    }
+    return mappedUser != null? '@' + mappedUser.slack : null
   }
 }

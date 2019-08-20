@@ -8,11 +8,12 @@ class CommonPipelineConfigTest extends Specification {
   AppPipelineConfig pipelineConfig
   AppPipelineDsl dsl
   PipelineCallbacksConfig callbacks
+  def steps
 
   def setup() {
     pipelineConfig = new AppPipelineConfig()
     callbacks = new PipelineCallbacksConfig()
-    dsl = new AppPipelineDsl(callbacks, pipelineConfig)
+    dsl = new AppPipelineDsl(Mock(JenkinsStepMock.class), callbacks, pipelineConfig)
   }
 
   def "Register 'before' callback"() {

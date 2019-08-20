@@ -22,16 +22,15 @@ def call(String product, String environment, String subscription, String deploym
     metricsPublisher.publish(stage)
   }
 
-  def dsl = new InfraPipelineDsl(callbacks, pipelineConfig)
+  def dsl = new InfraPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
 
   def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
 
   node {
-    def slackChannel
+    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
-      slackChannel = new TeamConfig(this, pipelineConfig).getBuildNoticesSlackChannel(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
@@ -57,6 +56,7 @@ def call(String product, String environment, String subscription, String deploym
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
       deleteDir()
     }
 
