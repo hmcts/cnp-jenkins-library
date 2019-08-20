@@ -28,6 +28,7 @@ Repo ${env.GIT_URL} is not approved for environment '${environment}'"
 ================================================================================
 """
     metricsPublisher.publish("not-approved-repo")
+  } else {
+    return block.call()
   }
-  return block.call()
 }
