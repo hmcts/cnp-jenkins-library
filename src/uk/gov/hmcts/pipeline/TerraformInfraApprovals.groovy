@@ -21,7 +21,7 @@ class TerraformInfraApprovals {
 
   def getInfraApprovals() {
     if (!infraApprovals) {
-      String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrg(this.steps.env.CHANGE_URL)
+      String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrg(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
         steps.httpRequest(
           consoleLogResponseBody: true,
