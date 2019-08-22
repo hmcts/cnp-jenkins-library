@@ -70,7 +70,8 @@ PR branch| `preview` (ASE or AKS depending on your config)
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
-`${env}` will be replaced by the pipeline with the environment that it is being run in
+`${env}` will be replaced by the pipeline with the environment that it is being run in. In order to use this feature you **must use single quotes** around your string to prevent Groovy from resolving the variable immediately.
+
 ```groovy
 def secrets = [
   'your-app-${env}': [
