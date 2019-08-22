@@ -49,11 +49,6 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
-
-    if (this.subscription != 'sandbox') {
-      // to be removed when hmcts registry is deleted, kept in to maintain backwards compatibility
-      this.acr.az "acr helm repo add --subscription DCD-CNP-DEV --name hmcts"
-    }
   }
 
   def enableTLS(String aksSubscription, String keyVaultName){
