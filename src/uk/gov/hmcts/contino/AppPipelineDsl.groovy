@@ -30,8 +30,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableDbMigration(String dbMigrationVaultName = "") {
-   if (dbMigrationVaultName == "") {
-     WarningCollector.addPipelineWarning("deprecated_enable_db_migration_no_vault)", "enableDbMigration() is deprecated, please use enableDbMigration(<vault-name>)", new Date().parse("dd.MM.yyyy", "05.09.2019"))
+    if (dbMigrationVaultName == "") {
+      WarningCollector.addPipelineWarning("deprecated_enable_db_migration_no_vault)", "enableDbMigration() is deprecated, please use enableDbMigration(<vault-name>)", new Date().parse("dd.MM.yyyy", "05.09.2019"))
+    }
+
     config.migrateDb = true
     config.dbMigrationVaultName = dbMigrationVaultName
   }
