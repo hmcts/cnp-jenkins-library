@@ -52,7 +52,10 @@ def call(params) {
             if (config.migrateDb) {
               stage("DB Migration - ${environment}") {
                 pcr.callAround("dbmigrate:${environment}") {
-                  builder.dbMigrate(tfOutput.vaultName.value, tfOutput.microserviceName.value)
+                  builder.dbMigrate(
+                    tfOutput.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
+                    component
+                  )
                 }
               }
             }
