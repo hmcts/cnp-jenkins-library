@@ -25,7 +25,7 @@ class TerraformInfraApprovalsTest extends Specification {
   void setup() {
     steps = Mock(JenkinsStepMock.class)
     steps.httpRequest(_) >> response
-    steps.env >> [SUBSCRIPTION_NAME: 'aat', CHANGE_URL: 'https://github.com/hmcts/some-project/pull/68']
+    steps.env >> [SUBSCRIPTION_NAME: 'aat', GIT_URL: 'https://github.com/hmcts/some-project']
     approvalsFile = new File("terraform-infra-approvals.json")
     if (approvalsFile.exists()) {
       approvalsFile.delete()
