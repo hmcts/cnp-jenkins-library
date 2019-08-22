@@ -110,7 +110,7 @@ def call(params) {
           stage("Functional Test - ${environmentDt} (staging slot)") {
             testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
               pcr.callAround("functionalTest:${environmentDt}") {
-                timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test') {
+                timeoutWithMsg(time: 60, unit: 'MINUTES', action: 'Functional Test') {
                   builder.functionalTest()
                 }
               }
