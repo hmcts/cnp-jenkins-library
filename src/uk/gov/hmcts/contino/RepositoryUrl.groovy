@@ -17,7 +17,7 @@ class RepositoryUrl {
    * @return a repository path in the form of spring-boot-template
    */
   String getShortWithoutOrg(String changeUrl) {
-    return changeUrl.replace("https://github.com/hmcts/", "").replaceFirst("/pull/\\d+", "")
+    return changeUrl.toLowerCase().replace("https://github.com/hmcts/", "").replaceFirst("/pull/\\d+", "")
   }
 
 }
