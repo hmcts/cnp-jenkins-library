@@ -41,9 +41,10 @@ this repo is using a terraform resource that is not allowed,
 whitelists are stored in https://github.com/hmcts/cnp-jenkins-config/tree/master/terraform-infra-approvals 
 send a pull request if you think this is in error. 
 non whitelisted resources:
-${results}
+${file.replace("Error matching resources: ", "")}
 """
       , new Date().parse("dd.MM.yyyy", "05.09.2019"))
+    return
   } else {
     log.info("All infrastructure is approved")
   }
