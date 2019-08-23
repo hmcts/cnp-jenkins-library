@@ -16,8 +16,8 @@ class RepositoryUrl {
    * @param changeUrl the change url env variable from jenkins i.e. https://github.com/hmcts/spring-boot-template/pull/294
    * @return a repository path in the form of spring-boot-template
    */
-  String getShortWithoutOrg(String changeUrl) {
-    return changeUrl.toLowerCase().replace("https://github.com/hmcts/", "").replaceFirst("/pull/\\d+", "")
+  String getShortWithoutOrgOrSuffix(String changeUrl) {
+    return changeUrl.toLowerCase().replace("https://github.com/hmcts/", "").replaceFirst("/pull/\\d+", "").replaceAll('\\.git$', "")
   }
 
 }
