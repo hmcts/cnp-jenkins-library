@@ -69,13 +69,12 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
 
         sh "terraform get -update=true"
-        sh "terraform plan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {
         stage("Apply ${productName} in ${environmentDeploymentTarget}") {
-          sh "terraform apply -auto-approve -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
-            (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+          sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {
             result = sh(script: "terraform output -json", returnStdout: true).trim()
