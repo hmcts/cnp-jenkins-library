@@ -49,7 +49,6 @@ ${results.replace("Error matching resources: ", "")}
 ```
 """
       , new Date().parse("dd.MM.yyyy", "05.09.2019"))
-    return
   } else {
     log.info("All infrastructure is approved")
   }
