@@ -50,13 +50,14 @@ class TerraformInfraApprovals {
       return true
     }
 
-    this.steps.echo(infraApprovals.join(" "))
+    def joinedInfraApprovals = infraApprovals.join(" ")
+    this.steps.echo(joinedInfraApprovals)
 //    if (this.subscription == "sandbox") {
 //      this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
 //      return true
 //    }
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${infraApprovals.join(" ")}")
+      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}")
     }
   }
 
