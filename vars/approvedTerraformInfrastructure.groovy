@@ -15,7 +15,9 @@ def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   TerraformInfraApprovals approvals = new TerraformInfraApprovals(this)
   if (!approvals.isApproved(".")) {
     def results = approvals.getResults(".")
-    echo results
+    echo results + ""
+    def file = readFile("terraform-output.txt")
+    echo file
 
     echo '''
 ================================================================================
