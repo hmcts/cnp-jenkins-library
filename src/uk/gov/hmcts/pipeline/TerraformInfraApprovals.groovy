@@ -11,7 +11,7 @@ class TerraformInfraApprovals {
 
   def steps
   def subscription
-  def infraApprovals = []
+  static def infraApprovals = []
 
   TerraformInfraApprovals(steps) {
     this.steps = steps
@@ -19,7 +19,7 @@ class TerraformInfraApprovals {
   }
 
   def getInfraApprovals() {
-    if (!this.infraApprovals) {
+    if (!infraApprovals) {
       def localInfraApprovals = []
       String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrg(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
@@ -37,10 +37,10 @@ class TerraformInfraApprovals {
           this.steps.echo "Infra approvals file ${k} doesn't exist"
         }
       }
-      this.infraApprovals = localInfraApprovals
+      infraApprovals = localInfraApprovals
     }
 
-    return this.infraApprovals
+    return infraApprovals
   }
 
   boolean isApproved(String tfInfraPath) {
