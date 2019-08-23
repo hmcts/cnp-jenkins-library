@@ -14,14 +14,8 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   TerraformInfraApprovals approvals = new TerraformInfraApprovals(this)
   if (!approvals.isApproved(".")) {
-    def results
-    try {
-      results = approvals.getResults(".")
-      echo results
-    } catch(e) {
-      echo "failed to get results"
-      echo e.getMessage()
-    }
+    def results = approvals.getResults(".")
+    echo results
 
     echo '''
 ================================================================================
