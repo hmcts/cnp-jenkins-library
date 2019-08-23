@@ -14,7 +14,14 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   TerraformInfraApprovals approvals = new TerraformInfraApprovals(this)
   if (!approvals.isApproved(".")) {
-    def results = approvals.getResults(".")
+    def results
+    try {
+      results = approvals.getResults(".")
+      echo results
+    } catch(e) {
+      echo "failed to get results"
+      echo e
+    }
 
     echo '''
 ================================================================================
@@ -31,6 +38,7 @@ def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
 Infrastructure for repo ${env.GIT_URL} is not approved for environment '${environment}'"
 ================================================================================
 """
+
     metricsPublisher.publish("not-approved-infra")
     WarningCollector.addPipelineWarning("deprecated_not_approved_infra", """
 this repo is using a terraform resource that is not allowed, 
