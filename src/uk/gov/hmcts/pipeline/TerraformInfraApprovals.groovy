@@ -27,12 +27,12 @@ class TerraformInfraApprovals {
           consoleLogResponseBody: true,
           timeout: 10,
           url: "${GITHUB_BASE_URL}/${k}",
-          validResponseCodes: v
+          validResponseCodes: v,
+          outputFile: k
         )
         if (response.status == 200) {
           this.steps.echo "Infra approvals file exists"
-          def approvals = this.steps.readJSON(text: response.content)
-          localInfraApprovals << approvals
+          localInfraApprovals << k
         } else {
           this.steps.echo "Infra approvals file ${k} doesn't exist"
         }
