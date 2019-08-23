@@ -49,10 +49,10 @@ class TerraformInfraApprovals {
       this.steps.sh("echo 'WARNING: No Terraform infrastructure whitelist found.'")
       return true
     }
-    if (this.subscription == "sandbox") {
-      this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
-      return true
-    }
+//    if (this.subscription == "sandbox") {
+//      this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
+//      return true
+//    }
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
       return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${infraApprovals.join(" ")}")
     }
