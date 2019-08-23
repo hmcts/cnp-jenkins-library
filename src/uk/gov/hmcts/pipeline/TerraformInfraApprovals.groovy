@@ -57,7 +57,7 @@ class TerraformInfraApprovals {
 //      return true
 //    }
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}")
+      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}") == 0
     }
   }
 
