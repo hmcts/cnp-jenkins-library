@@ -14,10 +14,13 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   TerraformInfraApprovals approvals = new TerraformInfraApprovals(this)
   if (!approvals.isApproved(".")) {
-    def results = approvals.getResults(".")
-    echo results + ""
-    def file = readFile("terraform-approvals.log")
-    echo file
+    // we run the tf-utils again because getting it the stderr through jenkins is a nightmare
+    // returnStdout will fail if non 0 result, set +ex doesn't stop it failing
+    // tee by default only gets stdout
+    // I suspect that with a proper bash shell it would be easier, but we're using a busybox sh shell here
+    approvals.storeResults(".")
+    def results = readFile("terraform-approvals.log")
+    echo results
 
     echo '''
 ================================================================================
@@ -41,7 +44,7 @@ this repo is using a terraform resource that is not allowed,
 whitelists are stored in https://github.com/hmcts/cnp-jenkins-config/tree/master/terraform-infra-approvals 
 send a pull request if you think this is in error. 
 non whitelisted resources:
-${file.replace("Error matching resources: ", "")}
+${results.replace("Error matching resources: ", "")}
 """
       , new Date().parse("dd.MM.yyyy", "05.09.2019"))
     return
