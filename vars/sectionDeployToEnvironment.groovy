@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
