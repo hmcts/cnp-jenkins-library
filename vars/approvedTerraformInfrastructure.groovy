@@ -1,5 +1,6 @@
 import uk.gov.hmcts.pipeline.TerraformInfraApprovals
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 /**
  * approvedTerraformInfrastructure(environment)
