@@ -32,17 +32,15 @@ def call(params) {
 
           withSubscription(subscription) {
             dir('infrastructure') {
-              approvedTerraformInfrastructure(environment, metricsPublisher) {
-                pcr.callAround("buildinfra:${environment}") {
-                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
-                    withIlbIp(environment) {
-                      def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-                      withEnv(additionalInfrastructureVariables) {
-                        tfOutput = spinInfra(product, component, environment, false, subscription)
-                      }
-                      if (config.legacyDeployment) {
-                        scmServiceRegistration(environment)
-                      }
+              pcr.callAround("buildinfra:${environment}") {
+                timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
+                  withIlbIp(environment) {
+                    def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+                    withEnv(additionalInfrastructureVariables) {
+                      tfOutput = spinInfra(product, component, environment, false, subscription)
+                    }
+                    if (config.legacyDeployment) {
+                      scmServiceRegistration(environment)
                     }
                   }
                 }

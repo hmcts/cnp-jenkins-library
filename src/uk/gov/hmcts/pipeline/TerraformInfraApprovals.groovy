@@ -42,12 +42,8 @@ class TerraformInfraApprovals {
 
   boolean isApproved(String tfInfraPath) {
     def infraApprovals = getInfraApprovals()
-    if (!infraApprovals) {
-      this.steps.sh("echo 'WARNING: No Terraform infrastructure whitelist found.'")
-      return true
-    }
     if (this.subscription == "sandbox") {
-      this.steps.sh("echo 'WARNING: Terraform whitelisting disabled. Please do not forget to check your infrastructure.'")
+      this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
       return true
     }
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {

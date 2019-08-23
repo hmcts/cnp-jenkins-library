@@ -28,6 +28,12 @@ Infrastructure for repo ${env.GIT_URL} is not approved for environment '${enviro
 ================================================================================
 """
     metricsPublisher.publish("not-approved-infra")
+    WarningCollector.addPipelineWarning("deprecated_not_approved_infra", """
+this repo is using a terraform resource that is not allowed, 
+whitelists are stored in https://github.com/hmcts/cnp-jenkins-config/tree/master/terraform-infra-approvals 
+send a pull request if you think this is in error. 
+"""
+      , new Date().parse("dd.MM.yyyy", "05.09.2019"))
   }
   return block.call()
 }
