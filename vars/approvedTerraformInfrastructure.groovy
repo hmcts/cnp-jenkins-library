@@ -16,7 +16,7 @@ def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
   if (!approvals.isApproved(".")) {
     def results = approvals.getResults(".")
     echo results + ""
-    def file = readFile("terraform-output.txt")
+    def file = readFile("terraform-approvals.log")
     echo file
 
     echo '''

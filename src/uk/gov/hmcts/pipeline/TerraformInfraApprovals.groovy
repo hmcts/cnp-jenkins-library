@@ -66,7 +66,7 @@ class TerraformInfraApprovals {
 
     def joinedInfraApprovals = infraApprovals.join(" ")
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} | tee terraform-output.txt || true"
+      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} 2> >(tee terraform-approvals.log >&2) || true"
       )
     }
   }
