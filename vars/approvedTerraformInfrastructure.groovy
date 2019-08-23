@@ -20,7 +20,7 @@ def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
       echo results
     } catch(e) {
       echo "failed to get results"
-      echo e
+      echo e.getMessage()
     }
 
     echo '''
