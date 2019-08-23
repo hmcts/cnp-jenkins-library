@@ -12,7 +12,10 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
  * }
  */
 def call(String environment, MetricsPublisher metricsPublisher, Closure block) {
-  if (!new TerraformInfraApprovals(this).isApproved(".")) {//, environment, env.GIT_URL)) {
+  TerraformInfraApprovals approvals = new TerraformInfraApprovals(this)
+  if (!approvals.isApproved(".")) {
+    def results = approvals.getResults(".")
+
     echo '''
 ================================================================================
 
@@ -33,6 +36,8 @@ Infrastructure for repo ${env.GIT_URL} is not approved for environment '${enviro
 this repo is using a terraform resource that is not allowed, 
 whitelists are stored in https://github.com/hmcts/cnp-jenkins-config/tree/master/terraform-infra-approvals 
 send a pull request if you think this is in error. 
+non whitelisted resources:
+${results}
 """
       , new Date().parse("dd.MM.yyyy", "05.09.2019"))
   } else {

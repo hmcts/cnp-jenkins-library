@@ -61,4 +61,13 @@ class TerraformInfraApprovals {
     }
   }
 
+  String getResults(String tfInfraPath) {
+    infraApprovals = getInfraApprovals()
+
+    def joinedInfraApprovals = infraApprovals.join(" ")
+    this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
+      return this.steps.sh(returnStdout: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}")
+    }
+  }
+
 }
