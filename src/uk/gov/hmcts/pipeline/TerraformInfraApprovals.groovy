@@ -50,7 +50,7 @@ class TerraformInfraApprovals {
       return true
     }
 
-    this.steps.echo(infraApprovals)
+    this.steps.echo(infraApprovals.join(" "))
 //    if (this.subscription == "sandbox") {
 //      this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
 //      return true
