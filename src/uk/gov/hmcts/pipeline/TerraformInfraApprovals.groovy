@@ -19,7 +19,8 @@ class TerraformInfraApprovals {
   }
 
   def getInfraApprovals() {
-    if (!infraApprovals) {
+    if (!this.infraApprovals) {
+      def localInfraApprovals = []
       String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrg(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
         def response = steps.httpRequest(
@@ -31,18 +32,19 @@ class TerraformInfraApprovals {
         if (response.status == 200) {
           this.steps.echo "Infra approvals file exists"
           def approvals = this.steps.readJSON(text: response.content)
-          infraApprovals << approvals
+          localInfraApprovals << approvals
         } else {
           this.steps.echo "Infra approvals file ${k} doesn't exist"
         }
       }
+      this.infraApprovals = localInfraApprovals
     }
 
-    return infraApprovals
+    return this.infraApprovals
   }
 
   boolean isApproved(String tfInfraPath) {
-    def infraApprovals = getInfraApprovals()
+    infraApprovals = getInfraApprovals()
     if (!infraApprovals) {
       this.steps.sh("echo 'WARNING: No Terraform infrastructure whitelist found.'")
       return true
