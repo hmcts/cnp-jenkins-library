@@ -49,15 +49,4 @@ class TerraformInfraApprovalsTest extends Specification {
     then:
     assertThat(approved).isEqualTo(true)
   }
-
-  def "isApproved() should return true when a terraform approvals list doesn't exist"() {
-    def tfInfraPath = '.'
-    approvalsFile << ""
-    when:
-    def approved = infraApprovals.isApproved(tfInfraPath)
-
-    then:
-    assertThat(approved).isEqualTo(true)
-  }
-
 }

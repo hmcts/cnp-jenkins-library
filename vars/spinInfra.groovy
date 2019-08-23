@@ -3,6 +3,7 @@ import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.contino.MetricsPublisher
 
 def call(productName, environment, planOnly, subscription) {
   call(productName, null, environment, planOnly, subscription)
