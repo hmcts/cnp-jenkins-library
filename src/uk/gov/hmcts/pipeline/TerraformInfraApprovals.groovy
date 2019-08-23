@@ -11,12 +11,11 @@ class TerraformInfraApprovals {
 
   def steps
   def subscription
-  def infraApprovals
+  def infraApprovals = []
 
   TerraformInfraApprovals(steps) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
-    this.infraApprovals = []
   }
 
   def getInfraApprovals() {
@@ -31,7 +30,8 @@ class TerraformInfraApprovals {
         )
         if (response.status == 200) {
           this.steps.echo "Infra approvals file exists"
-          infraApprovals << this.steps.readJSON(text: response.content)
+          def approvals = this.steps.readJSON(text: response.content)
+          infraApprovals << approvals
         } else {
           this.steps.echo "Infra approvals file ${k} doesn't exist"
         }
