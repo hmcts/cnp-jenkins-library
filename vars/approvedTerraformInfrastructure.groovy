@@ -35,6 +35,8 @@ whitelists are stored in https://github.com/hmcts/cnp-jenkins-config/tree/master
 send a pull request if you think this is in error. 
 """
       , new Date().parse("dd.MM.yyyy", "05.09.2019"))
+  } else {
+    log.info("All infrastructure is approved")
   }
   return block.call()
 }

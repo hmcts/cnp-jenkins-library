@@ -32,7 +32,7 @@ class TerraformInfraApprovals {
         )
         def infraApprovalsFile = new File(k)
         if (infraApprovalsFile.exists() && infraApprovalsFile.length() > 0) {
-          infraApprovals << k
+          infraApprovals << this.steps.readJSON(file: k)
         }
       }
     }
