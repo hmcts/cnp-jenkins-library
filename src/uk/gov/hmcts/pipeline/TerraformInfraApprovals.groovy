@@ -32,7 +32,10 @@ class TerraformInfraApprovals {
         )
         def infraApprovalsFile = new File(k)
         if (infraApprovalsFile.exists() && infraApprovalsFile.length() > 0) {
+          this.steps.echo "Infra approvals file exists"
           infraApprovals << this.steps.readJSON(file: k)
+        } else {
+          this.steps.echo "Infra approvals file doesn't exist"
         }
       }
     }
