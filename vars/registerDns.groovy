@@ -6,12 +6,16 @@ def call(Map params) {
 
   withAksClient(params.subscription, params.environment) {
     Consul consul = new Consul(this, params.environment)
+    AzPrivateDns azPrivateDns = new AzPrivateDns()
 
     // Staging DNS registration
     if (config.legacyDeploymentForEnv(params.environment)) {
       withIlbIp(params.subscription, params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
+
+        AzPrivateDns
+
       }
     }
 
