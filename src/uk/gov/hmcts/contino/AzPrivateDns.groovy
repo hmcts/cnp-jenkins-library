@@ -5,7 +5,7 @@ class AzPrivateDns {
     private zone = "service.core-compute-${env}.internal"
     private aRecordName = "${product}-${component}-${env}"
 
-    def RegisterAzDns(cnameRecord, serviceIP) {
+    def RegisterAzDns(aRecord, serviceIP) {
     
         def json = JsonOutput.toJson(
             [
