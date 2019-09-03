@@ -1,28 +1,28 @@
 class AzPrivateDns {
 
-    private subscriptionId = "6aff0bdf-7c12-4850-8f7e-7dd4633b4110"     // subscription id of azure private dns zones. Reform-CFT-Sandbox
-    private ResourceGroup = "gheath-test"                               // resource group of azure dns zones
+    private subscriptionId = "6aff0bdf-7c12-4850-8f7e-7dd4633b411"     // subscription id of azure private dns zones. Reform-CFT-Sandbox
+    private ResourceGroup = "rdo-private-dns-sbox"                     // resource group of azure dns zones
     private zone = "service.core-compute-${env}.internal"
-    private cnameRecord = "${product}-${component}-${env}"
+    private aRecordName = "${product}-${component}-${env}"
 
-    def RegisterAzDns(cnameRecord, cnameValue) {
+    def RegisterAzDns(cnameRecord, serviceIP) {
     
         def json = JsonOutput.toJson(
             [
                 "properties"    : {
                     "ttl"           : "3600"
-                    "cnameRecord"   : {
-                        "cname"         : cnameValue
+                    "aRecords"      : {
+                        "ipv4Address"   : "${serviceIP}"
                     }
                 }
             ]
         )
 
-        def res = this.steps.httpRequest(      // this needs to be tweeked
+        def result = this.steps.httpRequest(      // this needs to be tweeked
             httpMode: 'PUT',
             acceptType: 'APPLICATION_JSON',
             contentType: 'APPLICATION_JSON',
-            url: "https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${DnsResourceGroup}/providers/Microsoft.Network/privateDnsZones/${zone}/CNAME/${cnameRecord}?api-version=2018-09-01",
+            url: "https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${DnsResourceGroup}/providers/Microsoft.Network/privateDnsZones/${zone}/A/${aRecordName}?api-version=2018-09-01",
             requestBody: "${json}",
             consoleLogResponseBody: true,
             validResponseCodes: '201'
@@ -31,6 +31,8 @@ class AzPrivateDns {
     }
 
 }
+
+// https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/privateDnsZones/{privateZoneName}/{recordType}/{relativeRecordSetName}?api-version=2018-09-01
 
 /*
 

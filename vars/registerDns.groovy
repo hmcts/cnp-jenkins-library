@@ -14,7 +14,7 @@ def call(Map params) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
 
-        AzPrivateDns
+        AzPrivateDns.RegisterAzDns()
 
       }
     }
