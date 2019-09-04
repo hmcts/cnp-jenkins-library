@@ -24,7 +24,14 @@ def call(DockerImage dockerImage, Map params) {
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def serviceFqdn = "${aksServiceName}.service.core-compute-${environment}.internal"
+  def serviceFqdn
+  if (config.legacyDeployment == true && aksServiceName.endsWith("-aat")) {
+    // If legacy deployments are still enabled the service name for aat should have '-aat'  removed
+    // otherwise the service ingressHost will have the wrong name and the appgw will not find it.
+    serviceFqdn = "${aksServiceName[0..-5]}.service.core-compute-${environment}.internal"
+  } else {
+    serviceFqdn = "${aksServiceName}.service.core-compute-${environment}.internal"
+  }
 
   def consul = new Consul(this, environment)
   def consulApiAddr = consul.getConsulIP()
