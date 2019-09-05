@@ -63,14 +63,14 @@ class AppPipelineConfigTest extends Specification {
     when:
       dsl.loadVaultSecrets(secrets)
     then:
-      assertThat(pipelineConfig.vaultSecrets).isEqualTo(['unknown': secrets])
+      thrown RuntimeException
   }
 
   def "ensure enable db migration"() {
     when:
       dsl.enableDbMigration()
     then:
-      assertThat(pipelineConfig.migrateDb).isTrue()
+      thrown RuntimeException
   }
 
   def "ensure enable performance test"() {
@@ -108,8 +108,7 @@ class AppPipelineConfigTest extends Specification {
     when:
       dsl.enableDeployToAKS()
     then:
-      assertThat(pipelineConfig.deployToAKS).isTrue()
-      assertThat(pipelineConfig.installCharts).isFalse()
+      thrown RuntimeException
   }
 
   def "ensure install charts"() {
