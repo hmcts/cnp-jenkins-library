@@ -60,7 +60,7 @@ def call(params) {
                   
                   builder.dbMigrate(
                     tfOutput.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
-                    tfOutput.microserviceName? tfOutput.microserviceName.value : component
+                    config.uniqueDbMigrateSecretNames? "${product}-${component}" : component
                   )
                 }
               }

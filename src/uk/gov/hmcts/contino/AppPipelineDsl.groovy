@@ -29,13 +29,14 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     WarningCollector.addPipelineWarning("deprecated_set_vault_name", "setVaultName() is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
   }
 
-  void enableDbMigration(String dbMigrationVaultName = "") {
+  void enableDbMigration(String dbMigrationVaultName = "", boolean uniqueSecretNames = false) {
     if (dbMigrationVaultName == "") {
       WarningCollector.addPipelineWarning("deprecated_enable_db_migration_no_vault)", "enableDbMigration() is deprecated, please use enableDbMigration(<vault-name>)", new Date().parse("dd.MM.yyyy", "05.09.2019"))
     }
 
     config.migrateDb = true
     config.dbMigrationVaultName = dbMigrationVaultName
+    config.uniqueDbMigrateSecretNames = uniqueSecretNames
   }
 
   void enablePerformanceTest(int timeout = 15) {
