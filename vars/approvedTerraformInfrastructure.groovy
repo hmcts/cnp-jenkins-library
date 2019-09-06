@@ -48,7 +48,7 @@ non whitelisted resources:
 ${results.replace("Error matching resources: ", "")}
 ```
 """
-      , new Date().parse("dd.MM.yyyy", "05.09.2019"))
+      , new Date().parse("dd.MM.yyyy", "23.09.2019"))
   } else {
     log.info("All infrastructure is approved")
   }
