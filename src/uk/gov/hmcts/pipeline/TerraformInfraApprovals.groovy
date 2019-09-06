@@ -54,7 +54,7 @@ class TerraformInfraApprovals {
     this.steps.echo(joinedInfraApprovals)
     if (this.subscription == "sandbox") {
       this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
-//      return true
+      return true
     }
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
       return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}") == 0
