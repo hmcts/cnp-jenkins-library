@@ -85,7 +85,7 @@ class AzPrivateDns {
             [
                 "properties" : [
                     "ttl" : "3600"
-                    "aRecords" [
+                    "aRecords" : [
                         "ipv4Address" : "${serviceIP}"
                     ]
                 ]
