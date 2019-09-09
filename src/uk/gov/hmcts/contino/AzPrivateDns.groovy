@@ -84,9 +84,9 @@ class AzPrivateDns {
         def json = JsonOutput.toJson(
             [
                 "properties"    : {
-                    "ttl"           : "3600"
+                    "ttl"           : "3600",
                     "aRecords"      : {
-                        "ipv4Address"   : "${serviceIP}"
+                        "ipv4Address"   : "${serviceIP}",
                     }
                 }
             ]
