@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.AppPipelineConfig
-//import uk.gov.hmcts.contino.AzPrivateDns
+import uk.gov.hmcts.contino.AzPrivateDns
 
 def call(Map params) {
   AppPipelineConfig config = params.appPipelineConfig
