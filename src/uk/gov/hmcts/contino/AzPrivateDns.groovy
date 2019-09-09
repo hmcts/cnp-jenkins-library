@@ -4,7 +4,7 @@ class AzPrivateDns {
     private subscriptionId = "bf308a5c-0624-4334-8ff8-8dca9fd43783"     // Subscription id of azure dns zone
     private resourceGroup = "rdo-private-dns-sbox"                      // Resource group of azure dns zone
     
-    AzPrivateDns (steps) {
+    AzPrivateDns(steps) {
 
         this.steps = steps
         this.product = product
@@ -13,9 +13,7 @@ class AzPrivateDns {
 
     }
 
-    def registerAzDns(product, component, environment, serviceIP) {
-
-        def recordName = "${product}-${component}-${environment}"
+    def registerAzDns(recordName, serviceIP) {
 
         // Logic to determin which dns zone the ASE application should register it's DNS record with
 
