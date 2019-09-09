@@ -81,16 +81,7 @@ class AzPrivateDns {
 
         // JSON payload to send to Azure private DNS API.  serviceIP is the ASE load balancer IP.
 
-        def json = JsonOutput.toJson(
-            [
-                "properties" : [
-                    "ttl" : "3600"
-                    "aRecords" : [
-                        "ipv4Address" : "${serviceIP}"
-                    ]
-                ]
-            ]
-        )
+        def json = '''{ "properties" : { "ttl" : "3600", "aRecords" : [ { "ipv4Address" : "${serviceIP}" } ] } }'''
 
         def result = this.steps.httpRequest(
             httpMode: 'PUT',
