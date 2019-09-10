@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonOutput
+
 class AzPrivateDns {
 
     def steps
