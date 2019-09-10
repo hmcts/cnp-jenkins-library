@@ -39,7 +39,7 @@ class AzPrivateDns extends Az {
             consoleLogResponseBody: true,
             customHeaders: [
                 [maskValue: true, name: 'Authorization', value: "Bearer ${accessToken}"]
-            ]
+            ],
             validResponseCodes: '201'
         )
 
