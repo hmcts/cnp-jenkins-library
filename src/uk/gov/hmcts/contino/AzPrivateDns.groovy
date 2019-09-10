@@ -11,7 +11,7 @@ class AzPrivateDns extends Az {
     private resourceGroup = "rdo-private-dns-sbox"                      // Resource group of azure dns zone
     
     AzPrivateDns(steps, subscription, environment) {
-        super(this, subscription)
+        super(steps, subscription)
 
         this.steps = steps
         this.environment = environment
