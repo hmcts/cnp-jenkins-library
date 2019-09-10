@@ -35,7 +35,7 @@ class AzPrivateDns extends Az {
             httpMode: 'PUT',
             acceptType: 'APPLICATION_JSON',
             contentType: 'APPLICATION_JSON',
-            url: "https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Network/defDnsZones/${zone}/A/${recordName}?api-version=2018-09-01",
+            url: "https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Network/DnsZones/${zone}/A/${recordName}?api-version=2018-09-01",
             requestBody: "${json}",
             consoleLogResponseBody: true,
             customHeaders: [
