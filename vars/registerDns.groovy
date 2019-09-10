@@ -1,5 +1,3 @@
-package uk.gov.hmcts.contino
-
 import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
