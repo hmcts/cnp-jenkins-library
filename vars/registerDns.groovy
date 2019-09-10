@@ -7,7 +7,7 @@ def call(Map params) {
 
   withAksClient(params.subscription, params.environment) {
     Consul consul = new Consul(this, params.environment)
-    AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment)
+    AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.subscription, params.environment)
 
     // Staging DNS registration
     if (config.legacyDeploymentForEnv(params.environment)) {
