@@ -17,6 +17,8 @@ class AzPrivateDns {
         def zone = "service.core-compute-${environment}.internal"
         def json = "{ "properties" : { "ttl" : "3600", "aRecords" : [ { "ipv4Address" : "${serviceIP}" } ] } }" 
 
+        this.steps.echo "Registering DNS for ${recordName} to ${serviceIP}, properties: ${json}"
+
         def result = this.steps.httpRequest(
             httpMode: 'PUT',
             acceptType: 'APPLICATION_JSON',
