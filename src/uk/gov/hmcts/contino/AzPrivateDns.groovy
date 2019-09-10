@@ -6,7 +6,7 @@ class AzPrivateDns {
     private subscriptionId = "bf308a5c-0624-4334-8ff8-8dca9fd43783"     // Subscription id of azure dns zone
     private resourceGroup = "rdo-private-dns-sbox"                      // Resource group of azure dns zone
     
-    AzPrivateDns(steps) {
+    AzPrivateDns(steps, product, component, environment) {
 
         this.steps = steps
         this.product = product
@@ -81,7 +81,7 @@ class AzPrivateDns {
 
         // JSON payload to send to Azure private DNS API.  serviceIP is the ASE load balancer IP.
 
-        def json = "{ "properties" : { "ttl" : "3600", "aRecords" : [ { "ipv4Address" : "${serviceIP}" } ] } }"
+        def json = "{ "properties" : { "ttl" : "3600", "aRecords" : [ { "ipv4Address" : "${serviceIP}" } ] } }" 
 
         def result = this.steps.httpRequest(
             httpMode: 'PUT',
