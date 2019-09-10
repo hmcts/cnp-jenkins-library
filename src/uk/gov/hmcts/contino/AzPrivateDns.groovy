@@ -3,6 +3,9 @@ package uk.gov.hmcts.contino
 class AzPrivateDns {
 
     def steps
+    def product
+    def component
+    def environment
     private subscriptionId = "bf308a5c-0624-4334-8ff8-8dca9fd43783"     // Subscription id of azure dns zone
     private resourceGroup = "rdo-private-dns-sbox"                      // Resource group of azure dns zone
     
