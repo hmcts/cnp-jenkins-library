@@ -19,7 +19,7 @@ class TerraformInfraApprovals {
   }
 
   def getInfraApprovals() {
-    if (!infraApprovals) {
+    if (!hasCachedInfraApprovals()) {
       def localInfraApprovals = []
       String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
@@ -68,6 +68,19 @@ class TerraformInfraApprovals {
     this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
        this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} 2> terraform-approvals.log || true")
     }
+  }
+
+  boolean hasCachedInfraApprovals() {
+    try {
+      if (infraApprovals) {
+        return infraApprovals.every {
+          it.bytes.length > 0
+        }
+      }
+    } catch(e) {
+      this.steps.sh("echo 'WARNING: ${e.message}'")
+    }  // Do nothing, just return false
+    return false
   }
 
 }

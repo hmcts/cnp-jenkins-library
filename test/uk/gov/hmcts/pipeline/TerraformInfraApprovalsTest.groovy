@@ -59,4 +59,25 @@ class TerraformInfraApprovalsTest extends Specification {
     then:
     assertThat(approved).isEqualTo(true)
   }
+
+  def "hasCachedInfraApprovals() should return true when a terraform approvals list exists"() {
+    approvalsFile << response.content
+    TerraformInfraApprovals.infraApprovals.add(approvalsFile)
+    when:
+    def cached = infraApprovals.hasCachedInfraApprovals()
+
+    then:
+    assertThat(cached).isEqualTo(true)
+  }
+
+  def "hasCachedInfraApprovals() should return false when a terraform approvals list doesn't exist"() {
+    approvalsFile << ""
+    TerraformInfraApprovals.infraApprovals.add(approvalsFile)
+    when:
+    def cached = infraApprovals.hasCachedInfraApprovals()
+
+    then:
+    assertThat(cached).isEqualTo(false)
+  }
+
 }
