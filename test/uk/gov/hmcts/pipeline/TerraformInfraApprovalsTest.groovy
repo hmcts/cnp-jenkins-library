@@ -9,7 +9,7 @@ class TerraformInfraApprovalsTest extends Specification {
 
   def steps
   def infraApprovals
-  def approvalsFileName = "terraform-infra-approvals.json"
+  def approvalsFileName
   def approvalsFile
   static def response = ["content":
   """{
@@ -27,6 +27,7 @@ class TerraformInfraApprovalsTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.httpRequest(_) >> response
     steps.env >> [SUBSCRIPTION_NAME: 'aat', GIT_URL: 'https://github.com/hmcts/some-project']
+    approvalsFileName = "terraform-infra-approvals.json"
     approvalsFile = new File(approvalsFileName)
     if (approvalsFile.exists()) {
       approvalsFile.delete()
