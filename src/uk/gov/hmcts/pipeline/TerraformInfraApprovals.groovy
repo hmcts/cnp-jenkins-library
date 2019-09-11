@@ -23,16 +23,17 @@ class TerraformInfraApprovals {
       def localInfraApprovals = []
       String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
+        def outFile = "${this.steps.env.WORKSPACE}/${k}"
         def response = steps.httpRequest(
           consoleLogResponseBody: true,
           timeout: 10,
           url: "${GITHUB_BASE_URL}/${k}",
           validResponseCodes: v,
-          outputFile: k
+          outputFile: outFile
         )
         if (response.status == 200) {
           this.steps.echo "Infra approvals file exists"
-          localInfraApprovals << k
+          localInfraApprovals << outFile
         } else {
           this.steps.echo "Infra approvals file ${k} doesn't exist"
         }
