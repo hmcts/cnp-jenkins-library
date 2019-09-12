@@ -9,6 +9,7 @@ class TerraformInfraApprovalsTest extends Specification {
 
   def steps
   def infraApprovals
+  def approvalsFileName
   def approvalsFile
   static def response = ["content":
   """{
@@ -26,7 +27,8 @@ class TerraformInfraApprovalsTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.httpRequest(_) >> response
     steps.env >> [SUBSCRIPTION_NAME: 'aat', GIT_URL: 'https://github.com/hmcts/some-project']
-    approvalsFile = new File("terraform-infra-approvals.json")
+    approvalsFileName = "terraform-infra-approvals.json"
+    approvalsFile = new File(approvalsFileName)
     if (approvalsFile.exists()) {
       approvalsFile.delete()
     }
@@ -62,7 +64,7 @@ class TerraformInfraApprovalsTest extends Specification {
 
   def "hasCachedInfraApprovals() should return true when a terraform approvals list exists"() {
     approvalsFile << response.content
-    TerraformInfraApprovals.infraApprovals.add(approvalsFile)
+    TerraformInfraApprovals.infraApprovals.add(approvalsFileName)
     when:
     def cached = infraApprovals.hasCachedInfraApprovals()
 
@@ -72,7 +74,7 @@ class TerraformInfraApprovalsTest extends Specification {
 
   def "hasCachedInfraApprovals() should return false when a terraform approvals list doesn't exist"() {
     approvalsFile << ""
-    TerraformInfraApprovals.infraApprovals.add(approvalsFile)
+    TerraformInfraApprovals.infraApprovals.add(approvalsFileName)
     when:
     def cached = infraApprovals.hasCachedInfraApprovals()
 

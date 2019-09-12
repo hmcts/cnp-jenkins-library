@@ -74,7 +74,8 @@ class TerraformInfraApprovals {
     try {
       if (infraApprovals) {
         return infraApprovals.every {
-          it.bytes.length > 0
+          def f = new File(it)
+          f.bytes.length > 0
         }
       }
     } catch(e) {
