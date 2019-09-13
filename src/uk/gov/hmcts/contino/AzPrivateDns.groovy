@@ -7,7 +7,7 @@ class AzPrivateDns extends Az {
 
     def steps
     def environment
-    private subscriptionId = "bf308a5c-0624-4334-8ff8-8dca9fd43783"     // Subscription id of azure dns zone
+    private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"     // Subscription id of azure dns zone
     private resourceGroup = "rdo-private-dns-sbox"                      // Resource group of azure dns zone
     
     AzPrivateDns(steps, subscription, environment) {
