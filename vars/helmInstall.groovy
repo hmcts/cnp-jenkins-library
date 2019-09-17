@@ -14,7 +14,6 @@ def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
-  def templateOverrideEnvironment = params.environment
   def helmOptionEnvironment = params.environment
   def product = params.product
   def component = params.component
@@ -63,14 +62,8 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
-    if (!fileExists(defaultValues)) {
 
-      onPR {
-        templateOverrideEnvironment = new Environment(env).nonProdName
-      }
-      WarningCollector.addPipelineWarning("deprecated_helm_values_template", "Please provide non-templated values.yaml with helm chart. See https://tools.hmcts.net/confluence/display/CNP/Using+Helm+in+Your+Application+Pipeline", new Date().parse("dd.MM.yyyy", "27.08.2019"))
-    }
-    if (!fileExists(templateValues) && !fileExists(defaultValues)) {
+    if (!fileExists(defaultValues)) {
       throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
     }
     if (fileExists(templateValues)) {
@@ -79,8 +72,8 @@ def call(DockerImage dockerImage, Map params) {
     values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${templateOverrideEnvironment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${templateOverrideEnvironment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${environment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${environment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
       values << valuesEnv
