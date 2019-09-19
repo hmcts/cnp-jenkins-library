@@ -94,6 +94,7 @@ def call(DockerImage dockerImage, Map params) {
       "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
+      "--set global.devMode=true",
       "--namespace ${namespace}"
     ]
 
