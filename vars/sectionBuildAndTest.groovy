@@ -93,9 +93,10 @@ def call(params) {
 
               pcr.callAround('dockerbuild') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+                  def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
                   fileExists(acbTemplateFilePath) ?
                     acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-                    : acr.build(dockerImage)
+                    : acr.build(dockerImage, buildArgs)
                 }
               }
             }

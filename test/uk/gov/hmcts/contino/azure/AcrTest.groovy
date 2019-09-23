@@ -57,6 +57,19 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "build() should call az with acr build and correct additional arguments"() {
+    when:
+    dockerImage.getImageTag() >> "sometag"
+    dockerImage.getBaseShortName() >> IMAGE_NAME
+    acr.build(dockerImage, " --build-arg DEV_MODE=true")
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME} --subscription ${REGISTRY_SUBSCRIPTION} -g ${REGISTRY_RESOURCE_GROUP} --build-arg REGISTRY_NAME=${REGISTRY_NAME} --build-arg DEV_MODE=true .") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+  }
+
   def "getHostname() should call az with correct arguments"() {
     when:
       acr.getHostname()
