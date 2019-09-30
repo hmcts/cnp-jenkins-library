@@ -79,7 +79,7 @@ class GradleBuilderTest extends Specification {
     then:
       1 * steps.sh({
         GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') &&
-        it.contains('jdbc:postgresql://owaspdependency-v5-prod')
+        it.contains('mgmtstatestore')
       })
   }
 

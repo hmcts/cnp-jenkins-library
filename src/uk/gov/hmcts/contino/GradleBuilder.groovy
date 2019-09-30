@@ -80,7 +80,7 @@ class GradleBuilder extends AbstractBuilder {
   def securityCheck() {
     try {
       if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:5")) {
-        gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Dautoupdate='false' -Danalyzer.retirejs.enabled=false -Dcve.url.base=https://mgmtstatestoreprod.blob.core.windows.net/nist-mirror/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz  -Dcve.url.modified='https://mgmtstatestoreprod.blob.core.windows.net/nist-mirror/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz' dependencyCheckAnalyze")
+        gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Dodc.autoupdate=false -Dautoupdate='false' -Danalyzer.retirejs.enabled=false -Dcve.url.base=https://mgmtstatestoreprod.blob.core.windows.net/nist-mirror/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz  -Dcve.url.modified='https://mgmtstatestoreprod.blob.core.windows.net/nist-mirror/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz' dependencyCheckAnalyze")
       } else {
         // NOTE: delete owasp 4 dependency check and its tests in GradleBuilderTest some time after 15/07/2019
           throw new RuntimeException("Owasp dependency check version 4 is not available anymore. Please update your build to use version 5.")
