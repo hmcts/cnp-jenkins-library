@@ -140,6 +140,30 @@ class AppPipelineConfigTest extends Specification {
       dsl.disableLegacyDeployment()
     then:
       assertThat(pipelineConfig.legacyDeployment).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("aat")).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("prod")).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("sandbox")).isFalse()
+  }
+
+  def "ensure disable legacy deployment on AAT"() {
+    when:
+      dsl.disableLegacyDeploymentOnAAT()
+    then:
+      assertThat(pipelineConfig.legacyDeploymentExemptions).containsExactly("aat")
+      assertThat(pipelineConfig.legacyDeploymentForEnv("aat")).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("prod")).isTrue()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("sandbox")).isTrue()
+  }
+
+  def "ensure disable legacy deployment overrides AAT"() {
+    when:
+      dsl.disableLegacyDeployment()
+      dsl.disableLegacyDeploymentOnAAT()
+    then:
+      assertThat(pipelineConfig.legacyDeployment).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("aat")).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("prod")).isFalse()
+      assertThat(pipelineConfig.legacyDeploymentForEnv("sandbox")).isFalse()
   }
 
   def "ensure non service app"() {

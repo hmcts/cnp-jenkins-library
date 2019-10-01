@@ -88,6 +88,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.legacyDeployment = false
   }
 
+  void disableLegacyDeploymentOnAAT() {
+    config.legacyDeploymentExemptions.add("aat")
+  }
+
   void nonServiceApp() {
     config.serviceApp = false
   }
