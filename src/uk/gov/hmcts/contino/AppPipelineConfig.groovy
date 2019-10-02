@@ -19,6 +19,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean serviceApp = true
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
+  Set<String> legacyDeploymentExemptions = []
   boolean pactBrokerEnabled = false
   boolean pactProviderVerificationsEnabled = false
   boolean pactConsumerTestsEnabled = false
@@ -29,4 +30,8 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int mutationTestTimeout
   int fullFunctionalTestTimeout
   int securityScanTimeout
+
+  boolean legacyDeploymentForEnv(String environment) {
+    return legacyDeployment && !legacyDeploymentExemptions.contains(environment)
+  }
 }

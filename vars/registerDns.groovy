@@ -8,7 +8,7 @@ def call(Map params) {
     Consul consul = new Consul(this, params.environment)
 
     // Staging DNS registration
-    if (config.legacyDeployment) {
+    if (config.legacyDeploymentForEnv(params.environment)) {
       withIlbIp(params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
@@ -17,7 +17,7 @@ def call(Map params) {
 
     aksSubscriptionName = params.aksSubscription != null ? params.aksSubscription.name : null
 
-  
+
     if (config.aksStagingDeployment) {
       if (aksSubscriptionName) {
         def ingressIP = params.aksSubscription.ingressIp()
@@ -31,7 +31,7 @@ def call(Map params) {
 
     if (aksEnv) {
       appGwIp = params.aksSubscription.loadBalancerIp()
-      if (!config.legacyDeployment) {
+      if (!config.legacyDeploymentForEnv(params.environment)) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
       }
       consul.registerDns("${params.product}-${params.component}", appGwIp)
