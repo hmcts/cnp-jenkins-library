@@ -84,7 +84,7 @@ def call(params) {
             stage("Functional Test - AKS ${environment}") {
               testEnv(aksUrl) {
                 pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Functional Test - AKS') {
                     builder.functionalTest()
                   }
                 }
