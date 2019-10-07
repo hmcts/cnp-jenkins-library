@@ -96,15 +96,15 @@ def call(params) {
               pcr.callAround('dockerbuild') {
                 timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
                   def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-                  if(fileExists(acbTemplateFilePath)) {
+                  if (fileExists(acbTemplateFilePath)) {
                     acr.runWithTemplate(acbTemplateFilePath, dockerImage)
                   } else {
                     acr.build(dockerImage, buildArgs)
                   }
                   if (isOnMaster) {
-                    writeFile file: 'runTests.sh', text: steps.libraryResource('uk/gov/hmcts/gradle/runTests.sh')
+                    writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
                     if (!fileExists(dockerfileTest)) {
-                      writeFile file: dockerfileTest, text: steps.libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+                      writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
                     }
                     def dockerImageTest = new DockerImage(product, component, acr, 'test', env.GIT_COMMIT)
                     acr.build(dockerImageTest, " -f ${dockerfileTest}")
