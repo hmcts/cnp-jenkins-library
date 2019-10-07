@@ -1,0 +1,13 @@
+FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.2
+
+ENV APP_USER hmcts
+
+WORKDIR /opt/app
+USER $APP_USER
+
+COPY --chown=$APP_USER:$APP_USER runTests.sh gradlew build.gradle /opt/app/
+COPY --chown=$APP_USER:$APP_USER .gradle /opt/app/.gradle/
+COPY --chown=$APP_USER:$APP_USER gradle /opt/app/gradle/
+COPY --chown=$APP_USER:$APP_USER src /opt/app/src/
+
+ENTRYPOINT ["./runTests.sh"]
