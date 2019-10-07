@@ -102,6 +102,7 @@ def call(params) {
                     acr.build(dockerImage, buildArgs)
                   }
                   if (isOnMaster) {
+                    writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
                     writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
                     if (!fileExists(dockerfileTest)) {
                       writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')

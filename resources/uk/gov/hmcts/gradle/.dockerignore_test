@@ -1,0 +1,8 @@
+*
+
+!gradlew
+!build.gradle
+!runTests.sh
+!.gradle
+!gradle
+!src
