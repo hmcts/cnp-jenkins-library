@@ -69,7 +69,7 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stage("AKS deploy - ${environment}") {
             pcr.callAround('akschartsinstall') {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Install Charts to AKS') {
+              timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
                 onPR {
                   deploymentNumber = githubCreateDeployment()
                 }
