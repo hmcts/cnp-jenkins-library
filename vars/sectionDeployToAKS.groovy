@@ -73,7 +73,7 @@ def call(params) {
           stage("Smoke Test - AKS ${environment}") {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:${environment}") {
-                timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                   builder.smokeTest()
                 }
               }
