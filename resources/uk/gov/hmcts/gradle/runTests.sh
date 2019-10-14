@@ -11,7 +11,7 @@ _healthy="false"
 for i in $(seq 0 30)
 do
   sleep 10
-  wget $TEST_HEALTH_URL
+  wget -O - $TEST_HEALTH_URL >/dev/null
   [ "$?" == "0" ] && _healthy="true" && break
 done
 
