@@ -8,4 +8,4 @@ COPY --chown=hmcts:hmcts .gradle /opt/app/.gradle/
 COPY --chown=hmcts:hmcts gradle /opt/app/gradle/
 COPY --chown=hmcts:hmcts src /opt/app/src/
 
-ENTRYPOINT ["./runTests.sh"]
+ENTRYPOINT ["sh", "runTests.sh"]

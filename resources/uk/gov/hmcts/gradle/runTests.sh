@@ -1,4 +1,3 @@
-#!/bin/sh
 
 [ "$TEST_URL" == "" ] && echo "Error: cannot find TEST_URL env var." && exit 1
 
@@ -20,4 +19,4 @@ done
   && "Error: application does not seem to be running, check the application logs to see why" \
   && exit 2
 
-./gradlew --info --rerun-tasks ${TASK}
+sh gradlew --info --rerun-tasks ${TASK}
