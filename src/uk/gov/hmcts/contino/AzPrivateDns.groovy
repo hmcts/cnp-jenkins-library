@@ -19,13 +19,13 @@ class AzPrivateDns extends Az {
 
     def dnsSubId(environment) {
         if (environment == "prod") {
-            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+            return "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
         } else
         
         if (environment == "idam-prod") {
-            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+            return "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
         } else {
-            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+            return "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
         }
     }
 
