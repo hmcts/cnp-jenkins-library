@@ -17,17 +17,21 @@ class AzPrivateDns extends Az {
         this.environment = environment
     }
 
-    if (environment == "prod") {
-        private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-    } else
-    
-    if (environment == "idam-prod") {
-        private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-    } else {
-        private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+    def dnsSubId(environment) {
+        if (environment == "prod") {
+            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+        } else
+        
+        if (environment == "idam-prod") {
+            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+        } else {
+            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+        }
     }
 
     def registerAzDns(recordName, serviceIP) {
+
+        def subscriptionId = this.dnsSubId(environment)
 
         def zone = "service.core-compute-${environment}.internal"
 
