@@ -9,14 +9,6 @@ class AzPrivateDns extends Az {
     def environment
     private subscriptionId
     private resourceGroup = "mgmt-intdns-prod"                             // Resource group of azure dns zone
-
-    // if (environment == "prod") {
-    //     private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-    // } else if (environment == "idam-prod") {
-    //     private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-    // } else {
-    //     private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-    // }
     
     AzPrivateDns(steps, subscription, environment) {
         super(steps, subscription)
@@ -25,15 +17,15 @@ class AzPrivateDns extends Az {
         this.environment = environment
     }
 
-    def registerAzDns(recordName, serviceIP) {
+    if (environment == "prod") {
+        private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+    } else if (environment == "idam-prod") {
+        private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+    } else {
+        private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+    }
 
-        if (environment == "prod") {
-            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-        } else if (environment == "idam-prod") {
-            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-        } else {
-            private subscriptionId = "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-        }
+    def registerAzDns(recordName, serviceIP) {
 
         def zone = "service.core-compute-${environment}.internal"
 
