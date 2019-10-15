@@ -65,7 +65,6 @@ def call(params) {
           }
         }
       } else if (config.installCharts) {
-        environment = environment.replace('idam-', '')
         withTeamSecrets(config, environment) {
           stage("AKS deploy - ${environment}") {
             pcr.callAround('akschartsinstall') {
@@ -73,10 +72,14 @@ def call(params) {
                 onPR {
                   deploymentNumber = githubCreateDeployment()
                 }
+                
                 withAksClient(subscription, environment) {
+                  params.environment = params.environment.replace('idam-', '')
+                  println "Using AKS environment: ${params.environment}"
                   aksUrl = helmInstall(dockerImage, params)
                   log.info("deployed component URL: ${aksUrl}")
                 }
+
                 onPR {
                   githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
                 }
