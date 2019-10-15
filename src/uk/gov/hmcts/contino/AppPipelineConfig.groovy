@@ -12,7 +12,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean crossBrowserTest = false
   boolean mutationTest = false
   boolean dockerBuild = false
-  boolean deployToAKS = false
   boolean installCharts = false
   boolean fullFunctionalTest = false
   boolean securityScan = false

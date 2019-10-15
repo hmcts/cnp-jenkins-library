@@ -28,7 +28,6 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.crossBrowserTest).isFalse()
       assertThat(pipelineConfig.mutationTest).isFalse()
       assertThat(pipelineConfig.dockerBuild).isFalse()
-      assertThat(pipelineConfig.deployToAKS).isFalse()
       assertThat(pipelineConfig.installCharts).isFalse()
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
       assertThat(pipelineConfig.securityScan).isFalse()
@@ -104,19 +103,11 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.dockerBuild).isTrue()
   }
 
-  def "ensure enable deploy to AKS"() {
-    when:
-      dsl.enableDeployToAKS()
-    then:
-      thrown RuntimeException
-  }
-
   def "ensure install charts"() {
     when:
       dsl.installCharts()
     then:
       assertThat(pipelineConfig.installCharts).isTrue()
-      assertThat(pipelineConfig.deployToAKS).isFalse()
   }
 
   def "ensure enable full functional test"() {
