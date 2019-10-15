@@ -44,8 +44,28 @@ def call(params) {
       }
     }
 
-    if (config.installCharts) {
-      withSubscription(subscription) {
+      if (config.deployToAKS) {
+
+        withTeamSecrets(config, environment) {
+          stage('Deploy to AKS') {
+            pcr.callAround('aksdeploy') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
+                onPR {
+                  deploymentNumber = githubCreateDeployment()
+                }
+
+                aksUrl = aksDeploy(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
+
+                onPR {
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
+              }
+            }
+          }
+        }
+      } else if (config.installCharts) {
+        environment = environment.replace('idam-', '')
         withTeamSecrets(config, environment) {
           stage("AKS deploy - ${environment}") {
             pcr.callAround('akschartsinstall') {
