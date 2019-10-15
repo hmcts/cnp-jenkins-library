@@ -43,9 +43,9 @@ def call(params) {
         acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
       }
     }
-    withAksClient(subscription, environment) {
 
-      if (config.installCharts) {
+    if (config.installCharts) {
+      withSubscription(subscription) {
         withTeamSecrets(config, environment) {
           stage("AKS deploy - ${environment}") {
             pcr.callAround('akschartsinstall') {
@@ -53,10 +53,10 @@ def call(params) {
                 onPR {
                   deploymentNumber = githubCreateDeployment()
                 }
-
-                aksUrl = helmInstall(dockerImage, params)
-                log.info("deployed component URL: ${aksUrl}")
-
+                withAksClient(subscription, environment) {
+                  aksUrl = helmInstall(dockerImage, params)
+                  log.info("deployed component URL: ${aksUrl}")
+                }
                 onPR {
                   githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
                 }
