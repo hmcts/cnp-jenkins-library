@@ -192,6 +192,18 @@ def call(type, String product, String component, Closure body) {
           aksSubscription: aksSubscriptions.preview,
           pactBrokerUrl: environment.pactBrokerUrl
         )
+
+        if (pipelineConfig.installCharts) {
+          stage('Publish Helm chart') {
+            helmPublish(
+              appPipelineConfig: pipelineConfig,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
+        }
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
