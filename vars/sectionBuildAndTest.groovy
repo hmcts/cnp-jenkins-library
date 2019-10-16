@@ -69,7 +69,7 @@ def call(params) {
                 builder.sonarScan()
               }
 
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Sonar Scan') {
+              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
                 def qg = waitForQualityGate()
                 if (qg.status != 'OK') {
                   error "Pipeline aborted due to quality gate failure: ${qg.status}"
