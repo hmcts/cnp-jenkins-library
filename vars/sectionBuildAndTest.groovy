@@ -107,7 +107,7 @@ def call(params) {
                     if (!fileExists(dockerfileTest)) {
                       writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
                     }
-                    def dockerImageTest = new DockerImage(product, component, acr, 'test', env.GIT_COMMIT)
+                    def dockerImageTest = new DockerImage(product, component, acr, projectBranch.imageTestTag(), env.GIT_COMMIT)
                     acr.build(dockerImageTest, " -f ${dockerfileTest}")
                   }
                 }

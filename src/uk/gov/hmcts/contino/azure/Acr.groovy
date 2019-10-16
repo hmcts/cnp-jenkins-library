@@ -127,6 +127,16 @@ class Acr extends Az {
   def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
     def baseTag = (stage == DockerImage.DeploymentStage.PR  || dockerImage.imageTag == 'staging') ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
+    retag(additionalTag, baseTag)
+  }
+
+  def retagForTestStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
+    def additionalTag = dockerImage.getTestShortName(stage)
+    def baseTag = dockerImage.getBaseTaggedName()
+    retag(baseTag, additionalTag)
+  }
+
+  def retag(String baseTag, String additionalTag) {
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 

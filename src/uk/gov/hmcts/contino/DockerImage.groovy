@@ -142,6 +142,10 @@ class DockerImage {
       .concat(getTag(imageTag))
   }
 
+  def getTestShortName(DeploymentStage stage) {
+    return "test-${getShortName(stage)}"
+  }
+
   /**
    * Get the 'short name' of the image, without the registry prefix ,commit suffix is added only for staging.
    * Use this while resolving name for the base image for building or re-tagging.

@@ -44,4 +44,8 @@ class ProjectBranch implements Serializable {
     return (branchName == 'master') ? 'staging' : this.branchName.replaceAll('/', '-')
   }
 
+  String imageTestTag() {
+    return 'test'
+  }
+
 }
