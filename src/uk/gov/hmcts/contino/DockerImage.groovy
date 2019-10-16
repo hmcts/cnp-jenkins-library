@@ -140,7 +140,7 @@ class DockerImage {
   }
 
   def getTestShortName(DeploymentStage stage) {
-    return shortName("${TEST_LABEL}-${getTag(stage.label)}")
+    return shortName("${TEST_LABEL}-${stage.label}")
   }
 
   private def shortName(String imageTag) {

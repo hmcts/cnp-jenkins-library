@@ -85,6 +85,16 @@ class DockerImageTest extends Specification {
       assertThat(tag).isEqualTo('latest')
   }
 
+  def "getTestShortName for prod stage should return the prod test tag with commit"() {
+    when:
+    acr.getHostname() >> REGISTRY_HOST
+    dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, DockerImage.TEST_LABEL, COMMIT)
+    def name = dockerImage.getTestShortName(DockerImage.DeploymentStage.PROD)
+
+    then:
+    assertThat(name).isEqualTo('custard/back-end:test-prod-379c53a7')
+  }
+
   def "getAksServiceName should return the service name"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
