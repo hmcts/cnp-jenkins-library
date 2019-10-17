@@ -56,7 +56,7 @@ class AzPrivateDns extends Az {
             customHeaders: [
                 [maskValue: true, name: 'Authorization', value: "Bearer ${accessToken}"]
             ],
-            validResponseCodes: '201'
+            validResponseCodes: '200:201'
         )
 
     }
