@@ -1,8 +1,9 @@
 *
 
 !gradlew
-!build.gradle
+!**/*.gradle
 !runTests.sh
 !.gradle
 !gradle
-!src
+!**/src
+
