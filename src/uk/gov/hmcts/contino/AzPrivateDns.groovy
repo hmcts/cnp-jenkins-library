@@ -29,9 +29,21 @@ class AzPrivateDns extends Az {
         }
     }
 
+    def ttl(environment) {
+        if (environment == "prod") {
+            return "3600"
+        } else if (environment == "idam-prod") {
+            return "3600"
+        } else {
+            return "300"
+        }
+    }
+
     def registerAzDns(recordName, serviceIP) {
 
         def subscriptionId = this.dnsSubId(environment)
+
+        def ttl = this.ttl(environment)
 
         def zone = "service.core-compute-${environment}.internal"
 
