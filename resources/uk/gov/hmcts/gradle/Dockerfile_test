@@ -3,9 +3,6 @@ FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.3
 WORKDIR /opt/app
 USER hmcts
 
-COPY --chown=hmcts:hmcts gradlew build.gradle runTests.sh /opt/app/
-COPY --chown=hmcts:hmcts .gradle /opt/app/.gradle/
-COPY --chown=hmcts:hmcts gradle /opt/app/gradle/
-COPY --chown=hmcts:hmcts src /opt/app/src/
+COPY --chown=hmcts:hmcts . /opt/app/
 
 ENTRYPOINT ["sh", "runTests.sh"]

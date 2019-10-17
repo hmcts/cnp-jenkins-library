@@ -1,9 +1,6 @@
-*
-
-!gradlew
-!**/*.gradle
-!runTests.sh
-!.gradle
-!gradle
-!**/src
+build
+.git
+.idea
+performanceTests
+lib
 
