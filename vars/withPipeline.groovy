@@ -181,18 +181,6 @@ def call(type, String product, String component, Closure body) {
       }
 
       onPreview {
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.previewName,
-          environment: environment.previewName,
-          product: deploymentProduct,
-          component: component,
-          aksSubscription: aksSubscriptions.preview,
-          pactBrokerUrl: environment.pactBrokerUrl
-        )
-
         if (pipelineConfig.installCharts) {
           stage('Publish Helm chart') {
             helmPublish(
@@ -204,6 +192,18 @@ def call(type, String product, String component, Closure body) {
             )
           }
         }
+
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.previewName,
+          environment: environment.previewName,
+          product: deploymentProduct,
+          component: component,
+          aksSubscription: aksSubscriptions.preview,
+          pactBrokerUrl: environment.pactBrokerUrl
+        )
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
