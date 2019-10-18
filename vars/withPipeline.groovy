@@ -77,18 +77,6 @@ def call(type, String product, String component, Closure body) {
 
       onPR {
 
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.previewName,
-          environment: environment.previewName,
-          product: deploymentProduct,
-          component: component,
-          aksSubscription: aksSubscriptions.preview,
-          pactBrokerUrl: environment.pactBrokerUrl
-        )
-        
         sectionDeployToAKS(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
@@ -209,8 +197,8 @@ def call(type, String product, String component, Closure body) {
           stage('Publish Helm chart') {
             helmPublish(
               appPipelineConfig: pipelineConfig,
-              subscription: subscription.previewName,
-              environment: environment.previewName,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
               product: product,
               component: component
             )
