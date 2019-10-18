@@ -12,6 +12,10 @@ class ProjectBranch implements Serializable {
     branchName == 'master'
   }
 
+  boolean isPreview() {
+    branchName == 'preview'
+  }
+
   boolean isPR() {
     branchName.startsWith('PR')
   }

@@ -74,6 +74,18 @@ def call(type, String product, String component, Closure body) {
         component: component,
         pactBrokerUrl: environment.pactBrokerUrl
       )
+      
+      if (new ProjectBranch(env.BRANCH_NAME).isPreview() && pipelineConfig.installCharts) {
+        stage('Publish Helm chart') {
+          helmPublish(
+            appPipelineConfig: pipelineConfig,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
+        }
+      }
 
       onPR {
 
@@ -181,18 +193,6 @@ def call(type, String product, String component, Closure body) {
       }
 
       onPreview {
-        if (pipelineConfig.installCharts) {
-          stage('Publish Helm chart') {
-            helmPublish(
-              appPipelineConfig: pipelineConfig,
-              subscription: subscription.nonProdName,
-              environment: environment.nonProdName,
-              product: product,
-              component: component
-            )
-          }
-        }
-
         sectionDeployToEnvironment(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,

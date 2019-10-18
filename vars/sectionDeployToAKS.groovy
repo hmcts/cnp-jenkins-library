@@ -44,27 +44,8 @@ def call(params) {
       }
     }
 
-      if (config.deployToAKS) {
-
-        withTeamSecrets(config, environment) {
-          stage('Deploy to AKS') {
-            pcr.callAround('aksdeploy') {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Deploy to AKS') {
-                onPR {
-                  deploymentNumber = githubCreateDeployment()
-                }
-
-                aksUrl = aksDeploy(dockerImage, params)
-                log.info("deployed component URL: ${aksUrl}")
-
-                onPR {
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-                }
-              }
-            }
-          }
-        }
-      } else if (config.installCharts) {
+    withAksClient(subscription, environment) {
+      if (config.installCharts) {
         withTeamSecrets(config, environment) {
           stage("AKS deploy - ${environment}") {
             pcr.callAround('akschartsinstall') {
@@ -72,14 +53,10 @@ def call(params) {
                 onPR {
                   deploymentNumber = githubCreateDeployment()
                 }
-                
-                withAksClient(subscription, environment) {
-                  params.environment = params.environment.replace('idam-', '')
-                  println "Using AKS environment: ${params.environment}"
-                  aksUrl = helmInstall(dockerImage, params)
-                  log.info("deployed component URL: ${aksUrl}")
-                }
-
+                params.environment = params.environment.replace('idam-', '')
+                println "Using AKS environment: ${params.environment}"
+                aksUrl = helmInstall(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
                 onPR {
                   githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
                 }
