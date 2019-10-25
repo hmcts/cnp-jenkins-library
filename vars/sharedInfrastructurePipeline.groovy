@@ -29,8 +29,8 @@ ______                              _           _ _
 ================================================================================
 '''
 
-  try {
-    node {
+  node {
+    try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       def tfOutput
@@ -65,8 +65,8 @@ ______                              _           _ _
           }
         }
       }
+    } finally {
+      deleteDir()
     }
-  } finally {
-    deleteDir()
   }
 }
