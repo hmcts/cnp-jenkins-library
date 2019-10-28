@@ -20,3 +20,18 @@ done
   && exit 2
 
 sh gradlew --info --rerun-tasks ${TASK}
+
+[ "$?" == "0" ] && _success="true" || _success="false"
+if [ "$SLACK_WEBHOOK" != "" ]
+then
+  if [ "$_success" == "true" ]
+  then
+    _slackMessage="Gradle Build Successful: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
+    _slackIcon=${$SLACK_ICON_SUCCESS:-banana-dance}
+  else
+    _slackMessage="Gradle Build Failure: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
+    _slackIcon=${$SLACK_ICON_FAILURE:-boom}
+  fi
+  wget --post-data "payload={\"channel\": \"${SLACK_CHANNEL}\", \"username\": \"${TASK}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
+  ${SLACK_WEBHOOK}
+fi
