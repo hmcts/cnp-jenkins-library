@@ -33,5 +33,7 @@ then
     _slackIcon=${$SLACK_ICON_FAILURE:-boom}
   fi
   wget --post-data "payload={\"channel\": \"${SLACK_CHANNEL}\", \"username\": \"${TASK}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
-  ${SLACK_WEBHOOK}
+  $(cat /mnt/secrets/${SLACK_WEBHOOK})
 fi
+
+[ "$_success" == "true" ] && exit 0 || exit 1
