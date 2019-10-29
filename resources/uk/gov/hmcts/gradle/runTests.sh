@@ -1,4 +1,6 @@
 
+set -x
+
 [ "$TEST_URL" == "" ] && echo "Error: cannot find TEST_URL env var." && exit 1
 
 [ "$TEST_HEATH_URL" == "" ] && TEST_HEALTH_URL="${TEST_URL}/health"
@@ -27,10 +29,10 @@ then
   if [ "$_success" == "true" ]
   then
     _slackMessage="Gradle Build Successful: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
-    _slackIcon=${$SLACK_ICON_SUCCESS:-banana-dance}
+    _slackIcon=${SLACK_ICON_SUCCESS:-banana-dance}
   else
     _slackMessage="Gradle Build Failure: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
-    _slackIcon=${$SLACK_ICON_FAILURE:-boom}
+    _slackIcon=${SLACK_ICON_FAILURE:-boom}
   fi
   wget --post-data "payload={\"channel\": \"#${SLACK_CHANNEL}\", \"username\": \"${TASK}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
   $(cat /mnt/secrets/${SLACK_WEBHOOK})
