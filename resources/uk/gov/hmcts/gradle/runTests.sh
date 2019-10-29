@@ -1,6 +1,4 @@
 
-set -x
-
 [ "$TEST_URL" == "" ] && echo "Error: cannot find TEST_URL env var." && exit 1
 
 [ "$TEST_HEATH_URL" == "" ] && TEST_HEALTH_URL="${TEST_URL}/health"
