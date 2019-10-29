@@ -32,7 +32,7 @@ then
     _slackMessage="Gradle Build Failure: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
     _slackIcon=${$SLACK_ICON_FAILURE:-boom}
   fi
-  wget --post-data "payload={\"channel\": \"${SLACK_CHANNEL}\", \"username\": \"${TASK}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
+  wget --post-data "payload={\"channel\": \"#${SLACK_CHANNEL}\", \"username\": \"${TASK}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
   $(cat /mnt/secrets/${SLACK_WEBHOOK})
 fi
 
