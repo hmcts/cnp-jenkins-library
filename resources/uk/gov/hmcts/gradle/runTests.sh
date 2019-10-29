@@ -6,7 +6,7 @@ set -x
 [ "$TEST_HEATH_URL" == "" ] && TEST_HEALTH_URL="${TEST_URL}/health"
 
 # smoke or functional
-[ "$TASK" == "" ] && TASK="smoke"
+_task=${TASK:-smoke}
 
 _healthy="false"
 
@@ -21,21 +21,27 @@ done
   && "Error: application does not seem to be running, check the application logs to see why" \
   && exit 2
 
-sh gradlew --info --rerun-tasks ${TASK}
+sh gradlew --info --rerun-tasks ${_task}
 
 [ "$?" == "0" ] && _success="true" || _success="false"
 if [ "$SLACK_WEBHOOK" != "" ]
 then
+  _slackNotifySuccess=${SLACK_NOTIFY_SUCCESS:-true}
   if [ "$_success" == "true" ]
   then
-    _slackMessage="Gradle Build Successful: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
+      _slackDefaultMessage="Gradle Build Successful: TASK = ${_task} - TEST_URL = ${TEST_URL}" \
+      _slackMessage=${SLACK_MESSAGE_SUCCESS:-$_slackDefaultMessage}
     _slackIcon=${SLACK_ICON_SUCCESS:-banana-dance}
   else
-    _slackMessage="Gradle Build Failure: TASK = ${TASK} - TEST_URL = ${TEST_URL}"
+      _slackDefaultMessage="Gradle Build Failure: TASK = ${_task} - TEST_URL = ${TEST_URL}" \
+      _slackMessage=${SLACK_MESSAGE_FAILURE:-$_slackDefaultMessage}
     _slackIcon=${SLACK_ICON_FAILURE:-boom}
   fi
-  wget --post-data "payload={\"channel\": \"#${SLACK_CHANNEL}\", \"username\": \"${TASK}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
-  $(cat /mnt/secrets/${SLACK_WEBHOOK})
+  if [ "$_success" == "false" ] || [ "$_slackNotifySuccess" == "true" ]
+  then
+    wget --post-data "payload={\"channel\": \"#${SLACK_CHANNEL}\", \"username\": \"${_task}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
+    $(cat "/mnt/secrets/${SLACK_WEBHOOK}")
+  fi
 fi
 
 [ "$_success" == "true" ] && exit 0 || exit 1
