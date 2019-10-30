@@ -404,9 +404,6 @@ The following hooks will then be ran before the deployment:
 | `PROVIDER` | 1     | `test:pact:verify-and-publish` | `runProviderPactVerification publish true`  | `master` only    |
 | `PROVIDER` | 1     | `test:pact:verify`             | `runProviderPactVerification publish false` | Any branch       |
 | `CONSUMER` | 2     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`            | Any branch       |
-| `CONSUMER` | 3     | `can-i-deploy`\*               | `can-i-deploy`\*                            | `master` only    |
-
-\*: `can-i-deploy` is already available in the CI and doesn't need any hook or installation process.
 
 #### Notes
 
