@@ -27,11 +27,11 @@ then
   _slackNotifySuccess=${SLACK_NOTIFY_SUCCESS:-true}
   if [ "$_success" == "true" ]
   then
-      _slackDefaultMessage="Gradle Build Successful: TASK = ${_task} - TEST_URL = ${TEST_URL}" \
+      _slackDefaultMessage="Gradle Build Success: ${TEST_URL}" \
       _slackMessage=${SLACK_MESSAGE_SUCCESS:-$_slackDefaultMessage}
     _slackIcon=${SLACK_ICON_SUCCESS:-banana-dance}
   else
-      _slackDefaultMessage="Gradle Build Failure: TASK = ${_task} - TEST_URL = ${TEST_URL}" \
+      _slackDefaultMessage="Gradle Build Failure: ${TEST_URL}" \
       _slackMessage=${SLACK_MESSAGE_FAILURE:-$_slackDefaultMessage}
     _slackIcon=${SLACK_ICON_FAILURE:-boom}
   fi
