@@ -11,7 +11,7 @@ _healthy="false"
 for i in $(seq 0 30)
 do
   sleep 10
-  wget -O - $TEST_HEALTH_URL >/dev/null
+  wget -O - "$TEST_HEALTH_URL" >/dev/null
   [ "$?" == "0" ] && _healthy="true" && break
 done
 
@@ -19,7 +19,12 @@ done
   && "Error: application does not seem to be running, check the application logs to see why" \
   && exit 2
 
-sh gradlew --info --rerun-tasks ${_task}
+for i in "$@"
+do
+  [ -z "${i##*=*}" ] && _secret=$(echo "$i"| cut -d '=' -f 2) && export $(echo "$i"| cut -d '=' -f 1)=$(cat "${_secret}")
+done
+
+sh gradlew --info --rerun-tasks "$_task"
 
 [ "$?" == "0" ] && _success="true" || _success="false"
 if [ "$SLACK_WEBHOOK" != "" ]
