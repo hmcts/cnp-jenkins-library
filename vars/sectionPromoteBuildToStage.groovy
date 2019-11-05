@@ -48,8 +48,8 @@ def call(params) {
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
             if (projectBranch.isMaster() && fileExists('build.gradle')) {
-              def dockerImageTest = new DockerImage(product, component, acr, DockerImage.TEST_LABEL, env.GIT_COMMIT)
-              acr.retagForTestStage(deploymentStage, dockerImageTest)
+              def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
+              acr.retagForStage(deploymentStage, dockerImageTest)
             }
           }
         }

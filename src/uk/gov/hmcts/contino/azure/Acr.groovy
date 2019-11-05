@@ -130,12 +130,6 @@ class Acr extends Az {
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 
-  def retagForTestStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
-    def additionalTag = dockerImage.getTestShortName(stage)
-    def baseTag = dockerImage.getBaseTaggedName()
-    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
-  }
-
   def untag(DockerImage dockerImage) {
     if (!dockerImage.isLatest()) {
       this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --image ${dockerImage.getShortName()}"

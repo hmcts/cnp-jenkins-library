@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.azure.Acr
 
 class DockerImage {
 
-  public static final String TEST_LABEL = "test"
+  public static final String TEST_REPO = "test"
 
   // environment the image has been promoted to
   enum DeploymentStage {
@@ -139,10 +139,6 @@ class DockerImage {
     return shortName(stage.label)
   }
 
-  def getTestShortName(DeploymentStage stage) {
-    return shortName("${TEST_LABEL}-${stage.label}")
-  }
-
   private def shortName(String imageTag) {
     return repositoryName().concat(':')
       .concat(getTag(imageTag))
@@ -156,7 +152,7 @@ class DockerImage {
    *   the short name. e.g. hmcts/product-component:branch
    */
   def getBaseShortName() {
-    def baseShortName = this.imageTag == 'staging' || this.imageTag == TEST_LABEL ? "${this.imageTag}-${this.commit}" : imageTag
+    def baseShortName = this.imageTag == 'staging' ? "${this.imageTag}-${this.commit}" : imageTag
     return repositoryName().concat(':')
       .concat(baseShortName)
   }
