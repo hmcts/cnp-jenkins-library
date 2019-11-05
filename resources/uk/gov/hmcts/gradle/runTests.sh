@@ -27,7 +27,7 @@ done
 sh gradlew --info --rerun-tasks "$_task"
 
 [ "$?" == "0" ] && _success="true" || _success="false"
-if [ "$SLACK_WEBHOOK" != "" ]
+if [ "$SLACK_WEBHOOK" != "" ] && [ "$SLACK_CHANNEL" != "" ]
 then
   _slackNotifySuccess=${SLACK_NOTIFY_SUCCESS:-true}
   if [ "$_success" == "true" ]
@@ -43,7 +43,7 @@ then
   if [ "$_success" == "false" ] || [ "$_slackNotifySuccess" == "true" ]
   then
     wget --post-data "payload={\"channel\": \"#${SLACK_CHANNEL}\", \"username\": \"${_task}_test\", \"text\": \"${_slackMessage}\", \"icon_emoji\": \":${_slackIcon}:\"}" \
-    $(cat "/mnt/secrets/${SLACK_WEBHOOK}")
+      "$SLACK_WEBHOOK"
   fi
 fi
 
