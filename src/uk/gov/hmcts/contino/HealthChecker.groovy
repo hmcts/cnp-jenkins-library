@@ -14,7 +14,7 @@ class HealthChecker {
     int attemptCounter = 1
 
     steps.retry(maxAttempts) {
-      steps.echo "Attempt number: " + attemptCounter
+      steps.echo "Startup checker, attempt: " + attemptCounter + " (check app logs if this fails)"
 
       try {
         def response = steps.httpRequest(
