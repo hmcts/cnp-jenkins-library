@@ -8,11 +8,11 @@ class PipelineCallbacksRunner implements Serializable {
   }
 
   void callAfter(String stage) {
-    nullSafeCall('after:' + stage)
+    nullSafeCall('after:' + stage, stage)
   }
 
   void callBefore(String stage) {
-    nullSafeCall('before:' + stage)
+    nullSafeCall('before:' + stage, stage)
   }
 
   void callAround(String stage, Closure body) {
@@ -20,11 +20,11 @@ class PipelineCallbacksRunner implements Serializable {
     try {
       body.call()
     } catch (err) {
-      call('onStageFailure')
+      call('onStageFailure', stage)
       throw err
     } finally {
       callAfter(stage)
-      nullSafeCall('after:all')
+      nullSafeCall('after:all', stage)
     }
   }
 
@@ -36,14 +36,14 @@ class PipelineCallbacksRunner implements Serializable {
     }
   }
 
-  void call(String callback) {
-    nullSafeCall(callback)
+  void call(String callback, String stage = null) {
+    nullSafeCall(callback, stage)
   }
 
-  private def nullSafeCall(String key) {
+  private def nullSafeCall(String key, String stage) {
     def body = config.bodies.get(key)
     if (body != null) {
-      body.call()
+      body.call(stage)
     }
   }
 }
