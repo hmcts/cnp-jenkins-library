@@ -17,7 +17,7 @@ import uk.gov.hmcts.contino.azure.Acr
  * is set:
  *
  * e.g.: <my-app-image>:aat-<commit-hash>
- * 
+ *
  * The prod tag marks the image as having passed all the verification
  * and build stages and should be assigned only at the end of the pipeline.
  *
@@ -39,13 +39,18 @@ def call(params) {
     if (config.dockerBuild) {
       withAcrClient(subscription) {
 
+        def projectBranch = new ProjectBranch(env.BRANCH_NAME)
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-        def dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
+        def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
+            if (projectBranch.isMaster() && fileExists('build.gradle')) {
+              def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
+              acr.retagForStage(deploymentStage, dockerImageTest)
+            }
           }
         }
       }
