@@ -1,0 +1,8 @@
+FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.3
+
+WORKDIR /opt/app
+USER hmcts
+
+COPY --chown=hmcts:hmcts . /opt/app/
+
+ENTRYPOINT ["sh", "runTests.sh"]
