@@ -100,6 +100,7 @@ def call(DockerImage dockerImage, Map params) {
     if (!config.serviceApp) {
       //Forcing Jobs deployed through Jenkins to be Job to avoid cronJobs being run forever.
         options.add("--set global.job.kind=Job")
+        options.add("--set global.jobKind=Job")
         options.add("--set global.smoketestscron.enabled=false")
         options.add("--set global.functionaltestscron.enabled=false")
       //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
