@@ -15,7 +15,7 @@ def call(String subscription, Closure body) {
 
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-      azJenkins 'login --service-principal -u $JENKINS_CLIENT_ID -p $JENKINS_CLIENT_SECRET -t $JENKINS_TENANT_ID'
+      azJenkins 'login --identity'
       azJenkins 'account set --subscription $JENKINS_SUBSCRIPTION_ID'
 
       def infraVaultName = "infra-vault-$subscription"
@@ -59,7 +59,6 @@ def call(String subscription, Closure body) {
                "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
-        az 'login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
         az 'account set --subscription $AZURE_SUBSCRIPTION_ID'
 
         body.call()
