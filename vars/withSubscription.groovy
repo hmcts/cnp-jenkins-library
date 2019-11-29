@@ -11,8 +11,10 @@ def call(String subscription, Closure body) {
       clientSecretVariable: 'JENKINS_CLIENT_SECRET',
       tenantIdVariable: 'ARM_TENANT_ID')]) {
 
-      def az = { cmd -> return sh(script: "az $cmd", returnStdout: true).trim() }
+      def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
+      azJenkins 'login --identity'
 
+      def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
       az 'login --identity'
 
       def infraVaultName = env.INFRA_VAULT_NAME
