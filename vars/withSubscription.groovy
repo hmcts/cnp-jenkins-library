@@ -16,13 +16,14 @@ def call(String subscription, Closure body) {
 
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
       az 'login --identity'
+      az 'account set --subscription bf308a5c-0624-4334-8ff8-8dca9fd43783' // TODO update
 
       def infraVaultName = env.INFRA_VAULT_NAME
       log.info "using $infraVaultName"
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
-      def jenkinsObjectId = az "identity show -g managed-identities-cftsbox-intsvc-rg --name jenkins-cftsbox-intsvc-mi --query principalId -o tsv"
+      def jenkinsObjectId = azJenkins "identity show -g managed-identities-cftsbox-intsvc-rg --name jenkins-cftsbox-intsvc-mi --query principalId -o tsv"
 
       def storageAccountKey = az "storage account keys  list --account-name mgmtstatestore${subscription} --query [0].value -o tsv"
       withEnv([
@@ -48,9 +49,6 @@ def call(String subscription, Closure body) {
                "TF_VAR_root_address_space=10.96.0.0/12",
                "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"])
       {
-        echo "Setting Azure CLI to run on $subscription subscription account"
-        az 'account set --subscription bf308a5c-0624-4334-8ff8-8dca9fd43783' // TODO update
-
         body.call()
       }
     }
