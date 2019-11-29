@@ -9,6 +9,9 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import uk.gov.hmcts.contino.IPV4Validator
 import uk.gov.hmcts.contino.ConsulRecord
+
+import java.util.concurrent.TimeUnit
+
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
 crawl the infra to workout which webapps are currently deployed
@@ -39,6 +42,12 @@ def call(environment, deploymentTarget) {
     .get()
     .addHeader("authorization", "Bearer " + authtoken)
     .addHeader("cache-control", "no-cache")
+    .build()
+
+  OkHttpClient client = new OkHttpClient.Builder()
+    .connectTimeout(90, TimeUnit.SECONDS)
+    .writeTimeout(90, TimeUnit.SECONDS)
+    .readTimeout(90, TimeUnit.SECONDS)
     .build()
 
   Response responsefarms = client.newCall(requestfarms).execute()
