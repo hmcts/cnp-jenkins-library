@@ -9,57 +9,46 @@ def call(String subscription, Closure body) {
       subscriptionIdVariable: 'JENKINS_SUBSCRIPTION_ID',
       clientIdVariable: 'JENKINS_CLIENT_ID',
       clientSecretVariable: 'JENKINS_CLIENT_SECRET',
-      tenantIdVariable: 'JENKINS_TENANT_ID')]) {
+      tenantIdVariable: 'ARM_TENANT_ID')]) {
 
       def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
 
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
       azJenkins 'login --identity'
-      azJenkins 'account set --subscription $JENKINS_SUBSCRIPTION_ID'
+      azJenkins 'account set --subscription DCD-CFT-Sandbox'
 
-      def infraVaultName = "infra-vault-$subscription"
+      def infraVaultName = env.INFRA_VAULT_NAME
       log.info "using $infraVaultName"
-
-      def subscriptionCredsjson = azJenkins "keyvault secret show --vault-name '$infraVaultName' --name '$subscription-creds' --query value -o tsv".toString()
-      subscriptionCredValues = new JsonSlurperClassic().parseText(subscriptionCredsjson)
-
-      def stateStoreCfgjson = azJenkins "keyvault secret show --vault-name '$infraVaultName' --name 'cfg-state-store' --query value -o tsv".toString()
-      stateStoreCfgValues = new JsonSlurperClassic().parseText(stateStoreCfgjson)
-
-      def root_address_space = azJenkins "keyvault secret show --vault-name '$infraVaultName' --name 'cfg-root-vnet-cidr' --query value -o tsv".toString()
-      def dcdJenkinsObjectId = azJenkins "keyvault secret show --vault-name '$infraVaultName' --name '$subscription-jenkins-object-id' --query value -o tsv".toString()
-
+      
       log.warning "=== you are building with $subscription subscription credentials ==="
 
-      withEnv(["AZURE_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
-               "AZURE_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
+      withEnv([
+        "ARM_USE_MSI=true",
+//               "AZURE_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
+//               "AZURE_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
                "AZURE_TENANT_ID=${subscriptionCredValues.azure_tenant_id}",
-               "AZURE_SUBSCRIPTION_ID=${subscriptionCredValues.azure_subscription}",
                // Terraform env variables
-               "ARM_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
-               "ARM_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
-               "ARM_TENANT_ID=${subscriptionCredValues.azure_tenant_id}",
-               "ARM_SUBSCRIPTION_ID=${subscriptionCredValues.azure_subscription}",
+//               "ARM_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
+//               "ARM_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
+               "ARM_SUBSCRIPTION_ID=bf308a5c-0624-4334-8ff8-8dca9fd43783", // TODO update
                // Terraform input variables
-               "TF_VAR_client_id=${subscriptionCredValues.azure_client_id}",
-               "TF_VAR_secret_access_key=${subscriptionCredValues.azure_client_secret}",
                "TF_VAR_tenant_id=${subscriptionCredValues.azure_tenant_id}",
-               "TF_VAR_subscription_id=${subscriptionCredValues.azure_subscription}",
+               "TF_VAR_subscription_id=bf308a5c-0624-4334-8ff8-8dca9fd43783", // TODO update
                "TF_VAR_mgmt_subscription_id=${env.JENKINS_SUBSCRIPTION_ID}",
-               "TF_VAR_token=${subscriptionCredValues.azure_tenant_id}",
+               "TF_VAR_token=${env.ARM_TENANT_ID}",
                // other variables
-               "TOKEN=${subscriptionCredValues.azure_tenant_id}",
-               "STORE_rg_name_template=${stateStoreCfgValues.rg_name}",
-               "STORE_sa_name_template=${stateStoreCfgValues.sa_name}",
-               "STORE_sa_container_name_template=${stateStoreCfgValues.sa_container_name}",
+               "STORE_rg_name_template=mgmt-state-store",
+               "STORE_sa_name_template=mgmtstatestore",
+               "STORE_sa_container_name_template=mgmtstatestorecontainer",
                "SUBSCRIPTION_NAME=$subscription",
-               "TF_VAR_jenkins_AAD_objectId=$dcdJenkinsObjectId",
-               "TF_VAR_root_address_space=$root_address_space",
+        // az identity show -g managed-identities-sbox-rg --name jenkins-cftsbox-intsvc-mi
+               "TF_VAR_jenkins_AAD_objectId=0292f26e-288e-4f5b-85fc-b99a53f0a2b1", // TODO update
+               "TF_VAR_root_address_space=10.96.0.0/12",
                "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
-        az 'account set --subscription $AZURE_SUBSCRIPTION_ID'
+        az 'account set --subscription DCD-CFT-Sandbox'
 
         body.call()
       }

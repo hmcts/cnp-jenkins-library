@@ -19,7 +19,7 @@ class AzureFactory {
     def clientId = steps.env.AZURE_CLIENT_ID
     def clientSecret = steps.env.AZURE_CLIENT_SECRET
     def tenantId = steps.env.AZURE_TENANT_ID
-    def subscriptionId = steps.env.AZURE_SUBSCRIPTION_ID
+    def subscriptionId = steps.env.ARM_SUBSCRIPTION_ID
     def creds = new ApplicationTokenCredentials(clientId, tenantId, clientSecret, AzureEnvironment.AZURE)
     return Azure.authenticate(creds).withSubscription(subscriptionId)
   }

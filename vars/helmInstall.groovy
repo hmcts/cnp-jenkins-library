@@ -90,7 +90,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def options = [
-      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
+      "--set global.subscriptionId=${this.env.ARM_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
