@@ -26,10 +26,12 @@ do
   [ -z "${i##*=*}" ] && _secret=$(echo "$i"| cut -d '=' -f 2) && export $(echo "$i"| cut -d '=' -f 1)=$(cat "${_secret}")
 done
 
+export GRADLE_OPTS="-Xmx1024m -Dorg.gradle.daemon=false"
 sh gradlew --info --rerun-tasks "$_task"
 
-# Notify slack channel
 [ "$?" == "0" ] && _success="true" || _success="false"
+
+# Notify slack channel
 if [ "$SLACK_WEBHOOK" != "" ] && [ "$SLACK_CHANNEL" != "" ]
 then
   _slackNotifySuccess=${SLACK_NOTIFY_SUCCESS:-true}

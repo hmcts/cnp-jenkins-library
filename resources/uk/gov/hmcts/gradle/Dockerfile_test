@@ -5,4 +5,6 @@ USER hmcts
 
 COPY --chown=hmcts:hmcts . /opt/app/
 
+RUN ["/busybox/sh", "gradlew", "--info", "--no-daemon", "--refresh-dependencies", "dependencies"]
+
 ENTRYPOINT ["sh", "runTests.sh"]
