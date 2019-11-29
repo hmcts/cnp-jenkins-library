@@ -16,11 +16,10 @@ def call(String subscription, Closure body) {
       def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
       azJenkins 'login --identity'
-      azJenkins 'account set --subscription DCD-CFT-Sandbox'
 
       def infraVaultName = env.INFRA_VAULT_NAME
       log.info "using $infraVaultName"
-      
+
       log.warning "=== you are building with $subscription subscription credentials ==="
 
       withEnv([
@@ -48,7 +47,7 @@ def call(String subscription, Closure body) {
                "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"])
       {
         echo "Setting Azure CLI to run on $subscription subscription account"
-        az 'account set --subscription DCD-CFT-Sandbox'
+        az 'account set --subscription bf308a5c-0624-4334-8ff8-8dca9fd43783' // TODO update
 
         body.call()
       }
