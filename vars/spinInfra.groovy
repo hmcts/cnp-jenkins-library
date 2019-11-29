@@ -61,11 +61,16 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
 
-        sh "terraform init -reconfigure -backend-config " +
-          "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
-          "-backend-config \"container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}\" " +
-          "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
-          "-backend-config \"key=${productName}/${environmentDeploymentTarget}/terraform.tfstate\""
+        sh """
+          terraform init -reconfigure \
+            -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
+            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
+            -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate" \
+            -backend-config "subscription_id=${env.ARM_SUBSCRIPTION_ID}" \
+            -backend-config "tenant_id=${env.ARM_TENANT_ID}"
+        """
+
 
 
         sh "terraform get -update=true"
