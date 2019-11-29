@@ -26,13 +26,12 @@ def call(String subscription, Closure body) {
         "ARM_USE_MSI=true",
 //               "AZURE_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
 //               "AZURE_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
-               "AZURE_TENANT_ID=${subscriptionCredValues.azure_tenant_id}",
                // Terraform env variables
 //               "ARM_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
 //               "ARM_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
                "ARM_SUBSCRIPTION_ID=bf308a5c-0624-4334-8ff8-8dca9fd43783", // TODO update
                // Terraform input variables
-               "TF_VAR_tenant_id=${subscriptionCredValues.azure_tenant_id}",
+               "TF_VAR_tenant_id=${env.ARM_TENANT_ID}",
                "TF_VAR_subscription_id=bf308a5c-0624-4334-8ff8-8dca9fd43783", // TODO update
                "TF_VAR_mgmt_subscription_id=${env.JENKINS_SUBSCRIPTION_ID}",
                "TF_VAR_token=${env.ARM_TENANT_ID}",
