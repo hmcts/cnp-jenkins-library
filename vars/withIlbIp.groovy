@@ -2,7 +2,7 @@
 import groovy.json.JsonSlurperClassic
 
 def call(String environment, Closure body) {
-  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
 
   TOKEN = az "account get-access-token --query accessToken -o tsv"
   def vip = httpRequest httpMode: 'GET', customHeaders: [[name: 'Authorization', value: "Bearer ${TOKEN}"]], url: "https://management.azure.com/subscriptions/$env.ARM_SUBSCRIPTION_ID/resourceGroups/core-infra-$environment/providers/Microsoft.Web/hostingEnvironments/core-compute-$environment/capacities/virtualip?api-version=2016-09-01"
