@@ -68,6 +68,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
             -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
             -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate" \
             -backend-config "subscription_id=${env.ARM_SUBSCRIPTION_ID}" \
+            -backend-config "use_msi=true" \
             -backend-config "tenant_id=${env.ARM_TENANT_ID}"
         """
 
