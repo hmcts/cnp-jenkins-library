@@ -22,6 +22,9 @@ def call(String subscription, Closure body) {
 
       log.warning "=== you are building with $subscription subscription credentials ==="
 
+      def jenkinsObjectId = az "identity show -g managed-identities-cftsbox-intsvc-rg --name jenkins-cftsbox-intsvc-mi --query principalId -o tsv"
+
+      def storageAccountKey = az "storage account keys  list --account-name mgmtstatestore${subscription} --query [0].value -o tsv"
       withEnv([
         "ARM_USE_MSI=true",
 //               "AZURE_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
@@ -30,6 +33,7 @@ def call(String subscription, Closure body) {
 //               "ARM_CLIENT_ID=${subscriptionCredValues.azure_client_id}",
 //               "ARM_CLIENT_SECRET=${subscriptionCredValues.azure_client_secret}",
                "ARM_SUBSCRIPTION_ID=bf308a5c-0624-4334-8ff8-8dca9fd43783", // TODO update
+        "ARM_ACCESS_KEY=${storageAccountKey}",
                // Terraform input variables
                "TF_VAR_tenant_id=${env.ARM_TENANT_ID}",
                "TF_VAR_subscription_id=bf308a5c-0624-4334-8ff8-8dca9fd43783", // TODO update
@@ -40,8 +44,7 @@ def call(String subscription, Closure body) {
                "STORE_sa_name_template=mgmtstatestore",
                "STORE_sa_container_name_template=mgmtstatestorecontainer",
                "SUBSCRIPTION_NAME=$subscription",
-        // az identity show -g managed-identities-sbox-rg --name jenkins-cftsbox-intsvc-mi
-               "TF_VAR_jenkins_AAD_objectId=0292f26e-288e-4f5b-85fc-b99a53f0a2b1", // TODO update
+               "TF_VAR_jenkins_AAD_objectId=${jenkinsObjectId}", // TODO update
                "TF_VAR_root_address_space=10.96.0.0/12",
                "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"])
       {
