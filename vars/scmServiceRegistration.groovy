@@ -30,7 +30,7 @@ def call(environment, deploymentTarget) {
   println "Registering application to the scm service"
 
   def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
-  TOKEN = az "account get-access-token --query accessToken -o tsv"
+  def authtoken = az "account get-access-token --query accessToken -o tsv"
 
   // Get ServerFarms list
   println "Getting a list of the current apps deployed ..."
