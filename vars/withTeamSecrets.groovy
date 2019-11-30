@@ -25,13 +25,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 
   String theKeyVaultUrl = getKeyVaultUrl(keyVaultURL, entry, environment, vaultName, vaultOverrides)
 
-  wrap([
-    $class                   : 'AzureKeyVaultBuildWrapper',
-    azureKeyVaultSecrets     : entry.value,
-    keyVaultURLOverride      : theKeyVaultUrl,
-    applicationIDOverride    : env.AZURE_CLIENT_ID,
-    applicationSecretOverride: env.AZURE_CLIENT_SECRET
-  ]) {
+  withAzureKeyvault(azureKeyVaultSecrets: entry.value, keyVaultURLOverride: theKeyVaultUrl) {
     if (secretIterator.hasNext()) {
       return executeClosure(secretIterator, environment, keyVaultURL, vaultName, vaultOverrides, body)
     } else {
