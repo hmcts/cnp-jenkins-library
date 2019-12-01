@@ -61,6 +61,8 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
+        sh "terraform --version"
+
         sh """
           terraform init -reconfigure \
             -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
@@ -68,9 +70,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
             -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
             -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
-
-
-
+        
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
