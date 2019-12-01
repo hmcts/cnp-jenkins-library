@@ -26,12 +26,12 @@ def call(String subscription, Closure body) {
     withEnv([
       "ARM_USE_MSI=true",
       // Terraform env variables
-      "ARM_SUBSCRIPTION_ID=${subscriptionId}", // TODO update
+      "ARM_SUBSCRIPTION_ID=${subscriptionId}",
       "ARM_ACCESS_KEY=${storageAccountKey}",
       "ARM_TENANT_ID=${tenantId}",
       // Terraform input variables
       "TF_VAR_tenant_id=${tenantId}",
-      "TF_VAR_subscription_id=${subscriptionId}", // TODO update
+      "TF_VAR_subscription_id=${subscriptionId}",
       "TF_VAR_mgmt_subscription_id=${mgmtSubscriptionId}",
       "TF_VAR_token=${tenantId}",
       // other variables
@@ -39,7 +39,7 @@ def call(String subscription, Closure body) {
       "STORE_sa_name_template=mgmtstatestore",
       "STORE_sa_container_name_template=mgmtstatestorecontainer",
       "SUBSCRIPTION_NAME=$subscription",
-      "TF_VAR_jenkins_AAD_objectId=${jenkinsObjectId}", // TODO update
+      "TF_VAR_jenkins_AAD_objectId=${jenkinsObjectId}",
       "TF_VAR_root_address_space=${rootAddressSpace}",
       "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"
     ])
