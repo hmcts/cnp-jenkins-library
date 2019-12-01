@@ -61,6 +61,13 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
+        try {
+          sh "tfenv install"
+        } catch (ignored) {
+          echo "No .terraform-version file present, falling back to last terraform version pre tfenv"
+          sh "tfenv use 0.11.7"
+        }
+
         sh "terraform --version"
 
         sh """
