@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.PactBroker
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(params) {
 
@@ -40,15 +41,20 @@ def call(params) {
   stage("Build") {
     builder.setupToolVersion()
 
+    if (!fileExists('Dockerfile')) {
+      WarningCollector.addPipelineWarning("deprecated_no_dockerfile", "A Dockerfile will be required for all app builds. Docker builds (enableDockerBuild()) wil be enabled by default. ", new Date().parse("dd.MM.yyyy", "17.12.2019"))
+    }
+
     // always build master and demo as we currently do not deploy an image there
-      boolean envSub = autoDeployEnvironment() != null
-      when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+    boolean envSub = autoDeployEnvironment() != null
+    when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
       pcr.callAround('build') {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
           builder.build()
         }
       }
     }
+    
   }
 
   stage("Tests/Checks/Container build") {
