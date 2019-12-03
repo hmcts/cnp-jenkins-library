@@ -11,8 +11,6 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import uk.gov.hmcts.contino.IPV4Validator
 import uk.gov.hmcts.contino.ConsulRecord
-
-
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
 crawl the infra to workout which webapps are currently deployed
