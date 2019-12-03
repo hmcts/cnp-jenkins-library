@@ -12,7 +12,6 @@ import okhttp3.Response
 import uk.gov.hmcts.contino.IPV4Validator
 import uk.gov.hmcts.contino.ConsulRecord
 
-import java.util.concurrent.TimeUnit
 
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
@@ -126,4 +125,3 @@ def call(environment, deploymentTarget) {
 
   println("Result code for scm service registration: " + responsescm.code())
 }
-
