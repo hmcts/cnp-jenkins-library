@@ -1,4 +1,4 @@
-FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.3
+FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.4
 
 WORKDIR /opt/app
 USER hmcts
