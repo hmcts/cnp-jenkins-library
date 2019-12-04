@@ -5,8 +5,6 @@ USER hmcts
 
 COPY --chown=hmcts:hmcts . /opt/app/
 
-RUN ["/busybox/sh", "gradlew", "--info", "--no-daemon", "testClasses"]
-RUN ["/busybox/sh", "gradlew", "--info", "--no-daemon", "smokeTestClasses"]
-RUN ["/busybox/sh", "gradlew", "--info", "--no-daemon", "functionalTestClasses"]
+RUN ["/busybox/sh", "gradlew", "--info", "--no-daemon", "testClasses", "smokeTestClasses", "functionalTestClasses"]
 
 ENTRYPOINT ["sh", "runTests.sh"]
