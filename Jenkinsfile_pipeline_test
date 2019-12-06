@@ -17,13 +17,13 @@ node {
       builder.gradle('build -x test')
     }
 
-    stage('Test') {
-      try {
-        builder.gradle('test')
-      } finally {
-        steps.junit '**/test-results/**/*.xml'
-      }
-    }
+//    stage('Test') {
+//      try {
+//        builder.gradle('test')
+//      } finally {
+//        steps.junit '**/test-results/**/*.xml'
+//      }
+//    }
 
     stage('Run shared infra pipeline') {
       build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-shared-infrastructure/master',
