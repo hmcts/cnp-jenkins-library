@@ -5,12 +5,12 @@ def call(String subscription, Closure body) {
   try {
     def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
     azJenkins 'login --identity'
-
-    identityBasedLogin(subscription, body)
   } catch (ignored) {
     // no identity on the VM use SP instead
     servicePrincipalBasedLogin(subscription, body)
+    return
   }
+  identityBasedLogin(subscription, body)
 }
 
 def servicePrincipalBasedLogin(String subscription, Closure body) {
