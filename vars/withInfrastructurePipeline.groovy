@@ -30,7 +30,7 @@ https://github.com/hmcts/cnp-jenkins-library#opinionated-infrastructure-pipeline
         checkoutScm()
       }
       withSubscription(subscription) {
-        withIlbIp(environmentDeploymentTarget) {
+        withIlbIp(subscription, environmentDeploymentTarget) {
           spinInfra(product, null, environment, false, subscription, deploymentTarget)
         }
       }
