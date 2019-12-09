@@ -59,7 +59,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         } else
           throw new Exception("State store name details not found in environment variables?")
 
-        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
+        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
         try {
           sh "tfenv install"

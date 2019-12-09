@@ -5,12 +5,7 @@ def call(Closure block) {
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'public-registry-sub', version: '', envVariable: 'REGISTRY_SUBSCRIPTION'],
   ]
 
-  wrap([$class                   : 'AzureKeyVaultBuildWrapper',
-        azureKeyVaultSecrets     : registrySecrets,
-        keyVaultURLOverride      : env.INFRA_VAULT_URL,
-        applicationIDOverride    : env.AZURE_CLIENT_ID,
-        applicationSecretOverride: env.AZURE_CLIENT_SECRET
-  ]) {
+  withAzureKeyvault(registrySecrets) {
     block.call()
   }
 }
