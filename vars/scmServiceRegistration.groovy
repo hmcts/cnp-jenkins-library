@@ -19,11 +19,11 @@ script is expected to be called as part of withPipeline just
 after spinInfra.
  --------------------------------------------------------------*/
 
-def call(environment) {
+def call(subscription, environment) {
   call(environment, '')
 }
 
-def call(environment, deploymentTarget) {
+def call(subscription, environment, deploymentTarget) {
 
   def environmentDt = "${environment}${deploymentTarget}"
 
@@ -31,7 +31,7 @@ def call(environment, deploymentTarget) {
 
   println "Registering application to the scm service"
 
-  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
   def authtoken = az "account get-access-token --query accessToken -o tsv"
 
   // Get ServerFarms list
