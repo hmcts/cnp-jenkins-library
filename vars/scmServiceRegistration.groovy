@@ -20,7 +20,7 @@ after spinInfra.
  --------------------------------------------------------------*/
 
 def call(subscription, environment) {
-  call(environment, '')
+  call(subscription, environment, '')
 }
 
 def call(subscription, environment, deploymentTarget) {
