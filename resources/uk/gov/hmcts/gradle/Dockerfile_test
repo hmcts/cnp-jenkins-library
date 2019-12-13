@@ -5,8 +5,8 @@ USER hmcts
 
 COPY --chown=hmcts:hmcts . /opt/app/
 
-RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle testClasses || exit 0"]
-RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle smokeTestClasses || exit 0"]
-RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle functionalTestClasses || exit 0"]
+RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle testClasses || :"]
+RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle smokeTestClasses || :"]
+RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle functionalTestClasses || :"]
 
 ENTRYPOINT ["sh", "runTests.sh"]
