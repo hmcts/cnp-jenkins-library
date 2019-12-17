@@ -1,12 +1,21 @@
+FROM openjdk:11.0-jdk AS build-env
+WORKDIR /opt/app
+
+COPY . /opt/app/
+
+ENV GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx512m -Dfile.encoding=UTF-8"
+
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks --init-script init.gradle testClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks --init-script init.gradle smokeTestClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks --init-script init.gradle functionalClasses || :"]
+
+
 FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.4
 
 WORKDIR /opt/app
 USER hmcts
 
-COPY --chown=hmcts:hmcts . /opt/app/
-
-RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle testClasses || :"]
-RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle smokeTestClasses || :"]
-RUN ["/busybox/sh", "-c", "gradlew --info --no-daemon --rerun-tasks --init-script init.gradle functionalTestClasses || :"]
+COPY --from=build-env --chown=hmcts:hmcts /opt/app /opt/app
+COPY --from=build-env --chown=hmcts:hmcts /root/.gradle /opt/app/.gradle
 
 ENTRYPOINT ["sh", "runTests.sh"]
