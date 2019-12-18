@@ -27,7 +27,7 @@ do
 done
 
 export GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx768m -Dfile.encoding=UTF-8"
-sh gradlew --info  --init-script init.gradle --rerun-tasks "$_task"
+sh gradlew --info --rerun-tasks "$_task"
 
 [ "$?" == "0" ] && _success="true" || _success="false"
 
