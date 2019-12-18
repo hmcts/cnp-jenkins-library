@@ -43,7 +43,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
     helper.registerAllowedMethod("usernamePassword", [LinkedHashMap], null)
-    helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' })
+    helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' || c == 'Dockerfile' })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
