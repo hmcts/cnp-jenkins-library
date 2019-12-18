@@ -9,9 +9,9 @@ RUN sed -i 's/-all\.zip/-bin.zip/' /opt/app/gradle/wrapper/gradle-wrapper.proper
 
 ENV GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx768m -Dfile.encoding=UTF-8"
 
-RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks --init-script init.gradle testClasses || :"]
-RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks --init-script init.gradle smokeTestClasses || :"]
-RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks --init-script init.gradle functionalTestClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks testClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks smokeTestClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks functionalTestClasses || :"]
 
 
 FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.4
