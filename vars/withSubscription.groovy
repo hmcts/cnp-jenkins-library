@@ -91,6 +91,7 @@ def identityBasedLogin(String subscription, Closure body) {
       [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: "${subscription}-subscription-id", version: '', envVariable: 'ARM_SUBSCRIPTION_ID']
     ]) {
       az "account set --subscription ${env.ARM_SUBSCRIPTION_ID}"
+      azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
 
       def infraVaultName = env.INFRA_VAULT_NAME
       log.info "Using $infraVaultName"
