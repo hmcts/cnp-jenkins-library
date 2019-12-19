@@ -26,10 +26,12 @@ do
   [ -z "${i##*=*}" ] && _secret=$(echo "$i"| cut -d '=' -f 2) && export $(echo "$i"| cut -d '=' -f 1)=$(cat "${_secret}")
 done
 
+export GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx768m -Dfile.encoding=UTF-8"
 sh gradlew --info --rerun-tasks "$_task"
 
-# Notify slack channel
 [ "$?" == "0" ] && _success="true" || _success="false"
+
+# Notify slack channel
 if [ "$SLACK_WEBHOOK" != "" ] && [ "$SLACK_CHANNEL" != "" ]
 then
   _slackNotifySuccess=${SLACK_NOTIFY_SUCCESS:-true}
