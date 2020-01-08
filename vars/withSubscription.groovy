@@ -3,10 +3,13 @@ import groovy.json.JsonSlurperClassic
 
 def call(String subscription, Closure body) {
   try {
+    echo "Attempting Managed Identity login to Azure (this will error if not supported)..."
     def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
     azJenkins 'login --identity'
   } catch (ignored) {
     // no identity on the VM use SP instead
+    echo "...Managed Identity login not supported, falling back to Service Principal login"
+    echo "Error above can safely be ignored"
     servicePrincipalBasedLogin(subscription, body)
     return
   }
