@@ -24,7 +24,7 @@ class Helm {
   Helm(steps, String chartName) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
-    this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
+    this.subscriptionId = this.steps.env.ARM_SUBSCRIPTION_ID
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION

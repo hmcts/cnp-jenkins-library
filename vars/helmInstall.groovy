@@ -89,8 +89,8 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def options = [
-      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
-      "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
+      "--set global.subscriptionId=${this.env.ARM_SUBSCRIPTION_ID} ",
+      "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
       "--set global.devMode=true",
@@ -99,7 +99,10 @@ def call(DockerImage dockerImage, Map params) {
 
     if (!config.serviceApp) {
       //Forcing Jobs deployed through Jenkins to be Job to avoid cronJobs being run forever.
-      options.add("--set global.job.kind=Job")
+        options.add("--set global.job.kind=Job")
+        options.add("--set global.jobKind=Job")
+        options.add("--set global.smoketestscron.enabled=false")
+        options.add("--set global.functionaltestscron.enabled=false")
       //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
       if(helm.exists(dockerImage.getImageTag(), namespace)){
         helm.delete(dockerImage.getImageTag(), namespace)

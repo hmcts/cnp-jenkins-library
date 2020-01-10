@@ -3,21 +3,21 @@ package uk.gov.hmcts.contino
 class MockJenkinsPlugin
 {
   private final String shortName
-  private final boolean isActive
+  private final boolean isEnabled
 
   MockJenkinsPlugin() {
     this.shortName = "mockPlugin"
-    this.isActive = true
+    this.isEnabled = true
   }
 
-  MockJenkinsPlugin(String shortName, boolean isActive) {
+  MockJenkinsPlugin(String shortName, boolean isEnabled) {
     this.shortName = shortName
-    this.isActive = isActive
+    this.isEnabled = isEnabled
   }
   def getShortName() {
     return this.shortName
   }
-  def isActive() {
-    return this.isActive
+  def isEnabled() {
+    return this.isEnabled
   }
 }

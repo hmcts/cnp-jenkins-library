@@ -371,6 +371,19 @@ Properties expanded by Jenkins:
 
 If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
 
+## Tool versions
+
+Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/cnp-vm-hardening/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
+
+### Java
+Java 8 and Java 11 are installed directly on the Jenkins agent, the library will detect if Java 11 is in use by looking at the build.gradle file, if it can't detect it or it isn't Java 11 it will use Java 8
+
+### Node.JS
+[nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
+
+### Terraform
+[tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
+
 ## Contract testing with Pact
 
 #### Usage

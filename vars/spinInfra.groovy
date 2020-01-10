@@ -59,17 +59,27 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         } else
           throw new Exception("State store name details not found in environment variables?")
 
-        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE"'
+        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
-        sh "terraform init -reconfigure -backend-config " +
-          "\"storage_account_name=${env.STORE_sa_name_template}${subscription}\" " +
-          "-backend-config \"container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}\" " +
-          "-backend-config \"resource_group_name=${env.STORE_rg_name_template}-${subscription}\" " +
-          "-backend-config \"key=${productName}/${environmentDeploymentTarget}/terraform.tfstate\""
+        try {
+          sh "tfenv install"
+        } catch (ignored) {
+          echo "No .terraform-version file present, falling back to last terraform version pre tfenv"
+          sh "tfenv use 0.11.7"
+        }
 
+        sh "terraform --version"
+
+        sh """
+          terraform init -reconfigure \
+            -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
+            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
+            -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
+        """
 
         sh "terraform get -update=true"
-        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'deployment_target=${deploymentTarget}' -var 'name=${productName}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {
