@@ -100,7 +100,7 @@ def call(params) {
               def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
               pcr.callAround('dockerbuild') {
-                timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Docker build') {
+                timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
                   def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
                   if (fileExists(acbTemplateFilePath)) {
                     acr.runWithTemplate(acbTemplateFilePath, dockerImage)
