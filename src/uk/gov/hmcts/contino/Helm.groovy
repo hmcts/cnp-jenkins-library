@@ -44,6 +44,7 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+    steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
 
   def enableTLS(String aksSubscription, String keyVaultName){
