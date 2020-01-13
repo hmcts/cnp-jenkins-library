@@ -9,7 +9,7 @@ class Helm {
   public static final String HELM_RESOURCES_DIR = "charts"
   def steps
   def acr
-  def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $name $options", returnStdout: true)}
+  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true)}
 
   def subscription
   def subscriptionId
@@ -34,13 +34,8 @@ class Helm {
   }
 
   def setup() {
-    init()
     configureAcr()
     addRepo()
-  }
-
-  def init() {
-    this.helm "init", "", "--client-only"
   }
 
   def configureAcr() {
@@ -49,6 +44,7 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+    steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
 
   def enableTLS(String aksSubscription, String keyVaultName){
@@ -66,7 +62,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -100,7 +96,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def allOptions = ["--install", "--wait", "--timeout 500", this.tlsOptions] + (options == null ? [] : options)
+    def allOptions = ["--install", "--wait", "--timeout 500s", this.tlsOptions] + (options == null ? [] : options)
     def allValues = values.flatten()
     this.execute("upgrade", "${this.chartName}-${imageTag} ${this.chartLocation}", allValues, allOptions)
   }
@@ -109,8 +105,8 @@ class Helm {
     this.execute("dependency update", this.chartLocation)
   }
 
-  def delete(String imageTag) {
-    this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge", this.tlsOptions])
+  def delete(String imageTag, String namespace) {
+    this.execute("uninstall", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", this.tlsOptions])
   }
 
   def exists(String imageTag, String namespace) {
@@ -118,16 +114,16 @@ class Helm {
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
-  def history(String imageTag) {
-    this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json", this.tlsOptions])
+  def history(String imageTag, String namespace) {
+    this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json", this.tlsOptions])
   }
 
   def hasAnyDeployed(String imageTag, String namespace) {
     if (!exists(imageTag, namespace)) {
       return false
     }
-    def releases = this.history(imageTag)
-    return !releases || new JsonSlurper().parseText(releases).any{it.status == "DEPLOYED"}
+    def releases = this.history(imageTag, namespace)
+    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "deployed" }
   }
 
   private Object execute(String command, String name) {

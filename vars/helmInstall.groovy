@@ -7,7 +7,6 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 
 def call(DockerImage dockerImage, Map params) {
@@ -106,7 +105,7 @@ def call(DockerImage dockerImage, Map params) {
         options.add("--set global.functionaltestscron.enabled=false")
       //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
       if(helm.exists(dockerImage.getImageTag(), namespace)){
-        helm.delete(dockerImage.getImageTag())
+        helm.delete(dockerImage.getImageTag(), namespace)
       }
     }
 
@@ -116,7 +115,7 @@ def call(DockerImage dockerImage, Map params) {
       !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
-      helm.delete(dockerImage.getImageTag())
+      helm.delete(dockerImage.getImageTag(), namespace)
     }
 
     // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
@@ -131,7 +130,7 @@ def call(DockerImage dockerImage, Map params) {
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
-        helm.delete(dockerImage.getImageTag())
+        helm.delete(dockerImage.getImageTag(), namespace)
         sleep(attempts * 60)
         attempts++
         echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
@@ -149,7 +148,7 @@ def call(DockerImage dockerImage, Map params) {
       consul.registerDns(aksServiceName, ingressIP)
 
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
-      echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
+      echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
       def url = env.AKS_TEST_URL + '/health'
       def healthChecker = new HealthChecker(this)
