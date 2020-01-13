@@ -32,8 +32,10 @@ def call(DockerImage dockerImage, Map params) {
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
 
+  def namespace = new TeamConfig(this).getNameSpace(product)
+
   def templateEnvVars = [
-    "NAMESPACE=${aksServiceName}",
+    "NAMESPACE=${namespace}",
     "SERVICE_NAME=${aksServiceName}",
     "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
@@ -49,7 +51,6 @@ def call(DockerImage dockerImage, Map params) {
 
     def values = []
     def chartName = "${product}-${component}"
-    def namespace = new TeamConfig(this).getNameSpace(product)
 
     def helm = new Helm(this, chartName)
     helm.setup()
@@ -159,7 +160,8 @@ def call(DockerImage dockerImage, Map params) {
 
 def addGithubLabels() {
   def namespaceLabel   = 'ns:' + env.NAMESPACE
-  def labels = [namespaceLabel]
+  def releaseLabel   = 'rel:' + env.SERVICE_NAME
+  def labels = [namespaceLabel, releaseLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)
