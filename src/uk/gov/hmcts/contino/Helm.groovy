@@ -46,16 +46,7 @@ class Helm {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
-
-  def enableTLS(String aksSubscription, String keyVaultName){
-    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
-    def helmRoot = (this.helm ("home", "", "") ).trim()
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-ca-cert' --subscription '$aksSubscription' --file $helmRoot/ca.pem "
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-cert' --subscription '$aksSubscription' --file $helmRoot/cert.pem "
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-key' --subscription '$aksSubscription' --file $helmRoot/key.pem "
-    this.tlsOptions = "--tls"
-  }
-
+  
   def publishIfNotExists(List<String> values) {
     configureAcr()
     addRepo()

@@ -53,10 +53,6 @@ def call(DockerImage dockerImage, Map params) {
 
     def helm = new Helm(this, chartName)
     helm.setup()
-    if(subscription != "sandbox" && params.aksSubscription.tlsEnabled) {
-      helm.enableTLS(params.aksSubscription.name, params.aksSubscription.keyvaultName)
-    }
-
 
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
