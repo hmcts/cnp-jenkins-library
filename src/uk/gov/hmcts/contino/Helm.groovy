@@ -46,7 +46,7 @@ class Helm {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
-  
+
   def publishIfNotExists(List<String> values) {
     configureAcr()
     addRepo()
@@ -111,9 +111,11 @@ class Helm {
 
   def hasAnyDeployed(String imageTag, String namespace) {
     if (!exists(imageTag, namespace)) {
+      this.steps.echo "No release deployed for: $imageTag in namespace $namespace"
       return false
     }
     def releases = this.history(imageTag, namespace)
+    this.steps.echo releases
     return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "deployed" }
   }
 
