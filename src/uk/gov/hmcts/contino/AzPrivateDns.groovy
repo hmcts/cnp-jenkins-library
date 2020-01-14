@@ -8,7 +8,7 @@ class AzPrivateDns extends Az {
     def steps
     def environment
     private subscriptionId
-    private resourceGroup = "mgmt-intdns-prod"                             // Resource group of azure dns zone
+    private resourceGroup
     
     AzPrivateDns(steps, subscription, environment) {
         super(steps, subscription)
@@ -17,15 +17,109 @@ class AzPrivateDns extends Az {
         this.environment = environment
     }
 
+    def resourceGroupName(environment) {
+        if (environment == "prod") {
+            return "mgmt-intdns-prod"
+        } else
+        if (environment == "idam-prod") {
+            return "mgmt-intdns-prod"
+        } else
+        if (environment == "aat") {
+            return "mgmt-intdns-nonprod"
+        } else       
+        if (environment == "demo") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "ithc") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "perftest") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "preview") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "saat") {
+            return "mgmt-intdns-nonprod"
+        } else
+        if (environment == "sandbox") {
+            return "mgmt-intdns-sboxintsvc"
+        } else       
+        if (environment == "idam-aat") {
+            return "mgmt-intdns-nonprod"
+        } else       
+        if (environment == "idam-demo") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "idam-ithc") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "idam-perftest") {
+            return "mgmt-intdns-nonprod"
+        } else       
+        if (environment == "idam-preview") {
+            return "mgmt-intdns-nonprod"
+        } else        
+        if (environment == "idam-saat") {
+            return "mgmt-intdns-nonprod"
+        } else
+        if (environment == "idam-sandbox") {
+            return "mgmt-intdns-sboxintsvc"
+        } else {
+            return "mgmt-intdns-prod"
+        }  
+    }
+
     def dnsSubId(environment) {
         if (environment == "prod") {
-            return "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-        } else
-        
+            return "2b1afc19-5ca9-4796-a56f-574a58670244"
+        } else   
         if (environment == "idam-prod") {
-            return "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+            return "2b1afc19-5ca9-4796-a56f-574a58670244"
+        } else
+        if (environment == "aat") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else   
+        if (environment == "demo") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else   
+        if (environment == "ithc") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else   
+        if (environment == "perftest") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else   
+        if (environment == "preview") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else    
+        if (environment == "saat") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else
+        if (environment == "sandbox") {
+            return "b3394340-6c9f-44ca-aa3e-9ff38bd1f9ac"
+        } else    
+        if (environment == "idam-aat") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else     
+        if (environment == "idam-demo") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else     
+        if (environment == "idam-ithc") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else  
+        if (environment == "idam-perftest") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else       
+        if (environment == "idam-preview") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else        
+        if (environment == "idam-saat") {
+            return "b44eb479-9ae2-42e7-9c63-f3c599719b6f"
+        } else
+        if (environment == "idam-sandbox") {
+            return "b3394340-6c9f-44ca-aa3e-9ff38bd1f9ac"  
         } else {
-            return "b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+            return "2b1afc19-5ca9-4796-a56f-574a58670244"
         }
     }
 
@@ -42,6 +136,8 @@ class AzPrivateDns extends Az {
     def registerAzDns(recordName, serviceIP) {
 
         def subscriptionId = this.dnsSubId(environment)
+
+        def resourceGroup = this.resourceGroupName(environment)
 
         def ttl = this.ttl(environment)
 
