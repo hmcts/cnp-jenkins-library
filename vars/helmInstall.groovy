@@ -113,6 +113,9 @@ def call(DockerImage dockerImage, Map params) {
 
       deleted = true
       helm.delete(dockerImage.getImageTag(), namespace)
+      echo "Deleted release for ${dockerImage.getImageTag()} as previous release was not 'deployed'"
+    } else {
+      echo "Skipping delete for ${dockerImage.getImageTag()} as it doesn't exist or the last version was deployed successfully"
     }
 
     // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
