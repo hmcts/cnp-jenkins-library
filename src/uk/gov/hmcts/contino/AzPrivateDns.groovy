@@ -65,9 +65,7 @@ class AzPrivateDns extends Az {
         } else
         if (environment == "idam-sandbox") {
             return "mgmt-intdns-sboxintsvc"
-        } else {
-            return "mgmt-intdns-prod"
-        }  
+        } 
     }
 
     def dnsSubId(environment) {
@@ -118,9 +116,7 @@ class AzPrivateDns extends Az {
         } else
         if (environment == "idam-sandbox") {
             return "b3394340-6c9f-44ca-aa3e-9ff38bd1f9ac"  
-        } else {
-            return "2b1afc19-5ca9-4796-a56f-574a58670244"
-        }
+        } 
     }
 
     def ttl(environment) {
@@ -134,15 +130,14 @@ class AzPrivateDns extends Az {
     }
 
     def registerAzDns(recordName, serviceIP) {
+        if (!IPV4Validator.validate(serviceIP)) {
+            throw new RuntimeException("Invalid IP address [${serviceIP}].")
+    }
 
         def subscriptionId = this.dnsSubId(environment)
-
         def resourceGroup = this.resourceGroupName(environment)
-
         def ttl = this.ttl(environment)
-
         def zone = "service.core-compute-${environment}.internal"
-
         def json = JsonOutput.toJson(
             [
                 "properties": [
