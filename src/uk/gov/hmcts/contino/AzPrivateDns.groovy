@@ -147,9 +147,17 @@ class AzPrivateDns extends Az {
             [
                 "properties": [
                 "ttl": "${ttl}",
-                "aRecords": [["ipv4Address": serviceIP]]
+                "aRecords": [["ipv4Address": "${serviceIP}"]]
                 ],
         ])
+
+        // def jsoncname = JsonOutput.toJson(
+        //     [
+        //         "properties": [
+        //         "ttl": "${ttl}",
+        //         "cnameRecord": [["cname": "${serviceIP}"]]
+        //         ],
+        // ])
 
         this.steps.echo "Registering DNS for ${recordName} to ${serviceIP}, properties: ${json}"
         def accessToken = this.az "account get-access-token --query accessToken -o tsv"
