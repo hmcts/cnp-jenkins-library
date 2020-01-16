@@ -6,6 +6,7 @@
 # smoke or functional
 _task=${TASK:-smoke}
 _type=${TASK_TYPE}
+_success_timeout=${SUCCESS_TIMEOUT:-3600}
 
 _healthy="false"
 
@@ -31,18 +32,53 @@ sh gradlew --info --rerun-tasks "$_task"
 
 [ "$?" == "0" ] && _success="true" || _success="false"
 
+TEST_HOST=$(echo "$TEST_URL" |sed 's!^https*://!!' |sed 's![^-_a-zA-Z0-9]!_!g')
+
+wget -O kubectl https://storage.googleapis.com/kubernetes-release/release/v1.16.4/bin/linux/amd64/kubectl
+
+hasConfigMap=$(kubectl get configmap test-runs-configmap)
+currentDate=$(date '+%s')
+currentRun="${_success};1;${currentDate}"
+
+if [ "$hasConfigMap" != "" ]
+then
+  previousRun=$(kubectl get configmap test-runs-configmap -o jsonpath='{.data.'${TEST_HOST}'}')
+  if [ "$previousRun" != "" ]
+  then
+    previousSuccess=$(echo "$previousRun" |cut -d";" -f1)
+    previousCount=$(echo "$previousRun" |cut -d";" -f2)
+    previousDate=$(echo "$previousRun" |cut -d";" -f3)
+    if [ "$previousSuccess" != "true" ]
+    then
+      if [ "$_success" == "true" ]
+      then
+        if [ $(($currentDate - $previousDate)) -lt "$_success_timeout" ]
+        then
+          export SLACK_MESSAGE_SUCCESS="Gradle Build Fixed: ${CLUSTER_NAME} ${TEST_URL}"
+          export SLACK_NOTIFY_SUCCESS=true
+        fi
+      else
+        currentRun="${_success};$(($previousCount + 1));${currentDate}"
+      fi
+    fi
+  fi
+  kubectl patch configmap test-runs-configmap --type merge -p '{"data":{"'${TEST_HOST}'":"'"${currentRun}"'"}}'
+else
+  kubectl create configmap test-runs-configmap --from-literal="${TEST_HOST}"="${currentRun}"
+fi
+
 # Notify slack channel
 if [ "$SLACK_WEBHOOK" != "" ] && [ "$SLACK_CHANNEL" != "" ]
 then
   _slackNotifySuccess=${SLACK_NOTIFY_SUCCESS:-true}
   if [ "$_success" == "true" ]
   then
-      _slackDefaultMessage="Gradle Build Success: ${CLUSTER_NAME} ${TEST_URL}" \
-      _slackMessage=${SLACK_MESSAGE_SUCCESS:-$_slackDefaultMessage}
+    _slackDefaultMessage="Gradle Build Success: ${CLUSTER_NAME} ${TEST_URL}"
+    _slackMessage=${SLACK_MESSAGE_SUCCESS:-$_slackDefaultMessage}
     _slackIcon=${SLACK_ICON_SUCCESS:-banana-dance}
   else
-      _slackDefaultMessage="Gradle Build Failure: ${CLUSTER_NAME} ${TEST_URL}" \
-      _slackMessage=${SLACK_MESSAGE_FAILURE:-$_slackDefaultMessage}
+    _slackDefaultMessage="Gradle Build Failure: ${CLUSTER_NAME} ${TEST_URL}"
+    _slackMessage=${SLACK_MESSAGE_FAILURE:-$_slackDefaultMessage}
     _slackIcon=${SLACK_ICON_FAILURE:-boom}
   fi
   if [ "$_success" == "false" ] || [ "$_slackNotifySuccess" == "true" ]
