@@ -35,14 +35,15 @@ sh gradlew --info --rerun-tasks "$_task"
 TEST_HOST=$(echo "$TEST_URL" |sed 's!^https*://!!' |sed 's![^-_a-zA-Z0-9]!_!g')
 
 wget -O kubectl https://storage.googleapis.com/kubernetes-release/release/v1.16.4/bin/linux/amd64/kubectl
+chmod 750 kubectl
 
-hasConfigMap=$(kubectl get configmap test-runs-configmap)
+hasConfigMap=$(./kubectl get configmap test-runs-configmap)
 currentDate=$(date '+%s')
 currentRun="${_success};1;${currentDate}"
 
 if [ "$hasConfigMap" != "" ]
 then
-  previousRun=$(kubectl get configmap test-runs-configmap -o jsonpath='{.data.'${TEST_HOST}'}')
+  previousRun=$(./kubectl get configmap test-runs-configmap -o jsonpath='{.data.'${TEST_HOST}'}')
   if [ "$previousRun" != "" ]
   then
     previousSuccess=$(echo "$previousRun" |cut -d";" -f1)
@@ -62,9 +63,9 @@ then
       fi
     fi
   fi
-  kubectl patch configmap test-runs-configmap --type merge -p '{"data":{"'${TEST_HOST}'":"'"${currentRun}"'"}}'
+  ./kubectl patch configmap test-runs-configmap --type merge -p '{"data":{"'${TEST_HOST}'":"'"${currentRun}"'"}}'
 else
-  kubectl create configmap test-runs-configmap --from-literal="${TEST_HOST}"="${currentRun}"
+  ./kubectl create configmap test-runs-configmap --from-literal="${TEST_HOST}"="${currentRun}"
 fi
 
 # Notify slack channel
