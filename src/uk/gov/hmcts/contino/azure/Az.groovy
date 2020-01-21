@@ -11,7 +11,7 @@ class Az {
     this.subscription = subscription
 
     this.az = { cmd ->
-      return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az ${cmd}", returnStdout: true)?.trim()
+      return steps.sh(label: "az ${cmd}", script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az ${cmd}", returnStdout: true)?.trim()
     }
   }
 

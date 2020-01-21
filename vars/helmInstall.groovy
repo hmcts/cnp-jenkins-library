@@ -7,7 +7,6 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 
 def call(DockerImage dockerImage, Map params) {
@@ -33,8 +32,10 @@ def call(DockerImage dockerImage, Map params) {
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
 
+  def namespace = new TeamConfig(this).getNameSpace(product)
+
   def templateEnvVars = [
-    "NAMESPACE=${aksServiceName}",
+    "NAMESPACE=${namespace}",
     "SERVICE_NAME=${aksServiceName}",
     "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
@@ -50,14 +51,9 @@ def call(DockerImage dockerImage, Map params) {
 
     def values = []
     def chartName = "${product}-${component}"
-    def namespace = new TeamConfig(this).getNameSpace(product)
 
     def helm = new Helm(this, chartName)
     helm.setup()
-    if(subscription != "sandbox" && params.aksSubscription.tlsEnabled) {
-      helm.enableTLS(params.aksSubscription.name, params.aksSubscription.keyvaultName)
-    }
-
 
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
@@ -90,8 +86,8 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def options = [
-      "--set global.subscriptionId=${this.env.AZURE_SUBSCRIPTION_ID} ",
-      "--set global.tenantId=${this.env.AZURE_TENANT_ID} ",
+      "--set global.subscriptionId=${this.env.ARM_SUBSCRIPTION_ID} ",
+      "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
       "--set global.devMode=true",
@@ -100,10 +96,13 @@ def call(DockerImage dockerImage, Map params) {
 
     if (!config.serviceApp) {
       //Forcing Jobs deployed through Jenkins to be Job to avoid cronJobs being run forever.
-      options.add("--set global.job.kind=Job")
+        options.add("--set global.job.kind=Job")
+        options.add("--set global.jobKind=Job")
+        options.add("--set global.smoketestscron.enabled=false")
+        options.add("--set global.functionaltestscron.enabled=false")
       //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
       if(helm.exists(dockerImage.getImageTag(), namespace)){
-        helm.delete(dockerImage.getImageTag())
+        helm.delete(dockerImage.getImageTag(), namespace)
       }
     }
 
@@ -113,7 +112,10 @@ def call(DockerImage dockerImage, Map params) {
       !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
-      helm.delete(dockerImage.getImageTag())
+      helm.delete(dockerImage.getImageTag(), namespace)
+      echo "Deleted release for ${dockerImage.getImageTag()} as previous release was not 'deployed'"
+    } else {
+      echo "Skipping delete for ${dockerImage.getImageTag()} as it doesn't exist or the last version was deployed successfully"
     }
 
     // When deleting we might need to wait as some deprovisioning operations are async (i.e. osba)
@@ -128,7 +130,7 @@ def call(DockerImage dockerImage, Map params) {
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
-        helm.delete(dockerImage.getImageTag())
+        helm.delete(dockerImage.getImageTag(), namespace)
         sleep(attempts * 60)
         attempts++
         echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
@@ -146,7 +148,7 @@ def call(DockerImage dockerImage, Map params) {
       consul.registerDns(aksServiceName, ingressIP)
 
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
-      echo "Your AKS service can be reached at: https://${env.SERVICE_FQDN}"
+      echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
 
       def url = env.AKS_TEST_URL + '/health'
       def healthChecker = new HealthChecker(this)
@@ -161,7 +163,8 @@ def call(DockerImage dockerImage, Map params) {
 
 def addGithubLabels() {
   def namespaceLabel   = 'ns:' + env.NAMESPACE
-  def labels = [namespaceLabel]
+  def releaseLabel   = 'rel:' + env.SERVICE_NAME
+  def labels = [namespaceLabel, releaseLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)

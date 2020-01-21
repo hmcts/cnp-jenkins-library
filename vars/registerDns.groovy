@@ -9,7 +9,7 @@ def call(Map params) {
 
     // Staging DNS registration
     if (config.legacyDeploymentForEnv(params.environment)) {
-      withIlbIp(params.environment) {
+      withIlbIp(params.subscription, params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
         consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
       }

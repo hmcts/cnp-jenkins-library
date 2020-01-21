@@ -19,11 +19,11 @@ script is expected to be called as part of withPipeline just
 after spinInfra.
  --------------------------------------------------------------*/
 
-def call(environment) {
-  call(environment, '')
+def call(subscription, environment) {
+  call(subscription, environment, '')
 }
 
-def call(environment, deploymentTarget) {
+def call(subscription, environment, deploymentTarget) {
 
   def environmentDt = "${environment}${deploymentTarget}"
 
@@ -31,37 +31,22 @@ def call(environment, deploymentTarget) {
 
   println "Registering application to the scm service"
 
-// Get Auth Token
-  println "Getting access token from management.azure.com ..."
-  OkHttpClient client = new OkHttpClient.Builder()
-    .connectTimeout(90, TimeUnit.SECONDS)
-    .writeTimeout(90, TimeUnit.SECONDS)
-    .readTimeout(90, TimeUnit.SECONDS)
-    .build()
+  def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+  def authtoken = az "account get-access-token --query accessToken -o tsv"
 
-  MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded")
-  def urlSafeClientSecret = java.net.URLEncoder.encode(env.ARM_CLIENT_SECRET, "UTF-8")
-  RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=" + env.ARM_CLIENT_ID + "&client_secret=" + urlSafeClientSecret)
-  Request request = new Request.Builder()
-    .url("https://login.microsoftonline.com/" + env.ARM_TENANT_ID + "/oauth2/token")
-    .post(body)
-    .addHeader("content-type", "application/x-www-form-urlencoded")
-    .addHeader("cache-control", "no-cache")
-    .build()
-
-  Response response = client.newCall(request).execute()
-
-
-  def responsebody = new JsonSlurper().parseText(response.body().string())
-  def authtoken = responsebody.access_token
-
-// Get ServerFarms list
+  // Get ServerFarms list
   println "Getting a list of the current apps deployed ..."
   Request requestfarms = new Request.Builder()
     .url("https://management.azure.com/subscriptions/${env.ARM_SUBSCRIPTION_ID}/resourceGroups/core-infra-$environmentDt/providers/Microsoft.Web/hostingEnvironments/core-compute-$environmentDt/sites?api-version=2016-09-01")
     .get()
     .addHeader("authorization", "Bearer " + authtoken)
     .addHeader("cache-control", "no-cache")
+    .build()
+
+  OkHttpClient client = new OkHttpClient.Builder()
+    .connectTimeout(90, TimeUnit.SECONDS)
+    .writeTimeout(90, TimeUnit.SECONDS)
+    .readTimeout(90, TimeUnit.SECONDS)
     .build()
 
   Response responsefarms = client.newCall(requestfarms).execute()
@@ -138,4 +123,3 @@ def call(environment, deploymentTarget) {
 
   println("Result code for scm service registration: " + responsescm.code())
 }
-

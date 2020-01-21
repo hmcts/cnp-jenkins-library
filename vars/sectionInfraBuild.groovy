@@ -11,7 +11,7 @@ def call(params) {
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription )
   approvedEnvironmentRepository(environment, metricsPublisher) {
     withSubscription(subscription) {
-      withIlbIp(environment) {
+      withIlbIp(subscription, environment) {
         // build environment infrastructure once
         tfOutput = spinInfra(product, null, environment, planOnly, subscription)
 

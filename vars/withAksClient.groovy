@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.Environment
 
 def call(String subscription, String environment, Closure block) {
-  withDocker('hmcts/cnp-aks-client:az-2.0.61-kubectl-1.13.5-helm-2.14.0', null) {
+  withDocker('hmcts/cnp-aks-client:az-2.0.61-kubectl-1.16.2-helm-3.0.2', null) {
     withSubscription(subscription) {
       withRegistrySecrets {
         def envName = environment.replace('idam-', '').toUpperCase()

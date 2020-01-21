@@ -1,0 +1,24 @@
+FROM openjdk:11.0-jdk AS build-env
+WORKDIR /opt/app
+
+RUN groupadd -g 1000 hmcts && useradd -u 1000 -d /opt/app -g hmcts hmcts
+USER hmcts
+
+COPY --chown=hmcts:hmcts . /opt/app/
+RUN sed -i 's/-all\.zip/-bin.zip/' /opt/app/gradle/wrapper/gradle-wrapper.properties
+
+ENV GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx768m -Dfile.encoding=UTF-8"
+
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks testClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks smokeTestClasses || :"]
+RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks functionalTestClasses || :"]
+
+
+FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.4
+
+WORKDIR /opt/app
+USER hmcts
+
+COPY --from=build-env --chown=hmcts:hmcts /opt/app /opt/app
+
+ENTRYPOINT ["sh", "runTests.sh"]

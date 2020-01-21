@@ -36,18 +36,6 @@ class HelmTest extends Specification {
       })
   }
 
-  def "init() should execute the correct command"() {
-    when:
-    helm.init()
-
-    then:
-    1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm init  --client-only") &&
-      it.containsKey('returnStdout') &&
-      it.get('returnStdout').equals(true)
-    })
-  }
-
   def "configureAcr() should use the subscription passed in"() {
     when:
     helm.configureAcr()
@@ -71,11 +59,11 @@ class HelmTest extends Specification {
 
   def "delete() should execute with the correct chart and options"() {
     when:
-    helm.delete("pr-1")
+    helm.delete("pr-1", "default")
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm delete ${CHART}-pr-1  --purge") &&
+      it.get('script').contains("helm uninstall ${CHART}-pr-1") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)
     })
@@ -83,11 +71,11 @@ class HelmTest extends Specification {
 
   def "history() should execute with the correct chart and options"() {
     when:
-    helm.history("pr-1")
+    helm.history("pr-1", "default")
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm history ${CHART}-pr-1  -o json") &&
+      it.get('script').contains("helm history ${CHART}-pr-1  --namespace default -o json") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)
     })
