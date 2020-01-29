@@ -75,6 +75,7 @@ class WebAppDeploy implements Serializable {
     steps.sh("echo '/node_modules/' >> .gitignore")
     steps.sh("echo '/log/' >> .gitignore")
     steps.sh("echo '/lib/' >> .gitignore")
+    steps.sh("echo '.scannerwork/' >> .gitignore")
     steps.sh("echo 'coverage' >> .gitignore")
     steps.writeFile file: 'deploy.cmd', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/deploy.cmd')
     steps.writeFile file: '.deployment', text: steps.libraryResource('uk/gov/hmcts/contino/yarn-install/.deployment')
