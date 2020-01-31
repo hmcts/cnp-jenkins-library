@@ -29,8 +29,8 @@ ______                              _           _ _
 ================================================================================
 '''
 
-  try {
-    node {
+  node {
+    try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       def tfOutput
@@ -40,7 +40,7 @@ ______                              _           _ _
       }
 
       withSubscription(subscription) {
-        withIlbIp(environment) {
+        withIlbIp(subscription, environment) {
           tfOutput = spinInfra(product, null, environment, planOnly, subscription)
           if (deploymentTarget) {
             folderExists('deploymentTarget') {
@@ -65,8 +65,8 @@ ______                              _           _ _
           }
         }
       }
+    } finally {
+      deleteDir()
     }
-  } finally {
-    deleteDir()
   }
 }

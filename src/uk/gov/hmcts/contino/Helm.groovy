@@ -9,7 +9,7 @@ class Helm {
   public static final String HELM_RESOURCES_DIR = "charts"
   def steps
   def acr
-  def helm = { cmd, name, options -> return this.steps.sh(script: "helm $cmd $name $options", returnStdout: true)}
+  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true)}
 
   def subscription
   def subscriptionId
@@ -24,7 +24,7 @@ class Helm {
   Helm(steps, String chartName) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
-    this.subscriptionId = this.steps.env.AZURE_SUBSCRIPTION_ID
+    this.subscriptionId = this.steps.env.ARM_SUBSCRIPTION_ID
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
@@ -34,13 +34,8 @@ class Helm {
   }
 
   def setup() {
-    init()
     configureAcr()
     addRepo()
-  }
-
-  def init() {
-    this.helm "init", "", "--client-only"
   }
 
   def configureAcr() {
@@ -49,15 +44,7 @@ class Helm {
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
-  }
-
-  def enableTLS(String aksSubscription, String keyVaultName){
-    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
-    def helmRoot = (this.helm ("home", "", "") ).trim()
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-ca-cert' --subscription '$aksSubscription' --file $helmRoot/ca.pem "
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-cert' --subscription '$aksSubscription' --file $helmRoot/cert.pem "
-    az "keyvault secret download --vault-name '$keyVaultName' --name 'helm-pki-helm-key' --subscription '$aksSubscription' --file $helmRoot/key.pem "
-    this.tlsOptions = "--tls"
+    steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
 
   def publishIfNotExists(List<String> values) {
@@ -66,7 +53,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -100,7 +87,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def allOptions = ["--install", "--wait", "--timeout 500", this.tlsOptions] + (options == null ? [] : options)
+    def allOptions = ["--install", "--wait", "--timeout 500s", this.tlsOptions] + (options == null ? [] : options)
     def allValues = values.flatten()
     this.execute("upgrade", "${this.chartName}-${imageTag} ${this.chartLocation}", allValues, allOptions)
   }
@@ -109,25 +96,27 @@ class Helm {
     this.execute("dependency update", this.chartLocation)
   }
 
-  def delete(String imageTag) {
-    this.execute("delete", "${this.chartName}-${imageTag}", null, ["--purge", this.tlsOptions])
+  def delete(String imageTag, String namespace) {
+    this.execute("uninstall", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", this.tlsOptions])
   }
 
   def exists(String imageTag, String namespace) {
-    def deployments = this.execute("list", "", null, ["-q", "--namespace ${namespace}", this.tlsOptions])
+    def deployments = this.execute("list", "", null, ["--all", "-q", "--namespace ${namespace}", this.tlsOptions])
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
-  def history(String imageTag) {
-    this.execute("history", "${this.chartName}-${imageTag}", null, ["-o json", this.tlsOptions])
+  def history(String imageTag, String namespace) {
+    this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json", this.tlsOptions])
   }
 
   def hasAnyDeployed(String imageTag, String namespace) {
     if (!exists(imageTag, namespace)) {
+      this.steps.echo "No release deployed for: $imageTag in namespace $namespace"
       return false
     }
-    def releases = this.history(imageTag)
-    return !releases || new JsonSlurper().parseText(releases).any{it.status == "DEPLOYED"}
+    def releases = this.history(imageTag, namespace)
+    this.steps.echo releases
+    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "deployed" }
   }
 
   private Object execute(String command, String name) {

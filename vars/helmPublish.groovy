@@ -6,7 +6,6 @@ def call(Map params) {
     String chartName = "${params.product}-${params.component}"
 
     Helm helm = new Helm(this, chartName)
-    helm.init()
 
     def templateEnvVars = [
       "IMAGE_NAME=https://hmcts.azurecr.io/hmcts/${params.product}-${params.component}:latest",

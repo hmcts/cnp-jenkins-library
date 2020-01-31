@@ -34,7 +34,7 @@ class withNodeJsPipelinePactOnMaster extends BaseCnpPipelineTest {
     }
 
     stubPactBroker.demand.with {
-      canIDeploy(1) { version -> return null }
+      canIDeploy(0) { version -> return null }
     }
 
     def mockDeployer = new MockFor(NodeDeployer)

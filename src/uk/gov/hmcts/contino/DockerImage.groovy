@@ -4,6 +4,8 @@ import uk.gov.hmcts.contino.azure.Acr
 
 class DockerImage {
 
+  public static final String TEST_REPO = "test"
+
   // environment the image has been promoted to
   enum DeploymentStage {
     PR('pr'),
