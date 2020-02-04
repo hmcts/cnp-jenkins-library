@@ -12,21 +12,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     this.steps = steps
   }
 
-
-  @Deprecated
-  void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
-    WarningCollector.addPipelineWarning("deprecated_load_vault_secrets", "loadVaultSecrets(List<Map<String, Object>> vaultSecrets) is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
-    config.vaultSecrets = ['unknown': vaultSecrets]
-  }
-
   void loadVaultSecrets(Map<String, List<Map<String, Object>>> vaultSecrets) {
     config.vaultSecrets = vaultSecrets
-  }
-
-  @Deprecated
-  void setVaultName(String vaultName) {
-    config.vaultName = vaultName
-    WarningCollector.addPipelineWarning("deprecated_set_vault_name", "setVaultName() is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
   }
 
   void enableDbMigration(String dbMigrationVaultName = "") {
