@@ -54,16 +54,7 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
   }
-
-  def "load vault secrets - deprecated"() {
-    given:
-      def secrets = [['secretName': 'name', 'var': 'var']]
-    when:
-      dsl.loadVaultSecrets(secrets)
-    then:
-      thrown RuntimeException
-  }
-
+  
   def "ensure enable db migration"() {
     when:
       dsl.enableDbMigration()
