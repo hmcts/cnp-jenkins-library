@@ -34,40 +34,38 @@ def call(params) {
 
   Builder builder = pipelineType.builder
 
-  if (config.dockerBuild) {
-
-    withAcrClient(subscription) {
-      acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-      dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
-      onPR {
-        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
-      }
+  withAcrClient(subscription) {
+    acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+    dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
+    onPR {
+      acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
+  }
 
-    if (config.installCharts) {
-      withSubscription(subscription) {
-        withTeamSecrets(config, environment) {
-          stage("AKS deploy - ${environment}") {
-            pcr.callAround('akschartsinstall') {
-              timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
-                onPR {
-                  deploymentNumber = githubCreateDeployment()
-                }
-                withAksClient(subscription, environment) {
-                  aksUrl = helmInstall(dockerImage, params)
-                  log.info("deployed component URL: ${aksUrl}")
-                }
-                onPR {
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-                }
+  if (config.installCharts) {
+    withSubscription(subscription) {
+      withTeamSecrets(config, environment) {
+        stage("AKS deploy - ${environment}") {
+          pcr.callAround('akschartsinstall') {
+            timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+              onPR {
+                deploymentNumber = githubCreateDeployment()
+              }
+              withAksClient(subscription, environment) {
+                aksUrl = helmInstall(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
+              }
+              onPR {
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
               }
             }
           }
         }
       }
     }
+  }
 
-    if (config.installCharts && config.serviceApp) {
+  if (config.installCharts && config.serviceApp) {
       withSubscription(subscription) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
@@ -79,7 +77,7 @@ def call(params) {
               }
             }
           }
-          
+
           onFunctionalTestEnvironment(environment) {
             stage("Functional Test - AKS ${environment}") {
               testEnv(aksUrl) {
@@ -151,5 +149,4 @@ def call(params) {
         }
       }
     }
-  }
 }
