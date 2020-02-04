@@ -5,7 +5,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   Map<String, String> vaultEnvironmentOverrides = ['preview':'aat']
   String vaultName
   boolean migrateDb = false
-  boolean uniqueDbMigrateSecretNames = false;
   String dbMigrationVaultName
 
   boolean performanceTest = false
