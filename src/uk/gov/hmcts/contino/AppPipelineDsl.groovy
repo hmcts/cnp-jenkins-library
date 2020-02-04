@@ -45,8 +45,9 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.securityScan = true
   }
 
+  @Deprecated // no longer required, kept so that builds don't break if they contain it
   void enableDockerBuild() {
-    config.dockerBuild = true
+    WarningCollector.addPipelineWarning("docker_build_enabled", "enableDockerBuild() is deprecated, a Dockerfile has been mandatory since 17/12/2019, please remove this option from your Jenkinsfile", new Date().parse("dd.MM.yyyy", "18.02.2020"))
   }
 
   void installCharts() {
