@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 CHART_DIRECTORY=${1}-${2}
 
 git fetch origin master:master
