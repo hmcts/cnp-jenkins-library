@@ -94,7 +94,7 @@ def call(params) {
     }
 
     withSubscription(subscription) {
-      withTeamSecrets(config, environment, mergedTfOutput?.vaultUri?.value) {
+      withTeamSecrets(config, environment) {
         stage("Smoke Test - ${environmentDt} (staging slot)") {
           testEnv(deployer.getServiceUrl(environmentDt, "staging"), mergedTfOutput) {
             pcr.callAround("smoketest:${environmentDt}-staging") {

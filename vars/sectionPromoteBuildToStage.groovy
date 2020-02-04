@@ -36,8 +36,7 @@ def call(params) {
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stage("${deploymentStage.label} build promotion") {
-    if (config.dockerBuild) {
-      withAcrClient(subscription) {
+    withAcrClient(subscription) {
 
         def projectBranch = new ProjectBranch(env.BRANCH_NAME)
         def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
@@ -54,6 +53,5 @@ def call(params) {
           }
         }
       }
-    }
   }
 }

@@ -12,21 +12,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     this.steps = steps
   }
 
-
-  @Deprecated
-  void loadVaultSecrets(List<Map<String, Object>> vaultSecrets) {
-    WarningCollector.addPipelineWarning("deprecated_load_vault_secrets", "loadVaultSecrets(List<Map<String, Object>> vaultSecrets) is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
-    config.vaultSecrets = ['unknown': vaultSecrets]
-  }
-
   void loadVaultSecrets(Map<String, List<Map<String, Object>>> vaultSecrets) {
     config.vaultSecrets = vaultSecrets
-  }
-
-  @Deprecated
-  void setVaultName(String vaultName) {
-    config.vaultName = vaultName
-    WarningCollector.addPipelineWarning("deprecated_set_vault_name", "setVaultName() is deprecated, see https://github.com/hmcts/cnp-jenkins-library#secrets-for-functional--smoke-testing ", new Date().parse("dd.MM.yyyy", "27.08.2019"))
   }
 
   void enableDbMigration(String dbMigrationVaultName = "", boolean uniqueSecretNames = false) {
@@ -59,8 +46,9 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.securityScan = true
   }
 
+  @Deprecated // no longer required, kept so that builds don't break if they contain it
   void enableDockerBuild() {
-    config.dockerBuild = true
+    WarningCollector.addPipelineWarning("docker_build_enabled", "enableDockerBuild() is deprecated, a Dockerfile has been mandatory since 17/12/2019, please remove this option from your Jenkinsfile", new Date().parse("dd.MM.yyyy", "18.02.2020"))
   }
 
   void installCharts() {

@@ -27,7 +27,6 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.apiGatewayTest).isFalse()
       assertThat(pipelineConfig.crossBrowserTest).isFalse()
       assertThat(pipelineConfig.mutationTest).isFalse()
-      assertThat(pipelineConfig.dockerBuild).isFalse()
       assertThat(pipelineConfig.installCharts).isFalse()
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
       assertThat(pipelineConfig.securityScan).isFalse()
@@ -55,16 +54,7 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
   }
-
-  def "load vault secrets - deprecated"() {
-    given:
-      def secrets = [['secretName': 'name', 'var': 'var']]
-    when:
-      dsl.loadVaultSecrets(secrets)
-    then:
-      thrown RuntimeException
-  }
-
+  
   def "ensure enable db migration"() {
     when:
       dsl.enableDbMigration()
@@ -94,13 +84,6 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.crossBrowserTest).isTrue()
       assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
-  }
-
-  def "ensure enable docker build"() {
-    when:
-      dsl.enableDockerBuild()
-    then:
-      assertThat(pipelineConfig.dockerBuild).isTrue()
   }
 
   def "ensure install charts"() {

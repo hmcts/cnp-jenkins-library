@@ -26,13 +26,11 @@ def call(params) {
   stage('Checkout') {
     pcr.callAround('checkout') {
       checkoutScm()
-      if (config.dockerBuild) {
-        withAcrClient(subscription) {
-          projectBranch = new ProjectBranch(env.BRANCH_NAME)
-          acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-          dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
-          noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
-        }
+      withAcrClient(subscription) {
+        projectBranch = new ProjectBranch(env.BRANCH_NAME)
+        acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+        dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
+        noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
       }
     }
   }
@@ -54,7 +52,7 @@ def call(params) {
         }
       }
     }
-    
+
   }
 
   stage("Tests/Checks/Container build") {
@@ -92,30 +90,27 @@ def call(params) {
         },
 
         "Docker Build": {
-          if (config.dockerBuild) {
-            withAcrClient(subscription) {
+          withAcrClient(subscription) {
+            def acbTemplateFilePath = 'acb.tpl.yaml'
+            def dockerfileTest = 'Dockerfile_test'
+            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-              def acbTemplateFilePath = 'acb.tpl.yaml'
-              def dockerfileTest = 'Dockerfile_test'
-              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-
-              pcr.callAround('dockerbuild') {
-                timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
-                  def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-                  if (fileExists(acbTemplateFilePath)) {
-                    acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-                  } else {
-                    acr.build(dockerImage, buildArgs)
+            pcr.callAround('dockerbuild') {
+              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+                def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+                if (fileExists(acbTemplateFilePath)) {
+                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                } else {
+                  acr.build(dockerImage, buildArgs)
+                }
+                if (isOnMaster && fileExists('build.gradle')) {
+                  writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
+                  writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
+                  if (!fileExists(dockerfileTest)) {
+                    writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
                   }
-                  if (isOnMaster && fileExists('build.gradle')) {
-                    writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
-                    writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
-                    if (!fileExists(dockerfileTest)) {
-                      writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
-                    }
-                    def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
-                    acr.build(dockerImageTest, " -f ${dockerfileTest}")
-                  }
+                  def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
+                  acr.build(dockerImageTest, " -f ${dockerfileTest}")
                 }
               }
             }
