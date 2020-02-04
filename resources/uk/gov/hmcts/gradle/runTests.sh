@@ -6,7 +6,7 @@
 # smoke or functional
 _task=${TASK:-smoke}
 _type=${TASK_TYPE}
-_success_timeout=${SUCCESS_TIMEOUT:-3600}
+_success_timeout=${SUCCESS_TIMEOUT:-21600}   # 6 hours default
 
 _healthy="false"
 
