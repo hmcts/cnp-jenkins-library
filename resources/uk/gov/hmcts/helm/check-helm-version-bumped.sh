@@ -4,7 +4,7 @@ CHART_DIRECTORY=${1}-${2}
 
 git fetch origin master:master
 
-git diff --no-patch --exit-code master charts/"${CHART_DIRECTORY}"/values.yaml
+git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/values.yaml
 
 if [ $? -eq 1 ]; then
   echo "Diff in values.yaml detected"
@@ -13,7 +13,7 @@ else
   DIFF_IN_VALUES=false
 fi
 
-git diff --no-patch --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
+git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
 
 if [ $? -eq 1 ]; then
   echo "Diff in requirements.yaml detected"
