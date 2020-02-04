@@ -53,7 +53,7 @@ def call(params) {
               }
               withAksClient(subscription, environment) {
                 params.environment = params.environment.replace('idam-', '')
-                println "Using AKS environment: ${params.environment}"
+                log.info("Using AKS environment: ${params.environment}")
                 aksUrl = helmInstall(dockerImage, params)
                 log.info("deployed component URL: ${aksUrl}")
               }
