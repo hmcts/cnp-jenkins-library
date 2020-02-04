@@ -40,10 +40,11 @@ chmod 750 kubectl
 hasConfigMap=$(./kubectl get configmap test-runs-configmap)
 currentDate=$(date '+%s')
 currentRun="${_success};1;${currentDate}"
+hostAndTask="${TEST_HOST}-${_task}"
 
 if [ "$hasConfigMap" != "" ]
 then
-  previousRun=$(./kubectl get configmap test-runs-configmap -o jsonpath='{.data.'${TEST_HOST}'}')
+  previousRun=$(./kubectl get configmap test-runs-configmap -o jsonpath='{.data.'${hostAndTask}'}')
   if [ "$previousRun" != "" ]
   then
     previousSuccess=$(echo "$previousRun" |cut -d";" -f1)
@@ -63,9 +64,9 @@ then
       fi
     fi
   fi
-  ./kubectl patch configmap test-runs-configmap --type merge -p '{"data":{"'${TEST_HOST}'":"'"${currentRun}"'"}}'
+  ./kubectl patch configmap test-runs-configmap --type merge -p '{"data":{"'${hostAndTask}'":"'"${currentRun}"'"}}'
 else
-  ./kubectl create configmap test-runs-configmap --from-literal="${TEST_HOST}"="${currentRun}"
+  ./kubectl create configmap test-runs-configmap --from-literal="${hostAndTask}"="${currentRun}"
 fi
 
 # Notify slack channel
