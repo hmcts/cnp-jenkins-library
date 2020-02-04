@@ -2,6 +2,8 @@
 
 CHART_DIRECTORY=${1}-${2}
 
+git fetch origin master:master
+
 git diff --no-patch --exit-code master charts/"${CHART_DIRECTORY}"/values.yaml
 
 if [ $? -eq 1 ]; then
@@ -11,7 +13,7 @@ else
   DIFF_IN_VALUES=false
 fi
 
-git diff --no-patch --exit-code master charts/"${CHART_DIRECTORY}"/requirements.yaml
+git diff --no-patch --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
 
 if [ $? -eq 1 ]; then
   echo "Diff in requirements.yaml detected"
@@ -25,7 +27,7 @@ if [[ ${DIFF_IN_VALUES} = 'false' ]] && [[ ${DIFF_IN_REQUIREMENTS} = 'false' ]];
   exit 0
 fi
 
-git diff master charts/"${CHART_DIRECTORY}"/Chart.yaml | grep --quiet '+version'
+git diff origin/master charts/"${CHART_DIRECTORY}"/Chart.yaml | grep --quiet '+version'
 
 if [ $? -eq 0 ]; then
   echo "Chart.yaml version has been bumped :)"
