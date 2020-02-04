@@ -1,6 +1,7 @@
 package withPipeline
 
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import uk.gov.hmcts.contino.MockDocker
 import uk.gov.hmcts.contino.MockJenkins
 import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
@@ -24,7 +25,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     binding.setVariable("env", [
       BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
       ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
-      CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:'', GIT_COMMIT: '', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'])
+      CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:'', GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'])
+    binding.setVariable("docker", new MockDocker())
 
     def library = library()
       .name('Infrastructure')
@@ -52,7 +54,9 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class], {})
     helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class, String.class], {})
     helper.registerAllowedMethod("registerDns", [LinkedHashMap.class], {})
-    helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], null)
+    helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], { secrets, body ->
+      body.call()
+    })
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
