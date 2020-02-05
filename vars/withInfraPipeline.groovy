@@ -73,7 +73,9 @@ def call(String product, Closure body) {
       throw err
     } finally {
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
-      deleteDir()
+      if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+        deleteDir()
+      }
     }
 
     notifyBuildFixed channel: slackChannel
