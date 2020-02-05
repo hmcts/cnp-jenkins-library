@@ -37,6 +37,10 @@ def call(params) {
 
 
   stage("Build") {
+    onPR {
+      enforceChartVersionBumped product: product, component: component
+    }
+
     builder.setupToolVersion()
 
     if (!fileExists('Dockerfile')) {
