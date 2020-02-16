@@ -5,6 +5,9 @@ def call(Map params) {
   AppPipelineConfig config = params.appPipelineConfig
 
   withAksClient(params.subscription, params.environment) {
+    if (!config.legacyDeploymentForEnv(params.environment)) {
+      params.environment = params.environment.replace('idam-', '')
+    }
     Consul consul = new Consul(this, params.environment)
 
     // Staging DNS registration
