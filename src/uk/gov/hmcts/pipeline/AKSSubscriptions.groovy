@@ -29,6 +29,6 @@ class AKSSubscriptions {
     prod = new AKSSubscription(steps, prodName, prodKvName, 'prod', true)
 
     def demoName = steps.env.AKS_DEMO_SUBSCRIPTION_NAME ?: 'DCD-CFTAPPS-DEMO'
-    prod = new AKSSubscription(steps, demoName, 'cftapps-demo', 'demo', true)
+    demo = new AKSSubscription(steps, demoName, 'cftapps-demo', 'demo', true)
   }
 }
