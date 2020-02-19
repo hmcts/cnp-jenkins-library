@@ -148,7 +148,7 @@ EOF
 
   def yarn(task) {
     if (!steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
-      runYarn("--mutex network install --frozen-lockfile")
+      runYarn("--mutex network install --frozen-lockfile --ignore-optional")
       steps.sh("touch ${INSTALL_CHECK_FILE}")
     }
     runYarn(task)
