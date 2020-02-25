@@ -1,10 +1,9 @@
 package uk.gov.hmcts.contino
 
-@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
-import com.microsoft.azure.documentdb.Document
-import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
 import com.cloudbees.groovy.cps.NonCPS
+
+import static uk.gov.hmcts.contino.MetricsPublisher.METRICS_RESOURCE_PATH
 
 class DocumentPublisher implements Serializable {
 
@@ -35,19 +34,27 @@ class DocumentPublisher implements Serializable {
     publish(getCosmosDbKey(), collectionLink, documents)
   }
 
-  @NonCPS
   private def publish(cosmosDbKey, collectionLink, documents) {
-
     def cosmosDbUrl = params.subscription == 'sandbox' ? DB_SANDBOX_URL : DB_DEFAULT_URL
-    def documentClient = new DocumentClient(cosmosDbUrl, cosmosDbKey, null, null)
+    def collection = collectionLink.split('/').last()
 
-    try {
-      documents.each {
-        documentClient.createDocument(collectionLink, new Document(it), null, false)
-      }
-    }
-    finally {
-      documentClient.close()
+    steps.sh "mkdir -p /tmp/metrics-reporting"
+    steps.writeFile(file: '/tmp/metrics-reporting/package.json', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/package.json"))
+    steps.writeFile(file: '/tmp/metrics-reporting/yarn.lock', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/yarn.lock"))
+    steps.writeFile(file: '/tmp/metrics-reporting/metrics-publisher.js', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/metrics-publisher.js"))
+
+    documents.each {
+      steps.sh """
+      cd /tmp/metrics-reporting/
+      chmod +x metrics-publisher.js
+      yarn install
+
+      export COSMOS_DB_URL=${cosmosDbUrl}
+      export COSMOSDB_TOKEN_KEY=${cosmosDbKey}
+      export COSMOS_COLLECTION_ID=${collection}
+
+      ./metrics-publisher.js '${it}'
+    """
     }
   }
 

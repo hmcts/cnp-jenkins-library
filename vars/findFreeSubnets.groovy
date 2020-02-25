@@ -1,5 +1,4 @@
 #!groovy
-//@Grab(group='commons-net', module='commons-net', version='3.6')
 @Grab(group='com.github.seancfoley', module='ipaddress', version='4.1.0')
 
 import inet.ipaddr.*
