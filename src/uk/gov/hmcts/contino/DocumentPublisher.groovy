@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
+@Grab('com.microsoft.azure:azure-documentdb:2.4.1')
 import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
