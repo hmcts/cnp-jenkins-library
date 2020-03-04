@@ -5,7 +5,7 @@ package uk.gov.hmcts.contino
 //  @Grab(group='joda-time', module='joda-time', version='2.10.5')
 //])
 
-@Grab(group='com.microsoft.azure', module='azure-documentdb', version='2.4.7')
+@Grab(group='com.microsoft.azure', module='azure-documentdb', version='1.16.4')
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.microsoft.azure.documentdb.Document
