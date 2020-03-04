@@ -1,9 +1,11 @@
 package uk.gov.hmcts.contino
 
-@Grapes([
-  @Grab(group='com.microsoft.azure', module='azure-documentdb', version='2.4.1'),
-  @Grab(group='joda-time', module='joda-time', version='2.10.5')
-])
+//@Grapes([
+//  @Grab(group='com.microsoft.azure', module='azure-documentdb', version='2.4.7'),
+//  @Grab(group='joda-time', module='joda-time', version='2.10.5')
+//])
+
+@Grab(group='com.microsoft.azure', module='azure-documentdb', version='2.4.7')
 
 import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
