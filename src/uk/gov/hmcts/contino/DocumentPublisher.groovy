@@ -5,7 +5,7 @@ package uk.gov.hmcts.contino
 //  @Grab(group='joda-time', module='joda-time', version='2.10.5')
 //])
 
-@Grab(group='com.microsoft.azure', module='azure-documentdb', version='1.16.4')
+@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
 
 import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
