@@ -57,13 +57,13 @@ class WarningCollectorTest extends Specification {
     assertThat(message).isEqualTo(nextDayFormattedDate+" ( tomorrow )")
   }
 
-  def "getMessageByDays() with a week later should return in 6 days"() {
+  def "getMessageByDays() with a week later should return in 7 days"() {
 
     when:
     String message = WarningCollector.getMessageByDays(nextWeek)
 
     then:
-    assertThat(message).isEqualTo(nextWeekFormattedDate+" ( in 6 days )")
+    assertThat(message).isEqualTo(nextWeekFormattedDate+" ( in 7 days )")
   }
 
   def "getSlackWarningMessage() should return expected message"() {
@@ -75,7 +75,7 @@ class WarningCollectorTest extends Specification {
     String message = WarningCollector.getSlackWarningMessage()
 
     String expectedMessage = "Test deprecation. This configuration will stop working by ${nextDayFormattedDate} ( tomorrow )\n\n" +
-      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 6 days )\n\n"
+      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )\n\n"
     then:
     assertThat(message).isEqualTo(expectedMessage)
   }

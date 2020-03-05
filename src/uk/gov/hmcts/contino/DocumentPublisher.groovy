@@ -43,6 +43,8 @@ class DocumentPublisher implements Serializable {
     steps.writeFile(file: '/tmp/metrics-reporting/yarn.lock', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/yarn.lock"))
     steps.writeFile(file: '/tmp/metrics-reporting/metrics-publisher.js', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/metrics-publisher.js"))
 
+    steps.echo "Found: " +  documents.size() + " documents"
+
     documents.each {
       steps.sh """
       cd /tmp/metrics-reporting/
