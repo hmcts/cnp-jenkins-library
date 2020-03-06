@@ -74,7 +74,7 @@ class MetricsPublisher implements Serializable {
 
     def data = JsonOutput.toJson(metrics).toString()
     steps.sh """
-      cd /tmp/metrics-reporting/
+      cd ../metrics-reporting
       chmod +x metrics-publisher.js
       yarn install
 

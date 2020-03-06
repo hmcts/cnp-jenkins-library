@@ -1,7 +1,6 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
-import com.cloudbees.groovy.cps.NonCPS
 
 import static uk.gov.hmcts.contino.MetricsPublisher.METRICS_RESOURCE_PATH
 
@@ -38,16 +37,16 @@ class DocumentPublisher implements Serializable {
     def cosmosDbUrl = params.subscription == 'sandbox' ? DB_SANDBOX_URL : DB_DEFAULT_URL
     def collection = collectionLink.split('/').last()
 
-    steps.sh "mkdir -p /tmp/metrics-reporting"
-    steps.writeFile(file: '/tmp/metrics-reporting/package.json', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/package.json"))
-    steps.writeFile(file: '/tmp/metrics-reporting/yarn.lock', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/yarn.lock"))
-    steps.writeFile(file: '/tmp/metrics-reporting/metrics-publisher.js', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/metrics-publisher.js"))
+    steps.sh 'mkdir -p ../metrics-reporting'
+    steps.writeFile(file: '../metrics-reporting/package.json', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/package.json"))
+    steps.writeFile(file: '../metrics-reporting/yarn.lock', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/yarn.lock"))
+    steps.writeFile(file: '../metrics-reporting/metrics-publisher.js', text: steps.libraryResource("${METRICS_RESOURCE_PATH}/metrics-publisher.js"))
 
     steps.echo "Found: " +  documents.size() + " documents"
 
     documents.each {
       steps.sh """
-      cd /tmp/metrics-reporting/
+      cd ../metrics-reporting
       chmod +x metrics-publisher.js
       yarn install
 
