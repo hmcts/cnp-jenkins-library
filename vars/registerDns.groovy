@@ -7,17 +7,16 @@ def call(Map params) {
 
   withAksClient(params.subscription, params.environment) {
     Consul consul = new Consul(this, params.environment)
-    AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.subscription, params.environment)
+    AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment)
 
     // Staging DNS registration
     if (config.legacyDeploymentForEnv(params.environment)) {
       withIlbIp(params.subscription, params.environment) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
-        consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
-
         azPrivateDns.registerAzDns("${params.product}-${params.component}-${params.environment}-staging", env.TF_VAR_ilbIp)
-        azPrivateDns.registerAzDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
 
+        consul.registerDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
+        azPrivateDns.registerAzDns("${params.product}-${params.component}-${params.environment}", env.TF_VAR_ilbIp)
       }
     }
 
@@ -28,6 +27,7 @@ def call(Map params) {
       if (aksSubscriptionName) {
         def ingressIP = params.aksSubscription.ingressIp()
         consul.registerDns("${params.product}-${params.component}-staging", ingressIP)
+        azPrivateDns.registerAzDns("${params.product}-${params.component}-staging", ingressIP)
       } else {
         echo "Skipping staging dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
       }
@@ -39,8 +39,10 @@ def call(Map params) {
       appGwIp = params.aksSubscription.loadBalancerIp()
       if (!config.legacyDeploymentForEnv(params.environment)) {
         consul.registerDns("${params.product}-${params.component}-${params.environment}", appGwIp)
+        azPrivateDns.registerAzDns("${params.product}-${params.component}-${params.environment}", appGwIp)
       }
       consul.registerDns("${params.product}-${params.component}", appGwIp)
+      azPrivateDns.registerAzDns("${params.product}-${params.component}", appGwIp)
     } else {
       echo "Skipping dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
     }
