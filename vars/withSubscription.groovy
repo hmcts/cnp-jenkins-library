@@ -85,6 +85,7 @@ def servicePrincipalBasedLogin(String subscription, Closure body) {
 def identityBasedLogin(String subscription, Closure body) {
   ansiColor('xterm') {
     def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
+    azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
     def mgmtSubscriptionId = azJenkins 'account show --query id -o tsv'
 
     def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
@@ -94,7 +95,6 @@ def identityBasedLogin(String subscription, Closure body) {
       [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: "${subscription}-subscription-id", version: '', envVariable: 'ARM_SUBSCRIPTION_ID']
     ]) {
       az "account set --subscription ${env.ARM_SUBSCRIPTION_ID}"
-      azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
 
       def infraVaultName = env.INFRA_VAULT_NAME
       log.info "Using $infraVaultName"
