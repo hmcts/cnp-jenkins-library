@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonOutput
 import spock.lang.Specification
 
 class AzPrivateDnsTest extends Specification {
@@ -19,16 +18,11 @@ class AzPrivateDnsTest extends Specification {
   def "registerAzDns() should register the record name with the private dns zone for the environment"() {
     def recordName = "rn"
     def ip = "4.3.2.1"
-    def ttl = "300"
 
-    def expectedUrl = "https://management.azure.com/subscriptions/b3394340-6c9f-44ca-aa3e-9ff38bd1f9ac/resourceGroups/mgmt-intdns-sboxintsvc/providers/Microsoft.Network/privateDnsZones/service.core-compute-sandbox.internal/A/${recordName}?api-version=2018-09-01"
-    def expectedBody = JsonOutput.toJson(
-      [
-        "properties": [
-          "ttl": "${ttl}",
-          "aRecords": [["ipv4Address": "${ip}"]]
-        ],
-      ])
+    def zone = "service.core-compute-${ENVIRONMENT}.internal"
+    def resourceGroup = "mgmt-intdns-sboxintsvc"
+    def subscriptionId = "b3394340-6c9f-44ca-aa3e-9ff38bd1f9ac"
+    def ttl = 300
 
     when:
       azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, ENVIRONMENT])
@@ -36,13 +30,14 @@ class AzPrivateDnsTest extends Specification {
       azPrivateDns.registerAzDns(recordName, ip)
 
     then:
-      1 * steps.httpRequest({it.get('httpMode').equals('PUT') &&
-        it.get('acceptType').equals('APPLICATION_JSON') &&
-        it.get('contentType').equals('APPLICATION_JSON') &&
-        it.get('url').equals("${expectedUrl}") &&
-        it.get('requestBody').equals("${expectedBody}") &&
-        it.get('consoleLogResponseBody').equals(true) &&
-        it.get('validResponseCodes').equals('200:201')})
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscriptionId}") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${ip} --subscription ${subscriptionId}") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
   }
 
   def "registerAzDns() should throw exception if environment does not have a private DNS zone registered"() {

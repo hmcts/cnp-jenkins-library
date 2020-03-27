@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonOutput
 import uk.gov.hmcts.contino.azure.Az
 
 class AzPrivateDns {
@@ -80,30 +79,10 @@ class AzPrivateDns {
 
         def ttl = this.ttl(environment)
         def zone = "service.core-compute-${environment}.internal"
-        def json = JsonOutput.toJson(
-            [
-                "properties": [
-                "ttl": "${ttl}",
-                "aRecords": [["ipv4Address": "${serviceIP}"]]
-                ],
-        ])
 
-        this.steps.echo "Registering DNS for ${recordName} to ${serviceIP}, properties: ${json}"
-
-        def accessToken = getAccessToken()
-
-        def req = this.steps.httpRequest(
-            httpMode: 'PUT',
-            acceptType: 'APPLICATION_JSON',
-            contentType: 'APPLICATION_JSON',
-            url: "https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Network/privateDnsZones/${zone}/A/${recordName}?api-version=2018-09-01",
-            requestBody: "${json}",
-            consoleLogResponseBody: true,
-            customHeaders: [
-                [maskValue: true, name: 'Authorization', value: "Bearer ${accessToken}"]
-            ],
-            validResponseCodes: '200:201'
-        )
+        this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
+        this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscriptionId}"
+        this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscriptionId}"
     }
 
 }
