@@ -2,13 +2,14 @@ import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
 import uk.gov.hmcts.contino.EnvironmentDnsConfig
+import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 
 def call(Map params) {
   AppPipelineConfig config = params.appPipelineConfig
   boolean azPrivateFailOnError = false
 
   withAksClient(params.subscription, params.environment) {
-    EnvironmentDnsConfig.Entry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
+    EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
     Consul consul = new Consul(this, params.environment)
     AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, environmentDnsConfigEntry)
 

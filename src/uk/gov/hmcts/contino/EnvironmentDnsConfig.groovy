@@ -4,16 +4,6 @@ import groovy.text.SimpleTemplateEngine
 
 class EnvironmentDnsConfig {
 
-  class Entry {
-    def environment
-    def subscription
-    def resourceGroup
-    def zone
-    def ttl
-    def active
-    def consulActive
-  }
-
   static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
 
   def steps
@@ -44,7 +34,7 @@ class EnvironmentDnsConfig {
     def engine = new SimpleTemplateEngine()
     for (s in dnsConfigMap['subscriptions']) {
       for (e in s['environments']) {
-        def envConfig = new EnvironmentDnsConfig.Entry(
+        def envConfig = new EnvironmentDnsConfigEntry(
           environment: e['name'],
           subscription: s['name'],
           resourceGroup: s['resourceGroup'],
