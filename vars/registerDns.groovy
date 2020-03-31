@@ -47,7 +47,7 @@ def call(Map params) {
   }
 }
 
-def registerDns(consul, azPrivateDns, dnsConfigEntry,recordName, serviceIP) {
+def registerDns(consul, azPrivateDns, dnsConfigEntry, recordName, serviceIP) {
   if (dnsConfigEntry.consulActive) {
     consul.registerDns(recordName, serviceIP)
   }
