@@ -12,11 +12,9 @@ class AzPrivateDnsTest extends Specification {
   static def response = ["content": ["subscriptions":
                           [["name": "DTS-CFTSBOX-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 300, "active": true,
                             "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox"]],
-                            "id": "1497c3d7-ab6d-4bb7-8a10-b51d03189ee3",
                             "resourceGroup": "core-infra-intsvc-rg"],
                            ["name": "DTS-CFTPTL-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 3600, "active": false,
                             "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"]],
-                            "id": "1baf5470-1c3e-40d3-a6f7-74bfbce4b348",
                             "resourceGroup": "core-infra-intsvc-rg"]]]]
 
 
@@ -36,7 +34,7 @@ class AzPrivateDnsTest extends Specification {
 
     def zone = "service.core-compute-${ENVIRONMENT}.internal"
     def resourceGroup = "core-infra-intsvc-rg"
-    def subscriptionId = "1497c3d7-ab6d-4bb7-8a10-b51d03189ee3"
+    def subscription = "DTS-CFTSBOX-INTSVC"
     def ttl = 3600
 
     when:
@@ -45,11 +43,11 @@ class AzPrivateDnsTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscriptionId}") &&
+      it.get('script').contains("network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${ip} --subscription ${subscriptionId}") &&
+      it.get('script').contains("network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${ip} --subscription ${subscription}") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
   }

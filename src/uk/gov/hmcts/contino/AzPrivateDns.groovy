@@ -30,8 +30,8 @@ class AzPrivateDns {
           this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
           return
         }
-        def subscriptionId = environmentDnsConfig.getEntry(environment).subscriptionId
-        if (!subscriptionId) {
+        def subscription = environmentDnsConfig.getEntry(environment).subscription
+        if (!subscription) {
           throw new RuntimeException("No Subscription found for Environment [${environment}].")
         }
 
@@ -44,8 +44,8 @@ class AzPrivateDns {
         def zone = this.environmentDnsConfig.getEntry(environment).zone
 
         this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
-        this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscriptionId}"
-        this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscriptionId}"
+        this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+        this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
     }
 
 }

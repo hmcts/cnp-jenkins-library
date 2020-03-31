@@ -7,7 +7,6 @@ class EnvironmentDnsConfig {
   class Entry {
     def environment
     def subscription
-    def subscriptionId
     def resourceGroup
     def zone
     def ttl
@@ -48,7 +47,6 @@ class EnvironmentDnsConfig {
         def envConfig = new EnvironmentDnsConfig.Entry(
           environment: e['name'],
           subscription: s['name'],
-          subscriptionId: s['id'],
           resourceGroup: s['resourceGroup'],
           ttl: e['ttl'] != null ? e['ttl'] : s['ttl'],
           zone: e['zone'] != null ? e['zone'] : engine.createTemplate(s['zoneTemplate']).make([environment:e['name']]).toString(),
