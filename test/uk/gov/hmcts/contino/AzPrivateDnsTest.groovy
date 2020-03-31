@@ -8,7 +8,7 @@ class AzPrivateDnsTest extends Specification {
 
   def steps
   def azPrivateDns
-  def environmentDnsConfig
+  def environmentDnsConfigEntry
   static def response = ["content": ["subscriptions":
                           [["name": "DTS-CFTSBOX-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 300, "active": true,
                             "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox"]],
@@ -24,8 +24,8 @@ class AzPrivateDnsTest extends Specification {
     steps.httpRequest(_) >> response
     steps.error(_) >> { throw new Exception(_ as String) }
     steps.env >> ["SUBSCRIPTION_NAME": "sandbox"]
-    environmentDnsConfig = new EnvironmentDnsConfig(steps)
-    azPrivateDns = new AzPrivateDns(steps, ENVIRONMENT, environmentDnsConfig)
+    environmentDnsConfigEntry = new EnvironmentDnsConfig(steps).getEntry(ENVIRONMENT)
+    azPrivateDns = new AzPrivateDns(steps, ENVIRONMENT, environmentDnsConfigEntry)
   }
 
   def "registerAzDns() should register the record name with the private dns zone for the environment"() {
@@ -38,7 +38,7 @@ class AzPrivateDnsTest extends Specification {
     def ttl = 3600
 
     when:
-      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, ENVIRONMENT, environmentDnsConfig])
+      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, ENVIRONMENT, environmentDnsConfigEntry])
       azPrivateDns.registerDns(recordName, ip)
 
     then:
@@ -58,7 +58,7 @@ class AzPrivateDnsTest extends Specification {
     def ip = "4.3.2.1"
 
     when:
-      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, environment, environmentDnsConfig])
+      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, environment, new EnvironmentDnsConfig(steps).getEntry(environment)])
       azPrivateDns.registerDns(recordName, ip)
 
     then:
