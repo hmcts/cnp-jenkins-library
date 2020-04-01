@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import spock.lang.Ignore
 import spock.lang.Specification
 import static org.assertj.core.api.Assertions.assertThat
 
@@ -36,10 +35,6 @@ class EnvironmentDnsConfigTest extends Specification {
 
     then:
     assertThat(idamSandbox.environment).isEqualTo(environment)
-    println("idamSandbox.consulActive: " + idamSandbox.consulActive.toBoolean() + " - " + idamSandbox.consulActive.toBoolean().getClass())
-    assertThat(idamSandbox.consulActive.toBoolean()).isEqualTo(Boolean.FALSE)
-    println("idamSandbox.active: " + idamSandbox.active.toBoolean() + " - " + idamSandbox.active.toBoolean().getClass())
-    assertThat(idamSandbox.active.toBoolean()).isEqualTo(Boolean.TRUE)
     assertThat(idamSandbox.subscription).isEqualTo("DTS-CFTSBOX-INTSVC")
     assertThat(idamSandbox.resourceGroup).isEqualTo("core-infra-intsvc-rg")
     assertThat(idamSandbox.ttl).isEqualTo(300)
