@@ -36,8 +36,8 @@ class EnvironmentDnsConfigTest extends Specification {
 
     then:
     assertThat(idamSandbox.environment).isEqualTo(environment)
-    assertThat(idamSandbox.consulActive).isFalse()
-    assertThat(idamSandbox.active).isTrue()
+    assertThat(idamSandbox.consulActive).isEqualTo(false)
+    assertThat(idamSandbox.active).isEqualTo(true)
     assertThat(idamSandbox.subscription).isEqualTo("DTS-CFTSBOX-INTSVC")
     assertThat(idamSandbox.resourceGroup).isEqualTo("core-infra-intsvc-rg")
     assertThat(idamSandbox.ttl).isEqualTo(300)
