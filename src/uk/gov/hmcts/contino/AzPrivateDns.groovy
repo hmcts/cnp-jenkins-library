@@ -44,7 +44,11 @@ class AzPrivateDns {
         def zone = this.environmentDnsConfigEntry.zone
 
         this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
-        def aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+        def aRecordSet
+        try {
+          aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+        } catch (e) {
+        } // do nothing, record not found
         if (!aRecordSet) {
           this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
           this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
