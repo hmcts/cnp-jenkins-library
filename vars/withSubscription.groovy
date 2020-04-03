@@ -103,14 +103,13 @@ def identityBasedLogin(String subscription, Closure body) {
 
       def jenkinsObjectId = azJenkins "identity show -g managed-identities-${infraVaultName}-rg --name jenkins-${infraVaultName}-mi --query principalId -o tsv"
 
-      def storageAccountKey = az "storage account keys  list --account-name mgmtstatestore${subscription} --query [0].value -o tsv"
-      def tenantId = az "account show --query tenantId -o tsv"
-
       def tfStateRgNameTemplate = env.TF_STATE_RG_TEMPLATE ?: "mgmt-state-store"
-      def tfStateStorageAccountNameTemplate = env.TF_STATE_RG_TEMPLATE ?: "mgmtstatestore"
-      def tfStateContainerNameTemplate = env.TF_STATE_RG_TEMPLATE ?: "mgmtstatestorecontainer"
+      def tfStateStorageAccountNameTemplate = env.TF_STATE_STORAGE_TEMPLATE ?: "mgmtstatestore"
+      def tfStateContainerNameTemplate = env.TF_STATE_CONTAINER_TEMPLATE ?: "mgmtstatestorecontainer"
       def rootAddressSpace = env.ROOT_ADDRESS_SPACE ?: "10.96.0.0/12"
-
+      
+      def storageAccountKey = az "storage account keys list --account-name ${tfStateStorageAccountNameTemplate}${subscription} --query [0].value -o tsv"
+      def tenantId = az "account show --query tenantId -o tsv"
 
       withEnv([
         "ARM_USE_MSI=true",
