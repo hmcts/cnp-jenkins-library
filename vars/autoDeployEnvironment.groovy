@@ -20,9 +20,8 @@ def call() {
     ],
     demo: [
       environmentName: environment.demoName,
-      subscriptionName: subscription.nonProdName,
-      aksSubscription: null,
-      aksInfraRgName: null
+      subscriptionName: subscription.demoName,
+      aksSubscription: aksSubscriptions.demo,
     ],
     hmctsdemo: [ // TODO delete
       environmentName: environment.hmctsDemoName,

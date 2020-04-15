@@ -11,11 +11,6 @@ In your pipeline, import this library.
   @Library('Infrastructure')
 ```
 
-To refer to a branch use
-```groovy
-@Library('Infrastructure@<branch-name>')
-```
-
 ### Opinionated app pipeline
 
 This library contains a complete opinionated pipeline that can build, test and deploy Java
