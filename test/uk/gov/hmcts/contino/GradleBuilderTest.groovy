@@ -66,38 +66,18 @@ class GradleBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('apiGateway') && it.contains('--rerun-tasks') })
   }
 
-  def "securityCheck calls 'gradle dependencyCheckAnalyze 5 if hasPlugin version 5'"() {
+  def "securityCheck calls 'gradle dependencyCheckAnalyze"() {
     setup:
       def closure
       steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
-      def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
-        hasPlugin(_) >> true
-      }
 
     when:
-      b.securityCheck()
+      builder.securityCheck()
     then:
       1 * steps.sh({
         GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') &&
         it.contains('jdbc:postgresql://owaspdependency-v5-prod')
       })
-  }
-
-  // NOTE: delete this test some time after 15/07/2019 together with the related code in GradleBuilder
-  def "securityCheck throws Exception if 'gradle dependencyCheckAnalyze 4 is called after 15.07.2019'"() {
-    setup:
-    def closure
-    steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
-    def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
-      hasPlugin(_) >> false
-    }
-    GroovySpy(Date, global: true)
-    new Date() >> new Date().parse("dd.MM.yyyy", "16.07.2019")
-
-    when:
-      b.securityCheck()
-    then:
-      thrown RuntimeException
   }
 
   def "runProviderVerification triggers a gradlew hook"() {
