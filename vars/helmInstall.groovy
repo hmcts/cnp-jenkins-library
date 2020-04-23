@@ -8,6 +8,7 @@ import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
+import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 
 def call(DockerImage dockerImage, Map params) {
