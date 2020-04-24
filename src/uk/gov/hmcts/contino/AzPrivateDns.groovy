@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.azure.Az
 
 class AzPrivateDns {
@@ -20,6 +21,7 @@ class AzPrivateDns {
         }
     }
 
+    @NonCPS
     def registerDns(recordName, serviceIP) {
         if (!IPV4Validator.validate(serviceIP)) {
             throw new RuntimeException("Invalid IP address [${serviceIP}].")
