@@ -11,6 +11,9 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import uk.gov.hmcts.contino.IPV4Validator
 import uk.gov.hmcts.contino.ConsulRecord
+import uk.gov.hmcts.contino.AzPrivateDns
+import uk.gov.hmcts.contino.EnvironmentDnsConfig
+import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 /*--------------------------------------------------------------
 Groovy script to update the scm service consul record. It will
 crawl the infra to workout which webapps are currently deployed
@@ -65,7 +68,7 @@ def call(subscription, environment, deploymentTarget) {
     }
   }
 
-// Get ILB internal IP address
+  // Get ILB internal IP address
   println "Getting the ILB internal IP address ..."
   Request requestilbip = new Request.Builder()
     .url("https://management.azure.com/subscriptions/${env.ARM_SUBSCRIPTION_ID}/resourceGroups/core-infra-$environmentDt/providers/Microsoft.Web/hostingEnvironments/core-compute-$environmentDt/capacities/virtualip?api-version=2016-09-01")
@@ -85,41 +88,53 @@ def call(subscription, environment, deploymentTarget) {
     error "IP address for the ILB of the ASE failed validation, exiting to prevent corruption of the scm records"
   }
 
-// Get details about the consul vm scale set i.e. IP address
-  println "Getting consul's IP address ..."
-  Request requestvmss = new Request.Builder()
-    .url("https://management.azure.com/subscriptions/${env.ARM_SUBSCRIPTION_ID}/resourceGroups/$envInfraRg/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
-    .get()
-    .addHeader("Authorization", "Bearer " + authtoken)
-    .addHeader("Cache-Control", "no-cache")
-    .build();
+  EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(environment)
 
-  Response responsevmss = client.newCall(requestvmss).execute();
+  if (dnsConfigEntry.active) {
+    AzPrivateDns azPrivateDns = new AzPrivateDns(this, environment, dnsConfigEntry)
+    webapps.each { w ->
+      azPrivateDns.registerDns(w, ilbinternalip)
+    }
+  }
 
-  def consulvmscaleset = new JsonSlurper().parseText(responsevmss.body().string())
-  String consulapiaddr = consulvmscaleset.value[0].properties.ipConfigurations[0].properties.privateIPAddress
-  println "Consul IP address is: " + consulapiaddr
+  if (dnsConfigEntry.consulActive) {
 
-// Build json payload for scm record
+    // Get details about the consul vm scale set i.e. IP address
+    println "Getting consul's IP address ..."
+    Request requestvmss = new Request.Builder()
+      .url("https://management.azure.com/subscriptions/${env.ARM_SUBSCRIPTION_ID}/resourceGroups/$envInfraRg/providers/Microsoft.Compute/virtualMachineScaleSets/consul-server/networkInterfaces?api-version=2017-03-30")
+      .get()
+      .addHeader("Authorization", "Bearer " + authtoken)
+      .addHeader("Cache-Control", "no-cache")
+      .build();
 
-  def scm = new ConsulRecord(ID: 'scm', Name: 'scm', Tags: webapps, Address: ilbinternalip, Port: 443 )
-  def scmjson = new JsonBuilder(scm).toString()
-  println("Preparing and sending scm consul record: " + scmjson)
+    Response responsevmss = client.newCall(requestvmss).execute();
 
-// Update the scm record in consul
+    def consulvmscaleset = new JsonSlurper().parseText(responsevmss.body().string())
+    String consulapiaddr = consulvmscaleset.value[0].properties.ipConfigurations[0].properties.privateIPAddress
+    println "Consul IP address is: " + consulapiaddr
 
-  MediaType mediaTypeScm = MediaType.parse("application/json");
-  RequestBody scmrequestbody = RequestBody.create(mediaTypeScm, scmjson);
-  Request requestscm = new Request.Builder()
-    .url("http://" + consulapiaddr + ":8500/v1/agent/service/register")
-    .put(scmrequestbody)
-    .addHeader("content-type", "application/json")
-    .addHeader("cache-control", "no-cache")
-    .build();
+    // Build json payload for scm record
 
-  Response responsescm = client.newCall(requestscm).execute();
+    def scm = new ConsulRecord(ID: 'scm', Name: 'scm', Tags: webapps, Address: ilbinternalip, Port: 443)
+    def scmjson = new JsonBuilder(scm).toString()
+    println("Preparing and sending scm consul record: " + scmjson)
 
-// Print the new record details
+    // Update the scm record in consul
 
-  println("Result code for scm service registration: " + responsescm.code())
+    MediaType mediaTypeScm = MediaType.parse("application/json");
+    RequestBody scmrequestbody = RequestBody.create(mediaTypeScm, scmjson);
+    Request requestscm = new Request.Builder()
+      .url("http://" + consulapiaddr + ":8500/v1/agent/service/register")
+      .put(scmrequestbody)
+      .addHeader("content-type", "application/json")
+      .addHeader("cache-control", "no-cache")
+      .build();
+
+    Response responsescm = client.newCall(requestscm).execute();
+
+    // Print the new record details
+
+    println("Result code for scm service registration in consul: " + responsescm.code())
+  }
 }
