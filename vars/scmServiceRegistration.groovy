@@ -93,8 +93,9 @@ def call(subscription, environment, deploymentTarget) {
   if (dnsConfigEntry.active) {
     AzPrivateDns azPrivateDns = new AzPrivateDns(this, environment, dnsConfigEntry)
     webapps.each { w ->
-      azPrivateDns.registerDns(w, ilbinternalip)
+      azPrivateDns.registerDns("${w}.scm", ilbinternalip)
     }
+    println("Registered ${webapps.join(',')} for scm service registration in private dns at: ${ilbinternalip}")
   }
 
   if (dnsConfigEntry.consulActive) {
