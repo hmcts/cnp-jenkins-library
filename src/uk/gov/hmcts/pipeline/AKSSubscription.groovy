@@ -15,18 +15,6 @@ class AKSSubscription implements Serializable {
     this.tlsEnabled = tlsEnabled
   }
 
-  String ingressIp() {
-    def secrets = [
-      [secretType: 'Secret', name: 'ingress-ip-staging', version: '', envVariable: 'INGRESS_IP'],
-    ]
-    steps.withAzureKeyvault(
-      azureKeyVaultSecrets: secrets,
-      keyVaultURLOverride: "https://${keyvaultName}.vault.azure.net"
-    ) {
-      return steps.env.INGRESS_IP
-    }
-  }
-
   String loadBalancerIp() {
     def secrets = [
       [secretType: 'Secret', name: 'internal-lb-ip', version: '', envVariable: 'LB_IP'],
