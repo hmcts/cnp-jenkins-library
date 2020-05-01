@@ -24,15 +24,6 @@ def call(Map params) {
 
     aksSubscriptionName = params.aksSubscription != null ? params.aksSubscription.name : null
 
-
-    if (config.aksStagingDeployment) {
-      if (aksSubscriptionName) {
-        def ingressIP = params.aksSubscription.ingressIp()
-        registerDns(consul, azPrivateDns, dnsConfigEntry, "${params.product}-${params.component}-staging", ingressIP)
-      } else {
-        echo "Skipping staging dns registration for AKS as this environment is not configured with it: ${aksSubscriptionName}"
-      }
-    }
     // AAT + PROD DNS registration
     def aksEnv = params.aksSubscription != null && params.aksSubscription.envName
 
