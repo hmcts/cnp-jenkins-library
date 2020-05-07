@@ -51,7 +51,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void installCharts() {
-    config.installCharts = true
+    WarningCollector.addPipelineWarning("install_charts", "installCharts() is deprecated and no longer does anything, please remove this flag before the pipeline starts failing.,", new Date().parse("dd.MM.yyyy", "21.04.2020"))
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
