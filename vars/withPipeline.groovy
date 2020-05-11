@@ -130,16 +130,14 @@ def call(type, String product, String component, Closure body) {
           )
         }
 
-        if (pipelineConfig.installCharts) {
-          stage('Publish Helm chart') {
-            helmPublish(
-              appPipelineConfig: pipelineConfig,
-              subscription: subscription.nonProdName,
-              environment: environment.nonProdName,
-              product: product,
-              component: component
-            )
-          }
+        stage('Publish Helm chart') {
+          helmPublish(
+            appPipelineConfig: pipelineConfig,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
         }
 
         sectionDeployToEnvironment(
