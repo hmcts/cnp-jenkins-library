@@ -65,9 +65,6 @@ class TeamConfig {
       steps.error ("${key} is not configured for Product ${product} ."
           + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
     }
-    System.out.println(teamNames)
-    System.out.println(product)
-    System.out.println(teamNames.get(product))
     return teamNames.get(product).get(SLACK_KEY).get(key)
   }
 
