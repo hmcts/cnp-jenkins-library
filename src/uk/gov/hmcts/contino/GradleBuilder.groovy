@@ -10,12 +10,14 @@ class GradleBuilder extends AbstractBuilder {
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
 
   def product
+  def env
 
   def java11 = "11"
 
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
+    this.env = steps.env
   }
 
   def build() {
