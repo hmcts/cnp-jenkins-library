@@ -1,6 +1,13 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
+import com.microsoft.azure.documentdb.Document
+import com.microsoft.azure.documentdb.DocumentClient
+
 class GradleBuilder extends AbstractBuilder {
+
+  private static final String COSMOS_DB_URL = 'https://pipeline-metrics.documents.azure.com/'
+  private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
 
   def product
 
@@ -88,7 +95,36 @@ class GradleBuilder extends AbstractBuilder {
       }
       finally {
         steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        publishCVEReport()
       }
+    }
+  }
+
+  def publishCVEReport() {
+    try {
+      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
+        if (env.COSMOSDB_TOKEN_KEY == null) {
+          steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
+          return
+        }
+
+        steps.echo "Publishing CVE report"
+        String data = steps.readFile('build/reports/dependency-check-report.json')
+        createDocument(data)
+      }
+    } catch (err) {
+      steps.echo "Unable to publish CVE report '${err}'"
+    }
+  }
+
+  @NonCPS
+  private def createDocument(String data) {
+    def client = new DocumentClient(COSMOS_DB_URL, env.COSMOSDB_TOKEN_KEY, null, null)
+    try {
+      client.createDocument(COSMOS_COLLECTION_LINK, new Document(data)
+        , null, false)
+    } finally {
+      client.close()
     }
   }
 
