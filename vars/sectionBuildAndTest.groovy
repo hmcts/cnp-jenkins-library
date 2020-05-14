@@ -39,9 +39,7 @@ def call(params) {
   stage("Build") {
     onPR {
       enforceChartVersionBumped product: product, component: component
-      if (config.installCharts) {
-        warnAboutAADIdentityPreviewHack product: product, component: component
-      }
+      warnAboutAADIdentityPreviewHack product: product, component: component
     }
 
     builder.setupToolVersion()
