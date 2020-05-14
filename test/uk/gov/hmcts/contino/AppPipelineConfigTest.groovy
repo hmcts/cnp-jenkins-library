@@ -27,7 +27,6 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.apiGatewayTest).isFalse()
       assertThat(pipelineConfig.crossBrowserTest).isFalse()
       assertThat(pipelineConfig.mutationTest).isFalse()
-      assertThat(pipelineConfig.installCharts).isFalse()
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
@@ -54,7 +53,7 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
   }
-  
+
   def "ensure enable db migration"() {
     when:
       dsl.enableDbMigration()
@@ -84,13 +83,6 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.crossBrowserTest).isTrue()
       assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
-  }
-
-  def "ensure install charts"() {
-    when:
-      dsl.installCharts()
-    then:
-      assertThat(pipelineConfig.installCharts).isTrue()
   }
 
   def "ensure enable full functional test"() {
