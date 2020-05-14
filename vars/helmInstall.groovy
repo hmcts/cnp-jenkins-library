@@ -166,10 +166,10 @@ def call(DockerImage dockerImage, Map params) {
 }
 
 def registerDns(consul, azPrivateDns, dnsConfigEntry, recordName, serviceIP) {
-  if (dnsConfigEntry.consulActive) {
+  if (dnsConfigEntry?.consulActive) {
     consul.registerDns(recordName, serviceIP)
   }
-  if (dnsConfigEntry.active) {
+  if (dnsConfigEntry?.active) {
     azPrivateDns.registerDns(recordName, serviceIP)
   }
 }
