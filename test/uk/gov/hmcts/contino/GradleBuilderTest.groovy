@@ -66,7 +66,7 @@ class GradleBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('apiGateway') && it.contains('--rerun-tasks') })
   }
 
-  def "securityCheck calls 'gradle dependencyCheckAnalyze"() {
+  def "securityCheck calls 'gradle dependencyCheckAggregate"() {
     setup:
       def closure
       steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
@@ -75,7 +75,7 @@ class GradleBuilderTest extends Specification {
       builder.securityCheck()
     then:
       1 * steps.sh({
-        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') &&
+        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
         it.contains('jdbc:postgresql://owaspdependency-v5-prod')
       })
   }
