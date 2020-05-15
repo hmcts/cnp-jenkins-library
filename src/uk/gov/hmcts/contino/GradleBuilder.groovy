@@ -105,7 +105,7 @@ class GradleBuilder extends AbstractBuilder {
   def publishCVEReport() {
     try {
       steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-        if (env.COSMOSDB_TOKEN_KEY == null) {
+        if (steps.env.COSMOSDB_TOKEN_KEY == null) {
           steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
           return
         }
