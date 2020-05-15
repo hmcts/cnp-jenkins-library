@@ -138,7 +138,7 @@ class GradleBuilder extends AbstractBuilder {
 
   @NonCPS
   private def createDocument(String reportJSON) {
-    def client = new DocumentClient(COSMOS_DB_URL, env.COSMOSDB_TOKEN_KEY, null, null)
+    def client = new DocumentClient(COSMOS_DB_URL, steps.env.COSMOSDB_TOKEN_KEY, null, null)
     try {
       client.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
         , null, false)
