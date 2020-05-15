@@ -120,4 +120,12 @@ class GradleBuilderTest extends Specification {
     result.report.dependencies.every { it.vulnerabilityIds }
     result.build.git_url == 'http://example.com'
   }
+
+  def "Publishing CVE report does not throw unhandled error"() {
+    when:
+    builder.publishCVEReport()
+
+    then:
+    notThrown()
+  }
 }
