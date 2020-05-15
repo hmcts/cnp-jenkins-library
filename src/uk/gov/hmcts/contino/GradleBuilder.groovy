@@ -3,6 +3,8 @@ package uk.gov.hmcts.contino
 import com.cloudbees.groovy.cps.NonCPS
 import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 class GradleBuilder extends AbstractBuilder {
 
@@ -10,14 +12,12 @@ class GradleBuilder extends AbstractBuilder {
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
 
   def product
-  def env
 
   def java11 = "11"
 
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
-    this.env = steps.env
   }
 
   def build() {
@@ -111,19 +111,36 @@ class GradleBuilder extends AbstractBuilder {
         }
 
         steps.echo "Publishing CVE report"
-        String data = steps.readFile('build/reports/dependency-check-report.json')
-        createDocument(data)
+        String dependencyReport = steps.readFile('build/reports/dependency-check-report.json')
+        def summary = prepareCVEReport(dependencyReport, steps.env)
+        createDocument(summary)
       }
     } catch (err) {
       steps.echo "Unable to publish CVE report '${err}'"
     }
   }
 
+  def prepareCVEReport(owaspReportJSON, env) {
+    def report = new JsonSlurper().parseText(owaspReportJSON)
+    // Only include non-vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+    report.dependencies = report.dependencies.findAll { it.vulnerabilityIds }
+
+    def result = [
+      build: [
+        build_display_name           : env.BUILD_DISPLAY_NAME,
+        build_tag                    : env.BUILD_TAG,
+        git_url                      : env.GIT_URL,
+      ],
+      report: report
+    ]
+    return JsonOutput.toJson(result)
+  }
+
   @NonCPS
-  private def createDocument(String data) {
+  private def createDocument(String reportJSON) {
     def client = new DocumentClient(COSMOS_DB_URL, env.COSMOSDB_TOKEN_KEY, null, null)
     try {
-      client.createDocument(COSMOS_COLLECTION_LINK, new Document(data)
+      client.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
         , null, false)
     } finally {
       client.close()
