@@ -18,7 +18,7 @@ def call(type, String product, String component, String environment, String subs
 
 def call(type, String product, String component, String environment, String subscription, String deploymentTargets, Closure body) {
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, component),
+    java  : new SpringBootPipelineType(this, product, component, subscription),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component)
   ]

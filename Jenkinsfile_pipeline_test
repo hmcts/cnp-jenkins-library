@@ -3,7 +3,7 @@
 import uk.gov.hmcts.contino.GradleBuilder
 
 def channel = '#rpe-build-notices'
-GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
+GradleBuilder builder = new GradleBuilder(this, 'jenkins-library', 'prod')
 
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 

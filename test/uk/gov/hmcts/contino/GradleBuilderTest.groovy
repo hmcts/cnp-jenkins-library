@@ -19,7 +19,7 @@ class GradleBuilderTest extends Specification {
     steps.getEnv() >> [
       GIT_URL: 'http://example.com'
     ]
-    builder = new GradleBuilder(steps, 'test')
+    builder = new GradleBuilder(steps, 'test', 'prod')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
     def closure

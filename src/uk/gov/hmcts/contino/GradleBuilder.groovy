@@ -8,16 +8,18 @@ import groovy.json.JsonSlurper
 
 class GradleBuilder extends AbstractBuilder {
 
-  private static final String COSMOS_DB_URL = 'https://pipeline-metrics.documents.azure.com/'
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
 
   def product
-
+  def cosmosDbUrl
   def java11 = "11"
 
-  GradleBuilder(steps, product) {
+  GradleBuilder(steps, product, subscription) {
     super(steps)
     this.product = product
+    this.cosmosDbUrl = subscription == "sandbox" ?
+      'https://sandbox-pipeline-metrics.documents.azure.com/' :
+      'https://pipeline-metrics.documents.azure.com/'
   }
 
   def build() {
@@ -138,7 +140,7 @@ class GradleBuilder extends AbstractBuilder {
 
   @NonCPS
   private def createDocument(String reportJSON) {
-    def client = new DocumentClient(COSMOS_DB_URL, steps.env.COSMOSDB_TOKEN_KEY, null, null)
+    def client = new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
     try {
       client.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
         , null, false)

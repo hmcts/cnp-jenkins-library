@@ -20,14 +20,14 @@ def call(type, String product, String component, Closure body) {
 
   def deploymentNamespace = branch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+  Subscription subscription = new Subscription(env)
 
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, deploymentProduct, component),
+    java  : new SpringBootPipelineType(this, deploymentProduct, component, subscription.prodName),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
     angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
 
-  Subscription subscription = new Subscription(env)
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   PipelineType pipelineType

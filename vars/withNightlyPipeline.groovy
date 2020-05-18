@@ -12,10 +12,10 @@ import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(type,product,component,Closure body) {
 
-
+  Subscription subscription = new Subscription(env)
   def pipelineTypes = [
     nodejs : new NodePipelineType(this, product, component),
-    java   : new SpringBootPipelineType(this, product, component),
+    java   : new SpringBootPipelineType(this, product, component, subscription.prodName),
     angular: new AngularPipelineType(this, product, component)
   ]
 
@@ -23,7 +23,6 @@ def call(type,product,component,Closure body) {
 
   assert pipelineType != null
 
-  Subscription subscription = new Subscription(env)
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName)
   def pipelineConfig = new AppPipelineConfig()
