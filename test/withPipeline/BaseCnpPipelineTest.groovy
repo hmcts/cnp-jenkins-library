@@ -72,16 +72,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       }
     })
 
-    def privateDnsResponse = ["content": ["subscriptions":
-                                  [["name": "DTS-CFTSBOX-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal',
-                                    "ttl": 300, "active": true, "consulActive": true,
-                                    "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox", "consulActive": false]],
-                                    "resourceGroup": "core-infra-intsvc-rg"],
-                                   ["name": "DTS-CFTPTL-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal',
-                                    "ttl": 3600, "active": false, "consulActive": true,
-                                    "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"], ["name": "preview"]],
-                                    "resourceGroup": "core-infra-intsvc-rg"]]]]
-
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
       if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
         return TeamConfigTest.response
