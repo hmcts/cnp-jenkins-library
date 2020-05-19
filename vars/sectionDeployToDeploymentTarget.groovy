@@ -51,12 +51,9 @@ def call(params) {
           dir('infrastructure/deploymentTarget') {
             pcr.callAround("buildinfra:${environmentDt}") {
               timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environmentDt}") {
-                withIlbIp(subscription, environmentDt) {
-                  def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-                  withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, false, subscription, deploymentTarget)
-                  }
-                  scmServiceRegistration(subscription, environment, deploymentTarget)
+                def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+                withEnv(additionalInfrastructureVariables) {
+                  tfOutput = spinInfra(product, component, environment, false, subscription, deploymentTarget)
                 }
               }
             }

@@ -41,7 +41,6 @@ class EnvironmentDnsConfig {
           ttl: e['ttl'] != null ? e['ttl'] : s['ttl'],
           zone: e['zone'] != null ? e['zone'] : engine.createTemplate(s['zoneTemplate']).make([environment:e['name']]).toString(),
           active: e['active'] != null ? e['active'] : s['active'],
-          consulActive: e['consulActive'] != null ? e['consulActive'] : s['consulActive'],
         )
         envDnsConfigMap[e['name']] = envConfig
       }
@@ -50,6 +49,8 @@ class EnvironmentDnsConfig {
   }
 
   def getEntry(environment) {
+    println('Getting entry for ' + environment)
+    println(getDnsConfig())
     return getDnsConfig()[environment]
   }
 

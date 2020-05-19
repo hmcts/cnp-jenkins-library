@@ -10,11 +10,12 @@ def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 node {
   try {
     stage('Checkout') {
+      deleteDir()
       checkout scm
     }
 
     stage('Build') {
-      builder.gradle('build -x test')
+      builder.gradle('clean build -x test')
     }
 
     stage('Test') {
