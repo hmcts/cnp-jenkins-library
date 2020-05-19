@@ -14,7 +14,7 @@ class AzPrivateDnsTest extends Specification {
                             "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox"]],
                             "resourceGroup": "core-infra-intsvc-rg"],
                            ["name": "DTS-CFTPTL-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 3600, "active": false,
-                            "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"]],
+                            "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"], ["name": "preview"]],
                             "resourceGroup": "core-infra-intsvc-rg"]]]]
 
 
