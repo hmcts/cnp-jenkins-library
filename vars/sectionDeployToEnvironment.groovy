@@ -40,9 +40,6 @@ def call(params) {
                     withEnv(additionalInfrastructureVariables) {
                       tfOutput = spinInfra(product, component, environment, false, subscription)
                     }
-                    if (config.legacyDeploymentForEnv(environment)) {
-                      scmServiceRegistration(subscription, environment)
-                    }
                   }
                 }
               }

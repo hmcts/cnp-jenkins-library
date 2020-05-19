@@ -56,7 +56,6 @@ def call(params) {
                   withEnv(additionalInfrastructureVariables) {
                     tfOutput = spinInfra(product, component, environment, false, subscription, deploymentTarget)
                   }
-                  scmServiceRegistration(subscription, environment, deploymentTarget)
                 }
               }
             }

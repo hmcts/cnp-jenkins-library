@@ -2,7 +2,6 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
-import uk.gov.hmcts.contino.Consul
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
@@ -26,10 +25,8 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
   def serviceFqdn = "${aksServiceName}.service.core-compute-${environment}.internal"
 
-  def consul = new Consul(this, environment)
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
-  def consulApiAddr = consul.getConsulIP()
 
   def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
   kubectl.login()
@@ -43,7 +40,6 @@ def call(DockerImage dockerImage, Map params) {
     "SERVICE_NAME=${aksServiceName}",
     "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
-    "CONSUL_LB_IP=${consulApiAddr}",
     "INGRESS_IP=${ingressIP}"
   ]
 
@@ -149,7 +145,7 @@ def call(DockerImage dockerImage, Map params) {
 
     if (config.serviceApp) {
       // Register service dns
-      registerDns(consul, azPrivateDns, dnsConfigEntry, aksServiceName, ingressIP)
+      azPrivateDns.registerDns(aksServiceName, ingressIP)
 
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
@@ -162,15 +158,6 @@ def call(DockerImage dockerImage, Map params) {
     } else {
       return null
     }
-  }
-}
-
-def registerDns(consul, azPrivateDns, dnsConfigEntry, recordName, serviceIP) {
-  if (dnsConfigEntry.consulActive) {
-    consul.registerDns(recordName, serviceIP)
-  }
-  if (dnsConfigEntry.active) {
-    azPrivateDns.registerDns(recordName, serviceIP)
   }
 }
 

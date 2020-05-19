@@ -52,8 +52,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
     helper.registerAllowedMethod("warnError", [String.class, Closure.class], null)
-    helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class], {})
-    helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class, String.class], {})
     helper.registerAllowedMethod("registerDns", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("helmPublish", [LinkedHashMap], null)
     helper.registerAllowedMethod("retry", [Integer, Closure.class], {})
