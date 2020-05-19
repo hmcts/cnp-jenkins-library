@@ -7,4 +7,17 @@ class EnvironmentDnsConfigEntry {
     def zone
     def ttl
     def active
+
+
+  @Override
+  public String toString() {
+    return "EnvironmentDnsConfigEntry{" +
+      "environment=" + environment +
+      ", subscription=" + subscription +
+      ", resourceGroup=" + resourceGroup +
+      ", zone=" + zone +
+      ", ttl=" + ttl +
+      ", active=" + active +
+      '}';
+  }
 }
