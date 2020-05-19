@@ -89,7 +89,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
         return EnvironmentApprovalsTest.response
       }
       else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml'){
-        return privateDnsResponse
+        return EnvironmentDnsConfigTest.response
       }
       else {
         return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +

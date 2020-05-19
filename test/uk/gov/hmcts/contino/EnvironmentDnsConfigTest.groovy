@@ -7,7 +7,7 @@ class EnvironmentDnsConfigTest extends Specification {
 
   def steps
   def environmentDnsConfig
-  def response = ["content": ["subscriptions":
+  static def response = ["content": ["subscriptions":
                           [["name": "DTS-CFTSBOX-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal',
                             "ttl": 300, "active": true, "consulActive": true,
                             "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox", "consulActive": false]],
