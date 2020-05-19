@@ -14,7 +14,7 @@ class AzPrivateDnsTest extends Specification {
                             "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox"]],
                             "resourceGroup": "core-infra-intsvc-rg"],
                            ["name": "DTS-CFTPTL-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 3600, "active": false,
-                            "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"], ["name": "preview"]],
+                            "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"]],
                             "resourceGroup": "core-infra-intsvc-rg"]]]]
 
 
@@ -26,6 +26,10 @@ class AzPrivateDnsTest extends Specification {
     steps.env >> ["SUBSCRIPTION_NAME": "sandbox"]
     environmentDnsConfigEntry = new EnvironmentDnsConfig(steps).getEntry(ENVIRONMENT)
     azPrivateDns = new AzPrivateDns(steps, ENVIRONMENT, environmentDnsConfigEntry)
+  }
+
+  def cleanup() {
+    EnvironmentDnsConfig.envDnsConfigMap = null
   }
 
   def "registerAzDns() should register the record name with the private dns zone for the environment"() {
