@@ -14,7 +14,6 @@ class EnvironmentDnsConfig {
   }
 
   def getDnsConfig() {
-    println('envDnsConfigMap is: ' + this.envDnsConfigMap == null)
     if (this.envDnsConfigMap == null ){
       def dnsConfigMap = [:]
       def response = steps.httpRequest(
