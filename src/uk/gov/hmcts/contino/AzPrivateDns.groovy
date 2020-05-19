@@ -25,7 +25,8 @@ class AzPrivateDns {
             throw new RuntimeException("Invalid IP address [${serviceIP}].")
         }
 
-        print this.environmentDnsConfigEntry
+        println this.environmentDnsConfigEntry
+        println 'here'
         def active = this.environmentDnsConfigEntry.active
         if (!active) {
           this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
