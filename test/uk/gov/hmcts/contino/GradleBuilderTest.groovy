@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import com.microsoft.azure.documentdb.DocumentClient
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 class GradleBuilderTest extends Specification {
@@ -8,13 +10,20 @@ class GradleBuilderTest extends Specification {
   static final String PACT_BROKER_URL = "https://pact-broker.platform.hmcts.net"
 
   def steps
+  def sampleCVEReport
 
   def builder
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.getEnv() >> []
+    steps.getEnv() >> [
+      GIT_URL: 'http://example.com'
+    ]
     builder = new GradleBuilder(steps, 'test')
+    sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
+    steps.readFile(_ as String) >> sampleCVEReport
+    def closure
+    steps.withCredentials(_, { closure = it }) >> { closure.call() }
   }
 
   def "build calls 'gradle assemble'"() {
@@ -99,5 +108,24 @@ class GradleBuilderTest extends Specification {
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
                     it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")})
+  }
+
+  def "Prepares CVE report for publishing to CosmosDB"() {
+    when:
+    def result = builder.prepareCVEReport(sampleCVEReport, steps.env)
+    result = new JsonSlurper().parseText(result)
+
+    then:
+    // Only dependencies with vulnerabilities should be reported
+    result.report.dependencies.every { it.vulnerabilityIds }
+    result.build.git_url == 'http://example.com'
+  }
+
+  def "Publishing CVE report does not throw unhandled error"() {
+    when:
+    builder.publishCVEReport()
+
+    then:
+    notThrown()
   }
 }
