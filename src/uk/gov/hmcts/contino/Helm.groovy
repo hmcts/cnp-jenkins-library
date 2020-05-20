@@ -45,6 +45,7 @@ class Helm {
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
+    steps.sh "helm repo add bitnami https://charts.bitnami.com/bitnami"
   }
 
   def publishIfNotExists(List<String> values) {
