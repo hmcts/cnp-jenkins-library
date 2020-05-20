@@ -42,7 +42,7 @@ settingsEvaluated { settings ->
 // Enable JSON dependency check reports for monitoring of CVEs and suppressions.
 allprojects {
   afterEvaluate { project ->
-    if (project.dependencyCheck) {
+    if (project.hasProperty('dependencyCheck')) {
       project.dependencyCheck.formats += 'json'
     }
   }
