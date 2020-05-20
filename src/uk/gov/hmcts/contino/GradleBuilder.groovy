@@ -1,4 +1,5 @@
 package uk.gov.hmcts.contino
+@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.microsoft.azure.documentdb.Document
