@@ -30,7 +30,6 @@ interface JenkinsStepMock {
   Object saucePublisher()
   Object retry(Integer, Closure)
   Object readYaml(LinkedHashMap)
-  String readFile(String)
 }
 
 
