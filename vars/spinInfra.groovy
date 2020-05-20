@@ -79,7 +79,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         """
 
         sh "terraform get -update=true"
-        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'ilbIp=TODO remove after some time' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {
