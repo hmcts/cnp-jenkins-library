@@ -13,13 +13,14 @@ else
   DIFF_IN_VALUES=false
 fi
 
-git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
-
-if [ $? -eq 1 ]; then
-  echo "Diff in requirements.yaml detected"
-  DIFF_IN_REQUIREMENTS=true
-else
-  DIFF_IN_REQUIREMENTS=false
+DIFF_IN_REQUIREMENTS=false
+if [[ -f charts/"${CHART_DIRECTORY}"/requirements.yaml ]]
+then
+  git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
+  if [ $? -eq 1 ]; then
+     echo "Diff in requirements.yaml detected"
+     DIFF_IN_REQUIREMENTS=true
+   fi
 fi
 
 if [[ ${DIFF_IN_VALUES} = 'false' ]] && [[ ${DIFF_IN_REQUIREMENTS} = 'false' ]]; then
