@@ -126,11 +126,14 @@ class GradleBuilder extends AbstractBuilder {
 
   def prepareCVEReport(owaspReportJSON, env) {
     def report = new JsonSlurper().parseText(owaspReportJSON)
-    // Only include non-vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
-    report.dependencies = report.dependencies.findAll { it.vulnerabilityIds }
+    // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+    report.dependencies = report.dependencies.findAll {
+      it.vulnerabilities || it.suppressedVulnerabilities
+    }
 
     def result = [
       build: [
+        branch_name                  : env.BRANCH_NAME,
         build_display_name           : env.BUILD_DISPLAY_NAME,
         build_tag                    : env.BUILD_TAG,
         git_url                      : env.GIT_URL,
