@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import com.microsoft.azure.documentdb.DocumentClient
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 class GradleBuilderTest extends Specification {
@@ -8,13 +10,20 @@ class GradleBuilderTest extends Specification {
   static final String PACT_BROKER_URL = "https://pact-broker.platform.hmcts.net"
 
   def steps
+  def sampleCVEReport
 
   def builder
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.getEnv() >> []
+    steps.getEnv() >> [
+      GIT_URL: 'http://example.com'
+    ]
     builder = new GradleBuilder(steps, 'test')
+    sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
+    steps.readFile(_ as String) >> sampleCVEReport
+    def closure
+    steps.withCredentials(_, { closure = it }) >> { closure.call() }
   }
 
   def "build calls 'gradle assemble'"() {
@@ -66,38 +75,18 @@ class GradleBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('apiGateway') && it.contains('--rerun-tasks') })
   }
 
-  def "securityCheck calls 'gradle dependencyCheckAnalyze 5 if hasPlugin version 5'"() {
+  def "securityCheck calls 'gradle dependencyCheckAggregate"() {
     setup:
       def closure
       steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
-      def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
-        hasPlugin(_) >> true
-      }
 
     when:
-      b.securityCheck()
+      builder.securityCheck()
     then:
       1 * steps.sh({
-        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAnalyze') &&
+        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
         it.contains('jdbc:postgresql://owaspdependency-v5-prod')
       })
-  }
-
-  // NOTE: delete this test some time after 15/07/2019 together with the related code in GradleBuilder
-  def "securityCheck throws Exception if 'gradle dependencyCheckAnalyze 4 is called after 15.07.2019'"() {
-    setup:
-    def closure
-    steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
-    def b = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
-      hasPlugin(_) >> false
-    }
-    GroovySpy(Date, global: true)
-    new Date() >> new Date().parse("dd.MM.yyyy", "16.07.2019")
-
-    when:
-      b.securityCheck()
-    then:
-      thrown RuntimeException
   }
 
   def "runProviderVerification triggers a gradlew hook"() {
@@ -119,5 +108,24 @@ class GradleBuilderTest extends Specification {
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
                     it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")})
+  }
+
+  def "Prepares CVE report for publishing to CosmosDB"() {
+    when:
+    def result = builder.prepareCVEReport(sampleCVEReport, steps.env)
+    result = new JsonSlurper().parseText(result)
+
+    then:
+    // Only dependencies with vulnerabilities should be reported
+    result.report.dependencies.every { it.vulnerabilityIds }
+    result.build.git_url == 'http://example.com'
+  }
+
+  def "Publishing CVE report does not throw unhandled error"() {
+    when:
+    builder.publishCVEReport()
+
+    then:
+    notThrown()
   }
 }

@@ -1,6 +1,7 @@
 package withPipeline
 
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import uk.gov.hmcts.contino.EnvironmentDnsConfigTest
 import uk.gov.hmcts.contino.MockDocker
 import uk.gov.hmcts.contino.MockJenkins
 import uk.gov.hmcts.contino.MockJenkinsPlugin
@@ -45,15 +46,15 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
     helper.registerAllowedMethod("usernamePassword", [LinkedHashMap], null)
-    helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' || c == 'Dockerfile' })
+    helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' || c == 'Dockerfile' || c.startsWith('charts') })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
     helper.registerAllowedMethod("warnError", [String.class, Closure.class], null)
-    helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class], {})
-    helper.registerAllowedMethod("scmServiceRegistration", [String.class, String.class, String.class], {})
     helper.registerAllowedMethod("registerDns", [LinkedHashMap.class], {})
+    helper.registerAllowedMethod("helmPublish", [LinkedHashMap], null)
+    helper.registerAllowedMethod("retry", [Integer, Closure.class], {})
     helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], { secrets, body ->
       body.call()
     })
@@ -61,17 +62,26 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
-      } else {
+      }  else if(m.get('script').startsWith("kubectl get service")){
+        return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
+          '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
+      }
+      else {
         return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
           '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}'
       }
     })
+
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
       if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
         return TeamConfigTest.response
       } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml') {
         return EnvironmentApprovalsTest.response
-      } else {
+      }
+      else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml'){
+        return EnvironmentDnsConfigTest.response
+      }
+      else {
         return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
           '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }

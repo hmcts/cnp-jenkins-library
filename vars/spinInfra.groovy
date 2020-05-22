@@ -78,6 +78,8 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
             -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
+        env.TF_VAR_ilbIp = 'TODO remove after some time'
+        
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")

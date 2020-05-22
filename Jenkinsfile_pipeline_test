@@ -7,14 +7,15 @@ GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 
-node {
-  try {
+try {
+  node {
     stage('Checkout') {
+      deleteDir()
       checkout scm
     }
 
     stage('Build') {
-      builder.gradle('build -x test')
+      builder.gradle('clean build -x test')
     }
 
     stage('Test') {
@@ -22,35 +23,34 @@ node {
         builder.gradle('test')
       } finally {
         steps.junit '**/test-results/**/*.xml'
+        deleteDir()
       }
     }
-
-    stage('Run shared infra pipeline') {
-      build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-shared-infrastructure/master',
-        parameters: [string(name: 'LIB_VERSION', value: testBranch)]
-    }
-
-    parallel (
-      backend: {
-        stage('Run pipeline for backend') {
-          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
-            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
-        }
-      },
-
-      frontend: {
-        stage('Run pipeline for frontend') {
-          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
-            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
-        }
-      }
-    )
-
-  } catch (err) {
-    notifyBuildFailure channel: channel
-    throw err
-  } finally {
-    deleteDir()
   }
-  notifyBuildFixed channel: channel
+
+  stage('Run shared infra pipeline') {
+    build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-shared-infrastructure/master',
+      parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+  }
+
+  parallel (
+    backend: {
+      stage('Run pipeline for backend') {
+        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
+          parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+      }
+    },
+
+    frontend: {
+      stage('Run pipeline for frontend') {
+        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
+          parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+      }
+    }
+  )
+
+} catch (err) {
+  notifyBuildFailure channel: channel
+  throw err
 }
+notifyBuildFixed channel: channel

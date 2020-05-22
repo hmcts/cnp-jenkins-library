@@ -7,5 +7,4 @@ class EnvironmentDnsConfigEntry {
     def zone
     def ttl
     def active
-    def consulActive
 }
