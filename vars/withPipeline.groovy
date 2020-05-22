@@ -74,8 +74,8 @@ def call(type, String product, String component, Closure body) {
         component: component,
         pactBrokerUrl: environment.pactBrokerUrl
       )
-      
-      if (new ProjectBranch(env.BRANCH_NAME).isPreview() && pipelineConfig.installCharts) {
+
+      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
         stage('Publish Helm chart') {
           helmPublish(
             appPipelineConfig: pipelineConfig,
