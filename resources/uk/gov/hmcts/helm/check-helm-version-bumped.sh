@@ -13,16 +13,26 @@ else
   DIFF_IN_VALUES=false
 fi
 
-git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
+git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/Chart.yaml
 
 if [ $? -eq 1 ]; then
-  echo "Diff in requirements.yaml detected"
-  DIFF_IN_REQUIREMENTS=true
+  echo "Diff in Chart.yaml detected"
+  DIFF_IN_CHART=true
 else
-  DIFF_IN_REQUIREMENTS=false
+  DIFF_IN_CHART=false
 fi
 
-if [[ ${DIFF_IN_VALUES} = 'false' ]] && [[ ${DIFF_IN_REQUIREMENTS} = 'false' ]]; then
+DIFF_IN_REQUIREMENTS=false
+if [[ -f charts/"${CHART_DIRECTORY}"/requirements.yaml ]]
+then
+  git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
+  if [ $? -eq 1 ]; then
+     echo "Diff in requirements.yaml detected"
+     DIFF_IN_REQUIREMENTS=true
+   fi
+fi
+
+if [[ ${DIFF_IN_VALUES} = 'false' ]] && [[ ${DIFF_IN_REQUIREMENTS} = 'false' ]] && [[ ${DIFF_IN_CHART} = 'false' ]] ; then
   echo 'No differences requiring chart version bump detected'
   exit 0
 fi
