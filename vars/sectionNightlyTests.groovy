@@ -91,7 +91,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
         warnError('Failure in fullFunctionalTest') {
           pcr.callAround('fullFunctionalTest') {
             timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-              builder.fullFunctionalTest()
+              builder.functionalTest()
             }
           }
         }
