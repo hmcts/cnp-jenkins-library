@@ -189,7 +189,7 @@ EOF
   }
 
   def fullFunctionalTest() {
-
+      functionalTest()
   }
 
   def dbMigrate(String vaultName, String microserviceName) {
