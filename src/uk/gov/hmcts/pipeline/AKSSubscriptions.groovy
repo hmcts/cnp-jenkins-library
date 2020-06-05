@@ -12,7 +12,7 @@ class AKSSubscriptions {
     Objects.requireNonNull(steps)
 
     def previewName ='DCD-CFTAPPS-DEV'
-    preview = new AKSSubscription(steps, previewName, 'cftapps-dev',  'preview', false)
+    preview = new AKSSubscription(steps, previewName, 'cftapps-dev',  'dev', true)
 
     def aatName = steps.env.AKS_AAT_SUBSCRIPTION_NAME ?: 'DCD-CFTAPPS-STG'
     def aatKvName =  steps.env.AAT_AKS_KEY_VAULT ?: 'cftapps-stg'
