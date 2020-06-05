@@ -6,6 +6,7 @@ class Subscription implements Serializable {
   def final demoName
   def final previewName
   def final hmctsDemoName
+  def final devName
   def final qaName
   def final ethosLdataName
 
@@ -17,6 +18,7 @@ class Subscription implements Serializable {
     demoName = env.DEMO_SUBSCRIPTION_NAME ?: 'nonprod'
     previewName = env.PREVIEW_SUBSCRIPTION_NAME ?: 'nonprod'
     hmctsDemoName = env.HMCTSDEMO_SUBSCRIPTION_NAME ?: 'hmctsdemo'
+    devName = env.DEV_SUBSCRIPTION_NAME ?: 'dev'
     qaName = env.QA_SUBSCRIPTION_NAME ?: 'qa'
     ethosLdataName = env.ETHOSLDATA_SUBSCRIPTION_NAME ?: 'ethosldata'
   }

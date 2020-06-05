@@ -17,7 +17,8 @@ def call(String subscription, String environment) {
     nonprod: [
       aat: [],
       demo: [],
-      preview: []
+      preview: [],
+      dev []
     ],
     prod: [
       prod: []

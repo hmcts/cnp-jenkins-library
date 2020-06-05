@@ -28,6 +28,10 @@ class ProjectBranch implements Serializable {
     branchName == 'perftest'
   }
 
+  boolean isDev() {
+    branchName == 'dev'
+  }
+
   boolean isEthosldata() {
     branchName == 'ethosldata'
   }

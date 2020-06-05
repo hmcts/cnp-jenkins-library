@@ -7,6 +7,7 @@ class AKSSubscriptions {
   final AKSSubscription perftest
   final AKSSubscription prod
   final AKSSubscription demo
+  final AKSSubscription dev
 
   AKSSubscriptions(Object steps) {
     Objects.requireNonNull(steps)
@@ -30,5 +31,8 @@ class AKSSubscriptions {
 
     def demoName = steps.env.AKS_DEMO_SUBSCRIPTION_NAME ?: 'DCD-CFTAPPS-DEMO'
     demo = new AKSSubscription(steps, demoName, 'cftapps-demo', 'demo', true)
+
+    def devName = steps.env.AKS_DEV_SUBSCRIPTION_NAME ?: 'DCD-CFTAPPS-DEV'
+    dev = new AKSSubscription(steps, devName, 'cftapps-dev', 'dev', true)
   }
 }

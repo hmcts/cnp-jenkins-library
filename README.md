@@ -60,6 +60,7 @@ Branch | Environment
 `master` | `aat` then `prod`
 `demo` | `demo`
 `perftest` | `perftest`
+`dev` | `dev`
 PR branch| `preview` (ASE or AKS depending on your config)
 
 #### Secrets for functional / smoke testing

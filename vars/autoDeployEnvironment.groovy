@@ -32,6 +32,11 @@ def call() {
       subscriptionName: subscription.qaName,
       aksSubscription: aksSubscriptions.perftest
     ],
+    dev: [
+      environmentName: environment.devName,
+      subscriptionNameL subscription.devName,
+      aksSubscription: aksSubscriptions.dev
+    ],
     ithc: [
       environmentName: environment.ithcName,
       subscriptionName: subscription.qaName,
