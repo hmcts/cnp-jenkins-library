@@ -1,11 +1,11 @@
 import uk.gov.hmcts.contino.ProjectBranch
 
 /**
- * onDemo
+ * onDev
  *
- * Runs the block of code if the current branch is demo
+ * Runs the block of code if the current branch is dev
  *
- * onDemo {
+ * onDev {
  *   ...
  * }
  */

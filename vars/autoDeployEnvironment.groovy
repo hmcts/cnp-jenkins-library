@@ -34,7 +34,7 @@ def call() {
     ],
     dev: [
       environmentName: environment.devName,
-      subscriptionNameL subscription.devName,
+      subscriptionName: subscription.devName,
       aksSubscription: aksSubscriptions.dev
     ],
     ithc: [
