@@ -5,8 +5,8 @@ def call(String subscription, String environment, Closure block) {
     withSubscription(subscription) {
       withRegistrySecrets {
         def envName = environment.toUpperCase()
-        env.AKS_CLUSTER_NAME = env."${envName}_AKS_CLUSTER_NAME" ?: "cnp-${environment}-cluster"
-        env.AKS_RESOURCE_GROUP = env."${envName}_AKS_RESOURCE_GROUP" ?: "cnp-${environment}-rg"
+        env.AKS_CLUSTER_NAME = env."DEV_AKS_CLUSTER_NAME"
+        env.AKS_RESOURCE_GROUP = env."DEV_AKS_RESOURCE_GROUP"
         block.call()
       }
     }
