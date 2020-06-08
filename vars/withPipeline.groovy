@@ -194,7 +194,7 @@ def call(type, String product, String component, Closure body) {
     } catch (err) {
       if (err.message.startsWith('AUTO_ABORT')) {
         currentBuild.result = 'ABORTED'
-        metricsPublisher.publish(e.message)
+        metricsPublisher.publish(err.message)
         return
       } else {
         currentBuild.result = "FAILURE"
