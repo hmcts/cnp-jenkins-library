@@ -15,8 +15,7 @@ def call(Map<String, String> params) {
       returnStatus: true
     )
     if(CHART_BUMP==1) {
-      currentBuild.result = 'ABORTED'
-      error('Chart version is bumped and a commit has been pushed to branch')
+      error('AUTO_ABORT_CHART_VERSION_BUMP')
     }
   }
 

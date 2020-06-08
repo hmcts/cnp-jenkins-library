@@ -192,11 +192,16 @@ def call(type, String product, String component, Closure body) {
         )
       }
     } catch (err) {
-      currentBuild.result = "FAILURE"
-      notifyBuildFailure channel: slackChannel
-
+      if (e.message.startsWith('AUTO_ABORT'))
+      {
+        currentBuild.result = 'ABORTED'
+        metricsPublisher.publish(e.message)
+      } else {
+        currentBuild.result = "FAILURE"
+        notifyBuildFailure channel: slackChannel
+        metricsPublisher.publish('Pipeline Failed')
+      }
       callbacksRunner.call('onFailure')
-      metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
