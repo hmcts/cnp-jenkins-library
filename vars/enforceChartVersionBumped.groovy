@@ -9,10 +9,15 @@ def call(Map<String, String> params) {
 
   withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
     def bearerToken = env.BEARER_TOKEN
-    sh """
-    chmod +x check-helm-version-bumped.sh
-    ./check-helm-version-bumped.sh $product $component $branch $credentialsId $bearerToken $gitEmailId
-  """
+    CHART_BUMP = sh (
+      script: "chmod +x check-helm-version-bumped.sh\n" +
+        "    ./check-helm-version-bumped.sh $product $component $branch $credentialsId $bearerToken $gitEmailId",
+      returnStatus: true
+    )
+    if(CHART_BUMP==1) {
+      currentBuild.result = 'ABORTED'
+      error('Chart version is bumped and a commit has been pushed to branch')
+    }
   }
 
   sh 'rm check-helm-version-bumped.sh'
