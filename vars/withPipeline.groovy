@@ -192,10 +192,10 @@ def call(type, String product, String component, Closure body) {
         )
       }
     } catch (err) {
-      if (e.message.startsWith('AUTO_ABORT'))
-      {
+      if (e.message.startsWith('AUTO_ABORT')) {
         currentBuild.result = 'ABORTED'
         metricsPublisher.publish(e.message)
+        return
       } else {
         currentBuild.result = "FAILURE"
         notifyBuildFailure channel: slackChannel
