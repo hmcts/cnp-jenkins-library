@@ -14,8 +14,8 @@ def call(Map<String, String> params) {
         "    ./check-helm-version-bumped.sh $product $component $branch $credentialsId $bearerToken $gitEmailId",
       returnStatus: true
     )
-    if(CHART_BUMP==1) {
-      error('AUTO_ABORT Chart version has been bumped and a commit has been pushed')
+    if (CHART_BUMP==1) {
+      error('AUTO_ABORT Automatically bumped chart version due to changes in the chart')
     }
   }
 
