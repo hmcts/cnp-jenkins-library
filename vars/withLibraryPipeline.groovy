@@ -69,8 +69,6 @@ def call(type, String product, String component, Closure body) {
 
 
 
-      onPR {
-      }
 
       onMaster {
 
@@ -88,37 +86,13 @@ def call(type, String product, String component, Closure body) {
         stage('Checkout') {
           pcr.callAround('checkout') {
             checkoutScm()
-            withAcrClient(azSubscription) {
-              projectBranch = new ProjectBranch(env.BRANCH_NAME)
-              acr = new Acr(this, azSubscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-              dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
-              noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
-            }
-          }
         }
 
 
         stage("Build") {
-          onPR {
-            enforceChartVersionBumped product: product, component: component
-            warnAboutAADIdentityPreviewHack product: product, component: component
-          }
 
           builder.setupToolVersion()
 
-          if (!fileExists('Dockerfile')) {
-            WarningCollector.addPipelineWarning("deprecated_no_dockerfile", "A Dockerfile will be required for all app builds. Docker builds (enableDockerBuild()) wil be enabled by default. ", new Date().parse("dd.MM.yyyy", "17.12.2019"))
-          }
-
-          // always build master and demo as we currently do not deploy an image there
-          boolean envSub = autoDeployEnvironment() != null
-          when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
-            pcr.callAround('build') {
-              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-                builder.build()
-              }
-            }
-          }
 
         }
 
@@ -162,11 +136,6 @@ def call(type, String product, String component, Closure body) {
 
       }
 
-      onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-      }
-
-      onPreview {
-      }
 
     } catch (err) {
       currentBuild.result = "FAILURE"
