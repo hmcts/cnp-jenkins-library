@@ -63,21 +63,99 @@ def call(type, String product, String component, Closure body) {
     try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      sectionBuildAndTestNoPublish(
-        appPipelineConfig: pipelineConfig,
-        pipelineCallbacksRunner: callbacksRunner,
-        builder: pipelineType.builder,
-        subscription: subscription.nonProdName,
-        environment: environment.nonProdName,
-        product: product,
-        component: component,
-        pactBrokerUrl: environment.pactBrokerUrl
-      )
+
 
       onPR {
       }
 
       onMaster {
+
+        PipelineCallbacksRunner pcr = callbacksRunner
+        AppPipelineConfig config = pipelineConfig
+        Builder builder = pipelineType.builder
+
+        def azSubscription = subscription.nonProdName
+        def pactBrokerUrl = environment.pactBrokerUrl
+        def acr
+        def dockerImage
+        def projectBranch
+        boolean noSkipImgBuild = true
+
+        stage('Checkout') {
+          pcr.callAround('checkout') {
+            checkoutScm()
+            withAcrClient(azSubscription) {
+              projectBranch = new ProjectBranch(env.BRANCH_NAME)
+              acr = new Acr(this, azSubscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+              dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
+              noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
+            }
+          }
+        }
+
+
+        stage("Build") {
+          onPR {
+            enforceChartVersionBumped product: product, component: component
+            warnAboutAADIdentityPreviewHack product: product, component: component
+          }
+
+          builder.setupToolVersion()
+
+          if (!fileExists('Dockerfile')) {
+            WarningCollector.addPipelineWarning("deprecated_no_dockerfile", "A Dockerfile will be required for all app builds. Docker builds (enableDockerBuild()) wil be enabled by default. ", new Date().parse("dd.MM.yyyy", "17.12.2019"))
+          }
+
+          // always build master and demo as we currently do not deploy an image there
+          boolean envSub = autoDeployEnvironment() != null
+          when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+            pcr.callAround('build') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+                builder.build()
+              }
+            }
+          }
+
+        }
+
+        stage("Tests") {
+
+          when (noSkipImgBuild) {
+            parallel(
+
+              "Unit tests": {
+                pcr.callAround('test') {
+                  timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+                    builder.test()
+                  }
+                }
+              },
+
+              failFast: true
+            )
+          }
+        }
+
+        if (config.pactBrokerEnabled) {
+          stage("Pact Consumer Verification") {
+            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+            env.PACT_BROKER_URL = pactBrokerUrl
+
+            /*
+             * These instructions have to be kept in order
+             */
+
+            if (config.pactConsumerTestsEnabled) {
+              pcr.callAround('pact-consumer-tests') {
+                builder.runConsumerTests(pactBrokerUrl, version)
+              }
+            }
+          }
+        }
+
       }
 
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
