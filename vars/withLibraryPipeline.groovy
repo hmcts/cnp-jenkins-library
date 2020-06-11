@@ -67,9 +67,6 @@ def call(type, String product, String component, Closure body) {
     try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
-
-
-
       onMaster {
 
         PipelineCallbacksRunner pcr = callbacksRunner
@@ -86,57 +83,56 @@ def call(type, String product, String component, Closure body) {
         stage('Checkout') {
           pcr.callAround('checkout') {
             checkoutScm()
-        }
-
-
-        stage("Build") {
-
-          builder.setupToolVersion()
-
-
-        }
-
-        stage("Tests") {
-
-          when (noSkipImgBuild) {
-            parallel(
-
-              "Unit tests": {
-                pcr.callAround('test') {
-                  timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-                    builder.test()
-                  }
-                }
-              },
-
-              failFast: true
-            )
           }
-        }
 
-        if (config.pactBrokerEnabled) {
-          stage("Pact Consumer Verification") {
-            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-            env.PACT_BROKER_URL = pactBrokerUrl
+          stage("Build") {
 
-            /*
+            builder.setupToolVersion()
+
+
+          }
+
+          stage("Tests") {
+
+            when(noSkipImgBuild) {
+              parallel(
+
+                "Unit tests": {
+                  pcr.callAround('test') {
+                    timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+                      builder.test()
+                    }
+                  }
+                },
+
+                failFast: true
+              )
+            }
+          }
+
+          if (config.pactBrokerEnabled) {
+            stage("Pact Consumer Verification") {
+              def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+              env.PACT_BROKER_URL = pactBrokerUrl
+
+              /*
              * These instructions have to be kept in order
              */
 
-            if (config.pactConsumerTestsEnabled) {
-              pcr.callAround('pact-consumer-tests') {
-                builder.runConsumerTests(pactBrokerUrl, version)
+              if (config.pactConsumerTestsEnabled) {
+                pcr.callAround('pact-consumer-tests') {
+                  builder.runConsumerTests(pactBrokerUrl, version)
+                }
               }
             }
           }
+
         }
-
       }
-
-
     } catch (err) {
       currentBuild.result = "FAILURE"
       notifyBuildFailure channel: slackChannel
