@@ -67,7 +67,7 @@ def call(type, String product, String component, Closure body) {
     try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      onMaster {
+//      onMaster {
 
         PipelineCallbacksRunner pcr = callbacksRunner
         AppPipelineConfig config = pipelineConfig
@@ -132,7 +132,7 @@ def call(type, String product, String component, Closure body) {
           }
 
         }
-      }
+//      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       notifyBuildFailure channel: slackChannel
