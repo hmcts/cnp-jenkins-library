@@ -84,46 +84,44 @@ def call(type, String product, String component, Closure body) {
           pcr.callAround('checkout') {
             checkoutScm()
           }
+        }
 
-          stage("Build") {
+        stage("Build") {
 
-            builder.setupToolVersion()
-          }
+          builder.setupToolVersion()
+        }
 
-          stage("Tests") {
+        stage("Tests") {
 
-            when(noSkipImgBuild) {
-                  pcr.callAround('test') {
-                    timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-                      builder.test()
-                    }
+          when(noSkipImgBuild) {
+                pcr.callAround('test') {
+                  timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+                    builder.test()
                   }
-                failFast: true
-            }
+                }
+              failFast: true
           }
-
-
-
         }
-        if (config.pactBrokerEnabled) {
-          stage("Pact Consumer Verification") {
-            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-            env.PACT_BROKER_URL = pactBrokerUrl
+        stage("Pact Consumer Verification") {
+          if (config.pactBrokerEnabled) {
+          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-            /*
-           * These instructions have to be kept in order
-           */
+          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+          env.PACT_BROKER_URL = pactBrokerUrl
 
-            if (config.pactConsumerTestsEnabled) {
-              pcr.callAround('pact-consumer-tests') {
-                builder.runConsumerTests(pactBrokerUrl, version)
-              }
+          /*
+         * These instructions have to be kept in order
+         */
+
+          if (config.pactConsumerTestsEnabled) {
+            pcr.callAround('pact-consumer-tests') {
+              builder.runConsumerTests(pactBrokerUrl, version)
             }
           }
         }
+      }
 //      }
     } catch (err) {
       currentBuild.result = "FAILURE"
