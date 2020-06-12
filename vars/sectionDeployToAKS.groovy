@@ -42,7 +42,7 @@ def call(params) {
     }
   }
 
-  withSubscription(subscription) {
+  withAcrClient(subscription) {
     withTeamSecrets(config, environment) {
       stage("AKS deploy - ${environment}") {
         pcr.callAround('akschartsinstall') {
@@ -50,10 +50,8 @@ def call(params) {
             onPR {
               deploymentNumber = githubCreateDeployment()
             }
-            withAksClient(subscription, environment) {
-              aksUrl = helmInstall(dockerImage, params)
-              log.info("deployed component URL: ${aksUrl}")
-            }
+            aksUrl = helmInstall(dockerImage, params)
+            log.info("deployed component URL: ${aksUrl}")
             onPR {
               githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
             }
@@ -64,7 +62,7 @@ def call(params) {
   }
 
   if (config.serviceApp) {
-      withSubscription(subscription) {
+    withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
             testEnv(aksUrl) {

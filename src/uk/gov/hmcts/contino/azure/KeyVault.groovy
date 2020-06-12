@@ -1,7 +1,7 @@
 package uk.gov.hmcts.contino.azure;
 
 /**
- * Needs to be used within a withSubscription block.
+ * Needs to be used within a withSubscriptionLogin block.
  */
 class KeyVault extends Az implements Serializable {
 

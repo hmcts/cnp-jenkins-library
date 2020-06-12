@@ -84,18 +84,11 @@ def servicePrincipalBasedLogin(String subscription, Closure body) {
 
 def identityBasedLogin(String subscription, Closure body) {
   ansiColor('xterm') {
-    def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
+    Closure azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
     azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
     def mgmtSubscriptionId = azJenkins 'account show --query id -o tsv'
 
-    def az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-    az 'login --identity'
-
-    withAzureKeyvault([
-      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: "${subscription}-subscription-id", version: '', envVariable: 'ARM_SUBSCRIPTION_ID']
-    ]) {
-      az "account set --subscription ${env.ARM_SUBSCRIPTION_ID}"
-
+    withSubscriptionLogin(subscription) {
       def infraVaultName = env.INFRA_VAULT_NAME
       log.info "Using $infraVaultName"
 
@@ -107,7 +100,8 @@ def identityBasedLogin(String subscription, Closure body) {
       def tfStateStorageAccountNameTemplate = env.TF_STATE_STORAGE_TEMPLATE ?: "mgmtstatestore"
       def tfStateContainerNameTemplate = env.TF_STATE_CONTAINER_TEMPLATE ?: "mgmtstatestorecontainer"
       def rootAddressSpace = env.ROOT_ADDRESS_SPACE ?: "10.96.0.0/12"
-      
+
+      Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
       def storageAccountKey = az "storage account keys list --account-name ${tfStateStorageAccountNameTemplate}${subscription} --query [0].value -o tsv"
       def tenantId = az "account show --query tenantId -o tsv"
 
