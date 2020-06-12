@@ -85,29 +85,20 @@ def call(type, String product, String component, Closure body) {
             checkoutScm()
           }
 
-
           stage("Build") {
 
             builder.setupToolVersion()
-
-
           }
 
           stage("Tests") {
 
             when(noSkipImgBuild) {
-              parallel(
-
-                "Unit tests": {
                   pcr.callAround('test') {
                     timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
                       builder.test()
                     }
                   }
-                },
-
                 failFast: true
-              )
             }
           }
 
