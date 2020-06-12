@@ -12,6 +12,10 @@ def call(String subscription, Closure body) {
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: "${subscription}-subscription-id", version: '', envVariable: 'ARM_SUBSCRIPTION_ID']
   ]) {
     az "account set --subscription ${env.ARM_SUBSCRIPTION_ID}"
-    body.call()
+    withEnv([
+      "SUBSCRIPTION_NAME=$subscription",
+    ]) {
+      body.call()
+    }
   }
 }

@@ -119,7 +119,6 @@ def identityBasedLogin(String subscription, Closure body) {
         "STORE_rg_name_template=${tfStateRgNameTemplate}",
         "STORE_sa_name_template=${tfStateStorageAccountNameTemplate}",
         "STORE_sa_container_name_template=${tfStateContainerNameTemplate}",
-        "SUBSCRIPTION_NAME=$subscription",
         "TF_VAR_jenkins_AAD_objectId=${jenkinsObjectId}",
         "TF_VAR_root_address_space=${rootAddressSpace}",
         "INFRA_VAULT_URL=https://${infraVaultName}.vault.azure.net/"
