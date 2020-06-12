@@ -36,7 +36,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def test() {
     try {
-      gradle("--info check")
+      gradle("check")
     } finally {
       steps.junit '**/test-results/**/*.xml'
       steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
@@ -51,7 +51,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--info --rerun-tasks smoke")
+      gradle("--rerun-tasks smoke")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -61,7 +61,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--info --rerun-tasks functional")
+      gradle("--rerun-tasks functional")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -71,7 +71,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--info --rerun-tasks apiGateway")
+      gradle("--rerun-tasks apiGateway")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
