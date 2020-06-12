@@ -102,26 +102,27 @@ def call(type, String product, String component, Closure body) {
             }
           }
 
-          if (config.pactBrokerEnabled) {
-            stage("Pact Consumer Verification") {
-              def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-              env.PACT_BROKER_URL = pactBrokerUrl
 
-              /*
-             * These instructions have to be kept in order
-             */
+        }
+        if (config.pactBrokerEnabled) {
+          stage("Pact Consumer Verification") {
+            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-              if (config.pactConsumerTestsEnabled) {
-                pcr.callAround('pact-consumer-tests') {
-                  builder.runConsumerTests(pactBrokerUrl, version)
-                }
+            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+            env.PACT_BROKER_URL = pactBrokerUrl
+
+            /*
+           * These instructions have to be kept in order
+           */
+
+            if (config.pactConsumerTestsEnabled) {
+              pcr.callAround('pact-consumer-tests') {
+                builder.runConsumerTests(pactBrokerUrl, version)
               }
             }
           }
-
         }
 //      }
     } catch (err) {
