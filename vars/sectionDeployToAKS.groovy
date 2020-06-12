@@ -42,7 +42,7 @@ def call(params) {
     }
   }
 
-  withAcrClient(subscription) {
+  withAksClient(subscription, environment) {
     withTeamSecrets(config, environment) {
       stage("AKS deploy - ${environment}") {
         pcr.callAround('akschartsinstall') {
