@@ -109,7 +109,6 @@ def identityBasedLogin(String subscription, Closure body) {
         "ARM_USE_MSI=true",
         // Terraform env variables
         "ARM_ACCESS_KEY=${storageAccountKey}",
-        "ARM_TENANT_ID=${tenantId}",
         // Terraform input variables
         "TF_VAR_tenant_id=${tenantId}",
         "TF_VAR_subscription_id=${env.ARM_SUBSCRIPTION_ID}",
