@@ -139,7 +139,7 @@ def call(DockerImage dockerImage, Map params) {
 
     onPR {
       if (subscription != 'sandbox') {
-        addGithubLabels()
+        addGithubLabels(product)
       }
     }
 
@@ -161,10 +161,11 @@ def call(DockerImage dockerImage, Map params) {
   }
 }
 
-def addGithubLabels() {
-  def namespaceLabel   = 'ns:' + env.NAMESPACE
-  def releaseLabel   = 'rel:' + env.SERVICE_NAME
-  def labels = [namespaceLabel, releaseLabel]
+def addGithubLabels(String product) {
+  def namespaceLabel = 'ns:' + env.NAMESPACE
+  def releaseLabel = 'rel:' + env.SERVICE_NAME
+  def productLabel = 'prd:' + product
+  def labels = [namespaceLabel, releaseLabel, productLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)
