@@ -1,7 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
-import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
@@ -13,8 +11,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.pipeline.AKSSubscriptions
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(type, String product, String component, Closure body) {
@@ -31,7 +27,6 @@ def call(type, String product, String component, Closure body) {
   ]
 
   Subscription subscription = new Subscription(env)
-  AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   PipelineType pipelineType
 
@@ -67,17 +62,13 @@ def call(type, String product, String component, Closure body) {
     try {
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      onMaster {
+//      onMaster {
 
         PipelineCallbacksRunner pcr = callbacksRunner
         AppPipelineConfig config = pipelineConfig
         Builder builder = pipelineType.builder
 
-        def azSubscription = subscription.nonProdName
         def pactBrokerUrl = environment.pactBrokerUrl
-        def acr
-        def dockerImage
-        def projectBranch
         boolean noSkipImgBuild = true
 
         stage('Checkout') {
@@ -99,7 +90,6 @@ def call(type, String product, String component, Closure body) {
                     builder.test()
                   }
                 }
-              failFast: true
           }
         }
 
@@ -114,15 +104,12 @@ def call(type, String product, String component, Closure body) {
           /*
          * These instructions have to be kept in order
          */
-
-          if (config.pactConsumerTestsEnabled) {
             pcr.callAround('pact-consumer-tests') {
               builder.runConsumerTests(pactBrokerUrl, version)
             }
-          }
         }
       }
-      }
+//      }
     } catch (err) {
       currentBuild.result = "FAILURE"
       notifyBuildFailure channel: slackChannel
