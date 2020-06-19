@@ -6,6 +6,7 @@ import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class GradleBuilder extends AbstractBuilder {
 
@@ -213,12 +214,18 @@ EOF
       if (javaVersion == java11) {
         steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      } else {
+        nagAboutJava11Required()
       }
     } catch(err) {
       steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set"
+      nagAboutJava11Required()
     }
     steps.sh "java -version"
+  }
 
+  def nagAboutJava11Required() {
+    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "19.08.2020"))
   }
 
   def hasPlugin(String pluginName) {
