@@ -6,6 +6,7 @@ import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class GradleBuilder extends AbstractBuilder {
 
@@ -36,7 +37,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def test() {
     try {
-      gradle("--info check")
+      gradle("check")
     } finally {
       steps.junit '**/test-results/**/*.xml'
       steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
@@ -51,7 +52,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--info --rerun-tasks smoke")
+      gradle("--rerun-tasks smoke")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -61,7 +62,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--info --rerun-tasks functional")
+      gradle("--rerun-tasks functional")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -71,7 +72,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--info --rerun-tasks apiGateway")
+      gradle("--rerun-tasks apiGateway")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
@@ -126,11 +127,14 @@ class GradleBuilder extends AbstractBuilder {
 
   def prepareCVEReport(owaspReportJSON, env) {
     def report = new JsonSlurper().parseText(owaspReportJSON)
-    // Only include non-vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
-    report.dependencies = report.dependencies.findAll { it.vulnerabilityIds }
+    // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+    report.dependencies = report.dependencies.findAll {
+      it.vulnerabilities || it.suppressedVulnerabilities
+    }
 
     def result = [
       build: [
+        branch_name                  : env.BRANCH_NAME,
         build_display_name           : env.BUILD_DISPLAY_NAME,
         build_tag                    : env.BUILD_TAG,
         git_url                      : env.GIT_URL,
@@ -186,7 +190,7 @@ EOF
   }
 
   def fullFunctionalTest() {
-
+      functionalTest()
   }
 
   def dbMigrate(String vaultName, String microserviceName) {
@@ -210,12 +214,18 @@ EOF
       if (javaVersion == java11) {
         steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      } else {
+        nagAboutJava11Required()
       }
     } catch(err) {
       steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set"
+      nagAboutJava11Required()
     }
     steps.sh "java -version"
+  }
 
+  def nagAboutJava11Required() {
+    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "19.08.2020"))
   }
 
   def hasPlugin(String pluginName) {

@@ -116,8 +116,12 @@ class GradleBuilderTest extends Specification {
     result = new JsonSlurper().parseText(result)
 
     then:
-    // Only dependencies with vulnerabilities should be reported
-    result.report.dependencies.every { it.vulnerabilityIds }
+    // Report has 2 dependencies with vulnerabilities and 3 with suppressed vulnerabilities.
+    result.report.dependencies.size == 5
+    // Only dependencies with vulnerabilities or suppressed vulnerabilities should be reported
+    result.report.dependencies.every {
+      it.vulnerabilities || it.suppressedVulnerabilities
+    }
     result.build.git_url == 'http://example.com'
   }
 

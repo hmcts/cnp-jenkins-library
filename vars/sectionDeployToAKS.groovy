@@ -42,10 +42,10 @@ def call(params) {
     }
   }
 
-  withSubscription(subscription) {
+  stage("AKS deploy - ${environment}") {
     withTeamSecrets(config, environment) {
-      stage("AKS deploy - ${environment}") {
-        pcr.callAround('akschartsinstall') {
+      pcr.callAround('akschartsinstall') {
+        withAksClient(subscription, environment) {
           timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
             onPR {
               deploymentNumber = githubCreateDeployment()
@@ -66,7 +66,7 @@ def call(params) {
   }
 
   if (config.serviceApp) {
-      withSubscription(subscription) {
+    withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
           stage("Smoke Test - AKS ${environment}") {
             testEnv(aksUrl) {
