@@ -172,7 +172,7 @@ EOF
   }
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
-    gradle("--debug -Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
+    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
   }
 
   def runConsumerTests(pactBrokerUrl, version) {
