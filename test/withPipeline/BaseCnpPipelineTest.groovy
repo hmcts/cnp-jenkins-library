@@ -39,8 +39,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       .build()
     helper.registerSharedLibrary(library)
     helper.registerAllowedMethod("deleteDir", null)
-    helper.registerAllowedMethod("stash", [Map.class], null)
-    helper.registerAllowedMethod("unstash", [String.class], null)
     helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)

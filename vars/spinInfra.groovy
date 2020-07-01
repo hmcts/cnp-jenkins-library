@@ -19,7 +19,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
   def deploymentNamespace = branch.deploymentNamespace()
   def productName = component ? "$product-$component" : product
   def changeUrl = ""
-  def environmentDeploymentTarget = "$environment$deploymentTarget"
+  def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
 
@@ -47,7 +47,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         def builtFrom = env.GIT_URL ?: 'unknown'
         pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel]).toString()
-        log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; deploymentTarget='$deploymentTarget' environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+        log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
@@ -79,9 +79,10 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         """
 
         env.TF_VAR_ilbIp = 'TODO remove after some time'
-        
+        env.TF_VAR_deployment_namespace = deploymentNamespace
+
         sh "terraform get -update=true"
-        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'deployment_namespace=${deploymentNamespace}' -var 'product=${product}' -var 'component=${component}'" +
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'product=${product}' -var 'component=${component}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {

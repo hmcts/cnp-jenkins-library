@@ -1,6 +1,5 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.Deployer
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
@@ -11,16 +10,13 @@ def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
-  def pactBrokerUrl = params.pactBrokerUrl
   def subscription = params.subscription
   def environment = params.environment
   def product = params.product
   def component = params.component
-  def deploymentTargets = params.deploymentTargets ?: deploymentTargets(subscription, environment)
   Long deploymentNumber
 
   Builder builder = pipelineType.builder
-  Deployer deployer = pipelineType.deployer
   def tfOutput
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
   approvedEnvironmentRepository(environment, metricsPublisher) {
@@ -61,32 +57,6 @@ def call(params) {
               }
             }
           }
-        }
-
-        notFolderExists('infrastructure/deploymentTarget') {
-          // if there's no deployment target infrastructure code then don't run deployment code for deployment targets
-          deploymentTargets.clear()
-        }
-
-        if (config.legacyDeploymentForEnv(environment)) {
-          deploymentTargets.add(0, '')
-        }
-
-        for (int i = 0; i < deploymentTargets.size(); i++) {
-
-          sectionDeployToDeploymentTarget(
-            appPipelineConfig: config,
-            pipelineCallbacksRunner: pcr,
-            pipelineType: pipelineType,
-            subscription: subscription,
-            environment: environment,
-            product: product,
-            component: component,
-            envTfOutput: tfOutput,
-            deploymentTarget: deploymentTargets[i],
-            deploymentNumber: deploymentNumber,
-            pactBrokerUrl: pactBrokerUrl
-          )
         }
       }
     }

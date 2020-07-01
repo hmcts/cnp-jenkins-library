@@ -36,14 +36,9 @@ class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
     }
 
 
-    // ensure no deployer methods are called
-    def mockDeployer = new MockFor(NodeDeployer)
-
-    mockDeployer.use {
-      stubBuilder.use {
-        stubPactBroker.use {
-          runScript("testResources/$jenkinsFile")
-        }
+    stubBuilder.use {
+      stubPactBroker.use {
+        runScript("testResources/$jenkinsFile")
       }
     }
 
