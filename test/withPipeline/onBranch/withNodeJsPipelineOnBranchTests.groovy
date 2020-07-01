@@ -26,13 +26,8 @@ class withNodeJsPipelineOnBranchTests extends BaseCnpPipelineTest {
     stubBuilder.demand.securityCheck() {}
     stubBuilder.demand.sonarScan() {}
 
-    // ensure no deployer methods are called
-    def mockDeployer = new MockFor(NodeDeployer)
-
-    mockDeployer.use {
-      stubBuilder.use {
-        runScript("testResources/$jenkinsFile")
-      }
+    stubBuilder.use {
+      runScript("testResources/$jenkinsFile")
     }
 
     stubBuilder.expect.verify()

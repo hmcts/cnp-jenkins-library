@@ -116,19 +116,17 @@ def call(type, String product, String component, Closure body) {
           pactBrokerUrl: environment.pactBrokerUrl
         )
 
-        if (pipelineConfig.aksStagingDeployment) {
-          sectionDeployToAKS(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            aksSubscription: aksSubscriptions.aat,
-            environment: environment.nonProdName,
-            product: product,
-            component: component,
-            pactBrokerUrl: environment.pactBrokerUrl
-          )
-        }
+        sectionDeployToAKS(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment.nonProdName,
+          product: product,
+          component: component,
+          pactBrokerUrl: environment.pactBrokerUrl
+        )
 
         stage('Publish Helm chart') {
           helmPublish(

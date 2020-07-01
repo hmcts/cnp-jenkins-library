@@ -28,7 +28,6 @@ class GradleBuilder extends AbstractBuilder {
   def build() {
     addVersionInfo()
     gradle("assemble")
-    steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
   }
 
   def addInitScript() {

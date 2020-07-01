@@ -3,7 +3,6 @@ package withPipeline.onBranch
 import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import uk.gov.hmcts.contino.GradleBuilder
-import uk.gov.hmcts.contino.JavaDeployer
 import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
 import withPipeline.BaseCnpPipelineTest
@@ -31,13 +30,8 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     stubBuilder.demand.securityCheck() {}
     stubBuilder.demand.sonarScan() {}
 
-    // ensure no deployer methods are called
-    def mockDeployer = new MockFor(JavaDeployer)
-
-    mockDeployer.use {
-      stubBuilder.use {
-        runScript("testResources/exampleJavaPipeline.jenkins")
-      }
+    stubBuilder.use {
+      runScript("testResources/exampleJavaPipeline.jenkins")
     }
 
     stubBuilder.expect.verify()
@@ -54,13 +48,8 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     stubBuilder.demand.securityCheck(0) {}
     stubBuilder.demand.sonarScan(0) {}
 
-    // ensure no deployer methods are called
-    def mockDeployer = new MockFor(JavaDeployer)
-
-    mockDeployer.use {
-      stubBuilder.use {
-          runScript("testResources/exampleJavaPipeline.jenkins")
-      }
+    stubBuilder.use {
+        runScript("testResources/exampleJavaPipeline.jenkins")
     }
 
     stubBuilder.expect.verify()

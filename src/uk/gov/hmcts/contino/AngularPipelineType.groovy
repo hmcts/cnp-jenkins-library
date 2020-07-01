@@ -6,7 +6,6 @@ public class AngularPipelineType implements PipelineType, Serializable {
   def app
 
   Builder builder
-  Deployer deployer
 
   AngularPipelineType(steps, product, app) {
     this.steps = steps
@@ -14,6 +13,5 @@ public class AngularPipelineType implements PipelineType, Serializable {
     this.app = app
 
     builder = new AngularBuilder(steps)
-    deployer = new StaticSiteDeployer(steps, product, app, 'dist')
   }
 }
