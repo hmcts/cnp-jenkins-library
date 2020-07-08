@@ -30,6 +30,7 @@ def call(Map params) {
       }
 
       helm.publishIfNotExists(values)
+      helm.publishToGit(values)
     }
   }
 }

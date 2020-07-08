@@ -75,6 +75,32 @@ class Helm {
     }
   }
 
+  def publishToGit(List<String> values) {
+    addRepo()
+    lint(values)
+
+    def credentialsId = env.GIT_CREDENTIALS_ID
+    def gitEmailId = env.GIT_APP_EMAIL_ID
+
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    this.steps.echo "Version of chart locally is: ${version}"
+
+    writeFile file: 'push-helm-charts-to-git.sh', text: libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
+    
+    PUBLISH_CHART = sh (
+      script: "chmod +x push-helm-charts-to-git.sh\n" +
+        "    ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $credentialsId $gitEmailId $version",
+      returnStatus: true
+    )
+    if (PUBLISH_CHART==1) {
+      error('AUTO_ABORT Chart publishing failed.')
+    }
+
+  sh 'rm push-helm-charts-to-git.sh'
+
+  }
+
+
   def lint(List<String> values) {
     this.execute("lint", this.chartLocation, values, null)
   }
