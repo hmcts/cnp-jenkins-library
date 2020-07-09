@@ -11,7 +11,7 @@ if [ -d "hmcts-charts" ]; then
   rm -rf hmcts-charts
 fi
 
-git clone git@github.com:hmcts/hmcts-charts.git
+git clone https://github.com/hmcts/hmcts-charts.git
 
 if cd hmcts-charts; then
   if [ -d "${CHART_NAME}" ]; then
