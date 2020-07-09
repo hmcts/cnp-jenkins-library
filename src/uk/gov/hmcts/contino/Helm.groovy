@@ -79,24 +79,24 @@ class Helm {
     addRepo()
     lint(values)
 
-    def credentialsId = env.GIT_CREDENTIALS_ID
-    def gitEmailId = env.GIT_APP_EMAIL_ID
+    def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
+    def gitEmailId = this.steps.env.GIT_APP_EMAIL_ID
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
 
-    writeFile file: 'push-helm-charts-to-git.sh', text: libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
+    this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
     
-    PUBLISH_CHART = sh (
+    publishChart = this.steps.sh (
       script: "chmod +x push-helm-charts-to-git.sh\n" +
         "    ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $credentialsId $gitEmailId $version",
       returnStatus: true
     )
-    if (PUBLISH_CHART==1) {
-      error('AUTO_ABORT Chart publishing failed.')
+    if (publishChart==1) {
+      this.steps.error('AUTO_ABORT Chart publishing failed.')
     }
 
-  sh 'rm push-helm-charts-to-git.sh'
+    this.steps.sh 'rm push-helm-charts-to-git.sh'
 
   }
 
