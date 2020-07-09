@@ -6,7 +6,6 @@ CHART_NAME=${2}
 USER_NAME=${3}
 EMAIL_ID=${4}
 VERSION=${5}
-BEARER_TOKEN=${6}
 
 if [ -d "hmcts-charts" ]; then
   rm -rf hmcts-charts
