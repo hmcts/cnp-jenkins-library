@@ -6,6 +6,7 @@ CHART_NAME=${2}
 USER_NAME=${3}
 EMAIL_ID=${4}
 VERSION=${5}
+BEARER_TOKEN=${6}
 
 if [ -d "hmcts-charts" ]; then
   rm -rf hmcts-charts
@@ -25,6 +26,7 @@ if cd hmcts-charts; then
   fi
   
   if cp -R "../${CHART_DIRECTORY}" .; then
+    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
     git config --global user.name "${USER_NAME}"
     git config --global user.email "${EMAIL_ID}"
     git add "${CHART_NAME}/"
