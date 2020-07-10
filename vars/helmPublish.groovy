@@ -35,9 +35,8 @@ def call(Map params) {
       if helm.compareChartVersion() {
         helm.publishIfNotExists()
         helm.publishToGitIfNotExists()
-        echo "Published ${this.chartName}-${version} to ${registryName}"
       } else {
-        echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+        echo "Chart already published, skipping publish, bump the version in ${helmResourcesDir}/${chartName}/Chart.yaml if you want it to be published"
       }
     }
   }
