@@ -60,7 +60,7 @@ class Helm {
     }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    return resultOfSearch == notFoundMessage
+    return (resultOfSearch == notFoundMessage)
   }
 
   def publishIfNotExists() {
