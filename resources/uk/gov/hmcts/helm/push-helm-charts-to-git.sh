@@ -37,6 +37,12 @@ if cd hmcts-charts; then
   fi
   
   if cp -R "../${CHART_DIRECTORY}" ./stable/; then
+
+    rm -r ./stable/${CHART_NAME}/charts
+    if [[ $? -ne 0 ]];then
+      echo "Unable to delete stable/${CHART_NAME}/charts directory" 1>&2
+    fi
+
     git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
     git config --global user.name "${GIT_CREDENTIALS_ID}"
     git config --global user.email "${GIT_APP_EMAIL_ID}"
