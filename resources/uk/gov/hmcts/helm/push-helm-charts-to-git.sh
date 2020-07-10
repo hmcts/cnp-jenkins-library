@@ -18,7 +18,7 @@ while [ $COUNT -lt $RETRIES ]; do
     COUNT=0
     break
   fi
-  (( $COUNT++ ))
+  COUNT=$(( $COUNT + 1))
   sleep $DELAY
 done
 
@@ -49,7 +49,7 @@ if cd hmcts-charts; then
       else
         echo "Failed to publish chart to git. Retry count $COUNT of $RETRIES"
       fi
-    (( $COUNT++ ))
+    COUNT=$(( $COUNT + 1))
     sleep $DELAY
     done
 

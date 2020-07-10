@@ -20,7 +20,6 @@ class Helm {
   def notFoundMessage = "Not found"
   String registrySubscription
   String tlsOptions = ""
-  def version
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -48,9 +47,13 @@ class Helm {
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
 
-  def compareChartVersion() {
-    
-    version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+  def publishIfNotExists(List<String> values) {
+    configureAcr()
+    addRepo()
+    dependencyUpdate()
+    lint(values)
+
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -60,20 +63,24 @@ class Helm {
     }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    return (resultOfSearch == notFoundMessage)
+    if (resultOfSearch == notFoundMessage) {
+      this.steps.echo "Publishing new version of ${this.chartName}"
+
+      this.steps.sh "helm package ${this.chartLocation}"
+      this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
+
+      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
+    } else {
+      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+    }
   }
 
-  def publishIfNotExists() {
-    configureAcr()
-    dependencyUpdate()
+  def publishToGitIfNotExists(List<String> values) {
+    addRepo()
+    lint(values)
 
-    this.steps.echo "Publishing new version of ${this.chartName}"
-    this.steps.sh "helm package ${this.chartLocation}"
-    this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
-    this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
-  }
-
-  def publishToGitIfNotExists() {
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    this.steps.echo "Version of chart locally is: ${version}"
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
     
