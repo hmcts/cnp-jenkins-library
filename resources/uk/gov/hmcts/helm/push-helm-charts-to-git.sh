@@ -19,6 +19,9 @@ while [ $COUNT -lt $RETRIES ]; do
     break
   fi
   COUNT=$(( $COUNT + 1))
+  if [ "$COUNT" = $RETRIES ]; then
+    exit 1
+  fi
   sleep $DELAY
 done
 
@@ -33,7 +36,7 @@ if cd hmcts-charts; then
      echo "Chart version ${GIT_CHART_VERSION} not published to git yet" 1>&2
   fi
   
-  if cp -R "../${CHART_DIRECTORY}" .; then
+  if cp -R "../${CHART_DIRECTORY}" ./stable/; then
     git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
     git config --global user.name "${GIT_CREDENTIALS_ID}"
     git config --global user.email "${GIT_APP_EMAIL_ID}"
@@ -41,7 +44,7 @@ if cd hmcts-charts; then
     git commit -m "chart push to git"
 
     while [ $COUNT -lt $RETRIES ]; do
-      git fetch origin master
+      git pull origin master
       if git push origin HEAD:master; then
         echo "Chart published successfully with ${GIT_CHART_VERSION}"
         COUNT=0
@@ -50,6 +53,9 @@ if cd hmcts-charts; then
         echo "Failed to publish chart to git. Retry count $COUNT of $RETRIES"
       fi
     COUNT=$(( $COUNT + 1))
+    if [ "$COUNT" = $RETRIES ]; then
+      exit 1
+    fi
     sleep $DELAY
     done
 
