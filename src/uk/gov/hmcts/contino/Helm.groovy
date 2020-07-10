@@ -20,6 +20,7 @@ class Helm {
   def notFoundMessage = "Not found"
   String registrySubscription
   String tlsOptions = ""
+  def version
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -47,13 +48,9 @@ class Helm {
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
 
-  def publishIfNotExists(List<String> values) {
-    configureAcr()
-    addRepo()
-    dependencyUpdate()
-    lint(values)
-
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+  def compareChartVersion() {
+    
+    version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -63,35 +60,28 @@ class Helm {
     }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
-    if (resultOfSearch == notFoundMessage) {
-      this.steps.echo "Publishing new version of ${this.chartName}"
-
-      this.steps.sh "helm package ${this.chartLocation}"
-      this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
-
-      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
-    } else {
-      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
-    }
+    return resultOfSearch == notFoundMessage
   }
 
-  def publishToGitIfNotExists(List<String> values) {
-    addRepo()
-    lint(values)
+  def publishIfNotExists() {
+    configureAcr()
+    dependencyUpdate()
 
-    def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
-    def gitEmailId = this.steps.env.GIT_APP_EMAIL_ID
+    this.steps.echo "Publishing new version of ${this.chartName}"
+    this.steps.sh "helm package ${this.chartLocation}"
+    this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
-    this.steps.echo "Version of chart locally is: ${version}"
+  }
+
+  def publishToGitIfNotExists() {
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
     
-    this.steps.withCredentials([this.steps.usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+    this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
       this.steps.sh (
         """
         chmod +x push-helm-charts-to-git.sh
-        ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $credentialsId $gitEmailId $version
+        ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $version
         """
       )
 

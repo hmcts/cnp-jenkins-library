@@ -3,9 +3,7 @@ set -x
 
 CHART_DIRECTORY=${1}
 CHART_NAME=${2}
-USER_NAME=${3}
-EMAIL_ID=${4}
-VERSION=${5}
+VERSION=${3}
 
 RETRIES=3
 DELAY=5
@@ -36,9 +34,9 @@ if cd hmcts-charts; then
   fi
   
   if cp -R "../${CHART_DIRECTORY}" .; then
-    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-    git config --global user.name "${USER_NAME}"
-    git config --global user.email "${EMAIL_ID}"
+    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
+    git config --global user.name "${GIT_CREDENTIALS_ID}"
+    git config --global user.email "${GIT_APP_EMAIL_ID}"
     git add "${CHART_NAME}/"
     git commit -m "chart push to git"
 

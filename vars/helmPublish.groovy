@@ -29,8 +29,16 @@ def call(Map params) {
         values << valuesEnv
       }
 
-      helm.publishIfNotExists(values)
-      helm.publishToGitIfNotExists(values)
+      helm.addRepo()
+      helm.lint(values)
+
+      if helm.compareChartVersion() {
+        helm.publishIfNotExists()
+        helm.publishToGitIfNotExists()
+        echo "Published ${this.chartName}-${version} to ${registryName}"
+      } else {
+        echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+      }
     }
   }
 }
