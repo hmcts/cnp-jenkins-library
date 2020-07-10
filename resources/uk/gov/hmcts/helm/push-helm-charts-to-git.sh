@@ -38,9 +38,15 @@ if cd hmcts-charts; then
   
   if cp -R "../${CHART_DIRECTORY}" ./stable/; then
 
-    rm -r ./stable/${CHART_NAME}/charts
-    if [[ $? -ne 0 ]];then
-      echo "Unable to delete stable/${CHART_NAME}/charts directory" 1>&2
+    if [ -d ./stable/${CHART_NAME}/charts ]; then 
+      rm -rf ./stable/${CHART_NAME}/charts
+      if [[ $? -ne 0 ]];then
+        echo "Unable to delete stable/${CHART_NAME}/charts directory" 1>&2
+      fi
+    fi
+
+    if [ -e ./stable/${CHART_NAME}/Chart.lock ];then
+      rm -f ./stable/${CHART_NAME}/Chart.lock
     fi
 
     git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
