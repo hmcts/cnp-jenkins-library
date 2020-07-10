@@ -40,7 +40,7 @@ if cd hmcts-charts; then
     git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
     git config --global user.name "${GIT_CREDENTIALS_ID}"
     git config --global user.email "${GIT_APP_EMAIL_ID}"
-    git add "${CHART_NAME}/"
+    git add .
     git commit -m "Auto-release ${CHART_NAME} ${VERSION}"
 
     while [ $COUNT -lt $RETRIES ]; do
