@@ -9,7 +9,7 @@ VERSION=${5}
 
 RETRIES=3
 DELAY=5
-COUNT=1
+COUNT=0
 
 if [ -d "hmcts-charts" ]; then
   rm -rf hmcts-charts
@@ -17,7 +17,7 @@ fi
 
 while [ $COUNT -lt $RETRIES ]; do
   if git clone https://github.com/hmcts/hmcts-charts.git; then
-    RETRIES=0
+    COUNT=0
     break
   fi
   (( $COUNT++ ))
@@ -46,7 +46,7 @@ if cd hmcts-charts; then
       git fetch origin master
       if git push origin HEAD:master; then
         echo "Chart published successfully with ${GIT_CHART_VERSION}"
-        RETRIES=0
+        COUNT=0
         break
       else
         echo "Failed to publish chart to git. Retry count $COUNT of $RETRIES"
