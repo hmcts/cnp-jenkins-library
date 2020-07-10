@@ -70,7 +70,7 @@ class Helm {
     this.steps.echo "Publishing new version of ${this.chartName}"
     this.steps.sh "helm package ${this.chartLocation}"
     this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
-    echo "Published ${this.chartName}-${version} to ${registryName}"
+    this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
   }
 
   def publishToGitIfNotExists() {
