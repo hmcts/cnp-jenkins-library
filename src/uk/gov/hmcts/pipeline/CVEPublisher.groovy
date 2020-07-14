@@ -5,6 +5,7 @@ import com.cloudbees.groovy.cps.NonCPS
 import com.microsoft.azure.documentdb.Document
 import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
+import uk.gov.hmcts.contino.Subscription
 
 class CVEPublisher {
 
@@ -13,13 +14,11 @@ class CVEPublisher {
   def documentClient
   private final boolean ignoreErrors
 
-  CVEPublisher(String cosmosDbUrl, steps) {
+  CVEPublisher(steps, DocumentClient documentClient) {
     this(
       steps,
       true,
-      steps.env.COSMOSDB_TOKEN_KEY != null ?
-        new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
-        : null
+      documentClient
     )
   }
 
@@ -27,6 +26,19 @@ class CVEPublisher {
     this.ignoreErrors = ignoreErrors
     this.steps = steps
     this.documentClient = documentClient
+  }
+
+  static CVEPublisher create(steps) {
+    Subscription subscription = new Subscription(steps.env)
+    def cosmosDbUrl = subscription.nonProdName == "sandbox" ?
+      'https://sandbox-pipeline-metrics.documents.azure.com/' :
+      'https://pipeline-metrics.documents.azure.com/'
+
+    steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
+      new CVEPublisher(steps, steps.env.COSMOSDB_TOKEN_KEY != null ?
+        new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
+        : null)
+    }
   }
 
   /**
@@ -38,25 +50,23 @@ class CVEPublisher {
    */
   def publishCVEReport(report) {
     try {
-      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-        if (steps.env.COSMOSDB_TOKEN_KEY == null) {
-          steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
-          return
-        }
-
-        steps.echo "Publishing CVE report"
-        def summary = JsonOutput.toJson([
-          build: [
-            branch_name                  : steps.env.BRANCH_NAME,
-            build_display_name           : steps.env.BUILD_DISPLAY_NAME,
-            build_tag                    : steps.env.BUILD_TAG,
-            git_url                      : steps.env.GIT_URL,
-          ],
-          report: report
-        ])
-
-        createDocument(summary)
+      if (documentClient == null) {
+        steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
+        return
       }
+
+      steps.echo "Publishing CVE report"
+      def summary = JsonOutput.toJson([
+        build: [
+          branch_name                  : steps.env.BRANCH_NAME,
+          build_display_name           : steps.env.BUILD_DISPLAY_NAME,
+          build_tag                    : steps.env.BUILD_TAG,
+          git_url                      : steps.env.GIT_URL,
+        ],
+        report: report
+      ])
+
+      createDocument(summary)
     } catch (err) {
       if (ignoreErrors) {
         steps.echo "Unable to publish CVE report '${err}'"

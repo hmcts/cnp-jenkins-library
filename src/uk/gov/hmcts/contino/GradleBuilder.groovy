@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -8,17 +9,10 @@ class GradleBuilder extends AbstractBuilder {
 
   def product
   def java11 = "11"
-  CVEPublisher cvePublisher
 
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
-    Subscription subscription = new Subscription(steps.env)
-    def cosmosDbUrl = subscription.nonProdName == "sandbox" ?
-      'https://sandbox-pipeline-metrics.documents.azure.com/' :
-      'https://pipeline-metrics.documents.azure.com/'
-
-    this.cvePublisher = new CVEPublisher(cosmosDbUrl, steps)
   }
 
   def build() {
@@ -100,7 +94,9 @@ class GradleBuilder extends AbstractBuilder {
         String dependencyReport = steps.readFile('build/reports/dependency-check-report.json')
 
         def cveReport = prepareCVEReport(dependencyReport)
-        cvePublisher.publishCVEReport(cveReport)
+
+        CVEPublisher.create(steps)
+          .publishCVEReport(cveReport)
       }
     }
   }
