@@ -1,4 +1,5 @@
 package uk.gov.hmcts.contino
+@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
 
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
