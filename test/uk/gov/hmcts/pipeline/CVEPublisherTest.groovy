@@ -1,36 +1,49 @@
 package uk.gov.hmcts.pipeline
 
+import com.microsoft.azure.documentdb.DocumentClient
 import spock.lang.Specification
 import uk.gov.hmcts.contino.JenkinsStepMock
 
 class CVEPublisherTest extends Specification {
 
-  def cvePublisher
+  CVEPublisher cvePublisher
   def steps
 
+  def documentClient
+
   def setup() {
+    documentClient = Mock(DocumentClient.class)
     steps = Mock(JenkinsStepMock.class)
     steps.getEnv() >> [
-      GIT_URL: 'http://example.com'
+      BRANCH_NAME: 'master',
+      GIT_URL: 'http://example.com',
+      COSMOSDB_TOKEN_KEY: 'abcd'
     ]
     def closure
     steps.withCredentials(_, { closure = it }) >> { closure.call() }
 
     cvePublisher = new CVEPublisher(
-      'https://pipeline-metrics.documents.azure.com/',
-      steps
+      steps,
+      false,
+      documentClient
     )
   }
 
   def "Publishing CVE report does not throw unhandled error"() {
-    when:
-    cvePublisher.publishCVEReport([
+    given:
+    def report = [
       dependencies: [
         something: '1.0'
       ]
-    ])
+    ]
+
+    when:
+    cvePublisher.publishCVEReport(report)
 
     then:
-    notThrown()
+    notThrown(Exception.class)
+
+    1 * documentClient.createDocument('dbs/jenkins/colls/cve-reports', _, null, false)
+    1 * documentClient.close()
   }
 }

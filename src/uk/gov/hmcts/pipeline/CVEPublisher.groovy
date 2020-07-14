@@ -9,12 +9,24 @@ import groovy.json.JsonOutput
 class CVEPublisher {
 
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
-  String cosmosDbUrl
   def steps
+  def documentClient
+  private final boolean ignoreErrors
 
   CVEPublisher(String cosmosDbUrl, steps) {
-    this.cosmosDbUrl = cosmosDbUrl
+    this(
+      steps,
+      true,
+      steps.env.COSMOSDB_TOKEN_KEY != null ?
+        new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
+        : null
+    )
+  }
+
+  CVEPublisher(steps, ignoreErrors, DocumentClient documentClient) {
+    this.ignoreErrors = ignoreErrors
     this.steps = steps
+    this.documentClient = documentClient
   }
 
   /**
@@ -35,10 +47,10 @@ class CVEPublisher {
         steps.echo "Publishing CVE report"
         def summary = JsonOutput.toJson([
           build: [
-            branch_name                  : env.BRANCH_NAME,
-            build_display_name           : env.BUILD_DISPLAY_NAME,
-            build_tag                    : env.BUILD_TAG,
-            git_url                      : env.GIT_URL,
+            branch_name                  : steps.env.BRANCH_NAME,
+            build_display_name           : steps.env.BUILD_DISPLAY_NAME,
+            build_tag                    : steps.env.BUILD_TAG,
+            git_url                      : steps.env.GIT_URL,
           ],
           report: report
         ])
@@ -46,19 +58,22 @@ class CVEPublisher {
         createDocument(summary)
       }
     } catch (err) {
-      steps.echo "Unable to publish CVE report '${err}'"
+      if (ignoreErrors) {
+        steps.echo "Unable to publish CVE report '${err}'"
+      } else {
+        throw err
+      }
     }
   }
 
 
   @NonCPS
   private def createDocument(String reportJSON) {
-    def client = new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
     try {
-      client.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
+      documentClient.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
         , null, false)
     } finally {
-      client.close()
+      documentClient.close()
     }
   }
 }
