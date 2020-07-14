@@ -59,7 +59,7 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-  node() {
+  node("k8s-agent") {
     def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
       env.PATH = "$env.PATH:/usr/local/bin"
