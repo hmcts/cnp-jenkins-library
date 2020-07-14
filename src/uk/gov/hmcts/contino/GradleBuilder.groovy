@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
