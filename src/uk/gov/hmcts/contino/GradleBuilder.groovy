@@ -1,28 +1,24 @@
 package uk.gov.hmcts.contino
-@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
 
-import com.cloudbees.groovy.cps.NonCPS
-import com.microsoft.azure.documentdb.Document
-import com.microsoft.azure.documentdb.DocumentClient
-import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class GradleBuilder extends AbstractBuilder {
 
-  private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
-
   def product
-  String cosmosDbUrl
   def java11 = "11"
+  CVEPublisher cvePublisher
 
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
     Subscription subscription = new Subscription(steps.env)
-    this.cosmosDbUrl = subscription.nonProdName == "sandbox" ?
+    def cosmosDbUrl = subscription.nonProdName == "sandbox" ?
       'https://sandbox-pipeline-metrics.documents.azure.com/' :
       'https://pipeline-metrics.documents.azure.com/'
+
+    this.cvePublisher = new CVEPublisher(cosmosDbUrl, steps)
   }
 
   def build() {
@@ -101,57 +97,22 @@ class GradleBuilder extends AbstractBuilder {
       }
       finally {
         steps.archiveArtifacts 'build/reports/dependency-check-report.html'
-        publishCVEReport()
-      }
-    }
-  }
-
-  def publishCVEReport() {
-    try {
-      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-        if (steps.env.COSMOSDB_TOKEN_KEY == null) {
-          steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
-          return
-        }
-
-        steps.echo "Publishing CVE report"
         String dependencyReport = steps.readFile('build/reports/dependency-check-report.json')
-        def summary = prepareCVEReport(dependencyReport, steps.env)
-        createDocument(summary)
+
+        def cveReport = prepareCVEReport(dependencyReport)
+        cvePublisher.publishCVEReport(cveReport)
       }
-    } catch (err) {
-      steps.echo "Unable to publish CVE report '${err}'"
     }
   }
 
-  def prepareCVEReport(owaspReportJSON, env) {
+  def prepareCVEReport(String owaspReportJSON) {
     def report = new JsonSlurper().parseText(owaspReportJSON)
     // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
     report.dependencies = report.dependencies.findAll {
       it.vulnerabilities || it.suppressedVulnerabilities
     }
 
-    def result = [
-      build: [
-        branch_name                  : env.BRANCH_NAME,
-        build_display_name           : env.BUILD_DISPLAY_NAME,
-        build_tag                    : env.BUILD_TAG,
-        git_url                      : env.GIT_URL,
-      ],
-      report: report
-    ]
-    return JsonOutput.toJson(result)
-  }
-
-  @NonCPS
-  private def createDocument(String reportJSON) {
-    def client = new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
-    try {
-      client.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
-        , null, false)
-    } finally {
-      client.close()
-    }
+    return report
   }
 
   @Override

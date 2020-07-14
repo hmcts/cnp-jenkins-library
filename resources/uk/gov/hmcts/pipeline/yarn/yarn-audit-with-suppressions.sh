@@ -37,7 +37,5 @@ if [ "$result" != 0 ]; then
   echo
   echo and commit the yarn-audit-known-issues file
 
-  rm -f yarn-audit-issues
-
   exit "$result"
 fi
