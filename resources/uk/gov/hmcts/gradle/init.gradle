@@ -41,19 +41,22 @@ settingsEvaluated { settings ->
 allprojects {
   afterEvaluate { project ->
     if (project.hasProperty('dependencyCheck')) {
-      // Any CVE should fail the build.
-      project.dependencyCheck.failBuildOnCVSS = 0
+      configure(project) {
+        dependencyCheck {
+          // Any CVE should fail the build.
+          failBuildOnCVSS = 0
 
-      // JSON dependency check reports are logged to cosmos for reporting.
-      project.dependencyCheck.formats += 'json'
+          // JSON dependency check reports are logged to cosmos for reporting.
+          formats += 'json'
 
-      // Scan only the dependencies used at application runtime.
-      // See https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
-      project.dependencyCheck.scanConfigurations += 'runtimeClasspath'
-      // Scan and skip configurations are mutually exclusive,
-      // so we must clear any skipped configurations the build may have configured.
-      project.dependencyCheck.skipConfigurations = []
+          // Scan only the dependencies used at application runtime.
+          // See https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
+          scanConfigurations += 'runtimeClasspath'
+          // Scan and skip configurations are mutually exclusive,
+          // so we must clear any skipped configurations the build may have configured.
+          skipConfigurations = []
+        }
+      }
     }
   }
 }
-
