@@ -1,4 +1,6 @@
-package uk.gov.hmcts.contino;
+package uk.gov.hmcts.contino
+
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector;
 
 class YarnBuilder extends AbstractBuilder {
 
@@ -84,6 +86,24 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn-audit-with-suppressions.sh'))
+    try {
+      steps.sh """
+        set +ex
+        source /opt/nvm/nvm.sh || true
+        nvm install
+        set -ex
+
+        chmod +x yarn-audit-with-suppressions.sh
+
+        ./yarn-audit-with-suppressions.sh
+
+        rm -f yarn-audit-with-suppressions.sh
+    """
+    } catch(err) { // TODO remove try catch after pipeline warning expires
+      WarningCollector.addPipelineWarning("node_cve", "CVEs found for Node.JS, update your dependencies / ignore false positives", new Date().parse("dd.MM.yyyy", "28.07.2020"))
+    }
+
     // no-op
     // to be replaced with yarn audit once suppressing vulnerabilities is possible
     // https://github.com/yarnpkg/yarn/issues/6669
