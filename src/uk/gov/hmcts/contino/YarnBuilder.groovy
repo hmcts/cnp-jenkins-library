@@ -86,7 +86,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn-audit-with-suppressions.sh'))
+    steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
     try {
       steps.sh """
         set +ex
