@@ -35,8 +35,8 @@ try {
 
   parallel (
     backend: {
-      stage('Run pipeline for backend') {
-        container('k8s-agent') {
+      node('k8s-agent') {
+        stage('Run pipeline for backend') {
           build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
             parameters: [string(name: 'LIB_VERSION', value: testBranch)]
         }
@@ -44,8 +44,8 @@ try {
     },
 
     frontend: {
-      stage('Run pipeline for frontend') {
-        container('k8s-agent') {
+      node('k8s-agent') {
+        stage('Run pipeline for frontend') {
           build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
             parameters: [string(name: 'LIB_VERSION', value: testBranch)]
         }
