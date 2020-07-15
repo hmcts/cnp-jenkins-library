@@ -36,15 +36,19 @@ try {
   parallel (
     backend: {
       stage('Run pipeline for backend') {
-        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
-          parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+        container('k8s-agent') {
+          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
+            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+        }
       }
     },
 
     frontend: {
       stage('Run pipeline for frontend') {
-        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
-          parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+        container('k8s-agent') {
+          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
+            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+        }
       }
     }
   )
