@@ -116,8 +116,6 @@ class YarnBuilder extends AbstractBuilder {
 
       CVEPublisher.create(steps)
         .publishCVEReport(cveReport)
-
-      steps.sh "rm -f yarn-audit-issues-result"
     }
   }
 

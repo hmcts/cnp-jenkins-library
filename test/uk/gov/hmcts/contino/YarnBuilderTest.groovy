@@ -131,7 +131,7 @@ class YarnBuilderTest extends Specification {
     when:
       builder.securityCheck()
     then:
-      2 * steps.sh({ it.contains('audit') })
+      1 * steps.sh({ it.contains('audit') })
   }
 
   def "full functional tests calls 'yarn test:fullfunctional'"() {
