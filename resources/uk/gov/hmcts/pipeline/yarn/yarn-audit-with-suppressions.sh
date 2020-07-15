@@ -8,12 +8,14 @@
 set +e
 yarn audit --groups dependencies
 result=$?
+
+yarn audit --groups dependencies --json > yarn-audit-issues-result
+
 set -e
 
 if [ "$result" != 0 ]; then
   if [ -f yarn-audit-known-issues ]; then
     set +e
-    yarn audit --groups dependencies --json > yarn-audit-issues-result
     grep auditAdvisory yarn-audit-issues-result > yarn-audit-issues
     set -e
 
