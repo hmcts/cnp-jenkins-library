@@ -157,14 +157,14 @@ class YarnBuilder extends AbstractBuilder {
    */
   private static LinkedHashMap<String, Object> mapYarnAuditToOurReport(it) {
     [
-      title              : it.data.advisory.title,
-      cves               : it.data.advisory.cves,
-      vulnerable_versions: it.data.advisory.vulnerable_versions,
-      patched_versions   : it.data.advisory.patched_versions,
-      severity           : it.data.advisory.severity,
-      cwe                : it.data.advisory.cwe,
-      url                : it.data.advisory.url,
-      module_name        : it.data.advisory.module_name
+      title              : it?.data?.advisory?.title,
+      cves               : it?.data?.advisory?.cves,
+      vulnerable_versions: it?.data?.advisory?.vulnerable_versions,
+      patched_versions   : it?.data?.advisory?.patched_versions,
+      severity           : it?.data?.advisory?.severity,
+      cwe                : it?.data?.advisory?.cwe,
+      url                : it?.data?.advisory?.url,
+      module_name        : it?.data?.advisory?.module_name
     ]
   }
 
