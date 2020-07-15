@@ -128,9 +128,15 @@ class YarnBuilder extends AbstractBuilder {
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
     issuesParsed.removeIf { it.type == 'auditSummary' }
 
+   issuesParsed = issuesParsed.collect {
+      mapYarnAuditToOurReport(it)
+    }
+
     List<Object> knownIssuesParsed = []
     if (knownIssues) {
-      knownIssuesParsed = knownIssues.split('\n').collect { jsonSlurper.parseText(it) }
+      knownIssuesParsed = knownIssues.split('\n').collect {
+        mapYarnAuditToOurReport(jsonSlurper.parseText(it))
+      }
     }
 
     def result = [
@@ -143,6 +149,23 @@ class YarnBuilder extends AbstractBuilder {
     }
 
     return result
+  }
+
+  /**
+   * We trim the report down to a 2MB per document limit in CosmosDB
+   * On large projects we've seen reports that are ~15MB
+   */
+  private static LinkedHashMap<String, Object> mapYarnAuditToOurReport(it) {
+    [
+      title              : it.data.advisory.title,
+      cves               : it.data.advisory.cves,
+      vulnerable_versions: it.data.advisory.vulnerable_versions,
+      patched_versions   : it.data.advisory.patched_versions,
+      severity           : it.data.advisory.severity,
+      cwe                : it.data.advisory.cwe,
+      url                : it.data.advisory.url,
+      module_name        : it.data.advisory.module_name
+    ]
   }
 
 

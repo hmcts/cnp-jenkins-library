@@ -7,6 +7,8 @@ import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
 import uk.gov.hmcts.contino.Subscription
 
+import java.nio.charset.StandardCharsets
+
 class CVEPublisher {
 
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
@@ -65,6 +67,8 @@ class CVEPublisher {
         ],
         report: report
       ])
+
+      steps.echo "SizeOf document: " + summary.getBytes(StandardCharsets.UTF_8).length
 
       createDocument(summary)
     } catch (err) {
