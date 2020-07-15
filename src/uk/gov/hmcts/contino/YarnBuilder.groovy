@@ -106,7 +106,7 @@ class YarnBuilder extends AbstractBuilder {
     } catch(ignored) { // TODO remove try catch after pipeline warning expires
       WarningCollector.addPipelineWarning("node_cve", "CVEs found for Node.JS, update your dependencies / ignore false positives", new Date().parse("dd.MM.yyyy", "28.07.2020"))
     } finally {
-      String issues = steps.readFile('yarn-audit-issues')
+      String issues = steps.readFile('yarn-audit-issues-result')
       String knownIssues = null
       if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
         knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
@@ -116,6 +116,8 @@ class YarnBuilder extends AbstractBuilder {
 
       CVEPublisher.create(steps)
         .publishCVEReport(cveReport)
+
+      steps.sh "rm -f yarn-audit-issues-result"
     }
   }
 
