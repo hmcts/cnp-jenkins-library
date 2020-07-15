@@ -68,8 +68,6 @@ class CVEPublisher {
         report: report
       ])
 
-      steps.echo "SizeOf document: " + summary.getBytes(StandardCharsets.UTF_8).length
-
       createDocument(summary)
     } catch (err) {
       if (ignoreErrors) {
