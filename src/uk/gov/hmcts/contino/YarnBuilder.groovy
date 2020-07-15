@@ -115,7 +115,7 @@ class YarnBuilder extends AbstractBuilder {
       def cveReport = prepareCVEReport(issues, knownIssues)
 
       CVEPublisher.create(steps)
-        .publishCVEReport(cveReport)
+        .publishCVEReport('node', cveReport)
     }
   }
 

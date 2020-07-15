@@ -95,7 +95,7 @@ class GradleBuilder extends AbstractBuilder {
         def cveReport = prepareCVEReport(dependencyReport)
 
         CVEPublisher.create(steps)
-          .publishCVEReport(cveReport)
+          .publishCVEReport('java', cveReport)
       }
     }
   }

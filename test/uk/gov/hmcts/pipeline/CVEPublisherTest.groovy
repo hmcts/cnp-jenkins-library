@@ -38,7 +38,7 @@ class CVEPublisherTest extends Specification {
     ]
 
     when:
-    cvePublisher.publishCVEReport(report)
+    cvePublisher.publishCVEReport('java', report)
 
     then:
     notThrown(Exception.class)
