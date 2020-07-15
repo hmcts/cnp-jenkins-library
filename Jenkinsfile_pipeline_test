@@ -8,26 +8,7 @@ GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 
 try {
-  node("k8s-agent") {
-    stage('Checkout') {
-      deleteDir()
-      checkout scm
-    }
-
-    stage('Build') {
-      builder.gradle('clean build -x test')
-    }
-
-    stage('Test') {
-      try {
-        builder.gradle('test')
-      } finally {
-        steps.junit '**/test-results/**/*.xml'
-        deleteDir()
-      }
-    }
-  }
-
+ß
   stage('Run shared infra pipeline') {
     build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-shared-infrastructure/master',
       parameters: [string(name: 'LIB_VERSION', value: testBranch)]
@@ -35,20 +16,16 @@ try {
 
   parallel (
     backend: {
-      node('k8s-agent') {
-        stage('Run pipeline for backend') {
-          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
-            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
-        }
+      stage('Run pipeline for backend') {
+        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
+          parameters: [string(name: 'LIB_VERSION', value: testBranch)]
       }
     },
 
     frontend: {
-      node('k8s-agent') {
-        stage('Run pipeline for frontend') {
-          build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
-            parameters: [string(name: 'LIB_VERSION', value: testBranch)]
-        }
+      stage('Run pipeline for frontend') {
+        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
+          parameters: [string(name: 'LIB_VERSION', value: testBranch)]
       }
     }
   )
