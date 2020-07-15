@@ -1,11 +1,14 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector;
 
 class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
+  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
 
   YarnBuilder(steps) {
     super(steps)
@@ -102,8 +105,44 @@ class YarnBuilder extends AbstractBuilder {
     """
     } catch(ignored) { // TODO remove try catch after pipeline warning expires
       WarningCollector.addPipelineWarning("node_cve", "CVEs found for Node.JS, update your dependencies / ignore false positives", new Date().parse("dd.MM.yyyy", "28.07.2020"))
+    } finally {
+      String issues = steps.readFile('yarn-audit-issues')
+      String knownIssues = null
+      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+      }
+
+      def cveReport = prepareCVEReport(issues, knownIssues)
+
+      CVEPublisher.create(steps)
+        .publishCVEReport(cveReport)
     }
   }
+
+  def prepareCVEReport(String issues, String knownIssues) {
+    def jsonSlurper = new JsonSlurper()
+    List<Object> issuesParsed = issues.split( '\n' ).collect { jsonSlurper.parseText(it) }
+
+    Object summary = issuesParsed.find { it.type == 'auditSummary' }
+    issuesParsed.removeIf { it.type == 'auditSummary' }
+
+    List<Object> knownIssuesParsed = []
+    if (knownIssues) {
+      knownIssuesParsed = knownIssues.split('\n').collect { jsonSlurper.parseText(it) }
+    }
+
+    def result = [
+      vulnerabilities: issuesParsed,
+      summary        : summary.data
+    ]
+
+    if (!knownIssuesParsed.isEmpty()) {
+      result["suppressed"] = knownIssuesParsed
+    }
+
+    return result
+  }
+
 
   @Override
   def addVersionInfo() {
