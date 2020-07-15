@@ -8,12 +8,15 @@
 set +e
 yarn audit --groups dependencies
 result=$?
+
+yarn audit --groups dependencies --json > yarn-audit-issues-result
+
 set -e
 
 if [ "$result" != 0 ]; then
   if [ -f yarn-audit-known-issues ]; then
     set +e
-    yarn audit --groups dependencies --json | grep auditAdvisory > yarn-audit-issues
+    grep auditAdvisory yarn-audit-issues-result > yarn-audit-issues
     set -e
 
     if diff -q yarn-audit-known-issues yarn-audit-issues > /dev/null 2>&1; then
@@ -36,6 +39,8 @@ if [ "$result" != 0 ]; then
   echo "yarn audit --groups dependencies --json | grep auditAdvisory > yarn-audit-known-issues"
   echo
   echo and commit the yarn-audit-known-issues file
+
+  rm -f yarn-audit-issues
 
   exit "$result"
 fi

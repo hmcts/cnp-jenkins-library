@@ -7,6 +7,8 @@ import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
 import uk.gov.hmcts.contino.Subscription
 
+import java.nio.charset.StandardCharsets
+
 class CVEPublisher {
 
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
@@ -46,9 +48,10 @@ class CVEPublisher {
    * There's a limit of 2MB per document in CosmosDB so you may need to filter your
    * report to remove fields.
    *
+   * @param codeBaseType string indicating which type of report it is, e.g. java or node
    * @param report provider specific report should be a groovy object that can be converted to json.
    */
-  def publishCVEReport(report) {
+  def publishCVEReport(String codeBaseType, report) {
     try {
       if (documentClient == null) {
         steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
@@ -62,6 +65,7 @@ class CVEPublisher {
           build_display_name           : steps.env.BUILD_DISPLAY_NAME,
           build_tag                    : steps.env.BUILD_TAG,
           git_url                      : steps.env.GIT_URL,
+          codebase_type                : codeBaseType
         ],
         report: report
       ])
