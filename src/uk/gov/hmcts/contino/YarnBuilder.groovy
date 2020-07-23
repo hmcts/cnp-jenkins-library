@@ -100,8 +100,6 @@ class YarnBuilder extends AbstractBuilder {
         chmod +x yarn-audit-with-suppressions.sh
 
         ./yarn-audit-with-suppressions.sh
-
-        rm -f yarn-audit-with-suppressions.sh
     """
     } catch(ignored) { // TODO remove try catch after pipeline warning expires
       WarningCollector.addPipelineWarning("node_cve", "CVEs found for Node.JS, update your dependencies / ignore false positives", new Date().parse("dd.MM.yyyy", "28.07.2020"))
