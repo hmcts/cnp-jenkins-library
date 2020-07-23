@@ -101,6 +101,7 @@ def call(params) {
 
             pcr.callAround('dockerbuild') {
               timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+                writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
                 def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
                 if (fileExists(acbTemplateFilePath)) {
                   acr.runWithTemplate(acbTemplateFilePath, dockerImage)
