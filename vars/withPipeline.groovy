@@ -11,6 +11,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
+import uk.gov.hmcts.contino.azure.KeyVault
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 
@@ -62,6 +63,15 @@ def call(type, String product, String component, Closure body) {
   node("k8s-agent") {
     def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
+      withSubscriptionLogin(env.SUBSCRIPTION_NAME) {
+        def homeDir = "/home/jenkins"
+        def mkdirOut = sh(label: "mkdir .ssh", script: "[ ! -d '${homeDir}/.ssh' ] && mkdir -p '${homeDir}/.ssh' && chmod 700 '${homeDir}/.ssh' ", returnStdout: true)?.trim()
+        echo("'mkdir .ssh' output: ${mkdirOut}")
+        def infraVaultName = env.SUBSCRIPTION_NAME == "sandbox" ? "infra-vault-sandbox" : "infra-vault-prod"
+        KeyVault keyVault = new KeyVault(this, env.SUBSCRIPTION_NAME, infraVaultName)
+        keyVault.download("jenkins-ssh-private-key", "/home/jenkins/.ssh/id_rsa", "600")
+      }
+
       env.PATH = "$env.PATH:/usr/local/bin"
 
       sectionBuildAndTest(
