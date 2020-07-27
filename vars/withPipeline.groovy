@@ -63,15 +63,13 @@ def call(type, String product, String component, Closure body) {
   node("k8s-agent") {
     def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
     try {
-      def envSubscriptionName = env.SUBSCRIPTION_NAME == "nonprod" ? "nonprod" : "sandbox"
-      withSubscriptionLogin(envSubscriptionName) {
-        def printEnv = sh(script: "env", returnStdout: true)?.trim()
-        echo("Env: ${printEnv}")
+      def envName = env.PROD_ENVIRONMENT_NAME
+      withSubscriptionLogin(envName) {
         def homeDir = "/home/jenkins"
         def mkdirOut = sh(label: "mkdir .ssh", script: "[ ! -d '${homeDir}/.ssh' ] && mkdir -p '${homeDir}/.ssh' && chmod 700 '${homeDir}/.ssh' || exit 0", returnStdout: true)?.trim()
         echo("'mkdir .ssh' output: ${mkdirOut}")
-        def infraVaultName = envSubscriptionName == "sandbox" ? "infra-vault-sandbox" : "infra-vault-prod"
-        KeyVault keyVault = new KeyVault(this, envSubscriptionName, infraVaultName)
+        def infraVaultName = envName == "sandbox" ? "infra-vault-sandbox" : "infra-vault-prod"
+        KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
         keyVault.download("jenkins-ssh-private-key", "/home/jenkins/.ssh/id_rsa", "600")
       }
 
