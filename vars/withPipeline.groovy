@@ -68,7 +68,7 @@ def call(type, String product, String component, Closure body) {
         def printEnv = sh(script: "env", returnStdout: true)?.trim()
         echo("Env: ${printEnv}")
         def homeDir = "/home/jenkins"
-        def mkdirOut = sh(label: "mkdir .ssh", script: "[ ! -d '${homeDir}/.ssh' ] && mkdir -p '${homeDir}/.ssh' && chmod 700 '${homeDir}/.ssh' ", returnStdout: true)?.trim()
+        def mkdirOut = sh(label: "mkdir .ssh", script: "[ ! -d '${homeDir}/.ssh' ] && mkdir -p '${homeDir}/.ssh' && chmod 700 '${homeDir}/.ssh' || exit 0", returnStdout: true)?.trim()
         echo("'mkdir .ssh' output: ${mkdirOut}")
         def infraVaultName = envSubscriptionName == "sandbox" ? "infra-vault-sandbox" : "infra-vault-prod"
         KeyVault keyVault = new KeyVault(this, envSubscriptionName, infraVaultName)
