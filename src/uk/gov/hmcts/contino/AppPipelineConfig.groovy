@@ -20,6 +20,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactBrokerEnabled = false
   boolean pactProviderVerificationsEnabled = false
   boolean pactConsumerTestsEnabled = false
+  boolean dockerBuildAgent = true
 
   int crossBrowserTestTimeout
   int perfTestTimeout
