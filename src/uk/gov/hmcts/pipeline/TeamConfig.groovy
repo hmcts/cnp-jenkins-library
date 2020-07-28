@@ -79,7 +79,7 @@ class TeamConfig {
     return getDefaultTeamSlackChannel(getRawProductName(product),CONTACT_SLACK_CHANNEL_KEY)
   }
 
-  def getBuildAgentType(String product) {
+  String getBuildAgentType(String product) {
     def teamNames = getTeamNamesMap()
     def rawProductName = getRawProductName(product)
     if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
@@ -89,7 +89,7 @@ class TeamConfig {
     return DOCKER_AGENT_LABEL
   }
 
-  def isDockerBuildAgent(String product) {
+  boolean isDockerBuildAgent(String product) {
     return getBuildAgentType(product) == DOCKER_AGENT_LABEL
   }
 

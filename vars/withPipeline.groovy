@@ -61,7 +61,7 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this)
-  def agentType = teamConfig.getBuildAgentType(product)
+  String agentType = teamConfig.getBuildAgentType(product)
 
   node(agentType) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
