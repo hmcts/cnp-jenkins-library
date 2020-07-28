@@ -63,7 +63,7 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this)
   String agentType = teamConfig.getBuildAgentType(product)
 
-  node("k8s-agent") {
+  node(agentType) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
       if (teamConfig.isDockerBuildAgent(product)) {
