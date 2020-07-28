@@ -70,7 +70,7 @@ def call(type, String product, String component, Closure body) {
         echo("'mkdir .ssh' output: ${mkdirOut}")
         def infraVaultName = envName == "sandbox" ? "infra-vault-sandbox" : "infra-vault-prod"
         KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
-        keyVault.download("jenkins-ssh-private-key", "/home/jenkins/.ssh/id_rsa", "600")
+        keyVault.download("jenkins-ssh-private-key-file", "/home/jenkins/.ssh/id_rsa", "600")
       }
 
       env.PATH = "$env.PATH:/usr/local/bin"
