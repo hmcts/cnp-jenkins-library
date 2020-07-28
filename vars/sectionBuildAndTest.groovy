@@ -25,7 +25,7 @@ def call(params) {
   stage('Checkout') {
     pcr.callAround('checkout') {
       checkoutScm()
-      withAcrClient(subscription) {
+      withAcrClient(subscription, product) {
         projectBranch = new ProjectBranch(env.BRANCH_NAME)
         acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
         dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
@@ -94,7 +94,7 @@ def call(params) {
         },
 
         "Docker Build": {
-          withAcrClient(subscription) {
+          withAcrClient(subscription, product) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
             def dockerfileTest = 'Dockerfile_test'
             def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()

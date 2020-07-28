@@ -60,11 +60,13 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-//  node(pipelineConfig.dockerBuildAgent ? "k8s-agent" : null) {
-  node("cnp") {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this)
+  def agentType = teamConfig.getBuildAgentType(product)
+
+  node(agentType) {
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
-      if (pipelineConfig.dockerBuildAgent) {
+      if (teamConfig.isDockerBuildAgent(product)) {
         def envName = env.PROD_ENVIRONMENT_NAME
         withSubscriptionLogin(envName) {
           def homeDir = "/home/jenkins"

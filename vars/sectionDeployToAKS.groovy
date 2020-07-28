@@ -34,7 +34,7 @@ def call(params) {
 
   Builder builder = pipelineType.builder
 
-  withAcrClient(subscription) {
+  withAcrClient(subscription, product) {
     acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
     onPR {
@@ -45,7 +45,7 @@ def call(params) {
   stage("AKS deploy - ${environment}") {
     withTeamSecrets(config, environment) {
       pcr.callAround('akschartsinstall') {
-        withAksClient(subscription, environment) {
+        withAksClient(subscription, environment, product) {
           timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
             onPR {
               deploymentNumber = githubCreateDeployment()
