@@ -67,14 +67,11 @@ def call(type, String product, String component, Closure body) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
       if (teamConfig.isDockerBuildAgent(product)) {
-        def envName = env.PROD_ENVIRONMENT_NAME
+        def envName = env.SUBSCRIPTION_NAME
         withSubscriptionLogin(envName) {
-          def homeDir = "/home/jenkins"
-          def mkdirOut = sh(label: "mkdir .ssh", script: "[ ! -d '${homeDir}/.ssh' ] && mkdir -p '${homeDir}/.ssh' && chmod 700 '${homeDir}/.ssh' || exit 0", returnStdout: true)?.trim()
-          echo("'mkdir .ssh' output: ${mkdirOut}")
-          def infraVaultName = envName == "sandbox" ? "infra-vault-sandbox" : "infra-vault-prod"
+          def infraVaultName = env.INFRA_VAULT_NAME
           KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
-          keyVault.download("jenkins-ssh-private-key-file", "/home/jenkins/.ssh/id_rsa", "600")
+          keyVault.download("jenkins-ssh-private-key", "/home/jenkins/.ssh/id_rsa", "600")
         }
       }
       env.PATH = "$env.PATH:/usr/local/bin"
