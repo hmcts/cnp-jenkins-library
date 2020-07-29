@@ -67,8 +67,7 @@ def call(type, String product, String component, Closure body) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
       if (teamConfig.isDockerBuildAgent(product)) {
-        sh("env")
-        def envName = env.PROD_ENVIRONMENT_NAME
+        def envName = env.JENKINS_SUBSCRIPTION_NAME == "DTS-CFTSBOX-INTSVC" ? "sandbox" : "prod"
         withSubscriptionLogin(envName) {
           def infraVaultName = env.INFRA_VAULT_NAME
           KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
