@@ -16,7 +16,7 @@ class TeamConfigTest extends Specification {
                                      "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ]],
                                      "dm":["team":"CCD","slack": ["contact_channel":"", "build_notices_channel":"" ]],
                                      "product":["namespace":"product", "team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
-                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
+                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","agent":"k8s-agent","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
@@ -199,5 +199,54 @@ class TeamConfigTest extends Specification {
 
     then:
     thrown RuntimeException
+  }
+
+  def "getBuildAgentType() with valid product name but no agent should return default null agent type"() {
+
+    when:
+    def agent = teamConfig.getBuildAgentType('dm')
+
+    then:
+    assertThat(agent).isNull()
+  }
+
+  def "getBuildAgentType() with non existing product should return null"() {
+
+    when:
+    steps.env >> []
+    def agent = teamConfig.getBuildAgentType('idontexist')
+
+    then:
+    assertThat(agent).isNull()
+  }
+
+  def "getBuildAgentType() with valid product name and agent should return that agent type"() {
+    def productName = 'bulk-scan'
+
+    when:
+    def agent = teamConfig.getBuildAgentType(productName)
+
+    then:
+    assertThat(agent).isEqualTo("k8s-agent")
+  }
+
+  def "isDockerBuildAgent() with non existing product should return false"() {
+
+    when:
+    steps.env >> []
+    def isDocker = teamConfig.isDockerBuildAgent('idontexist')
+
+    then:
+    assertThat(isDocker).isFalse()
+  }
+
+  def "isDockerBuildAgent() with valid product name and agent should return true"() {
+    def productName = 'bulk-scan'
+
+    when:
+    def isDocker = teamConfig.isDockerBuildAgent(productName)
+
+    then:
+    assertThat(isDocker).isTrue()
   }
 }

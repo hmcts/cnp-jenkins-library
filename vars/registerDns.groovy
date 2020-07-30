@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 
 def call(Map params) {
-  withAksClient(params.subscription, params.environment) {
+  withAksClient(params.subscription, params.environment, params.product) {
     EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
     AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
 
