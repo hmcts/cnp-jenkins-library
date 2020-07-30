@@ -9,8 +9,8 @@ def call(String subscription, String environment, String product, Closure block)
   }
 }
 
-def call(String subscription, Closure block) {
+def call(String subscription, String product, Closure block) {
   String environment = new Environment(env).previewName
-  call(subscription,environment, block)
+  call(subscription, environment, product, block)
 }
 
