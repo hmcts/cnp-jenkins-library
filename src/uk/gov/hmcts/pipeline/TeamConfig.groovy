@@ -10,6 +10,8 @@ class TeamConfig {
   static final String BUILD_NOTICES_CHANNEL_KEY = "build_notices_channel"
   static final String TEAM_KEY = "team"
   static final String SLACK_KEY ="slack"
+  static final String AGENT_KEY ="agent"
+  static final String DOCKER_AGENT_LABEL ="k8s-agent"
   static def teamConfigMap
 
   TeamConfig(steps){
@@ -77,5 +79,18 @@ class TeamConfig {
     return getDefaultTeamSlackChannel(getRawProductName(product),CONTACT_SLACK_CHANNEL_KEY)
   }
 
+  String getBuildAgentType(String product) {
+    def teamNames = getTeamNamesMap()
+    def rawProductName = getRawProductName(product)
+    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
+      steps.echo("Agent type not found. Using default agent")
+      return null
+    }
+    return DOCKER_AGENT_LABEL
+  }
+
+  boolean isDockerBuildAgent(String product) {
+    return getBuildAgentType(product) == DOCKER_AGENT_LABEL
+  }
 
 }
