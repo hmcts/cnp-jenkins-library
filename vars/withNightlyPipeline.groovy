@@ -42,9 +42,13 @@ def call(type,product,component,Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this)
+  String agentType = teamConfig.getBuildAgentType(product)
+
+  node(agentType) {
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
       withSubscriptionLogin(subscription.nonProdName) {
         sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType)

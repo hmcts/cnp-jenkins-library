@@ -11,7 +11,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.contino.azure.KeyVault
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 
@@ -66,14 +65,7 @@ def call(type, String product, String component, Closure body) {
   node(agentType) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
-      if (teamConfig.isDockerBuildAgent(product)) {
-        def envName = env.JENKINS_SUBSCRIPTION_NAME == "DTS-CFTSBOX-INTSVC" ? "sandbox" : "prod"
-        withSubscriptionLogin(envName) {
-          def infraVaultName = env.INFRA_VAULT_NAME
-          KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
-          keyVault.download("jenkins-ssh-private-key", "/home/jenkins/.ssh/id_rsa", "600")
-        }
-      }
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       sectionBuildAndTest(

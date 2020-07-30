@@ -28,9 +28,13 @@ def call(String product, String environment, String subscription, String deploym
 
   def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this)
+  String agentType = teamConfig.getBuildAgentType(product)
+
+  node(agentType) {
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stage('Checkout') {
