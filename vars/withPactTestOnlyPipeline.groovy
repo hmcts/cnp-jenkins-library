@@ -57,9 +57,13 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this)
+  String agentType = teamConfig.getBuildAgentType(product)
+
+  node(agentType) {
+    def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       onMaster {
