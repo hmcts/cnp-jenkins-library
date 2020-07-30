@@ -6,14 +6,17 @@ package uk.gov.hmcts.contino.azure;
 class KeyVault extends Az implements Serializable {
 
   private String vaultName
+  def steps
 
   KeyVault(steps, String vaultName) {
     this(steps, "jenkins", vaultName)
+    this.steps = steps
   }
 
   KeyVault(steps, String subscription, String vaultName) {
     super(steps, subscription)
     this.vaultName = vaultName
+    this.steps = steps
   }
 
   void store(String key, String value) {
@@ -37,7 +40,7 @@ class KeyVault extends Az implements Serializable {
   boolean download(String key, String path, String filePermissions) {
     String output
     boolean resp
-    if (!steps.fileExists(path)) {
+    if (!this.steps.fileExists(path)) {
       output = this.az("keyvault secret download --vault-name '${this.vaultName}' --name '${key}' --file '${path}'")
       this.steps.sh("chmod ${filePermissions} '${path}'")
       output = "${output} - File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}'"
