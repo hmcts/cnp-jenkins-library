@@ -1,5 +1,3 @@
-import uk.gov.hmcts.contino.Environment
-
 def call(String subscription, String environment, String product, Closure block) {
   withAcrClient(subscription, product) {
     def envName = environment.toUpperCase()
