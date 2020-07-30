@@ -36,7 +36,7 @@ if cd hmcts-charts; then
      echo "Chart version ${GIT_CHART_VERSION} not published to git yet" 1>&2
   fi
   
-  if cp -R "../${CHART_DIRECTORY}" ./stable/; then
+  if rsync -a --delete-after "../${CHART_DIRECTORY}/" "./stable/${CHART_NAME}"; then
 
     if [ -d ./stable/${CHART_NAME}/charts ]; then 
       rm -rf ./stable/${CHART_NAME}/charts
@@ -47,6 +47,16 @@ if cd hmcts-charts; then
 
     if [ -e ./stable/${CHART_NAME}/Chart.lock ];then
       rm -f ./stable/${CHART_NAME}/Chart.lock
+      if [[ $? -ne 0 ]];then
+        echo "Unable to delete stable/${CHART_NAME}/Chart.lock " 1>&2
+      fi
+    fi
+
+    if [ -e ./stable/${CHART_NAME}/requirements.lock ];then
+      rm -f ./stable/${CHART_NAME}/requirements.lock
+      if [[ $? -ne 0 ]];then
+        echo "Unable to delete stable/${CHART_NAME}/requirements.lock " 1>&2
+      fi
     fi
 
     git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
