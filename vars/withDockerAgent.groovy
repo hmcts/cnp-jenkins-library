@@ -1,10 +1,10 @@
 import uk.gov.hmcts.pipeline.TeamConfig
 
 /**
- * Run a closure inside a specific container of a kubernetes agent pod
+ * Run a closure inside a specific container of a kubernetes agent pod (or skip container altogether)
  */
-def call(String agentType, Closure body) {
-  String agentContainer = new TeamConfig(this).getBuildAgentContainer(agentType)
+def call(String product, Closure body) {
+  String agentContainer = new TeamConfig(this).getBuildAgentContainer(product)
   if (agentContainer != null && agentContainer != "") {
     try {
       container(agentContainer) {

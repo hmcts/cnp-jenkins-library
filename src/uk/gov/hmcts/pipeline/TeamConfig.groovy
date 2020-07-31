@@ -94,8 +94,8 @@ class TeamConfig {
     return getBuildAgentType(product) == DOCKER_AGENT_LABEL
   }
 
-  String getBuildAgentContainer(String buildAgentType) {
-    return buildAgentType == DOCKER_AGENT_LABEL ? CONTAINER_AGENT : null
+  String getBuildAgentContainer(String product) {
+    return isDockerBuildAgent(product) ? CONTAINER_AGENT : null
   }
 
 }
