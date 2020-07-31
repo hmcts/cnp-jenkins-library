@@ -6,8 +6,13 @@ import uk.gov.hmcts.pipeline.TeamConfig
 def call(String agentType, Closure body) {
   String agentContainer = new TeamConfig(this).getBuildAgentContainer(agentType)
   if (agentContainer != null && agentContainer != "") {
-    container(agentContainer) {
-      body()
+    try {
+      container(agentContainer) {
+        body()
+      }
+    } catch (Exception e) {
+      containerLog agentContainer
+      throw e
     }
   } else {
     body()
