@@ -6,9 +6,9 @@ import uk.gov.hmcts.pipeline.TeamConfig
 def call(String product, Closure body) {
   String agentContainer = new TeamConfig(this).getBuildAgentContainer(product)
   if (agentContainer != null && agentContainer != "") {
+    echo "Using agent container: ${agentContainer}"
     try {
       container(agentContainer) {
-        echo "Agent container: ${agentContainer}"
         dockerAgentSetup(product)
         body()
       }

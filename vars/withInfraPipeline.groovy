@@ -31,7 +31,7 @@ def call(String product, Closure body) {
   node(agentType) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
-      dockerAgentSetup(product)
+      //dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
