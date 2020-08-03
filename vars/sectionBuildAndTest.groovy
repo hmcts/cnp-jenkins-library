@@ -140,8 +140,8 @@ def call(params) {
       env.PACT_BROKER_URL = pactBrokerUrl
 
       /*
-     * These instructions have to be kept in order
-     */
+       * These instructions have to be kept in order
+       */
 
       if (config.pactConsumerTestsEnabled) {
         pcr.callAround('pact-consumer-tests') {

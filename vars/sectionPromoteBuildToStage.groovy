@@ -35,7 +35,7 @@ def call(params) {
   def component = params.component
   DockerImage.DeploymentStage deploymentStage = params.stage
 
-  stage("${deploymentStage.label} build promotion") {
+  stageWithAgent("${deploymentStage.label} build promotion", product) {
     withAcrClient(subscription, product) {
 
         def projectBranch = new ProjectBranch(env.BRANCH_NAME)

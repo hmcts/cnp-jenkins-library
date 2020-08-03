@@ -67,13 +67,13 @@ def call(type, String product, String component, String environment, String subs
       dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         callbacksRunner.callAround('checkout') {
           checkoutScm()
         }
       }
 
-      stage("Build") {
+      stageWithAgent("Build", product) {
         builder.setupToolVersion()
 
         callbacksRunner.callAround('build') {
