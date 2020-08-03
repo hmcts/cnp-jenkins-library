@@ -8,6 +8,7 @@ def call(String product, Closure body) {
   if (agentContainer != null && agentContainer != "") {
     try {
       container(agentContainer) {
+        echo "Agent container: ${agentContainer}"
         dockerAgentSetup(product)
         body()
       }
