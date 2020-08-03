@@ -268,27 +268,18 @@ It is possible for applications to build their specific infrastructure elements 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
 
-## Azure Web Jobs
-[Documentation from Azure](https://docs.microsoft.com/en-us/azure/app-service/web-sites-create-web-jobs)
+## Cron Jobs
+You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
 
-If you want to create a Web Job for your app you need to create the following directory structure in the root of your project:
+```groovy
+#!groovy
 
-`App_Data\jobs\{job type}\{job name}`
+@Library("Infrastructure")
 
-* `job type` - Either *continuous* or *triggered*
-* `job name` - The name of your Web Job
-
-Within your job folder create a file called `run.<supported extention>`. Other files may be present but this is the file Azure will look to contain the runnable job.
-
-For triggered jobs with a schedule, you can add a file called `settings.job` with a cron string like so:
-
-```json
-{
-  "schedule": "0 30 0 * * *"
+withPipeline(type, product, component) {
+    nonServiceApp()
 }
 ```
-
-> Note: This has only been tested for Java applications!
 
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
