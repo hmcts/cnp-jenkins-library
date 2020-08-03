@@ -48,7 +48,7 @@ def call(type,product,component,Closure body) {
   node(agentType) {
     def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
     try {
-      //dockerAgentSetup(product)
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
       withSubscriptionLogin(subscription.nonProdName) {
         sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product)
