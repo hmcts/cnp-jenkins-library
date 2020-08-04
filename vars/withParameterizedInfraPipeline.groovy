@@ -37,7 +37,7 @@ def call(String product, String environment, String subscription, String deploym
       dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         callbacksRunner.callAround('checkout') {
           checkoutScm()
         }

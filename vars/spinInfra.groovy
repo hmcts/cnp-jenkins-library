@@ -38,7 +38,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
     stateStoreInit(environment, subscription, deploymentTarget)
 
     lock("${productName}-${environmentDeploymentTarget}") {
-      stage("Plan ${productName} in ${environmentDeploymentTarget}") {
+      stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", product) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
@@ -84,7 +84,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {
-        stage("Apply ${productName} in ${environmentDeploymentTarget}") {
+        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {

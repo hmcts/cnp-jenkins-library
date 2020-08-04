@@ -37,20 +37,13 @@ class KeyVault extends Az implements Serializable {
     }
   }
 
-  boolean download(String key, String path, String filePermissions) {
+  void download(String key, String path, String filePermissions) {
     String output
-    boolean resp
-    if (!this.steps.fileExists(path)) {
-      output = this.az("keyvault secret download --vault-name '${this.vaultName}' --name '${key}' --file '${path}'")
-      this.steps.sh("chmod ${filePermissions} '${path}'")
-      output = "${output} - File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}'"
-      resp = true
-    } else {
-      output = "File '${path}' exists already. Not overwriting it with '${key}'"
-      resp = false
-    }
-    this.steps.echo(output)
-    return resp
+    // Reload file anyway, to be on the safe side
+    this.steps.sh("rm -rf ${path}")
+    output = this.az("keyvault secret download --vault-name '${this.vaultName}' --name '${key}' --file '${path}'")
+    this.steps.sh("chmod ${filePermissions} '${path}'")
+    this.steps.echo("File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}' - output: ${output}")
   }
 
 }
