@@ -201,23 +201,23 @@ class TeamConfigTest extends Specification {
     thrown RuntimeException
   }
 
-  def "getBuildAgentType() with valid product name but no agent should return default null agent type"() {
+  def "getBuildAgentType() with valid product name but no agent should return empty agent type"() {
 
     when:
     def agent = teamConfig.getBuildAgentType('dm')
 
     then:
-    assertThat(agent).isNull()
+    assertThat(agent).isEqualTo("")
   }
 
-  def "getBuildAgentType() with non existing product should return null"() {
+  def "getBuildAgentType() with non existing product should return empty"() {
 
     when:
     steps.env >> []
     def agent = teamConfig.getBuildAgentType('idontexist')
 
     then:
-    assertThat(agent).isNull()
+    assertThat(agent).isEqualTo("")
   }
 
   def "getBuildAgentType() with valid product name and agent should return that agent type"() {

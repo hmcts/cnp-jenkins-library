@@ -13,7 +13,6 @@ class TeamConfig {
   static final String AGENT_KEY = "agent"
   static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
-  static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
 
   TeamConfig(steps){
@@ -30,7 +29,6 @@ class TeamConfig {
     this.steps.env.BUILD_AGENT_TYPE = getBuildAgentType(product)
     this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(product)
     this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(product)
-    this.steps.env.TEAM_CONTAINER_REGISTRY = getContainerRegistry(product)
   }
 
   def getTeamNamesMap() {
