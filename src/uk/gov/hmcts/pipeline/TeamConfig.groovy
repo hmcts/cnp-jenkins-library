@@ -26,7 +26,7 @@ class TeamConfig {
     this.steps.env.BUILD_NOTICES_SLACK_CHANNEL = getBuildNoticesSlackChannel(product)
     this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
     this.steps.env.BUILD_AGENT_TYPE = getBuildAgentType(product)
-    this.steps.env.IS_DOCKER_AGENT = (this.steps.env.BUILD_AGENT_TYPE == DOCKER_AGENT_LABEL)
+    this.steps.env.IS_DOCKER_BUILD_AGENT = (this.steps.env.BUILD_AGENT_TYPE == DOCKER_AGENT_LABEL)
 
   }
 
