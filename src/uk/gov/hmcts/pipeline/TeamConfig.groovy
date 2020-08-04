@@ -13,6 +13,7 @@ class TeamConfig {
   static final String AGENT_KEY = "agent"
   static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
+  static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
 
   TeamConfig(steps){
@@ -29,6 +30,7 @@ class TeamConfig {
     this.steps.env.BUILD_AGENT_TYPE = getBuildAgentType(product)
     this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(product)
     this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(product)
+    this.steps.env.TEAM_CONTAINER_REGISTRY = getContainerRegistry(product)
   }
 
   def getTeamNamesMap() {
@@ -97,7 +99,7 @@ class TeamConfig {
     def rawProductName = getRawProductName(product)
     if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
       steps.echo("Agent type not found. Using default agent")
-      return null
+      return ""
     }
     return DOCKER_AGENT_LABEL
   }
@@ -107,7 +109,12 @@ class TeamConfig {
   }
 
   String getBuildAgentContainer(String product) {
-    return isDockerBuildAgent(product) ? CONTAINER_AGENT : null
+    return isDockerBuildAgent(product) ? CONTAINER_AGENT : ""
+  }
+
+  String getContainerRegistry(String product) {
+    def teamNames = getTeamNamesMap()
+    return teamNames.containsKey(product) ? teamNames.get(product).get(REGISTRY_KEY) : ""
   }
 
 }
