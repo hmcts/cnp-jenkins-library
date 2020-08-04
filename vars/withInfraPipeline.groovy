@@ -34,7 +34,7 @@ def call(String product, Closure body) {
       dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         checkoutScm()
       }
 

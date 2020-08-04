@@ -42,7 +42,7 @@ def call(params) {
     }
   }
 
-  stage("AKS deploy - ${environment}") {
+  stageWithAgent("AKS deploy - ${environment}", product) {
     withTeamSecrets(config, environment) {
       pcr.callAround('akschartsinstall') {
         withAksClient(subscription, environment, product) {
@@ -64,7 +64,7 @@ def call(params) {
   if (config.serviceApp) {
     withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
-          stage("Smoke Test - AKS ${environment}") {
+          stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:${environment}") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
@@ -75,7 +75,7 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - AKS ${environment}") {
+            stageWithAgent("Functional Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("functionalTest:${environment}") {
                   timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
@@ -86,7 +86,7 @@ def call(params) {
             }
           }
           if (config.performanceTest) {
-            stage("Performance Test - AKS ${environment}") {
+            stageWithAgent("Performance Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
@@ -99,7 +99,7 @@ def call(params) {
           }
 
           if (config.pactBrokerEnabled) {
-            stage("Pact Provider Verification") {
+            stageWithAgent("Pact Provider Verification", product) {
               def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
               def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
@@ -115,7 +115,7 @@ def call(params) {
           }
           onMaster {
             if (config.crossBrowserTest) {
-              stage("CrossBrowser Test - AKS ${environment}") {
+              stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.crossBrowserTest()
@@ -124,7 +124,7 @@ def call(params) {
               }
             }
             if (config.mutationTest) {
-              stage("Mutation Test - AKS ${environment}") {
+              stageWithAgent("Mutation Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("mutationTest:${environment}") {
                     builder.mutationTest()
@@ -133,7 +133,7 @@ def call(params) {
               }
             }
             if (config.fullFunctionalTest) {
-              stage("FullFunctional Test - AKS ${environment}") {
+              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.fullFunctionalTest()

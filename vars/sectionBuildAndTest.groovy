@@ -22,7 +22,7 @@ def call(params) {
   def projectBranch
   boolean noSkipImgBuild = true
 
-  stage('Checkout') {
+  stageWithAgent('Checkout', product) {
     pcr.callAround('checkout') {
       checkoutScm()
       withAcrClient(subscription, product) {
@@ -35,7 +35,7 @@ def call(params) {
   }
 
 
-  stage("Build") {
+  stageWithAgent("Build", product) {
     onPR {
       enforceChartVersionBumped product: product, component: component
       warnAboutAADIdentityPreviewHack product: product, component: component
@@ -56,12 +56,11 @@ def call(params) {
         }
       }
     }
-
   }
 
-  stage("Tests/Checks/Container build") {
+  stageWithAgent("Tests/Checks/Container build", product) {
 
-    when (noSkipImgBuild) {
+    when(noSkipImgBuild) {
       parallel(
 
         "Unit tests and Sonar scan": {
@@ -133,7 +132,7 @@ def call(params) {
   }
 
   if (config.pactBrokerEnabled) {
-    stage("Pact Consumer Verification") {
+    stageWithAgent("Pact Consumer Verification", product) {
       def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 

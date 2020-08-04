@@ -39,7 +39,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
     stateStoreInit(environment, subscription, deploymentTarget)
 
     lock("${productName}-${environmentDeploymentTarget}") {
-      stage("Plan ${productName} in ${environmentDeploymentTarget}") {
+      stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", product) {
 
         def teamConfig = new TeamConfig(this)
         teamName = teamConfig.getName(product)
@@ -86,7 +86,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {
-        stage("Apply ${productName} in ${environmentDeploymentTarget}") {
+        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {

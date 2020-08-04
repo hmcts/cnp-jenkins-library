@@ -22,7 +22,7 @@ def call(params) {
   approvedEnvironmentRepository(environment, metricsPublisher) {
     lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
       folderExists('infrastructure') {
-        stage("Build Infrastructure - ${environment}") {
+        stageWithAgent("Build Infrastructure - ${environment}", product) {
           onPreview {
             deploymentNumber = githubCreateDeployment()
           }
@@ -42,7 +42,7 @@ def call(params) {
             registerDns(params)
 
             if (config.migrateDb) {
-              stage("DB Migration - ${environment}") {
+              stageWithAgent("DB Migration - ${environment}", product) {
                 pcr.callAround("dbmigrate:${environment}") {
                   if (tfOutput?.microserviceName) {
                     WarningCollector.addPipelineWarning("deprecated_microservice_name_outputted", "Please remove microserviceName from your terraform outputs, if you are not outputting the microservice name (component) and instead outputting something else you will need to migrate the secrets first, example PR: https://github.com/hmcts/ccd-data-store-api/pull/540"

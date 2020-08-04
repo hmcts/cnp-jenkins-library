@@ -132,7 +132,7 @@ def call(type, String product, String component, Closure body) {
           pactBrokerUrl: environment.pactBrokerUrl
         )
 
-        stage('Publish Helm chart') {
+        stageWithAgent('Publish Helm chart', product) {
           helmPublish(
             appPipelineConfig: pipelineConfig,
             subscription: subscription.nonProdName,
