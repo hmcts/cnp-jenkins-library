@@ -207,17 +207,17 @@ class TeamConfigTest extends Specification {
     def agent = teamConfig.getBuildAgentType('dm')
 
     then:
-    assertThat(agent).equals("")
+    assertThat(agent).isEqualTo("")
   }
 
-  def "getBuildAgentType() with non existing product should return null"() {
+  def "getBuildAgentType() with non existing product should return empty"() {
 
     when:
     steps.env >> []
     def agent = teamConfig.getBuildAgentType('idontexist')
 
     then:
-    assertThat(agent).equals("")
+    assertThat(agent).isEqualTo("")
   }
 
   def "getBuildAgentType() with valid product name and agent should return that agent type"() {
