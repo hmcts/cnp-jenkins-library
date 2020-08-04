@@ -247,7 +247,7 @@ class TeamConfigTest extends Specification {
     def registry = teamConfig.getContainerRegistry(productName)
 
     then:
-    assertThat(registry).isEqualTo(null)
+    assertThat(registry).isEqualTo("")
   }
 
 }
