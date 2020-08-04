@@ -97,7 +97,7 @@ class TeamConfig {
     def rawProductName = getRawProductName(product)
     if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
       steps.echo("Agent type not found. Using default agent")
-      return null
+      return ""
     }
     return DOCKER_AGENT_LABEL
   }
@@ -107,7 +107,7 @@ class TeamConfig {
   }
 
   String getBuildAgentContainer(String product) {
-    return isDockerBuildAgent(product) ? CONTAINER_AGENT : null
+    return isDockerBuildAgent(product) ? CONTAINER_AGENT : ""
   }
 
 }
