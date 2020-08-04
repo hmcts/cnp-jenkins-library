@@ -1,10 +1,8 @@
-import uk.gov.hmcts.pipeline.TeamConfig
-
 /**
  * Run a closure inside a specific container of a kubernetes agent pod (or skip container altogether)
  */
 def call(String product, Closure body) {
-  String agentContainer = new TeamConfig(this).getBuildAgentContainer(product)
+  String agentContainer = env.BUILD_AGENT_CONTAINER
   if (agentContainer != null && agentContainer != "") {
     echo "Using agent container: ${agentContainer}"
     try {
