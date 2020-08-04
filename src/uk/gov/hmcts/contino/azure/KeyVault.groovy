@@ -46,7 +46,7 @@ class KeyVault extends Az implements Serializable {
       this.steps.sh("chmod ${filePermissions} '${path}'")
       this.steps.echo("File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}' - output: ${output}")
     } catch (e) {
-      // ignore as this is must be a vm-agent
+      // ignore as this must be a vm-agent
     }
   }
 
