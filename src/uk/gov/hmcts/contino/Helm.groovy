@@ -43,6 +43,7 @@ class Helm {
   }
 
   def addRepo() {
+    steps.sh "helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo/"
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
@@ -83,7 +84,7 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
-    
+
     this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
       this.steps.sh (
         """
