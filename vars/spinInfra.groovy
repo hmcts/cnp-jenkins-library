@@ -2,7 +2,6 @@
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
-import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.MetricsPublisher
 
 def call(productName, environment, planOnly, subscription) {
@@ -41,9 +40,8 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
     lock("${productName}-${environmentDeploymentTarget}") {
       stage("Plan ${productName} in ${environmentDeploymentTarget}") {
 
-        def teamConfig = new TeamConfig(this)
-        teamName = teamConfig.getName(product)
-        def contactSlackChannel = teamConfig.getContactSlackChannel(product)
+        teamName = env.TEAM_NAME
+        def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
         pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel]).toString()

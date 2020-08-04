@@ -18,6 +18,18 @@ class TeamConfig {
     this.steps = steps
   }
 
+  def setTeamConfigEnv(String product){
+    def teamNames = getTeamNamesMap()
+    this.steps.env.TEAM_NAME = getName(product)
+    this.steps.env.RAW_PRODUCT_NAME = getRawProductName(product)
+    this.steps.env.TEAM_NAMESPACE = getNameSpace(product)
+    this.steps.env.BUILD_NOTICES_SLACK_CHANNEL = getBuildNoticesSlackChannel(product)
+    this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
+    this.steps.env.BUILD_AGENT_TYPE = getBuildAgentType(product)
+    this.steps.env.IS_DOCKER_AGENT = (this.steps.env.BUILD_AGENT_TYPE == DOCKER_AGENT_LABEL)
+
+  }
+
   def getTeamNamesMap() {
     if (teamConfigMap ==null ){
       def response = steps.httpRequest(
@@ -88,9 +100,4 @@ class TeamConfig {
     }
     return DOCKER_AGENT_LABEL
   }
-
-  boolean isDockerBuildAgent(String product) {
-    return getBuildAgentType(product) == DOCKER_AGENT_LABEL
-  }
-
 }

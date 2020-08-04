@@ -3,7 +3,6 @@ import uk.gov.hmcts.contino.HealthChecker
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
@@ -33,7 +32,7 @@ def call(DockerImage dockerImage, Map params) {
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
 
-  def namespace = new TeamConfig(this).getNameSpace(product)
+  def namespace = env.TEAM_NAMESPACE
 
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
