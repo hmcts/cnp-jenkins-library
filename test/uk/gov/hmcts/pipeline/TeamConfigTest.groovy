@@ -230,23 +230,4 @@ class TeamConfigTest extends Specification {
     assertThat(agent).isEqualTo("k8s-agent")
   }
 
-  def "isDockerBuildAgent() with non existing product should return false"() {
-
-    when:
-    steps.env >> []
-    def isDocker = teamConfig.isDockerBuildAgent('idontexist')
-
-    then:
-    assertThat(isDocker).isFalse()
-  }
-
-  def "isDockerBuildAgent() with valid product name and agent should return true"() {
-    def productName = 'bulk-scan'
-
-    when:
-    def isDocker = teamConfig.isDockerBuildAgent(productName)
-
-    then:
-    assertThat(isDocker).isTrue()
-  }
 }

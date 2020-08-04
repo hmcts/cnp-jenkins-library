@@ -58,11 +58,11 @@ def call(type, String product, String component, String environment, String subs
   def deploymentTargetList = deploymentTargets.split(',') as List
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
-  def teamConfig = new TeamConfig(this)
-  String agentType = teamConfig.getBuildAgentType(product)
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
-    def slackChannel = teamConfig.getBuildNoticesSlackChannel(product)
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
       dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
