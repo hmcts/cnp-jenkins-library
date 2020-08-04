@@ -116,7 +116,7 @@ class TeamConfig {
 
   String getContainerRegistry(String product) {
     def teamNames = getTeamNamesMap()
-    return teamNames.containsKey(product) ? teamNames.get(product).get(REGISTRY_KEY) : ""
+    return teamNames.containsKey(product) && teamNames.get(product).get(REGISTRY_KEY) ? teamNames.get(product).get(REGISTRY_KEY) : ""
   }
 
 }
