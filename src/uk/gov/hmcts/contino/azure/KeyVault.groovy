@@ -40,10 +40,14 @@ class KeyVault extends Az implements Serializable {
   void download(String key, String path, String filePermissions) {
     String output
     // Reload file anyway, to be on the safe side
-    this.steps.sh("rm -rf ${path} && mkdir -p /home/jenkins/.ssh")
-    output = this.az("keyvault secret download --vault-name '${this.vaultName}' --name '${key}' --file '${path}'")
-    this.steps.sh("chmod ${filePermissions} '${path}'")
-    this.steps.echo("File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}' - output: ${output}")
+    try {
+      this.steps.sh("rm -rf ${path}")
+      output = this.az("keyvault secret download --vault-name '${this.vaultName}' --name '${key}' --file '${path}'")
+      this.steps.sh("chmod ${filePermissions} '${path}'")
+      this.steps.echo("File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}' - output: ${output}")
+    } catch (e) {
+      // ignore as this is must be a vm-agent
+    }
   }
 
 }
