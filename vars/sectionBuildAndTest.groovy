@@ -28,7 +28,7 @@ def call(params) {
       checkoutScm()
       withAcrClient(subscription, product) {
         projectBranch = new ProjectBranch(env.BRANCH_NAME)
-        imageRegistry = env.TEAM_CONTAINER_REGISTRY ? env.TEAM_CONTAINER_REGISTRY : env.REGISTRY_NAME
+        imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
         acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
         dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
         noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
