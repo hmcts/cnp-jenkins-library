@@ -31,11 +31,13 @@ def call(params) {
   def environment = params.environment
   def acr
   def dockerImage
+  def imageRegistry
 
   Builder builder = pipelineType.builder
 
   withAcrClient(subscription, product) {
-    acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+    imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
     onPR {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)

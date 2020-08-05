@@ -16,7 +16,7 @@ class TeamConfigTest extends Specification {
                                      "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ]],
                                      "dm":["team":"CCD","slack": ["contact_channel":"", "build_notices_channel":"" ]],
                                      "product":["namespace":"product", "team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
-                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","agent":"k8s-agent","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
+                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","registry":"hmctsprivate","agent":"k8s-agent","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
@@ -228,6 +228,26 @@ class TeamConfigTest extends Specification {
 
     then:
     assertThat(agent).isEqualTo("k8s-agent")
+  }
+
+  def "getContainerRegistry() with valid product name should return registry"() {
+    def productName = 'bulk-scan'
+
+    when:
+    def registry = teamConfig.getContainerRegistry(productName)
+
+    then:
+    assertThat(registry).isEqualTo("hmctsprivate")
+  }
+
+  def "getContainerRegistry() with invalid product name should not error"() {
+    def productName = 'idontexist'
+
+    when:
+    def registry = teamConfig.getContainerRegistry(productName)
+
+    then:
+    assertThat(registry).isEqualTo("")
   }
 
 }

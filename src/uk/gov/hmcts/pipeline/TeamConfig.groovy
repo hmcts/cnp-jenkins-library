@@ -13,6 +13,7 @@ class TeamConfig {
   static final String AGENT_KEY = "agent"
   static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
+  static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
 
   TeamConfig(steps){
@@ -26,9 +27,12 @@ class TeamConfig {
     this.steps.env.TEAM_NAMESPACE = getNameSpace(product)
     this.steps.env.BUILD_NOTICES_SLACK_CHANNEL = getBuildNoticesSlackChannel(product)
     this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
-    this.steps.env.BUILD_AGENT_TYPE = getBuildAgentType(product)
-    this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(product)
-    this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(product)
+    this.steps.env.TEAM_CONTAINER_REGISTRY = getContainerRegistry(product)
+
+    def buildAgentType = getBuildAgentType(product)
+    this.steps.env.BUILD_AGENT_TYPE = buildAgentType
+    this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(buildAgentType)
+    this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(buildAgentType)
   }
 
   def getTeamNamesMap() {
@@ -102,12 +106,17 @@ class TeamConfig {
     return DOCKER_AGENT_LABEL
   }
 
-  boolean isDockerBuildAgent(String product) {
-    return getBuildAgentType(product) == DOCKER_AGENT_LABEL
+  boolean isDockerBuildAgent(String agentLabel) {
+    return agentLabel == DOCKER_AGENT_LABEL
   }
 
-  String getBuildAgentContainer(String product) {
-    return isDockerBuildAgent(product) ? CONTAINER_AGENT : ""
+  String getBuildAgentContainer(String agentLabel) {
+    return isDockerBuildAgent(agentLabel) ? CONTAINER_AGENT : ""
+  }
+
+  String getContainerRegistry(String product) {
+    def teamNames = getTeamNamesMap()
+    return teamNames.containsKey(product) && teamNames.get(product).get(REGISTRY_KEY) ? teamNames.get(product).get(REGISTRY_KEY) : ""
   }
 
 }
