@@ -64,28 +64,28 @@ def call(params) {
     when (noSkipImgBuild) {
       parallel(
 
-        // "Unit tests and Sonar scan": {
-        //   pcr.callAround('test') {
-        //     timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-        //       builder.test()
-        //     }
-        //   }
+        "Unit tests and Sonar scan": {
+          pcr.callAround('test') {
+            timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+              builder.test()
+            }
+          }
 
-        //   pcr.callAround('sonarscan') {
-        //     pluginActive('sonar') {
-        //       withSonarQubeEnv("SonarQube") {
-        //         builder.sonarScan()
-        //       }
+          pcr.callAround('sonarscan') {
+            pluginActive('sonar') {
+              withSonarQubeEnv("SonarQube") {
+                builder.sonarScan()
+              }
 
-        //       timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-        //         def qg = waitForQualityGate()
-        //         if (qg.status != 'OK') {
-        //           error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //         }
-        //       }
-        //     }
-        //   }
-        // },
+              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+                def qg = waitForQualityGate()
+                if (qg.status != 'OK') {
+                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                }
+              }
+            }
+          }
+        },
 
         "Security Checks": {
           pcr.callAround('securitychecks') {
