@@ -6,7 +6,7 @@ def call() {
 
     def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
       authentication: env.GIT_CREDENTIALS_ID,
-      customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${env.BEARER_TOKEN}"]], httpMode: 'POST',
+      httpMode: 'POST',
       requestBody: """{
         "ref": "${env.CHANGE_BRANCH}",
         "description": "Deploying ${env.CHANGE_BRANCH}",
