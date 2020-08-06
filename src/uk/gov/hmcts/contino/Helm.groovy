@@ -43,7 +43,6 @@ class Helm {
   }
 
   def addRepo() {
-    steps.sh "helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo/"
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
     steps.sh "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
   }
