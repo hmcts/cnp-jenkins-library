@@ -5,7 +5,6 @@ import groovy.json.JsonOutput
 class GithubAPI {
 
   static final String API_URL = 'https://api.github.com/repos'
-  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
 
   def steps
 
@@ -42,7 +41,7 @@ class GithubAPI {
     def body = JsonOutput.toJson(labels)
 
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: "${GITHUB_CREDENTIAL}",
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/${project}/issues/${issueNumber}/labels",

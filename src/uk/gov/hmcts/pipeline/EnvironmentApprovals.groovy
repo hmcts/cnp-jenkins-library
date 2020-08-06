@@ -2,7 +2,6 @@ package uk.gov.hmcts.pipeline
 
 class EnvironmentApprovals {
   def steps
-  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
   static def environmentApprovals
 
   EnvironmentApprovals(steps) {
@@ -13,7 +12,7 @@ class EnvironmentApprovals {
     if (environmentApprovals == null) {
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
-        authentication: "${GITHUB_CREDENTIAL}",
+        authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
         url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml",
         validResponseCodes: '200'
