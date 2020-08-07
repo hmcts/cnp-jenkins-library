@@ -13,7 +13,7 @@ def call(String subscription, Closure body) {
       body.call()
     }
   } else {
-    echo "New login: /opt/jenkins/.azure-${subscription}"
+    echo "New az login: /opt/jenkins/.azure-${subscription}"
     Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
     az 'login --identity'
 
@@ -24,6 +24,7 @@ def call(String subscription, Closure body) {
       def tenantId = az "account show --query tenantId -o tsv"
       env.SUBSCRIPTION_NAME = subscription
       env.ARM_TENANT_ID = tenantId
+      env.CURRENT_ARM_SUBSCRIPTION_ID = env.ARM_SUBSCRIPTION_ID
       body.call()
     }
   }
