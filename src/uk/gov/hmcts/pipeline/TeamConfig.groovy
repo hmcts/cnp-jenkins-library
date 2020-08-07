@@ -3,7 +3,6 @@ package uk.gov.hmcts.pipeline
 class TeamConfig {
 
   def steps
-  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
   static final String NAMESPACE_KEY = "namespace"
   static final String CONTACT_SLACK_CHANNEL_KEY = "contact_channel"
@@ -39,7 +38,6 @@ class TeamConfig {
     if (teamConfigMap ==null ){
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
-        authentication: "${GITHUB_CREDENTIAL}",
         timeout: 10,
         url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml",
         validResponseCodes: '200'
