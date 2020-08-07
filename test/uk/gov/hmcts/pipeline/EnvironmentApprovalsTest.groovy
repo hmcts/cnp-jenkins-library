@@ -19,6 +19,7 @@ class EnvironmentApprovalsTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.readYaml([text: response.content]) >> response.content
     steps.httpRequest(_) >> response
+    steps.env >> [GIT_CREDENTIALS_ID:"test-app-id"]
     environmentApprovals = new EnvironmentApprovals(steps)
   }
 
