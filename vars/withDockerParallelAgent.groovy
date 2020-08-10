@@ -11,7 +11,7 @@ def call(Map bodies, boolean failFast) {
         try {
           container(agentContainer) {
             dockerAgentSetup()
-            body.value
+            body.value()
           }
         } catch (Exception e ) {
           containerLog agentContainer
