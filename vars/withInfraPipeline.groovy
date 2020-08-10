@@ -31,7 +31,7 @@ def call(String product, Closure body) {
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      dockerAgentSetup("jnlp")
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {

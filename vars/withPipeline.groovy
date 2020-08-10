@@ -65,7 +65,7 @@ def call(type, String product, String component, Closure body) {
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      dockerAgentSetup("jnlp")
+      dockerAgentSetup(product)
       env.PATH = "$env.PATH:/usr/local/bin"
 
       sectionBuildAndTest(
