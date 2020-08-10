@@ -16,13 +16,13 @@ def call(String product) {
       withSubscriptionLogin(envName) {
         KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
         keyVault.download(vaultSecret, sshFile, "600")
-        if (Files.exists(Paths.get(sshFile))) {
-          env.CURRENT_ID_RSA = idRsa
-          echo "Downloaded ssh id_rsa"
-        } else {
-          env.CURRENT_ID_RSA = ""
-          throw new Exception("Failed ssh id_rsa download")
-        }
+//        if (Files.exists(Paths.get(sshFile))) {
+//          env.CURRENT_ID_RSA = idRsa
+//          echo "Downloaded ssh id_rsa"
+//        } else {
+//          env.CURRENT_ID_RSA = ""
+//          throw new Exception("Failed ssh id_rsa download")
+//        }
       }
     } else {
       echo "Using existing ssh id_rsa"
