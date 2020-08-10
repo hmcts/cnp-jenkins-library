@@ -16,6 +16,7 @@ def call(String product) {
       withSubscriptionLogin(envName) {
         KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
         keyVault.download(vaultSecret, sshFile, "600")
+        env.CURRENT_ID_RSA = idRsa
 //        if (Files.exists(Paths.get(sshFile))) {
 //          env.CURRENT_ID_RSA = idRsa
 //          echo "Downloaded ssh id_rsa"
