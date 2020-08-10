@@ -4,9 +4,9 @@
 def call(String product, Closure body) {
   String agentContainer = env.BUILD_AGENT_CONTAINER
   if (agentContainer != null && agentContainer != "") {
-    echo "Using agent container: ${agentContainer}"
     try {
       container(agentContainer) {
+        echo "Using agent container: ${agentContainer}"
         dockerAgentSetup(product)
         body()
       }
@@ -15,6 +15,7 @@ def call(String product, Closure body) {
       throw e
     }
   } else {
+    echo "Using VM agent"
     body()
   }
 }
