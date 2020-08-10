@@ -12,6 +12,9 @@ def call(String product) {
     String sshFile = "/home/jenkins/.ssh/id_rsa"
     String vaultSecret = "jenkins-ssh-private-key"
     String idRsa = "${envName}-${infraVaultName}-${vaultSecret}"
+    echo "env.CURRENT_ID_RSA: ${env.CURRENT_ID_RSA}"
+    echo "idRsa: ${idRsa}"
+    echo "sshFile (${sshFile}): ${Files.exists(Paths.get(sshFile))}"
     if (env.CURRENT_ID_RSA != idRsa || !Files.exists(Paths.get(sshFile))) {
       withSubscriptionLogin(envName) {
         KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
