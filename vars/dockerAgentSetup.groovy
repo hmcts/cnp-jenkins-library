@@ -8,7 +8,7 @@ def call(String product) {
     String sshFile = "/home/jenkins/.ssh/id_rsa"
     String vaultSecret = "jenkins-ssh-private-key"
     String idRsa = "${envName}-${infraVaultName}-${vaultSecret}"
-    if (env.CURRENT_ID_RSA != idRsa) {
+    if (env.CURRENT_ID_RSA != idRsa || !fileExists(sshFile)) {
       withSubscriptionLogin(envName) {
         KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
         keyVault.download(vaultSecret, sshFile, "600")
