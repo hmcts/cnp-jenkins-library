@@ -5,8 +5,8 @@ def call(String product) {
     def envName = env.JENKINS_SUBSCRIPTION_NAME == "DTS-CFTSBOX-INTSVC" ? "sandbox" : "prod"
     echo "Using container env: ${envName}"
     // Check github host key
-    boolean hasGithubHostKey = sh(script: "grep '^github.com ssh-rsa' /home/jenkins/.ssh/known_hosts > /dev/null", returnStatus: "true")
-    if (!hasGithubHostKey) {
+    boolean githubHostKeyCheck = sh(script: "grep '^github.com ssh-rsa' /home/jenkins/.ssh/known_hosts > /dev/null", returnStatus: "true")
+    if (githubHostKeyCheck != 0) {
       sh """
         ssh-keyscan -t rsa github.com >> /home/jenkins/.ssh/known_hosts
         chmod 700 /home/jenkins/.ssh
