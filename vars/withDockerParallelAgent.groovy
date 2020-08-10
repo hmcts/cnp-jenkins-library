@@ -1,7 +1,7 @@
 /**
  * Run a closure inside a specific container of a kubernetes agent pod (or skip container altogether)
  */
-def call(Map<String, Closure> bodies, boolean failFast) {
+def call(Map bodies, boolean failFast) {
   String agentContainer = env.BUILD_AGENT_CONTAINER
   if (agentContainer != null && agentContainer != "") {
     echo "Using agent container: ${agentContainer}"
@@ -19,8 +19,10 @@ def call(Map<String, Closure> bodies, boolean failFast) {
         }
       }
     }
-    parallel stageDefs, failFast: failFast
+    stageDefs.failFast = failFast
+    parallel stageDefs
   } else {
-    parallel bodies, failFast: failFast
+    bodies.failFast = failFast
+    parallel bodies
   }
 }
