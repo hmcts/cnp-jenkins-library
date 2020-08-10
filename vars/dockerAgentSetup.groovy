@@ -9,7 +9,6 @@ def call(String product) {
     if (githubHostKeyCheck != 0) {
       sh """
         ssh-keyscan -t rsa github.com >> /home/jenkins/.ssh/known_hosts
-        chmod 700 /home/jenkins/.ssh
         chmod 644 /home/jenkins/.ssh/known_hosts
       """
     }
