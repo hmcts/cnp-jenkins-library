@@ -127,7 +127,7 @@ def call(params) {
 
   def failFast = true
 
-  stageWithParallelAgent("Tests/Checks/Container build", product, stageDefs, failFast, noSkipImgBuild)
+  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, failFast, noSkipImgBuild)
 
   if (config.pactBrokerEnabled) {
     stageWithAgent("Pact Consumer Verification", product) {
