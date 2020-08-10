@@ -10,7 +10,7 @@ def call(String subscription, String product, Closure block) {
 }
 
 def doAcrOrKubectlTask(String subscription, Closure block) {
-  withSubscriptionLogin(subscription) {
+  withSubscriptionLogin(subscription, true) {
     withRegistrySecrets {
       block.call()
     }

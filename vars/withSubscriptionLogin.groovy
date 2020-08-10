@@ -4,8 +4,8 @@
  * @param subscription the subscription short name, i.e. sandbox, qa, nonprod, prod
  * @param body the body to execute after logged in
  */
-def call(String subscription, Closure body) {
-  if (env.SUBSCRIPTION_NAME == subscription && fileExists("/opt/jenkins/.azure-${subscription}")) {
+def call(String subscription, boolean alwaysExecute, Closure body) {
+  if (!alwaysExecute && env.SUBSCRIPTION_NAME == subscription && fileExists("/opt/jenkins/.azure-${subscription}")) {
     echo "Using existing az login: /opt/jenkins/.azure-${subscription}"
     withAzureKeyvault([
       [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: "${subscription}-subscription-id", version: '', envVariable: 'ARM_SUBSCRIPTION_ID']
@@ -28,4 +28,8 @@ def call(String subscription, Closure body) {
       body.call()
     }
   }
+}
+
+def call(String subscription, Closure body) {
+  call(subscription, false, body)
 }
