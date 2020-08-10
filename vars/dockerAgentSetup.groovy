@@ -4,7 +4,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
-def call(String product) {
+def call(String agentContainer) {
   if (env.IS_DOCKER_BUILD_AGENT && env.IS_DOCKER_BUILD_AGENT.toBoolean()) {
     def envName = env.JENKINS_SUBSCRIPTION_NAME == "DTS-CFTSBOX-INTSVC" ? "sandbox" : "prod"
     echo "Using container env: ${envName}"
@@ -17,16 +17,12 @@ def call(String product) {
     echo "sshFile (${sshFile}): ${Files.exists(Paths.get(sshFile))}"
     if (env.CURRENT_ID_RSA != idRsa || !Files.exists(Paths.get(sshFile))) {
       withSubscriptionLogin(envName) {
-        KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
-        keyVault.download(vaultSecret, sshFile, "600")
-        env.CURRENT_ID_RSA = idRsa
-//        if (Files.exists(Paths.get(sshFile))) {
-//          env.CURRENT_ID_RSA = idRsa
-//          echo "Downloaded ssh id_rsa"
-//        } else {
-//          env.CURRENT_ID_RSA = ""
-//          throw new Exception("Failed ssh id_rsa download")
-//        }
+        container(agentContainer) {
+          echo "Using agent container: ${agentContainer}"
+          KeyVault keyVault = new KeyVault(this, envName, infraVaultName)
+          keyVault.download(vaultSecret, sshFile, "600")
+          env.CURRENT_ID_RSA = idRsa
+        }
       }
     } else {
       echo "Using existing ssh id_rsa"

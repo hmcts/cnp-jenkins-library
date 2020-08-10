@@ -34,7 +34,7 @@ def call(String product, String environment, String subscription, String deploym
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      dockerAgentSetup(product)
+      dockerAgentSetup("jnlp")
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
