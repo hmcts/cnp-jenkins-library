@@ -7,7 +7,7 @@ def call(String product, Closure body) {
     try {
       container(agentContainer) {
         echo "Using agent container: ${agentContainer}"
-        dockerAgentSetup(product)
+        dockerAgentSetup()
         body()
       }
     } catch (Exception e) {

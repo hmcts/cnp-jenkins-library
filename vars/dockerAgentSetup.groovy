@@ -1,11 +1,11 @@
 import uk.gov.hmcts.contino.azure.KeyVault
 
-def call(String product) {
+def call() {
   if (env.IS_DOCKER_BUILD_AGENT && env.IS_DOCKER_BUILD_AGENT.toBoolean()) {
     def envName = env.JENKINS_SUBSCRIPTION_NAME == "DTS-CFTSBOX-INTSVC" ? "sandbox" : "prod"
     echo "Using container env: ${envName}"
     // Check github host key
-    boolean githubHostKeyCheck = sh(script: "grep '^github.com ssh-rsa' /home/jenkins/.ssh/known_hosts > /dev/null", returnStatus: "true")
+    int githubHostKeyCheck = sh(script: "grep '^github.com ssh-rsa' /home/jenkins/.ssh/known_hosts > /dev/null", returnStatus: "true")
     if (githubHostKeyCheck != 0) {
       sh """
         ssh-keyscan -t rsa github.com >> /home/jenkins/.ssh/known_hosts
