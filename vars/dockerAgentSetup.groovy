@@ -4,12 +4,6 @@ def call(String product) {
   if (env.IS_DOCKER_BUILD_AGENT && env.IS_DOCKER_BUILD_AGENT.toBoolean()) {
     def envName = env.JENKINS_SUBSCRIPTION_NAME == "DTS-CFTSBOX-INTSVC" ? "sandbox" : "prod"
     echo "Using container env: ${envName}"
-    // setup github host key
-    sh """
-      ssh-keyscan -t rsa github.com >> /home/jenkins/.ssh/known_hosts
-      chmod 700 /home/jenkins/.ssh
-      chmod 644 /home/jenkins/.ssh/known_hosts
-    """
     String infraVaultName = env.INFRA_VAULT_NAME
     String sshFile = "/home/jenkins/.ssh/id_rsa"
     String vaultSecret = "jenkins-ssh-private-key"
