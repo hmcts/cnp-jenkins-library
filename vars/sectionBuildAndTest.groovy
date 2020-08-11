@@ -93,8 +93,6 @@ def call(params) {
     "Docker Build": {
       withAcrClient(subscription) {
         def acbTemplateFilePath = 'acb.tpl.yaml'
-        def dockerfileTest = 'Dockerfile_test'
-        def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
         pcr.callAround('dockerbuild') {
           timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
@@ -110,7 +108,19 @@ def call(params) {
             } else {
               acr.build(dockerImage, buildArgs)
             }
-            if (isOnMaster && fileExists('build.gradle')) {
+          }
+        }
+      }
+    },
+
+    "Docker Test Build": {
+      if (isOnMaster && fileExists('build.gradle')) {
+        withAcrClient(subscription) {
+          def dockerfileTest = 'Dockerfile_test'
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+          pcr.callAround('dockerbuild') {
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
               writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
               writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
               if (!fileExists(dockerfileTest)) {
