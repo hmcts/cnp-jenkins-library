@@ -23,6 +23,7 @@ def call(Map<String, Closure> bodies, boolean failFast) {
           throw e
         }
       }
+      i++
     }
     stageDefs.failFast = failFast
     parallel stageDefs
