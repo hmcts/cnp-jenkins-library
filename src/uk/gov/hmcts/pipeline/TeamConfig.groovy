@@ -111,7 +111,7 @@ class TeamConfig {
   }
 
   String getBuildAgentContainer(String agentLabel) {
-    return isDockerBuildAgent(agentLabel) ? "${CONTAINER_AGENT}-0"  : ""
+    return isDockerBuildAgent(agentLabel) ? CONTAINER_AGENT  : ""
   }
 
   String getBuildAgentContainerParallel(String agentLabel) {
