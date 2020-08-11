@@ -114,10 +114,10 @@ def call(params) {
     },
 
     "Docker Test Build": {
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
       if (isOnMaster && fileExists('build.gradle')) {
         withAcrClient(subscription) {
           def dockerfileTest = 'Dockerfile_test'
-          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
           pcr.callAround('dockerbuild') {
             timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
