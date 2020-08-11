@@ -6,10 +6,10 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.pipeline.TeamConfig
 
-def call(String product, String environment, String subscription, Closure body) {
-  call(product, environment, subscription, '', body)
+def call(String product, String environment, String subscription, Boolean planOnly, Closure body) {
+  call(product, environment, subscription, planOnly, '', body)
 }
-def call(String product, String environment, String subscription, String deploymentTargets, Closure body) {
+def call(String product, String environment, String subscription, Boolean planOnly, String deploymentTargets, Closure body) {
 
   Subscription metricsSubscription = new Subscription(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", metricsSubscription.prodName )
@@ -44,6 +44,7 @@ def call(String product, String environment, String subscription, String deploym
         pipelineConfig: pipelineConfig,
         subscription: subscription,
         environment: environment,
+        planOnly: planOnly,
         deploymentTargets: deploymentTargetList,
         product: product)
 
