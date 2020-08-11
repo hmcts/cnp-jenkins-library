@@ -12,6 +12,7 @@ class TeamConfig {
   static final String AGENT_KEY = "agent"
   static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
+  static final String CONTAINER_AGENT_PARALLEL = "4"
   static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
 
@@ -32,6 +33,7 @@ class TeamConfig {
     this.steps.env.BUILD_AGENT_TYPE = buildAgentType
     this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(buildAgentType)
     this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(buildAgentType)
+    this.steps.env.BUILD_AGENT_CONTAINER_PAR = getBuildAgentContainerParallel(buildAgentType)
   }
 
   def getTeamNamesMap() {
@@ -109,7 +111,11 @@ class TeamConfig {
   }
 
   String getBuildAgentContainer(String agentLabel) {
-    return isDockerBuildAgent(agentLabel) ? CONTAINER_AGENT : ""
+    return isDockerBuildAgent(agentLabel) ? "${CONTAINER_AGENT}-0"  : ""
+  }
+
+  String getBuildAgentContainerParallel(String agentLabel) {
+    return isDockerBuildAgent(agentLabel) ? CONTAINER_AGENT_PARALLEL : "1"
   }
 
   String getContainerRegistry(String product) {
