@@ -16,7 +16,7 @@ def call(Map<String, Closure> parallelStages) {
           container(agentContainerInstance) {
             echo "Using agent container: ${agentContainerInstance}"
             dockerAgentSetup()
-            stg.value()
+            stg.value.call()
           }
         } catch (Exception e ) {
           containerLog agentContainer
