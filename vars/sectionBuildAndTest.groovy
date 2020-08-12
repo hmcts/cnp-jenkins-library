@@ -140,12 +140,12 @@ def call(params) {
       } else {
         echo "Skipping docker test image build stage"
       }
-    },
-
-    failFast: true
+    }
   ]
 
-  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, noSkipImgBuild)
+  def failFast = true
+
+  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, failFast, noSkipImgBuild)
 
   if (config.pactBrokerEnabled) {
     stageWithAgent("Pact Consumer Verification", product) {
