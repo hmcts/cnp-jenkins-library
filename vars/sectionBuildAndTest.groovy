@@ -91,6 +91,7 @@ def call(params) {
     },
 
     "Docker Build": {
+      echo "Running Docker Build..."
       withAcrClient(subscription) {
         def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -118,13 +119,14 @@ def call(params) {
     },
 
     "Docker Test Build": {
-      withAcrClient(subscription) {
-        def dockerfileTest = 'Dockerfile_test'
-        def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      echo "Running Docker Test Build..."
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      if (isOnMaster && fileExists('build.gradle')) {
+        withAcrClient(subscription) {
+          def dockerfileTest = 'Dockerfile_test'
 
-        pcr.callAround('dockertestbuild') {
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-            if (isOnMaster && fileExists('build.gradle')) {
+          pcr.callAround('dockertestbuild') {
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
               writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
               writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
               if (!fileExists(dockerfileTest)) {
@@ -135,13 +137,15 @@ def call(params) {
             }
           }
         }
+      } else {
+        echo "Skipping docker test image build stage"
       }
-    }
+    },
+
+    failFast: true
   ]
 
-  def failFast = true
-
-  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, failFast, noSkipImgBuild)
+  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, noSkipImgBuild)
 
   if (config.pactBrokerEnabled) {
     stageWithAgent("Pact Consumer Verification", product) {

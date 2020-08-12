@@ -1,22 +1,22 @@
 /**
  * Run a closure inside a specific container of a kubernetes agent pod (or skip container altogether)
  */
-def call(Map<String, Closure> bodies, boolean failFast) {
+def call(Map<String, Closure> parallelStages) {
   String agentContainer = env.BUILD_AGENT_CONTAINER
   int agentContainerInstances = env.BUILD_AGENT_CONTAINER_PAR == "" ? 1 : env.BUILD_AGENT_CONTAINER_PAR as int
   if (agentContainer != null && agentContainer != "") {
     echo "Docker agent containers: ${agentContainer} #${agentContainerInstances}"
     def stageDefs = [:]
     int i = 0
-    for (body in bodies) {
+    for (stg in parallelStages) {
       int inst = i % agentContainerInstances
       String agentContainerInstance = inst == 0 ? agentContainer : "${agentContainer}-${inst}"
-      stageDefs[body.key] = {
+      stageDefs[stg.key] = {
         try {
           container(agentContainerInstance) {
             echo "Using agent container: ${agentContainerInstance}"
             dockerAgentSetup()
-            body.value()
+            stg.value()
           }
         } catch (Exception e ) {
           containerLog agentContainer
@@ -25,10 +25,8 @@ def call(Map<String, Closure> bodies, boolean failFast) {
       }
       i++
     }
-    stageDefs.failFast = failFast
     parallel stageDefs
   } else {
-    bodies.failFast = failFast
-    parallel bodies
+    parallel parallelStages
   }
 }
