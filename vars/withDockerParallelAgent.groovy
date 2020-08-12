@@ -8,15 +8,15 @@ def call(Map<String, Closure> bodies, boolean failFast) {
     echo "Docker agent containers: ${agentContainer} #${agentContainerInstances}"
     def stageDefs = [:]
     int i = 0
-    for (body in bodies) {
+    bodies.eachWithIndex { entry, idx ->
       int inst = i % agentContainerInstances
       String agentContainerInstance = inst == 0 ? agentContainer : "${agentContainer}-${inst}"
-      stageDefs[body.key] = {
+      stageDefs[entry.key] = {
         try {
           container(agentContainerInstance) {
-            echo "Using agent container: ${agentContainerInstance}"
+            echo "Using agent container ${agentContainerInstance} to process ${entry.key}"
             dockerAgentSetup()
-            body.value()
+            entry.value()
           }
         } catch (Exception e ) {
           containerLog agentContainer
