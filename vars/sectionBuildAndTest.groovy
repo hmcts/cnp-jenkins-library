@@ -118,7 +118,7 @@ def call(params) {
         def dockerfileTest = 'Dockerfile_test'
         def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-        pcr.callAround('dockerbuild') {
+        pcr.callAround('dockertestbuild') {
           timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
             if (isOnMaster && fileExists('build.gradle')) {
               writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
