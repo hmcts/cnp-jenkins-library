@@ -42,7 +42,6 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
     } finally {
-      steps.sh 'ls -ARl */test-results/'
       steps.junit '**/test-results/**/*.xml'
     }
   }

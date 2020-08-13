@@ -107,10 +107,10 @@ def call(params) {
             def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
             echo "Checking acb.tpl.yaml"
             if (fileExists(acbTemplateFilePath)) {
-              echo "Running docker build with acb.tpl.yaml"
+              echo "Building docker image with acb.tpl.yaml"
               acr.runWithTemplate(acbTemplateFilePath, dockerImage)
             } else {
-              echo "Running docker build"
+              echo "Building docker image"
               acr.build(dockerImage, buildArgs)
             }
           }
