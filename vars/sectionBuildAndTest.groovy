@@ -127,6 +127,7 @@ def call(params) {
 
           pcr.callAround('dockertestbuild') {
             timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
+              sh "TMPDIR=`mktemp -d` && cp -Rp . ${TMPDIR} && cd ${TMPDIR}"
               writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
               writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
               if (!fileExists(dockerfileTest)) {
