@@ -60,104 +60,112 @@ def call(params) {
     }
   }
 
-  def preStageDefs = [
-    "Pre-Docker Test Build": {
-      echo "Running Pre-Docker Test Build..."
-      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      if (isOnMaster && fileExists('build.gradle')) {
-        def dockerfileTest = 'Dockerfile_test'
-        String testContextDir = sh(script: 'TMPDIR=$(mktemp -d) && cp -a ./. ${TMPDIR} && echo ${TMPDIR}', returnStdout: true).trim()
-        env.TEST_IMG_BUILD_DIR = testContextDir
-        writeFile file: "${testContextDir}/.dockerignore", text: libraryResource("uk/gov/hmcts/gradle/.dockerignore_test")
-        writeFile file: "${testContextDir}/runTests.sh", text: libraryResource("uk/gov/hmcts/gradle/runTests.sh")
-        if (!fileExists(dockerfileTest)) {
-          writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
-        }
-      }
-    }
-  ]
-
   def stageDefs = [
-    "Unit tests and Sonar scan": {
-      pcr.callAround('test') {
-        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-          builder.test()
-        }
-      }
-
-      pcr.callAround('sonarscan') {
-        pluginActive('sonar') {
-          withSonarQubeEnv("SonarQube") {
-            builder.sonarScan()
+    "Unit tests and Sonar scan": new Tuple2<Closure, Closure>(
+      null,
+      {
+        pcr.callAround('test') {
+          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+            builder.test()
           }
+        }
 
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        pcr.callAround('sonarscan') {
+          pluginActive('sonar') {
+            withSonarQubeEnv("SonarQube") {
+              builder.sonarScan()
+            }
+
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+              def qg = waitForQualityGate()
+              if (qg.status != 'OK') {
+                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+              }
             }
           }
         }
       }
-    },
+    ),
 
-    "Security Checks": {
-      pcr.callAround('securitychecks') {
-        builder.securityCheck()
-      }
-    },
-
-    "Docker Build": {
-      echo "Running Docker Build..."
-      withAcrClient(subscription) {
-        def acbTemplateFilePath = 'acb.tpl.yaml'
-
-        pcr.callAround('dockerbuild') {
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
-            echo "Checking .dockerignore"
-            if (!fileExists('.dockerignore')) {
-              writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-            } else {
-              writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-              sh script: "cat .dockerignore_build >> .dockerignore"
-            }
-            def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-            echo "Checking acb.tpl.yaml"
-            if (fileExists(acbTemplateFilePath)) {
-              echo "Building docker image with acb.tpl.yaml"
-              acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-            } else {
-              echo "Building docker image"
-              acr.build(dockerImage, buildArgs)
-            }
-          }
+    "Security Checks": new Tuple2<Closure, Closure>(
+      null,
+      {
+        pcr.callAround('securitychecks') {
+          builder.securityCheck()
         }
       }
-    },
+    ),
 
-    "Docker Test Build": {
-      echo "Running Docker Test Build..."
-      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      if (isOnMaster && fileExists('build.gradle')) {
+    "Docker Build": new Tuple2<Closure, Closure>(
+      null,
+      {
+        echo "Running Docker Build..."
         withAcrClient(subscription) {
-          def dockerfileTest = 'Dockerfile_test'
+          def acbTemplateFilePath = 'acb.tpl.yaml'
 
-          pcr.callAround('dockertestbuild') {
-            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-              def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
-              acr.build(dockerImageTest, " -f ${dockerfileTest}", env.TEST_IMG_BUILD_DIR)
+          pcr.callAround('dockerbuild') {
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+              echo "Checking .dockerignore"
+              if (!fileExists('.dockerignore')) {
+                writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+              } else {
+                writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                sh script: "cat .dockerignore_build >> .dockerignore"
+              }
+              def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+              echo "Checking acb.tpl.yaml"
+              if (fileExists(acbTemplateFilePath)) {
+                echo "Building docker image with acb.tpl.yaml"
+                acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+              } else {
+                echo "Building docker image"
+                acr.build(dockerImage, buildArgs)
+              }
             }
           }
         }
-      } else {
-        echo "Skipping docker test image build stage"
       }
-    }
+    ),
+
+    "Docker Test Build": new Tuple2<Closure, Closure>(
+      {
+        echo "Running Pre-Docker Test Build..."
+        def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+        if (isOnMaster && fileExists('build.gradle')) {
+          def dockerfileTest = 'Dockerfile_test'
+          String testContextDir = sh(script: 'TMPDIR=$(mktemp -d) && cp -a ./. ${TMPDIR} && echo ${TMPDIR}', returnStdout: true).trim()
+          env.TEST_IMG_BUILD_DIR = testContextDir
+          writeFile file: "${testContextDir}/.dockerignore", text: libraryResource("uk/gov/hmcts/gradle/.dockerignore_test")
+          writeFile file: "${testContextDir}/runTests.sh", text: libraryResource("uk/gov/hmcts/gradle/runTests.sh")
+          if (!fileExists(dockerfileTest)) {
+            writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+          }
+        }
+      },
+      {
+        echo "Running Docker Test Build..."
+        def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+        if (isOnMaster && fileExists('build.gradle')) {
+          withAcrClient(subscription) {
+            def dockerfileTest = 'Dockerfile_test'
+
+            pcr.callAround('dockertestbuild') {
+              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
+                def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
+                acr.build(dockerImageTest, " -f ${dockerfileTest}", env.TEST_IMG_BUILD_DIR)
+              }
+            }
+          }
+        } else {
+          echo "Skipping docker test image build stage"
+        }
+      }
+    )
   ]
 
   def failFast = true
 
-  stageWithParallelAgent("Tests/Checks/Container build", preStageDefs, stageDefs, failFast, noSkipImgBuild)
+  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, failFast, noSkipImgBuild)
 
   if (config.pactBrokerEnabled) {
     stageWithAgent("Pact Consumer Verification", product) {

@@ -3,10 +3,10 @@
  * if docker containers are used. Otherwise in parallel on the same vm agent.
  *
  */
-def call(String name, Map<String, Closure> preStages, Map<String, Closure> stages, boolean failFast, boolean noSkip) {
+def call(String name, Map<String, Tuple2<Closure, Closure>> stages, boolean failFast, boolean noSkip) {
   stage(name) {
     when(noSkip) {
-      withDockerParallelAgent(preStages, stages, failFast)
+      withDockerParallelAgent(stages, failFast)
     }
   }
 }
