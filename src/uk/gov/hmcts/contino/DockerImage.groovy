@@ -48,7 +48,7 @@ class DockerImage {
     return this.getRegistryHostname().concat('/')
       .concat(this.getShortName())
   }
-
+ 
   /**
    * Get the full image name, including the tag but excluding the commit.
    * Use when you need to retag (promote) a pr image

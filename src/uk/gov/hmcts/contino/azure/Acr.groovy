@@ -8,7 +8,7 @@ class Acr extends Az {
   def registryName
   def resourceGroup
   def registrySubscription
-  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  def projectBranch
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -22,11 +22,12 @@ class Acr extends Az {
    * @param registryName
    *   the 'resource name' of the ACR registry.  i.e. 'cnpacr' not 'cnpacr.azurecr.io'
    */
-  Acr(steps, subscription, registryName, resourceGroup, registrySubscription) {
+  Acr(steps, subscription, registryName, resourceGroup, registrySubscription, projectBranch) {
     super(steps, subscription)
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
+    this.projectBranch = projectBranch
   }
 
   /**
