@@ -135,11 +135,12 @@ def call(params) {
           def dockerfileTest = 'Dockerfile_test'
           String testContextDir = sh(script: 'TMPDIR=$(mktemp -d) && cp -a ./. ${TMPDIR} && echo ${TMPDIR}', returnStdout: true).trim()
           env.TEST_IMG_BUILD_DIR = testContextDir
-          dir testContextDir
-          writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
-          writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
-          if (!fileExists(dockerfileTest)) {
-            writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+          dir(testContextDir) {
+            writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
+            writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
+            if (!fileExists(dockerfileTest)) {
+              writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+            }
           }
         }
       },
@@ -152,9 +153,10 @@ def call(params) {
 
             pcr.callAround('dockertestbuild') {
               timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-                dir env.TEST_IMG_BUILD_DIR
-                def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
-                acr.build(dockerImageTest, " -f ${dockerfileTest}")
+                dir(env.TEST_IMG_BUILD_DIR) {
+                  def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
+                  acr.build(dockerImageTest, " -f ${dockerfileTest}")
+                }
               }
             }
           }
