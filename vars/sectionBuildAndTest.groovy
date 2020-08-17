@@ -60,6 +60,23 @@ def call(params) {
     }
   }
 
+  def preStageDefs = [
+    "Pre-Docker Test Build": {
+      echo "Running Pre-Docker Test Build..."
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      if (isOnMaster && fileExists('build.gradle')) {
+        def dockerfileTest = 'Dockerfile_test'
+        String testContextDir = sh(script: 'TMPDIR=$(mktemp -d) && cp -a ./. ${TMPDIR} && echo ${TMPDIR}', returnStdout: true).trim()
+        env.TEST_IMG_BUILD_DIR = testContextDir
+        writeFile file: "${testContextDir}/.dockerignore", text: libraryResource("uk/gov/hmcts/gradle/.dockerignore_test")
+        writeFile file: "${testContextDir}/runTests.sh", text: libraryResource("uk/gov/hmcts/gradle/runTests.sh")
+        if (!fileExists(dockerfileTest)) {
+          writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+        }
+      }
+    }
+  ]
+
   def stageDefs = [
     "Unit tests and Sonar scan": {
       pcr.callAround('test') {
@@ -127,13 +144,8 @@ def call(params) {
 
           pcr.callAround('dockertestbuild') {
             timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-              writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
-              writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
-              if (!fileExists(dockerfileTest)) {
-                writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
-              }
               def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
-              acr.build(dockerImageTest, " -f ${dockerfileTest}")
+              acr.build(dockerImageTest, " -f ${dockerfileTest}", env.TEST_IMG_BUILD_DIR)
             }
           }
         }
@@ -145,7 +157,7 @@ def call(params) {
 
   def failFast = true
 
-  stageWithParallelAgent("Tests/Checks/Container build", stageDefs, failFast, noSkipImgBuild)
+  stageWithParallelAgent("Tests/Checks/Container build", preStageDefs, stageDefs, failFast, noSkipImgBuild)
 
   if (config.pactBrokerEnabled) {
     stageWithAgent("Pact Consumer Verification", product) {
