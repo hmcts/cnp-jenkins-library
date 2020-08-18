@@ -20,7 +20,7 @@ class Helm {
   def notFoundMessage = "Not found"
   String registrySubscription
   String tlsOptions = ""
-  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  def projectBranch
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -32,6 +32,7 @@ class Helm {
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription, projectBranch)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
+    this.projectBranch = new ProjectBranch(this.steps.env.BRANCH_NAME)
   }
 
   def setup() {
