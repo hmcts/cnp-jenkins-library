@@ -32,13 +32,14 @@ def call(params) {
   def acr
   def dockerImage
   def imageRegistry
+  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
 
   Builder builder = pipelineType.builder
 
   withAcrClient(subscription) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-    dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
+    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
+    dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
     onPR {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
@@ -52,6 +53,8 @@ def call(params) {
             onPR {
               deploymentNumber = githubCreateDeployment()
             }
+            params.environment = params.environment.replace('idam-', '')
+            log.info("Using AKS environment: ${params.environment}")
             aksUrl = helmInstall(dockerImage, params)
             log.info("deployed component URL: ${aksUrl}")
             onPR {
@@ -68,9 +71,11 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
-              pcr.callAround("smoketest:${environment}") {
-                timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                  builder.smokeTest()
+              pcr.callAround("smoketest-aks:${environment}") {
+                pcr.callAround("smoketest:${environment}") {
+                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                    builder.smokeTest()
+                  }
                 }
               }
             }
@@ -79,9 +84,11 @@ def call(params) {
           onFunctionalTestEnvironment(environment) {
             stageWithAgent("Functional Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
-                pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                    builder.functionalTest()
+                pcr.callAround("functionalTest-aks:${environment}") {
+                  pcr.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      builder.functionalTest()
+                    }
                   }
                 }
               }

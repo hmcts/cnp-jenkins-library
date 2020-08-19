@@ -1,12 +1,14 @@
 package uk.gov.hmcts.contino.azure
 
 import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.ProjectBranch
 
 class Acr extends Az {
 
   def registryName
   def resourceGroup
   def registrySubscription
+  def projectBranch
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -20,11 +22,12 @@ class Acr extends Az {
    * @param registryName
    *   the 'resource name' of the ACR registry.  i.e. 'cnpacr' not 'cnpacr.azurecr.io'
    */
-  Acr(steps, subscription, registryName, resourceGroup, registrySubscription) {
+  Acr(steps, subscription, registryName, resourceGroup, registrySubscription, projectBranch) {
     super(steps, subscription)
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
+    this.projectBranch = projectBranch
   }
 
   /**
@@ -76,7 +79,8 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage, String additionalArgs) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
+    def buildTag = projectBranch.isPR() ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
+    this.az "acr build --no-format -r ${registryName} -t ${buildTag} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
   }
 
   /**
