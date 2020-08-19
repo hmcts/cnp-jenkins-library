@@ -185,7 +185,7 @@ EOF
   }
 
   def nagAboutJava11Required() {
-    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "19.08.2020"))
+    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "02.09.2020"))
   }
 
   def hasPlugin(String pluginName) {
