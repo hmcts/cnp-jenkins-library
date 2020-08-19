@@ -39,7 +39,7 @@ def call(params) {
     withAcrClient(subscription) {
 
         def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
         def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
 
         pcr.callAround("${deploymentStage.label}:promotion") {
