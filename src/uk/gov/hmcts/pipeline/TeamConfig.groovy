@@ -123,7 +123,7 @@ class TeamConfig {
   String getApplicationTag(String product) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(TAGS_KEY) || !teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)) {
-      steps.error ("${key} tag is not configured for Product ${product} ."
+      steps.error ("${APPLICATION_KEY} tag is not configured for Product ${product} ."
         + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
     }
     return teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)
