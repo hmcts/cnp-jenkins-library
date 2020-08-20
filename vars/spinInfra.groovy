@@ -44,7 +44,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
-        pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel]).toString()
+        pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG ]).toString()
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
 
         if (env.STORE_rg_name_template != null &&

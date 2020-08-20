@@ -11,12 +11,12 @@ class TeamConfigTest extends Specification {
   def steps
   def teamConfig
   def slackContactTeamConfig
-  static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims","slack": ["contact_channel":"#cmc-builds", "build_notices_channel":"#cmc-builds" ]],
-                                     "bar":["team":"Fees/Pay","namespace":"fees-pay","slack": ["contact_channel":"#fees-builds", "build_notices_channel":"#fees-builds" ]],
-                                     "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ]],
-                                     "dm":["team":"CCD","slack": ["contact_channel":"", "build_notices_channel":"" ]],
-                                     "product":["namespace":"product", "team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ]],
-                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","registry":"hmctsprivate","agent":"k8s-agent","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ]]]]
+  static def response = ["content": ["cmc":["team":"Money Claims","namespace":"money-claims","slack": ["contact_channel":"#cmc-builds", "build_notices_channel":"#cmc-builds" ], "tags": ["application":"cmc"]],
+                                     "bar":["team":"Fees/Pay","namespace":"fees-pay","slack": ["contact_channel":"#fees-builds", "build_notices_channel":"#fees-builds" ], "tags": ["application":"payment"]],
+                                     "ccd":["namespace":"ccd", "slack": ["contact_channel":"#ccd-builds", "build_notices_channel":"#ccd-builds" ], "tags": ["application":"ccd"]],
+                                     "dm":["team":"CCD","slack": ["contact_channel":"", "build_notices_channel":"" ], "tags": ["application":"ccd"], "tags": ["application":"dm"]],
+                                     "product":["namespace":"product", "team":"hmcts","slack": ["contact_channel":"#product-builds", "build_notices_channel":"#product-builds" ], "tags": ["application":"product"]],
+                                     "bulk-scan":["team":"Software Engineering","namespace":"rpe","registry":"hmctsprivate","agent":"k8s-agent","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ], "tags": ["application":"bulk-scan"]]]]
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
@@ -248,6 +248,24 @@ class TeamConfigTest extends Specification {
 
     then:
     assertThat(registry).isEqualTo("")
+  }
+
+  def "getApplicationTag() should return mapping from team config"() {
+
+    when:
+    String applicationTag = teamConfig.getApplicationTag('cmc')
+
+    then:
+    assertThat(applicationTag).isEqualTo("cmc")
+  }
+
+  def "getApplicationTag() with non existing product should throw exception"() {
+
+    when:
+    String applicationTag = teamConfig.getApplicationTag('idontexist')
+
+    then:
+    thrown RuntimeException
   }
 
 }
