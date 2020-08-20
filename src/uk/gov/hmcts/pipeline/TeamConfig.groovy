@@ -9,6 +9,8 @@ class TeamConfig {
   static final String BUILD_NOTICES_CHANNEL_KEY = "build_notices_channel"
   static final String TEAM_KEY = "team"
   static final String SLACK_KEY = "slack"
+  static final String TAGS_KEY = "tags"
+  static final String APPLICATION_KEY = "application"
   static final String AGENT_KEY = "agent"
   static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
@@ -27,6 +29,7 @@ class TeamConfig {
     this.steps.env.BUILD_NOTICES_SLACK_CHANNEL = getBuildNoticesSlackChannel(product)
     this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
     this.steps.env.TEAM_CONTAINER_REGISTRY = getContainerRegistry(product)
+    this.steps.env.TEAM_APPLICATION_TAG = getApplicationTag(product)
 
     def buildAgentType = getBuildAgentType(product)
     this.steps.env.BUILD_AGENT_TYPE = buildAgentType
@@ -115,6 +118,15 @@ class TeamConfig {
   String getContainerRegistry(String product) {
     def teamNames = getTeamNamesMap()
     return teamNames.containsKey(product) && teamNames.get(product).get(REGISTRY_KEY) ? teamNames.get(product).get(REGISTRY_KEY) : ""
+  }
+
+  String getApplicationTag(String product) {
+    def teamNames = getTeamNamesMap()
+    if (!teamNames.containsKey(product) || !teamNames.get(product).get(TAGS_KEY) || !teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)) {
+      steps.error ("${APPLICATION_KEY} tag is not configured for Product ${product} ."
+        + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
+    }
+    return teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)
   }
 
 }
