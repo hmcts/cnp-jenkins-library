@@ -34,7 +34,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
   }
 
-  approvedTerraformInfrastructure(environment, metricsPublisher) {
+  approvedTerraformInfrastructure(environment, product, metricsPublisher) {
     stateStoreInit(environment, subscription, deploymentTarget)
 
     lock("${productName}-${environmentDeploymentTarget}") {
