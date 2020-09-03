@@ -3,7 +3,7 @@
 version_output=$(terraform --version)
 
 terraform_version="$(echo "$version_output" | grep "Terraform v" | cut -d'v' -f 2)"
-azurerm_version="$(echo "$version_output" | grep "provider.azurerm" | cut -d'v' -f 3)"
+azurerm_version="$(echo "$version_output" | grep "azurerm" | cut -d'v' -f 3)"
 
 terraform_minor="$(echo "$terraform_version" | cut -d'.' -f 2)"
 azurerm_major="$(echo "$azurerm_version" | cut -d'.' -f 1)"
