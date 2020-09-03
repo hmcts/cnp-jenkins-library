@@ -34,7 +34,7 @@ else
   echo "=====    required_providers {                                                                  ======"
   echo "=====      azurerm = {                                                                         ======"
   echo "=====       source  = "hashicorp/azurerm"                                                      ======"
-  echo "=====       version = ">= 2.25"                                                                ======"
+  echo "=====       version = "~= 2.25"                                                                ======"
   echo "=====      }                                                                                   ======"
   echo "=====    }                                                                                     ======"
   echo "=====  }                                                                                       ======"
