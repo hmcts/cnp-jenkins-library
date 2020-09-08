@@ -78,9 +78,11 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         env.TF_VAR_ilbIp = 'TODO remove after some time'
         env.TF_VAR_deployment_namespace = deploymentNamespace
+        env.TF_VAR_subscription = subscription
+        env.TF_VAR_component = component
 
         sh "terraform get -update=true"
-        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'subscription=${subscription}' -var 'product=${product}' -var 'component=${component}'" +
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!planOnly) {
