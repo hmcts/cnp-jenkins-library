@@ -68,7 +68,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         sh "terraform --version"
 
-        warnAboutOldTfAzureProvider
+        warnAboutOldTfAzureProvider()
 
         sh """
           terraform init -reconfigure \
