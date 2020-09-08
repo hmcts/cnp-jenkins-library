@@ -68,6 +68,8 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         sh "terraform --version"
 
+        warnAboutOldTfAzureProvider()
+
         sh """
           terraform init -reconfigure \
             -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
