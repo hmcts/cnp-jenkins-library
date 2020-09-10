@@ -10,7 +10,7 @@ def call() {
     ./warn-about-old-tf-azure-provider.sh
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("updated_azurerm_provider", "Please upgrade azurerm to the lastest 2.x version. For an example, see: https://github.com/hmcts/draft-store/pull/702", new Date().parse("dd.MM.yyyy", "06.10.2020"))
+    WarningCollector.addPipelineWarning("updated_azurerm_provider", "Please upgrade azurerm to the lastest 2.x version. For examples see: https://github.com/hmcts/rpe-pdf-service/pull/281 and https://github.com/hmcts/rpe-shared-infrastructure/pull/11", new Date().parse("dd.MM.yyyy", "06.10.2020"))
   } finally {
     sh 'rm -f warn-about-old-tf-azure-provider.sh'
   }
