@@ -118,13 +118,13 @@ def call(params) {
         },
 
         "Docker Test Build": {
-          withAcrClient(subscription) {
-            def dockerfileTest = 'Dockerfile_test'
-            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+          if (isOnMaster && fileExists('build.gradle')) {
+            withAcrClient(subscription) {
+              def dockerfileTest = 'Dockerfile_test'
 
-            pcr.callAround('dockertestbuild') {
-              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-                if (isOnMaster && fileExists('build.gradle')) {
+              pcr.callAround('dockertestbuild') {
+                timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
                   writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
                   writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
                   if (!fileExists(dockerfileTest)) {
@@ -135,6 +135,8 @@ def call(params) {
                 }
               }
             }
+          } else {
+            echo "Not on Master branch. Skipping docker test build."
           }
         },
 
