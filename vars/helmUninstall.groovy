@@ -11,7 +11,7 @@ def call(DockerImage dockerImage, Map params) {
   def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
   kubectl.login()
 
-  if (helm.exists(dockerImage.getImageTag(), namespace) {
+  if (helm.exists(dockerImage.getImageTag(), namespace)) {
     helm.delete(dockerImage.getImageTag(), namespace)
     echo "Uninstalled release for ${dockerImage.getImageTag()}"
   }
