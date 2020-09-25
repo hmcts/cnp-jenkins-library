@@ -143,6 +143,14 @@ def call(params) {
                 }
               }
             }
+            if (environment == 'aat') {
+              stageWithAgent("Clear staging release - AKS $(environment", product) {
+                pcr.callAround("helmReleaseClear") {
+                  helmClear(dockerImage, params)
+                  log.info("Clearing staging release")
+                }
+              }
+            }
           }
         }
       }
