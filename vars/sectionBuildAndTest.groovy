@@ -136,7 +136,7 @@ def call(params) {
               }
             }
           } else {
-            echo "Not on Master branch. Skipping docker test build."
+            echo "Not on Master branch (or not using gradle). Skipping docker test build."
           }
         },
 
