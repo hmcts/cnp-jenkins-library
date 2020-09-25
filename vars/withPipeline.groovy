@@ -90,7 +90,7 @@ def call(type, String product, String component, Closure body) {
           environment: environment.nonProdName,
           product: product,
           component: component,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
           tfPlanOnly: true
         )
 
@@ -130,7 +130,7 @@ def call(type, String product, String component, Closure body) {
           environment: environment.nonProdName,
           product: product,
           component: component,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
           tfPlanOnly: false
         )
 
@@ -165,7 +165,7 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           aksSubscription: aksSubscriptions.prod,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
           tfPlanOnly: false
         )
 
@@ -191,7 +191,7 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           aksSubscription: aksSubscription,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
           tfPlanOnly: false
         )
       }
@@ -206,7 +206,7 @@ def call(type, String product, String component, Closure body) {
           product: deploymentProduct,
           component: component,
           aksSubscription: aksSubscriptions.preview,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
           tfPlanOnly: false
         )
       }
