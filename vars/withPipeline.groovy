@@ -91,7 +91,7 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           pactBrokerUrl: environment.pactBrokerUrl
-          planOnly: true
+          tfPlanOnly: true
         )
 
         sectionDeployToAKS(
@@ -131,7 +131,7 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           pactBrokerUrl: environment.pactBrokerUrl
-          planOnly: false
+          tfPlanOnly: false
         )
 
         sectionDeployToAKS(
@@ -166,7 +166,7 @@ def call(type, String product, String component, Closure body) {
           component: component,
           aksSubscription: aksSubscriptions.prod,
           pactBrokerUrl: environment.pactBrokerUrl
-          planOnly: false
+          tfPlanOnly: false
         )
 
         sectionPromoteBuildToStage(
@@ -192,7 +192,7 @@ def call(type, String product, String component, Closure body) {
           component: component,
           aksSubscription: aksSubscription,
           pactBrokerUrl: environment.pactBrokerUrl
-          planOnly: false
+          tfPlanOnly: false
         )
       }
 
@@ -207,7 +207,7 @@ def call(type, String product, String component, Closure body) {
           component: component,
           aksSubscription: aksSubscriptions.preview,
           pactBrokerUrl: environment.pactBrokerUrl
-          planOnly: false
+          tfPlanOnly: false
         )
       }
     } catch (err) {
