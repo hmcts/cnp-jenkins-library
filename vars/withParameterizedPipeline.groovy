@@ -92,6 +92,7 @@ def call(type, String product, String component, String environment, String subs
         component: component,
         deploymentTargets: deploymentTargetList,
         pactBrokerUrl: pactBrokerUrl
+        tfPlanOnly: false
       )
     } catch (err) {
       currentBuild.result = "FAILURE"
