@@ -144,7 +144,7 @@ def call(params) {
               }
             }
             if (environment == env.nonProdName) {
-              stageWithAgent("Clear release - AKS $(environment", product) {
+              stageWithAgent("Uninstall release $(environment", product) {
                 pcr.callAround("helmReleaseUninstall") {
                   helmUninstall(dockerImage, params)
                 }
