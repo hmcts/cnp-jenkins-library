@@ -81,6 +81,19 @@ def call(type, String product, String component, Closure body) {
 
       onPR {
 
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment.nonProdName,
+          product: product,
+          component: component,
+          pactBrokerUrl: environment.pactBrokerUrl
+          planOnly: true
+        )
+
         sectionDeployToAKS(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
@@ -118,6 +131,7 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           pactBrokerUrl: environment.pactBrokerUrl
+          planOnly: false
         )
 
         sectionDeployToAKS(
@@ -152,6 +166,7 @@ def call(type, String product, String component, Closure body) {
           component: component,
           aksSubscription: aksSubscriptions.prod,
           pactBrokerUrl: environment.pactBrokerUrl
+          planOnly: false
         )
 
         sectionPromoteBuildToStage(
@@ -177,6 +192,7 @@ def call(type, String product, String component, Closure body) {
           component: component,
           aksSubscription: aksSubscription,
           pactBrokerUrl: environment.pactBrokerUrl
+          planOnly: false
         )
       }
 
@@ -191,6 +207,7 @@ def call(type, String product, String component, Closure body) {
           component: component,
           aksSubscription: aksSubscriptions.preview,
           pactBrokerUrl: environment.pactBrokerUrl
+          planOnly: false
         )
       }
     } catch (err) {

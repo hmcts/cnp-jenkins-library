@@ -14,6 +14,7 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
+  def planOnly = params.planOnly
   Long deploymentNumber
 
   Builder builder = pipelineType.builder
@@ -33,7 +34,7 @@ def call(params) {
                 timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
                   def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
                   withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, false, subscription)
+                    tfOutput = spinInfra(product, component, environment, planOnly, subscription)
                   }
                 }
               }
