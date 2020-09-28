@@ -143,10 +143,12 @@ def call(params) {
                 }
               }
             }
-            if (environment == environment.nonProdName) {
-              stageWithAgent("Uninstall release ${environment}", product) {
-                pcr.callAround("helmReleaseUninstall") {
-                  helmUninstall(dockerImage, params)
+            testEnv(aksUrl) {
+              if (environment == env.ENVIRONMENT_NAME) {
+                stageWithAgent("Uninstall release ${environment}", product) {
+                  pcr.callAround("helmReleaseUninstall") {
+                    helmUninstall(dockerImage, params)
+                  }
                 }
               }
             }
