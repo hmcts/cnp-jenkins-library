@@ -7,7 +7,9 @@ def call(DockerImage dockerImage, Map params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+
   def aksServiceName = dockerImage.getAksServiceName()
+
   def namespace = env.TEAM_NAMESPACE
 
   def chartName = "${product}-${component}"
