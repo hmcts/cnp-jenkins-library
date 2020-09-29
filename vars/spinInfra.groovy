@@ -4,15 +4,15 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
 
-def call(productName, environment, planOnly, subscription) {
-  call(productName, null, environment, planOnly, subscription)
+def call(productName, environment, tfPlanOnly, subscription) {
+  call(productName, null, environment, tfPlanOnly, subscription)
 }
 
-def call(product, component, environment, planOnly, subscription) {
-  call(product, component, environment, planOnly, subscription, "")
+def call(product, component, environment, tfPlanOnly, subscription) {
+  call(product, component, environment, tfPlanOnly, subscription, "")
 }
 
-def call(product, component, environment, planOnly, subscription, deploymentTarget) {
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
@@ -45,7 +45,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
 
         def builtFrom = env.GIT_URL ?: 'unknown'
         pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG ]).toString()
-        log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; planOnly='$planOnly'"
+        log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
 
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
@@ -87,7 +87,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
-      if (!planOnly) {
+      if (!tfPlanOnly) {
         stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
@@ -101,7 +101,7 @@ def call(product, component, environment, planOnly, subscription, deploymentTarg
           return parseResult
         }
       } else
-        log.warning "Skipping apply due to planOnly flag set"
+        log.warning "Skipping apply due to tfPlanOnly flag set"
     }
   }
 }

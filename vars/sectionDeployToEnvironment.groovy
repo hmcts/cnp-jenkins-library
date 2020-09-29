@@ -14,6 +14,7 @@ def call(params) {
   def environment = params.environment
   def product = params.product
   def component = params.component
+  def tfPlanOnly = params.tfPlanOnly
   Long deploymentNumber
 
   Builder builder = pipelineType.builder
@@ -33,29 +34,33 @@ def call(params) {
                 timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
                   def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
                   withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, false, subscription)
+                    tfOutput = spinInfra(product, component, environment, tfPlanOnly, subscription)
                   }
                 }
               }
             }
 
-            registerDns(params)
+            if(!tfPlanOnly){
+              registerDns(params)
 
-            if (config.migrateDb) {
-              stageWithAgent("DB Migration - ${environment}", product) {
-                pcr.callAround("dbmigrate:${environment}") {
-                  if (tfOutput?.microserviceName) {
-                    WarningCollector.addPipelineWarning("deprecated_microservice_name_outputted", "Please remove microserviceName from your terraform outputs, if you are not outputting the microservice name (component) and instead outputting something else you will need to migrate the secrets first, example PR: https://github.com/hmcts/ccd-data-store-api/pull/540"
-      , new Date().parse("dd.MM.yyyy", "05.09.2019"))
+              if (config.migrateDb) {
+                stageWithAgent("DB Migration - ${environment}", product) {
+                  pcr.callAround("dbmigrate:${environment}") {
+                    if (tfOutput?.microserviceName) {
+                      WarningCollector.addPipelineWarning("deprecated_microservice_name_outputted", "Please remove microserviceName from your terraform outputs, if you are not outputting the microservice name (component) and instead outputting something else you will need to migrate the secrets first, example PR: https://github.com/hmcts/ccd-data-store-api/pull/540"
+                        , new Date().parse("dd.MM.yyyy", "05.09.2019"))
+                    }
+
+                    builder.dbMigrate(
+                      tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
+                      tfOutput?.microserviceName ? tfOutput.microserviceName.value : component
+                    )
                   }
-
-                  builder.dbMigrate(
-                    tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
-                    tfOutput?.microserviceName ? tfOutput.microserviceName.value : component
-                  )
                 }
               }
+
             }
+
           }
         }
       }
