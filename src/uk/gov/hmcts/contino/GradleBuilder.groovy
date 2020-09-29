@@ -88,7 +88,7 @@ class GradleBuilder extends AbstractBuilder {
     ]
     steps.withAzureKeyvault(secrets) {
       try {
-        if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:6")) {
+        if (hasPlugin("org.owasp:dependency-check-gradle:6")) {
           gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
         } else {
           WarningCollector.addPipelineWarning("deprecate_owasp_5", "Older versions of Owasp dependency check  plugin are not supported, please move to latest 6.x. For example see https://github.com/hmcts/service-auth-provider-app/pull/322 ", new Date().parse("dd.MM.yyyy", "15.10.2020"))
