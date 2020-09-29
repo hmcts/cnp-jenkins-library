@@ -91,7 +91,7 @@ def call(type, String product, String component, String environment, String subs
         product: product,
         component: component,
         deploymentTargets: deploymentTargetList,
-        pactBrokerUrl: pactBrokerUrl
+        pactBrokerUrl: pactBrokerUrl,
         tfPlanOnly: false
       )
     } catch (err) {
