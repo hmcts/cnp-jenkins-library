@@ -25,7 +25,7 @@ def call(params) {
       folderExists('infrastructure') {
         def buildInfraStageName = "Build Infrastructure - ${environment}"
         if(tfPlanOnly){
-          buildInfraStageName = "Tf Plan Only"
+          buildInfraStageName = "Terraform Plan -${environment}"
         }
         stageWithAgent(buildInfraStageName, product) {
           onPreview {
