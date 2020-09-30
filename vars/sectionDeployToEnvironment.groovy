@@ -23,7 +23,11 @@ def call(params) {
   approvedEnvironmentRepository(environment, metricsPublisher) {
     lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
       folderExists('infrastructure') {
-        stageWithAgent("Build Infrastructure - ${environment}", product) {
+        def buildInfraStageName = "Build Infrastructure - ${environment}"
+        if(tfPlanOnly){
+          buildInfraStageName = "Tf Plan Only"
+        }
+        stageWithAgent(buildInfraStageName, product) {
           onPreview {
             deploymentNumber = githubCreateDeployment()
           }
