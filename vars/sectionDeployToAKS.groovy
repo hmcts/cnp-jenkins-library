@@ -143,14 +143,6 @@ def call(params) {
                 }
               }
             }
-            def nonProdEnv = new Environment(env).nonProdName
-            if (environment == nonProdEnv) {
-              stageWithAgent("Uninstall Helm Release ${environment}", product) {
-                pcr.callAround("helmReleaseUninstall:${environment}") {
-                  helmUninstall(dockerImage, params)
-                }
-              }
-            }
           }
         }
       }
