@@ -17,9 +17,13 @@ def call(DockerImage dockerImage, Map params) {
 
   def helm = new Helm(this, chartName)
 
-  if (helm.exists(dockerImage.getImageTag(), namespace)) {
-    helm.delete(dockerImage.getImageTag(), namespace)
-    echo "Uninstalled release for ${dockerImage.getImageTag()}"
+  try {
+    if (helm.exists(dockerImage.getImageTag(), namespace)) {
+      helm.delete(dockerImage.getImageTag(), namespace)
+      echo "Uninstalled release for ${dockerImage.getImageTag()}"
+    }
+  } catch (ignored) {
+      echo "Unable to uninstall this helm release."
   }
 
 }
