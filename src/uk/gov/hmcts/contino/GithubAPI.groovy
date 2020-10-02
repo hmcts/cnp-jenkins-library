@@ -82,7 +82,7 @@ class GithubAPI {
 
     def json_response = new JsonSlurper().parseText(response.content)
 
-    return json_response.stream().map(label -> label['name']).collect(Collectors.toList())
+    return json_response.stream().map( { label -> label['name'] } ).collect(Collectors.toList())
   }
 
   def currentProject() {
