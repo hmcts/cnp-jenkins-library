@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.GithubAPI
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -115,6 +116,12 @@ def call(params) {
               }
             }
           }
+          onPR {
+            def githubApi = new GithubAPI(this)
+            if (githubApi.checkForDependenciesLabel()) {
+              helmReleaseToBeUninstalled(dockerImage, params)
+            }
+          }
           onMaster {
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
@@ -145,13 +152,7 @@ def call(params) {
             }
             def nonProdEnv = new Environment(env).nonProdName
             if (environment == nonProdEnv) {
-              stageWithAgent("Uninstall Helm Release ${environment}", product) {
-                pcr.callAround("helmReleaseUninstall:${environment}") {
-                  withAksClient(subscription, environment, product) {
-                    helmUninstall(dockerImage, params)
-                  }
-                }
-              }
+              helmReleaseToBeUninstalled(dockerImage, params)
             }
           }
         }
