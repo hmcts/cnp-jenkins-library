@@ -1,3 +1,5 @@
+import uk.gov.hmcts.contino.DockerImage
+
 /**
  * helmReleaseToBeUninstalled(environment, subscription, product)
  * 
