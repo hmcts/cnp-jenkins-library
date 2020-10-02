@@ -80,7 +80,11 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
+    echo response.content
+
     def json_response = new JsonSlurper().parseText(response.content)
+
+    echo json_response
 
     return json_response.stream().map( { label -> label['name'] } ).collect(Collectors.toList())
   }
