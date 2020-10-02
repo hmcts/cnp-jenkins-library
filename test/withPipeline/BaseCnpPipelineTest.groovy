@@ -83,9 +83,9 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
         return GithubAPITest.response
       }
       else {
-        return m.get('url')
-        // return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
-        //   '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
+        echo m.get('url')
+        return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
+           '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }
     })
     helper.registerAllowedMethod("milestone", null)
