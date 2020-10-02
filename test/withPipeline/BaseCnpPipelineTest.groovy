@@ -79,7 +79,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml'){
         return EnvironmentDnsConfigTest.response
       }
-      else if (m.get('url') == "https://api.github.com/repos/hmcts/some-project/issues/68/labels"){
+      else if (m.get('url').startsWith("https://api.github.com/repos/hmcts/") && m.get('url').endsWith("/labels")){
         return GithubAPITest.response
       }
       else {
