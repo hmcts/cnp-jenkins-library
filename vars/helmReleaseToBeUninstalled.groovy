@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.PipelineCallbacksRunner
 
 /**
  * helmReleaseToBeUninstalled(environment, subscription, product)
