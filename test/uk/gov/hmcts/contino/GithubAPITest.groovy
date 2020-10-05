@@ -11,7 +11,27 @@ class GithubAPITest extends Specification {
   def labels = ['label1', 'label2']
   def expectedLabels = '["label1","label2"]'
   
-  static def response = ["content": ["id":208045946,"node_id":"MDU6TGFiZWwyMDgwNDU5NDY=","url": "https://api.github.com/repos/hmcts/some-project/labels/dependencies","name": "dependencies","description":"Dependabot","color":"a2eeef", "default": false]]
+  static def response = ["content": '''[
+      {
+        "id": 208045946,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/bug",
+        "name": "bug",
+        "description": "Bug",
+        "color": "f29513",
+        "default": true
+      },
+      {
+        "id": 208045947,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDc=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/enhancement",
+        "name": "enhancement",
+        "description": "New feature or request",
+        "color": "a2eeef",
+        "default": false
+      }
+    ]'''
+  ]
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
@@ -52,39 +72,6 @@ class GithubAPITest extends Specification {
         it.get('contentType').equals('APPLICATION_JSON') &&
         it.get('url').equals("${expectedUrl}") &&
         it.get('requestBody').equals("${expectedLabels}") &&
-        it.get('consoleLogResponseBody').equals(true) &&
-        it.get('validResponseCodes').equals('200')})
-  }
-
-  def "CheckForDependenciesLabel"() {
-    def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
-
-    when:
-      githubApi.checkForDependenciesLabel()
-
-    then:
-      1 * steps.httpRequest({it.get('httpMode').equals('GET') &&
-                             it.get('authentication').equals("test-app-id") &&
-                             it.get('acceptType').equals('APPLICATION_JSON') &&
-                             it.get('contentType').equals('APPLICATION_JSON') &&
-                             it.get('url').equals("${expectedUrl}") &&
-                             it.get('consoleLogResponseBody').equals(true) &&
-                             it.get('validResponseCodes').equals('200')})
-  }
-
-  def "GetLabels"() {
-
-    def expectedUrl = 'https://api.github.com/repos/evilcorp/my-project/issues/89/labels'
-
-    when:
-      githubApi.getLabels('evilcorp/my-project', '89')
-
-    then:
-      1 * steps.httpRequest({it.get('httpMode').equals('GET') &&
-        it.get('authentication').equals("test-app-id") &&
-        it.get('acceptType').equals('APPLICATION_JSON') &&
-        it.get('contentType').equals('APPLICATION_JSON') &&
-        it.get('url').equals("${expectedUrl}") &&
         it.get('consoleLogResponseBody').equals(true) &&
         it.get('validResponseCodes').equals('200')})
   }

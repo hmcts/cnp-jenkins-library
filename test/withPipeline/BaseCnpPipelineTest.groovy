@@ -9,6 +9,7 @@ import uk.gov.hmcts.contino.MockJenkinsPluginManager
 
 import uk.gov.hmcts.pipeline.EnvironmentApprovalsTest
 import uk.gov.hmcts.pipeline.TeamConfigTest
+import uk.gov.hmcts.contino.GithubAPITest
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static uk.gov.hmcts.contino.ProjectSource.projectSource
@@ -79,11 +80,10 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml'){
         return EnvironmentDnsConfigTest.response
       }
-      else if (m.get('url').startsWith("https://api.github.com/repos/hmcts/") && m.get('url').endsWith("/labels")){
+      else if (m.get('url').startsWith("https://api.github.com/repos") && m.get('url').endsWith("/labels")){
         return GithubAPITest.response
       }
       else {
-        echo m.get('url')
         return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
            '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }
