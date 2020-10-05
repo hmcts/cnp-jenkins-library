@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.DockerImage
  * 
  */
 
-def call(DockerImage dockerImage, Map params) {
+def call(DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
 
   try {
     stageWithAgent("Uninstall Helm Release - ${params.environment}", params.product) {

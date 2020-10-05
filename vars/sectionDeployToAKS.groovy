@@ -119,7 +119,7 @@ def call(params) {
           onPR {
             def githubApi = new GithubAPI(this)
             if (githubApi.checkForDependenciesLabel()) {
-              helmReleaseToBeUninstalled(dockerImage, params)
+              helmReleaseToBeUninstalled(dockerImage, params, pcr)
             }
           }
           onMaster {
@@ -152,7 +152,7 @@ def call(params) {
             }
             def nonProdEnv = new Environment(env).nonProdName
             if (environment == nonProdEnv) {
-              helmReleaseToBeUninstalled(dockerImage, params)
+              helmReleaseToBeUninstalled(dockerImage, params, pcr)
             }
           }
         }
