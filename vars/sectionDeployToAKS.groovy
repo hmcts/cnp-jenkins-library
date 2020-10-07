@@ -116,12 +116,6 @@ def call(params) {
               }
             }
           }
-          onPR {
-            def githubApi = new GithubAPI(this)
-            if (githubApi.checkForDependenciesLabel()) {
-              helmUninstall(dockerImage, params, pcr)
-            }
-          }
           onMaster {
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
@@ -152,6 +146,12 @@ def call(params) {
             }
             def nonProdEnv = new Environment(env).nonProdName
             if (environment == nonProdEnv) {
+              helmUninstall(dockerImage, params, pcr)
+            }
+          }
+          onPR {
+            def githubApi = new GithubAPI(this)
+            if (githubApi.checkForDependenciesLabel()) {
               helmUninstall(dockerImage, params, pcr)
             }
           }
