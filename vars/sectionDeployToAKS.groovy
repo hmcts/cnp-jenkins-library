@@ -144,16 +144,11 @@ def call(params) {
                 }
               }
             }
-            def nonProdEnv = new Environment(env).nonProdName
-            if (environment == nonProdEnv) {
-              helmUninstall(dockerImage, params, pcr)
-            }
           }
-          onPR {
-            def githubApi = new GithubAPI(this)
-            if (githubApi.checkForDependenciesLabel()) {
-              helmUninstall(dockerImage, params, pcr)
-            }
+          def nonProdEnv = new Environment(env).nonProdName
+          def githubApi = new GithubAPI(this)
+          if (environment == nonProdEnv || githubApi.checkForDependenciesLabel()) {
+            helmUninstall(dockerImage, params, pcr)
           }
         }
       }
