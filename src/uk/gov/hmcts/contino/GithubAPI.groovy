@@ -54,12 +54,11 @@ class GithubAPI {
   /**
    * Check Pull Request for dependencies label.
    */
-  def checkForDependenciesLabel() {
-    
-    def pullRequestNumber = currentPullRequestNumber()
+  def checkForDependenciesLabel(branch_name) {
 
-    if (new ProjectBranch(pullRequestNumber).isPR() == true) {
+    if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
+      def pullRequestNumber = currentPullRequestNumber()
 
       return getLabels(project, pullRequestNumber).contains("dependencies")
     } else {
