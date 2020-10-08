@@ -56,9 +56,10 @@ class GithubAPI {
    */
   def checkForDependenciesLabel() {
     
-    if (ProjectBranch.isPR() == true) {
+    def pullRequestNumber = currentPullRequestNumber()
+
+    if (new ProjectBranch(pullRequestNumber).isPR() == true) {
       def project = currentProject()
-      def pullRequestNumber = currentPullRequestNumber()
 
       return getLabels(project, pullRequestNumber).contains("dependencies")
     } else {
