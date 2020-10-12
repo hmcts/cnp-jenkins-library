@@ -1,4 +1,4 @@
-def mirrorHost = (System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox") ? 'sandbox-artifactory' : 'artifactory'
+def mirrorHost = (System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox") ? 'artifactory.sandbox' : 'artifactory'
 def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
 
 allprojects {
