@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino.azure
 import spock.lang.Specification
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.JenkinsStepMock
-import uk.gov.hmcts.contino.ProjectBranch
 
 class AcrTest extends Specification {
 
@@ -16,13 +15,11 @@ class AcrTest extends Specification {
   def steps
   def acr
   def dockerImage
-  def projectBranch
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
     dockerImage = Mock(DockerImage.class)
-    projectBranch = new ProjectBranch('test')
-    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION, projectBranch)
+    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
   }
 
   def "login() should login with registry name"() {
