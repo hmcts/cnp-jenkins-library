@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.GithubAPI
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -143,16 +144,11 @@ def call(params) {
                 }
               }
             }
-            def nonProdEnv = new Environment(env).nonProdName
-            if (environment == nonProdEnv) {
-              stageWithAgent("Uninstall Helm Release ${environment}", product) {
-                pcr.callAround("helmReleaseUninstall:${environment}") {
-                  withAksClient(subscription, environment, product) {
-                    helmUninstall(dockerImage, params)
-                  }
-                }
-              }
-            }
+          }
+          def nonProdEnv = new Environment(env).nonProdName
+          def githubApi = new GithubAPI(this)
+          if (environment == nonProdEnv || githubApi.checkForDependenciesLabel(env.BRANCH_NAME)) {
+            helmUninstall(dockerImage, params, pcr)
           }
         }
       }
