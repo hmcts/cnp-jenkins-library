@@ -94,11 +94,18 @@ class GradleBuilder extends AbstractBuilder {
   def securityCheck() {
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v5-Account', version: '', envVariable: 'OWASPDB_V5_ACCOUNT' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v5-Password', version: '', envVariable: 'OWASPDB_V5_PASSWORD' ]
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v5-Password', version: '', envVariable: 'OWASPDB_V5_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
     ]
     steps.withAzureKeyvault(secrets) {
       try {
+        if (hasPlugin("org.owasp:dependency-check-gradle:6")) {
+          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
+        } else {
+          WarningCollector.addPipelineWarning("deprecate_owasp_5", "Older versions of Owasp dependency check  plugin are not supported, please move to latest 6.x. For example see https://github.com/hmcts/service-auth-provider-app/pull/322 ", new Date().parse("dd.MM.yyyy", "15.10.2020"))
         gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
+      }
       }
       finally {
         steps.archiveArtifacts 'build/reports/dependency-check-report.html'
