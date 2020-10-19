@@ -3,24 +3,44 @@ package uk.gov.hmcts.pipeline
 class TeamConfig {
 
   def steps
-  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
   static final String NAMESPACE_KEY = "namespace"
   static final String CONTACT_SLACK_CHANNEL_KEY = "contact_channel"
   static final String BUILD_NOTICES_CHANNEL_KEY = "build_notices_channel"
   static final String TEAM_KEY = "team"
-  static final String SLACK_KEY ="slack"
+  static final String SLACK_KEY = "slack"
+  static final String TAGS_KEY = "tags"
+  static final String APPLICATION_KEY = "application"
+  static final String AGENT_KEY = "agent"
+  static final String DOCKER_AGENT_LABEL = "k8s-agent"
+  static final String CONTAINER_AGENT = "inbound-agent"
+  static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
 
   TeamConfig(steps){
     this.steps = steps
   }
 
+  def setTeamConfigEnv(String product){
+    def teamNames = getTeamNamesMap()
+    this.steps.env.TEAM_NAME = getName(product)
+    this.steps.env.RAW_PRODUCT_NAME = getRawProductName(product)
+    this.steps.env.TEAM_NAMESPACE = getNameSpace(product)
+    this.steps.env.BUILD_NOTICES_SLACK_CHANNEL = getBuildNoticesSlackChannel(product)
+    this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
+    this.steps.env.TEAM_CONTAINER_REGISTRY = getContainerRegistry(product)
+    this.steps.env.TEAM_APPLICATION_TAG = getApplicationTag(product)
+
+    def buildAgentType = getBuildAgentType(product)
+    this.steps.env.BUILD_AGENT_TYPE = buildAgentType
+    this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(buildAgentType)
+    this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(buildAgentType)
+  }
+
   def getTeamNamesMap() {
     if (teamConfigMap ==null ){
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
-        authentication: "${GITHUB_CREDENTIAL}",
         timeout: 10,
         url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml",
         validResponseCodes: '200'
@@ -77,5 +97,36 @@ class TeamConfig {
     return getDefaultTeamSlackChannel(getRawProductName(product),CONTACT_SLACK_CHANNEL_KEY)
   }
 
+  String getBuildAgentType(String product) {
+    def teamNames = getTeamNamesMap()
+    def rawProductName = getRawProductName(product)
+    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
+      steps.echo("Agent type not found. Using default agent")
+      return ""
+    }
+    return DOCKER_AGENT_LABEL
+  }
+
+  boolean isDockerBuildAgent(String agentLabel) {
+    return agentLabel == DOCKER_AGENT_LABEL
+  }
+
+  String getBuildAgentContainer(String agentLabel) {
+    return isDockerBuildAgent(agentLabel) ? CONTAINER_AGENT : ""
+  }
+
+  String getContainerRegistry(String product) {
+    def teamNames = getTeamNamesMap()
+    return teamNames.containsKey(product) && teamNames.get(product).get(REGISTRY_KEY) ? teamNames.get(product).get(REGISTRY_KEY) : ""
+  }
+
+  String getApplicationTag(String product) {
+    def teamNames = getTeamNamesMap()
+    if (!teamNames.containsKey(product) || !teamNames.get(product).get(TAGS_KEY) || !teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)) {
+      steps.error ("${APPLICATION_KEY} tag is not configured for Product ${product} ."
+        + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
+    }
+    return teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)
+  }
 
 }

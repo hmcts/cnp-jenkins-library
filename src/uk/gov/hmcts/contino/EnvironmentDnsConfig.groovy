@@ -4,8 +4,6 @@ import groovy.text.SimpleTemplateEngine
 
 class EnvironmentDnsConfig {
 
-  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
-
   def steps
   static def envDnsConfigMap
 
@@ -18,7 +16,7 @@ class EnvironmentDnsConfig {
       def dnsConfigMap = [:]
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
-        authentication: "${GITHUB_CREDENTIAL}",
+        authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
         url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml",
         validResponseCodes: '200'

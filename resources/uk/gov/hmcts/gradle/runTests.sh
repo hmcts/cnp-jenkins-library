@@ -77,11 +77,11 @@ then
   then
     _slackDefaultMessage="Gradle Build Success: ${CLUSTER_NAME} ${TEST_URL}"
     _slackMessage=${SLACK_MESSAGE_SUCCESS:-$_slackDefaultMessage}
-    _slackIcon=${SLACK_ICON_SUCCESS:-banana-dance}
+    _slackIcon=${SLACK_ICON_SUCCESS:-green_heart}
   else
     _slackDefaultMessage="Gradle Build Failure: ${CLUSTER_NAME} ${TEST_URL}"
     _slackMessage=${SLACK_MESSAGE_FAILURE:-$_slackDefaultMessage}
-    _slackIcon=${SLACK_ICON_FAILURE:-boom}
+    _slackIcon=${SLACK_ICON_FAILURE:-red_circle}
   fi
   if [ "$_success" == "false" ] || [ "$_slackNotifySuccess" == "true" ]
   then

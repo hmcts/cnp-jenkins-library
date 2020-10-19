@@ -5,20 +5,20 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
 
-def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType) {
+def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product) {
 
   Environment environment = new Environment(env)
 
   withTeamSecrets(config, environment.nonProdName) {
     Builder builder = pipelineType.builder
 
-    stage('Checkout') {
+    stageWithAgent('Checkout', product) {
       pcr.callAround('checkout') {
         checkoutScm()
       }
     }
 
-    stage("Build") {
+    stageWithAgent("Build", product) {
       pcr.callAround('build') {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
           builder.setupToolVersion()
@@ -28,7 +28,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    stage('Dependency check') {
+    stageWithAgent('Dependency check', product) {
       warnError('Failure in DependencyCheckNightly') {
         pcr.callAround('DependencyCheckNightly') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Dependency check') {
@@ -39,7 +39,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.crossBrowserTest) {
-      stage("Cross browser tests") {
+      stageWithAgent("Cross browser tests", product) {
         warnError('Failure in crossBrowserTest') {
           pcr.callAround('crossBrowserTest') {
             timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
@@ -51,7 +51,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.performanceTest) {
-      stage("Performance test") {
+      stageWithAgent("Performance test", product) {
         warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
@@ -63,7 +63,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.securityScan) {
-      stage('Security scan') {
+      stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
@@ -75,19 +75,19 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.mutationTest) {
-        stage('Mutation tests') {
-          warnError('Failure in mutationTest') {
-            pcr.callAround('mutationTest') {
-              timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
-                builder.mutationTest()
-              }
+      stageWithAgent('Mutation tests', product) {
+        warnError('Failure in mutationTest') {
+          pcr.callAround('mutationTest') {
+            timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
+              builder.mutationTest()
             }
           }
         }
+      }
     }
 
     if (config.fullFunctionalTest) {
-      stage('Full functional tests') {
+      stageWithAgent('Full functional tests', product) {
         warnError('Failure in fullFunctionalTest') {
           pcr.callAround('fullFunctionalTest') {
             timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {

@@ -35,7 +35,7 @@ ______                              _           _ _
 
       def tfOutput
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         checkoutScm()
       }
 
@@ -50,7 +50,7 @@ ______                              _           _ _
         }
 
         if (!planOnly) {
-          stage('Store shared product secrets') {
+          stageWithAgent('Store shared product secrets', product) {
             if (tfOutput.vaultName) {
               KeyVault keyVault = new KeyVault(this, subscription, tfOutput.vaultName.value)
 

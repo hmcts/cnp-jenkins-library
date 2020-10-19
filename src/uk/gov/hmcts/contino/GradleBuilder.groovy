@@ -1,34 +1,22 @@
 package uk.gov.hmcts.contino
-@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
 
-import com.cloudbees.groovy.cps.NonCPS
-import com.microsoft.azure.documentdb.Document
-import com.microsoft.azure.documentdb.DocumentClient
-import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class GradleBuilder extends AbstractBuilder {
 
-  private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
-
   def product
-  String cosmosDbUrl
   def java11 = "11"
 
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
-    Subscription subscription = new Subscription(steps.env)
-    this.cosmosDbUrl = subscription.nonProdName == "sandbox" ?
-      'https://sandbox-pipeline-metrics.documents.azure.com/' :
-      'https://pipeline-metrics.documents.azure.com/'
   }
 
   def build() {
     addVersionInfo()
     gradle("assemble")
-    steps.stash(name: product, includes: "**/libs/*.jar,**/libs/*.war")
   }
 
   def addInitScript() {
@@ -104,62 +92,30 @@ class GradleBuilder extends AbstractBuilder {
           gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
         } else {
           WarningCollector.addPipelineWarning("deprecate_owasp_5", "Older versions of Owasp dependency check  plugin are not supported, please move to latest 6.x. For example see https://github.com/hmcts/service-auth-provider-app/pull/322 ", new Date().parse("dd.MM.yyyy", "15.10.2020"))
-        gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
+          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v5-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V5_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V5_PASSWORD}' -Dautoupdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
+        }
       }
       }
       finally {
         steps.archiveArtifacts 'build/reports/dependency-check-report.html'
-        publishCVEReport()
-      }
-    }
-  }
-
-  def publishCVEReport() {
-    try {
-      steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-        if (steps.env.COSMOSDB_TOKEN_KEY == null) {
-          steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
-          return
-        }
-
-        steps.echo "Publishing CVE report"
         String dependencyReport = steps.readFile('build/reports/dependency-check-report.json')
-        def summary = prepareCVEReport(dependencyReport, steps.env)
-        createDocument(summary)
+
+        def cveReport = prepareCVEReport(dependencyReport)
+
+        CVEPublisher.create(steps)
+          .publishCVEReport('java', cveReport)
       }
-    } catch (err) {
-      steps.echo "Unable to publish CVE report '${err}'"
     }
   }
 
-  def prepareCVEReport(owaspReportJSON, env) {
+  def prepareCVEReport(String owaspReportJSON) {
     def report = new JsonSlurper().parseText(owaspReportJSON)
     // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
     report.dependencies = report.dependencies.findAll {
       it.vulnerabilities || it.suppressedVulnerabilities
     }
 
-    def result = [
-      build: [
-        branch_name                  : env.BRANCH_NAME,
-        build_display_name           : env.BUILD_DISPLAY_NAME,
-        build_tag                    : env.BUILD_TAG,
-        git_url                      : env.GIT_URL,
-      ],
-      report: report
-    ]
-    return JsonOutput.toJson(result)
-  }
-
-  @NonCPS
-  private def createDocument(String reportJSON) {
-    def client = new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
-    try {
-      client.createDocument(COSMOS_COLLECTION_LINK, new Document(reportJSON)
-        , null, false)
-    } finally {
-      client.close()
-    }
+    return report
   }
 
   @Override
@@ -219,8 +175,13 @@ EOF
       def javaVersion = gradleWithOutput("-q :javaVersion")
       steps.echo "Found java version: ${javaVersion}"
       if (javaVersion == java11) {
-        steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
-        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+        if (steps.fileExists("/usr/share/jdk-11.0.2")) {
+          steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
+          steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+        } else if (steps.fileExists("/usr/local/openjdk-11")) {
+          steps.env.JAVA_HOME = "/usr/local/openjdk-11"
+          steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+        }
       } else {
         nagAboutJava11Required()
       }
@@ -232,7 +193,7 @@ EOF
   }
 
   def nagAboutJava11Required() {
-    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "19.08.2020"))
+    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "26.09.2020"))
   }
 
   def hasPlugin(String pluginName) {

@@ -6,7 +6,7 @@ class TerraformInfraApprovals {
 
   static final String GITHUB_BASE_URL = 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/terraform-infra-approvals'
 
-  public static final String TFUTILS_IMAGE = 'hmctspublic.azurecr.io/tf-utils:dbf0x'
+  public static final String TFUTILS_IMAGE = 'hmctspublic.azurecr.io/tf-utils:db66hn'
   public static final String TFUTILS_RUN_ARGS = '--entrypoint ""'
 
   def steps

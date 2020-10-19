@@ -25,12 +25,16 @@ def call(String product, Closure body) {
   body.delegate = dsl
   body.call() // register pipeline config
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
+
+  node(agentType) {
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         checkoutScm()
       }
 

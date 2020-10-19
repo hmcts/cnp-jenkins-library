@@ -28,12 +28,16 @@ def call(String product, String environment, String subscription, Boolean planOn
 
   def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
+
+  node(agentType) {
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         callbacksRunner.callAround('checkout') {
           checkoutScm()
         }

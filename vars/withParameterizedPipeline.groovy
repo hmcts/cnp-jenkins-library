@@ -10,6 +10,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
+import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
@@ -55,19 +56,24 @@ def call(type, String product, String component, String environment, String subs
   }
 
   def deploymentTargetList = deploymentTargets.split(',') as List
+  AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
+
+  node(agentType) {
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
-      stage('Checkout') {
+      stageWithAgent('Checkout', product) {
         callbacksRunner.callAround('checkout') {
           checkoutScm()
         }
       }
 
-      stage("Build") {
+      stageWithAgent("Build", product) {
         builder.setupToolVersion()
 
         callbacksRunner.callAround('build') {
@@ -80,11 +86,13 @@ def call(type, String product, String component, String environment, String subs
         pipelineCallbacksRunner: callbacksRunner,
         pipelineType: pipelineType,
         subscription: subscription,
+        aksSubscription: aksSubscriptions.aat,
         environment: environment,
         product: product,
         component: component,
         deploymentTargets: deploymentTargetList,
-        pactBrokerUrl: pactBrokerUrl
+        pactBrokerUrl: pactBrokerUrl,
+        tfPlanOnly: false
       )
     } catch (err) {
       currentBuild.result = "FAILURE"

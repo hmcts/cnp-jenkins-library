@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.Helm
 
 def call(Map params) {
-  withAksClient(params.subscription, params.environment) {
+  withAksClient(params.subscription, params.environment, params.product) {
 
     String chartName = "${params.product}-${params.component}"
 
@@ -29,7 +29,8 @@ def call(Map params) {
         values << valuesEnv
       }
 
-      helm.publishIfNotExists(values)
+      helm.publishIfNotExists()
+      helm.publishToGitIfNotExists()
     }
   }
 }

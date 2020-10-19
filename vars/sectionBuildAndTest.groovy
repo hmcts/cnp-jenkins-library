@@ -20,14 +20,16 @@ def call(params) {
   def acr
   def dockerImage
   def projectBranch
+  def imageRegistry
   boolean noSkipImgBuild = true
 
-  stage('Checkout') {
+  stageWithAgent('Checkout', product) {
     pcr.callAround('checkout') {
       checkoutScm()
       withAcrClient(subscription) {
         projectBranch = new ProjectBranch(env.BRANCH_NAME)
-        acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
+        imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+        acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
         dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
         noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
       }
@@ -35,7 +37,7 @@ def call(params) {
   }
 
 
-  stage("Build") {
+  stageWithAgent("Build", product) {
     onPR {
       enforceChartVersionBumped product: product, component: component
       warnAboutAADIdentityPreviewHack product: product, component: component
@@ -56,12 +58,11 @@ def call(params) {
         }
       }
     }
-
   }
 
-  stage("Tests/Checks/Container build") {
+  stageWithAgent("Tests/Checks/Container build", product) {
 
-    when (noSkipImgBuild) {
+    when(noSkipImgBuild) {
       parallel(
 
         "Unit tests and Sonar scan": {
@@ -96,19 +97,35 @@ def call(params) {
         "Docker Build": {
           withAcrClient(subscription) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
-            def dockerfileTest = 'Dockerfile_test'
-            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
             pcr.callAround('dockerbuild') {
               timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+                if (!fileExists('.dockerignore')) {
+                  writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                } else {
+                  writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                  sh script: "cat .dockerignore_build >> .dockerignore"
+                }
                 def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
                 if (fileExists(acbTemplateFilePath)) {
                   acr.runWithTemplate(acbTemplateFilePath, dockerImage)
                 } else {
                   acr.build(dockerImage, buildArgs)
                 }
-                if (isOnMaster && fileExists('build.gradle')) {
-                  writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
+              }
+            }
+          }
+        },
+
+        "Docker Test Build": {
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+          if (isOnMaster && fileExists('build.gradle')) {
+            withAcrClient(subscription) {
+              def dockerfileTest = 'Dockerfile_test'
+
+              pcr.callAround('dockertestbuild') {
+                timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
+                  writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
                   writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
                   if (!fileExists(dockerfileTest)) {
                     writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
@@ -118,6 +135,8 @@ def call(params) {
                 }
               }
             }
+          } else {
+            echo "Not on Master branch (or not using gradle). Skipping docker test build."
           }
         },
 
@@ -127,7 +146,7 @@ def call(params) {
   }
 
   if (config.pactBrokerEnabled) {
-    stage("Pact Consumer Verification") {
+    stageWithAgent("Pact Consumer Verification", product) {
       def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 

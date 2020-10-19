@@ -1,7 +1,5 @@
 package uk.gov.hmcts.contino
 
-import com.microsoft.azure.documentdb.DocumentClient
-import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 class GradleBuilderTest extends Specification {
@@ -16,9 +14,6 @@ class GradleBuilderTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.getEnv() >> [
-      GIT_URL: 'http://example.com'
-    ]
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
@@ -79,13 +74,15 @@ class GradleBuilderTest extends Specification {
     setup:
       def closure
       steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
-
+      def spyGradleBuilder = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
+        hasPlugin(_) >> true
+      }
     when:
-      builder.securityCheck()
+    spyGradleBuilder.securityCheck()
     then:
       1 * steps.sh({
         GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
-        it.contains('jdbc:postgresql://owaspdependency-v5-prod')
+        it.contains('jdbc:postgresql://owaspdependency-v6-prod')
       })
   }
 
@@ -112,24 +109,14 @@ class GradleBuilderTest extends Specification {
 
   def "Prepares CVE report for publishing to CosmosDB"() {
     when:
-    def result = builder.prepareCVEReport(sampleCVEReport, steps.env)
-    result = new JsonSlurper().parseText(result)
+    def result = builder.prepareCVEReport(sampleCVEReport)
 
     then:
     // Report has 2 dependencies with vulnerabilities and 3 with suppressed vulnerabilities.
-    result.report.dependencies.size == 5
+    result.dependencies.size == 5
     // Only dependencies with vulnerabilities or suppressed vulnerabilities should be reported
-    result.report.dependencies.every {
+    result.dependencies.every {
       it.vulnerabilities || it.suppressedVulnerabilities
     }
-    result.build.git_url == 'http://example.com'
-  }
-
-  def "Publishing CVE report does not throw unhandled error"() {
-    when:
-    builder.publishCVEReport()
-
-    then:
-    notThrown()
   }
 }

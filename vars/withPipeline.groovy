@@ -59,9 +59,13 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
+
+  node(agentType) {
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       sectionBuildAndTest(
@@ -88,6 +92,19 @@ def call(type, String product, String component, Closure body) {
       }
 
       onPR {
+
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment.nonProdName,
+          product: product,
+          component: component,
+          pactBrokerUrl: environment.pactBrokerUrl,
+          tfPlanOnly: true
+        )
 
         sectionDeployToAKS(
           appPipelineConfig: pipelineConfig,
@@ -125,24 +142,23 @@ def call(type, String product, String component, Closure body) {
           environment: environment.nonProdName,
           product: product,
           component: component,
+          pactBrokerUrl: environment.pactBrokerUrl,
+          tfPlanOnly: false
+        )
+
+        sectionDeployToAKS(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment.nonProdName,
+          product: product,
+          component: component,
           pactBrokerUrl: environment.pactBrokerUrl
         )
 
-        if (pipelineConfig.aksStagingDeployment) {
-          sectionDeployToAKS(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            aksSubscription: aksSubscriptions.aat,
-            environment: environment.nonProdName,
-            product: product,
-            component: component,
-            pactBrokerUrl: environment.pactBrokerUrl
-          )
-        }
-
-        stage('Publish Helm chart') {
+        stageWithAgent('Publish Helm chart', product) {
           helmPublish(
             appPipelineConfig: pipelineConfig,
             subscription: subscription.nonProdName,
@@ -161,7 +177,8 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           aksSubscription: aksSubscriptions.prod,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
+          tfPlanOnly: false
         )
 
         sectionPromoteBuildToStage(
@@ -186,7 +203,8 @@ def call(type, String product, String component, Closure body) {
           product: product,
           component: component,
           aksSubscription: aksSubscription,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
+          tfPlanOnly: false
         )
       }
 
@@ -200,7 +218,8 @@ def call(type, String product, String component, Closure body) {
           product: deploymentProduct,
           component: component,
           aksSubscription: aksSubscriptions.preview,
-          pactBrokerUrl: environment.pactBrokerUrl
+          pactBrokerUrl: environment.pactBrokerUrl,
+          tfPlanOnly: false
         )
       }
     } catch (err) {

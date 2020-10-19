@@ -1,9 +1,7 @@
 package withPipeline.onPreview
 
-import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import uk.gov.hmcts.contino.NodeDeployer
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 

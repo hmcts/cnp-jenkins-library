@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.GithubAPI
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -32,21 +33,23 @@ def call(params) {
   def acr
   def dockerImage
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  def imageRegistry
 
   Builder builder = pipelineType.builder
 
   withAcrClient(subscription) {
-    acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
+    imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
     onPR {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
   }
 
-  stage("AKS deploy - ${environment}") {
+  stageWithAgent("AKS deploy - ${environment}", product) {
     withTeamSecrets(config, environment) {
       pcr.callAround('akschartsinstall') {
-        withAksClient(subscription, environment) {
+        withAksClient(subscription, environment, product) {
           timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
             onPR {
               deploymentNumber = githubCreateDeployment()
@@ -67,7 +70,7 @@ def call(params) {
   if (config.serviceApp) {
     withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
-          stage("Smoke Test - AKS ${environment}") {
+          stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
               pcr.callAround("smoketest-aks:${environment}") {
                 pcr.callAround("smoketest:${environment}") {
@@ -80,7 +83,7 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            stage("Functional Test - AKS ${environment}") {
+            stageWithAgent("Functional Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("functionalTest-aks:${environment}") {
                   pcr.callAround("functionalTest:${environment}") {
@@ -93,7 +96,7 @@ def call(params) {
             }
           }
           if (config.performanceTest) {
-            stage("Performance Test - AKS ${environment}") {
+            stageWithAgent("Performance Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
@@ -106,7 +109,7 @@ def call(params) {
           }
 
           if (config.pactBrokerEnabled) {
-            stage("Pact Provider Verification") {
+            stageWithAgent("Pact Provider Verification", product) {
               def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
               def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
@@ -122,7 +125,7 @@ def call(params) {
           }
           onMaster {
             if (config.crossBrowserTest) {
-              stage("CrossBrowser Test - AKS ${environment}") {
+              stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.crossBrowserTest()
@@ -131,7 +134,7 @@ def call(params) {
               }
             }
             if (config.mutationTest) {
-              stage("Mutation Test - AKS ${environment}") {
+              stageWithAgent("Mutation Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("mutationTest:${environment}") {
                     builder.mutationTest()
@@ -140,7 +143,7 @@ def call(params) {
               }
             }
             if (config.fullFunctionalTest) {
-              stage("FullFunctional Test - AKS ${environment}") {
+              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.fullFunctionalTest()
@@ -148,6 +151,11 @@ def call(params) {
                 }
               }
             }
+          }
+          def nonProdEnv = new Environment(env).nonProdName
+          def githubApi = new GithubAPI(this)
+          if (environment == nonProdEnv || githubApi.checkForDependenciesLabel(env.BRANCH_NAME)) {
+            helmUninstall(dockerImage, params, pcr)
           }
         }
       }

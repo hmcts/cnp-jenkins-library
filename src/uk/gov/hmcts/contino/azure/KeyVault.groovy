@@ -6,14 +6,17 @@ package uk.gov.hmcts.contino.azure;
 class KeyVault extends Az implements Serializable {
 
   private String vaultName
+  def steps
 
   KeyVault(steps, String vaultName) {
     this(steps, "jenkins", vaultName)
+    this.steps = steps
   }
 
   KeyVault(steps, String subscription, String vaultName) {
     super(steps, subscription)
     this.vaultName = vaultName
+    this.steps = steps
   }
 
   void store(String key, String value) {
@@ -31,6 +34,19 @@ class KeyVault extends Az implements Serializable {
       } else {
         throw e
       }
+    }
+  }
+
+  void download(String key, String path, String filePermissions) {
+    String output
+    // Reload file anyway, to be on the safe side
+    try {
+      this.steps.sh("rm -rf ${path}")
+      output = this.az("keyvault secret download --vault-name '${this.vaultName}' --name '${key}' --file '${path}'")
+      this.steps.sh("chmod ${filePermissions} '${path}'")
+      this.steps.echo("File '${path}' with permissions '${filePermissions}' created from '${this.vaultName}' - '${key}' - output: ${output}")
+    } catch (e) {
+      // ignore as this must be a vm-agent
     }
   }
 

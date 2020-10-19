@@ -4,9 +4,9 @@ import uk.gov.hmcts.contino.RepositoryUrl
 def call() {
   String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
 
-  withCredentials([usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USERNAME')]) {
     def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
-      customHeaders: [[maskValue: true, name: 'Authorization', value: "Bearer ${env.BEARER_TOKEN}"]], httpMode: 'POST',
+      authentication: env.GIT_CREDENTIALS_ID,
+      httpMode: 'POST',
       requestBody: """{
         "ref": "${env.CHANGE_BRANCH}",
         "description": "Deploying ${env.CHANGE_BRANCH}",
@@ -20,5 +20,4 @@ def call() {
 
     def deploymentId = new JsonSlurperClassic().parseText(response.content).id
     return deploymentId
-  }
 }

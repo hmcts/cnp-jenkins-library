@@ -35,12 +35,12 @@ def call(params) {
   def component = params.component
   DockerImage.DeploymentStage deploymentStage = params.stage
 
-  stage("${deploymentStage.label} build promotion") {
+  stageWithAgent("${deploymentStage.label} build promotion", product) {
     withAcrClient(subscription) {
-
+        def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
         def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-        def acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
-        def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
+        def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+        def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, projectBranch)
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)

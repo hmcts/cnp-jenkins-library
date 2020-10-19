@@ -57,9 +57,13 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-  node {
-    def slackChannel = new TeamConfig(this).getBuildNoticesSlackChannel(product)
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
+
+  node(agentType) {
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       onMaster {
@@ -71,18 +75,18 @@ def call(type, String product, String component, Closure body) {
         def pactBrokerUrl = environment.pactBrokerUrl
         boolean noSkipImgBuild = true
 
-        stage('Checkout') {
+        stageWithAgent('Checkout', product) {
           pcr.callAround('checkout') {
             checkoutScm()
           }
         }
 
-        stage("Build") {
+        stageWithAgent("Build", product) {
 
           builder.setupToolVersion()
         }
 
-        stage("Tests") {
+        stageWithAgent("Tests", product) {
 
           when(noSkipImgBuild) {
                 pcr.callAround('test') {
@@ -93,7 +97,7 @@ def call(type, String product, String component, Closure body) {
           }
         }
 
-        stage("Pact Consumer Verification") {
+        stageWithAgent("Pact Consumer Verification", product) {
 
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()

@@ -1,11 +1,11 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 class GithubAPI {
 
   static final String API_URL = 'https://api.github.com/repos'
-  static final String GITHUB_CREDENTIAL = 'jenkins-github-hmcts-api-token'
 
   def steps
 
@@ -42,13 +42,51 @@ class GithubAPI {
     def body = JsonOutput.toJson(labels)
 
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: "${GITHUB_CREDENTIAL}",
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/${project}/issues/${issueNumber}/labels",
       requestBody: "${body}",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
+  }
+
+  /**
+   * Check Pull Request for dependencies label.
+   */
+  def checkForDependenciesLabel(branch_name) {
+
+    if (new ProjectBranch(branch_name).isPR() == true) {
+      def project = currentProject()
+      def pullRequestNumber = currentPullRequestNumber()
+
+      return getLabels(project, pullRequestNumber).contains("dependencies")
+    } else {
+      return false
+    }
+  }
+
+  /**
+   * Get labels from an issue or pull request
+   *
+   * @param project
+   *   The project repo name, including the org e.g. 'hmcts/my-frontend-app'
+   * @param issueNumber
+   *   The issue or PR number
+   */
+  def getLabels(project, issueNumber) {
+
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: "${API_URL}/${project}/issues/${issueNumber}/labels",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+    def json_response = new JsonSlurper().parseText(response.content)
+
+    return json_response.stream().map( { label -> label['name'] } ).collect()
   }
 
   def currentProject() {

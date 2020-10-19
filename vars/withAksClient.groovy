@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.Environment
 
-def call(String subscription, String environment, Closure block) {
+def call(String subscription, String environment, String product, Closure block) {
   withAcrClient(subscription) {
     def envName = environment.replace('idam-', '').toUpperCase()
     env.AKS_CLUSTER_NAME = env."${envName}_AKS_CLUSTER_NAME" ?: "cnp-${environment}-cluster"
@@ -9,7 +9,7 @@ def call(String subscription, String environment, Closure block) {
   }
 }
 
-def call(String subscription, Closure block) {
+def call(String subscription, String product, Closure block) {
   String environment = new Environment(env).previewName
-  call(subscription,environment, block)
+  call(subscription, environment, product, block)
 }
