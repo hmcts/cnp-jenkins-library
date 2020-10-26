@@ -241,6 +241,8 @@ EOF
       steps.env.JAVA_HOME = "/usr/local/openjdk-11"
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
+    steps.echo "after set java home"
+    steps.echo steps.env.JAVA_HOME
   }
 
 }
