@@ -232,17 +232,7 @@ EOF
 
   @Override
   def setupToolVersion() {
-    steps.echo "Java home"
-    steps.echo steps.env.JAVA_HOME
-    if (steps.fileExists("/usr/share/jdk-11.0.2")) {
-      steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
-      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-    } else if (steps.fileExists("/usr/local/openjdk-11")) {
-      steps.env.JAVA_HOME = "/usr/local/openjdk-11"
-      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-    }
-    steps.echo "after set java home"
-    steps.echo steps.env.JAVA_HOME
+    super.setupToolVersion()
   }
 
 }
