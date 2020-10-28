@@ -36,8 +36,8 @@ abstract class AbstractBuilder implements Builder, Serializable {
   def setupToolVersion() {
 
     //Setting Up JAVA_HOME here as its used for Sonar scan even in YarnBuilder.
-    if (steps.fileExists("/usr/share/jdk-11.0.2")) {
-      steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
+    if (steps.fileExists("/usr/lib/jvm/java-11-openjdk")) {
+      steps.env.JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     } else if (steps.fileExists("/usr/local/openjdk-11")) {
       steps.env.JAVA_HOME = "/usr/local/openjdk-11"
