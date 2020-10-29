@@ -174,13 +174,7 @@ EOF
       def javaVersion = gradleWithOutput("-q :javaVersion")
       steps.echo "Found java version: ${javaVersion}"
       if (javaVersion == java11) {
-        if (steps.fileExists("/usr/share/jdk-11.0.2")) {
-          steps.env.JAVA_HOME = "/usr/share/jdk-11.0.2"
-          steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-        } else if (steps.fileExists("/usr/local/openjdk-11")) {
-          steps.env.JAVA_HOME = "/usr/local/openjdk-11"
-          steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-        }
+        super.setupToolVersion()
       } else {
         nagAboutJava11Required()
       }
