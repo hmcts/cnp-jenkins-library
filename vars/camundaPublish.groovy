@@ -14,9 +14,14 @@ def call(String s2sServiceName, String component, String environment, String pro
 
     log.info "Publish to Camunda"
 
-    def functions = libraryResource 'uk/gov/hmcts/pipeline/camunda/publishBpmn.sh'
-    writeFile file: 'publishBpmn.sh', text: functions
-    result = sh "bash publishBpmn.sh $WORKSPACE $S2S_URL $s2sServiceName $camunda_url"
+    def functions = libraryResource 'uk/gov/hmcts/pipeline/camunda/publish-camunda-processes.sh'
+    writeFile file: 'publish-camunda-processes.sh', text: functions
+    sh """
+    chmod +x publish-camunda-processes.sh
+    ./publish-camunda-processes.sh $WORKSPACE $S2S_URL $s2sServiceName $camunda_url
+    """
+
+    sh 'rm publish-camunda-processes.sh'
   }
 }
 
