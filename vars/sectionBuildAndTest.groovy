@@ -16,6 +16,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def environent = params.environment
   def pactBrokerUrl = params.pactBrokerUrl
   def acr
   def dockerImage
@@ -143,6 +144,10 @@ def call(params) {
         failFast: true
       )
     }
+  }
+
+  if (config.camundaEnabled) {
+    camundaPublish(config.s2sServiceName, component, environment, product)
   }
 
   if (config.pactBrokerEnabled) {
