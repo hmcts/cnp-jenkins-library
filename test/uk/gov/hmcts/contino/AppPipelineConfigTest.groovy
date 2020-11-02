@@ -32,6 +32,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
+      assertThat(pipelineConfig.camundaEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
   }

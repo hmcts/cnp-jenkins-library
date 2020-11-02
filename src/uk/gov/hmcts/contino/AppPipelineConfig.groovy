@@ -18,6 +18,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean legacyDeployment = true
   Set<String> legacyDeploymentExemptions = []
   boolean pactBrokerEnabled = false
+  boolean camundaEnabled = false
   boolean pactProviderVerificationsEnabled = false
   boolean pactConsumerTestsEnabled = false
 
