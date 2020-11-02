@@ -15,7 +15,6 @@ try {
     }
 
     stage('Build') {
-      builder.setupToolVersion()
       builder.gradle('clean build -x test')
     }
 

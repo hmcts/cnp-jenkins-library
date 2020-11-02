@@ -22,7 +22,8 @@ compileTestGroovy {
 dependencies {
   compileOnly 'org.apache.ivy:ivy:2.4.0'
 
-  compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.9'
+  compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.13'
+  compile group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.13'
   compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.32'
   //used for generating RandomStrings
   compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
@@ -40,12 +41,12 @@ dependencies {
   compile 'com.squareup.okhttp3:okhttp:3.9.1'
   compile 'org.apache.ant:ant:1.10.3'
 
-  testCompile group: 'org.spockframework', name: 'spock-core', version: '1.1-groovy-2.4'
+  testCompile group: 'org.spockframework', name: 'spock-core', version: '1.2-groovy-2.5'
   testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
   testCompile group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '1.31.0'
 
-  testRuntime "cglib:cglib-nodep:3.2.6"
+  testRuntime "cglib:cglib-nodep:3.3.0"
   testRuntime "org.objenesis:objenesis:2.5.1"
 }
 
