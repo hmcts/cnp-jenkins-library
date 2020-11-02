@@ -7,7 +7,6 @@ class Gatling implements Serializable {
   public static final String GATLING_SIMS_DIR      = '$WORKSPACE/src/gatling/simulations'
   public static final String GATLING_RESOURCES_DIR = '$WORKSPACE/src/gatling/resources'
   public static final String GATLING_CONF_DIR      = '$WORKSPACE/src/gatling/conf'
-  public static final String GATLING_JAVA_8_IMAGE  = 'hmcts/gatling:3.1.1-java-8-1.0'
   public static final String GATLING_JAVA_11_IMAGE  = 'hmcts/gatling:3.1.1-java-11-1.0'
   @SuppressWarnings("unused") // used in publishPerformanceReports
   public static final String COSMOSDB_COLLECTION   = 'dbs/jenkins/colls/performance-metrics'
@@ -28,7 +27,7 @@ class Gatling implements Serializable {
   }
 
   def execute() {
-    def gatlingImage = steps.env?.JAVA_MAJOR_VERSION == "11" ? GATLING_JAVA_11_IMAGE : GATLING_JAVA_8_IMAGE
+    def gatlingImage =  GATLING_JAVA_11_IMAGE
 
     this.steps.withDocker(gatlingImage, GATLING_RUN_ARGS) {
       this.steps.sh """
