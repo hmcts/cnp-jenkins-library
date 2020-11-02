@@ -15,8 +15,7 @@ try {
     }
 
     stage('Build') {
-      steps.env.JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
-      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      builder.setupToolVersion()
       builder.gradle('clean build -x test')
     }
 
