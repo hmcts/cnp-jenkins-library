@@ -92,7 +92,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.pactProviderVerificationsEnabled = roles.contains(PactRoles.PROVIDER)
   }
 
-  void enableCamundaAs(String s2sTokenName) {
+  void enableCamunda(String s2sTokenName) {
     config.camundaEnabled = true
     config.s2sServiceName = s2sTokenName
   }
