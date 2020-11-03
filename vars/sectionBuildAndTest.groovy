@@ -16,7 +16,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
-  def environent = params.environment
+  def environment = params.environment
   def pactBrokerUrl = params.pactBrokerUrl
   def acr
   def dockerImage
