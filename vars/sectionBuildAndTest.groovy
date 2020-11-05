@@ -146,8 +146,13 @@ def call(params) {
     }
   }
 
-  if (config.camundaEnabled) {
-    camundaPublish(config.s2sServiceName, component, environment, product)
+  onMaster {
+    if (config.camundaEnabled) {
+      camunda_url = "http://camunda-api-${environment}.service.core-compute-${environment}.internal"
+      s2s_url = "http://rpe-service-auth-provider-${environment}.service.core-compute-${environment}.internal"
+
+      camundaPublish(config.s2sServiceName, camunda_url, s2s_url, product)
+    }
   }
 
   if (config.pactBrokerEnabled) {

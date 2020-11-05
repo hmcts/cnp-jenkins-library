@@ -77,6 +77,16 @@ def call(params) {
             }
           }
 
+          onPreview {
+            if (config.camundaEnabled) {
+              camunda = "camunda-$product-$component-$projectBranch.imageTag()"
+              camunda_url = "http://${camunda}.service.core-compute-${environment}.internal"
+              s2s_url = "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal"
+
+              camundaPublish(config.s2sServiceName, camunda_url, s2s_url, product)
+            }
+          }
+
           onFunctionalTestEnvironment(environment) {
             stageWithAgent("Functional Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
