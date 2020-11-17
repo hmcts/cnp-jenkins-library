@@ -370,6 +370,34 @@ Java 8 and Java 11 are installed directly on the Jenkins agent, the library will
 ### Terraform
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
 
+## Camunda Deployments from separate Camunda Process repo
+
+#### Usage
+
+You can activate the testing and deployment of Camunda files using the `enableCamundaOnly()` method
+This particular method is designed to be used with a separate Camunda repo, as opposed to Camunda files in the app repo.
+It has been configured to find BPMN and DMN files in the repo, and create the deployment in Camunda if there are changes.
+The various versions of a deployment can be viewed in the Camunda UI.
+
+It will run unit tests on PRs, and will deploy to Camunda once merged
+
+Example of usage
+```groovy
+import uk.gov.hmcts.contino.AppPipelineDsl
+
+/* … */
+
+withPipeline(product) {
+
+  /* … */
+
+  enableCamundaOnly('s2s-service-name')
+}
+```
+
+These s2s Service Names can be found in the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/d9024d0fe21592b39cd77fd6dbd5c2e585e56c59/src/main/resources/application.yaml#L58, eg. unspec-service, wa_workflow_api etc.
+
+
 ## Contract testing with Pact
 
 #### Usage
