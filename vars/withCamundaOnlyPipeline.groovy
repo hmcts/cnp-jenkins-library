@@ -85,10 +85,10 @@ def call(String product, Closure body) {
       }
 
       // Prod camunda promotion
-      onMaster {
-        def prodEnv = new Environment(env).prodName
-        camundaPublish(config.s2sServiceName, prodEnv, product)
-      }
+      // onMaster {
+      //   def prodEnv = new Environment(env).prodName
+      //   camundaPublish(config.s2sServiceName, prodEnv, product)
+      // }
 
     } catch (err) {
       currentBuild.result = 'FAILURE'
