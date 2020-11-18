@@ -7,11 +7,11 @@ import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
 
-def call(type, String product, String component, Closure body) {
+def call(String product, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription.prodName)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, '', subscription.prodName)
   String agentType = env.BUILD_AGENT_TYPE
 
   def pipelineConfig = new AppPipelineConfig()
@@ -81,18 +81,13 @@ def call(type, String product, String component, Closure body) {
 
       // AAT/Demo/ITHC/Perftest camunda upload
       onNonPR {
-        camunda_url = "http://camunda-api-${environment}.service.core-compute-${environment}.internal"
-        s2s_url = "http://rpe-service-auth-provider-${environment}.service.core-compute-${environment}.internal"
-
-        camundaPublish(config.s2sServiceName, camunda_url, s2s_url, product)
+        camundaPublish(config.s2sServiceName, environment, product)
       }
 
       // Prod camunda promotion
       onMaster {
-        camunda_url = 'http://camunda-api-prod.service.core-compute-prod.internal'
-        s2s_url = 'http://rpe-service-auth-provider-prod.service.core-compute-prod.internal'
-
-        camundaPublish(config.s2sServiceName, camunda_url, s2s_url, product)
+        def prodEnv = new Environment(env).prodName
+        camundaPublish(config.s2sServiceName, prodEnv, product)
       }
 
     } catch (err) {

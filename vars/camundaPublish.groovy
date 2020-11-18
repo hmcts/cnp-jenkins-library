@@ -1,6 +1,9 @@
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.Environment
 
-def call(String s2sServiceName, String camundaUrl, String s2sUrl, String product) {
+def call(String s2sServiceName, Environment environment, String product) {
+
+  camunda_url = "http://camunda-api-${environment}.service.core-compute-${environment}.internal"
+  s2s_url = "http://rpe-service-auth-provider-${environment}.service.core-compute-${environment}.internal"
 
   stageWithAgent('Camunda - Publish BPMN and DMN', product) {
 
@@ -10,7 +13,7 @@ def call(String s2sServiceName, String camundaUrl, String s2sUrl, String product
     writeFile file: 'publish-camunda-processes.sh', text: functions
     sh """
     chmod +x publish-camunda-processes.sh
-    ./publish-camunda-processes.sh $WORKSPACE $s2sUrl $s2sServiceName $camundaUrl
+    ./publish-camunda-processes.sh $WORKSPACE $s2s_url $s2sServiceName $camunda_url
     """
 
     sh 'rm publish-camunda-processes.sh'

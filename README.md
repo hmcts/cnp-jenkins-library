@@ -387,7 +387,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 
 /* … */
 
-withPipeline(product) {
+withCamundaOnlyPipeline(product) {
 
   /* … */
 
