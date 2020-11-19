@@ -40,6 +40,7 @@ do
     echo "$(basename "${file}") diagram uploaded successfully (${upload_response_content})"
   else
     echo "$(basename "${file}") upload failed with http code ${upload_http_code} and response (${upload_response_content})"
+    exit 1;
   fi
 
 done
