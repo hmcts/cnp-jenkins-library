@@ -7,7 +7,7 @@ import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
 
-def call(String product, Closure body) {
+def call(String product, String s2sServiceName, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
@@ -37,7 +37,6 @@ def call(String product, Closure body) {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       PipelineCallbacksRunner pcr = callbacksRunner
-      AppPipelineConfig config = pipelineConfig
       Builder builder = pipelineType.builder
 
       stageWithAgent('Checkout', product) {
@@ -79,16 +78,18 @@ def call(String product, Closure body) {
         failFast: true
       )
 
-      // AAT/Demo/ITHC/Perftest camunda upload
-      onNonPR {
-        camundaPublish(config.s2sServiceName, environment, product)
+      // Demo/ITHC/Perftest camunda upload
+      onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+        camundaPublish(s2sServiceName, environmentName, product)
       }
 
-      // Prod camunda promotion
-      // onMaster {
-      //   def prodEnv = new Environment(env).prodName
-      //   camundaPublish(config.s2sServiceName, prodEnv, product)
-      // }
+      // AAT and Prod camunda promotion
+      onMaster {
+        def nonProdEnv = new Environment(env).nonProdName
+        // def prodEnv = new Environment(env).prodName
+        camundaPublish(s2sServiceName, nonProdEnv, product)
+        // camundaPublish(s2sServiceName, prodEnv, product)
+       }
 
     } catch (err) {
       currentBuild.result = 'FAILURE'

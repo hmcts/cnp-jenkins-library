@@ -374,7 +374,7 @@ Java 8 and Java 11 are installed directly on the Jenkins agent, the library will
 
 #### Usage
 
-You can activate the testing and deployment of Camunda files using the `enableCamundaOnly()` method
+You can activate the testing and deployment of Camunda files using the `withCamundaOnlyPipeline()` method
 This particular method is designed to be used with a separate Camunda repo, as opposed to Camunda files in the app repo.
 It has been configured to find BPMN and DMN files in the repo, and create the deployment in Camunda if there are changes.
 The various versions of a deployment can be viewed in the Camunda UI.
@@ -385,13 +385,11 @@ Example of usage
 ```groovy
 import uk.gov.hmcts.contino.AppPipelineDsl
 
-/* … */
+def product = "wa"
+def s2sServiceName = "wa_workflow_api"
 
-withCamundaOnlyPipeline(product) {
-
-  /* … */
-
-  enableCamundaOnly('s2s-service-name')
+withCamundaOnlyPipeline(product, s2sServiceName) {
+  
 }
 ```
 

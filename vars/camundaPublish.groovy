@@ -1,6 +1,4 @@
-import uk.gov.hmcts.contino.Environment
-
-def call(String s2sServiceName, Environment environment, String product) {
+def call(String s2sServiceName, String environment, String product) {
 
   camunda_url = "http://camunda-api-${environment}.service.core-compute-${environment}.internal"
   s2s_url = "http://rpe-service-auth-provider-${environment}.service.core-compute-${environment}.internal"
