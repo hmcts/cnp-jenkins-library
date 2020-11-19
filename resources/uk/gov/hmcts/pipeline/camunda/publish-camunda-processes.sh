@@ -6,7 +6,7 @@ workspace=$1
 s2s_url=$2
 s2s_service=$3
 camunda_url=$4
-filepath="$(realpath "$workspace")/"
+filepath="$(realpath "$workspace")/src/main/resources"
 
 for file in $(find "${filepath}" -type f \( -iname "*.bpmn" -o -iname "*.dmn" \))
 do 
@@ -43,4 +43,3 @@ do
   fi
 
 done
-exit 0; 
