@@ -6,13 +6,13 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(String product, String s2sServiceName, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, '', subscription.prodName)
-  String agentType = env.BUILD_AGENT_TYPE
 
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
@@ -29,6 +29,9 @@ def call(String product, String s2sServiceName, Closure body) {
   dsl.onStageFailure {
     currentBuild.result = 'FAILURE'
   }
+
+  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL

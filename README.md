@@ -389,7 +389,7 @@ def product = "wa"
 def s2sServiceName = "wa_workflow_api"
 
 withCamundaOnlyPipeline(product, s2sServiceName) {
-  
+  /* … */
 }
 ```
 
