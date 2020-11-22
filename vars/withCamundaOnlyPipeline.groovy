@@ -16,7 +16,7 @@ def call(String product, String s2sServiceName, Closure body) {
 
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
-  def callbackRunner = new PipelineCallbacksRunner(callbacks)
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
