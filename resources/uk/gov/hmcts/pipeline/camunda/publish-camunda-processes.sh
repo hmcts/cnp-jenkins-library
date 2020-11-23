@@ -6,6 +6,7 @@ workspace=$1
 s2s_url=$2
 s2s_service=$3
 camunda_url=$4
+product=$5
 filepath="$(realpath "$workspace")/src/main/resources"
 
 for file in $(find "${filepath}" -type f \( -iname "*.bpmn" -o -iname "*.dmn" \))
@@ -29,8 +30,9 @@ do
     "${camunda_url}"/engine-rest/deployment/create \
     -H "Accept: application/json" \
     -H "ServiceAuthorization: Bearer {$leaseServiceToken}" \
-    -F "deployment-name=$(date +"%Y%m%d-%H%M%S")-$(basename "${file}")" \
+    -F "deployment-name=$(basename "${file}")" \
     -F "deploy-changed-only=true" \
+    -F "deployment-source=$product" \
     -F "file=@${filepath}/$(basename "${file}")")
 
   upload_http_code=$(echo "$uploadResponse" | tail -n1)

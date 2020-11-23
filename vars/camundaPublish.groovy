@@ -11,7 +11,7 @@ def call(String s2sServiceName, String environment, String product) {
     writeFile file: 'publish-camunda-processes.sh', text: functions
     sh """
     chmod +x publish-camunda-processes.sh
-    ./publish-camunda-processes.sh $WORKSPACE $s2sUrl $s2sServiceName $camundaUrl
+    ./publish-camunda-processes.sh $WORKSPACE $s2sUrl $s2sServiceName $camundaUrl $product
     """
 
     sh 'rm publish-camunda-processes.sh'
