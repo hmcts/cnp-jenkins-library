@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
@@ -17,6 +18,10 @@ def call(type, String product, String s2sServiceName, Closure body) {
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, '', subscription.prodName)
+
+  def branch = new ProjectBranch(env.BRANCH_NAME)
+  def deploymentNamespace = branch.deploymentNamespace()
+  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
