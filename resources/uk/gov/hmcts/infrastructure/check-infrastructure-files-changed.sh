@@ -3,4 +3,4 @@ set -ex
 
 git fetch origin master:master
 
-git diff -s --exit-code origin/master infrastucture/
+git diff -s --exit-code origin/master infrastructure/
