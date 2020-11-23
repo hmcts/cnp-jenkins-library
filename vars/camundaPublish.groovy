@@ -1,7 +1,7 @@
 def call(String s2sServiceName, String environment, String product) {
 
-  camunda_url = "http://camunda-api-${environment}.service.core-compute-${environment}.internal"
-  s2s_url = "http://rpe-service-auth-provider-${environment}.service.core-compute-${environment}.internal"
+  def camundaUrl = "http://camunda-api-${environment}.service.core-compute-${environment}.internal"
+  def s2sUrl = "http://rpe-service-auth-provider-${environment}.service.core-compute-${environment}.internal"
 
   stageWithAgent('Camunda - Publish BPMN and DMN', product) {
 
@@ -11,7 +11,7 @@ def call(String s2sServiceName, String environment, String product) {
     writeFile file: 'publish-camunda-processes.sh', text: functions
     sh """
     chmod +x publish-camunda-processes.sh
-    ./publish-camunda-processes.sh $WORKSPACE $s2s_url $s2sServiceName $camunda_url
+    ./publish-camunda-processes.sh $WORKSPACE $s2sUrl $s2sServiceName $camundaUrl
     """
 
     sh 'rm publish-camunda-processes.sh'
