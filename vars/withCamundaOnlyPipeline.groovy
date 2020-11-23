@@ -13,11 +13,11 @@ import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 
-def call(type, String product, String s2sServiceName, Closure body) {
+def call(type, String product, String component, String s2sServiceName, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, '', subscription.prodName)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName)
 
   def branch = new ProjectBranch(env.BRANCH_NAME)
   def deploymentNamespace = branch.deploymentNamespace()
