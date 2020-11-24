@@ -80,19 +80,20 @@ def call(type, String product, String component, Closure body) {
       )
 
       onPR {
-
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          aksSubscription: aksSubscriptions.aat,
-          environment: environment.nonProdName,
-          product: product,
-          component: component,
-          pactBrokerUrl: environment.pactBrokerUrl,
-          tfPlanOnly: true
-        )
+        onTerraformChangeInPR{
+          sectionDeployToEnvironment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            aksSubscription: aksSubscriptions.aat,
+            environment: environment.nonProdName,
+            product: product,
+            component: component,
+            pactBrokerUrl: environment.pactBrokerUrl,
+            tfPlanOnly: true
+          )
+        }
 
         sectionDeployToAKS(
           appPipelineConfig: pipelineConfig,
