@@ -7,8 +7,7 @@ def call(String s2sServiceName, String environment, String product) {
 
     log.info 'Publish to Camunda'
 
-    functions = libraryResource 'uk/gov/hmcts/pipeline/camunda/publish-camunda-processes.sh'
-    writeFile file: 'publish-camunda-processes.sh', text: functions
+    writeFile file: 'publish-camunda-processes.sh', text: libraryResource('uk/gov/hmcts/pipeline/camunda/publish-camunda-processes.sh')
     sh """
     chmod +x publish-camunda-processes.sh
     ./publish-camunda-processes.sh $WORKSPACE $s2sUrl $s2sServiceName $camundaUrl $product
