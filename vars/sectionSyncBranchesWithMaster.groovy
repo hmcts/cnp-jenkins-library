@@ -23,7 +23,8 @@ def call(params) {
                             git push --force origin HEAD:'''+branch'''
                         '''
                     } catch (err) {
-                        echo "Failed to update $branch branch."
+                        println("Failed to update $branch branch.")
+                        println(err.getMessage())
                         throw err
                     }
                 }
