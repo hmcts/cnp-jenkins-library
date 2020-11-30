@@ -12,7 +12,7 @@ def call(params) {
 
                 sh '''
                     set -e
-                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
+                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${BEARER_TOKEN}@github.com/g")
 
                     git config --global user.name "${GIT_CREDENTIALS_ID}"
                     git config --global user.email "${GIT_APP_EMAIL_ID}"
