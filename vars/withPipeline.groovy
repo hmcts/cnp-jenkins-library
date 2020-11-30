@@ -111,10 +111,10 @@ def call(type, String product, String component, Closure body) {
 
       onMaster {
 
-        sectionSyncBranchesWithMaster {
+        sectionSyncBranchesWithMaster(
           appPipelineConfig: pipelineConfig,
           product: product
-        }
+        )
 
         sectionPromoteBuildToStage(
           appPipelineConfig: pipelineConfig,

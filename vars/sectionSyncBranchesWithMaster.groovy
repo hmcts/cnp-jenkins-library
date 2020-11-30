@@ -2,6 +2,7 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(params) {
+    
     AppPipelineConfig config = params.appPipelineConfig
     def product = params.product
 
