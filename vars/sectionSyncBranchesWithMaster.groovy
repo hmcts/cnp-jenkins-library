@@ -20,8 +20,8 @@ def call(params) {
 
                 try {
                     sh '''
-                        git fetch origin '''branch''':'''branch'''
-                        git push --force origin HEAD:'''branch'''
+                        git fetch origin '''+branch+''':''' +branch+'''
+                        git push --force origin HEAD:'''+branch'''
                     '''
                 } catch (err) {
                     echo "Failed to update $branch branch."
