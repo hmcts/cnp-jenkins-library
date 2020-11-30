@@ -68,6 +68,11 @@ def call(type, String product, String component, Closure body) {
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
+      sectionSyncBranchesWithMaster(
+        appPipelineConfig: pipelineConfig,
+        product: product
+      )
+
       sectionBuildAndTest(
         appPipelineConfig: pipelineConfig,
         pipelineCallbacksRunner: callbacksRunner,
@@ -110,11 +115,10 @@ def call(type, String product, String component, Closure body) {
       }
 
       onMaster {
-
-        sectionSyncBranchesWithMaster(
-          appPipelineConfig: pipelineConfig,
-          product: product
-        )
+        // sectionSyncBranchesWithMaster(
+        //   appPipelineConfig: pipelineConfig,
+        //   product: product
+        // )
 
         sectionPromoteBuildToStage(
           appPipelineConfig: pipelineConfig,
