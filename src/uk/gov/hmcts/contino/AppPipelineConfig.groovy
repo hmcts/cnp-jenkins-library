@@ -21,6 +21,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactProviderVerificationsEnabled = false
   boolean pactConsumerTestsEnabled = false
   String s2sServiceName
+  Set<String> branchesToSyncWithMaster = []
 
   int crossBrowserTestTimeout
   int perfTestTimeout

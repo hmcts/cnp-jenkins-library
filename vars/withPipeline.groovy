@@ -111,6 +111,11 @@ def call(type, String product, String component, Closure body) {
 
       onMaster {
 
+        sectionSyncBranchesWithMaster {
+          appPipelineConfig: pipelineConfig,
+          product: product
+        }
+
         sectionPromoteBuildToStage(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
