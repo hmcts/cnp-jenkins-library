@@ -23,7 +23,6 @@ def call(params) {
                 sh '''
                     set -e
                     git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-
                 '''
 
                 for (branch in config.branchesToSyncWithMaster) {
