@@ -110,10 +110,6 @@ def call(type, String product, String component, Closure body) {
       }
 
       onMaster {
-        sectionSyncBranchesWithMaster(
-          appPipelineConfig: pipelineConfig,
-          product: product
-        )
 
         sectionPromoteBuildToStage(
           appPipelineConfig: pipelineConfig,
@@ -183,6 +179,11 @@ def call(type, String product, String component, Closure body) {
           component: component,
           stage: DockerImage.DeploymentStage.PROD,
           environment: environment.nonProdName
+        )
+
+        sectionSyncBranchesWithMaster(
+          appPipelineConfig: pipelineConfig,
+          product: product
         )
       }
 
