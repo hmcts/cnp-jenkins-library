@@ -28,7 +28,7 @@ def call(params) {
                 '''
 
                 for (branch in config.branchesToSyncWithMaster) {
-                    println('Syncing branch - ' + branch)
+                    echo "Syncing branch - ${branch}"
 
                     try {
                         sh """
