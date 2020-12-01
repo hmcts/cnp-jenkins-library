@@ -26,20 +26,20 @@ def call(params) {
                 '''
 
                 for (branch in config.branchesToSyncWithMaster) {
-                    echo "Syncing branch - ${branch}"
-
                     try {
+                        echo "Syncing branch - ${branch}"
+
                         sh """
                          git fetch origin ${branch}:${branch}
-                         git push --force origin HEAD:${branch}
+                         git push --force origin HEAD:refs/heads/${branch}
                         """
+
+                        echo "Sync completed for - ${branch}"
                         
                     } catch (err) {
                         echo "Failed to update $branch branch."
                         echo err.getMessage()
                     }
-
-                    echo "Sync completed for - ${branch}"
                 }
             }
         }
