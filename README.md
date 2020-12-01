@@ -443,6 +443,26 @@ The Pact broker url and other parameters are passed to these hooks as following:
 🛎️  `onMaster` is a boolean that is true if the current branch is `master`
 🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
 
+## Keep environment specific branches in sync with master
+
+#### Usage
+
+The environment specific branches such as demo, ithc and perftest can be automatically synced with master branch. 
+
+This can be achieved by using the `syncBranchesWithMaster()` method. This method will be invoked in the master build and execute as the last stage in the build.
+
+Example of usage
+```groovy
+
+def branchesToSync = ['demo', 'perftest']
+
+withPipeline(type, product, component) {	
+  syncBranchesWithMaster(branchesToSync)
+}
+
+```
+
+
 ## Contributing
 
  1. Use the Github pull requests to make change

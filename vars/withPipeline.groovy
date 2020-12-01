@@ -180,6 +180,11 @@ def call(type, String product, String component, Closure body) {
           stage: DockerImage.DeploymentStage.PROD,
           environment: environment.nonProdName
         )
+
+        sectionSyncBranchesWithMaster(
+          appPipelineConfig: pipelineConfig,
+          product: product
+        )
       }
 
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
