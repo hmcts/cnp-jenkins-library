@@ -18,12 +18,13 @@ def call(params) {
 
     stageWithAgent("Sync Branches with Master", product) {
         if (!config.branchesToSyncWithMaster.isEmpty()) {
-            // withCredentials([this.steps.usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', usernameVariable: 'USERNAME', passwordVariable: 'BEARER_TOKEN')]) {
+            // withCredentials([this.steps.usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', usernameVariable: 'USER_NAME', passwordVariable: 'BEARER_TOKEN')]) {
             
-            withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+            withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
                 sh '''
                     set -e
-                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${BEARER_TOKEN}@github.com/g")
+                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+
                 '''
 
                 for (branch in config.branchesToSyncWithMaster) {
