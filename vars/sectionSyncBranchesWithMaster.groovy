@@ -18,7 +18,6 @@ def call(params) {
 
     stageWithAgent("Sync Branches with Master", product) {
         if (!config.branchesToSyncWithMaster.isEmpty()) {
-            // withCredentials([this.steps.usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', usernameVariable: 'USER_NAME', passwordVariable: 'BEARER_TOKEN')]) {
             
             withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
                 sh '''
