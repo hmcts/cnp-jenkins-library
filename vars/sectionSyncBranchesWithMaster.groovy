@@ -9,13 +9,13 @@ def call(params) {
         if (!config.branchesToSyncWithMaster.isEmpty()) {
             withCredentials([this.steps.usernamePassword(credentialsId: 'jenkins-github-hmcts-api-token', usernameVariable: 'USERNAME', passwordVariable: 'BEARER_TOKEN')]) {
                 
+                sh '''
+                    set -e
+                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${BEARER_TOKEN}@github.com/g")
+                '''
+
                 for (branch in config.branchesToSyncWithMaster) {
                     println('Syncing branch - ' + branch)
-
-                    sh '''
-                        set -e
-                        git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${BEARER_TOKEN}@github.com/g")
-                    '''
 
                     try {
                         sh '''git fetch origin '''+branch+''':'''+branch
