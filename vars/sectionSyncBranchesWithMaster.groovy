@@ -31,8 +31,10 @@ def call(params) {
                     println('Syncing branch - ' + branch)
 
                     try {
-                        sh '''git fetch origin '''+branch+''':'''+branch
-                        sh '''git push --force origin HEAD:'''+branch
+                        sh """
+                         git fetch origin ${branch}:${branch}
+                         git push --force origin HEAD:${branch}
+                        """
                         
                     } catch (err) {
                         println("Failed to update $branch branch.")
