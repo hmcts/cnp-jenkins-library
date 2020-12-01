@@ -41,7 +41,7 @@ def call(params) {
                         throw err
                     }
 
-                    println('Sync completed for - ' + branch)
+                    echo "Sync completed for - ${branch}"
                 }
             }
         }
