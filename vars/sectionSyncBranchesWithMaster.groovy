@@ -1,6 +1,7 @@
+#!groovy
+
 // Section to Sync branches with master branch
 // USAGE:
-
 
 // def branchesToSync = ['demo', 'perftest']
 
@@ -8,7 +9,6 @@
 //   syncBranchesWithMaster(branchesToSync)
 // }
 
-#!groovy
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(params) {
