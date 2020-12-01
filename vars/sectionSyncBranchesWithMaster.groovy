@@ -36,6 +36,8 @@ def call(params) {
                         println(err.getMessage())
                         throw err
                     }
+
+                    println('Sync completed for - ' + branch)
                 }
             }
         }
