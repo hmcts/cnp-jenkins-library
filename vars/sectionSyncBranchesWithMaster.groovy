@@ -37,7 +37,6 @@ def call(params) {
                     } catch (err) {
                         echo "Failed to update $branch branch."
                         echo err.getMessage()
-                        throw err
                     }
 
                     echo "Sync completed for - ${branch}"
