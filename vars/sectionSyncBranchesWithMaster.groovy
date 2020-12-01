@@ -1,3 +1,13 @@
+// Section to Sync branches with master branch
+// USAGE:
+
+
+// def branchesToSync = ['demo', 'perftest']
+
+// withPipeline(type, product, component) {	
+//   syncBranchesWithMaster(branchesToSync)
+// }
+
 #!groovy
 import uk.gov.hmcts.contino.AppPipelineConfig
 
@@ -28,25 +38,6 @@ def call(params) {
                     }
                 }
             }
-
-            // for (branch in config.branchesToSyncWithMaster) {
-            //     println('Syncing branch - ' + branch)
-
-            //     sh '''
-            //         set -e
-            //         git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${BEARER_TOKEN}@github.com/g")
-            //     '''
-
-            //     try {
-            //         sh '''
-            //             git fetch origin '''+branch+''':''' +branch+'''
-            //             git push --force origin HEAD:'''+branch'''
-            //         '''
-            //     } catch (err) {
-            //         echo "Failed to update $branch branch."
-            //         throw err
-            //     }
-            // }
         }
     }
 }
