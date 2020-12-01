@@ -36,8 +36,8 @@ def call(params) {
                         """
                         
                     } catch (err) {
-                        println("Failed to update $branch branch.")
-                        println(err.getMessage())
+                        echo "Failed to update $branch branch."
+                        echo err.getMessage()
                         throw err
                     }
 
