@@ -34,7 +34,7 @@ def call(params) {
                          git push --force origin HEAD:refs/heads/${branch}
                         """
 
-                        echo "Sync completed for - ${branch}"
+                        echo "Sync completed for branch - ${branch}"
                         
                     } catch (err) {
                         echo "Failed to update $branch branch."
