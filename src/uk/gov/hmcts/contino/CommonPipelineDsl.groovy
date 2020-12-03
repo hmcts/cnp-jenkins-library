@@ -40,4 +40,7 @@ abstract class CommonPipelineDsl implements Serializable {
     steps.env.BUILD_NOTICE_SLACK_CHANNEL = slackChannel
   }
 
+  void syncBranchesWithMaster(List<String> branches) {
+    config.branchesToSyncWithMaster = branches
+  }
 }

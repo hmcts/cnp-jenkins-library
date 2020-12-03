@@ -91,8 +91,4 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.pactConsumerTestsEnabled = roles.contains(PactRoles.CONSUMER)
     config.pactProviderVerificationsEnabled = roles.contains(PactRoles.PROVIDER)
   }
-
-  void syncBranchesWithMaster(List<String> branches) {
-    config.branchesToSyncWithMaster = branches
-  }
 }
