@@ -9,8 +9,6 @@
 //   syncBranchesWithMaster(branchesToSync)
 // }
 
-import uk.gov.hmcts.contino.CommonPipelineConfig
-
 def call(params) {
     def branchesToSync = params.branchestoSync
     def product = params.product
