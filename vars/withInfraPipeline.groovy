@@ -39,17 +39,17 @@ def call(String product, Closure body) {
       }
 
       onMaster {
-        sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
-          subscription: subscription.nonProdName,
-          environment: environment.nonProdName,
-          product: product)
+        // sectionInfraBuild(
+        //   pipelineConfig: pipelineConfig,
+        //   subscription: subscription.nonProdName,
+        //   environment: environment.nonProdName,
+        //   product: product)
 
-        sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
-          subscription: subscription.prodName,
-          environment: environment.prodName,
-          product: product)
+        // sectionInfraBuild(
+        //   pipelineConfig: pipelineConfig,
+        //   subscription: subscription.prodName,
+        //   environment: environment.prodName,
+        //   product: product)
 
         sectionSyncBranchesWithMaster(
           branchestoSync: pipelineConfig.branchesToSyncWithMaster,
