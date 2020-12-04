@@ -50,6 +50,11 @@ def call(String product, Closure body) {
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product)
+
+        sectionSyncBranchesWithMaster(
+          branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+          product: product
+        )
       }
 
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->

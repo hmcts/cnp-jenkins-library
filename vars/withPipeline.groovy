@@ -182,7 +182,7 @@ def call(type, String product, String component, Closure body) {
         )
 
         sectionSyncBranchesWithMaster(
-          appPipelineConfig: pipelineConfig,
+          branchestoSync: pipelineConfig.branchesToSyncWithMaster,
           product: product
         )
       }
