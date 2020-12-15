@@ -51,20 +51,22 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
     if (config.parallelCrossBrowserTest) {
       Set<String> browsers = config.parallelCrossBrowsers.collect{ it.toLowerCase() }.toSet()
-      parallel(
-        browsers.each { browser ->
-          browser: {
-            stageWithAgent("Cross browser test: $browsers", product) {
-              warnError('Failure in parallelCrossBrowserTest') {
-                pcr.callAround('parallelCrossBrowserTest') {
-                  timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-                    builder.parallelCrossBrowserTest(browsers)
-                  }
+      Map parallelBrowsers = [:]
+      browsers.each { browser ->
+        parallelBrowsers.put(browser, {
+          stageWithAgent("Cross browser test: $browser", product) {
+            warnError('Failure in parallelCrossBrowserTest') {
+              pcr.callAround('parallelCrossBrowserTest') {
+                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+                  builder.parallelCrossBrowserTest(browser)
                 }
               }
             }
           }
-        }
+        })
+      }
+      parallel(
+        parallelBrowsers
 //        "Chrome": {
 //          stageWithAgent("Cross browser test: Chrome", product) {
 //            warnError('Failure in parallelCrossBrowserTest') {
