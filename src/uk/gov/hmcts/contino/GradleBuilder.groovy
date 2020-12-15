@@ -66,6 +66,10 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
+  def parallelCrossBrowserTest(String browser) {
+    // this method is included in builder interface as part of nightly pipieline job
+  }
+
   def crossBrowserTest() {
     // this method is included in builder interface as part of nightly pipieline job
   }

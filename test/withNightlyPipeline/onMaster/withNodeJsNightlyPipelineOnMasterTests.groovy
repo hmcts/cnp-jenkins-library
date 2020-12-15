@@ -20,6 +20,7 @@ class withNodeJsNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       build(1) {}
       securityCheck(1) {}
       crossBrowserTest(1) {}
+      parallelCrossBrowserTest(4) {}
       performanceTest(1) {}
       mutationTest(1){}
       fullFunctionalTest(1){}

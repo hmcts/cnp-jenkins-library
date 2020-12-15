@@ -40,6 +40,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.crossBrowserTest = true
   }
 
+  void enableParallelCrossBrowserTest(List<String> browsers = ['chrome', 'firefox', 'safari', 'microsoft'], int timeout = 120) {
+    config.crossBrowserTestTimeout = timeout
+    config.parallelCrossBrowserTest = true
+    config.parallelCrossBrowsers = browsers
+  }
+
   void enableSecurityScan(int timeout = 120) {
     config.securityScanTimeout = timeout
     config.securityScan = true

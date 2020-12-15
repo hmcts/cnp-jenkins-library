@@ -117,6 +117,21 @@ class YarnBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:crossbrowser') })
   }
 
+  def "parallelCrossBrowserTest calls 'yarn test:crossbrowser-chrome'"() {
+    when:
+    builder.parallelCrossBrowserTest('chrome')
+    then:
+    1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
+    1 * steps.archiveArtifacts(['allowEmptyArchive':true, artifacts: "functional-output/chrome*/*"])
+    when:
+    builder.yarn("test:crossbrowser-chrome")
+    then:
+    1 * steps.sh(['script': 'yarn check &> /dev/null', 'returnStatus': true])
+    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
+    1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
+    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:crossbrowser-chrome') })
+  }
+
   def "mutationTest calls 'yarn test:mutation'"() {
     when:
         builder.mutationTest()

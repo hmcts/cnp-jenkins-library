@@ -49,6 +49,52 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
         }
       }
     }
+    if (config.parallelCrossBrowserTest) {
+      stageWithAgent("Cross browser tests", product) {
+        warnError('Failure in parallelCrossBrowserTest') {
+          Set<String> browsers = config.parallelCrossBrowsers.collect{ it.toLowerCase() }.toSet()
+          parallel(
+//            browsers.each {browser ->
+//              browser : {
+//                pcr.callAround('parallelCrossBrowserTest') {
+//                  timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+//                    builder.parallelCrossBrowserTest(it)
+//                  }
+//                }
+//              }
+//            }
+            "Chrome" : {
+              pcr.callAround('parallelCrossBrowserTest') {
+                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+                  builder.parallelCrossBrowserTest('chrome')
+                }
+              }
+            },
+            "Firefox": {
+              pcr.callAround('parallelCrossBrowserTest') {
+                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+                  builder.parallelCrossBrowserTest('firefox')
+                }
+              }
+            },
+            "Safari": {
+              pcr.callAround('parallelCrossBrowserTest') {
+                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+                  builder.parallelCrossBrowserTest('safari')
+                }
+              }
+            },
+            "IE & Edge": {
+              pcr.callAround('parallelCrossBrowserTest') {
+                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+                  builder.parallelCrossBrowserTest('microsoft')
+                }
+              }
+            }
+          )
+        }
+      }
+    }
 
     if (config.performanceTest) {
       stageWithAgent("Performance test", product) {

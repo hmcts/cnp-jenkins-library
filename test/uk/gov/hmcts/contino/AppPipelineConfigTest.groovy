@@ -26,6 +26,8 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.performanceTest).isFalse()
       assertThat(pipelineConfig.apiGatewayTest).isFalse()
       assertThat(pipelineConfig.crossBrowserTest).isFalse()
+      assertThat(pipelineConfig.parallelCrossBrowserTest).isFalse()
+      assertThat(pipelineConfig.parallelCrossBrowsers).isEqualTo([])
       assertThat(pipelineConfig.mutationTest).isFalse()
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
       assertThat(pipelineConfig.securityScan).isFalse()
@@ -82,6 +84,26 @@ class AppPipelineConfigTest extends Specification {
       dsl.enableCrossBrowserTest()
     then:
       assertThat(pipelineConfig.crossBrowserTest).isTrue()
+      assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
+  }
+
+  def "ensure enable default parallel cross browser test"() {
+    when:
+      dsl.enableParallelCrossBrowserTest()
+    then:
+      assertThat(pipelineConfig.parallelCrossBrowserTest).isTrue()
+      assertThat(pipelineConfig.parallelCrossBrowsers).isEqualTo(['chrome', 'firefox', 'safari', 'microsoft'])
+      assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
+  }
+
+  def "ensure enable custom parallel cross browser test"() {
+    given:
+      def browsers = ['chrome', 'firefox']
+    when:
+      dsl.enableParallelCrossBrowserTest(browsers)
+    then:
+      assertThat(pipelineConfig.parallelCrossBrowserTest).isTrue()
+      assertThat(pipelineConfig.parallelCrossBrowsers).isEqualTo(browsers)
       assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
   }
 

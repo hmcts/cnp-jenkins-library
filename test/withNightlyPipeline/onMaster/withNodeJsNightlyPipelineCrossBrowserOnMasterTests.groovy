@@ -20,6 +20,7 @@ class withNodeJsNightlyPipelineCrossBrowserOnMasterTests extends BaseCnpPipeline
       build(1) {}
       securityCheck(1) {}
       crossBrowserTest(1) {}
+      parallelCrossBrowserTest(4) {}
       performanceTest(0) {}
       mutationTest(1){}
     }
