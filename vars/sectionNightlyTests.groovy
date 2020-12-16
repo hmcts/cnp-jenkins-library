@@ -51,7 +51,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     }
 
     if (config.parallelCrossBrowserTest) {
-      Set<String> browsers = config.parallelCrossBrowsers.collect{ it.toLowerCase() }.toSet()
+      Set<String> browsers = config.parallelCrossBrowsers.toSet()
       Map crossBrowserStages = [:]
       browsers.each { browser ->
         crossBrowserStages.put(browser.capitalize(), {
