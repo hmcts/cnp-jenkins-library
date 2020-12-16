@@ -49,11 +49,12 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
         }
       }
     }
+
     if (config.parallelCrossBrowserTest) {
       Set<String> browsers = config.parallelCrossBrowsers.collect{ it.toLowerCase() }.toSet()
-      Map parallelBrowsers = [:]
+      Map crossBrowserStages = [:]
       browsers.each { browser ->
-        parallelBrowsers.put(browser, {
+        crossBrowserStages.put(browser, {
           stageWithAgent("Cross browser test: $browser", product) {
             warnError('Failure in parallelCrossBrowserTest') {
               pcr.callAround('parallelCrossBrowserTest') {
@@ -65,53 +66,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
           }
         })
       }
-      parallel(
-        parallelBrowsers
-//        "Chrome": {
-//          stageWithAgent("Cross browser test: Chrome", product) {
-//            warnError('Failure in parallelCrossBrowserTest') {
-//              pcr.callAround('parallelCrossBrowserTest') {
-//                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-//                  builder.parallelCrossBrowserTest('chrome')
-//                }
-//              }
-//            }
-//          }
-//        },
-//        "Firefox": {
-//          stageWithAgent("Cross browser test: Firefox", product) {
-//            warnError('Failure in parallelCrossBrowserTest') {
-//              pcr.callAround('parallelCrossBrowserTest') {
-//                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-//                  builder.parallelCrossBrowserTest('firefox')
-//                }
-//              }
-//            }
-//          }
-//        },
-//        "Safari": {
-//          stageWithAgent("Cross browser test: Safari", product) {
-//            warnError('Failure in parallelCrossBrowserTest') {
-//              pcr.callAround('parallelCrossBrowserTest') {
-//                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-//                  builder.parallelCrossBrowserTest('safari')
-//                }
-//              }
-//            }
-//          }
-//        },
-//        "IE & Edge": {
-//          stageWithAgent("Cross browser test: IE & Edge", product) {
-//            warnError('Failure in parallelCrossBrowserTest') {
-//              pcr.callAround('parallelCrossBrowserTest') {
-//                timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-//                  builder.parallelCrossBrowserTest('microsoft')
-//                }
-//              }
-//            }
-//          }
-//        }
-      )
+      parallel( crossBrowserStages )
     }
 
     if (config.performanceTest) {
