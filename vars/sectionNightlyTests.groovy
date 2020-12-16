@@ -54,7 +54,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       Set<String> browsers = config.parallelCrossBrowsers.collect{ it.toLowerCase() }.toSet()
       Map crossBrowserStages = [:]
       browsers.each { browser ->
-        crossBrowserStages.put(browser, {
+        crossBrowserStages.put(browser.capitalize(), {
           stageWithAgent("Cross browser test: $browser", product) {
             warnError('Failure in parallelCrossBrowserTest') {
               pcr.callAround('parallelCrossBrowserTest') {
