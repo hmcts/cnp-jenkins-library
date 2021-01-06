@@ -119,7 +119,7 @@ class YarnBuilderTest extends Specification {
 
   def "parallelCrossBrowserTest calls 'yarn test:crossbrowser-chrome'"() {
     when:
-    builder.parallelCrossBrowserTest('chrome')
+    builder.crossBrowserTest('chrome')
     then:
     1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
     1 * steps.archiveArtifacts(['allowEmptyArchive':true, artifacts: "functional-output/chrome*/*"])

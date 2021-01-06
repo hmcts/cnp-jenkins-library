@@ -61,8 +61,8 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
-  def parallelCrossBrowserTest(String browser) {
-    builder.parallelCrossBrowserTest(browser)
+  def crossBrowserTest(String browser) {
+    builder.crossBrowserTest(browser)
   }
 
   @Override

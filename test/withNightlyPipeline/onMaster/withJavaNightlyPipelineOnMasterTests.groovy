@@ -20,7 +20,6 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       build(1) {}
       securityCheck(1) {}
       crossBrowserTest(0) {}
-      parallelCrossBrowserTest(0) {}
       performanceTest(1) {}
       mutationTest(1){}
       fullFunctionalTest(1){}

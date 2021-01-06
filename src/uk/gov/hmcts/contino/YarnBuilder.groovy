@@ -69,10 +69,10 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
-  def parallelCrossBrowserTest(String browser) {
+  def crossBrowserTest(String browser) {
     try {
       steps.withSauceConnect("reform_tunnel") {
-        yarn("test:crossbrowser-$browser")
+        steps.sh("BROWSER_GROUP=$browser yarn test:crossbrowser")
       }
     }
     finally {

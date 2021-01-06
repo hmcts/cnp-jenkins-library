@@ -59,14 +59,16 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
             warnError('Failure in parallelCrossBrowserTest') {
               pcr.callAround('parallelCrossBrowserTest') {
                 timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-                  builder.parallelCrossBrowserTest(browser)
+                  builder.crossBrowserTest(browser)
                 }
               }
             }
           }
         })
       }
-      parallel( crossBrowserStages )
+      stage('Crossbrowser Tests') {
+        parallel( crossBrowserStages )
+      }
     }
 
     if (config.performanceTest) {

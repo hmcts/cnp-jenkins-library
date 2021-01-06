@@ -80,7 +80,7 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
-    def parallelCrossBrowserTest(String browser) {
+    def crossBrowserTest(String browser) {
       return null
     }
 
