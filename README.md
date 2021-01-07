@@ -393,7 +393,7 @@ withCamundaOnlyPipeline(type, product, component, s2sServiceName, tenantId) {
 
 These s2s Service Names can be found in the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/d9024d0fe21592b39cd77fd6dbd5c2e585e56c59/src/main/resources/application.yaml#L58, eg. unspec-service, wa_task_configuration_api etc.
 
-Tenant ID can also be checked from the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/da653ea69b386e369aa2a2dec5f0318f16ea3a78/src/main/resources/application.yaml#L55 eg. work-allocation, civil-unspecified etc.
+Tenant ID can also be checked from the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/master/src/main/resources/application.yaml#L47 eg. wa, ia, civil-unspecified etc.
 
 
 ## Contract testing with Pact
