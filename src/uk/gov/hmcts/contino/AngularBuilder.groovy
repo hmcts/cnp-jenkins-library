@@ -61,11 +61,6 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
-  def crossBrowserTest(String browser) {
-    builder.crossBrowserTest(browser)
-  }
-
-  @Override
   def mutationTest(){
     builder.mutationTest()
   }

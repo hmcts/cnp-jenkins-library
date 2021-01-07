@@ -9,7 +9,6 @@ interface Builder {
   def performanceTest()
   def apiGatewayTest()
   def crossBrowserTest()
-  def crossBrowserTest(String browser)
   def securityCheck()
   def addVersionInfo()
   def mutationTest()

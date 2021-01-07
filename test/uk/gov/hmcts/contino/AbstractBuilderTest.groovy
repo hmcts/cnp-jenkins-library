@@ -80,11 +80,6 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
-    def crossBrowserTest(String browser) {
-      return null
-    }
-
-    @Override
     def mutationTest() {
       return null
     }
