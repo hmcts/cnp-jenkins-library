@@ -8,6 +8,6 @@ def app = "app"
 
 withNightlyPipeline('nodejs', product, app) {
   enableCrossBrowserTest()
-  enableParallelCrossBrowserTest()
+  enableCrossBrowserTest(['chrome', 'firefox', 'safari', 'microsoft'])
   enableMutationTest()
 }

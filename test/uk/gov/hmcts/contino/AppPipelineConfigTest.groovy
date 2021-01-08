@@ -86,21 +86,11 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
   }
 
-  def "ensure enable default parallel cross browser test"() {
+  def "ensure enable parallel cross browser test"() {
     when:
-      dsl.enableParallelCrossBrowserTest()
+      dsl.enableCrossBrowserTest(['chrome', 'firefox', 'safari', 'microsoft'])
     then:
       assertThat(pipelineConfig.parallelCrossBrowsers).isEqualTo(['chrome', 'firefox', 'safari', 'microsoft'])
-      assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
-  }
-
-  def "ensure enable custom parallel cross browser test"() {
-    given:
-      def browsers = ['chrome', 'firefox']
-    when:
-      dsl.enableParallelCrossBrowserTest(browsers)
-    then:
-      assertThat(pipelineConfig.parallelCrossBrowsers).isEqualTo(browsers)
       assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
   }
 
