@@ -55,8 +55,8 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       Map crossBrowserStages = [:]
       browsers.each { browser ->
         crossBrowserStages.put(browser.capitalize(), {
-          warnError('Failure in parallelCrossBrowserTest') {
-            pcr.callAround('parallelCrossBrowserTest') {
+          warnError('Failure in crossBrowserTest') {
+            pcr.callAround('crossBrowserTest') {
               timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
                 builder.crossBrowserTest(browser)
               }
