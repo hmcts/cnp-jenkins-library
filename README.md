@@ -386,12 +386,14 @@ Example of usage
 /* … */
 def s2sServiceName = "wa_task_configuration_api"
 
-withCamundaOnlyPipeline(type, product, component, s2sServiceName) {
+withCamundaOnlyPipeline(type, product, component, s2sServiceName, tenantId) {
   /* … */
 }
 ```
 
 These s2s Service Names can be found in the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/d9024d0fe21592b39cd77fd6dbd5c2e585e56c59/src/main/resources/application.yaml#L58, eg. unspec-service, wa_task_configuration_api etc.
+
+Tenant ID can also be checked from the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/master/src/main/resources/application.yaml#L47 eg. wa, ia, civil-unspecified etc.
 
 
 ## Contract testing with Pact
