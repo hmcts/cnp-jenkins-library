@@ -69,6 +69,18 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def crossBrowserTest(String browser) {
+    try {
+      steps.withSauceConnect("reform_tunnel") {
+        steps.sh("BROWSER_GROUP=$browser yarn test:crossbrowser")
+      }
+    }
+    finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: "functional-output/$browser*/*"
+      steps.saucePublisher()
+    }
+  }
+
   def fullFunctionalTest(){
     try{
       yarn("test:fullfunctional")

@@ -37,6 +37,7 @@ class YarnBuilderTest extends Specification {
     steps.readFile(_ as String) >> sampleCVEReport
     def closure
     steps.withCredentials(_, { closure = it }) >> { closure.call() }
+    steps.withSauceConnect(_, { closure = it }) >> { closure.call() }
 
     builder = new YarnBuilder(steps)
   }
@@ -115,6 +116,15 @@ class YarnBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
     1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
     1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:crossbrowser') })
+  }
+
+  def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
+    when:
+    builder.crossBrowserTest('chrome')
+    then:
+    1 * steps.sh({ it.contains('BROWSER_GROUP=chrome yarn test:crossbrowser') })
+    1 * steps.archiveArtifacts(['allowEmptyArchive':true, artifacts: "functional-output/chrome*/*"])
+    1 * steps.saucePublisher()
   }
 
   def "mutationTest calls 'yarn test:mutation'"() {

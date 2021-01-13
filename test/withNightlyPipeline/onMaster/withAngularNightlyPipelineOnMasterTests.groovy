@@ -19,7 +19,7 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
-      crossBrowserTest(1) {}
+      crossBrowserTest(5) {}  // Includes parallelCrossBrowserTest
       performanceTest(1) {}
       mutationTest(1){}
       fullFunctionalTest(1){}
