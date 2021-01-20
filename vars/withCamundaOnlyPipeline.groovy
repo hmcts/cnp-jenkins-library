@@ -13,7 +13,11 @@ import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 
-def call(type, String product, String component, String s2sServiceName, String tenantId, Closure body) {
+def call(type, String product, String component, String s2sServiceName, Closure body) {
+  call(type, product, component, s2sServiceName, body, null)
+}
+
+def call(type, String product, String component, String s2sServiceName, Closure body, String tenantId) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
