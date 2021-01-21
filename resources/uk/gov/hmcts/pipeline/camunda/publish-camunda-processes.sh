@@ -26,7 +26,7 @@ do
     }'
   )
 
-  if [ -z "$6"]; then
+  if [ -z "$6" ]; then
     # Publish file to Camunda without a tenantid
     uploadResponse=$(curl -v --silent -w "\n%{http_code}" --show-error -X POST \
       "${camunda_url}"/engine-rest/deployment/create \
