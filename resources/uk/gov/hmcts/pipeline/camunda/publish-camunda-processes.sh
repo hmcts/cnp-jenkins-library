@@ -26,7 +26,7 @@ do
     }'
   )
 
-  # Publish file to Camunda with a tenant id
+  # Publish file to Camunda
   uploadResponse=$(curl -v --silent -w "\n%{http_code}" --show-error -X POST \
     "${camunda_url}"/engine-rest/deployment/create \
     -H "Accept: application/json" \
