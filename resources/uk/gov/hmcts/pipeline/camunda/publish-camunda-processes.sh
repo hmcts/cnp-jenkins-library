@@ -27,29 +27,12 @@ do
   )
 
   if [ -z "$6" ]; then
-    # Publish file to Camunda without a tenantid
-    uploadResponse=$(curl -v --silent -w "\n%{http_code}" --show-error -X POST \
-      "${camunda_url}"/engine-rest/deployment/create \
-      -H "Accept: application/json" \
-      -H "ServiceAuthorization: Bearer {$leaseServiceToken}" \
-      -F "deployment-name=$(basename "${file}")" \
-      -F "deploy-changed-only=true" \
-      -F "deployment-source=$product" \
-      -F "file=@${filepath}/$(basename "${file}")")
-  else
-    # Publish file to Camunda with a tenant id
-    uploadResponse=$(curl -v --silent -w "\n%{http_code}" --show-error -X POST \
-      "${camunda_url}"/engine-rest/deployment/create \
-      -H "Accept: application/json" \
-      -H "ServiceAuthorization: Bearer {$leaseServiceToken}" \
-      -F "deployment-name=$(basename "${file}")" \
-      -F "deploy-changed-only=true" \
-      -F "deployment-source=$product" \
-      -F "tenant-id=$tenant_id" \
-      -F "file=@${filepath}/$(basename "${file}")")
+    TENANT_PARAM="null"
+  else 
+    TENANT_PARAM="$tenant_id"
   fi
 
-  # Publish file to Camunda
+  # Publish file to Camunda with a tenant id
   uploadResponse=$(curl -v --silent -w "\n%{http_code}" --show-error -X POST \
     "${camunda_url}"/engine-rest/deployment/create \
     -H "Accept: application/json" \
@@ -57,8 +40,8 @@ do
     -F "deployment-name=$(basename "${file}")" \
     -F "deploy-changed-only=true" \
     -F "deployment-source=$product" \
-    -F "tenant-id=$tenant_id" \
-    -F "file=@${filepath}/$(basename "${file}")")
+    -F "file=@${filepath}/$(basename "${file}")" \
+    -F "tenant-id=$TENANT_PARAM" )
 
   upload_http_code=$(echo "$uploadResponse" | tail -n1)
   upload_response_content=$(echo "$uploadResponse" | sed '$d')
