@@ -29,7 +29,7 @@ do
   if [ -z "$6" ]; then
     TENANT_PARAM="null"
   else 
-    TENANT_PARAM="$tenant_id"
+    TENANT_PARAM=$tenant_id
   fi
 
   # Publish file to Camunda with a tenant id
