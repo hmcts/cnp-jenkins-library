@@ -7,7 +7,7 @@ s2s_url=$2
 s2s_service=$3
 camunda_url=$4
 product=$5
-tenant_id=$6
+tenant_id=${6:-null}
 filepath="$(realpath "$workspace")/src/main/resources"
 
 for file in $(find "${filepath}" -type f \( -iname "*.bpmn" -o -iname "*.dmn" \))
@@ -26,12 +26,6 @@ do
     }'
   )
 
-  if [ -z "$6" ]; then
-    TENANT_PARAM="null"
-  else 
-    TENANT_PARAM=$tenant_id
-  fi
-
   # Publish file to Camunda with a tenant id
   uploadResponse=$(curl -v --silent -w "\n%{http_code}" --show-error -X POST \
     "${camunda_url}"/engine-rest/deployment/create \
@@ -40,7 +34,7 @@ do
     -F "deployment-name=$(basename "${file}")" \
     -F "deploy-changed-only=true" \
     -F "deployment-source=$product" \
-    -F "tenant-id=$TENANT_PARAM" \
+    -F "tenant-id=$tenant_id" \
     -F "file=@${filepath}/$(basename "${file}")")
 
   upload_http_code=$(echo "$uploadResponse" | tail -n1)
