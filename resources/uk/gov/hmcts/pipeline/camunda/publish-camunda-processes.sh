@@ -34,8 +34,8 @@ do
     -F "deployment-name=$(basename "${file}")" \
     -F "deploy-changed-only=true" \
     -F "deployment-source=$product" \
-    -F "file=@${filepath}/$(basename "${file}")") \
-    ${tenant_id:+"-F" "tenant-id=$tenant_id"}
+    ${tenant_id:+'-F' "tenant-id=$tenant_id"} \
+    -F "file=@${filepath}/$(basename "${file}")")
 
   upload_http_code=$(echo "$uploadResponse" | tail -n1)
   upload_response_content=$(echo "$uploadResponse" | sed '$d')
