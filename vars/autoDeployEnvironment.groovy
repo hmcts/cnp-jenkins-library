@@ -40,7 +40,7 @@ def call() {
     ethosldata: [
       environmentName: environment.ethosLdataName,
       subscriptionName: subscription.ethosLdataName,
-      aksSubscription: null,
+      aksSubscription: aksSubscriptions.ethosldata,
       aksInfraRgName: null
     ]
   ]
