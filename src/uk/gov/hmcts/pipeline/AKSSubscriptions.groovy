@@ -33,7 +33,7 @@ class AKSSubscriptions {
     demo = new AKSSubscription(steps, demoName, 'cftapps-demo', 'demo', true)
 
     def ethosLdataName = steps.env.AKS_ETHOS_LDATA_SUBSCRIPTION_NAME ?: 'DCD-ETHOS-MIGRATION-LDATA'
-    demo = new AKSSubscription(steps, ethosLdataName, 'ethos-ldata', 'ethosldata', true)
+    ethosldata = new AKSSubscription(steps, ethosLdataName, 'ethos-ldata', 'ethosldata', true)
 
   }
 }
