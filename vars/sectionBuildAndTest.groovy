@@ -43,6 +43,8 @@ def call(params) {
       warnAboutAADIdentityPreviewHack product: product, component: component
     }
 
+    warnAboutDeprecatedChartConfig product: product, component: component
+
     builder.setupToolVersion()
 
     if (!fileExists('Dockerfile')) {
