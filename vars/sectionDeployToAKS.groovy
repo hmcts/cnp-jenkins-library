@@ -53,6 +53,7 @@ def call(params) {
             onPR {
               deploymentNumber = githubCreateDeployment()
             }
+            warnAboutDeprecatedChartConfig product: product, component: component
             aksUrl = helmInstall(dockerImage, params)
             log.info("deployed component URL: ${aksUrl}")
             onPR {
