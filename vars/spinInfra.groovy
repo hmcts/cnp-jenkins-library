@@ -83,6 +83,12 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
 
+        if (env.IMPORT_SERVICE_BUS_MODULES != null) {
+          if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
+            echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
+          }
+        }
+
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")

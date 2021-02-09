@@ -43,4 +43,8 @@ abstract class CommonPipelineDsl implements Serializable {
   void syncBranchesWithMaster(List<String> branches) {
     config.branchesToSyncWithMaster = branches
   }
+
+  void importServiceBusModules(boolean importSBModules) {
+    env.IMPORT_SERVICE_BUS_MODULES = importSBModules
+  }
 }
