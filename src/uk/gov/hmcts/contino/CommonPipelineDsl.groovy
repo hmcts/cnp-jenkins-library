@@ -45,6 +45,6 @@ abstract class CommonPipelineDsl implements Serializable {
   }
 
   void importServiceBusModules(boolean importSBModules) {
-    env.IMPORT_SERVICE_BUS_MODULES = importSBModules
+    steps.env.IMPORT_SERVICE_BUS_MODULES = importSBModules
   }
 }
