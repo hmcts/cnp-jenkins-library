@@ -86,7 +86,11 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         if (env.IMPORT_SERVICE_BUS_MODULES != null) {
           if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
             echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
+          } else {
+            echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
           }
+        } else {
+          echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - NULL"
         }
 
         sh "terraform get -update=true"
