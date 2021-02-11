@@ -15,7 +15,7 @@ def call(String subscription) {
     String serviceBusAuthRuleID = az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${sbName} --resource-group ${rgName} --query id -o tsv"
 
     String topicId = az "servicebus topic show --name ${topicName} --namespace-name ${sbName} --resource-group ${rgName} --query id -o tsv"
-    String topicAuthRuleId = az "az servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --topic-name ${topicName} --namespace-name ${sbName} --resource-group ${rgName} --query -o tsv"
+    String topicAuthRuleId = az "servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --topic-name ${topicName} --namespace-name ${sbName} --resource-group ${rgName} --query -o tsv"
     
     String subscriptionId = az "servicebus topic subscription show --name ${subName} --namespace-name ${sbName} --topic-name ${topicName} --resource-group ${rgName} --query -o tsv"
 
