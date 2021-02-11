@@ -70,13 +70,13 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
         warnAboutOldTfAzureProvider()
 
-        // sh """
-        //   terraform init -reconfigure \
-        //     -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
-        //     -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-        //     -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
-        //     -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
-        // """
+        sh """
+          terraform init -reconfigure \
+            -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
+            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
+            -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
+        """
 
         echo "CHECKING SB IMPORT VAR"
         if (env.IMPORT_SERVICE_BUS_MODULES != null) {
