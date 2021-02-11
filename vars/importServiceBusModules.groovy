@@ -31,7 +31,9 @@ def call(String subscription) {
 
     String stateList = sh(script: "terraform state list", returnStdout: true).trim()
 
-    String sbNamespaceModuleName = sh(script: "echo '$stateList' | grep '$nsIdentifier' | awk -F '$nsIdentifier' '{print \$1}'", returnStdout: true).trim()
+    String sbNamespaceModuleName = sh(script: "grep '$nsIdentifier' <<< '$stateList' | awk -F '$nsIdentifier' '{print \$1}'", returnStdout: true).trim()
+
+    // String sbNamespaceModuleName = sh(script: "echo '$stateList' | grep '$nsIdentifier' | awk -F '$nsIdentifier' '{print \$1}'", returnStdout: true).trim()
     // String topicModuleName = sh(script: "echo $stateList | grep '$topicIdentifier' | awk -F '$topicIdentifier' '{print \$1}'", returnStdout: true).trim()
     // String subsciptionModuleName = sh(script: "echo $stateList | grep '$subIdentifier' | awk -F '$subIdentifier' '{print \$1}'", returnStdout: true).trim()
 
