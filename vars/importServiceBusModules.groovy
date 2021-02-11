@@ -29,9 +29,9 @@ def call() {
     String topicIdentifier = "azurerm_template_deployment.topic"
     String subIdentifier = "azurerm_template_deployment.subscription"
 
-    sbNamespaceModuleName = sh(script: """terraform state list | grep ${nsIdentifier} | awk -F ${nsIdentifier} '{print $1}'""", returnStdout: true).trim()
-    topicModuleName = sh(script: """terraform state list | grep ${topicIdentifier} | awk -F ${topicIdentifier} '{print $1}'""", returnStdout: true).trim()
-    subsciptionModuleName = sh(script: """terraform state list | grep ${subIdentifier} | awk -F ${subIdentifier} '{print $1}'""", returnStdout: true).trim()
+    sbNamespaceModuleName = sh(script: "terraform state list | grep ${nsIdentifier} | awk -F ${nsIdentifier} \'{print $1}\'", returnStdout: true).trim()
+    topicModuleName = sh(script: "terraform state list | grep ${topicIdentifier} | awk -F ${topicIdentifier} \'{print $1}\'", returnStdout: true).trim()
+    subsciptionModuleName = sh(script: "terraform state list | grep ${subIdentifier} | awk -F ${subIdentifier} \'{print $1}\'", returnStdout: true).trim()
 
     echo "SERVICE BUS MODULE NAME - ${sbNamespaceModuleName}"
     echo "TOPIC MODULE NAME - ${topicModuleName}"
