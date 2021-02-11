@@ -70,13 +70,27 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
         warnAboutOldTfAzureProvider()
 
-        sh """
-          terraform init -reconfigure \
-            -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
-            -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
-        """
+        // sh """
+        //   terraform init -reconfigure \
+        //     -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
+        //     -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+        //     -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
+        //     -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
+        // """
+
+        echo "CHECKING SB IMPORT VAR"
+        if (env.IMPORT_SERVICE_BUS_MODULES != null) {
+          if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
+            echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
+          } else {
+            echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
+          }
+        } else {
+          echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - NULL"
+        }
+
+        echo "PRINT main.tf CONTENTS"
+        sh "cat .terraform/modules/caseworker-subscription/main.tf"
 
         env.TF_VAR_ilbIp = 'TODO remove after some time'
         env.TF_VAR_deployment_namespace = deploymentNamespace
@@ -88,18 +102,18 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!tfPlanOnly) {
-        // stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
-        //   sh "terraform apply -auto-approve tfplan"
-        //   parseResult = null
-        //   try {
-        //     result = sh(script: "terraform output -json", returnStdout: true).trim()
-        //     parseResult = new JsonSlurperClassic().parseText(result)
-        //     log.info("returning parsed JSON terraform output: ${parseResult}")
-        //   } catch (err) {
-        //     log.info("terraform output command failed! ${err} Assuming there was no result...")
-        //   }
-        //   return parseResult
-        // }
+        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
+          // sh "terraform apply -auto-approve tfplan"
+          // parseResult = null
+          // try {
+          //   result = sh(script: "terraform output -json", returnStdout: true).trim()
+          //   parseResult = new JsonSlurperClassic().parseText(result)
+          //   log.info("returning parsed JSON terraform output: ${parseResult}")
+          // } catch (err) {
+          //   log.info("terraform output command failed! ${err} Assuming there was no result...")
+          // }
+          // return parseResult
+        }
       } else
         log.warning "Skipping apply due to tfPlanOnly flag set"
     }
