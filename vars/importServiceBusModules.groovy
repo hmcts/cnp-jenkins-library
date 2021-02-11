@@ -6,7 +6,7 @@ def call(String subscription) {
 
     String sbName = env.SERVICE_BUS_NAME
     String topicName = env.TOPIC_NAME
-    String subName = env.SUBSCRIPTION_NAME
+    String subName = env.SB_SUBSCRIPTION_NAME
     String rgName = env.RESOURCE_GROUP_NAME
 
     Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }

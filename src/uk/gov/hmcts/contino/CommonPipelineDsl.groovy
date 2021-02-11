@@ -48,7 +48,7 @@ abstract class CommonPipelineDsl implements Serializable {
     steps.env.IMPORT_SERVICE_BUS_MODULES = true
     steps.env.SERVICE_BUS_NAME = serviceBusName
     steps.env.TOPIC_NAME = topicName
-    steps.env.SUBSCRIPTION_NAME = subscriptionName
+    steps.env.SB_SUBSCRIPTION_NAME = subscriptionName
     steps.env.RESOURCE_GROUP_NAME = resourceGroupName
   }
 }
