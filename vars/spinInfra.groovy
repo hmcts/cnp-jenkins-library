@@ -78,19 +78,12 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
             -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
-        echo "CHECKING SB IMPORT VAR"
+        // Call to import Service Bus modules in to Terraform Native resource
         if (env.IMPORT_SERVICE_BUS_MODULES != null) {
           if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
-            echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
-          } else {
-            echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - ${env.IMPORT_SERVICE_BUS_MODULES}"
+            importServiceBusModules()
           }
-        } else {
-          echo "TERRAFORM IMPORT SERVICE BUS MODULES SCRIPT HERE - NULL"
         }
-
-        echo "PRINT main.tf CONTENTS"
-        sh "cat .terraform/modules/caseworker-subscription/main.tf"
 
         env.TF_VAR_ilbIp = 'TODO remove after some time'
         env.TF_VAR_deployment_namespace = deploymentNamespace
