@@ -1,7 +1,7 @@
 #!groovy
 
 //can be run only inside withSubscription
-def call() {
+def call(String subscription) {
     echo "Importing Service Bus, Topic and Subscription modules"
 
     String sbName = env.SERVICE_BUS_NAME
