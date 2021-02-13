@@ -45,6 +45,10 @@ abstract class CommonPipelineDsl implements Serializable {
   }
 
   void importServiceBusModules(String serviceBusName, String topicName, String subscriptionName, String resourceGroupName) {
+    // if (serviceBusName?.trim() || topicName?.trim() || subscriptionName?.trim() || resourceGroupName?.trim() ) {
+    //     throw new RuntimeException("Mandatory parameters not set for importServiceBusModules method.")
+    // }   
+
     steps.env.IMPORT_SERVICE_BUS_MODULES = true
     steps.env.SERVICE_BUS_NAME = serviceBusName
     steps.env.TOPIC_NAME = topicName

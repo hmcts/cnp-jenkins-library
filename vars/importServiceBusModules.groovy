@@ -47,6 +47,25 @@ def call(String subscription) {
     echo "TOPIC AUTH RULE - ${topicAuthModuleName}"
     echo "SUBSCTION MODULE NAME - ${subsciptionModuleName}"
 
+    // Import Service Bus
     // sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
-    //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") +
+    //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + "${sbNamespaceModuleName} ${serviceBusId}"
+
+    // // Import Service Bus Authorisation Rule
+    // sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+    //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + "${sbNamespaceAuthModuleName} ${serviceBusAuthRuleID}"
+
+    // // Import Service Bus Topic
+    // sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+    //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + "${topicModuleName} ${topicId}"
+
+    // // Import Service Bus Topic Authorisation Rule
+    // sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+    //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + "${topicAuthModuleName} ${topicAuthRuleId}"
+
+    // // Import Service Bus Subscription
+    // sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+    //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + "${subsciptionModuleName} ${subscriptionId}"
+
+    terraform show -json | jq -r '.values.root_module.child_modules[].resources[] | select(.address=="module.servicebus-namespace.azurerm_template_deployment.namespace") | .values.name'
 }
