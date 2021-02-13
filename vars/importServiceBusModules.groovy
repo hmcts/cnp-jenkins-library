@@ -67,5 +67,5 @@ def call(String subscription) {
     // sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
     //     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + "${subsciptionModuleName} ${subscriptionId}"
 
-    terraform show -json | jq -r '.values.root_module.child_modules[].resources[] | select(.address=="module.servicebus-namespace.azurerm_template_deployment.namespace") | .values.name'
+    sh "terraform show -json | jq -r '.values.root_module.child_modules[].resources[] | select(.address==\"module.servicebus-namespace.azurerm_template_deployment.namespace\") | .values.name'"
 }
