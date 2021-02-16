@@ -2,10 +2,10 @@
 
 import groovy.json.JsonSlurper
 
-String subscription = ""
-String environment = ""
-String product = ""
-pipelineTags = ""
+String subscription
+String environment
+String product
+TerraformTagMap pipelineTags
 Closure az
 
 //can be run only inside withSubscription
