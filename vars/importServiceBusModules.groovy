@@ -30,7 +30,7 @@ def call(String subscription) {
                 if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                     echo "Import of Service Module - ${resource.values.name} is successful"
                 } else {
-                    echo "Failed to import Serice Bus Module - ${serviceBusName}"
+                    echo "Failed to import Serice Bus Module - ${resource.values.name}"
                     break
                 }
             }        
