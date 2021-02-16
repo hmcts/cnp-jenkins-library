@@ -7,10 +7,11 @@ def call(String subscription, String environment, String product, tags) {
     echo "Importing Service Bus, Topic and Subscription modules"
 
     az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-    subscription = subscription
-    environment = environment
-    product = product
-    pipelineTags = tags
+    
+    // subscription = subscription
+    // environment = environment
+    // product = product
+    // pipelineTags = tags
 
     def jsonSlurper = new JsonSlurper()
 
@@ -32,8 +33,8 @@ def call(String subscription, String environment, String product, tags) {
                 println (resource.values.name)
                 println (resource.values.resource_group_name)
 
-                // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
-                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
+                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
+                //if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                     echo "Import of Service Module - ${resource.values.name} is successful"
                 } else {
                     echo "Failed to import Serice Bus Module - ${resource.values.name}"
@@ -44,8 +45,8 @@ def call(String subscription, String environment, String product, tags) {
     }
 }
 
-// def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference, String environment, String product, pipelineTags) {
-def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
+def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference, String environment, String product, pipelineTags) {
+//def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
     try {
         String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
         String nsAuthRuleModule = module_reference + ".azurerm_servicebus_namespace_authorization_rule.servicebus_authorization_rule"
