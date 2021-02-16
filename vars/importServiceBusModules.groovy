@@ -6,41 +6,36 @@ import groovy.json.JsonSlurper
 def call(String subscription, String environment, String product, tags) {
     echo "Importing Service Bus, Topic and Subscription modules"
 
-    az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-    
-    // subscription = subscription
-    // environment = environment
-    // product = product
-    // pipelineTags = tags
+    stageWithAgent("Sync Branches with Master", product) {
+        def jsonSlurper = new JsonSlurper()
 
-    def jsonSlurper = new JsonSlurper()
+        az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-    String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
+        String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
+        def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
-    def stateJsonObj = jsonSlurper.parseText(stateJsonString)
+        // Get all modules
+        def child_modules = stateJsonObj.values.root_module.child_modules
+        for (module in child_modules) {
+            def resources = module.resources
+            
+            for (resource in resources) {
+                if (resource.type == "azurerm_template_deployment" && resource.name == "namespace") {
+                    def address = resource.address.minus(".azurerm_template_deployment.namespace")
+                    
+                    println (address)
+                    println (resource.values.name)
+                    println (resource.values.resource_group_name)
 
-    // Get all modules
-    def child_modules = stateJsonObj.values.root_module.child_modules
-
-    for (module in child_modules) {
-        def resources = module.resources
-        
-        for (resource in resources) {
-            if (resource.type == "azurerm_template_deployment" && resource.name == "namespace") {
-                def address = resource.address.minus(".azurerm_template_deployment.namespace")
-                
-                println (address)
-                println (resource.values.name)
-                println (resource.values.resource_group_name)
-
-                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
-                //if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
-                    echo "Import of Service Module - ${resource.values.name} is successful"
-                } else {
-                    echo "Failed to import Serice Bus Module - ${resource.values.name}"
-                    break
-                }
-            }        
+                    if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
+                    //if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
+                        echo "Import of Service Module - ${resource.values.name} is successful"
+                    } else {
+                        echo "Failed to import Serice Bus Module - ${resource.values.name}"
+                        break
+                    }
+                }        
+            }
         }
     }
 }
