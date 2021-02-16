@@ -27,7 +27,7 @@ def call(String subscription) {
                 println (resource.values.name)
                 println (resource.values.resource_group_name)
 
-                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
+                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, subscription)) {
                     echo "Import of Service Module - ${resource.values.name} is successful"
                 } else {
                     echo "Failed to import Serice Bus Module - ${resource.values.name}"
@@ -38,7 +38,7 @@ def call(String subscription) {
     }
 }
 
-def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
+def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference, String subscription) {
     try {
         Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
