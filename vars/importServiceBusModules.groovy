@@ -1,6 +1,7 @@
 #!groovy
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.contino.TerraformTagMap
 
 String subscription
 String environment
