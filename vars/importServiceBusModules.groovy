@@ -131,14 +131,14 @@ class ImportServiceBusModules {
             String topicModule = module_reference + ".azurerm_servicebus_topic.servicebus_topic"
             String topicAuthRuleModule = module_reference + ".azurerm_servicebus_topic_authorization_rule.topic_authorization_rule"
 
-            String serviceBusId = this.az.az "servicebus topic show --name ${topicName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            String serviceBusAuthRuleID = this.az.az "servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
+            String topicId = this.az.az "servicebus topic show --name ${topicName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String topicAuthRuleID = this.az.az "servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.echo "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
-                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsModule} ${serviceBusId}"
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${topicModule} ${topicId}"
 
             this.steps.echo "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
-                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsAuthRuleModule} ${serviceBusAuthRuleID}"
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${topicAuthRuleModule} ${topicAuthRuleID}"
 
             return true;
         }
