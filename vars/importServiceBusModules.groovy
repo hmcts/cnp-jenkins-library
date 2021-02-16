@@ -32,9 +32,26 @@ def call(String subscription, String environment, String product, tags) {
 
                     // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
                     if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
-                        echo "Import of Service Module - ${resource.values.name} is successful"
+                        echo "Import of Service Bus Module - ${resource.values.name} is successful"
                     } else {
                         echo "Failed to import Serice Bus Module - ${resource.values.name}"
+                        break
+                    }
+                }
+
+                if (resource.type == "azurerm_template_deployment" && resource.name == "topic") {
+                    def address = resource.address.minus(".azurerm_template_deployment.topic")
+                    
+                    echo "${address}"
+                    echo "${resource.values.name}"
+                    echo "${resource.values.parameters.serviceBusNamespaceName}"
+                    echo "${resource.values.resource_group_name}"
+
+                    // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
+                    if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
+                        echo "Import of Service Bus Topic Module - ${resource.values.name} is successful"
+                    } else {
+                        echo "Failed to import Serice Bus Topic Module - ${resource.values.name}"
                         break
                     }
                 }
@@ -85,7 +102,6 @@ class ImportServiceBusModules {
 
     def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
         try {
-
             this.steps.echo "Importing Service Bus Namespace - ${serviceBusName}"
 
             String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
@@ -98,6 +114,30 @@ class ImportServiceBusModules {
                 (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsModule} ${serviceBusId}"
 
             this.steps.sh "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsAuthRuleModule} ${serviceBusAuthRuleID}"
+
+            return true;
+        }
+        catch (err) {
+            this.steps.echo err.getMessage()
+            return false;
+        }
+    }
+
+    def importServiceBusTopicModule(String topicName, String serviceBusName, String resource_group_name, String module_reference) {
+        try {
+            this.steps.echo "Importing Service Bus Topic - ${topicName}"
+
+            String topicModule = module_reference + ".azurerm_servicebus_topic.servicebus_topic"
+            String topicAuthRuleModule = module_reference + ".azurerm_servicebus_topic_authorization_rule.topic_authorization_rule"
+
+            String serviceBusId = this.az.az "servicebus topic show --name ${topicName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String serviceBusAuthRuleID = this.az.az "servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
+
+            this.steps.echo "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsModule} ${serviceBusId}"
+
+            this.steps.echo "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
                 (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsAuthRuleModule} ${serviceBusAuthRuleID}"
 
             return true;
