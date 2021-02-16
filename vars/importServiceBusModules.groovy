@@ -2,10 +2,11 @@
 
 import groovy.json.JsonSlurper
 
-subscription = ""
-environment = ""
-product = ""
+String subscription = ""
+String environment = ""
+String product = ""
 pipelineTags = ""
+Closure az
 
 //can be run only inside withSubscription
 def call(String subscription, String environment, String product, pipelineTags) {
@@ -15,6 +16,7 @@ def call(String subscription, String environment, String product, pipelineTags) 
     environment = environment
     product = product
     pipelineTags = pipelineTags
+    az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
     def jsonSlurper = new JsonSlurper()
     // def importModules = new ImportServiceBusModules(subscription, this)
@@ -50,7 +52,7 @@ def call(String subscription, String environment, String product, pipelineTags) 
 
 def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
     try {
-        Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+        // Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
         String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
         String nsAuthRuleModule = module_reference + ".azurerm_servicebus_namespace_authorization_rule.servicebus_authorization_rule"
