@@ -55,35 +55,28 @@ def call(String subscription, String environment, String product, tags) {
                         break
                     }
                 }
+
+                if (resource.type == "azurerm_template_deployment" && resource.name == "subscription") {
+                    def address = resource.address.minus(".azurerm_template_deployment.subscription")
+                    
+                    echo "${address}"
+                    echo "${resource.values.name}"
+                    echo "${resource.values.parameters.serviceBusNamespaceName}"
+                    echo "${resource.values.parameters.serviceBusTopicName}"
+                    echo "${resource.values.resource_group_name}"
+
+                    // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
+                    if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
+                        echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful"
+                    } else {
+                        echo "Failed to import Serice Bus Subscription Module - ${resource.values.name}"
+                        break
+                    }
+                }
             }
         }
     }
 }
-
-// def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference, String environment, String product, pipelineTags) {
-//     try {
-
-//         echo "Importing Service Bus Namespace - ${serviceBusName}"
-
-//         String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
-//         String nsAuthRuleModule = module_reference + ".azurerm_servicebus_namespace_authorization_rule.servicebus_authorization_rule"
-
-//         String serviceBusId = az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-//         String serviceBusAuthRuleID = az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-
-//         sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
-//             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + " ${nsModule} ${serviceBusId}"
-
-//         sh "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
-//             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + " ${nsAuthRuleModule} ${serviceBusAuthRuleID}"
-
-//         return true;
-//     }
-//     catch (err) {
-//         echo err.getMessage()
-//         return false;
-//     }
-// }
 
 class ImportServiceBusModules {
     def steps
@@ -139,6 +132,25 @@ class ImportServiceBusModules {
 
             this.steps.echo "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
                 (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${topicAuthRuleModule} ${topicAuthRuleID}"
+
+            return true;
+        }
+        catch (err) {
+            this.steps.echo err.getMessage()
+            return false;
+        }
+    }
+
+    def importServiceBusSubscriptionModule(String subscriptionName, String serviceBusName, String topicName, String resource_group_name, String module_reference) {
+        try {
+            this.steps.echo "Importing Service Bus Subscription - ${subscriptionName}"
+
+            String subModule = module_reference + ".azurerm_servicebus_subscription.servicebus_subscription"
+
+            String subId = this.az.az "servicebus topic subscription show --name ${subscriptionName} --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
+
+            this.steps.echo "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${subModule} ${subId}"
 
             return true;
         }
