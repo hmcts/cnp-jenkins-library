@@ -78,17 +78,17 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
             -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
+        env.TF_VAR_ilbIp = 'TODO remove after some time'
+        env.TF_VAR_deployment_namespace = deploymentNamespace
+        env.TF_VAR_subscription = subscription
+        env.TF_VAR_component = component
+
         // Call to import Service Bus modules in to Terraform Native resource
         if (env.IMPORT_SERVICE_BUS_MODULES != null) {
           if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
             importServiceBusModules(subscription, environment, product, pipelineTags)
           }
         }
-
-        env.TF_VAR_ilbIp = 'TODO remove after some time'
-        env.TF_VAR_deployment_namespace = deploymentNamespace
-        env.TF_VAR_subscription = subscription
-        env.TF_VAR_component = component
 
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
