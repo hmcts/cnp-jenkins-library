@@ -40,7 +40,7 @@ def call(String subscription, String environment, String product, TerraformTagMa
                 println (resource.values.name)
                 println (resource.values.resource_group_name)
 
-                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name)) {
+                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                     echo "Import of Service Module - ${resource.values.name} is successful"
                 } else {
                     echo "Failed to import Serice Bus Module - ${resource.values.name}"
