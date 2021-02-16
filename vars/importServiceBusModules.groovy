@@ -7,7 +7,7 @@ def call(String subscription) {
     echo "Importing Service Bus, Topic and Subscription modules"
 
     def jsonSlurper = new JsonSlurper()
-    def importModules = new ImportServiceBusModules(subscription)
+    def importModules = new ImportServiceBusModules(subscription, this)
 
     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
 
@@ -33,7 +33,6 @@ def call(String subscription) {
                     echo "Failed to import Serice Bus Module - ${serviceBusName}"
                     break
                 }
-
             }        
         }
     }
@@ -41,11 +40,13 @@ def call(String subscription) {
 
 class ImportServiceBusModules {
     
+    def steps
     String subscription = ""
-    Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+    Closure az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-    ImportServiceBusModules(String current_subscription) {
+    ImportServiceBusModules(String current_subscription, steps) {
         subscription = current_subscription
+        this.steps = steps
     }
     
     boolean ImportServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
@@ -56,10 +57,10 @@ class ImportServiceBusModules {
             String serviceBusId = az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
             String serviceBusAuthRuleID = az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
-            echo "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+            steps.echo "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
                 (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + nsModule + " " + serviceBusId
 
-            echo "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+            steps.echo "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
                 (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "") + nsAuthRuleModule + " " + serviceBusAuthRuleID
 
             return true;
