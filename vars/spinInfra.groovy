@@ -90,9 +90,9 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
 
-        // sh "terraform get -update=true"
-        // sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
-        //   (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+        sh "terraform get -update=true"
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
+          (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!tfPlanOnly) {
         stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
