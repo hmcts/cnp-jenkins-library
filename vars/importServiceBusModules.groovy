@@ -95,10 +95,10 @@ class ImportServiceBusModules {
             String serviceBusAuthRuleID = this.az.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
-                (fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsModule} ${serviceBusId}"
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsModule} ${serviceBusId}"
 
             this.steps.sh "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" +
-                (fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsAuthRuleModule} ${serviceBusAuthRuleID}"
+                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "") + " ${nsAuthRuleModule} ${serviceBusAuthRuleID}"
 
             return true;
         }
