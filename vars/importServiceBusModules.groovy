@@ -2,9 +2,17 @@
 
 import groovy.json.JsonSlurper
 
+environment = ""
+product = ""
+pipelineTags = ""
+
 //can be run only inside withSubscription
-def call(String subscription) {
+def call(String subscription, String environment, String product, pipelineTags) {
     echo "Importing Service Bus, Topic and Subscription modules"
+
+    environment = environment
+    product = product
+    pipelineTags = pipelineTags
 
     def jsonSlurper = new JsonSlurper()
     // def importModules = new ImportServiceBusModules(subscription, this)
@@ -27,7 +35,7 @@ def call(String subscription) {
                 println (resource.values.name)
                 println (resource.values.resource_group_name)
 
-                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, subscription)) {
+                if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                     echo "Import of Service Module - ${resource.values.name} is successful"
                 } else {
                     echo "Failed to import Serice Bus Module - ${resource.values.name}"
@@ -38,7 +46,7 @@ def call(String subscription) {
     }
 }
 
-def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference, String subscription) {
+def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
     try {
         Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
@@ -61,7 +69,6 @@ def importServiceBusNamespaceModule(String serviceBusName, String resource_group
         return false;
     }
 }
-
 
 // class ImportServiceBusModules {
     

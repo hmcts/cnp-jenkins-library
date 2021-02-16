@@ -81,7 +81,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         // Call to import Service Bus modules in to Terraform Native resource
         if (env.IMPORT_SERVICE_BUS_MODULES != null) {
           if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
-            importServiceBusModules(subscription)
+            importServiceBusModules(subscription, environment, product, pipelineTags)
           }
         }
 
