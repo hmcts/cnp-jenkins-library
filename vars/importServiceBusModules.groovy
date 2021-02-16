@@ -1,6 +1,7 @@
 #!groovy
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.contino.azure.Az
 
 //can be run only inside withSubscription
 def call(String subscription, String environment, String product, tags) {
