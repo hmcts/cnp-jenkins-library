@@ -1,16 +1,15 @@
 #!groovy
 
 import groovy.json.JsonSlurper
-import uk.gov.hmcts.contino.TerraformTagMap
 
 String subscription
 String environment
 String product
-TerraformTagMap pipelineTags
+pipelineTags
 Closure az
 
 //can be run only inside withSubscription
-def call(String subscription, String environment, String product, TerraformTagMap pipelineTags) {
+def call(String subscription, String environment, String product, pipelineTags) {
     echo "Importing Service Bus, Topic and Subscription modules"
 
     subscription = subscription
