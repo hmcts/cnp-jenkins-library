@@ -2,6 +2,7 @@
 
 import groovy.json.JsonSlurper
 
+subscription = ""
 environment = ""
 product = ""
 pipelineTags = ""
@@ -10,6 +11,7 @@ pipelineTags = ""
 def call(String subscription, String environment, String product, pipelineTags) {
     echo "Importing Service Bus, Topic and Subscription modules"
 
+    subscription = subscription
     environment = environment
     product = product
     pipelineTags = pipelineTags
