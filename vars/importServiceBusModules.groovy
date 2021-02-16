@@ -53,7 +53,7 @@ class ImportServiceBusModules {
             String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
             String nsAuthRuleModule = module_reference + ".azurerm_servicebus_namespace_authorization_rule.servicebus_authorization_rule"
 
-            String serviceBusId = az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name}"
+            String serviceBusId = az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
             String serviceBusAuthRuleID = az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
             echo "terraform import -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
