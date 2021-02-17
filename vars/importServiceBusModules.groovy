@@ -10,8 +10,8 @@ def call(String subscription, String environment, String product, tags) {
     stageWithAgent("Import Service Bus Modules", product) {
         def jsonSlurper = new JsonSlurper()
 
-        def tfImport = "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" + 
-                        (fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
+        def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" + 
+                        (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
         importModules = new ImportServiceBusModules(this, environment, product, tags)
         importModules.initialise(tfImport)
