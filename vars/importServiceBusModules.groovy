@@ -90,7 +90,7 @@ class ImportServiceBusModules {
         this.tags = tags
     }
 
-    initialise(String tfImport) {
+    def initialise(String tfImport) {
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = tfImport
     }
