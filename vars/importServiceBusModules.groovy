@@ -84,19 +84,13 @@ class ImportServiceBusModules {
     def tfImportCommand
 
     ImportServiceBusModules(steps, environment, product, tags) {
-        // this.steps = steps
-        // this.environment = environment
-        // this.product = product
-        // this.tags = tags
-    }
-
-    @NonCPS
-    initialise(String tfImport) {
         this.steps = steps
         this.environment = environment
         this.product = product
         this.tags = tags
+    }
 
+    initialise(String tfImport) {
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = tfImport
     }
