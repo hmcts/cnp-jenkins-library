@@ -10,8 +10,11 @@ def call(String subscription, String environment, String product, tags) {
     stageWithAgent("Import Service Bus Modules", product) {
         def jsonSlurper = new JsonSlurper()
 
+        def tfImport = "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" + 
+                        (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
+
         importModules = new ImportServiceBusModules(this, environment, product, tags)
-        importModules.initialise()
+        importModules.initialise(tfImport)
 
         String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
         def stateJsonObj = jsonSlurper.parseText(stateJsonString)
@@ -88,15 +91,14 @@ class ImportServiceBusModules {
     }
 
     @NonCPS
-    initialise() {
+    initialise(string tfImport) {
         this.steps = steps
         this.environment = environment
         this.product = product
         this.tags = tags
 
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
-        this.tfImportCommand = "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" + 
-                                (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
+        this.tfImportCommand = tfImport
     }
 
     def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
