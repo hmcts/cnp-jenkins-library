@@ -95,10 +95,9 @@ class ImportServiceBusModules {
         this.tfImportCommand = tfImport
     }
 
+    // Method to import Service Bus Namespace
     def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
         try {
-            //initialise()
-
             this.steps.echo "Importing Service Bus Namespace - ${serviceBusName}"
 
             String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
@@ -119,10 +118,9 @@ class ImportServiceBusModules {
         }
     }
 
+    // Method to import Service Bus Queue
     def importServiceBusQueueModule(String queueName, String serviceBusName, String resource_group_name, String module_reference) {
         try {
-            //initialise()
-
             this.steps.echo "Importing Service Bus Queue - ${queueName}"
 
             String queueModule = module_reference + ".azurerm_servicebus_queue.servicebus_queue"
@@ -147,10 +145,9 @@ class ImportServiceBusModules {
         }
     }
 
+    // Method to import Service Bus Topic
     def importServiceBusTopicModule(String topicName, String serviceBusName, String resource_group_name, String module_reference) {
         try {
-            //initialise()
-
             this.steps.echo "Importing Service Bus Topic - ${topicName}"
 
             String topicModule = module_reference + ".azurerm_servicebus_topic.servicebus_topic"
@@ -171,10 +168,9 @@ class ImportServiceBusModules {
         }
     }
 
+    // Method to import Service Bus Subscription
     def importServiceBusSubscriptionModule(String subscriptionName, String serviceBusName, String topicName, String resource_group_name, String module_reference) {
         try {
-            //initialise()
-
             this.steps.echo "Importing Service Bus Subscription - ${subscriptionName}"
 
             String subModule = module_reference + ".azurerm_servicebus_subscription.servicebus_subscription"
