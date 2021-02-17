@@ -106,7 +106,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         //     log.info("terraform output command failed! ${err} Assuming there was no result...")
         //   }
         //   return parseResult
-        }
+        // }
       } else
         log.warning "Skipping apply due to tfPlanOnly flag set"
     }
