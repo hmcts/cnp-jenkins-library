@@ -87,6 +87,8 @@ class ImportServiceBusModules {
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" + 
                                 (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
+
+        echo "Terraform Import Command - ${this.tfImportCommand}"
     }
 
     def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
