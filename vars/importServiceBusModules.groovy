@@ -11,6 +11,7 @@ def call(String subscription, String environment, String product, tags) {
         def jsonSlurper = new JsonSlurper()
 
         importModules = new ImportServiceBusModules(this, environment, product, tags)
+        importModules.initialise()
 
         String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
         def stateJsonObj = jsonSlurper.parseText(stateJsonString)
@@ -80,17 +81,19 @@ class ImportServiceBusModules {
     def tfImportCommand
 
     ImportServiceBusModules(steps, environment, product, tags) {
-        this.steps = steps
-        this.environment = environment
-        this.product = product
-        this.tags = tags
-        initialise()
-
-        echo "Terraform Import Command - ${this.tfImportCommand}"
+        // this.steps = steps
+        // this.environment = environment
+        // this.product = product
+        // this.tags = tags
     }
 
     @NonCPS
     initialise() {
+        this.steps = steps
+        this.environment = environment
+        this.product = product
+        this.tags = tags
+
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" + 
                                 (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
@@ -98,6 +101,8 @@ class ImportServiceBusModules {
 
     def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
         try {
+            //initialise()
+
             this.steps.echo "Importing Service Bus Namespace - ${serviceBusName}"
 
             String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
@@ -120,6 +125,8 @@ class ImportServiceBusModules {
 
     def importServiceBusQueueModule(String queueName, String serviceBusName, String resource_group_name, String module_reference) {
         try {
+            //initialise()
+
             this.steps.echo "Importing Service Bus Queue - ${queueName}"
 
             String queueModule = module_reference + ".azurerm_servicebus_queue.servicebus_queue"
@@ -146,6 +153,8 @@ class ImportServiceBusModules {
 
     def importServiceBusTopicModule(String topicName, String serviceBusName, String resource_group_name, String module_reference) {
         try {
+            //initialise()
+
             this.steps.echo "Importing Service Bus Topic - ${topicName}"
 
             String topicModule = module_reference + ".azurerm_servicebus_topic.servicebus_topic"
@@ -168,6 +177,8 @@ class ImportServiceBusModules {
 
     def importServiceBusSubscriptionModule(String subscriptionName, String serviceBusName, String topicName, String resource_group_name, String module_reference) {
         try {
+            //initialise()
+
             this.steps.echo "Importing Service Bus Subscription - ${subscriptionName}"
 
             String subModule = module_reference + ".azurerm_servicebus_subscription.servicebus_subscription"
