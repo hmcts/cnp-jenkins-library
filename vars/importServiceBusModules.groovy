@@ -11,7 +11,7 @@ def call(String subscription, String environment, String product, tags) {
         def jsonSlurper = new JsonSlurper()
 
         def tfImport = "terraform import -var 'common_tags=${this.tags}' -var 'env=${this.environment}' -var 'product=${this.product}'" + 
-                        (this.steps.fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
+                        (fileExists("${this.environment}.tfvars") ? " -var-file=${this.environment}.tfvars" : "")
 
         importModules = new ImportServiceBusModules(this, environment, product, tags)
         importModules.initialise(tfImport)
@@ -91,7 +91,7 @@ class ImportServiceBusModules {
     }
 
     @NonCPS
-    initialise(string tfImport) {
+    initialise(String tfImport) {
         this.steps = steps
         this.environment = environment
         this.product = product
