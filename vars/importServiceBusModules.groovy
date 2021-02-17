@@ -11,7 +11,6 @@ def call(String subscription, String environment, String product, tags) {
         def jsonSlurper = new JsonSlurper()
 
         importModules = new ImportServiceBusModules(this, environment, product, tags)
-        // az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
         String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
         def stateJsonObj = jsonSlurper.parseText(stateJsonString)
@@ -26,11 +25,6 @@ def call(String subscription, String environment, String product, tags) {
                 if (resource.type == "azurerm_template_deployment" && resource.name == "namespace") {
                     def address = resource.address.minus(".azurerm_template_deployment.namespace")
                     
-                    echo "${address}"
-                    echo "${resource.values.name}"
-                    echo "${resource.values.resource_group_name}"
-
-                    // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
                     if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                         echo "Import of Service Bus Module - ${resource.values.name} is successful"
                     } else {
@@ -42,12 +36,6 @@ def call(String subscription, String environment, String product, tags) {
                 if (resource.type == "azurerm_template_deployment" && resource.name == "topic") {
                     def address = resource.address.minus(".azurerm_template_deployment.topic")
                     
-                    echo "${address}"
-                    echo "${resource.values.name}"
-                    echo "${resource.values.parameters.serviceBusNamespaceName}"
-                    echo "${resource.values.resource_group_name}"
-
-                    // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
                     if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
                         echo "Import of Service Bus Topic Module - ${resource.values.name} is successful"
                     } else {
@@ -59,13 +47,6 @@ def call(String subscription, String environment, String product, tags) {
                 if (resource.type == "azurerm_template_deployment" && resource.name == "subscription") {
                     def address = resource.address.minus(".azurerm_template_deployment.subscription")
                     
-                    echo "${address}"
-                    echo "${resource.values.name}"
-                    echo "${resource.values.parameters.serviceBusNamespaceName}"
-                    echo "${resource.values.parameters.serviceBusTopicName}"
-                    echo "${resource.values.resource_group_name}"
-
-                    // if (importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address, environment, product, tags)) {
                     if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
                         echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful"
                     } else {
@@ -76,6 +57,7 @@ def call(String subscription, String environment, String product, tags) {
             }
         }
     }
+    echo "Completed import of Service Bus, Topic, Queue and Subscription modules"
 }
 
 class ImportServiceBusModules {
