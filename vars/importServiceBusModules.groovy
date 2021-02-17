@@ -114,7 +114,7 @@ class ImportServiceBusModules {
         try {
             this.steps.echo "Importing Service Bus Queue - ${queueName}"
 
-            String queueModule = module_reference + ".azurerm_servicebus_topic.servicebus_queue"
+            String queueModule = module_reference + ".azurerm_servicebus_queue.servicebus_queue"
             String queueSendAuthRuleModule = module_reference + ".azurerm_servicebus_queue_authorization_rule.send_auth_rule"
             String queueListenAuthRuleModule = module_reference + ".azurerm_servicebus_queue_authorization_rule.listen_auth_rule"
 
