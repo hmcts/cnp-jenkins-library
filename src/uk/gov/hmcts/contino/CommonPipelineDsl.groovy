@@ -44,18 +44,6 @@ abstract class CommonPipelineDsl implements Serializable {
     config.branchesToSyncWithMaster = branches
   }
 
-  // void importServiceBusModules(String serviceBusName, String topicName, String subscriptionName, String resourceGroupName) {
-  //   // if (serviceBusName?.trim() || topicName?.trim() || subscriptionName?.trim() || resourceGroupName?.trim() ) {
-  //   //     throw new RuntimeException("Mandatory parameters not set for importServiceBusModules method.")
-  //   // }   
-
-  //   steps.env.IMPORT_SERVICE_BUS_MODULES = true
-  //   steps.env.SERVICE_BUS_NAME = serviceBusName
-  //   steps.env.TOPIC_NAME = topicName
-  //   steps.env.SB_SUBSCRIPTION_NAME = subscriptionName
-  //   steps.env.RESOURCE_GROUP_NAME = resourceGroupName
-  // }
-
   void importServiceBusModules() {
     steps.env.IMPORT_SERVICE_BUS_MODULES = true
   }
