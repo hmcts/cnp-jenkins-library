@@ -70,11 +70,12 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      withSauceConnect("reform_tunnel") {
+      steps.withSauceConnect("reform_tunnel") {
         gradle("--rerun-tasks crossbrowser")
       }
     } finally {
-      steps.junit '**/test-results/**/*.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      steps.saucePublisher()
     }
   }
 
