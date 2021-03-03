@@ -21,8 +21,10 @@ def call(String subscription, String environment, String product, tags) {
 
         // Create a backup/snapshot of the state file
         tfstate = "${product}/${environment}/terraform.tfstate"
+        Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+
         echo "Backup state file - ${tfstate}"
-        sh "az storage blob snapshot --container-name=$__container --name=${tfstate} --account-name=$__sa --account-key=$__sa_key"
+        def snapShot = az "az storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription} --account-key=${env.ARM_ACCESS_KEY}"
 
         // Get all modules
         def child_modules = stateJsonObj.values.root_module.child_modules
@@ -35,48 +37,56 @@ def call(String subscription, String environment, String product, tags) {
 
                     // Service Bus Namespace
                     if (resource.name == "namespace") {
+                        echo "Importing Service Bus Namespace - ${resource.values.name}."
+
                         def address = resource.address.minus(".azurerm_template_deployment.namespace")
                         
                         if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
-                            echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful"
+                            echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful."
                         } else {
-                            echo "Failed to import Service Bus Namespace Module - ${resource.values.name}"
+                            echo "Failed to import Service Bus Namespace Module - ${resource.values.name}."
                             break
                         }
                     }
 
                     // Service Bus Queue
                     if (resource.name == "queue") {
+                        echo "Importing Service Bus Queue - ${resource.values.name}."
+
                         def address = resource.address.minus(".azurerm_template_deployment.queue")
                         
                         if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-                            echo "Import of Service Bus Queue Module - ${resource.values.name} is successful"
+                            echo "Import of Service Bus Queue Module - ${resource.values.name} is successful."
                         } else {
-                            echo "Failed to import Service Bus Queue Module - ${resource.values.name}"
+                            echo "Failed to import Service Bus Queue Module - ${resource.values.name}."
                             break
                         }
                     }
 
                     // Service Bus Topic
                     if (resource.name == "topic") {
+                        echo "Importing Service Bus Topic - ${resource.values.name}."
+
                         def address = resource.address.minus(".azurerm_template_deployment.topic")
                         
                         if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-                            echo "Import of Service Bus Topic Module - ${resource.values.name} is successful"
+                            echo "Import of Service Bus Topic Module - ${resource.values.name} is successful."
                         } else {
-                            echo "Failed to import Service Bus Topic Module - ${resource.values.name}"
+                            echo "Failed to import Service Bus Topic Module - ${resource.values.name}."
                             break
                         }
                     }
 
                     // Service Bus Subscription
                     if (resource.name == "subscription") {
+                        echo "Importing Service Bus Subscription - ${resource.values.name}."
+
                         def address = resource.address.minus(".azurerm_template_deployment.subscription")
                         
                         if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
-                            echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful"
+                            echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful."
                         } else {
-                            echo "Failed to import Service Bus Subscription Module - ${resource.values.name}"
+                            echo "Failed to import Service Bus Subscription Module - ${resource.values.name}."
                             break
                         }
                     }
@@ -93,7 +103,9 @@ class ImportTerraformModules {
     def product
     def tags
     def az
+    Closure azTest
     def tfImportCommand
+    
 
     ImportTerraformModules(steps, environment, product, tags) {
         this.steps = steps
@@ -105,18 +117,21 @@ class ImportTerraformModules {
     def initialise(String tfImport) {
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = tfImport
+
+        this.azTest = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
     }
 
     // Method to import Service Bus Namespace
     def importServiceBusNamespaceModule(String serviceBusName, String resource_group_name, String module_reference) {
         try {
-            this.steps.echo "Importing Service Bus Namespace - ${serviceBusName}"
-
             String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
             String nsAuthRuleModule = module_reference + ".azurerm_servicebus_namespace_authorization_rule.send_listen_auth_rule"
 
-            String serviceBusId = this.az.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            String serviceBusAuthRuleID = this.az.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            // String serviceBusId = this.az.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            // String serviceBusAuthRuleID = this.az.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+
+            String serviceBusId = this.azTest "az servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String serviceBusAuthRuleID = this.azTest "az servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "${this.tfImportCommand}" + " ${nsModule} ${serviceBusId}"
 
@@ -133,8 +148,6 @@ class ImportTerraformModules {
     // Method to import Service Bus Queue
     def importServiceBusQueueModule(String queueName, String serviceBusName, String resource_group_name, String module_reference) {
         try {
-            this.steps.echo "Importing Service Bus Queue - ${queueName}"
-
             String queueModule = module_reference + ".azurerm_servicebus_queue.servicebus_queue"
             String queueSendAuthRuleModule = module_reference + ".azurerm_servicebus_queue_authorization_rule.send_auth_rule"
             String queueListenAuthRuleModule = module_reference + ".azurerm_servicebus_queue_authorization_rule.listen_auth_rule"
@@ -160,8 +173,6 @@ class ImportTerraformModules {
     // Method to import Service Bus Topic
     def importServiceBusTopicModule(String topicName, String serviceBusName, String resource_group_name, String module_reference) {
         try {
-            this.steps.echo "Importing Service Bus Topic - ${topicName}"
-
             String topicModule = module_reference + ".azurerm_servicebus_topic.servicebus_topic"
             String topicAuthRuleModule = module_reference + ".azurerm_servicebus_topic_authorization_rule.send_listen_auth_rule"
 
@@ -183,8 +194,6 @@ class ImportTerraformModules {
     // Method to import Service Bus Subscription
     def importServiceBusSubscriptionModule(String subscriptionName, String serviceBusName, String topicName, String resource_group_name, String module_reference) {
         try {
-            this.steps.echo "Importing Service Bus Subscription - ${subscriptionName}"
-
             String subModule = module_reference + ".azurerm_servicebus_subscription.servicebus_subscription"
 
             String subId = this.az.az "servicebus topic subscription show --name ${subscriptionName} --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
