@@ -5,19 +5,24 @@ import uk.gov.hmcts.contino.azure.Az
 
 //can be run only inside withSubscription
 def call(String subscription, String environment, String product, tags) {
-    echo "Importing Service Bus, Topic, Queue and Subscription modules"
+    echo "Importing Terraform modules"
 
-    stageWithAgent("Import Service Bus Modules", product) {
+    stageWithAgent("Import Terraform Modules", product) {
         def jsonSlurper = new JsonSlurper()
 
         def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" + 
                         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
-        importModules = new ImportServiceBusModules(this, environment, product, tags)
+        importModules = new ImportTerraformModules(this, environment, product, tags)
         importModules.initialise(tfImport)
 
         String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
         def stateJsonObj = jsonSlurper.parseText(stateJsonString)
+
+        // Create a backup/snapshot of the state file
+        tfstate = "${product}/${environment}/terraform.tfstate"
+        echo "Backup state file - ${tfstate}"
+        sh "az storage blob snapshot --container-name=$__container --name=${tfstate} --account-name=$__sa --account-key=$__sa_key"
 
         // Get all modules
         def child_modules = stateJsonObj.values.root_module.child_modules
@@ -26,56 +31,63 @@ def call(String subscription, String environment, String product, tags) {
             def resources = module.resources
 
             for (resource in resources) {
-                if (resource.type == "azurerm_template_deployment" && resource.name == "namespace") {
-                    def address = resource.address.minus(".azurerm_template_deployment.namespace")
-                    
-                    if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
-                        echo "Import of Service Bus Module - ${resource.values.name} is successful"
-                    } else {
-                        echo "Failed to import Service Bus Module - ${resource.values.name}"
-                        break
-                    }
-                }
+                if (resource.type == "azurerm_template_deployment") {
 
-                if (resource.type == "azurerm_template_deployment" && resource.name == "queue") {
-                    def address = resource.address.minus(".azurerm_template_deployment.queue")
-                    
-                    if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-                        echo "Import of Service Bus Queue Module - ${resource.values.name} is successful"
-                    } else {
-                        echo "Failed to import Service Bus Queue Module - ${resource.values.name}"
-                        break
+                    // Service Bus Namespace
+                    if (resource.name == "namespace") {
+                        def address = resource.address.minus(".azurerm_template_deployment.namespace")
+                        
+                        if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
+                            echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful"
+                        } else {
+                            echo "Failed to import Service Bus Namespace Module - ${resource.values.name}"
+                            break
+                        }
                     }
-                }
 
-                if (resource.type == "azurerm_template_deployment" && resource.name == "topic") {
-                    def address = resource.address.minus(".azurerm_template_deployment.topic")
-                    
-                    if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-                        echo "Import of Service Bus Topic Module - ${resource.values.name} is successful"
-                    } else {
-                        echo "Failed to import Service Bus Topic Module - ${resource.values.name}"
-                        break
+                    // Service Bus Queue
+                    if (resource.name == "queue") {
+                        def address = resource.address.minus(".azurerm_template_deployment.queue")
+                        
+                        if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
+                            echo "Import of Service Bus Queue Module - ${resource.values.name} is successful"
+                        } else {
+                            echo "Failed to import Service Bus Queue Module - ${resource.values.name}"
+                            break
+                        }
                     }
-                }
 
-                if (resource.type == "azurerm_template_deployment" && resource.name == "subscription") {
-                    def address = resource.address.minus(".azurerm_template_deployment.subscription")
-                    
-                    if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
-                        echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful"
-                    } else {
-                        echo "Failed to import Service Bus Subscription Module - ${resource.values.name}"
-                        break
+                    // Service Bus Topic
+                    if (resource.name == "topic") {
+                        def address = resource.address.minus(".azurerm_template_deployment.topic")
+                        
+                        if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
+                            echo "Import of Service Bus Topic Module - ${resource.values.name} is successful"
+                        } else {
+                            echo "Failed to import Service Bus Topic Module - ${resource.values.name}"
+                            break
+                        }
+                    }
+
+                    // Service Bus Subscription
+                    if (resource.name == "subscription") {
+                        def address = resource.address.minus(".azurerm_template_deployment.subscription")
+                        
+                        if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
+                            echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful"
+                        } else {
+                            echo "Failed to import Service Bus Subscription Module - ${resource.values.name}"
+                            break
+                        }
                     }
                 }
             }
         }
     }
-    echo "Completed import of Service Bus, Topic, Queue and Subscription modules"
+    echo "Completed import of Terraform modules"
 }
 
-class ImportServiceBusModules {
+class ImportTerraformModules {
     def steps
     def environment
     def product
@@ -83,7 +95,7 @@ class ImportServiceBusModules {
     def az
     def tfImportCommand
 
-    ImportServiceBusModules(steps, environment, product, tags) {
+    ImportTerraformModules(steps, environment, product, tags) {
         this.steps = steps
         this.environment = environment
         this.product = product

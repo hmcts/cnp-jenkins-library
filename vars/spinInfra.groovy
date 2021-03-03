@@ -83,10 +83,13 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
 
-        // Call to import Service Bus modules in to Terraform Native resource
-        if (env.IMPORT_SERVICE_BUS_MODULES != null) {
-          if (env.IMPORT_SERVICE_BUS_MODULES == "true") {
-            importServiceBusModules(subscription, environment, product, pipelineTags)
+        // Do not attempt to import during PR build
+        if (!tfPlanOnly) {
+          // Call to import Service Bus modules in to Terraform Native resource
+          if (env.IMPORT_TERRAFORM_MODULES != null) {
+            if (env.IMPORT_TERRAFORM_MODULES == "true") {
+              importTerraformModules(subscription, environment, product, pipelineTags)
+            }
           }
         }
 
@@ -95,18 +98,18 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
       }
       if (!tfPlanOnly) {
-        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
-          sh "terraform apply -auto-approve tfplan"
-          parseResult = null
-          try {
-            result = sh(script: "terraform output -json", returnStdout: true).trim()
-            parseResult = new JsonSlurperClassic().parseText(result)
-            log.info("returning parsed JSON terraform output: ${parseResult}")
-          } catch (err) {
-            log.info("terraform output command failed! ${err} Assuming there was no result...")
-          }
-          return parseResult
-        }
+        // stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
+        //   sh "terraform apply -auto-approve tfplan"
+        //   parseResult = null
+        //   try {
+        //     result = sh(script: "terraform output -json", returnStdout: true).trim()
+        //     parseResult = new JsonSlurperClassic().parseText(result)
+        //     log.info("returning parsed JSON terraform output: ${parseResult}")
+        //   } catch (err) {
+        //     log.info("terraform output command failed! ${err} Assuming there was no result...")
+        //   }
+        //   return parseResult
+        // }
       } else
         log.warning "Skipping apply due to tfPlanOnly flag set"
     }

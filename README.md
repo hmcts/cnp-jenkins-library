@@ -464,13 +464,21 @@ withPipeline(type, product, component) {
 
 ```
 
-## Import Service Bus, Topic, Queue and Subscription modules from template deployment to native Terraform resources
-
+## Import terraform modules created using template deployment to native Terraform resources
 #### Usage
 
-The existing Service Bus and its related modules use Azure Template Deployment to deploy the resources. Terraform has released native resources to managed these resources. Upgraded versions of these modules are available in a separate branch.
+Terraform AzureRM provider now supports new resource types, which were previously created using Azure Template Deployment.
 
-To consume the new modules, existing resources must be imported to the new module structure. This can be achieved by updating the branch reference as shown in the Git Commit below and using the `importServiceBusModules()` method in Application and Infrastructure pipelines. It is advisable to run the pipeline with this method call once. Subsequent runs will create an empty stage, which can be avoided.
+Currently, resources created using the following modules can be imported:
+
+* Service Bus Namespace (https://github.com/hmcts/terraform-module-servicebus-namespace)
+* Service Bus Topic (https://github.com/hmcts/terraform-module-servicebus-topic)
+* Service Bus Queue (https://github.com/hmcts/terraform-module-servicebus-queue)
+* Service Bus Subscription (https://github.com/hmcts/terraform-module-servicebus-subscription)
+
+RPE have released new versions of these modules, where native terraform resource types are used. The new version is available in a separate branch in the respective repositories.
+
+To consume the new modules, existing resources must be imported to the new module structure. This can be achieved by updating the branch reference as shown in the Git Commit below and using the `importTerraformModules()` method in Application and Infrastructure pipelines. It is advisable to run the pipeline with this method call once. Subsequent runs will create an empty stage, which can be avoided.
 
 Github Commit: https://github.com/hmcts/rd-shared-infrastructure/commit/5f1e464f246f8ed343951f044f1477667c248908#
 
@@ -479,7 +487,7 @@ Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job
 ```groovy
 
 withPipeline(type, product, component) {
-    importServiceBusModules()
+    importTerraformModules()
 }
 
 ```
