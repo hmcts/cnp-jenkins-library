@@ -24,7 +24,7 @@ def call(String subscription, String environment, String product, tags) {
         Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
         echo "Backup state file - ${tfstate}"
-        def snapShot = az "az storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription} --account-key=${env.ARM_ACCESS_KEY}"
+        def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription} --account-key=${env.ARM_ACCESS_KEY}"
 
         // Get all modules
         def child_modules = stateJsonObj.values.root_module.child_modules
@@ -130,8 +130,8 @@ class ImportTerraformModules {
             // String serviceBusId = this.az.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
             // String serviceBusAuthRuleID = this.az.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
-            String serviceBusId = this.azTest "az servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            String serviceBusAuthRuleID = this.azTest "az servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String serviceBusId = this.azTest "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String serviceBusAuthRuleID = this.azTest "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "${this.tfImportCommand}" + " ${nsModule} ${serviceBusId}"
 
