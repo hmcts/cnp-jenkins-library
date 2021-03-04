@@ -13,7 +13,9 @@ def call(String subscription, String environment, String product, tags) {
         def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" + 
                         (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
-        importModules = new ImportTerraformModules(this, environment, product, tags)
+        Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+
+        importModules = new ImportTerraformModules(this, environment, product, tags, az)
         importModules.initialise(tfImport)
 
         String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
@@ -21,8 +23,6 @@ def call(String subscription, String environment, String product, tags) {
 
         // Create a backup/snapshot of the state file
         tfstate = "${product}/${environment}/terraform.tfstate"
-        Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-
         echo "Backup state file - ${tfstate}"
         def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
 
@@ -102,23 +102,20 @@ class ImportTerraformModules {
     def environment
     def product
     def tags
-    // def az
-    Closure az
     def tfImportCommand
-    
+    Closure az
 
-    ImportTerraformModules(steps, environment, product, tags) {
+    ImportTerraformModules(steps, environment, product, tags, azClosure) {
         this.steps = steps
         this.environment = environment
         this.product = product
         this.tags = tags
+        this.az = azClosure
     }
 
     def initialise(String tfImport) {
-        // this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = tfImport
-
-        this.az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.steps.env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
+        // this.az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.steps.env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
     }
 
     // Method to import Service Bus Namespace
@@ -126,9 +123,6 @@ class ImportTerraformModules {
         try {
             String nsModule = module_reference + ".azurerm_servicebus_namespace.servicebus_namespace"
             String nsAuthRuleModule = module_reference + ".azurerm_servicebus_namespace_authorization_rule.send_listen_auth_rule"
-
-            // String serviceBusId = this.az.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            // String serviceBusAuthRuleID = this.az.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
             String serviceBusId = this.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
             String serviceBusAuthRuleID = this.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
