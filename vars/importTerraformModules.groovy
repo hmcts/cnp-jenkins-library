@@ -102,8 +102,8 @@ class ImportTerraformModules {
     def environment
     def product
     def tags
-    def az
-    Closure azTest
+    // def az
+    Closure az
     def tfImportCommand
     
 
@@ -115,10 +115,10 @@ class ImportTerraformModules {
     }
 
     def initialise(String tfImport) {
-        this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
+        // this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = tfImport
 
-        this.azTest = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.steps.env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
+        this.az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.steps.env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
     }
 
     // Method to import Service Bus Namespace
@@ -130,8 +130,8 @@ class ImportTerraformModules {
             // String serviceBusId = this.az.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
             // String serviceBusAuthRuleID = this.az.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
-            String serviceBusId = this.azTest "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            String serviceBusAuthRuleID = this.azTest "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String serviceBusId = this.az "servicebus namespace show --name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String serviceBusAuthRuleID = this.az "servicebus namespace authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "${this.tfImportCommand}" + " ${nsModule} ${serviceBusId}"
 
@@ -152,9 +152,9 @@ class ImportTerraformModules {
             String queueSendAuthRuleModule = module_reference + ".azurerm_servicebus_queue_authorization_rule.send_auth_rule"
             String queueListenAuthRuleModule = module_reference + ".azurerm_servicebus_queue_authorization_rule.listen_auth_rule"
 
-            String queueId = this.az.az "servicebus queue show --name ${queueName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            String queueSendAuthRuleID = this.az.az "servicebus queue authorization-rule show --name SendSharedAccessKey --namespace-name ${serviceBusName} --queue-name ${queueName} --resource-group ${resource_group_name} --query id -o tsv"
-            String queueListenAuthRuleID = this.az.az "servicebus queue authorization-rule show --name ListenSharedAccessKey --namespace-name ${serviceBusName} --queue-name ${queueName} --resource-group ${resource_group_name} --query id -o tsv"
+            String queueId = this.az "servicebus queue show --name ${queueName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String queueSendAuthRuleID = this.az "servicebus queue authorization-rule show --name SendSharedAccessKey --namespace-name ${serviceBusName} --queue-name ${queueName} --resource-group ${resource_group_name} --query id -o tsv"
+            String queueListenAuthRuleID = this.az "servicebus queue authorization-rule show --name ListenSharedAccessKey --namespace-name ${serviceBusName} --queue-name ${queueName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "${this.tfImportCommand}" + " ${queueModule} ${queueId}"
 
@@ -176,8 +176,8 @@ class ImportTerraformModules {
             String topicModule = module_reference + ".azurerm_servicebus_topic.servicebus_topic"
             String topicAuthRuleModule = module_reference + ".azurerm_servicebus_topic_authorization_rule.send_listen_auth_rule"
 
-            String topicId = this.az.az "servicebus topic show --name ${topicName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
-            String topicAuthRuleID = this.az.az "servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
+            String topicId = this.az "servicebus topic show --name ${topicName} --namespace-name ${serviceBusName} --resource-group ${resource_group_name} --query id -o tsv"
+            String topicAuthRuleID = this.az "servicebus topic authorization-rule show --name SendAndListenSharedAccessKey --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "${this.tfImportCommand}" + " ${topicModule} ${topicId}"
 
@@ -196,7 +196,7 @@ class ImportTerraformModules {
         try {
             String subModule = module_reference + ".azurerm_servicebus_subscription.servicebus_subscription"
 
-            String subId = this.az.az "servicebus topic subscription show --name ${subscriptionName} --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
+            String subId = this.az "servicebus topic subscription show --name ${subscriptionName} --namespace-name ${serviceBusName} --topic-name ${topicName} --resource-group ${resource_group_name} --query id -o tsv"
 
             this.steps.sh "${this.tfImportCommand}" + " ${subModule} ${subId}"
 
