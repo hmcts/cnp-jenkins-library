@@ -118,7 +118,7 @@ class ImportTerraformModules {
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.tfImportCommand = tfImport
 
-        this.azTest = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+        this.azTest = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.steps.env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
     }
 
     // Method to import Service Bus Namespace
