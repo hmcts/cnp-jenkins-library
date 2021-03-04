@@ -28,10 +28,7 @@ def call(String subscription, String environment, String product, tags) {
         String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
         def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
-        // Create a backup/snapshot of the state file
-        tfstate = "${product}/${environment}/terraform.tfstate"
-        echo "Backup state file - ${tfstate}"
-        def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
+        snapShotTaken = false
 
         // Get all modules
         def child_modules = stateJsonObj.values.root_module.child_modules
@@ -41,6 +38,16 @@ def call(String subscription, String environment, String product, tags) {
 
             for (resource in resources) {
                 if (resource.type == "azurerm_template_deployment") {
+                    
+                    // Create a backup/snapshot of the state file before import
+                    if (!snapShotTaken) {
+                        def tfstate = "${product}/${environment}/terraform.tfstate"
+                        
+                        echo "Backup state file - ${tfstate}"
+                        def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
+
+                        snapShotTaken = true
+                    }
 
                     // Service Bus Namespace
                     if (resource.name == "namespace") {
