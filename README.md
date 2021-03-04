@@ -480,6 +480,8 @@ RPE have released new versions of these modules, where native terraform resource
 
 To consume the new modules, existing resources must be imported to the new module structure. This can be achieved by updating the branch reference as shown in the Git Commit below and using the `importTerraformModules()` method in Application and Infrastructure pipelines. It is advisable to run the pipeline with this method call once. Subsequent runs will create an empty stage, which can be avoided.
 
+**NOTE:** The module's local name should **NOT** be changed for the import to work as expected. For example: ``` module "servicebus-namespace" { ... } ```. The local name "servicebus-namespace" should not be changed.
+
 Github Commit: https://github.com/hmcts/rd-shared-infrastructure/commit/5f1e464f246f8ed343951f044f1477667c248908#
 
 Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/135/console

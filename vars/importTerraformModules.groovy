@@ -1,5 +1,12 @@
 #!groovy
 
+// Section to import Azure resources deployed using azurerm_template_deployment in to Terraform native resources
+// USAGE:
+
+// withPipeline(type, product, component) {	
+//   importTerraformModules()
+// }
+
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.contino.azure.Az
 
@@ -115,7 +122,6 @@ class ImportTerraformModules {
 
     def initialise(String tfImport) {
         this.tfImportCommand = tfImport
-        // this.az = { cmd -> return this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.steps.env.SUBSCRIPTION_NAME} az $cmd", returnStdout: true).trim() }
     }
 
     // Method to import Service Bus Namespace
