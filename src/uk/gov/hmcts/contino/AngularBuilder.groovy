@@ -75,6 +75,7 @@ class AngularBuilder extends AbstractBuilder {
     builder.setupToolVersion()
   }
 
+  @Override
   def runProviderVerification(){
     builder.runProviderVerification()
   }
@@ -82,5 +83,10 @@ class AngularBuilder extends AbstractBuilder {
   @Override
   def runConsumerTests(){
     builder.runConsumerTests()
+  }
+
+  @Override
+  def runConsumerCanIDeploy(){
+    builder.runConsumerCanIDeploy()
   }
 }

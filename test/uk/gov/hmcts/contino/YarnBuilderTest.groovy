@@ -183,6 +183,15 @@ class YarnBuilderTest extends Specification {
       1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish") })
   }
 
+  def "runConsumerCanIDeploy triggers a yarn hook"() {
+    setup:
+    def version = "v3r510n"
+    when:
+    builder.runConsumerCanIDeploy()
+    then:
+    1 * steps.sh({ it.contains("yarn test:can-i-deploy:consumer") })
+  }
+
   def "prepareCVEReport converts json lines report to groovy object"() {
     given:
       def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
