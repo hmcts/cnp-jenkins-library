@@ -1,14 +1,8 @@
 #!groovy
 
 // Section to import Azure resources deployed using azurerm_template_deployment in to Terraform native resources
-// USAGE:
-
-// withPipeline(type, product, component) {	
-//   importTerraformModules()
-// }
 
 import groovy.json.JsonSlurper
-import uk.gov.hmcts.contino.azure.Az
 
 //can be run only inside withSubscription
 def call(String subscription, String environment, String product, tags) {
@@ -37,7 +31,7 @@ def call(String subscription, String environment, String product, tags) {
             // Backup state file
             def tfstate = "${product}/${environment}/terraform.tfstate"
             echo "Backup state file - ${tfstate}"
-            // def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
+            def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
             echo "State file backup of ${tfstate} completed"
 
             importModules = new ImportTerraformModules(this, environment, product, tags, az)
@@ -57,12 +51,12 @@ def call(String subscription, String environment, String product, tags) {
                             echo "Resource Group Name: ${resource.values.resource_group_name}" 
                             echo "Address: ${address}"
 
-                            // if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
-                            //     echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful."
-                            // } else {
-                            //     echo "Failed to import Service Bus Namespace Module - ${resource.values.name}."
-                            //     break
-                            // }
+                            if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
+                                echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful."
+                            } else {
+                                echo "Failed to import Service Bus Namespace Module - ${resource.values.name}."
+                                break
+                            }
                         }
 
                         // Service Bus Queue
@@ -76,12 +70,12 @@ def call(String subscription, String environment, String product, tags) {
                             echo "Resource Group Name: ${resource.values.resource_group_name}" 
                             echo "Address: ${address}"
 
-                            // if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-                            //     echo "Import of Service Bus Queue Module - ${resource.values.name} is successful."
-                            // } else {
-                            //     echo "Failed to import Service Bus Queue Module - ${resource.values.name}."
-                            //     break
-                            // }
+                            if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
+                                echo "Import of Service Bus Queue Module - ${resource.values.name} is successful."
+                            } else {
+                                echo "Failed to import Service Bus Queue Module - ${resource.values.name}."
+                                break
+                            }
                         }
 
                         // Service Bus Topic
@@ -95,12 +89,12 @@ def call(String subscription, String environment, String product, tags) {
                             echo "Resource Group Name: ${resource.values.resource_group_name}" 
                             echo "Address: ${address}"
 
-                            // if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-                            //     echo "Import of Service Bus Topic Module - ${resource.values.name} is successful."
-                            // } else {
-                            //     echo "Failed to import Service Bus Topic Module - ${resource.values.name}."
-                            //     break
-                            // }
+                            if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
+                                echo "Import of Service Bus Topic Module - ${resource.values.name} is successful."
+                            } else {
+                                echo "Failed to import Service Bus Topic Module - ${resource.values.name}."
+                                break
+                            }
                         }
 
                         // Service Bus Subscription
@@ -115,12 +109,12 @@ def call(String subscription, String environment, String product, tags) {
                             echo "Resource Group Name: ${resource.values.resource_group_name}" 
                             echo "Address: ${address}"
 
-                            // if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
-                            //     echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful."
-                            // } else {
-                            //     echo "Failed to import Service Bus Subscription Module - ${resource.values.name}."
-                            //     break
-                            // }
+                            if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
+                                echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful."
+                            } else {
+                                echo "Failed to import Service Bus Subscription Module - ${resource.values.name}."
+                                break
+                            }
                         }
                     }
                 }
