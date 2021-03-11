@@ -29,16 +29,16 @@ def call(String subscription, String environment, String product, tags) {
         stageWithAgent("Import Terraform Modules", product) {
             echo "Importing Terraform modules"
             
-            // Backup state file
-            def tfstate = "${product}/${environment}/terraform.tfstate"
-            echo "Backup state file - ${tfstate}"
-            def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
-            echo "State file backup of - ${tfstate} completed"
+            Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
             def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" + 
                             (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
-            Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
+            // Backup state file
+            def tfstate = "${product}/${environment}/terraform.tfstate"
+            echo "Backup state file - ${tfstate}"
+            // def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
+            echo "State file backup of - ${tfstate} completed"
 
             importModules = new ImportTerraformModules(this, environment, product, tags, az)
             importModules.initialise(tfImport)
@@ -46,6 +46,7 @@ def call(String subscription, String environment, String product, tags) {
             for (templateResource in templateResources.resources) {
                 for (resource in templateResource) {
                     if (resource.mode == "managed") {
+                        
                         // Service Bus Namespace
                         if (resource.name == "namespace") {
                             echo "Importing Service Bus Namespace - ${resource.values.name}."
