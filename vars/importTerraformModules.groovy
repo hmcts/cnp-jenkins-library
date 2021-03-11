@@ -47,10 +47,6 @@ def call(String subscription, String environment, String product, tags) {
 
                             def address = resource.address.minus(".azurerm_template_deployment.namespace")
                             
-                            echo "Resource Name: ${resource.values.name}"
-                            echo "Resource Group Name: ${resource.values.resource_group_name}" 
-                            echo "Address: ${address}"
-
                             if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                                 echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful."
                             } else {
@@ -65,11 +61,6 @@ def call(String subscription, String environment, String product, tags) {
 
                             def address = resource.address.minus(".azurerm_template_deployment.queue")
                             
-                            echo "Resource Name: ${resource.values.name}"
-                            echo "Namespace Name: ${resource.values.parameters.serviceBusNamespaceName}"
-                            echo "Resource Group Name: ${resource.values.resource_group_name}" 
-                            echo "Address: ${address}"
-
                             if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
                                 echo "Import of Service Bus Queue Module - ${resource.values.name} is successful."
                             } else {
@@ -84,11 +75,6 @@ def call(String subscription, String environment, String product, tags) {
 
                             def address = resource.address.minus(".azurerm_template_deployment.topic")
                             
-                            echo "Resource Name: ${resource.values.name}"
-                            echo "Namespace Name: ${resource.values.parameters.serviceBusNamespaceName}"
-                            echo "Resource Group Name: ${resource.values.resource_group_name}" 
-                            echo "Address: ${address}"
-
                             if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
                                 echo "Import of Service Bus Topic Module - ${resource.values.name} is successful."
                             } else {
@@ -103,12 +89,6 @@ def call(String subscription, String environment, String product, tags) {
 
                             def address = resource.address.minus(".azurerm_template_deployment.subscription")
 
-                            echo "Resource Name: ${resource.values.name}"
-                            echo "Namespace Name: ${resource.values.parameters.serviceBusNamespaceName}"
-                            echo "Topic Name: ${resource.values.parameters.serviceBusTopicName}"
-                            echo "Resource Group Name: ${resource.values.resource_group_name}" 
-                            echo "Address: ${address}"
-
                             if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
                                 echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful."
                             } else {
@@ -122,102 +102,6 @@ def call(String subscription, String environment, String product, tags) {
             echo "Import of Terraform modules completed"
         }
     }
-
-    // stageWithAgent("Import Terraform Modules", product) {
-    //     def jsonSlurper = new JsonSlurper()
-
-    //     def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" + 
-    //                     (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
-
-    //     Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-
-    //     importModules = new ImportTerraformModules(this, environment, product, tags, az)
-    //     importModules.initialise(tfImport)
-
-    //     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
-    //     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
-
-    //     snapShotTaken = false
-
-    //     // Get all modules
-    //     def child_modules = stateJsonObj.values.root_module.child_modules
-
-    //     for (module in child_modules) {
-    //         def resources = module.resources
-
-    //         for (resource in resources) {
-    //             if (resource.type == "azurerm_template_deployment") {
-                    
-    //                 // Create a backup/snapshot of the state file before import
-    //                 if (!snapShotTaken) {
-    //                     def tfstate = "${product}/${environment}/terraform.tfstate"
-                        
-    //                     echo "Backup state file - ${tfstate}"
-    //                     def snapShot = az "storage blob snapshot --container-name=${env.STORE_sa_container_name_template}${environment} --name=${tfstate} --account-name=${env.STORE_sa_name_template}${subscription}"
-
-    //                     snapShotTaken = true
-    //                 }
-
-    //                 // Service Bus Namespace
-    //                 if (resource.name == "namespace") {
-    //                     echo "Importing Service Bus Namespace - ${resource.values.name}."
-
-    //                     def address = resource.address.minus(".azurerm_template_deployment.namespace")
-                        
-    //                     if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
-    //                         echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful."
-    //                     } else {
-    //                         echo "Failed to import Service Bus Namespace Module - ${resource.values.name}."
-    //                         break
-    //                     }
-    //                 }
-
-    //                 // Service Bus Queue
-    //                 if (resource.name == "queue") {
-    //                     echo "Importing Service Bus Queue - ${resource.values.name}."
-
-    //                     def address = resource.address.minus(".azurerm_template_deployment.queue")
-                        
-    //                     if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-    //                         echo "Import of Service Bus Queue Module - ${resource.values.name} is successful."
-    //                     } else {
-    //                         echo "Failed to import Service Bus Queue Module - ${resource.values.name}."
-    //                         break
-    //                     }
-    //                 }
-
-    //                 // Service Bus Topic
-    //                 if (resource.name == "topic") {
-    //                     echo "Importing Service Bus Topic - ${resource.values.name}."
-
-    //                     def address = resource.address.minus(".azurerm_template_deployment.topic")
-                        
-    //                     if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
-    //                         echo "Import of Service Bus Topic Module - ${resource.values.name} is successful."
-    //                     } else {
-    //                         echo "Failed to import Service Bus Topic Module - ${resource.values.name}."
-    //                         break
-    //                     }
-    //                 }
-
-    //                 // Service Bus Subscription
-    //                 if (resource.name == "subscription") {
-    //                     echo "Importing Service Bus Subscription - ${resource.values.name}."
-
-    //                     def address = resource.address.minus(".azurerm_template_deployment.subscription")
-                        
-    //                     if (importModules.importServiceBusSubscriptionModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.parameters.serviceBusTopicName, resource.values.resource_group_name, address)) {
-    //                         echo "Import of Service Bus Subscription Module - ${resource.values.name} is successful."
-    //                     } else {
-    //                         echo "Failed to import Service Bus Subscription Module - ${resource.values.name}."
-    //                         break
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // echo "Completed import of Terraform modules"
 }
 
 class ImportTerraformModules {
