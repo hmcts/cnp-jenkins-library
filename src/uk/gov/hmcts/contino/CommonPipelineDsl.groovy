@@ -44,7 +44,7 @@ abstract class CommonPipelineDsl implements Serializable {
     config.branchesToSyncWithMaster = branches
   }
 
-  void importTerraformModules() {
-    steps.env.IMPORT_TERRAFORM_MODULES = true
-  }
+  // void importTerraformModules() {
+  //   steps.env.IMPORT_TERRAFORM_MODULES = true
+  // }
 }

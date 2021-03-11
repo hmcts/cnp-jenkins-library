@@ -85,12 +85,14 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
         // Do not attempt to import during PR build
         if (!tfPlanOnly) {
-          // Call to import Service Bus modules in to Terraform Native resource
-          if (env.IMPORT_TERRAFORM_MODULES != null) {
-            if (env.IMPORT_TERRAFORM_MODULES == "true") {
-              importTerraformModules(subscription, environment, product, pipelineTags)
-            }
-          }
+          importTerraformModules(subscription, environment, product, pipelineTags)
+          
+          // // Call to import Service Bus modules in to Terraform Native resource
+          // if (env.IMPORT_TERRAFORM_MODULES != null) {
+          //   if (env.IMPORT_TERRAFORM_MODULES == "true") {
+          //     importTerraformModules(subscription, environment, product, pipelineTags)
+          //   }
+          // }
         }
 
         sh "terraform get -update=true"
