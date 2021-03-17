@@ -101,7 +101,7 @@ def call(params) {
               }
             }
           }
-          if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled) {
+          if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
             stageWithAgent("Pact Consumer Can I Deploy", product) {
               builder.runConsumerCanIDeploy()
             }

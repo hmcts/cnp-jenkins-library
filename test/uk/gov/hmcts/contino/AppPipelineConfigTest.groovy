@@ -35,6 +35,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
+      assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -191,6 +192,15 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
   }
 
+  def "ensure enable pact can i deploy"() {
+    given:
+    assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
+    when:
+    dsl.enablePactAs([AppPipelineDsl.PactRoles.CAN_I_DEPLOY])
+    then:
+    assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isTrue()
+  }
+
   def "ensure enable pact consumer tests and provider verification"() {
     given:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
@@ -203,6 +213,7 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
+      assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
 
 }

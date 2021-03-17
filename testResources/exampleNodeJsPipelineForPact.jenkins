@@ -10,6 +10,7 @@ def app = "app"
 withPipeline('nodejs', product, app) {
   enablePactAs([
     PactRoles.CONSUMER,
-    PactRoles.PROVIDER
+    PactRoles.PROVIDER,
+    PactRoles.CAN_I_DEPLOY
   ])
 }
