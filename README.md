@@ -478,21 +478,13 @@ Currently, resources created using the following modules can be imported:
 
 Platops have released new versions of these modules, where native terraform resource types are used. The new version is available in a separate branch in the respective repositories.
 
-To consume the new modules, existing resources must be imported to the new module structure. This can be achieved by updating the branch reference as shown in the Git Commit below and using the `importTerraformModules()` method in Application and Infrastructure pipelines. It is advisable to run the pipeline with this method call once. Subsequent runs will create an empty stage, which can be avoided.
+To consume the new modules, existing resources must be imported to the new module structure. The import will be automatically performed in the background if there are modules that needs to be imported. Users will notice a new stage "Import Terraform Modules" in the pipeline. 
 
 **NOTE:** The module's local name should **NOT** be changed for the import to work as expected. For example: ``` module "servicebus-namespace" { ... } ```. The local name "servicebus-namespace" should not be changed.
 
-Github Commit: https://github.com/hmcts/rd-shared-infrastructure/commit/5f1e464f246f8ed343951f044f1477667c248908#
+**Example:**
 
-Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/135/console
-
-```groovy
-
-withPipeline(type, product, component) {
-    importTerraformModules()
-}
-
-```
+Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull
 
 ## Contributing
 
