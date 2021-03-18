@@ -12,7 +12,7 @@ def call(String subscription, String environment, String product, tags) {
     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
-    if (stateJsonObj != null) {
+    if (stateJsonObj.values.root_module != null) {
         echo stateJsonObj.values
 
         def child_modules = stateJsonObj.values.root_module.child_modules
