@@ -177,19 +177,23 @@ class AppPipelineConfigTest extends Specification {
   def "ensure enable pact consumer tests"() {
     given:
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
     when:
       dsl.enablePactAs([AppPipelineDsl.PactRoles.CONSUMER])
     then:
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
   }
 
   def "ensure enable pact provider verification"() {
     given:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
     when:
       dsl.enablePactAs([AppPipelineDsl.PactRoles.PROVIDER])
     then:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
   }
 
   def "ensure enable pact can i deploy"() {
