@@ -13,6 +13,8 @@ def call(String subscription, String environment, String product, tags) {
     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
     if (stateJsonObj != null) {
+        echo stateJsonObj.values
+
         def child_modules = stateJsonObj.values.root_module.child_modules
     
         // Get All resources to be imported
