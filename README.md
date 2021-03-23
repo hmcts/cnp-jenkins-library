@@ -402,7 +402,7 @@ Tenant ID can also be checked from the camunda-bpm repo: https://github.com/hmct
 
 You can activate contract testing lifecycle hooks in the CI using the `enablePactAs()` method.
 
-The different hooks are based on roles that you can assign to your project: `CONSUMER` and/or `PROVIDER` and/or 'CAN_I_DEPLOY' (to be used in conjunction with CONSUMER role). A common broker will be used as well as the naming and tagging conventions.
+The different hooks are based on roles that you can assign to your project: `CONSUMER` and/or `PROVIDER` and/or 'CONSUMER_DEPLOY_CHECK' (to be used in conjunction with CONSUMER role). A common broker will be used as well as the naming and tagging conventions.
 
 Here is an example of a project which acts a consumer and provider (for example a backend-for-frontend):
 
@@ -418,7 +418,7 @@ withPipeline(product) {
   enablePactAs([
     AppPipelineDsl.PactRoles.CONSUMER,
     AppPipelineDsl.PactRoles.PROVIDER,
-    AppPipelineDsl.PactRoles.CAN_I_DEPLOY
+    AppPipelineDsl.PactRoles.CONSUMER_DEPLOY_CHECK
   ])
 }
 ```
@@ -430,7 +430,7 @@ The following hooks will then be ran before the deployment:
 | `CONSUMER`     | 1     | `test:pact:run-and-publish`    | `runAndPublishConsumerPactTests`            | Any branch       |
 | `PROVIDER`     | 2     | `test:pact:verify-and-publish` | `runProviderPactVerification publish true`  | `master` only    |
 | `PROVIDER`     | 2     | `test:pact:verify`             | `runProviderPactVerification publish false` | Any branch       |
-| `CAN_I_DEPLOY` | 3     | `test:can-i-deploy:consumer`   | `canideploy`                                | Any branch       |
+| `CONSUMER_DEPLOY_CHECK` | 3     | `test:can-i-deploy:consumer`   | `canideploy`                                | Any branch       |
 
 #### Notes
 

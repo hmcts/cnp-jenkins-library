@@ -89,12 +89,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.aksStagingDeployment = true
   }
 
-  enum PactRoles { CONSUMER, PROVIDER, CAN_I_DEPLOY}
+  enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
 
   void enablePactAs(List<PactRoles> roles) {
     config.pactBrokerEnabled = true
     config.pactConsumerTestsEnabled = roles.contains(PactRoles.CONSUMER)
     config.pactProviderVerificationsEnabled = roles.contains(PactRoles.PROVIDER)
-    config.pactConsumerCanIDeployEnabled = roles.contains(PactRoles.CAN_I_DEPLOY)
+    config.pactConsumerCanIDeployEnabled = roles.contains(PactRoles.CONSUMER_DEPLOY_CHECK)
   }
 }

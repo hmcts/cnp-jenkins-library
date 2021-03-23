@@ -1,6 +1,6 @@
 #!groovy
 
-@Library("Infrastructure")
+@com.lesfurets.jenkins.unit.global.lib.Library("Infrastructure")
 import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
 
 def product = "product"
@@ -11,6 +11,6 @@ withPipeline('nodejs', product, app) {
   enablePactAs([
     PactRoles.CONSUMER,
     PactRoles.PROVIDER,
-    PactRoles.CAN_I_DEPLOY
+    PactRoles.CONSUMER_DEPLOY_CHECK
   ])
 }

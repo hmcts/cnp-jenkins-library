@@ -200,7 +200,7 @@ class AppPipelineConfigTest extends Specification {
     given:
     assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
     when:
-    dsl.enablePactAs([AppPipelineDsl.PactRoles.CAN_I_DEPLOY])
+    dsl.enablePactAs([AppPipelineDsl.PactRoles.CONSUMER_DEPLOY_CHECK])
     then:
     assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isTrue()
   }
