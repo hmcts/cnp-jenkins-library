@@ -12,13 +12,8 @@ def call(String subscription, String environment, String product, tags) {
     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
-    echo "TESTING ROOT_MODULE ISSUE - 1"
     if (stateJsonObj.values != null) {
-        echo "TESTING ROOT_MODULE ISSUE - 2"
-
         def child_modules = stateJsonObj.values.root_module.child_modules
-    
-        echo "TESTING ROOT_MODULE ISSUE - 3"
 
         // Get All resources to be imported
         def templateResources = child_modules.findAll { it.resources[0].type == 'azurerm_template_deployment' && 
