@@ -213,6 +213,10 @@ EOF
     steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish")
   }
 
+  def runConsumerCanIDeploy() {
+    steps.sh("yarn test:can-i-deploy:consumer")
+  }
+
   private runYarn(task){
     if (steps.fileExists(NVMRC)) {
       steps.sh """

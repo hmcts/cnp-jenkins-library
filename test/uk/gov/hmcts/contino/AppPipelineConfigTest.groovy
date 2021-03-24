@@ -35,6 +35,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
+      assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -176,19 +177,32 @@ class AppPipelineConfigTest extends Specification {
   def "ensure enable pact consumer tests"() {
     given:
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
     when:
       dsl.enablePactAs([AppPipelineDsl.PactRoles.CONSUMER])
     then:
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
+      assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
   }
 
   def "ensure enable pact provider verification"() {
     given:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
     when:
       dsl.enablePactAs([AppPipelineDsl.PactRoles.PROVIDER])
     then:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
+      assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
+  }
+
+  def "ensure enable pact can i deploy"() {
+    given:
+    assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
+    when:
+    dsl.enablePactAs([AppPipelineDsl.PactRoles.CONSUMER_DEPLOY_CHECK])
+    then:
+    assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isTrue()
   }
 
   def "ensure enable pact consumer tests and provider verification"() {
@@ -203,6 +217,7 @@ class AppPipelineConfigTest extends Specification {
     then:
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
+      assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
 
 }

@@ -16,6 +16,7 @@ interface Builder {
   def securityScan()
   def runProviderVerification()
   def runConsumerTests()
+  def runConsumerCanIDeploy()
 
   /**
    * Setup any required versions of a tool

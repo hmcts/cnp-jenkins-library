@@ -105,6 +105,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def runConsumerCanIDeploy() {
+      return null
+    }
+
+    @Override
     def setupToolVersion() {
       return null
     }

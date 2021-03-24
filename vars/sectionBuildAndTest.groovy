@@ -145,7 +145,7 @@ def call(params) {
     }
   }
 
-  if (config.pactBrokerEnabled) {
+  if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled) {
     stageWithAgent("Pact Consumer Verification", product) {
       def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
@@ -156,13 +156,9 @@ def call(params) {
       /*
        * These instructions have to be kept in order
        */
-
-      if (config.pactConsumerTestsEnabled) {
-        pcr.callAround('pact-consumer-tests') {
-          builder.runConsumerTests(pactBrokerUrl, version)
-        }
+      pcr.callAround('pact-consumer-tests') {
+        builder.runConsumerTests(pactBrokerUrl, version)
       }
     }
   }
-
 }

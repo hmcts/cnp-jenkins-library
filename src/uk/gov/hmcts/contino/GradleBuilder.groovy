@@ -150,6 +150,11 @@ EOF
     gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
   }
 
+  def runConsumerCanIDeploy() {
+    gradle("canideploy")
+  }
+
+
   def gradle(String task) {
     addInitScript()
     steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}")
