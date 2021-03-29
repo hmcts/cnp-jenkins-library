@@ -107,6 +107,16 @@ class GradleBuilderTest extends Specification {
                     it.contains("-Dpact.broker.url=${PACT_BROKER_URL} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")})
   }
 
+  def "runConsumerCanIDeploy triggers a gradlew hook"() {
+    setup:
+    def version = "v3r510n"
+    when:
+    builder.runConsumerCanIDeploy()
+    then:
+    1 * steps.sh({it.startsWith(GRADLE_CMD) &&
+            it.contains("canideploy")})
+  }
+
   def "Prepares CVE report for publishing to CosmosDB"() {
     when:
     def result = builder.prepareCVEReport(sampleCVEReport)

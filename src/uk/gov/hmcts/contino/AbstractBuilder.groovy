@@ -33,6 +33,9 @@ abstract class AbstractBuilder implements Builder, Serializable {
   def runConsumerTests() {}
 
   @Override
+  def runConsumerCanIDeploy() {}
+
+  @Override
   def setupToolVersion() {
   }
 }
