@@ -10,7 +10,7 @@ class WarningCollector implements Serializable {
 
   static void addPipelineWarning(String warningKey, String warningMessage, Date deprecationDate) {
     if (deprecationDate.before(new Date())){
-      throw new RuntimeException(warningMessage + "This change is enforced from ${deprecationDate.format("dd/MM/yyyy HH:mm", TimeZone.getTimeZone("UTC"))} ")
+      throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format("dd/MM/yyyy HH:mm", TimeZone.getTimeZone("UTC"))} ")
     }
     pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
   }

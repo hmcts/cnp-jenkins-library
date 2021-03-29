@@ -466,6 +466,27 @@ withPipeline(type, product, component) {
 
 ```
 
+## Import terraform modules created using template deployment to native Terraform resources
+#### Usage
+
+Terraform AzureRM provider now supports new resource types, which were previously created using Azure Template Deployment.
+
+Currently, resources created using the following modules can be imported:
+
+* Service Bus Namespace (https://github.com/hmcts/terraform-module-servicebus-namespace)
+* Service Bus Topic (https://github.com/hmcts/terraform-module-servicebus-topic)
+* Service Bus Queue (https://github.com/hmcts/terraform-module-servicebus-queue)
+* Service Bus Subscription (https://github.com/hmcts/terraform-module-servicebus-subscription)
+
+Platops have released new versions of these modules, where native terraform resource types are used. The new version is available in a separate branch in the respective repositories.
+
+To consume the new modules, existing resources must be imported to the new module structure. The import will be automatically performed in the background if there are modules that needs to be imported. Users will notice a new stage "Import Terraform Modules" in the pipeline. 
+
+**NOTE:** The module's local name should **NOT** be changed for the import to work as expected. For example: ``` module "servicebus-namespace" { ... } ```. The local name "servicebus-namespace" should not be changed.
+
+**Example:**
+
+Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull
 
 ## Contributing
 
