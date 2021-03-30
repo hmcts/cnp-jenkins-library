@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.ProjectBranch
  *
  * Runs the block of code if the current branch is associated with a pull request or master
  *
- * onPR {
+ * onPathToLive {
  *   ...
  * }
  */
