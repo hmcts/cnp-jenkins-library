@@ -3,7 +3,7 @@ def call(String subscription, Closure block) {
   if (env.IS_DOCKER_BUILD_AGENT && env.IS_DOCKER_BUILD_AGENT.toBoolean()) {
     doAcrOrKubectlTask(subscription, false, block)
   } else {
-    withDocker('hmcts/cnp-aks-client:az-2.12.0-kubectl-1.18.0-helm-3.3.4-rsync', null) {
+    withDocker('hmcts/cnp-aks-client:az-2.21.0-kubectl-1.20.5-helm-3.5.3', null) {
       doAcrOrKubectlTask(subscription, true, block)
     }
   }
