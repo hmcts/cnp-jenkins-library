@@ -23,10 +23,6 @@ def call() {
       subscriptionName: subscription.demoName,
       aksSubscription: aksSubscriptions.demo,
     ],
-    hmctsdemo: [ // TODO delete
-      environmentName: environment.hmctsDemoName,
-      subscriptionName: subscription.hmctsDemoName
-    ],
     perftest: [
       environmentName: environment.perftestName,
       subscriptionName: subscription.qaName,
