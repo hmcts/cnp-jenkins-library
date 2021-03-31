@@ -22,9 +22,6 @@ class withNodeJsPipelineOnBranchTests extends BaseCnpPipelineTest {
     def stubBuilder = new StubFor(YarnBuilder)
     stubBuilder.demand.setupToolVersion() {}
     stubBuilder.demand.build() {}
-    stubBuilder.demand.test() {}
-    stubBuilder.demand.securityCheck() {}
-    stubBuilder.demand.sonarScan() {}
 
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")

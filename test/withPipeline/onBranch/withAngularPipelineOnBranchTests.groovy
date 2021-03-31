@@ -17,9 +17,6 @@ class withAngularPipelineOnBranchTests extends BaseCnpPipelineTest {
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.setupToolVersion() {}
     stubBuilder.demand.build() {}
-    stubBuilder.demand.test() {}
-    stubBuilder.demand.securityCheck() {}
-    stubBuilder.demand.sonarScan() {}
 
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
