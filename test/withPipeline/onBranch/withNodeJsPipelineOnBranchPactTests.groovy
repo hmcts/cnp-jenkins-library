@@ -25,10 +25,6 @@ class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
     stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
-      test(1) {}
-      sonarScan(1) {}
-      securityCheck(1) {}
-      runConsumerTests(1) { url, version -> return null }
     }
 
     stubPactBroker.demand.with {

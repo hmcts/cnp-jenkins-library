@@ -26,9 +26,6 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.setupToolVersion() {}
     stubBuilder.demand.build() {}
-    stubBuilder.demand.test() {}
-    stubBuilder.demand.securityCheck() {}
-    stubBuilder.demand.sonarScan() {}
 
     stubBuilder.use {
       runScript("testResources/exampleJavaPipeline.jenkins")
