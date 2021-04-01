@@ -57,15 +57,9 @@ def getSubnetsList(String rootSubnet, newbits) {
       list.add(addr)
       hostMask = list[-1].getNetwork().getHostMask(list[-1].getNetworkPrefixLength())
       broadcastAddress = list[-1].bitwiseOr(hostMask)
-      /*println("Subnet: ${list[-1]}\n" +
-        "Network Mask: ${list[-1].getNetwork().getNetworkMask(list[-1].getPrefixLength(),false)}\n" +
-        "Wildcard: $hostMask\n" +
-        "Broadcast: $broadcastAddress\n" +
-        "-------------")*/
 
       nextAddress = new IPv4Address(broadcastAddress.getValue()+1, list[-1].getPrefixLength())
       if (rootNet.contains(nextAddress)) {
-        /*println("$rootNet contains $nextAddress")*/
         getNext(nextAddress.setPrefixLength(list[-1].getPrefixLength()), rootNet, list)
       }
       else
@@ -73,6 +67,5 @@ def getSubnetsList(String rootSubnet, newbits) {
     }
 
   rSubnet = new IPAddressString(rootSubnet).getAddress()
-  /*println("$rootSubnet can be split in ${Math.pow(2,newbits)} subnets of class /${rSubnet.getPrefixLength()+newbits}")*/
   return getNext(rSubnet.setPrefixLength(rSubnet.getPrefixLength()+newbits), rSubnet, list)
 }

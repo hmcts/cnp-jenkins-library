@@ -47,8 +47,6 @@ class EnvironmentDnsConfig {
   }
 
   def getEntry(environment) {
-    println('Getting entry for ' + environment)
-    println(getDnsConfig())
     return getDnsConfig()[environment]
   }
 
