@@ -3,6 +3,8 @@ import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 
 def call(Map params) {
+  AppPipelineConfig config = params.appPipelineConfig
+
   withAksClient(params.subscription, params.environment, params.product) {
     if (!config.legacyDeploymentForEnv(params.environment)) {
       params.environment = params.environment.replace('idam-', '')
