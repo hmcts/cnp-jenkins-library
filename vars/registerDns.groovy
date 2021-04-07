@@ -3,12 +3,8 @@ import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 
 def call(Map params) {
-  AppPipelineConfig config = params.appPipelineConfig
-
   withAksClient(params.subscription, params.environment, params.product) {
-    if (!config.legacyDeploymentForEnv(params.environment)) {
-      params.environment = params.environment.replace('idam-', '')
-    }
+    params.environment = params.environment.replace('idam-', '')
     EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
     AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
 
