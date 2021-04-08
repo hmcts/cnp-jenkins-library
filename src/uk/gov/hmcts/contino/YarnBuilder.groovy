@@ -2,6 +2,7 @@ package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector;
 
 class YarnBuilder extends AbstractBuilder {
@@ -27,7 +28,9 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
-    yarn('sonar-scan')
+    String properties = SonarProperties.get(steps)
+
+    yarn("sonar-scan ${properties}")
   }
 
   def smokeTest() {

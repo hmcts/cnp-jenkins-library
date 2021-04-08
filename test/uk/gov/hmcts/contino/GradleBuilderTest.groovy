@@ -14,6 +14,9 @@ class GradleBuilderTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
+    steps.getEnv() >> [
+      BRANCH_NAME: 'master',
+    ]
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
