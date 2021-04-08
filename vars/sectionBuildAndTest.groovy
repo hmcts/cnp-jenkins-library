@@ -36,31 +36,30 @@ def call(params) {
     }
   }
 
+ onPathToLive {
+    stageWithAgent("Build", product) {
+      onPR {
+        enforceChartVersionBumped product: product, component: component
+        warnAboutAADIdentityPreviewHack product: product, component: component
+      }
 
-  stageWithAgent("Build", product) {
-    onPR {
-      enforceChartVersionBumped product: product, component: component
-      warnAboutAADIdentityPreviewHack product: product, component: component
-    }
+      builder.setupToolVersion()
 
-    builder.setupToolVersion()
+      if (!fileExists('Dockerfile')) {
+        WarningCollector.addPipelineWarning("deprecated_no_dockerfile", "A Dockerfile will be required for all app builds. Docker builds (enableDockerBuild()) wil be enabled by default. ", new Date().parse("dd.MM.yyyy", "17.12.2019"))
+      }
 
-    if (!fileExists('Dockerfile')) {
-      WarningCollector.addPipelineWarning("deprecated_no_dockerfile", "A Dockerfile will be required for all app builds. Docker builds (enableDockerBuild()) wil be enabled by default. ", new Date().parse("dd.MM.yyyy", "17.12.2019"))
-    }
-
-    // always build master and demo as we currently do not deploy an image there
-    boolean envSub = autoDeployEnvironment() != null
-    when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
-      pcr.callAround('build') {
-        timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-          builder.build()
+      // always build master and demo as we currently do not deploy an image there
+      boolean envSub = autoDeployEnvironment() != null
+      when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+        pcr.callAround('build') {
+          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+            builder.build()
+          }
         }
       }
     }
-  }
-
-  onPathToLive {
+  
     stageWithAgent("Tests/Checks/Container build", product) {
 
       when(noSkipImgBuild) {
