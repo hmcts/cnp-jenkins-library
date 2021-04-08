@@ -24,8 +24,8 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion() {}
-    stubBuilder.demand.build() {}
+    stubBuilder.demand.setupToolVersion(0) {}
+    stubBuilder.demand.build(0) {}
 
     stubBuilder.use {
       runScript("testResources/exampleJavaPipeline.jenkins")
@@ -39,7 +39,7 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     helper.registerAllowedMethod("when", [boolean, Closure.class], {})
 
     def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(1) {}
+    stubBuilder.demand.setupToolVersion(0) {}
     stubBuilder.demand.build(0) {}
     stubBuilder.demand.test(0) {}
     stubBuilder.demand.securityCheck(0) {}

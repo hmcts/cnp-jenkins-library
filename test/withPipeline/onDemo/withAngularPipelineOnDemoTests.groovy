@@ -18,8 +18,8 @@ class withAngularPipelineOnDemoTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
-      build(1) {}
+      setupToolVersion(0) {}
+      build(0) {}
     }
 
     stubBuilder.use {
