@@ -362,7 +362,7 @@ If you want to learn more about ACR tasks, [here is the documentation](https://d
 Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/cnp-vm-hardening/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
 
 ### Java
-Java 8 and Java 11 are installed directly on the Jenkins agent, the library will detect if Java 11 is in use by looking at the build.gradle file, if it can't detect it or it isn't Java 11 it will use Java 8
+Java 11 is installed on the Jenkins agent.
 
 ### Node.JS
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
@@ -443,7 +443,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `-Dpact.broker.url`
   - `-Dpact.consumer.version`/`-Dpact.provider.version`
   - `-Dpact.verifier.publishResults=${onMaster}` is passed by default for providers
-  
+
 🛎️  `onMaster` is a boolean that is true if the current branch is `master`
 🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
 
@@ -451,7 +451,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
 
 #### Usage
 
-The environment specific branches such as demo, ithc and perftest can be automatically synced with master branch. 
+The environment specific branches such as demo, ithc and perftest can be automatically synced with master branch.
 
 This can be achieved by using the `syncBranchesWithMaster()` method in Application and Infrastructure pipelines. This method will be invoked in the master build and execute as the last stage in the build.
 
@@ -460,7 +460,7 @@ Example of usage
 
 def branchesToSync = ['demo', 'perftest']
 
-withPipeline(type, product, component) {	
+withPipeline(type, product, component) {
   syncBranchesWithMaster(branchesToSync)
 }
 
@@ -480,7 +480,7 @@ Currently, resources created using the following modules can be imported:
 
 Platops have released new versions of these modules, where native terraform resource types are used. The new version is available in a separate branch in the respective repositories.
 
-To consume the new modules, existing resources must be imported to the new module structure. The import will be automatically performed in the background if there are modules that needs to be imported. Users will notice a new stage "Import Terraform Modules" in the pipeline. 
+To consume the new modules, existing resources must be imported to the new module structure. The import will be automatically performed in the background if there are modules that needs to be imported. Users will notice a new stage "Import Terraform Modules" in the pipeline.
 
 **NOTE:** The module's local name should **NOT** be changed for the import to work as expected. For example: ``` module "servicebus-namespace" { ... } ```. The local name "servicebus-namespace" should not be changed.
 
