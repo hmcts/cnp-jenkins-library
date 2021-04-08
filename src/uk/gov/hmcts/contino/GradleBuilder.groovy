@@ -8,7 +8,6 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 class GradleBuilder extends AbstractBuilder {
 
   def product
-  def java11 = "11"
 
   GradleBuilder(steps, product) {
     super(steps)
@@ -187,23 +186,7 @@ EOF
   @Override
   def setupToolVersion() {
     gradle("--version") // ensure wrapper has been downloaded
-    try {
-      def javaVersion = gradleWithOutput("-q :javaVersion")
-      steps.echo "Found java version: ${javaVersion}"
-      if (javaVersion == java11) {
-        super.setupToolVersion()
-      } else {
-        nagAboutJava11Required()
-      }
-    } catch(err) {
-      steps.echo "Failed to detect java version, ensure the root project has sourceCompatibility set"
-      nagAboutJava11Required()
-    }
     steps.sh "java -version"
-  }
-
-  def nagAboutJava11Required() {
-    WarningCollector.addPipelineWarning("deprecate_java_8", "Java 11 is required for all projects, change your source compatibility to 11 and update your Dockerfile base, see https://github.com/hmcts/draft-store/pull/644. ", new Date().parse("dd.MM.yyyy", "26.09.2020"))
   }
 
   def hasPlugin(String pluginName) {
