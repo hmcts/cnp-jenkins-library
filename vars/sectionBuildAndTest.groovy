@@ -140,27 +140,26 @@ def call(params) {
             }
           },
 
-          'Pact Consumer Tests': {
-            if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled) {
-              stageWithAgent("Pact Consumer Verification", product) {
-                def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-                def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-
-                env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-                env.PACT_BROKER_URL = pactBrokerUrl
-
-                /*
-                 * These instructions have to be kept in order
-                 */
-                pcr.callAround('pact-consumer-tests') {
-                  builder.runConsumerTests(pactBrokerUrl, version)
-                }
-              }
-            }
-           },
           failFast: true
         )
       }
+    }
+
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
+        stageWithAgent("Pact Consumer Verification", product) {
+          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+          env.PACT_BROKER_URL = pactBrokerUrl
+
+          /*
+         * These instructions have to be kept in order
+         */
+          pcr.callAround('pact-consumer-tests') {
+            builder.runConsumerTests(pactBrokerUrl, version)
+          }
+        }
     }
   }
 }
