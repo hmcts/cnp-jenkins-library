@@ -45,7 +45,6 @@ def call(params) {
             }
 
             if(!tfPlanOnly){
-              registerDns(params)
 
               if (config.migrateDb) {
                 stageWithAgent("DB Migration - ${environment}", product) {
