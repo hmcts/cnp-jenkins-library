@@ -97,7 +97,7 @@ class GradleBuilder extends AbstractBuilder {
     ]
     steps.withAzureKeyvault(secrets) {
       try {
-          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}' -DautoUpdate='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
+          gradle("-DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}' -DautoUpdate='false'  -Dautoupdate='false' -Dauto_update='false' -Danalyzer.retirejs.enabled=false dependencyCheckAggregate")
       }
       finally {
         steps.archiveArtifacts 'build/reports/dependency-check-report.html'
