@@ -3,6 +3,7 @@ import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 def call(productName, environment, tfPlanOnly, subscription) {
   call(productName, null, environment, tfPlanOnly, subscription)
@@ -82,6 +83,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_deployment_namespace = deploymentNamespace
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
+        env.TF_VAR_aks_subscription_id = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment).id
 
         // Do not attempt to import during PR build
         if (!tfPlanOnly) {
