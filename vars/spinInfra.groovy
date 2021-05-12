@@ -85,6 +85,8 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_component = component
         env.TF_VAR_aks_subscription_id = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment).id
 
+        sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
+
         // Do not attempt to import during PR build
         if (!tfPlanOnly) {
           importTerraformModules(subscription, environment, product, pipelineTags)
