@@ -20,8 +20,8 @@ class withNodeJsPipelineOnBranchTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(YarnBuilder)
-    stubBuilder.demand.setupToolVersion() {}
-    stubBuilder.demand.build() {}
+    stubBuilder.demand.setupToolVersion(0) {}
+    stubBuilder.demand.build(0) {}
 
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")

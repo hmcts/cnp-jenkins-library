@@ -43,6 +43,7 @@ allprojects {
     if (project.hasProperty('dependencyCheck')) {
       configure(project) {
         dependencyCheck {
+          autoUpdate = false
           // Any CVE should fail the build.
           failBuildOnCVSS = 0
 

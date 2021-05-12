@@ -35,6 +35,9 @@ class YarnBuilderTest extends Specification {
 
     def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-no-issues.txt').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
+    steps.getEnv() >> [
+      BRANCH_NAME: 'master',
+    ]
     def closure
     steps.withCredentials(_, { closure = it }) >> { closure.call() }
     steps.withSauceConnect(_, { closure = it }) >> { closure.call() }
