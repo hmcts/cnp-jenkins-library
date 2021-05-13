@@ -27,7 +27,7 @@ class Environment implements Serializable {
     ethosLdataName = env.ETHOSLDATA_ENVIRONMENT_NAME ?: 'ethosldata'
     pactBrokerUrl = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
 
-    functionalTestEnvironments = [nonProdName, previewName]
+    functionalTestEnvironments = [nonProdName, previewName, 'idam-aat', 'idam-preview']
   }
 
   def onFunctionalTestEnvironment(environment) {

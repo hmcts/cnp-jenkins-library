@@ -33,13 +33,14 @@ def call(params) {
   def acr
   def dockerImage
   def imageRegistry
+  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
 
   Builder builder = pipelineType.builder
 
   withAcrClient(subscription) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-    dockerImage = new DockerImage(product, component, acr, new ProjectBranch(env.BRANCH_NAME).imageTag(), env.GIT_COMMIT)
+    dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
     onPR {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
@@ -53,6 +54,8 @@ def call(params) {
             onPR {
               deploymentNumber = githubCreateDeployment()
             }
+            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+            log.info("Using AKS environment: ${params.environment}")
             warnAboutDeprecatedChartConfig product: product, component: component
             aksUrl = helmInstall(dockerImage, params)
             log.info("deployed component URL: ${aksUrl}")

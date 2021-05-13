@@ -79,6 +79,18 @@ def call(type, String product, String component, Closure body) {
         pactBrokerUrl: environment.pactBrokerUrl
       )
 
+      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+        stage('Publish Helm chart') {
+          helmPublish(
+            appPipelineConfig: pipelineConfig,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
+        }
+      }
+
       onPR {
         onTerraformChangeInPR{
           sectionDeployToEnvironment(
