@@ -79,7 +79,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(DockerImage dockerImage, String additionalArgs) {
-    def buildTag = projectBranch.isPR() ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
+    def buildTag = projectBranch.isPR() ? dockerImage.getBaseTaggedName() : dockerImage.getBaseShortName()
     this.az "acr build --no-format -r ${registryName} -t ${buildTag} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
   }
 

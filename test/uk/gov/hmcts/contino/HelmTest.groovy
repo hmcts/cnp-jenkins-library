@@ -17,7 +17,8 @@ class HelmTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
                   AKS_CLUSTER_NAME: "cnp-aks-cluster",
-                  SUBSCRIPTION_NAME: "${SUBSCRIPTION}"]
+                  SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                  BRANCH_NAME: "master"]
     helm = new Helm(steps, CHART)
 
     def closure
