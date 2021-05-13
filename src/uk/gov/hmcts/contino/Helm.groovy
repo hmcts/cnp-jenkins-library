@@ -2,7 +2,6 @@ package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
 import groovy.json.JsonSlurper
-import uk.gov.hmcts.contino.ProjectBranch
 
 
 class Helm {
@@ -21,7 +20,6 @@ class Helm {
   def notFoundMessage = "Not found"
   String registrySubscription
   String tlsOptions = ""
-  def projectBranch
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -30,10 +28,9 @@ class Helm {
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
-    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription, projectBranch)
+    this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
-    this.projectBranch = new ProjectBranch(this.steps.env.BRANCH_NAME)
   }
 
   def setup() {

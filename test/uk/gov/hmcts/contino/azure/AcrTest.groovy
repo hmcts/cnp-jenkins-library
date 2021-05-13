@@ -22,7 +22,7 @@ class AcrTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     dockerImage = Mock(DockerImage.class)
     projectBranch = new ProjectBranch('test')
-    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION, projectBranch)
+    acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
   }
 
   def "login() should login with registry name"() {
