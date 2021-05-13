@@ -6,6 +6,9 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.pipeline.TeamConfig
 
+def call(String product, String environment, String subscription, Closure body) {
+  call(product, environment, subscription, false, '', body)
+}
 def call(String product, String environment, String subscription, Boolean planOnly, Closure body) {
   call(product, environment, subscription, planOnly, '', body)
 }
