@@ -73,11 +73,9 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
-              pcr.callAround("smoketest-aks:${environment}") {
-                pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                    builder.smokeTest()
-                  }
+              pcr.callAround("smoketest:${environment}") {
+                timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  builder.smokeTest()
                 }
               }
             }
@@ -86,11 +84,9 @@ def call(params) {
           onFunctionalTestEnvironment(environment) {
             stageWithAgent("Functional Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
-                pcr.callAround("functionalTest-aks:${environment}") {
-                  pcr.callAround("functionalTest:${environment}") {
-                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                      builder.functionalTest()
-                    }
+                pcr.callAround("functionalTest:${environment}") {
+                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                    builder.functionalTest()
                   }
                 }
               }
