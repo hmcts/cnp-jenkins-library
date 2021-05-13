@@ -39,7 +39,7 @@ def call(params) {
 
   withAcrClient(subscription) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-    acr = new Acr(this, subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
+    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION, projectBranch)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
     onPR {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
