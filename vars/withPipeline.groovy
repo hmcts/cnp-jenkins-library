@@ -89,6 +89,17 @@ def call(type, String product, String component, Closure body) {
             component: component
           )
         }
+
+        sectionPromoteBuildToStage(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          product: product,
+          component: component,
+          stage: DockerImage.DeploymentStage.PREVIEW,
+          environment: environment.nonProdName
+        )
       }
 
       onPR {
