@@ -11,6 +11,7 @@ class DockerImage {
     PR('pr'),
     STAGING('staging'),
     AAT('aat'),
+    PREVIEW('preview'),
     PROD('prod'),
     LATEST('latest')
 
