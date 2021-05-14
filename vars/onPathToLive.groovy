@@ -11,7 +11,7 @@ import uk.gov.hmcts.contino.ProjectBranch
  */
 def call(block) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
-  if (branch.isPR() || branch.isMaster()) {
+  if (branch.isPR() || branch.isMaster() || branch.isPreview()) {
     return block.call()
   }
 }
