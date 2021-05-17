@@ -126,11 +126,9 @@ class Acr extends Az {
    */
   def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
-    def baseTag = (stage == DockerImage.DeploymentStage.PR  || dockerImage.imageTag == 'staging') ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
-    if (stage == DockerImage.DeploymentStage.PREVIEW) {
-      // Non-master builds will only have the base branch name as the tag
-      baseTag = dockerImage.getBaseShortName();
-    }
+    // Non master branch builds like preview are tagged with the base tag
+    def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
+      ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 
