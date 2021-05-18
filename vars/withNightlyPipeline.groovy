@@ -46,31 +46,33 @@ def call(type,product,component,Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
-    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-    try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
-      withSubscriptionLogin(subscription.nonProdName) {
-        sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product)
-      }
-      assert  pipelineType!= null
-    } catch (err) {
-      currentBuild.result = "FAILURE"
-      notifyBuildFailure channel: slackChannel
+    timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+      def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+      try {
+        dockerAgentSetup()
+        env.PATH = "$env.PATH:/usr/local/bin"
+        withSubscriptionLogin(subscription.nonProdName) {
+          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product)
+        }
+        assert  pipelineType!= null
+      } catch (err) {
+        currentBuild.result = "FAILURE"
+        notifyBuildFailure channel: slackChannel
 
-      callbacksRunner.call('onFailure')
-      node {
-        metricsPublisher.publish('Pipeline Failed')
+        callbacksRunner.call('onFailure')
+        node {
+          metricsPublisher.publish('Pipeline Failed')
+        }
+        throw err
+      } finally {
+        notifyPipelineDeprecations(slackChannel, metricsPublisher)
+        deleteDir()
       }
-      throw err
-    } finally {
-      notifyPipelineDeprecations(slackChannel, metricsPublisher)
-      deleteDir()
+
+      notifyBuildFixed channel: slackChannel
+
+      callbacksRunner.call('onSuccess')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
-
-    notifyBuildFixed channel: slackChannel
-
-    callbacksRunner.call('onSuccess')
-    metricsPublisher.publish('Pipeline Succeeded')
   }
 }

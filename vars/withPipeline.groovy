@@ -63,47 +63,89 @@ def call(type, String product, String component, Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
-    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-    try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
+    timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+      def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+      try {
+        dockerAgentSetup()
+        env.PATH = "$env.PATH:/usr/local/bin"
 
-      sectionBuildAndTest(
-        appPipelineConfig: pipelineConfig,
-        pipelineCallbacksRunner: callbacksRunner,
-        builder: pipelineType.builder,
-        subscription: subscription.nonProdName,
-        environment: environment.nonProdName,
-        product: product,
-        component: component,
-        pactBrokerUrl: environment.pactBrokerUrl
-      )
+        sectionBuildAndTest(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          builder: pipelineType.builder,
+          subscription: subscription.nonProdName,
+          environment: environment.nonProdName,
+          product: product,
+          component: component,
+          pactBrokerUrl: environment.pactBrokerUrl
+        )
 
-      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-        stage('Publish Helm chart') {
-          helmPublish(
+        if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+          stage('Publish Helm chart') {
+            helmPublish(
+              appPipelineConfig: pipelineConfig,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
+
+          sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
             subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
             product: product,
-            component: component
+            component: component,
+            stage: DockerImage.DeploymentStage.PREVIEW,
+            environment: environment.nonProdName
           )
         }
 
-        sectionPromoteBuildToStage(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          product: product,
-          component: component,
-          stage: DockerImage.DeploymentStage.PREVIEW,
-          environment: environment.nonProdName
-        )
-      }
+        onPR {
+          onTerraformChangeInPR{
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              aksSubscription: aksSubscriptions.aat,
+              environment: environment.nonProdName,
+              product: product,
+              component: component,
+              pactBrokerUrl: environment.pactBrokerUrl,
+              tfPlanOnly: true
+            )
+          }
 
-      onPR {
-        onTerraformChangeInPR{
+          sectionDeployToAKS(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            aksSubscription: aksSubscriptions.preview,
+            environment: environment.previewName,
+            product: product,
+            component: component,
+            pactBrokerUrl: environment.pactBrokerUrl
+          )
+
+        }
+
+        onMaster {
+
+          sectionPromoteBuildToStage(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component,
+            stage: DockerImage.DeploymentStage.AAT,
+            environment: environment.nonProdName
+          )
+
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
@@ -114,153 +156,113 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component,
             pactBrokerUrl: environment.pactBrokerUrl,
-            tfPlanOnly: true
+            tfPlanOnly: false
           )
-        }
 
-        sectionDeployToAKS(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          aksSubscription: aksSubscriptions.preview,
-          environment: environment.previewName,
-          product: product,
-          component: component,
-          pactBrokerUrl: environment.pactBrokerUrl
-        )
-
-      }
-
-      onMaster {
-
-        sectionPromoteBuildToStage(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          product: product,
-          component: component,
-          stage: DockerImage.DeploymentStage.AAT,
-          environment: environment.nonProdName
-        )
-
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          aksSubscription: aksSubscriptions.aat,
-          environment: environment.nonProdName,
-          product: product,
-          component: component,
-          pactBrokerUrl: environment.pactBrokerUrl,
-          tfPlanOnly: false
-        )
-
-        sectionDeployToAKS(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          aksSubscription: aksSubscriptions.aat,
-          environment: environment.nonProdName,
-          product: product,
-          component: component,
-          pactBrokerUrl: environment.pactBrokerUrl
-        )
-
-        stageWithAgent('Publish Helm chart', product) {
-          helmPublish(
+          sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
             subscription: subscription.nonProdName,
+            aksSubscription: aksSubscriptions.aat,
             environment: environment.nonProdName,
             product: product,
-            component: component
+            component: component,
+            pactBrokerUrl: environment.pactBrokerUrl
+          )
+
+          stageWithAgent('Publish Helm chart', product) {
+            helmPublish(
+              appPipelineConfig: pipelineConfig,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
+
+          sectionDeployToEnvironment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.prodName,
+            environment: environment.prodName,
+            product: product,
+            component: component,
+            aksSubscription: aksSubscriptions.prod,
+            pactBrokerUrl: environment.pactBrokerUrl,
+            tfPlanOnly: false
+          )
+
+          sectionPromoteBuildToStage(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component,
+            stage: DockerImage.DeploymentStage.PROD,
+            environment: environment.nonProdName
+          )
+
+          sectionSyncBranchesWithMaster(
+            branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+            product: product
           )
         }
 
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.prodName,
-          environment: environment.prodName,
-          product: product,
-          component: component,
-          aksSubscription: aksSubscriptions.prod,
-          pactBrokerUrl: environment.pactBrokerUrl,
-          tfPlanOnly: false
-        )
+        onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+          sectionDeployToEnvironment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscriptionName,
+            environment: environmentName,
+            product: product,
+            component: component,
+            aksSubscription: aksSubscription,
+            pactBrokerUrl: environment.pactBrokerUrl,
+            tfPlanOnly: false
+          )
+        }
 
-        sectionPromoteBuildToStage(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.nonProdName,
-          product: product,
-          component: component,
-          stage: DockerImage.DeploymentStage.PROD,
-          environment: environment.nonProdName
-        )
-
-        sectionSyncBranchesWithMaster(
-          branchestoSync: pipelineConfig.branchesToSyncWithMaster,
-          product: product
-        )
+        onPreview {
+          sectionDeployToEnvironment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.previewName,
+            environment: environment.previewName,
+            product: deploymentProduct,
+            component: component,
+            aksSubscription: aksSubscriptions.preview,
+            pactBrokerUrl: environment.pactBrokerUrl,
+            tfPlanOnly: false
+          )
+        }
+      } catch (err) {
+        if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+          currentBuild.result = 'ABORTED'
+          metricsPublisher.publish(err.message)
+          return
+        } else {
+          currentBuild.result = "FAILURE"
+          notifyBuildFailure channel: slackChannel
+          metricsPublisher.publish('Pipeline Failed')
+        }
+        callbacksRunner.call('onFailure')
+        throw err
+      } finally {
+        notifyPipelineDeprecations(slackChannel, metricsPublisher)
+        if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+          deleteDir()
+        }
       }
 
-      onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscriptionName,
-          environment: environmentName,
-          product: product,
-          component: component,
-          aksSubscription: aksSubscription,
-          pactBrokerUrl: environment.pactBrokerUrl,
-          tfPlanOnly: false
-        )
-      }
+      notifyBuildFixed channel: slackChannel
 
-      onPreview {
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription.previewName,
-          environment: environment.previewName,
-          product: deploymentProduct,
-          component: component,
-          aksSubscription: aksSubscriptions.preview,
-          pactBrokerUrl: environment.pactBrokerUrl,
-          tfPlanOnly: false
-        )
-      }
-    } catch (err) {
-      if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
-        currentBuild.result = 'ABORTED'
-        metricsPublisher.publish(err.message)
-        return
-      } else {
-        currentBuild.result = "FAILURE"
-        notifyBuildFailure channel: slackChannel
-        metricsPublisher.publish('Pipeline Failed')
-      }
-      callbacksRunner.call('onFailure')
-      throw err
-    } finally {
-      notifyPipelineDeprecations(slackChannel, metricsPublisher)
-      if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-        deleteDir()
-      }
+      callbacksRunner.call('onSuccess')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
-
-    notifyBuildFixed channel: slackChannel
-
-    callbacksRunner.call('onSuccess')
-    metricsPublisher.publish('Pipeline Succeeded')
   }
 }
