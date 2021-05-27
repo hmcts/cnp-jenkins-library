@@ -21,6 +21,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
+      highLevelDataSetup(2) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
     }
@@ -43,6 +44,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
       test(0) {}
       securityCheck(0) {}
       sonarScan(0) {}
+      highLevelDataSetup(2) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
     }

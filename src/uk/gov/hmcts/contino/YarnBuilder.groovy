@@ -33,6 +33,10 @@ class YarnBuilder extends AbstractBuilder {
     yarn("sonar-scan ${properties}")
   }
 
+  def highLevelDataSetup(String dataSetupEnvironment) {
+    //TODO: not implemented yet
+  }
+
   def smokeTest() {
     try {
       yarn("test:smoke")

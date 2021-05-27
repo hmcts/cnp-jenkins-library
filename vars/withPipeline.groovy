@@ -119,6 +119,14 @@ def call(type, String product, String component, Closure body) {
             )
           }
 
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            stage: DockerImage.DeploymentStage.PREVIEW,
+            product: product,
+          )
+
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
@@ -159,6 +167,14 @@ def call(type, String product, String component, Closure body) {
             tfPlanOnly: false
           )
 
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            stage: DockerImage.DeploymentStage.AAT,
+            product: product,
+          )
+
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
@@ -192,6 +208,14 @@ def call(type, String product, String component, Closure body) {
             aksSubscription: aksSubscriptions.prod,
             pactBrokerUrl: environment.pactBrokerUrl,
             tfPlanOnly: false
+          )
+
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            stage: DockerImage.DeploymentStage.PROD,
+            product: product,
           )
 
           sectionPromoteBuildToStage(

@@ -26,6 +26,11 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
+  def highLevelDataSetup(String dataSetupEnvironment) {
+    builder.highLevelDataSetup(dataSetupEnvironment)
+  }
+
+  @Override
   def smokeTest() {
     builder.smokeTest()
   }

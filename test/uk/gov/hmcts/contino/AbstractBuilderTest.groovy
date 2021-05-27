@@ -55,6 +55,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def highLevelDataSetup(String dataSetupEnvironment) {
+      return null
+    }
+
+    @Override
     def smokeTest() {
       return null
     }

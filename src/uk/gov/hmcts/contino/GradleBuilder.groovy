@@ -38,6 +38,10 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--info ${properties} sonarqube")
   }
 
+  def highLevelDataSetup(String dataSetupEnvironment) {
+    gradle("highLevelDataSetup --args=${dataSetupEnvironment}")
+  }
+
   def smokeTest() {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
