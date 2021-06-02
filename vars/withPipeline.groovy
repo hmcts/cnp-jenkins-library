@@ -123,7 +123,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            stage: DockerImage.DeploymentStage.PREVIEW,
+            dataSetupEnvironment: environment.previewName,
             product: product,
           )
 
@@ -171,7 +171,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            stage: DockerImage.DeploymentStage.AAT,
+            dataSetupEnvironment: environment.nonProdName,
             product: product,
           )
 
@@ -214,7 +214,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            stage: DockerImage.DeploymentStage.PROD,
+            dataSetupEnvironment: environment.prodName,
             product: product,
           )
 
@@ -236,6 +236,14 @@ def call(type, String product, String component, Closure body) {
         }
 
         onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            dataSetupEnvironment: environmentName,
+            product: product,
+          )
+
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,

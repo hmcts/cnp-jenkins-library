@@ -5,10 +5,10 @@ import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 import withPipeline.BaseCnpPipelineTest
 
-class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
-  final static jenkinsFile = "exampleJavaPipeline.jenkins"
+class withJavaPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleJavaPipelineWithHighLevelDataSetup.jenkins"
 
-  withJavaPipelineOnMasterTests() {
+  withJavaPipelineOnMasterWithHighLevelDataSetupTests() {
     super("master", jenkinsFile)
   }
 
@@ -21,6 +21,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
+      highLevelDataSetup(2) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
     }
@@ -43,6 +44,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
       test(0) {}
       securityCheck(0) {}
       sonarScan(0) {}
+      highLevelDataSetup(2) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
     }

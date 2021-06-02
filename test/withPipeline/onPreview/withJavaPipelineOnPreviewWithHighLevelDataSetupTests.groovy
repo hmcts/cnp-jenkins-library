@@ -5,10 +5,10 @@ import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 import withPipeline.BaseCnpPipelineTest
 
-class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
-  final static jenkinsFile = "exampleJavaPipeline.jenkins"
+class withJavaPipelineOnPreviewWithHighLevelDataSetupTests extends BaseCnpPipelineTest {
+  final static jenkinsFile = "exampleJavaPipelineWithHighLevelDataSetup.jenkins"
 
-  withJavaPipelineOnPreviewTests() {
+    withJavaPipelineOnPreviewWithHighLevelDataSetupTests() {
     super("PR-999", jenkinsFile)
   }
 
@@ -22,6 +22,7 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
+      highLevelDataSetup(1) {}
       smokeTest(1) {} //preview-staging
       functionalTest(1) {}
     }
