@@ -8,13 +8,15 @@ def call(params) {
   AppPipelineConfig config = params.appPipelineConfig
   Builder builder = params.builder
 
-  def dataSetupEnvironment = params.dataSetupEnvironment
+  def environment = params.environment
   def product = params.product
 
   if (config.highLevelDataSetup) {
-    stageWithAgent("High Level Data Setup - ${dataSetupEnvironment}", product) {
-      pcr.callAround('highleveldatasetup') {
-        builder.highLevelDataSetup(dataSetupEnvironment)
+    stageWithAgent("High Level Data Setup - ${environment}", product) {
+      withDefinitionImportSecrets(product, environment, config.vaultEnvironmentOverrides){
+        pcr.callAround('highleveldatasetup') {
+          builder.highLevelDataSetup(environment)
+        }
       }
     }
   }

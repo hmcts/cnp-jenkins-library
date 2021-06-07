@@ -123,7 +123,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            dataSetupEnvironment: environment.previewName,
+            environment: environment.previewName,
             product: product,
           )
 
@@ -171,7 +171,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            dataSetupEnvironment: environment.nonProdName,
+            environment: environment.nonProdName,
             product: product,
           )
 
@@ -214,7 +214,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            dataSetupEnvironment: environment.prodName,
+            environment: environment.prodName,
             product: product,
           )
 
@@ -240,7 +240,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            dataSetupEnvironment: environmentName,
+            environment: environmentName,
             product: product,
           )
 
