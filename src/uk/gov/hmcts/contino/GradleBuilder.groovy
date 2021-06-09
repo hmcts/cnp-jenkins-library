@@ -151,8 +151,11 @@ EOF
 
 
   def gradle(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
     addInitScript()
-    steps.sh("${prepend} ./gradlew --no-daemon --init-script init.gradle ${task}")
+    steps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
   private String gradleWithOutput(String task) {
