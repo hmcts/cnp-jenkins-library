@@ -20,7 +20,6 @@ def call(String product, String environment, Map<String, String> vaultOverrides,
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
     's2s': [
-      secret('microservicekey-ccd-gw', 'BEFTA_S2S_CLIENT_SECRET'),
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
     '${product}': [
