@@ -30,7 +30,7 @@ def call(params) {
         projectBranch = new ProjectBranch(env.BRANCH_NAME)
         imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
         acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-        dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT)
+        dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
         noSkipImgBuild = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true' || !acr.hasTag(dockerImage)
       }
     }
@@ -129,7 +129,7 @@ def call(params) {
                     if (!fileExists(dockerfileTest)) {
                       writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
                     }
-                    def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT)
+                    def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
                     acr.build(dockerImageTest, " -f ${dockerfileTest}")
                   }
                 }
