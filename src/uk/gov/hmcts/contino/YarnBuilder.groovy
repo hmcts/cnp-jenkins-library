@@ -34,7 +34,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def highLevelDataSetup(String dataSetupEnvironment) {
-    yarn("highLevelDataSetup --dataSetupEnvironment=${dataSetupEnvironment}")
+    yarn("highLevelDataSetup ${dataSetupEnvironment}")
   }
 
   def smokeTest() {
