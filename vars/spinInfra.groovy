@@ -83,7 +83,9 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_deployment_namespace = deploymentNamespace
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
-        if (environment ==~ /^idam-.*/ ) {
+        if (environment ==~ /^idam-packer-.*/ ) {
+          environmentName = environment.replace("idam-packer-","")
+        } else if (environment ==~ /^idam-.*/ ) {
           environmentName = environment.replace("idam-","")
         } else {
           environmentName = environment
