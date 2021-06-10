@@ -13,6 +13,7 @@ def call(String product, String environment, Map<String, String> vaultOverrides,
   if (dependedEnv == prodName) {
     env.CCD_API_GATEWAY_OAUTH2_REDIRECT_URL = "https://www.ccd.platform.hmcts.net/oauth2redirect"
     env.IDAM_API_URL_BASE = "https://idam-api.platform.hmcts.net"
+    env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
   def secrets = [
