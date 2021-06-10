@@ -37,7 +37,9 @@ def call(String product, String environment, Map<String, String> vaultOverrides,
 def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String product, String dependedEnv, Closure body) {
   def entry = secretIterator.next()
 
-  def productName = entry.key != '${product}'?entry.key:product
+  // ${product} is a placeholder for the team's vault
+  // this assumes that the team, a) has a product vault, b) is named the same as their product
+  def productName = entry.key != '${product}' ? entry.key : product
   String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
 
   withAzureKeyvault(
