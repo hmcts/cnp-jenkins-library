@@ -87,7 +87,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environmentName)
         
         if (aksSubscription != null) {
-          env.TF_VAR_aks_subscription_id = .id
+          env.TF_VAR_aks_subscription_id = aksSubscription.id
         }
 
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
