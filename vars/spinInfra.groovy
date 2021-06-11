@@ -84,7 +84,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
 
-        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environmentName)
+        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
         
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
