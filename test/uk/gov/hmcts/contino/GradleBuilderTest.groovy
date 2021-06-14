@@ -73,6 +73,38 @@ class GradleBuilderTest extends Specification {
     1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('apiGateway') && it.contains('--rerun-tasks') })
   }
 
+  def "crossBrowserTest calls 'gradle crossbrowser'"() {
+    when:
+    builder.crossBrowserTest()
+    then:
+    1 * steps.saucePublisher()
+    1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
+    1 * steps.archiveArtifacts(['allowEmptyArchive':true, 'artifacts':'functional-output/**/*'])
+    when:
+    builder.gradle('--rerun-tasks crossbrowser')
+    then:
+    1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('--rerun-tasks crossbrowser') })
+    1 * steps.writeFile(['file':'init.gradle', 'text':null])
+    1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
+  }
+
+  def "crossBrowserTest calls 'gradle crossbrowser' with 'BROWSER_GROUP' environment variable prepended"() {
+    String browser = 'chrome'
+    String browserGroup = "BROWSER_GROUP=${browser}"
+    when:
+    builder.crossBrowserTest(browser)
+    then:
+    1 * steps.saucePublisher()
+    1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
+    1 * steps.archiveArtifacts(['allowEmptyArchive':true, 'artifacts':'functional-output/**/*'])
+    when:
+    builder.gradle('--rerun-tasks crossbrowser', browserGroup)
+    then:
+    1 * steps.sh({ it.startsWith("${browserGroup} ${GRADLE_CMD}") && it.contains('--rerun-tasks crossbrowser') })
+    1 * steps.writeFile(['file':'init.gradle', 'text':null])
+    1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
+  }
+
   def "securityCheck calls 'gradle dependencyCheckAggregate"() {
     setup:
       def closure
