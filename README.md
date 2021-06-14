@@ -25,9 +25,11 @@ and NodeJS applications. The pipeline contains the following stages:
 * Docker build (for AKS deployments, optional ACR steps)
 * Contract testing
 * Deploy Dev
+* High Level Data Setup - Dev
 * Smoke Tests - Dev
 * (Optional) API (gateway) Tests - Dev
 * Deploy Prod
+* High Level Data Setup - Production
 * Smoke Tests - Production
 * (Optional) API (gateway) Tests - Production
 
@@ -153,6 +155,39 @@ so this must be implemented as a command in package.json. The pipeline exposes t
 called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
+
+#### High level data setup
+
+This can be used to import data required for the application.
+The most common example is importing a CCD definition, but data requirements of a similar nature can be included using the same functionality.
+Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
+
+By adding `enableHighLevelDataSetup()` to the Jenkinsfile, `High Level Data Setup` stages will be added to the pipeline.
+
+```
+#!groovy
+
+@Library("Infrastructure")
+
+def type = "java"
+def product = "rhubarb"
+def component = "recipe-backend"
+
+withPipeline(type, product, component) {
+  enableHighLevelDataSetup()
+}
+
+```
+
+The opinionated pipeline uses the following branch mapping to import definition files to different environments.
+
+Branch | HighDataSetup Stage
+--- | ---
+`master` | `aat` then `prod`
+`PR` | `aat`
+`perftest` | `perftest`
+`demo` | `demo`
+`ithc` | `ithc`
 
 #### Extending the opinionated pipeline
 

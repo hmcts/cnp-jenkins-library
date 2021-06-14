@@ -97,4 +97,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.pactProviderVerificationsEnabled = roles.contains(PactRoles.PROVIDER)
     config.pactConsumerCanIDeployEnabled = roles.contains(PactRoles.CONSUMER_DEPLOY_CHECK)
   }
+
+  void enableHighLevelDataSetup() {
+    config.highLevelDataSetup = true
+  }
 }
