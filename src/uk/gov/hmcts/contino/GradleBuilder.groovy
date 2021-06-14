@@ -68,7 +68,20 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
-  def crossBrowserTest(String browser = "") {
+  def crossBrowserTest() {
+    try {
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      steps.withSauceConnect("reform_tunnel") {
+        gradle("--rerun-tasks crossbrowser")
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      steps.saucePublisher()
+    }
+  }
+
+  def crossBrowserTest(String browser) {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
