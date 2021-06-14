@@ -12,7 +12,7 @@ class DockerImageTest extends Specification {
   static final String TAG       = 'pr-47'
   static final String REGISTRY_HOST = 'cnpacr.azure.io'
   static final String COMMIT = '379c53a716b92cf79439db07edac01ba1028535d'
-  static final String LAST_COMMIT_TIMESTAMP = '202106011332'
+  static final String LAST_COMMIT_TIMESTAMP = '20210601133228'
 
   def dockerImage
   def projectBranch
@@ -30,13 +30,13 @@ class DockerImageTest extends Specification {
       def buildName = dockerImage.getTaggedName()
 
     then:
-      assertThat(buildName).isEqualTo('cnpacr.azure.io/custard/back-end:pr-47-379c53a7')
+      assertThat(buildName).isEqualTo('cnpacr.azure.io/custard/back-end:pr-47-379c53a-20210601133228')
   }
 
   def "getDigestName should have digest"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      acr.getImageDigest('custard/back-end:pr-47-379c53a7') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
+      acr.getImageDigest('custard/back-end:pr-47-379c53a-20210601133228') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
       dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT, LAST_COMMIT_TIMESTAMP)
       def buildName = dockerImage.getDigestName()
 
