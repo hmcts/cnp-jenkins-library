@@ -159,7 +159,7 @@ The smoke tests are to be non-destructive (i.e. have no data impact, such as not
 #### High level data setup
 
 This can be used to import data required for the application.
-The most common example is CCD definition file, but data requirements of a similar nature can be included using the same functionality.
+The most common example is importing a CCD definition, but data requirements of a similar nature can be included using the same functionality.
 Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
 
 By adding `enableHighLevelDataSetup()` to the Jenkinsfile, `High Level Data Setup` stages will be added to the pipeline.
