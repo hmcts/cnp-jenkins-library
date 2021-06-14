@@ -16,7 +16,8 @@ def call(String subscription, String environment, String product, tags) {
         def child_modules = stateJsonObj.values.root_module.child_modules
 
         // Get All resources to be imported
-        def templateResources = child_modules.findAll { it.resources[0].type == 'azurerm_template_deployment' && 
+        def templateResources = child_modules.findAll { it.resources &&
+                                                        it.resources[0].type == 'azurerm_template_deployment' && 
                                                         (it.resources[0].name == "namespace" || 
                                                         it.resources[0].name == "topic" || 
                                                         it.resources[0].name == "queue" || 
