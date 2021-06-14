@@ -36,7 +36,7 @@ class DockerImageTest extends Specification {
   def "getDigestName should have digest"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
-      acr.getImageDigest('custard/back-end:pr-47-379c53a-20210601133228') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
+      acr.getImageDigest('custard/back-end:pr-47-379c53a7') >> 'sha256:c8aa9687b927cb65ced1aa7bd7756c2af5e84a79b54dd67cb91177d9071396aa'
       dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, TAG, COMMIT, LAST_COMMIT_TIMESTAMP)
       def buildName = dockerImage.getDigestName()
 
@@ -93,7 +93,7 @@ class DockerImageTest extends Specification {
     def name = dockerImage.getShortName(DockerImage.DeploymentStage.PROD)
 
     then:
-    assertThat(name).isEqualTo('custard/back-end-test:prod-379c53a')
+    assertThat(name).isEqualTo('custard/back-end-test:prod-379c53a-20210601133228')
   }
 
   def "getAksServiceName should return the service name"() {
