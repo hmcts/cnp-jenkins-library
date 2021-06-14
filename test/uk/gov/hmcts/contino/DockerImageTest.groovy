@@ -72,7 +72,7 @@ class DockerImageTest extends Specification {
       String tag = dockerImage.getTag()
 
     then:
-      String expectedTag = "${TAG}-${COMMIT.substring(0,7)}-${LAST_COMMIT_TIMESTAMP}}"
+      String expectedTag = "${TAG}-${COMMIT.substring(0,7)}-${LAST_COMMIT_TIMESTAMP}"
       assertThat(tag).isEqualTo(expectedTag)
   }
 
