@@ -156,6 +156,13 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.aksStagingDeployment).isTrue()
   }
 
+  def "ensure enable high level data setup"() {
+    when:
+    dsl.enableHighLevelDataSetup()
+    then:
+    assertThat(pipelineConfig.highLevelDataSetup).isTrue()
+  }
+
   def "ensure enable slack notifications"() {
     def slackChannel = "#donotdisturb"
     when:
