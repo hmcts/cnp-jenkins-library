@@ -158,7 +158,11 @@ The smoke tests are to be non-destructive (i.e. have no data impact, such as not
 
 #### High level data setup
 
-Data requirements via high-level means like API calls can be satisfied under this stage. Most typical example is CCD definition files to be imported to target environments as part of a release activity, but data requirements of similar nature can be included under the same with our without a definition import accompanying the release. The satisfied data requirements can then be used within the same builds for automated testing, if available, in lower environments, and for actual live usage on production. By calling **enableHighLevelDataSetup()** in the related Jenkins file, HighLevelDataSetup stages in the opinionated pipeline are enabled to take effect.
+This can be used to import data required for the application.
+The most common example is CCD definition file, but data requirements of a similar nature can be included using the same functionality.
+Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
+
+By adding `enableHighLevelDataSetup()` to the Jenkinsfile, `High Level Data Setup` stages will be added to the pipeline.
 
 ```
 #!groovy
@@ -166,9 +170,7 @@ Data requirements via high-level means like API calls can be satisfied under thi
 @Library("Infrastructure")
 
 def type = "java"
-
 def product = "rhubarb"
-
 def component = "recipe-backend"
 
 withPipeline(type, product, component) {
