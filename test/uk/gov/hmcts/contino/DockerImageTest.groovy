@@ -93,7 +93,7 @@ class DockerImageTest extends Specification {
     def name = dockerImage.getShortName(DockerImage.DeploymentStage.PROD)
 
     then:
-    assertThat(name).isEqualTo('custard/back-end-test:prod-379c53a7')
+    assertThat(name).isEqualTo('custard/back-end-test:prod-379c53a')
   }
 
   def "getAksServiceName should return the service name"() {
