@@ -31,7 +31,7 @@ class DockerImage {
   def lastcommittime
 
 
-  DockerImage(product, component, acr, tag, commit, lastcommittime) {
+  DockerImage(product, component, acr, tag, commit, lastCommitTime) {
     this.product = product
     this.component = component
     this.imageTag = tag
