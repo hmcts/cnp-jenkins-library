@@ -4,6 +4,7 @@ interface Builder {
   def build()
   def test()
   def sonarScan()
+  def highLevelDataSetup(String dataSetupEnvironment)
   def smokeTest()
   def functionalTest()
   def performanceTest()

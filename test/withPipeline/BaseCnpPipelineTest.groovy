@@ -57,6 +57,9 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], { secrets, body ->
       body.call()
     })
+    helper.registerAllowedMethod("withAzureKeyvault", [LinkedHashMap, Closure.class], {secrets, body ->
+      body.call()
+    })
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {

@@ -38,6 +38,10 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--info ${properties} sonarqube")
   }
 
+  def highLevelDataSetup(String dataSetupEnvironment) {
+    gradle("highLevelDataSetup --args=${dataSetupEnvironment}")
+  }
+
   def smokeTest() {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
@@ -74,6 +78,19 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       steps.withSauceConnect("reform_tunnel") {
         gradle("--rerun-tasks crossbrowser")
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      steps.saucePublisher()
+    }
+  }
+
+  def crossBrowserTest(String browser) {
+    try {
+      // By default Gradle will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      steps.withSauceConnect("reform_tunnel") {
+        gradle("--rerun-tasks crossbrowser", "BROWSER_GROUP=$browser")
       }
     } finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
@@ -150,9 +167,12 @@ EOF
   }
 
 
-  def gradle(String task) {
+  def gradle(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
     addInitScript()
-    steps.sh("./gradlew --no-daemon --init-script init.gradle ${task}")
+    steps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
   private String gradleWithOutput(String task) {

@@ -119,6 +119,14 @@ def call(type, String product, String component, Closure body) {
             )
           }
 
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            environment: environment.previewName,
+            product: product,
+          )
+
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
@@ -159,6 +167,14 @@ def call(type, String product, String component, Closure body) {
             tfPlanOnly: false
           )
 
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            environment: environment.nonProdName,
+            product: product,
+          )
+
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
@@ -194,6 +210,14 @@ def call(type, String product, String component, Closure body) {
             tfPlanOnly: false
           )
 
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            environment: environment.prodName,
+            product: product,
+          )
+
           sectionPromoteBuildToStage(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
@@ -212,6 +236,14 @@ def call(type, String product, String component, Closure body) {
         }
 
         onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+          highLevelDataSetup(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            environment: environmentName,
+            product: product,
+          )
+
           sectionDeployToEnvironment(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
