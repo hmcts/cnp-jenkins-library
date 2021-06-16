@@ -28,14 +28,16 @@ class DockerImage {
   Acr acr
   def commit
   def registryHost
+  def lastCommitTime
 
 
-  DockerImage(product, component, acr, tag, commit) {
+  DockerImage(product, component, acr, tag, commit, lastCommitTime) {
     this.product = product
     this.component = component
     this.imageTag = tag
     this.acr = acr
-    this.commit = commit?.substring(0, 8)
+    this.commit = commit?.substring(0, 7)
+    this.lastCommitTime = lastCommitTime
   }
 
   /**
@@ -115,7 +117,7 @@ class DockerImage {
   }
 
   def getTag(String imageTag) {
-    return (imageTag ==  'latest' ? imageTag : "${imageTag}-${this.commit}")
+    return (imageTag ==  'latest' ? imageTag : "${imageTag}-${this.commit}-${this.lastCommitTime}")
   }
 
   def isLatest() {
@@ -153,7 +155,7 @@ class DockerImage {
    *   the short name. e.g. hmcts/product-component:branch
    */
   def getBaseShortName() {
-    def baseShortName = this.imageTag == 'staging' ? "${this.imageTag}-${this.commit}" : imageTag
+    def baseShortName = this.imageTag == 'staging' ? "${this.imageTag}-${this.commit}-${this.lastCommitTime}" : imageTag
     return repositoryName().concat(':')
       .concat(baseShortName)
   }
