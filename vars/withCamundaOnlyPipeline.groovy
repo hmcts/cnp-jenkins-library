@@ -117,7 +117,12 @@ def call(type, String product, String component, String s2sServiceName, String t
         def prodEnv = new Environment(env).prodName
         camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
         camundaPublish(s2sServiceName, prodEnv, product, tenantId)
-       }
+
+        sectionSyncBranchesWithMaster(
+            branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+            product: product
+        )
+      }
 
     } catch (err) {
       currentBuild.result = 'FAILURE'
