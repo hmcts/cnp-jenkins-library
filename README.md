@@ -488,7 +488,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
 
 The environment specific branches such as demo, ithc and perftest can be automatically synced with master branch.
 
-This can be achieved by using the `syncBranchesWithMaster()` method in Application and Infrastructure pipelines. This method will be invoked in the master build and execute as the last stage in the build.
+This can be achieved by using the `syncBranchesWithMaster()` method in Application, Infrastructure and Camunda pipelines. This method will be invoked in the master build and execute as the last stage in the build.
 
 Example of usage
 ```groovy
