@@ -105,6 +105,14 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
+    highLevelDataSetup(
+      appPipelineConfig: config,
+      pipelineCallbacksRunner: pcr,
+      builder: builder,
+      environment: environment.nonProdName,
+      product: product,
+    )
+
     if (config.fullFunctionalTest) {
       stageWithAgent('Full functional tests', product) {
         warnError('Failure in fullFunctionalTest') {
