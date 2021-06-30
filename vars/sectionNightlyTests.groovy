@@ -38,6 +38,14 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
+    fortifyScan(
+      pipelineCallbacksRunner: pcr,
+      appPipelineConfig: config,
+      builder: builder,
+      environment: environment.nonProdName,
+      product: product,
+    )
+
     if (config.crossBrowserTest) {
       stageWithAgent("Cross browser tests", product) {
         warnError('Failure in crossBrowserTest') {
@@ -104,6 +112,14 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
         }
       }
     }
+
+    highLevelDataSetup(
+      appPipelineConfig: config,
+      pipelineCallbacksRunner: pcr,
+      builder: builder,
+      environment: environment.nonProdName,
+      product: product,
+    )
 
     if (config.fullFunctionalTest) {
       stageWithAgent('Full functional tests', product) {

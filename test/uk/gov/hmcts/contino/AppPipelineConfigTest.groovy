@@ -163,6 +163,13 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.highLevelDataSetup).isTrue()
   }
 
+  def "ensure enable fortify scan"() {
+    when:
+    dsl.enableFortifyScan()
+    then:
+    assertThat(pipelineConfig.fortifyScan).isTrue()
+  }
+
   def "ensure enable slack notifications"() {
     def slackChannel = "#donotdisturb"
     when:

@@ -23,6 +23,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerTestsEnabled = false
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
+  boolean fortifyScan = false
   String s2sServiceName
 
   int crossBrowserTestTimeout

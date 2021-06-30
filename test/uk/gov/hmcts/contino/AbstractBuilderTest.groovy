@@ -45,6 +45,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def fortifyScan() {
+      return null
+    }
+
+    @Override
     def test() {
       return null
     }
