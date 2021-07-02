@@ -8,10 +8,11 @@ s2s_service=$3
 camunda_url=$4
 product=$5
 tenant_id=$6
-filepath="$(realpath "$workspace")/src/main/resources"
+folder=$7
+filepath="$(realpath "$workspace")/src/main/resources/$folder"
 
 for file in $(find "${filepath}" -type f \( -iname "*.bpmn" -o -iname "*.dmn" \))
-do 
+do
   # Generate one time password
   otp=$(docker run --rm toolbelt/oathtool -b --totp "${S2S_SECRET}")
 
