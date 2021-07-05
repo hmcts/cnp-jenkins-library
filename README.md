@@ -189,6 +189,21 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
+To disable high level data setup for an environment use
+```
+#!groovy
+
+@Library("Infrastructure")
+
+def type = "java"
+def product = "rhubarb"
+def component = "recipe-backend"
+
+withPipeline(type, product, component) {
+  disableHighLevelDataSetup()
+}
+
+```
 #### Extending the opinionated pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.

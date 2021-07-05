@@ -101,4 +101,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableHighLevelDataSetup() {
     config.highLevelDataSetup = true
   }
+
+  void disableHighLevelDataSetup() {
+    config.highLevelDataSetup = false
+  }
 }

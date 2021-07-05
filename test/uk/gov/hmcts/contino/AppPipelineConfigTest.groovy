@@ -163,6 +163,13 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.highLevelDataSetup).isTrue()
   }
 
+  def "ensure disable high level data setup"() {
+    when:
+    dsl.disableHighLevelDataSetup()
+    then:
+    assertThat(pipelineConfig.highLevelDataSetup).isFalse()
+  }
+
   def "ensure enable slack notifications"() {
     def slackChannel = "#donotdisturb"
     when:
@@ -226,5 +233,4 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
-
 }
