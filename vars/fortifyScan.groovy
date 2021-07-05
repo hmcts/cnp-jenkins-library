@@ -5,18 +5,15 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
-  AppPipelineConfig config = params.appPipelineConfig
   Builder builder = params.builder
 
-  def environment = params.environment
   def product = params.product
+  def fortifyVaultName = params.fortifyVaultName
 
-  if (config.fortifyScan) {
-    stageWithAgent("Fortify Scan", product) {
-      withFortifySecrets(product, environment) {
-        pcr.callAround('fortifyscan') {
-          builder.fortifyScan()
-        }
+  stageWithAgent("Fortify Scan", product) {
+    withFortifySecrets(fortifyVaultName) {
+      pcr.callAround('fortify-scan') {
+        builder.fortifyScan()
       }
     }
   }

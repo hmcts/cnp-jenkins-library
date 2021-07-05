@@ -163,11 +163,20 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.highLevelDataSetup).isTrue()
   }
 
-  def "ensure enable fortify scan"() {
+  def "ensure enable fortify scan without fortifyVaultName"() {
     when:
     dsl.enableFortifyScan()
     then:
     assertThat(pipelineConfig.fortifyScan).isTrue()
+    assertThat(pipelineConfig.fortifyVaultName).isEqualTo("")
+  }
+
+  def "ensure enable fortify scan with fortifyVaultName"() {
+    when:
+    dsl.enableFortifyScan("fortifyVaultName")
+    then:
+    assertThat(pipelineConfig.fortifyScan).isTrue()
+    assertThat(pipelineConfig.fortifyVaultName).isEqualTo("fortifyVaultName")
   }
 
   def "ensure enable slack notifications"() {

@@ -102,7 +102,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.highLevelDataSetup = true
   }
 
-  void enableFortifyScan() {
+  void enableFortifyScan(String fortifyVaultName = "") {
     config.fortifyScan = true
+    config.fortifyVaultName = fortifyVaultName
   }
 }
