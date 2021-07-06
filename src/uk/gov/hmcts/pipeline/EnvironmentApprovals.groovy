@@ -10,11 +10,13 @@ class EnvironmentApprovals {
 
   def getEnvironmentApprovals() {
     if (environmentApprovals == null) {
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/environment-approvals.yml",
         validResponseCodes: '200'
       )
       environmentApprovals = steps.readYaml(text: response.content)

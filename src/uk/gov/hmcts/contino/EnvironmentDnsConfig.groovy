@@ -13,12 +13,14 @@ class EnvironmentDnsConfig {
 
   def getDnsConfig() {
     if (this.envDnsConfigMap == null ){
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       def dnsConfigMap = [:]
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/private-dns-config.yml",
         validResponseCodes: '200'
       )
       dnsConfigMap = steps.readYaml (text: response.content)
