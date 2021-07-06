@@ -4,8 +4,6 @@ import uk.gov.hmcts.contino.RepositoryUrl
 
 class TerraformInfraApprovals {
 
-  static final String GITHUB_BASE_URL = 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/terraform-infra-approvals'
-
   public static final String TFUTILS_IMAGE = 'hmctspublic.azurecr.io/tf-utils:db66hn'
   public static final String TFUTILS_RUN_ARGS = '--entrypoint ""'
 
@@ -21,12 +19,17 @@ class TerraformInfraApprovals {
   def getInfraApprovals() {
     if (!hasCachedInfraApprovals()) {
       def localInfraApprovals = []
+
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
+      def githubBaseUrl = "https://raw.githubusercontent.com/hmcts/${repo}/master/terraform-infra-approvals"
+
       String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
         def response = steps.httpRequest(
           consoleLogResponseBody: true,
           timeout: 10,
-          url: "${GITHUB_BASE_URL}/${k}",
+          url: "${githubBaseUrl}/${k}",
           validResponseCodes: v,
           outputFile: k
         )
