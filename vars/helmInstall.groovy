@@ -75,7 +75,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     onPR
-      for (String label: cnp){
+      for (String label: pr-values:cnp){
         if (fileExists(values.label.{environment.template.yaml})) {
           sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
           values << valuesEnv
