@@ -74,6 +74,14 @@ def call(DockerImage dockerImage, Map params) {
       values << valuesEnv
     }
 
+    onPR
+      for (String label: cnp){
+        if (fileExists(values.label.{environment.template.yaml})) {
+          sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
+          values << valuesEnv
+        }
+      }
+
     def requirementsEnv = "${helmResourcesDir}/${chartName}/requirements.${environment}.yaml"
     def requirements = "${helmResourcesDir}/${chartName}/requirements.yaml"
     if (fileExists(requirementsEnv)) {
