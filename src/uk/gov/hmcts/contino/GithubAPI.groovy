@@ -54,6 +54,18 @@ class GithubAPI {
   /**
    * Check Pull Request for dependencies label.
    */
+  def getLabelsbyKey(String branch_name, String cnp) {
+
+    if (new ProjectBranch(branch_name).isPR() == true) {
+      def project = currentProject()
+      def pullRequestNumber = currentPullRequestNumber()
+
+      return getLabels(project, pullRequestNumber).contains(cnp)
+    } else {
+      return false
+    }
+  }
+
   def checkForDependenciesLabel(branch_name) {
 
     if (new ProjectBranch(branch_name).isPR() == true) {
