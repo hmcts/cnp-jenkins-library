@@ -40,9 +40,12 @@ Infrastructure for repo ${env.GIT_URL} is not approved for environment '${enviro
 """
 
       metricsPublisher.publish("not-approved-infra")
+
+      def repo = env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       WarningCollector.addPipelineWarning("deprecated_not_approved_infra", """
 this repo is using a terraform resource that is not allowed,
-whitelists are stored in https://github.com/hmcts/cnp-jenkins-config/tree/master/terraform-infra-approvals
+whitelists are stored in https://github.com/hmcts/${repo}/tree/master/terraform-infra-approvals
 send a pull request if you think this is in error.
 non whitelisted resources:
 ```
