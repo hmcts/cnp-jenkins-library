@@ -20,6 +20,12 @@ class AzPrivateDns {
         }
     }
 
+   def getHostName(recordName) {
+     def zone = this.environmentDnsConfigEntry.zone
+
+     return "${recordName}.${zone}"
+   }
+
     def registerDns(recordName, serviceIP) {
         if (!IPV4Validator.validate(serviceIP)) {
             throw new RuntimeException("Invalid IP address [${serviceIP}].")
