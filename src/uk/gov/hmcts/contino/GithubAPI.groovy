@@ -56,7 +56,7 @@ class GithubAPI {
    */
   def getLabelsbyKey(String branch_name, String cnp) {
 
-    if (new ProjectBranch(branch_name).isPR() == true) {
+    if (new ProjectBranch(branch_name).isPR() == false) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
 
