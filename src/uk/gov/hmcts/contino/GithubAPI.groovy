@@ -54,7 +54,7 @@ class GithubAPI {
   /**
    * Check Pull Request for dependencies label.
    */
-  def getLabelsbyKey(String branch_name, String label: cnp) {
+  def getLabelsbyKey(String branch_name, String cnp) {
 
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
