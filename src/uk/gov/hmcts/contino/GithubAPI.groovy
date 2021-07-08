@@ -71,7 +71,7 @@ class GithubAPI {
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
-      def getLabelsbyKey = cnp()
+      def getLabelsbyKey = labels()
 
       return getLabels(project, pullRequestNumber).contains("dependencies")
     } else {
