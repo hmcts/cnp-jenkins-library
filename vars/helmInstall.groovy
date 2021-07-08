@@ -76,6 +76,8 @@ def call(DockerImage dockerImage, Map params) {
 
     onPR {
       def githubApi = new GithubAPI(this)
+      def pr_values = (labels in githubApi.getLabelsbyKey(env.BRANCH_NAME, "pr-values") )
+      assert 'pr-values:' == s - 'pr-values:'
       for (labels in githubApi.getLabelsbyKey(env.BRANCH_NAME, "pr-values") ) {
         if (fileExists(values.labels.${environment}.template.yaml)) {
           sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
