@@ -54,13 +54,13 @@ class GithubAPI {
   /**
    * Check Pull Request for dependencies label.
    */
-  def getLabelsbyKey(String branch_name, String labels) {
+  def getLabelsbyKey(String branch_name) {
 
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
 
-      return getLabels(project, pullRequestNumber, labels).contains(cnp)
+      return getLabels(project, pullRequestNumber).contains(cnp)
     } else {
       return false
     }
