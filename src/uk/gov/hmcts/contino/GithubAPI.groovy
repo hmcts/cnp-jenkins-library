@@ -67,6 +67,10 @@ class GithubAPI {
   }
 
   def checkForDependenciesLabel(branch_name) {
+    getLabelsbyKey(branch_name, cnp:"dependencies")
+  }
+
+  def checkForDependenciesLabel(branch_name) {
 
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
