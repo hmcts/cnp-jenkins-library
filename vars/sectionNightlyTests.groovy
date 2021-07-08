@@ -38,6 +38,15 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
+    if (config.fortifyScan) {
+      fortifyScan(
+        pipelineCallbacksRunner: pcr,
+        fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+        builder: builder,
+        product: product,
+      )
+    }
+
     if (config.crossBrowserTest) {
       stageWithAgent("Cross browser tests", product) {
         warnError('Failure in crossBrowserTest') {
