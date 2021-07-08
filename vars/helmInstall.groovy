@@ -74,14 +74,16 @@ def call(DockerImage dockerImage, Map params) {
       values << valuesEnv
     }
 
-    onPR
-      for (String labels: cnp){
-        if (fileExists(values.labels.{environment.template.yaml})) {
+    onPR ( 
+      def githubApi = new GithubAPI(this)
+      for (String labels: githubApi.getLabelsbyKey(env.BRANCH_NAME, "pr-values")){
+        if (fileExists(values.labels.${environment}.template.yaml)) {
           sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
           values << valuesEnv
         }
       }
-
+    )
+    
     def requirementsEnv = "${helmResourcesDir}/${chartName}/requirements.${environment}.yaml"
     def requirements = "${helmResourcesDir}/${chartName}/requirements.yaml"
     if (fileExists(requirementsEnv)) {
