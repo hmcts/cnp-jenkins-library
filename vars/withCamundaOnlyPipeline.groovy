@@ -108,15 +108,16 @@ def call(type, String product, String component, String s2sServiceName, String t
 
       // Demo/ITHC/Perftest camunda upload
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-        camundaPublish(s2sServiceName, environmentName, product, tenantId)
+        camundaPublish(s2sServiceName, environmentName, product, tenantId,'nonprod')
       }
 
       // AAT and Prod camunda promotion
       onMaster {
         def nonProdEnv = new Environment(env).nonProdName
         def prodEnv = new Environment(env).prodName
-        camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
-        camundaPublish(s2sServiceName, prodEnv, product, tenantId)
+
+        camundaPublish(s2sServiceName, nonProdEnv, product, tenantId,'nonprod')
+        camundaPublish(s2sServiceName, prodEnv, product, tenantId,'prod')
 
         sectionSyncBranchesWithMaster(
             branchestoSync: pipelineConfig.branchesToSyncWithMaster,
