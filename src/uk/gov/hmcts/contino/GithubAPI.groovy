@@ -60,7 +60,7 @@ class GithubAPI {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
 
-      return getLabels(project, pullRequestNumber).contains(cnp)
+      return getLabels(project, pullRequestNumber, labels).contains(cnp)
     } else {
       return false
     }
