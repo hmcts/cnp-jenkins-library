@@ -75,12 +75,11 @@ def call(DockerImage dockerImage, Map params) {
     }
 
 class prvalues {
-          static void main(String[] args) {
-            String a = "pr-values:ccd";
-            
-            println(a.minus("pr-values:"));
-          }
-        }
+  static void main(String[] args) {
+    String a = "pr-values:ccd";
+    println(a.minus("pr-values:"));
+  }
+}
 
     onPR {
       def githubApi = new GithubAPI(this)
