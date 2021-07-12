@@ -74,10 +74,12 @@ def call(DockerImage dockerImage, Map params) {
       values << valuesEnv
     }
 
-void remove_part_of_string_minus() {
-    def part = "pr-values:ccd"
-    assert "pr-values:ccd" == part - "pr-values:"
-}
+    class example {
+      static void main(String[] args) {
+        String a = "pr-values:ccd"
+        println(a.minus("pr-values:"))
+      }
+    }
 
     onPR {
       def githubApi = new GithubAPI(this)
