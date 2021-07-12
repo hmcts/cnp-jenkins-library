@@ -74,7 +74,7 @@ def call(DockerImage dockerImage, Map params) {
       values << valuesEnv
     }
 
-    class pr-values { 
+    class prvalues { 
       static void main(String[] args) { 
           String a = "pr-values:ccd";
           println(a.minus("pr-values:")); 
