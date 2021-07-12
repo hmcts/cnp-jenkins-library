@@ -175,8 +175,7 @@ def addGithubLabels(String product) {
   def namespaceLabel = 'ns:' + env.NAMESPACE
   def releaseLabel = 'rel:' + env.SERVICE_NAME
   def productLabel = 'prd:' + product
-  def prlabel = 'pr-values:' + ns
-  def labels = [namespaceLabel, releaseLabel, productLabel, prlabel]
+  def labels = [namespaceLabel, releaseLabel, productLabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)
