@@ -77,8 +77,8 @@ def call(DockerImage dockerImage, Map params) {
     onPR {
       def githubApi = new GithubAPI(this)
       for (labels in githubApi.getLabelsbyKey(env.BRANCH_NAME, "pr-values") ) {
-        def getLabelsbyKey = (labels.minus("pr-values:"))
-        if (fileExists(values.${getLabelsbyKey}.${environment}.template.yaml)) {
+        def prlabels = (prlabel.minus("pr-values:"))
+        if (fileExists(values.${prlabels}.${environment}.template.yaml)) {
           sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
           values << valuesEnv
         }
@@ -175,7 +175,8 @@ def addGithubLabels(String product) {
   def namespaceLabel = 'ns:' + env.NAMESPACE
   def releaseLabel = 'rel:' + env.SERVICE_NAME
   def productLabel = 'prd:' + product
-  def labels = [namespaceLabel, releaseLabel, productLabel]
+  def prlabel = 'pr-values:' + ns
+  def labels = [namespaceLabel, releaseLabel, productLabel, prlabel]
 
   def githubApi = new GithubAPI(this)
   githubApi.addLabelsToCurrentPR(labels)
