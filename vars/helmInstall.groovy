@@ -75,14 +75,14 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     onPR {
-      class prvalues {
-        static void main(String[] args) {
-          String a = "pr-values:ccd";
-          println(a.minus("pr-values:"));
-        }
-      }
-      def githubApi = new GithubAPI(this)
+            def githubApi = new GithubAPI(this)
       for (labels in githubApi.getLabelsbyKey(env.BRANCH_NAME, "pr-values") ) {
+        class prvalues {
+          static void main(String[] args) {
+            String a = "pr-values:ccd";
+            println(a.minus("pr-values:"));
+          }
+        }
         if (fileExists(values.labels.${environment}.template.yaml)) {
           sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
           values << valuesEnv
