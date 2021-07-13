@@ -81,7 +81,7 @@ def call(DockerImage dockerImage, Map params) {
         def prlabelcnp = "pr-values:cnp"
         def result = 'cnp';
         if (String.startsWith(prefix)) {
-            result = prlabel.substring(prefix.size())
+            result = prlabelcnp.minus("pr-values:")
             print result
         }
         if (fileExists(values.result.${environment}.template.yaml)) {
