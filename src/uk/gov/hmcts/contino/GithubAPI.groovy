@@ -51,23 +51,23 @@ class GithubAPI {
       validResponseCodes: '200')
   }
 
-  /**
-   * Check Pull Request for dependencies label.
-   */
-  def getLabelsbyKey(String branch_name, String key) {
-
+/**
+ * Check Pull Request for label by a pattern in name.
+ */
+  def getLabelsbyPattern(String branch_name, String key) {
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
-
-      return getLabels(project, pullRequestNumber).contains(key)
+      return getLabels(project, pullRequestNumber).findAll{it.contains(key)}
     } else {
-      return false
+      return []
     }
   }
-
+/**
+ * Check Pull Request for dependencies label.
+ */
   def checkForDependenciesLabel(branch_name) {
-     return getLabelsbyKey(branch_name, "dependencies")
+      return getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
   }
 
   /**
