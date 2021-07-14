@@ -76,13 +76,14 @@ def call(DockerImage dockerImage, Map params) {
 
     onPR {
       def githubApi = new GithubAPI(this)
-      for (labels in githubApi.getLabelsbyPattern(env.BRANCH_NAME, "pr-values") ) {
-        echo "values for labels ${labels}"
-        def getLabelsbyPattern = labels.minus("pr-values:")
-        echo "values for labels ${labels}"
-        if (fileExists(values.${getLabelsbyPattern}.${environment}.template.yaml)) {
-          sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
-          values << valuesEnv
+      for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, "pr-values") ) {
+        echo "values for label ${label}"
+        def prLabel = label.minus("pr-values:")
+        def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.template.yaml"
+        def valuesLabel = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.yaml"
+        if (fileExists(valuesLabelTemplate)) {
+          sh "envsubst < ${valuesLabelTemplate} > ${valuesLabel}"
+          values << valuesLabel
         }
       }
     }
