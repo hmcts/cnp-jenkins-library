@@ -57,6 +57,8 @@ def call(DockerImage dockerImage, Map params) {
     // default values + overrides
     def templateValues = "${helmResourcesDir}/${chartName}/values.template.yaml"
     def defaultValues = "${helmResourcesDir}/${chartName}/values.yaml"
+    def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.template.yaml"
+    def valuesLabelEnv = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.yaml"
 
     if (!fileExists(defaultValues)) {
       throw new RuntimeException("No default values file found at ${templateValues} or ${defaultValues}")
@@ -65,6 +67,10 @@ def call(DockerImage dockerImage, Map params) {
       sh "envsubst < ${templateValues} > ${defaultValues}"
     }
     values << defaultValues
+
+    if (fileExists(valuesLabelTemplate)) {
+      sh "envsubst < ${valuesLabelTemplate} > ${valuesLabelEnv}"
+    }
 
     // environment specific values is optional
     def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${environment}.template.yaml"
