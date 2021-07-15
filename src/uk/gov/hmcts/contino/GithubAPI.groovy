@@ -94,7 +94,7 @@ class GithubAPI {
 
     def json_response = new JsonSlurper().parseText(response.content)
     this.steps.echo "Json response: ${json_response}"
-    def labelsList = json_response.stream().map( { label -> label['name'] } ).collect()
+    def labelsList = json_response.collect( { label -> label['name'] } )
     this.steps.echo "Label List: ${labelsList}"
     return labelsList
   }
