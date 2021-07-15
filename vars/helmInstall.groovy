@@ -80,10 +80,11 @@ def call(DockerImage dockerImage, Map params) {
         def prLabel = label.minus("pr-values:")
         def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.template.yaml"
         def valuesLabelEnv = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.yaml"
+        echo "Show output of valuesLabelEnv ${valuesLabelEnv}"
+        echo "Show output of valuesLabelTemplate ${valuesLabelTemplate}"
         if (fileExists(valuesLabelTemplate)) {
           sh "envsubst < ${valuesLabelTemplate} > ${valuesLabelEnv}"
           values << valuesLabelEnv
-          echo "Show output of valuesLabelEnv ${valuesLabelEnv}"
           echo "Show output of values ${values}"
         }
       }
