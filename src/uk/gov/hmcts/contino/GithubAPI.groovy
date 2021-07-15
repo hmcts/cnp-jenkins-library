@@ -59,9 +59,9 @@ class GithubAPI {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
       def allLabels = getLabels(project, pullRequestNumber)
-      this.step.echo "All Labels: ${allLabels}"
+      this.steps.echo "All Labels: ${allLabels}"
       def matchLabels = allLabels.findAll{it.contains(key)}
-      this.step.echo "Match Labels: ${matchLabels}"
+      this.steps.echo "Match Labels: ${matchLabels}"
       return matchLabels
     } else {
       return []
