@@ -58,7 +58,11 @@ class GithubAPI {
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
-      return getLabels(project, pullRequestNumber).findAll{it.contains(key)}
+      def allLabels = getLabels(project, pullRequestNumber)
+      echo "All Labels: ${allLabels}"
+      def matchLabels = allLabels.findAll{it.contains(key)}
+      echo "Match Labels: ${matchLabels}"
+      return matchLabels
     } else {
       return []
     }
