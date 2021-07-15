@@ -93,8 +93,10 @@ class GithubAPI {
       validResponseCodes: '200')
 
     def json_response = new JsonSlurper().parseText(response.content)
-
-    return json_response.stream().map( { label -> label['name'] } ).collect()
+    this.steps.echo "Json response: ${json_response}"
+    def labelsList = json_response.stream().map( { label -> label['name'] } ).collect()
+    this.steps.echo "Label List: ${labelsList}"
+    return labelsList
   }
 
   def currentProject() {
