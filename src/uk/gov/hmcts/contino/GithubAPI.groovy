@@ -58,11 +58,7 @@ class GithubAPI {
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
-      def allLabels = getLabels(project, pullRequestNumber)
-      this.steps.echo "All Labels: ${allLabels}"
-      def matchLabels = allLabels.findAll{it.contains(key)}
-      this.steps.echo "Match Labels: ${matchLabels}"
-      return matchLabels
+      return getLabels(project, pullRequestNumber).findAll{it.contains(key)}
     } else {
       return []
     }
@@ -93,10 +89,7 @@ class GithubAPI {
       validResponseCodes: '200')
 
     def json_response = new JsonSlurper().parseText(response.content)
-    this.steps.echo "Json response: ${json_response}"
-    def labelsList = json_response.collect( { label -> label['name'] } )
-    this.steps.echo "Label List: ${labelsList}"
-    return labelsList
+    return json_response.collect( { label -> label['name'] } )
   }
 
   def currentProject() {
