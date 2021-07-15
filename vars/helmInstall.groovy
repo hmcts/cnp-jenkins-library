@@ -83,6 +83,8 @@ def call(DockerImage dockerImage, Map params) {
         if (fileExists(valuesLabelTemplate)) {
           sh "envsubst < ${valuesLabelTemplate} > ${valuesLabelEnv}"
           values << valuesLabelEnv
+          echo "Show output of valuesLabelEnv ${valuesLabelEnv}"
+          echo "Show output of values ${values}"
         }
       }
     }
