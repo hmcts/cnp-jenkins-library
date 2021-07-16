@@ -16,6 +16,11 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
+  def fortifyScan() {
+    builder.fortifyScan()
+  }
+
+  @Override
   def test() {
     builder.test()
   }

@@ -21,6 +21,10 @@ class YarnBuilder extends AbstractBuilder {
     addVersionInfo()
   }
 
+  def fortifyScan() {
+    yarn("fortifyScan")
+  }
+
   def test() {
     yarn("test")
     runYarn("test:coverage")

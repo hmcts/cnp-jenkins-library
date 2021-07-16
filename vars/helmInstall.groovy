@@ -22,10 +22,10 @@ def call(DockerImage dockerImage, Map params) {
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
-  def serviceFqdn = "${aksServiceName}.service.core-compute-${environment}.internal"
 
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
+  String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
   def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
   kubectl.login()

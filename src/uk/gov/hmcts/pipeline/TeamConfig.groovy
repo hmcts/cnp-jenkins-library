@@ -39,10 +39,12 @@ class TeamConfig {
 
   def getTeamNamesMap() {
     if (teamConfigMap ==null ){
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/team-config.yml",
         validResponseCodes: '200'
       )
       teamConfigMap = steps.readYaml (text: response.content)
@@ -70,8 +72,10 @@ class TeamConfig {
       product = getRawProductName(product)
     }
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(NAMESPACE_KEY)) {
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       steps.error ("Product ${product} does not belong to any team. "
-          + "Please create a PR to update TeamConfig in cnp-jenkins-config.")
+          + "Please create a PR to update TeamConfig in ${repo}.")
     }
     return teamNames.get(product).get(NAMESPACE_KEY)
       .toLowerCase()
@@ -82,8 +86,10 @@ class TeamConfig {
   def getDefaultTeamSlackChannel(String product, String key) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(SLACK_KEY) || !teamNames.get(product).get(SLACK_KEY).get(key)) {
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       steps.error ("${key} is not configured for Product ${product} ."
-          + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
+          + "Please create a PR to update team-config.yml in ${repo}.")
     }
     return teamNames.get(product).get(SLACK_KEY).get(key)
   }
@@ -123,8 +129,10 @@ class TeamConfig {
   String getApplicationTag(String product) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(TAGS_KEY) || !teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)) {
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
       steps.error ("${APPLICATION_KEY} tag is not configured for Product ${product} ."
-        + "Please create a PR to update team-config.yml in cnp-jenkins-config.")
+        + "Please create a PR to update team-config.yml in ${repo}.")
     }
     return teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)
   }
