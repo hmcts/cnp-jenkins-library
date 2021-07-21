@@ -14,6 +14,7 @@ class CVEPublisher {
   private static final String COSMOS_COLLECTION_LINK = 'dbs/jenkins/colls/cve-reports'
   def steps
   def documentClient
+  def cosmosDbUrl
   private final boolean ignoreErrors
 
   CVEPublisher(steps, DocumentClient documentClient) {
@@ -28,14 +29,19 @@ class CVEPublisher {
     this.ignoreErrors = ignoreErrors
     this.steps = steps
     this.documentClient = documentClient
+
+    def tmpCosmosDbUrl = this.steps.env.PIPELINE_METRICS_URL
+    if (tmpCosmosDbUrl?.trim()) {
+      this.cosmosDbUrl = tmpCosmosDbUrl
+    } else {
+      Subscription subscription = new Subscription(steps.env)
+      this.cosmosDbUrl = subscription.nonProdName == "sandbox" ?
+        'https://sandbox-pipeline-metrics.documents.azure.com/' :
+        'https://pipeline-metrics.documents.azure.com/'
+    }
   }
 
   static CVEPublisher create(steps) {
-    Subscription subscription = new Subscription(steps.env)
-    def cosmosDbUrl = subscription.nonProdName == "sandbox" ?
-      'https://sandbox-pipeline-metrics.documents.azure.com/' :
-      'https://pipeline-metrics.documents.azure.com/'
-
     steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
       new CVEPublisher(steps, steps.env.COSMOSDB_TOKEN_KEY != null ?
         new DocumentClient(cosmosDbUrl, steps.env.COSMOSDB_TOKEN_KEY, null, null)
