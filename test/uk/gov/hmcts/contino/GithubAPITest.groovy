@@ -92,8 +92,13 @@ class GithubAPITest extends Specification {
       assertThat(prNumber).isEqualTo('68')
   }
 
-  def "getLabelsbyPattern"() {
-    when(new ProjectBranch(branch_name).isPR() == true) 
-    return getLabels(project, CurrentPullRequestNumber).findAll{it.contains(key)}
+  // Attempt to check filtering is working on returned labels
+
+  def "labelsFilter"() {
+    when:
+      def getLabelsbyPattern = githubApi.currentPullRequestNumber()
+
+    then:
+      print getLabels(project, CurrentPullRequestNumber).findAll{it.contains(key)}
   }
 }
