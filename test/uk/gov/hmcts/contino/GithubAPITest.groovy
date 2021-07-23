@@ -93,6 +93,6 @@ class GithubAPITest extends Specification {
   }
 
   def "labelsCheck"() {
-    return list(filter("pr-values:"))
+    return list(filter("pr-values:", "ccd"))
   }
 }
