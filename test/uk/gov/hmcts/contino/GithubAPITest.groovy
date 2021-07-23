@@ -92,8 +92,8 @@ class GithubAPITest extends Specification {
       assertThat(prNumber).isEqualTo('68')
   }
 
-  def "labelsCheck"() {
-    return list(filter("pr-values:", "ccd"))
-    assert labelsCheck(['']) == []
+  def "getLabelsbyPattern"() {
+    when(new ProjectBranch(branch_name).isPR() == true) 
+    return getLabels(project, CurrentPullRequestNumber).findAll{it.contains(key)}
   }
 }
