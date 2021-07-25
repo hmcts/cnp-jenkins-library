@@ -100,6 +100,6 @@ class GithubAPITest extends Specification {
 
     then:
     def list = "ccd"
-    assert list == "ccd"
+    assertThat list == "ccd"
   }
 }
