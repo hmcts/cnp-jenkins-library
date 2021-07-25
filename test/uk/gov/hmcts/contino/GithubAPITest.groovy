@@ -99,7 +99,7 @@ class GithubAPITest extends Specification {
       def getLabelsbyPattern = githubApi.currentPullRequestNumber()
 
     then:
-    def list = ["pr-values:", "ccd", "cnp"]
-    assert list == ["pr-values:", "ccd", "cnp"]
+    def list = "ccd"
+    assert list == "ccd"
   }
 }
