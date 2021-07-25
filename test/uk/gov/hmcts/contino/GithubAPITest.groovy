@@ -95,9 +95,11 @@ class GithubAPITest extends Specification {
   // Attempt to check filtering is working on returned labels
 
   def "getLabelsbyPattern"() {
+    def prLabels = ['ccd']
+    def expectedprLabels = '["ccd"]'
     when:
-      def getLabelsbyPattern = githubApi.getLabelsbyPattern()
+      def getLabelsbyPattern = githubApi.currentPullRequestNumber()
     then:
-      assertThat(labels).isEqualTo(labels)
+      assertThat(prLabels).isEqualTo(expectedprLabels)
   }
 }
