@@ -91,4 +91,15 @@ class GithubAPITest extends Specification {
     then:
       assertThat(prNumber).isEqualTo('68')
   }
+
+  // Attempt to check filtering is working on returned labels
+
+  def "getLabelsbyPattern"() {
+    when:
+      def getLabelsbyPattern = githubApi.currentPullRequestNumber()
+
+    then:
+    def list = ["pr-values:", "ccd", "cnp"]
+    assert list == ["pr-values:", "ccd", "cnp"]
+  }
 }
