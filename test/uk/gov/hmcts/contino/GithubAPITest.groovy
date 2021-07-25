@@ -99,7 +99,6 @@ class GithubAPITest extends Specification {
       def getLabelsbyPattern = githubApi.currentPullRequestNumber()
 
     then:
-    def list = "ccd"
-    assertThat list == "ccd"
+      assertThat(labels).isEqualTo(labels)
   }
 }
