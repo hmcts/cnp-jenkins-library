@@ -96,8 +96,7 @@ class GithubAPITest extends Specification {
 
   def "getLabelsbyPattern"() {
     when:
-      def getLabelsbyPattern = githubApi.currentPullRequestNumber()
-
+      def getLabelsbyPattern = githubApi.getLabelsbyPattern()
     then:
       assertThat(labels).isEqualTo(labels)
   }
