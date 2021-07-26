@@ -101,16 +101,18 @@ class GithubAPITest extends Specification {
   // Attempt to check filtering is working on returned labels
 
   def "getLabelsbyPattern"() {
+
     steps.httpRequest(_) >> prValuesResponse
 
     when:
-      def getMasterLabelsbyPattern = githubApi.getLabelsbyPattern("master", "pr-values")
-      def getPRLabelsbyPattern = githubApi.getLabelsbyPattern("PR-123", "pr-values")
-
+      def getMasterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
+      def getPRLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values")
+      def getPRLabelsNotMatching = githubApi.getLabelsbyPattern("PR-123", "doesntexist")
 
     then:
-      assertThat(getMasterLabelsbyPattern).isEqualTo([])
-      assertThat(getPRLabelsbyPattern).isEqualTo(["pr-values:ccd"])
+      assertThat(getMasterLabels).isEqualTo([])
+      assertThat(getPRLabelsNotMatching).isEqualTo([])
+      assertThat(getPRLabels).isEqualTo(["pr-values:ccd"])
   }
 
   def "CurrentProject"() {
