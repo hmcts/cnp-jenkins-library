@@ -39,16 +39,7 @@ class GithubAPITest extends Specification {
         "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
         "url": "https://api.github.com/repos/hmcts/some-project/labels/pr-values:ccd",
         "name": "pr-values:ccd",
-        "description": "Bug",
-        "color": "f29513",
-        "default": true
-      },
-      {
-        "id": 208045946,
-        "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
-        "url": "https://api.github.com/repos/hmcts/some-project/labels/pr-values:xui",
-        "name": "pr-values:xui",
-        "description": "Bug",
+        "description": "pr-values: ccd label",
         "color": "f29513",
         "default": true
       },
@@ -121,7 +112,7 @@ class GithubAPITest extends Specification {
     then:
       assertThat(getMasterLabels).isEqualTo([])
       assertThat(getPRLabelsNotMatching).isEqualTo([])
-      assertThat(getPRLabels).isEqualTo(["pr-values:ccd", "pr-values:xui"])
+      assertThat(getPRLabels).isEqualTo(["pr-values:ccd"])
   }
 
   def "CurrentProject"() {
