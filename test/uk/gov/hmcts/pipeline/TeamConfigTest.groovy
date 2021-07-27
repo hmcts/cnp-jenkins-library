@@ -22,6 +22,7 @@ class TeamConfigTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.readYaml([text: response.content]) >> response.content
     steps.httpRequest(_) >> response
+    steps.env >> []
     steps.error(_) >> { throw new Exception(_ as String) }
     teamConfig = new TeamConfig(steps)
     slackContactTeamConfig = new TeamConfig(steps)
