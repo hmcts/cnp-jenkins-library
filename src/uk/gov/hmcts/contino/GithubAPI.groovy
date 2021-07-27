@@ -51,19 +51,23 @@ class GithubAPI {
       validResponseCodes: '200')
   }
 
-  /**
-   * Check Pull Request for dependencies label.
-   */
-  def checkForDependenciesLabel(branch_name) {
-
+/**
+ * Check Pull Request for label by a pattern in name.
+ */
+  def getLabelsbyPattern(String branch_name, String key) {
     if (new ProjectBranch(branch_name).isPR() == true) {
       def project = currentProject()
       def pullRequestNumber = currentPullRequestNumber()
-
-      return getLabels(project, pullRequestNumber).contains("dependencies")
+      return getLabels(project, pullRequestNumber).findAll{it.contains(key)}
     } else {
-      return false
+      return []
     }
+  }
+/**
+ * Check Pull Request for dependencies label.
+ */
+  def checkForDependenciesLabel(branch_name) {
+      return getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
   }
 
   /**
@@ -85,8 +89,7 @@ class GithubAPI {
       validResponseCodes: '200')
 
     def json_response = new JsonSlurper().parseText(response.content)
-
-    return json_response.stream().map( { label -> label['name'] } ).collect()
+    return json_response.collect( { label -> label['name'] } )
   }
 
   def currentProject() {

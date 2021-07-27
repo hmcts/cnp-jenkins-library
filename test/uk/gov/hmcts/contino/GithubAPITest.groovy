@@ -10,7 +10,7 @@ class GithubAPITest extends Specification {
 
   def labels = ['label1', 'label2']
   def expectedLabels = '["label1","label2"]'
-  
+
   static def response = ["content": '''[
       {
         "id": 208045946,
@@ -27,6 +27,37 @@ class GithubAPITest extends Specification {
         "url": "https://api.github.com/repos/hmcts/some-project/labels/enhancement",
         "name": "enhancement",
         "description": "New feature or request",
+        "color": "a2eeef",
+        "default": false
+      }
+    ]'''
+  ]
+
+  static def prValuesResponse = ["content": '''[
+      {
+        "id": 208045946,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/pr-values:ccd",
+        "name": "pr-values:ccd",
+        "description": "pr-values: ccd label",
+        "color": "f29513",
+        "default": true
+      },
+      {
+        "id": 208045947,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDc=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/random",
+        "name": "random",
+        "description": "New feature or request",
+        "color": "a2eeef",
+        "default": false
+      },
+      {
+        "id": 208045947,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDc=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/pr-values:xui",
+        "name": "pr-values:xui",
+        "description": "pr-values:xui",
         "color": "a2eeef",
         "default": false
       }
@@ -74,6 +105,25 @@ class GithubAPITest extends Specification {
         it.get('requestBody').equals("${expectedLabels}") &&
         it.get('consoleLogResponseBody').equals(true) &&
         it.get('validResponseCodes').equals('200')})
+  }
+
+  // Attempt to check filtering is working on returned labels
+
+  def "getLabelsbyPattern"() {
+
+    steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def masterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
+      def prLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values:ccd")
+      def prLabelsNotMatching = githubApi.getLabelsbyPattern("PR-123", "doesntexist")
+      def multiplePRLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values")
+
+    then:
+      assertThat(masterLabels).isEqualTo([])
+      assertThat(prLabelsNotMatching).isEqualTo([])
+      assertThat(prLabels).isEqualTo(["pr-values:ccd"])
+      assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
   }
 
   def "CurrentProject"() {
