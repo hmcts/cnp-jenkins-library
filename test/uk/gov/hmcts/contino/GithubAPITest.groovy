@@ -51,6 +51,15 @@ class GithubAPITest extends Specification {
         "description": "New feature or request",
         "color": "a2eeef",
         "default": false
+      },
+      {
+        "id": 208045947,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDc=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/pr-values:xui",
+        "name": "pr-values:xui",
+        "description": "pr-values:xui",
+        "color": "a2eeef",
+        "default": false
       }
     ]'''
   ]
@@ -105,14 +114,16 @@ class GithubAPITest extends Specification {
     steps.httpRequest(_) >> prValuesResponse
 
     when:
-      def getMasterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
-      def getPRLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values")
-      def getPRLabelsNotMatching = githubApi.getLabelsbyPattern("PR-123", "doesntexist")
+      def masterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
+      def prLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values:ccd")
+      def prLabelsNotMatching = githubApi.getLabelsbyPattern("PR-123", "doesntexist")
+      def multiplePRLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values")
 
     then:
-      assertThat(getMasterLabels).isEqualTo([])
-      assertThat(getPRLabelsNotMatching).isEqualTo([])
-      assertThat(getPRLabels).isEqualTo(["pr-values:ccd"])
+      assertThat(masterLabels).isEqualTo([])
+      assertThat(prLabelsNotMatching).isEqualTo([])
+      assertThat(prLabels).isEqualTo(["pr-values:ccd"])
+      assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
   }
 
   def "CurrentProject"() {
