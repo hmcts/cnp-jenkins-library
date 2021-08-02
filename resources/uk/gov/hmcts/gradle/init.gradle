@@ -36,6 +36,7 @@ settingsEvaluated { settings ->
       maven {
         url mirrorUrl
       }
+      gradlePluginPortal()
     }
   }
 }
