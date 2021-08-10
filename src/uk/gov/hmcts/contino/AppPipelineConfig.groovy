@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
-  Map<String, String> vaultEnvironmentOverrides = ['preview':'aat']
+  Map<String, String> vaultEnvironmentOverrides = ['preview':'aat', 'dev':'stg']
   String vaultName
   boolean migrateDb = false
   String dbMigrationVaultName
