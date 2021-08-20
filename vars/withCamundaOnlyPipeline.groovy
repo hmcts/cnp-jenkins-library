@@ -33,6 +33,8 @@ def call(type, String product, String component, String s2sServiceName, String t
     angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
 
+  def deployToProdFlag = ['wa'].contains(product)?false: true;
+
   PipelineType pipelineType
 
   if (type instanceof PipelineType) {
@@ -116,7 +118,9 @@ def call(type, String product, String component, String s2sServiceName, String t
         def nonProdEnv = new Environment(env).nonProdName
         def prodEnv = new Environment(env).prodName
         camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
-        camundaPublish(s2sServiceName, prodEnv, product, tenantId)
+        if (deployToProdFlag) {
+          camundaPublish(s2sServiceName, prodEnv, product, tenantId)
+        }
 
         sectionSyncBranchesWithMaster(
             branchestoSync: pipelineConfig.branchesToSyncWithMaster,
