@@ -33,7 +33,7 @@ def call(type, String product, String component, String s2sServiceName, String t
     angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
 
-  def deployToProdFlag = ['wa'].contains(product)?false: true;
+  def deployToProdFlag = !product.equals('wa');
 
   PipelineType pipelineType
 
