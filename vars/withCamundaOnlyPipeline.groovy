@@ -115,9 +115,13 @@ def call(type, String product, String component, String s2sServiceName, String t
       onMaster {
         def nonProdEnv = new Environment(env).nonProdName
         def prodEnv = new Environment(env).prodName
+        
         camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
-        camundaPublish(s2sServiceName, prodEnv, product, tenantId)
-
+        
+        approvedEnvironmentRepository(prodEnv, metricsPublisher) {
+          camundaPublish(s2sServiceName, prodEnv, product, tenantId)
+        }
+        
         sectionSyncBranchesWithMaster(
             branchestoSync: pipelineConfig.branchesToSyncWithMaster,
             product: product
