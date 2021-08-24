@@ -118,7 +118,7 @@ def call(type, String product, String component, String s2sServiceName, String t
         
         camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
         
-        approvedEnvironmentRepository(environment, metricsPublisher) {
+        approvedEnvironmentRepository(prodEnv, metricsPublisher) {
           camundaPublish(s2sServiceName, prodEnv, product, tenantId)
         }
         
