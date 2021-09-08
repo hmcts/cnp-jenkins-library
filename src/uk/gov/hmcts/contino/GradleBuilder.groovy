@@ -158,7 +158,11 @@ EOF
   }
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
-    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
+    try {
+      gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: '**/reports/**/contract/**/*.xml'
+    }
   }
 
   def runConsumerTests(pactBrokerUrl, version) {

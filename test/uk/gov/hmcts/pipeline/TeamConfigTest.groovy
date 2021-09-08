@@ -31,6 +31,7 @@ class TeamConfigTest extends Specification {
     def productName = 'pr-12-bar'
     def expected = 'Fees/Pay'
     when:
+    steps.env >> []
     def teamName = teamConfig.getName(productName)
 
     then:
@@ -41,6 +42,7 @@ class TeamConfigTest extends Specification {
     def productName = 'pr-12-nonexisting'
     def expected = TeamConfig.DEFAULT_TEAM_NAME
     when:
+    steps.env >> []
     def teamName = teamConfig.getName(productName)
 
     then:
@@ -52,6 +54,7 @@ class TeamConfigTest extends Specification {
     def expected = 'Software Engineering'
 
     when:
+    steps.env >> []
     def teamName = teamConfig.getName(productName)
 
     then:
@@ -63,6 +66,7 @@ class TeamConfigTest extends Specification {
     def expected = TeamConfig.DEFAULT_TEAM_NAME
 
     when:
+    steps.env >> []
     def teamName = teamConfig.getName(productName)
 
     then:
@@ -74,6 +78,7 @@ class TeamConfigTest extends Specification {
     def expected = TeamConfig.DEFAULT_TEAM_NAME
 
     when:
+    steps.env >> []
     def teamName = teamConfig.getName(productName)
 
     then:
@@ -84,6 +89,7 @@ class TeamConfigTest extends Specification {
     def productName = 'pr-12-bar'
     def expected = 'fees-pay'
     when:
+    steps.env >> []
     def teamName = teamConfig.getNameSpace(productName)
 
     then:
@@ -94,6 +100,7 @@ class TeamConfigTest extends Specification {
     def productName = 'pr-12-nonexisting'
     def expected = TeamConfig.DEFAULT_TEAM_NAME
     when:
+    steps.env >> []
     def teamName = teamConfig.getNameSpace(productName)
 
     then:
@@ -105,6 +112,7 @@ class TeamConfigTest extends Specification {
     def expected = 'rpe'
 
     when:
+    steps.env >> []
     def teamName = teamConfig.getNameSpace(productName)
 
     then:
@@ -115,6 +123,7 @@ class TeamConfigTest extends Specification {
     def productName = 'dm'
 
     when:
+    steps.env >> []
     teamConfig.getNameSpace(productName)
 
     then:
@@ -125,6 +134,7 @@ class TeamConfigTest extends Specification {
     def productName = 'idontexist'
 
     when:
+    steps.env >> []
     def teamName = teamConfig.getNameSpace(productName)
 
     then:
@@ -134,6 +144,7 @@ class TeamConfigTest extends Specification {
   def "getContactSlackChannel() with empty value should return mapping from team config"() {
 
     when:
+    steps.env >> []
     def slackChannel = teamConfig.getContactSlackChannel('cmc')
 
     then:
@@ -143,6 +154,7 @@ class TeamConfigTest extends Specification {
   def "getContactSlackChannel() with non existing product should throw exception"() {
 
     when:
+    steps.env >> []
     def slackChannel = teamConfig.getContactSlackChannel('idontexist')
 
     then:
@@ -152,6 +164,7 @@ class TeamConfigTest extends Specification {
   def "getContactSlackChannel() with product having empty slackchannel mapping should throw exception"() {
 
     when:
+    steps.env >> []
     def slackChannel = teamConfig.getContactSlackChannel('dm')
 
     then:
@@ -204,6 +217,7 @@ class TeamConfigTest extends Specification {
   def "getBuildAgentType() with valid product name but no agent should return empty agent type"() {
 
     when:
+    steps.env >> []
     def agent = teamConfig.getBuildAgentType('dm')
 
     then:
@@ -224,6 +238,7 @@ class TeamConfigTest extends Specification {
     def productName = 'bulk-scan'
 
     when:
+    steps.env >> []
     def agent = teamConfig.getBuildAgentType(productName)
 
     then:
@@ -234,6 +249,7 @@ class TeamConfigTest extends Specification {
     def productName = 'bulk-scan'
 
     when:
+    steps.env >> []
     def registry = teamConfig.getContainerRegistry(productName)
 
     then:
@@ -244,6 +260,7 @@ class TeamConfigTest extends Specification {
     def productName = 'idontexist'
 
     when:
+    steps.env >> []
     def registry = teamConfig.getContainerRegistry(productName)
 
     then:
@@ -253,6 +270,7 @@ class TeamConfigTest extends Specification {
   def "getApplicationTag() should return mapping from team config"() {
 
     when:
+    steps.env >> []
     String applicationTag = teamConfig.getApplicationTag('cmc')
 
     then:
@@ -262,6 +280,7 @@ class TeamConfigTest extends Specification {
   def "getApplicationTag() with non existing product should throw exception"() {
 
     when:
+    steps.env >> []
     String applicationTag = teamConfig.getApplicationTag('idontexist')
 
     then:

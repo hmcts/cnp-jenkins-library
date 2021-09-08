@@ -25,12 +25,12 @@ def call() {
     ],
     perftest: [
       environmentName: environment.perftestName,
-      subscriptionName: subscription.qaName,
+      subscriptionName: subscription.perftestName,
       aksSubscription: aksSubscriptions.perftest
     ],
     ithc: [
       environmentName: environment.ithcName,
-      subscriptionName: subscription.qaName,
+      subscriptionName: subscription.ithcName,
       aksSubscription: aksSubscriptions.ithc
     ],
     ethosldata: [
