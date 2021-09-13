@@ -15,7 +15,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def build() {
     addVersionInfo()
-    gradle("assemble")
+    gradle("assemble", additionalOptions = "--refresh-dependencies")
   }
 
   def fortifyScan() {
@@ -174,12 +174,12 @@ EOF
   }
 
 
-  def gradle(String task, String prepend = "") {
+  def gradle(String task, String prepend = "", String additionalOptions = "") {
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
     addInitScript()
-    steps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    steps.sh("${prepend}./gradlew --no-daemon --init-script ${additionalOptions} init.gradle ${task}")
   }
 
   private String gradleWithOutput(String task) {
