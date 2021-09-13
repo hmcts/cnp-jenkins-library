@@ -45,7 +45,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
-        pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG ]).toString()
+        pipelineTags = new TerraformTagMap([environment: environment, changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
 
         if (env.STORE_rg_name_template != null &&
@@ -85,7 +85,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_component = component
 
         def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
-        
+
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
         }
