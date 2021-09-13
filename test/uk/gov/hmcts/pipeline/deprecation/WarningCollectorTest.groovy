@@ -9,7 +9,8 @@ class WarningCollectorTest extends Specification {
 
   Date nextDay = DateUtils.addDays(new Date(),1)
   Date now = new Date()
-  Date nextWeek = DateUtils.addDays(new Date(),7)
+  Date nextWeek = DateUtils.addHours(DateUtils.addDays(new Date(),7), -1)
+
   String nextWeekFormattedDate = nextWeek.format("dd/MM/yyyy HH:mm aa", TimeZone.getTimeZone("UTC"))
   String nextDayFormattedDate = nextDay.format("dd/MM/yyyy HH:mm aa", TimeZone.getTimeZone("UTC"))
 
