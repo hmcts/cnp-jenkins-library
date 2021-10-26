@@ -306,15 +306,29 @@ In case your infrastructure includes database creation there is a Flyway migrati
 
 ## Nightly pipeline
 
-The intent of the Nightly Pipeline is to run dependency checks on a nightly basis against the AAT environment as well as some optional tests which are listed in the table below:
+The intent of the Nightly Pipeline is to run dependency checks on a nightly basis against the AAT environment as well as some optional tests.
+
+Example block to enable tests:
+```
+withNightlyPipeline(type, product, component) {
+
+  // add this!
+  enableCrossBrowserTest()
+  enableFortifyScan()
+  enablePerformanceTest()
+  enableSecurityScan()
+  enableMutationTest()
+  enableFullFunctionalTest()
+}
+```
 
 TestName | How to enable | Example
 --- | --- | ---
- CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" | [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
+ CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" and call enableCrossBrowserTest()| [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
  FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files)
- Performance* | Add Gatling config | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
- SecurityScan | Add a file in root of repository called security.sh | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
- Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
+ Performance* | Add Gatling config and call enablePerformancetest() | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
+ SecurityScan | Add a file in root of repository called security.sh and call enableSecurityScan() | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
+ Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
  FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
@@ -328,19 +342,6 @@ Create the Jenkinsfile_Nightly, import the Infrastructure library and use the wi
 When initially setting up the nightly pipeline for use in your repo, you should make use of the nightly-dev branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
-
-Example block to enable tests:
-```
-withNightlyPipeline(type, product, component) {
-
-  // add this!
-  enableCrossBrowserTest()
-  enableFortifyScan()
-  enablePerformanceTest()
-  enableMutationTest()
-  enableFullFunctionalTest()
-}
-```
 
 #### Extending the test pipeline
 
