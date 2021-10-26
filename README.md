@@ -337,7 +337,7 @@ The current state of the Nightly Pipeline is geared towards testing both fronten
 
 The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named Jenkinsfile_nightly must be included in the repository.
 
-Create the Jenkinsfile_Nightly, import the Infrastructure library and use the withNightlyPipeline block.
+Create the `Jenkinsfile_Nightly`, import the Infrastructure library and use the `withNightlyPipeline` block.
 
 When initially setting up the nightly pipeline for use in your repo, you should make use of the nightly-dev branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
 
