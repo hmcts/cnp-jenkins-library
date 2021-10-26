@@ -316,7 +316,7 @@ TestName | How to enable | Example
  Mutation | Add NightlyPipeline block and add package.json file with "test:mutation": "Your script to run mutation tests" | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
  FullFunctional | Add NightlyPipeline block | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
 
-*Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/
+*Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
 
