@@ -339,7 +339,7 @@ The pipeline contains stages for application checkout, build and list of testing
 
 Create the `Jenkinsfile_Nightly`, import the Infrastructure library and use the `withNightlyPipeline` block.
 
-When initially setting up the nightly pipeline for use in your repo, you should make use of the nightly-dev branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
+When initially setting up the nightly pipeline for use in your repo, you should make use of the `nightly-dev` branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
