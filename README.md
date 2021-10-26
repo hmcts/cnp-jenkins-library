@@ -310,11 +310,12 @@ The intent of the Nightly Pipeline is to run dependency checks on a nightly basi
 
 TestName | How to enable | Example
 --- | --- | ---
- CrossBrowser | Add NightlyPipeline block and package.json file with "test:crossbrowser" : "Your script to run browser tests" | [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
- Performance* | Add NightlyPipeline block and Gatling config | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
- SecurityScan | Add NightlyPipeline block and create a file in root of repository called security.sh | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
- Mutation | Add NightlyPipeline block and add package.json file with "test:mutation": "Your script to run mutation tests" | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
- FullFunctional | Add NightlyPipeline block | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
+ CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" | [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
+ FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files)
+ Performance* | Add Gatling config | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
+ SecurityScan | Add a file in root of repository called security.sh | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
+ Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
+ FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
@@ -324,6 +325,8 @@ The pipeline contains stages for application checkout, build and list of testing
 
 Create the Jenkinsfile_Nightly, import the Infrastructure library and use the withNightlyPipeline block.
 
+When initially setting up the nightly pipeline for use in your repo, you should make use of the nightly-dev branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
+
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
 Example block to enable tests:
@@ -331,15 +334,17 @@ Example block to enable tests:
 withNightlyPipeline(type, product, component) {
 
   // add this!
-  enable{{ TestName }}Test()
-  enable{{ TestName }}Test()
-  enable{{ TestName }}Test()
+  enableCrossBrowserTest()
+  enableFortifyScan()
+  enablePerformanceTest()
+  enableMutationTest()
+  enableFullFunctionalTest()
 }
 ```
 
 #### Extending the test pipeline
 
-You can use the before(stage) and after(stage) within the withNightlyPipeline block to add extra steps at the beginning or end of a named stage.
+You can use the `before(stage)` and `after(stage)` within the `withNightlyPipeline` block to add extra steps at the beginning or end of a named stage.
 ```
 withNightlyPipeline(type, product, component) {
   enableCrossBrowserTest()
@@ -592,7 +597,7 @@ If your pipeline fails with an error message saying "this repo is using a terraf
 
 On searching for this, you will be directed to [/vars/approvedTerraformInfrastructure.groovy](https://github.com/hmcts/cnp-jenkins-library/blob/48109489e4a1075196142f9c1022c38be1f52ddf/vars/approvedTerraformInfrastructure.groovy#L47)
 
-This file calls a library named [TerraformInfraApprovals](https://github.com/hmcts/cnp-jenkins-library/blob/48109489e4a1075196142f9c1022c38be1f52ddf/src/uk/gov/hmcts/pipeline/TerraformInfraApprovals.groovy#L23).
+This file calls a class named [TerraformInfraApprovals](https://github.com/hmcts/cnp-jenkins-library/blob/48109489e4a1075196142f9c1022c38be1f52ddf/src/uk/gov/hmcts/pipeline/TerraformInfraApprovals.groovy#L23).
 
 This file will point to the repository which defines, in json syntax, which infrastructure resources and modules are approved for use at the [global](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/global.json) and [project](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/bulk-scan-shared-infrastructure.json) level.
 
