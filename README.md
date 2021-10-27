@@ -315,17 +315,17 @@ withNightlyPipeline(type, product, component) {
   // add this!
   enableCrossBrowserTest()
   enableFortifyScan()
-  enablePerformanceTest()
-  enableSecurityScan()
-  enableMutationTest()
-  enableFullFunctionalTest()
 }
 ```
+
+Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
+
+All available test stages are detailed in the table below:
 
 TestName | How to enable | Example
 --- | --- | ---
  CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" and call enableCrossBrowserTest()| [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
- FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files)
+ FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-case-management-web/pull/1102/files)
  Performance* | Add Gatling config and call enablePerformancetest() | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
  SecurityScan | Add a file in root of repository called security.sh and call enableSecurityScan() | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
  Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
@@ -340,8 +340,6 @@ The pipeline contains stages for application checkout, build and list of testing
 Create the `Jenkinsfile_Nightly`, import the Infrastructure library and use the `withNightlyPipeline` block.
 
 When initially setting up the nightly pipeline for use in your repo, you should make use of the `nightly-dev` branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
-
-Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
 #### Extending the test pipeline
 
