@@ -4,8 +4,8 @@ def call(String subscription, String environment, String product, Closure block)
   withAcrClient(subscription) {
     // replacing idam is a hack to workaround incorrect idam environment value
     def envName = environment.replace('idam-', '').toUpperCase()
-    env.AKS_CLUSTER_NAME = "preview-01-aks"
-    env.AKS_RESOURCE_GROUP = "preview-01-rg"
+    env.AKS_CLUSTER_NAME = "cft-preview-00-aks"
+    env.AKS_RESOURCE_GROUP = "cft-preview-00-rg"
     block.call()
   }
 }
