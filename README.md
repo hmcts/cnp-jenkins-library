@@ -2,10 +2,12 @@
 
 ## How is this used?
 Code in this library are loaded at runtime by Jenkins.
-Jenkins is already configured to point to this repository
+Jenkins is already configured to point to this repository.
 See [Jenkins Shared Libraries](https://jenkins.io/doc/book/pipeline/shared-libraries/)
 
-In your pipeline, import this library.
+To get an understanding of the directory structure within this repository, please refer to [Directory Structure](https://www.jenkins.io/doc/book/pipeline/shared-libraries/#directory-structure)
+
+To use this pipeline in your repo, you must import it in a Jenkinsfile
 
 ```groovy
   @Library('Infrastructure')
@@ -302,6 +304,65 @@ It is possible for applications to build their specific infrastructure elements 
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
+## Nightly pipeline
+
+The intent of the Nightly Pipeline is to run dependency checks on a nightly basis against the AAT environment as well as some optional tests.
+
+Example block to enable tests:
+```
+withNightlyPipeline(type, product, component) {
+
+  // add this!
+  enableCrossBrowserTest()
+  enableFortifyScan()
+}
+```
+
+Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
+
+All available test stages are detailed in the table below:
+
+TestName | How to enable | Example
+--- | --- | ---
+ CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" and call enableCrossBrowserTest()| [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
+ FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-case-management-web/pull/1102/files)
+ Performance* | Add Gatling config and call enablePerformancetest() | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
+ SecurityScan | Add a file in root of repository called security.sh and call enableSecurityScan() | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
+ Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
+ FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
+
+*Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
+
+The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
+
+The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named `Jenkinsfile_nightly` must be included in the repository.
+
+Create the `Jenkinsfile_Nightly`, import the Infrastructure library and use the `withNightlyPipeline` block.
+
+When initially setting up the nightly pipeline for use in your repo, you should make use of the `nightly-dev` branch. You should also utilise this branch when debugging any issues that arise in the nightly pipeline.
+
+#### Extending the test pipeline
+
+You can use the `before(stage)` and `after(stage)` within the `withNightlyPipeline` block to add extra steps at the beginning or end of a named stage.
+```
+withNightlyPipeline(type, product, component) {
+  enableCrossBrowserTest()
+  enableFullFunctionalTest()
+  loadVaultSecrets(secrets)
+
+  before('crossBrowserTest') {
+    yarnBuilder.smokeTest()
+  }
+
+  after('crossBrowserTest') {
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
+  }
+
+  after('fullFunctionalTest') {
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+  }
+}
+```
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
@@ -522,6 +583,22 @@ To consume the new modules, existing resources must be imported to the new modul
 **Example:**
 
 Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull
+
+## Troubleshooting
+
+Any steps that you see in your Jenkins pipeline can be found within this repository.
+
+If you search this repository for the command being run when a failure occurs, you can see where the command and it's associated variables are defined.
+
+For example, pipelines are restricted to create resources via Terraform that have been pre-approved.
+
+If your pipeline fails with an error message saying "this repo is using a terraform resource that is not allowed", you can search the repo for this message to see where the steps that throw this error are defined.
+
+On searching for this, you will be directed to [/vars/approvedTerraformInfrastructure.groovy](https://github.com/hmcts/cnp-jenkins-library/blob/48109489e4a1075196142f9c1022c38be1f52ddf/vars/approvedTerraformInfrastructure.groovy#L47)
+
+This file calls a class named [TerraformInfraApprovals](https://github.com/hmcts/cnp-jenkins-library/blob/48109489e4a1075196142f9c1022c38be1f52ddf/src/uk/gov/hmcts/pipeline/TerraformInfraApprovals.groovy#L23).
+
+This file will point to the repository which defines, in json syntax, which infrastructure resources and modules are approved for use at the [global](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/global.json) and [project](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/bulk-scan-shared-infrastructure.json) level.
 
 ## Contributing
 
