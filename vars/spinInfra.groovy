@@ -93,9 +93,9 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
         // Do not attempt to import during PR build
-        if (!tfPlanOnly) {
-          importTerraformModules(subscription, environment, product, pipelineTags)
-        }
+        // if (!tfPlanOnly) {
+        //   importTerraformModules(subscription, environment, product, pipelineTags)
+        // }
 
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +

@@ -9,9 +9,6 @@ def call(String subscription, String environment, String product, tags) {
 
     def jsonSlurper = new JsonSlurper()
 
-    sh "terraform refresh -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" +
-          (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
-    
     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
