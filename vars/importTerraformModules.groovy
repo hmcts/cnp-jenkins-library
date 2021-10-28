@@ -9,6 +9,7 @@ def call(String subscription, String environment, String product, tags) {
 
     def jsonSlurper = new JsonSlurper()
 
+    sh "terraform refresh"
     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
 
