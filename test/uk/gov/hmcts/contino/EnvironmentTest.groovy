@@ -63,7 +63,7 @@ class EnvironmentTest extends Specification {
 
   def "Converts prod to production"() {
     when:
-    def environmentTagName = new Environment.toTagName("prod")
+    def environmentTagName = Environment.toTagName("prod")
 
     then:
     assert environmentTagName == "production"
