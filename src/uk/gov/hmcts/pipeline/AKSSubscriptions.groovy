@@ -9,7 +9,6 @@ class AKSSubscriptions {
   final AKSSubscription perftest
   final AKSSubscription prod
   final AKSSubscription demo
-  final AKSSubscription ethosldata
   final AKSSubscription sandbox
 
   List<AKSSubscription> subscriptionList = new ArrayList<>();
@@ -55,7 +54,6 @@ class AKSSubscriptions {
     def sandboxId = steps.env.AKS_SANDBOX_SUBSCRIPTION_ID ?: 'b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb'
     sandbox = new AKSSubscription(steps, sandboxName, '', environment.sandbox.toString(), sandboxId)
 
-    subscriptionList.add(ethosldata)
 
   }
 
