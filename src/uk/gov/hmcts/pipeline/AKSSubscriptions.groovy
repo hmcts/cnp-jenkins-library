@@ -51,10 +51,6 @@ class AKSSubscriptions {
     demo = new AKSSubscription(steps, demoName, 'cftapps-demo', environment.demoName.toString(), demoId)
     subscriptionList.add(demo)
 
-    def ethosLdataName = steps.env.AKS_ETHOS_LDATA_SUBSCRIPTION_NAME ?: 'DCD-ETHOS-MIGRATION-LDATA'
-    def ethosId = steps.env.AKS_ETHOS_LDATA_SUBSCRIPTION_ID ?: '4da0ce99-35c5-491f-8a0b-56c39f7278fa'
-    ethosldata = new AKSSubscription(steps, ethosLdataName, 'ethos-ldata', environment.ethosLdataName.toString(), ethosId)
-
     def sandboxName = steps.env.AKS_SANDBOX_SUBSCRIPTION_NAME ?: 'DCD-CFTAPPS-SBOX'
     def sandboxId = steps.env.AKS_SANDBOX_SUBSCRIPTION_ID ?: 'b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb'
     sandbox = new AKSSubscription(steps, sandboxName, '', environment.sandbox.toString(), sandboxId)

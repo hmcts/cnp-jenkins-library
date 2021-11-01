@@ -45,22 +45,6 @@ class EnvironmentTest extends Specification {
     assert environment.nonProdName == "saat"
   }
 
-  def "default hmctsdemo environment"() {
-    when:
-    def environment = new Environment(["unusedVar": "unused"])
-
-    then:
-    assert environment.hmctsDemoName == "hmctsdemo"
-  }
-
-  def "overrride hmctsdemo environment"() {
-    when:
-    def environment = new Environment(["unusedVar": "unused", "HMCTSDEMO_ENVIRONMENT_NAME": "hmctsdemooverride"])
-
-    then:
-    assert environment.hmctsDemoName == "hmctsdemooverride"
-  }
-
   def "Converts prod to production"() {
     when:
     def environmentTagName = Environment.toTagName("prod")

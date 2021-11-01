@@ -32,12 +32,6 @@ def call() {
       environmentName: environment.ithcName,
       subscriptionName: subscription.ithcName,
       aksSubscription: aksSubscriptions.ithc
-    ],
-    ethosldata: [
-      environmentName: environment.ethosLdataName,
-      subscriptionName: subscription.ethosLdataName,
-      aksSubscription: aksSubscriptions.ethosldata,
-      aksInfraRgName: null
     ]
   ]
   return autoDeployEnvironments[branch]
