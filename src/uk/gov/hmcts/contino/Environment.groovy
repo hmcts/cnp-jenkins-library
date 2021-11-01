@@ -5,10 +5,8 @@ class Environment implements Serializable {
   def final prodName
   def final demoName
   def final previewName
-  def final hmctsDemoName
   def final perftestName
   def final ithcName
-  def final ethosLdataName
   def final sandbox
   def final pactBrokerUrl
 
@@ -22,10 +20,8 @@ class Environment implements Serializable {
     prodName = env.PROD_ENVIRONMENT_NAME ?: 'prod'
     demoName = env.DEMO_ENVIRONMENT_NAME ?: 'demo'
     previewName = env.PREVIEW_ENVIRONMENT_NAME ?: 'preview'
-    hmctsDemoName = env.HMCTSDEMO_ENVIRONMENT_NAME ?: 'hmctsdemo'
     perftestName = env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest'
     ithcName = env.ITHC_ENVIRONMENT_NAME ?: 'ithc'
-    ethosLdataName = env.ETHOSLDATA_ENVIRONMENT_NAME ?: 'ethosldata'
     sandbox = env.SANDBOX_ENVIRONMENT_NAME ?: 'sandbox'
     pactBrokerUrl = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
 
@@ -35,4 +31,26 @@ class Environment implements Serializable {
   def onFunctionalTestEnvironment(environment) {
     return functionalTestEnvironments.contains(environment)
   }
+
+  static String toTagName(String environment) {
+    String cleanedEnvironment = environment.replace("idam-", "")
+    switch(cleanedEnvironment) {
+        case "sbox":
+          return "sandbox"
+        case "dev":
+        case "preview":
+          return "development"
+        case "perftest":
+        case "test":
+          return "testing"
+        case "stg":
+        case "aat":
+          return "staging"
+        case "prod":
+          return "production"
+        default:
+          throw new RuntimeException("Unknown environment: ${cleanedEnvironment}")
+    }
+  }
+
 }

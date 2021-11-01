@@ -61,4 +61,20 @@ class EnvironmentTest extends Specification {
     assert environment.hmctsDemoName == "hmctsdemooverride"
   }
 
+  def "Converts prod to production"() {
+    when:
+    def environmentTagName = new Environment.toTagName("prod")
+
+    then:
+    assert environmentTagName == "production"
+  }
+
+  def "Throws exception on unknown environment"() {
+    when:
+    new Environment("unknown_environment")
+
+    then:
+    thrown(RuntimeException)
+  }
+
 }
