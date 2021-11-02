@@ -40,6 +40,10 @@ class Environment implements Serializable {
         case "dev":
         case "preview":
           return "development"
+        case "demo":
+          return "demo"
+        case "ithc":
+          return "ithc"
         case "perftest":
         case "test":
           return "testing"
