@@ -24,16 +24,8 @@ class ProjectBranch implements Serializable {
     branchName == 'demo'
   }
 
-  boolean isHMCTSDemo() {
-    branchName == 'hmctsdemo'
-  }
-
   boolean isPerftest() {
     branchName == 'perftest'
-  }
-
-  boolean isEthosldata() {
-    branchName == 'ethosldata'
   }
 
   boolean isIthc() {

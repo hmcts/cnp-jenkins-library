@@ -45,20 +45,20 @@ class EnvironmentTest extends Specification {
     assert environment.nonProdName == "saat"
   }
 
-  def "default hmctsdemo environment"() {
+  def "Converts prod to production"() {
     when:
-    def environment = new Environment(["unusedVar": "unused"])
+    def environmentTagName = Environment.toTagName("prod")
 
     then:
-    assert environment.hmctsDemoName == "hmctsdemo"
+    assert environmentTagName == "production"
   }
 
-  def "overrride hmctsdemo environment"() {
+  def "Throws exception on unknown environment"() {
     when:
-    def environment = new Environment(["unusedVar": "unused", "HMCTSDEMO_ENVIRONMENT_NAME": "hmctsdemooverride"])
+    new Environment("unknown_environment")
 
     then:
-    assert environment.hmctsDemoName == "hmctsdemooverride"
+    thrown(RuntimeException)
   }
 
 }

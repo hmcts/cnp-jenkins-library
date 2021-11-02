@@ -27,14 +27,6 @@ class SubscriptionTest extends Specification {
     then:
     assert subscription.nonProdName == "nonprod"
   }
-  
-  def "Defaults to 'hmctsdemo' for hmctsdemo env when hmctsDemo subscription var override not set"() {
-    when:
-    def subscription = new Subscription(["unusedVar": "unused"])
-
-    then:
-    assert subscription.hmctsDemoName == "hmctsdemo"
-  }
 
   def "Overrides prod env name when subscription var override is set"() {
     when:
@@ -52,11 +44,4 @@ class SubscriptionTest extends Specification {
     assert subscription.nonProdName == "snonprod"
   }
 
-  def "Overrides ethosldata env name when subscription var override is set"() {
-    when:
-    def subscription = new Subscription(["ETHOSLDATA_SUBSCRIPTION_NAME": "ethosldata"])
-
-    then:
-    assert subscription.ethosLdataName == "ethosldata"
-  }
 }
