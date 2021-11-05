@@ -50,6 +50,7 @@ class Environment implements Serializable {
           return "testing"
         case "stg":
         case "aat":
+        case "aat2":
           return "staging"
         case "prod":
           return "production"
