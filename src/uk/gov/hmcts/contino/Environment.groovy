@@ -34,6 +34,7 @@ class Environment implements Serializable {
 
   static String toTagName(String environment) {
     String cleanedEnvironment = environment.replace("idam-", "")
+    String cleanedEnvironment = environment.replace("packer-", "")
     switch(cleanedEnvironment) {
         case "sandbox":
         case "sbox":
@@ -53,6 +54,7 @@ class Environment implements Serializable {
         case "aat2":
           return "staging"
         case "prod":
+        case "prod2":
           return "production"
         default:
           throw new RuntimeException("Unknown environment: ${cleanedEnvironment}")
