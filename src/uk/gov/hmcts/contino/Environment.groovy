@@ -34,7 +34,7 @@ class Environment implements Serializable {
 
   static String toTagName(String environment) {
     String cleanedEnvironment = environment.replace("idam-", "")
-    String cleanedEnvironment = environment.replace("packer-", "")
+      .replace("packer-", "")
     switch(cleanedEnvironment) {
         case "sandbox":
         case "sbox":
