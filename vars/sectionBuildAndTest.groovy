@@ -103,7 +103,11 @@ def call(params) {
                     writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
                   } else {
                     writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-                    sh script: "cat .dockerignore_build >> .dockerignore"
+                    sh script: """
+                      # in case anyone doesn't have a trailing new line in their file
+                      echo -e '\n' >> .dockerignore
+                      cat .dockerignore_build >> .dockerignore
+                    """
                   }
                   def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
                   if (fileExists(acbTemplateFilePath)) {
