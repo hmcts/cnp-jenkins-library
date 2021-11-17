@@ -278,9 +278,9 @@ withInfraPipeline(product) {
 You have the ability to pass extra parameters to the `withInfraPipeline`.
 
 These parameters include:
-| parameter name | description | example |
+| parameter name | description
 | --- | --- | --- |
-| component | Extra detail to the name of the repository | "extra-detail" |
+| component | https://hmcts.github.io/glossary/#component |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
