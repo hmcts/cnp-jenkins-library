@@ -264,12 +264,9 @@ Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 
 @Library("Infrastructure") _
 
-def product = "rhubarb"
+def product = "rhubarb" 
 
-//Optional
-def component = "extra-detail" 
-
-withInfraPipeline(product, component) {
+withInfraPipeline(product) {
 
   enableSlackNotifications('#my-team-builds')
 
