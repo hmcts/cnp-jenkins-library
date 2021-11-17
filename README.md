@@ -273,6 +273,33 @@ withInfraPipeline(product) {
 }
 ```
 
+#### Optional parameters for the opinionated infratructure pipeline
+
+You have the ability to pass extra parameters to the `withInfraPipeline`.
+
+These parameters include:
+| parameter name | description
+| --- | --- | --- |
+| component | https://hmcts.github.io/glossary/#component |
+
+Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
+```groovy
+#!groovy
+
+@Library("Infrastructure") _
+
+def product = "rhubarb"
+
+//Optional
+def component = "extra-detail" 
+
+withInfraPipeline(product, component) {
+
+  enableSlackNotifications('#my-team-builds')
+
+}
+```
+
 #### Extending the opinionated infratructure pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
