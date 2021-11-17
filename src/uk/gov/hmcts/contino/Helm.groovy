@@ -130,14 +130,16 @@ class Helm {
     this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json", this.tlsOptions])
   }
 
-  def hasAnyDeployed(String imageTag, String namespace) {
+  def hasAnyNonDeployed(String imageTag, String namespace) {
     if (!exists(imageTag, namespace)) {
       this.steps.echo "No release deployed for: $imageTag in namespace $namespace"
       return false
     }
     def releases = this.history(imageTag, namespace)
     this.steps.echo releases
-    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "deployed" }
+    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
+                                                                    it.status?.toLowerCase() == "pending-upgrade" ||
+                                                                    it.status?.toLowerCase() == "pending-install" }
   }
 
   private Object execute(String command, String name) {

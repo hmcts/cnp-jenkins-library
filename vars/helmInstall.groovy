@@ -118,14 +118,13 @@ def call(DockerImage dockerImage, Map params) {
       }
     }
 
-    // Helm throws error if trying to upgrade , when there have only been failed deployments
+    // Helm throws error if trying to upgrade, when there have only been failed deployments
     def deleted = false
-    if (helm.exists(dockerImage.getImageTag(), namespace) &&
-      !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
+    if (helm.hasAnyNonDeployed(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
       helm.delete(dockerImage.getImageTag(), namespace)
-      echo "Deleted release for ${dockerImage.getImageTag()} as previous release was not 'deployed'"
+      echo "Deleted release for ${dockerImage.getImageTag()} as previous release was not 'deployed' successfully"
     } else {
       echo "Skipping delete for ${dockerImage.getImageTag()} as it doesn't exist or the last version was deployed successfully"
     }
