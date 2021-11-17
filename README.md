@@ -264,7 +264,7 @@ Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 
 @Library("Infrastructure") _
 
-def product = "rhubarb" 
+def product = "rhubarb"
 
 withInfraPipeline(product) {
 
