@@ -12,6 +12,7 @@ class TeamConfig {
   static final String TAGS_KEY = "tags"
   static final String APPLICATION_KEY = "application"
   static final String AGENT_KEY = "agent"
+  static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
   static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
