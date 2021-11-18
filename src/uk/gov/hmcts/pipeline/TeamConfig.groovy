@@ -12,7 +12,6 @@ class TeamConfig {
   static final String TAGS_KEY = "tags"
   static final String APPLICATION_KEY = "application"
   static final String AGENT_KEY = "agent"
-  static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
   static final String REGISTRY_KEY = "registry"
   static def teamConfigMap
@@ -106,7 +105,7 @@ class TeamConfig {
   String getBuildAgentType(String product) {
     def teamNames = getTeamNamesMap()
     def rawProductName = getRawProductName(product)
-    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
+    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY)) {
       steps.echo("Agent type not found. Using default agent")
       return ""
     }
