@@ -43,13 +43,15 @@ def call(String product, String component = null, Closure body) {
           pipelineConfig: pipelineConfig,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
-          product: product)
+          product: product,
+          component: component)
 
         sectionInfraBuild(
           pipelineConfig: pipelineConfig,
           subscription: subscription.prodName,
           environment: environment.prodName,
-          product: product)
+          product: product,
+          component: component)
 
         sectionSyncBranchesWithMaster(
           branchestoSync: pipelineConfig.branchesToSyncWithMaster,
@@ -62,7 +64,8 @@ def call(String product, String component = null, Closure body) {
           pipelineConfig: pipelineConfig,
           subscription: subscriptionName,
           environment: environmentName,
-          product: product)
+          product: product,
+          component: component)
       }
 
       onPR {
@@ -71,7 +74,8 @@ def call(String product, String component = null, Closure body) {
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
-          planOnly: true)
+          planOnly: true,
+          component: component)
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
