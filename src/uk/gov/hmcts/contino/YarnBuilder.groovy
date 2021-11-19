@@ -116,7 +116,7 @@ class YarnBuilder extends AbstractBuilder {
     try {
       steps.sh """
         set +ex
-        source /opt/nvm/nvm.sh || true
+        . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
 
@@ -232,7 +232,7 @@ EOF
     if (steps.fileExists(NVMRC)) {
       steps.sh """
         set +ex
-        source /opt/nvm/nvm.sh || true
+        . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
 
@@ -244,7 +244,7 @@ EOF
   }
 
   private runYarnQuiet(task) {
-    def status = steps.sh(script: "yarn ${task} &> /dev/null", returnStatus: true)
+    def status = steps.sh(script: "yarn ${task} 1> /dev/null 2> /dev/null", returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
   }
