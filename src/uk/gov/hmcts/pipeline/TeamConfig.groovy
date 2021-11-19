@@ -106,11 +106,11 @@ class TeamConfig {
   String getBuildAgentType(String product) {
     def teamNames = getTeamNamesMap()
     def rawProductName = getRawProductName(product)
-    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY) || teamNames.get(rawProductName).get(AGENT_KEY) != DOCKER_AGENT_LABEL) {
+    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY)) {
       steps.echo("Agent type not found. Using default agent")
       return ""
     }
-    return DOCKER_AGENT_LABEL
+    return teamNames.get(rawProductName).get(AGENT_KEY)
   }
 
   boolean isDockerBuildAgent(String agentLabel) {
