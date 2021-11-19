@@ -110,7 +110,7 @@ class TeamConfig {
       steps.echo("Agent type not found. Using default agent")
       return ""
     }
-    return DOCKER_AGENT_LABEL
+    return teamNames.get(rawProductName).get(AGENT_KEY)
   }
 
   boolean isDockerBuildAgent(String agentLabel) {
