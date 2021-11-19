@@ -232,7 +232,7 @@ EOF
     if (steps.fileExists(NVMRC)) {
       steps.sh """
         set +ex
-        source /opt/nvm/nvm.sh || true
+        . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
 
