@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector;
 
 class YarnBuilder extends AbstractBuilder {
 
@@ -124,8 +123,6 @@ class YarnBuilder extends AbstractBuilder {
 
         ./yarn-audit-with-suppressions.sh
     """
-    } catch(ignored) { // TODO remove try catch after pipeline warning expires
-      WarningCollector.addPipelineWarning("node_cve", "CVEs found for Node.JS, update your dependencies / ignore false positives", new Date().parse("dd.MM.yyyy", "28.07.2020"))
     } finally {
       String issues = steps.readFile('yarn-audit-issues-result')
       String knownIssues = null

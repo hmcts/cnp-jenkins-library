@@ -5,7 +5,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(params) {
 
@@ -46,7 +45,7 @@ def call(params) {
       builder.setupToolVersion()
 
       if (!fileExists('Dockerfile')) {
-        WarningCollector.addPipelineWarning("deprecated_no_dockerfile", "A Dockerfile will be required for all app builds. Docker builds (enableDockerBuild()) wil be enabled by default. ", new Date().parse("dd.MM.yyyy", "17.12.2019"))
+        error "Please add a Dockerfile"
       }
 
       // always build master and demo as we currently do not deploy an image there

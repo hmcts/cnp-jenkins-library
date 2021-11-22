@@ -13,8 +13,6 @@ def call(Map<String, String> params) {
     chmod +x check-helm-api-version.sh
     ./check-helm-api-version.sh $product $component
     """
-  } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_helmapiversion", "Please upgrade helm chart api version to v2. For examples see: https://github.com/hmcts/service-auth-provider-app/pull/255 and https://github.com/hmcts/draft-store/pull/611/files", new Date().parse("dd.MM.yyyy", "22.02.2021"))
   } finally {
     sh 'rm -f check-helm-api-version.sh'
   }
