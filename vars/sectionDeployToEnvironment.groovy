@@ -4,7 +4,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.MetricsPublisher
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
@@ -49,14 +48,9 @@ def call(params) {
               if (config.migrateDb) {
                 stageWithAgent("DB Migration - ${environment}", product) {
                   pcr.callAround("dbmigrate:${environment}") {
-                    if (tfOutput?.microserviceName) {
-                      WarningCollector.addPipelineWarning("deprecated_microservice_name_outputted", "Please remove microserviceName from your terraform outputs, if you are not outputting the microservice name (component) and instead outputting something else you will need to migrate the secrets first, example PR: https://github.com/hmcts/ccd-data-store-api/pull/540"
-                        , new Date().parse("dd.MM.yyyy", "05.09.2019"))
-                    }
-
                     builder.dbMigrate(
                       tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
-                      tfOutput?.microserviceName ? tfOutput.microserviceName.value : component
+                      component
                     )
                   }
                 }

@@ -1,7 +1,5 @@
 package uk.gov.hmcts.contino
 
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   final AppPipelineConfig config
   def final steps
@@ -16,11 +14,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.vaultSecrets = vaultSecrets
   }
 
-  void enableDbMigration(String dbMigrationVaultName = "") {
-    if (dbMigrationVaultName == "") {
-      WarningCollector.addPipelineWarning("deprecated_enable_db_migration_no_vault)", "enableDbMigration() is deprecated, please use enableDbMigration(<vault-name>)", new Date().parse("dd.MM.yyyy", "05.09.2019"))
-    }
-
+  void enableDbMigration(String dbMigrationVaultName) {
     config.migrateDb = true
     config.dbMigrationVaultName = dbMigrationVaultName
   }
@@ -48,15 +42,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableSecurityScan(int timeout = 120) {
     config.securityScanTimeout = timeout
     config.securityScan = true
-  }
-
-  @Deprecated // no longer required, kept so that builds don't break if they contain it
-  void enableDockerBuild() {
-    WarningCollector.addPipelineWarning("docker_build_enabled", "enableDockerBuild() is deprecated and no longer does anything, please remove this flag before the pipeline starts failing.,", new Date().parse("dd.MM.yyyy", "18.02.2020"))
-  }
-
-  void installCharts() {
-    WarningCollector.addPipelineWarning("install_charts", "installCharts() is deprecated and no longer does anything, please remove this flag before the pipeline starts failing.,", new Date().parse("dd.MM.yyyy", "25.05.2020"))
   }
 
   void enableFullFunctionalTest(int timeout = 30) {

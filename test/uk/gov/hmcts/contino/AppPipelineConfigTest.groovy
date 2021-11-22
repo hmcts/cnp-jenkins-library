@@ -56,13 +56,6 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
   }
 
-  def "ensure enable db migration"() {
-    when:
-      dsl.enableDbMigration()
-    then:
-      thrown RuntimeException
-  }
-
   def "ensure enable performance test"() {
     when:
       dsl.enablePerformanceTest()
