@@ -59,7 +59,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      gradle("--rerun-tasks functional")
+      gradle("--info --rerun-tasks functional")
     } finally {
       steps.junit '**/test-results/**/*.xml'
     }
