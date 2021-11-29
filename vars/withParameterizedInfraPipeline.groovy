@@ -7,10 +7,10 @@ import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(String product, String environment, String subscription, String component = null, Closure body) {
-  call(product, environment, subscription, false, '', body, component)
+  call(product, environment, subscription, false, '', component, body)
 }
 def call(String product, String environment, String subscription, Boolean planOnly, String component = null, Closure body) {
-  call(product, environment, subscription, planOnly, '', body, component)
+  call(product, environment, subscription, planOnly, '', component, body)
 }
 def call(String product, String environment, String subscription, Boolean planOnly, String deploymentTargets, String component = null, Closure body) {
 
