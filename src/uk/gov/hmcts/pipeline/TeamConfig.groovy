@@ -104,13 +104,16 @@ class TeamConfig {
   }
 
   String getBuildAgentType(String product) {
+    /*
     def teamNames = getTeamNamesMap()
     def rawProductName = getRawProductName(product)
     if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY)) {
       steps.echo("Agent type not found. Using default agent")
       return ""
     }
-    return teamNames.get(rawProductName).get(AGENT_KEY)
+    return teamNames.get(rawProductName).get(')
+    */
+    return "ubuntu"
   }
 
   boolean isDockerBuildAgent(String agentLabel) {
