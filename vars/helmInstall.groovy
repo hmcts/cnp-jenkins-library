@@ -118,7 +118,7 @@ def call(DockerImage dockerImage, Map params) {
       }
     }
 
-    // Delete Helm Release if a previous release failed/is pending
+    // // Helm throws error if trying to upgrade when there have only been failed deployments, or if the previous one is in a 'pending' status
     def deleted = false
     if (helm.hasAnyFailedToDeploy(dockerImage.getImageTag(), namespace)) {
 
