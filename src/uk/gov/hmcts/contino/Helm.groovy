@@ -130,7 +130,7 @@ class Helm {
     this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json", this.tlsOptions])
   }
 
-  def hasAnyNonDeployed(String imageTag, String namespace) {
+  def hasAnyFailedToDeploy(String imageTag, String namespace) {
     if (!exists(imageTag, namespace)) {
       this.steps.echo "No release deployed for: $imageTag in namespace $namespace"
       return false
