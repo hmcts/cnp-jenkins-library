@@ -115,6 +115,7 @@ class YarnBuilder extends AbstractBuilder {
     try {
       steps.sh """
         set +ex
+        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
         . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
@@ -229,6 +230,7 @@ EOF
     if (steps.fileExists(NVMRC)) {
       steps.sh """
         set +ex
+        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
         . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
