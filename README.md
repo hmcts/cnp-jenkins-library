@@ -482,7 +482,7 @@ If you want to learn more about ACR tasks, [here is the documentation](https://d
 
 ## Tool versions
 
-Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/cnp-vm-hardening/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
+Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/jenkins-packer/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
 
 ### Java
 Java 11 is installed on the Jenkins agent.
