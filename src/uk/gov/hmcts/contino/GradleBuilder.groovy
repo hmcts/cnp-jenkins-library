@@ -192,15 +192,17 @@ EOF
   }
 
   def dbMigrate(String vaultName, String microserviceName) {
-    def az = { cmd -> return steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$steps.env.SUBSCRIPTION_NAME az $cmd", returnStdout: true).trim() }
+    def secrets = [
+      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-DATABASE', version: '', envVariable: 'POSTGRES-DATABASE' ],
+      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-HOST', version: '', envVariable: 'POSTGRES-HOST' ],
+      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-PASS', version: '', envVariable: 'POSTGRES-PASS' ],
+      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-PORT', version: '', envVariable: 'POSTGRES-PORT' ],
+      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-USER', version: '', envVariable: 'POSTGRES-USER' ]
+    ]
 
-    def dbName = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-DATABASE' --query value -o tsv"
-    def dbHost = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-HOST' --query value -o tsv"
-    def dbPass = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PASS' --query value -o tsv"
-    def dbPort = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-PORT' --query value -o tsv"
-    def dbUser = az "keyvault secret show --vault-name '$vaultName' --name '${microserviceName}-POSTGRES-USER' --query value -o tsv"
-
-    gradle("-Pdburl='${dbHost}:${dbPort}/${dbName}?ssl=true&sslmode=require' -Pflyway.user='${dbUser}' -Pflyway.password='${dbPass}' migratePostgresDatabase")
+    steps.withAzureKeyvault(secrets) {
+      gradle("-Pdburl='${steps.env.POSTGRES-HOST}:${steps.env.POSTGRES-PORT}/${steps.env.POSTGRES-DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES-USER}' -Pflyway.password='${steps.env.POSTGRES-PASS}' migratePostgresDatabase")
+    }
   }
 
   @Override
