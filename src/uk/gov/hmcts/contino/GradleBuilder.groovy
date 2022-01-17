@@ -193,11 +193,11 @@ EOF
 
   def dbMigrate(String vaultName, String microserviceName) {
     def secrets = [
-      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-DATABASE', version: '', envVariable: 'POSTGRES-DATABASE' ],
-      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-HOST', version: '', envVariable: 'POSTGRES-HOST' ],
-      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-PASS', version: '', envVariable: 'POSTGRES-PASS' ],
-      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-PORT', version: '', envVariable: 'POSTGRES-PORT' ],
-      [ secretType: 'Secret', name: '${microserviceName}-POSTGRES-USER', version: '', envVariable: 'POSTGRES-USER' ]
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES-DATABASE' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES-HOST' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES-PASS' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES-PORT' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES-USER' ]
     ]
 
     steps.withAzureKeyvault(secrets) {
