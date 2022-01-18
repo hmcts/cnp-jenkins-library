@@ -193,15 +193,17 @@ EOF
 
   def dbMigrate(String vaultName, String microserviceName) {
     def secrets = [
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES-DATABASE' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES-HOST' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES-PASS' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES-PORT' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES-USER' ]
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
     ]
 
-    steps.withAzureKeyvault(secrets) {
-      gradle("-Pdburl='${steps.env.POSTGRES-HOST}:${steps.env.POSTGRES-PORT}/${steps.env.POSTGRES-DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES-USER}' -Pflyway.password='${steps.env.POSTGRES-PASS}' migratePostgresDatabase")
+    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
+
+    steps.withAzureKeyvault(secrets, azureKeyVaultURL) {
+      gradle("-Pdburl='${steps.env.POSTGRES_HOST}:${steps.env.POSTGRES_PORT}/${steps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES_USER}' -Pflyway.password='${steps.env.POSTGRES_PASS}' migratePostgresDatabase")
     }
   }
 
