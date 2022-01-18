@@ -32,8 +32,8 @@ def call(params) {
         dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
         boolean hasTag = acr.hasTag(dockerImage)
         boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
-        echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()} git commit: ${env.GIT_COMMIT} timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}")
         noSkipImgBuild = envOverrideForSkip || !hasTag
+        echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()} git commit: ${env.GIT_COMMIT} timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
       }
     }
   }
