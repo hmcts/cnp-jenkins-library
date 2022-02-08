@@ -203,7 +203,7 @@ EOF
     def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
     steps.withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: azureKeyVaultURL) {
-      gradle("-Pdburl='${steps.env.POSTGRES_HOST}:${steps.env.POSTGRES_PORT}/${steps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES_USER}' -Pflyway.password='${steps.env.POSTGRES_PASS}' migratePostgresDatabase")
+      gradle("#!/usr/bin/env bash -Pdburl='${steps.env.POSTGRES_HOST}:${steps.env.POSTGRES_PORT}/${steps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES_USER}' -Pflyway.password='${steps.env.POSTGRES_PASS}' migratePostgresDatabase")
     }
   }
 
