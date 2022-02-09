@@ -74,6 +74,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.aksStagingDeployment = true
   }
 
+  void enableCleanupOfHelmReleaseOnSuccess() {
+    config.clearHelmRelease = true;
+  }
+
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
 
   void enablePactAs(List<PactRoles> roles) {
