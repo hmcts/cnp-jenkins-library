@@ -242,6 +242,21 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+
+#### Clear Helm Release on Successful Build
+
+If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster. 
+
+To clear helm release, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseOnSuccess()
+    ...
+  }
+  ```
+
 ### Opinionated infrastructure pipeline
 
 For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.

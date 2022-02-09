@@ -149,6 +149,13 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.aksStagingDeployment).isTrue()
   }
 
+  def "ensure clear helm release is set"() {
+    when:
+    dsl.enableCleanupOfHelmReleaseOnSuccess()
+    then:
+    assertThat(pipelineConfig.clearHelmRelease).isTrue()
+  }
+
   def "ensure enable high level data setup"() {
     when:
     dsl.enableHighLevelDataSetup()
