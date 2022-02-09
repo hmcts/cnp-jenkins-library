@@ -24,6 +24,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
   boolean fortifyScan = false
+  boolean clearHelmRelease = false
   String fortifyVaultName
   String s2sServiceName
 
