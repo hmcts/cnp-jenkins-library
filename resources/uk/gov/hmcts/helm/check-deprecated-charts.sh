@@ -2,9 +2,9 @@
 set -x
 
 CHART_DIRECTORY=${1}-${2}
-MIN_JAVA_VERSION="3.6.0"
-MIN_NODEJS_VERSION="2.3.7"
-MIN_JOB_VERSION="0.7.1"
+MIN_JAVA_VERSION="3.7.0"
+MIN_NODEJS_VERSION="2.4.0"
+MIN_JOB_VERSION="0.7.3"
 
 JAVA_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "java" |awk '{ print $2}' | sed "s/~//g")
 NODEJS_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "nodejs" |awk '{ print $2}' | sed "s/~//g")
