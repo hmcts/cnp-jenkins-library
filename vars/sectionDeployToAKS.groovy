@@ -45,7 +45,7 @@ def call(params) {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
   }
-  lock("${productName}-${environmentDeploymentTarget}") {
+  lock("${product}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
