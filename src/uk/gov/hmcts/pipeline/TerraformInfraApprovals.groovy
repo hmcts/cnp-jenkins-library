@@ -55,7 +55,7 @@ class TerraformInfraApprovals {
 
     def joinedInfraApprovals = infraApprovals.join(" ")
     this.steps.echo(joinedInfraApprovals)
-    if (this.subscription == "sandbox") {
+    if (this.subscription == "sandbox" || this.subscription == "sbox") {
       this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
       return true
     }
