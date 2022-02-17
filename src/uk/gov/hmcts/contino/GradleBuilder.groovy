@@ -161,7 +161,7 @@ EOF
     try {
       gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/reports/**/contract/**/*.xml'
+      steps.junit allowEmptyResults: true, testResults: '**/reports/**/contract/**/*.xml,**/reports/**/contractTest/**/*.xml'
     }
   }
 
