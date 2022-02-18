@@ -36,7 +36,6 @@ def call(params) {
               def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
               withEnv(additionalInfrastructureVariables) {
                 sectionInfraBuild(
-                  pipelineConfig: pipelineConfig,
                   subscription: subscription,
                   environment: environment,
                   product: product,

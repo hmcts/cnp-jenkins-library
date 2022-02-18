@@ -40,7 +40,6 @@ def call(String product, String component = null, Closure body) {
 
       onMaster {
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
@@ -49,7 +48,6 @@ def call(String product, String component = null, Closure body) {
         )
 
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
@@ -65,7 +63,6 @@ def call(String product, String component = null, Closure body) {
 
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscriptionName,
           environment: environmentName,
           product: product,
@@ -76,7 +73,6 @@ def call(String product, String component = null, Closure body) {
 
       onPR {
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
