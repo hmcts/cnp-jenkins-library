@@ -40,7 +40,7 @@ def call(params) {
                   environment: environment,
                   product: product,
                   component: component,
-                  pipelineCallbacksRunner: callbacksRunner,
+                  pipelineCallbacksRunner: pcr,
                   planOnly: tfPlanOnly,
                 )
               }
