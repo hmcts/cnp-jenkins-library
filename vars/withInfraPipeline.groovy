@@ -24,6 +24,8 @@ def call(String product, String component = null, Closure body) {
   def dsl = new InfraPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
+  
+  echo '' + callbacks.bodies.keySet()
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
