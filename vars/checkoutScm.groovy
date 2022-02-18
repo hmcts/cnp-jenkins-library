@@ -1,5 +1,13 @@
 import jenkins.scm.api.SCMSource;
+import uk.gov.hmcts.contino.PipelineCallbacksConfig;
 import uk.gov.hmcts.contino.PipelineCallbacksRunner;
+
+/**
+* Compatibility for external consumers that were using this (mostly IDAM)
+*/
+def call() {
+  call(pipelineCallbacksRunner: new PipelineCallbacksRunner(new PipelineCallbacksConfig()))
+}
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
@@ -25,3 +33,5 @@ def call(params) {
     }
   }
 }
+
+def
