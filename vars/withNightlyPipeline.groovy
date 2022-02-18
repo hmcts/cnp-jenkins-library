@@ -46,7 +46,7 @@ def call(type,product,component,Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
-    timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+    timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
         dockerAgentSetup()
