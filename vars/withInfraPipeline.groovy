@@ -24,8 +24,6 @@ def call(String product, String component = null, Closure body) {
   def dsl = new InfraPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
-  
-  echo '' + callbacks.bodies.keySet()
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
@@ -46,14 +44,18 @@ def call(String product, String component = null, Closure body) {
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
 
         sectionInfraBuild(
           pipelineConfig: pipelineConfig,
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
 
         sectionSyncBranchesWithMaster(
           branchestoSync: pipelineConfig.branchesToSyncWithMaster,
@@ -67,7 +69,9 @@ def call(String product, String component = null, Closure body) {
           subscription: subscriptionName,
           environment: environmentName,
           product: product,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
       }
 
       onPR {
@@ -77,7 +81,9 @@ def call(String product, String component = null, Closure body) {
           environment: environment.nonProdName,
           product: product,
           planOnly: true,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

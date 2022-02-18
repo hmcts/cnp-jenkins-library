@@ -10,8 +10,12 @@ def call(params) {
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription )
   approvedEnvironmentRepository(environment, metricsPublisher) {
     withSubscription(subscription) {
-      // build environment infrastructure once
-      tfOutput = spinInfra(product, component, environment, planOnly, subscription)
+      pcr.callAround("buildinfra:${environment}") {
+        timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
+          // build environment infrastructure once
+          return spinInfra(product, component, environment, planOnly, subscription)
+        }
+      }
     }
   }
 }
