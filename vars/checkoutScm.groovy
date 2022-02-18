@@ -33,5 +33,3 @@ def call(params) {
     }
   }
 }
-
-def

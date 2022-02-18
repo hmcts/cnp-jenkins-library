@@ -35,9 +35,7 @@ def call(String product, String component = null, Closure body) {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
-        checkoutScm(
-          pipelineCallbacksRunner: callbacksRunner,
-        )
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
       onMaster {
