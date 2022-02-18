@@ -15,7 +15,7 @@ def call(String product, String component = null, Closure body) {
 
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
-  def callbackRunner = new PipelineCallbacksRunner(callbacks)
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
@@ -85,7 +85,7 @@ def call(String product, String component = null, Closure body) {
       currentBuild.result = "FAILURE"
       notifyBuildFailure channel: slackChannel
 
-      callbackRunner.call('onFailure')
+      callbacksRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
@@ -97,7 +97,7 @@ def call(String product, String component = null, Closure body) {
 
     notifyBuildFixed channel: slackChannel
 
-    callbackRunner.call('onSuccess')
+    callbacksRunner.call('onSuccess')
     metricsPublisher.publish('Pipeline Succeeded')
   }
 }
