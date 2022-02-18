@@ -28,4 +28,5 @@ ______                              _           _ _
  https://github.com/hmcts/cnp-jenkins-library#opinionated-infrastructure-pipeline
 ================================================================================
 '''
+  error "This is no longer in use"
 }

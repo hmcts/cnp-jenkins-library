@@ -19,21 +19,5 @@ Use withInfraPipeline instead
 https://github.com/hmcts/cnp-jenkins-library#opinionated-infrastructure-pipeline
 ================================================================================
 '''
-
-  def environmentDeploymentTarget = "$environment$deploymentTarget"
-
-  try {
-    node {
-      env.PATH = "$env.PATH:/usr/local/bin"
-
-      stage('Checkout') {
-        checkoutScm()
-      }
-      withSubscription(subscription) {
-        spinInfra(product, null, environment, false, subscription, deploymentTarget)
-      }
-    }
-  } finally {
-    deleteDir()
-  }
+  error "This is no longer in use"
 }
