@@ -161,7 +161,7 @@ EOF
     try {
       gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/reports/**/contract/**/*.xml'
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
@@ -202,7 +202,7 @@ EOF
 
     def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
-    steps.withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: azureKeyVaultURL) {
+    steps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
       gradle("-Pdburl='${steps.env.POSTGRES_HOST}:${steps.env.POSTGRES_PORT}/${steps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES_USER}' -Pflyway.password='${steps.env.POSTGRES_PASS}' migratePostgresDatabase")
     }
   }
