@@ -15,7 +15,7 @@ def call(String product, String component = null, Closure body) {
 
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
-  def callbackRunner = new PipelineCallbacksRunner(callbacks)
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
@@ -35,23 +35,25 @@ def call(String product, String component = null, Closure body) {
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
-        checkoutScm()
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
       onMaster {
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
 
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
 
         sectionSyncBranchesWithMaster(
           branchestoSync: pipelineConfig.branchesToSyncWithMaster,
@@ -61,27 +63,29 @@ def call(String product, String component = null, Closure body) {
 
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscriptionName,
           environment: environmentName,
           product: product,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
       }
 
       onPR {
         sectionInfraBuild(
-          pipelineConfig: pipelineConfig,
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
           planOnly: true,
-          component: component)
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
       }
     } catch (err) {
       currentBuild.result = "FAILURE"
       notifyBuildFailure channel: slackChannel
 
-      callbackRunner.call('onFailure')
+      callbacksRunner.call('onFailure')
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
@@ -93,7 +97,7 @@ def call(String product, String component = null, Closure body) {
 
     notifyBuildFixed channel: slackChannel
 
-    callbackRunner.call('onSuccess')
+    callbacksRunner.call('onSuccess')
     metricsPublisher.publish('Pipeline Succeeded')
   }
 }

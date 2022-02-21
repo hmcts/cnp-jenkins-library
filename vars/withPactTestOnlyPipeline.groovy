@@ -76,9 +76,7 @@ def call(type, String product, String component, Closure body) {
         boolean noSkipImgBuild = true
 
         stageWithAgent('Checkout', product) {
-          pcr.callAround('checkout') {
-            checkoutScm()
-          }
+          checkoutScm(pipelineCallbacksRunner: callbacksRunner)
         }
 
         stageWithAgent("Build", product) {

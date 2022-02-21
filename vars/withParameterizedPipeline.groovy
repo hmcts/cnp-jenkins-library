@@ -68,9 +68,7 @@ def call(type, String product, String component, String environment, String subs
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
-        callbacksRunner.callAround('checkout') {
-          checkoutScm()
-        }
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
       stageWithAgent("Build", product) {
