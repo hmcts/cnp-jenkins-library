@@ -13,9 +13,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     Builder builder = pipelineType.builder
 
     stageWithAgent('Checkout', product) {
-      pcr.callAround('checkout') {
-        checkoutScm()
-      }
+      checkoutScm(pipelineCallbacksRunner: pcr)
     }
 
     stageWithAgent("Build", product) {

@@ -33,13 +33,16 @@ def call(params) {
 
           withSubscription(subscription) {
             dir('infrastructure') {
-              pcr.callAround("buildinfra:${environment}") {
-                timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
-                  def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-                  withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, tfPlanOnly, subscription)
-                  }
-                }
+              def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
+              withEnv(additionalInfrastructureVariables) {
+                sectionInfraBuild(
+                  subscription: subscription,
+                  environment: environment,
+                  product: product,
+                  component: component,
+                  pipelineCallbacksRunner: pcr,
+                  planOnly: tfPlanOnly,
+                )
               }
             }
 
