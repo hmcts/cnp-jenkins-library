@@ -2,7 +2,7 @@
 @Library('Infrastructure') _
 import uk.gov.hmcts.contino.GradleBuilder
 
-def channel = '#rpe-build-notices'
+def channel = '#platops-build-notices'
 GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
