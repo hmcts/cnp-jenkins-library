@@ -58,7 +58,7 @@ class EnvironmentTest extends Specification {
     def environmentTagName = Environment.toTagName("saat")
 
     then:
-    assert environmentTagName == "saat"
+    assert environmentTagName == "sandbox"
   }
 
   def "Throws exception on unknown environment"() {
