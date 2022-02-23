@@ -40,9 +40,8 @@ class Environment implements Serializable {
     switch(cleanedEnvironment) {
         case "sandbox":
         case "sbox":
-          return "sandbox"
         case "saat":
-          return "saat"
+          return "sandbox"
         case "dev":
         case "preview":
           return "development"
