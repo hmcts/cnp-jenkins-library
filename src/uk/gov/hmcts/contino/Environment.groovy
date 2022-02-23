@@ -9,6 +9,7 @@ class Environment implements Serializable {
   def final ithcName
   def final sandbox
   def final pactBrokerUrl
+  def final saat
 
   def final functionalTestEnvironments
 
