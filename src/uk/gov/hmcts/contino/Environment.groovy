@@ -23,6 +23,7 @@ class Environment implements Serializable {
     perftestName = env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest'
     ithcName = env.ITHC_ENVIRONMENT_NAME ?: 'ithc'
     sandbox = env.SANDBOX_ENVIRONMENT_NAME ?: 'sandbox'
+    saat = env.SAAT_ENVIRONMENT_NAME ?: 'saat'
     pactBrokerUrl = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
 
     functionalTestEnvironments = [nonProdName, previewName, 'idam-aat', 'idam-preview']
@@ -39,6 +40,8 @@ class Environment implements Serializable {
         case "sandbox":
         case "sbox":
           return "sandbox"
+        case "saat":
+          return "saat"
         case "dev":
         case "preview":
           return "development"
