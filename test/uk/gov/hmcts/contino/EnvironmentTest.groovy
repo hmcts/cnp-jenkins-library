@@ -53,6 +53,14 @@ class EnvironmentTest extends Specification {
     assert environmentTagName == "production"
   }
 
+  def "Converts saat to saat"() {
+    when:
+    def environmentTagName = Environment.toTagName("saat")
+
+    then:
+    assert environmentTagName == "sandbox"
+  }
+
   def "Throws exception on unknown environment"() {
     when:
     new Environment("unknown_environment")

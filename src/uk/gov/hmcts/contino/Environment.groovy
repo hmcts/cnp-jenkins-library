@@ -9,6 +9,7 @@ class Environment implements Serializable {
   def final ithcName
   def final sandbox
   def final pactBrokerUrl
+  def final saat
 
   def final functionalTestEnvironments
 
@@ -23,6 +24,7 @@ class Environment implements Serializable {
     perftestName = env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest'
     ithcName = env.ITHC_ENVIRONMENT_NAME ?: 'ithc'
     sandbox = env.SANDBOX_ENVIRONMENT_NAME ?: 'sandbox'
+    saat = env.SAAT_ENVIRONMENT_NAME ?: 'saat'
     pactBrokerUrl = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
 
     functionalTestEnvironments = [nonProdName, previewName, 'idam-aat', 'idam-preview']
@@ -38,6 +40,7 @@ class Environment implements Serializable {
     switch(cleanedEnvironment) {
         case "sandbox":
         case "sbox":
+        case "saat":
           return "sandbox"
         case "dev":
         case "preview":
