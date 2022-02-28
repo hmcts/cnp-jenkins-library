@@ -6,12 +6,17 @@ def call(params) {
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
+  def pcr = params.pipelineCallbacksRunner
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription )
   approvedEnvironmentRepository(environment, metricsPublisher) {
     withSubscription(subscription) {
-      // build environment infrastructure once
-      tfOutput = spinInfra(product, component, environment, planOnly, subscription)
+      pcr.callAround("buildinfra:${environment}") {
+        timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
+          // build environment infrastructure once
+          return spinInfra(product, component, environment, planOnly, subscription)
+        }
+      }
     }
   }
 }
