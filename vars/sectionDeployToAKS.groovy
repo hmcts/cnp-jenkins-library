@@ -75,7 +75,7 @@ def call(params) {
       deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
     }
   } else {
-      deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
+    deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
   }
 
   if (config.serviceApp) {
