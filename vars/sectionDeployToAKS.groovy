@@ -46,7 +46,7 @@ def call(params) {
     }
   }
   //add lock to deploy stage if running on PR
-  if(onPR {
+  if(onPR{
     lock("${product}-${environment}-deploy") {
       stageWithAgent("AKS deploy - ${environment}", product) {
         withTeamSecrets(config, environment) {
@@ -70,7 +70,7 @@ def call(params) {
         }
       }
     }   
-  }){else{
+  }){ else {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
