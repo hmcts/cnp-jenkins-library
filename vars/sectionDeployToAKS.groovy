@@ -19,6 +19,30 @@ def testEnv(String testUrl, block) {
   }
 }
 
+def deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl) {
+  stageWithAgent("AKS deploy - ${environment}", product) {
+    withTeamSecrets(config, environment) {
+      pcr.callAround('akschartsinstall') {
+        withAksClient(subscription, environment, product) {
+          timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+            onPR {
+              deploymentNumber = githubCreateDeployment()
+            }
+            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+            log.info("Using AKS environment: ${params.environment}")
+            warnAboutDeprecatedChartConfig product: product, component: component
+            aksUrl = helmInstall(dockerImage, params)
+            log.info("deployed component URL: ${aksUrl}")
+            onPR {
+              githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
@@ -34,7 +58,6 @@ def call(params) {
   def dockerImage
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-  def isPR = false 
 
   Builder builder = pipelineType.builder
 
@@ -46,57 +69,13 @@ def call(params) {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
   }
-  //add lock to deploy stage if running on PR
-  onPR {
-    isPR = true
-  }
-  
-  if (isPR) {
+ 
+  if (new ProjectBranch(env.BRANCH_NAME),isPR()) {
     lock("${product}-${environment}-deploy") {
-      stageWithAgent("AKS deploy - ${environment}", product) {
-        withTeamSecrets(config, environment) {
-          pcr.callAround('akschartsinstall') {
-            withAksClient(subscription, environment, product) {
-              timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
-                onPR {
-                  deploymentNumber = githubCreateDeployment()
-                }
-                params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-                log.info("Using AKS environment: ${params.environment}")
-                warnAboutDeprecatedChartConfig product: product, component: component
-                aksUrl = helmInstall(dockerImage, params)
-                log.info("deployed component URL: ${aksUrl}")
-                onPR {
-                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-                }
-              }
-            }
-          }
-        }
-      }
+      deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
     }   
   } else {
-    stageWithAgent("AKS deploy - ${environment}", product) {
-      withTeamSecrets(config, environment) {
-        pcr.callAround('akschartsinstall') {
-          withAksClient(subscription, environment, product) {
-            timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
-              onPR {
-                deploymentNumber = githubCreateDeployment()
-              }
-              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-              log.info("Using AKS environment: ${params.environment}")
-              warnAboutDeprecatedChartConfig product: product, component: component
-              aksUrl = helmInstall(dockerImage, params)
-              log.info("deployed component URL: ${aksUrl}")
-              onPR {
-                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-              }
-            }
-          }
-        }
-      }
-    }
+    deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
   }
 
   if (config.serviceApp) {
