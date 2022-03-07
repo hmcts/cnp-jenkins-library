@@ -70,7 +70,7 @@ def call(params) {
     }
   }
  
-  if (new ProjectBranch(env.BRANCH_NAME),isPR()) {
+  if (new ProjectBranch(env.BRANCH_NAME).isPR()) {
     lock("${product}-${environment}-deploy") {
       deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
     }   
