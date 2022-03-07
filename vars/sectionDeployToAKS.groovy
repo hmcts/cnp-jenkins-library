@@ -47,11 +47,11 @@ def call(params) {
     }
   }
   //add lock to deploy stage if running on PR
-  onPR{
+  onPR {
     isPR = true
   }
   
-  if(isPR){
+  if (isPR) {
     lock("${product}-${environment}-deploy") {
       stageWithAgent("AKS deploy - ${environment}", product) {
         withTeamSecrets(config, environment) {
