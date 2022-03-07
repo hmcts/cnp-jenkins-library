@@ -10,7 +10,7 @@ import uk.gov.hmcts.contino.GithubAPI
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
-  def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnv}"]
+  def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnv}"] 
 
   withEnv(testEnvVariables) {
     echo "Using TEST_URL: ${env.TEST_URL}"
@@ -45,22 +45,48 @@ def call(params) {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
     }
   }
-
-  stageWithAgent("AKS deploy - ${environment}", product) {
-    withTeamSecrets(config, environment) {
-      pcr.callAround('akschartsinstall') {
-        withAksClient(subscription, environment, product) {
-          timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
-            onPR {
-              deploymentNumber = githubCreateDeployment()
+  //add lock to deploy stage if running on PR
+  if(onPR {
+    lock("${product}-${environment}-deploy") {
+      stageWithAgent("AKS deploy - ${environment}", product) {
+        withTeamSecrets(config, environment) {
+          pcr.callAround('akschartsinstall') {
+            withAksClient(subscription, environment, product) {
+              timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+                onPR {
+                  deploymentNumber = githubCreateDeployment()
+                }
+                params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+                log.info("Using AKS environment: ${params.environment}")
+                warnAboutDeprecatedChartConfig product: product, component: component
+                aksUrl = helmInstall(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
+                onPR {
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
+              }
             }
-            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-            log.info("Using AKS environment: ${params.environment}")
-            warnAboutDeprecatedChartConfig product: product, component: component
-            aksUrl = helmInstall(dockerImage, params)
-            log.info("deployed component URL: ${aksUrl}")
-            onPR {
-              githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+          }
+        }
+      }
+    }   
+  }){else{
+    stageWithAgent("AKS deploy - ${environment}", product) {
+      withTeamSecrets(config, environment) {
+        pcr.callAround('akschartsinstall') {
+          withAksClient(subscription, environment, product) {
+            timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+              onPR {
+                deploymentNumber = githubCreateDeployment()
+              }
+              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+              log.info("Using AKS environment: ${params.environment}")
+              warnAboutDeprecatedChartConfig product: product, component: component
+              aksUrl = helmInstall(dockerImage, params)
+              log.info("deployed component URL: ${aksUrl}")
+              onPR {
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+              }
             }
           }
         }
