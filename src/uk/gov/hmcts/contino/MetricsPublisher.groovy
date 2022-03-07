@@ -95,7 +95,7 @@ class MetricsPublisher implements Serializable {
           return
         }
 
-        steps.echo "Publishing Metrics data"
+        steps.echo "Publishing Metrics data to ${cosmosDbUrl}"
         createDocument(collectMetrics(eventName), cosmosDbUrl)
       }
     } catch (err) {
