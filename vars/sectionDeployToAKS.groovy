@@ -46,30 +46,34 @@ def call(params) {
     }
   }
 
-  stageWithAgent("AKS deploy - ${environment}", product) {
-    withTeamSecrets(config, environment) {
-      pcr.callAround('akschartsinstall') {
-        withAksClient(subscription, environment, product) {
-          timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
-            onPR {
-              deploymentNumber = githubCreateDeployment()
-            }
-            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-            log.info("Using AKS environment: ${params.environment}")
-            warnAboutDeprecatedChartConfig product: product, component: component
-            aksUrl = helmInstall(dockerImage, params)
-            log.info("deployed component URL: ${aksUrl}")
-            onPR {
-              githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+  def deploymentNamespace = projectBranch.deploymentNamespace()
+  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+
+  lock("${deploymentProduct}-${environment}-deploy") {
+    stageWithAgent("AKS deploy - ${environment}", product) {
+      withTeamSecrets(config, environment) {
+        pcr.callAround('akschartsinstall') {
+          withAksClient(subscription, environment, product) {
+            timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+              onPR {
+                deploymentNumber = githubCreateDeployment()
+              }
+              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+              log.info("Using AKS environment: ${params.environment}")
+              warnAboutDeprecatedChartConfig product: product, component: component
+              aksUrl = helmInstall(dockerImage, params)
+              log.info("deployed component URL: ${aksUrl}")
+              onPR {
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+              }
             }
           }
         }
       }
     }
-  }
 
-  if (config.serviceApp) {
-    withSubscriptionLogin(subscription) {
+    if (config.serviceApp) {
+      withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
@@ -158,4 +162,5 @@ def call(params) {
         }
       }
     }
+  }
 }
