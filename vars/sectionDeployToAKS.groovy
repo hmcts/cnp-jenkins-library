@@ -19,7 +19,7 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl) {
+def deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl, pcr) {
   stageWithAgent("AKS deploy - ${environment}", product) {
     withTeamSecrets(config, environment) {
       pcr.callAround('akschartsinstall') {
@@ -72,10 +72,10 @@ def call(params) {
  
   if (new ProjectBranch(env.BRANCH_NAME).isPR()) {
     lock("${product}-${environment}-deploy"){
-      deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
+      deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl, pcr)
     }
   } else {
-    deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl)
+    deployStage(config, environment, product, subscription, params, component, dockerImage, aksUrl, pcr)
   }
 
   if (config.serviceApp) {
