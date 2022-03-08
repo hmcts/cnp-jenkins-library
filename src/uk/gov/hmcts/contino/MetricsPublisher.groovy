@@ -29,9 +29,7 @@ class MetricsPublisher implements Serializable {
     if (tmpCosmosDbUrl?.trim()) {
       this.cosmosDbUrl = tmpCosmosDbUrl
     } else {
-      this.cosmosDbUrl = subscription == this.env.sandbox ?
-        'https://sandbox-pipeline-metrics.documents.azure.com/' :
-        'https://pipeline-metrics.documents.azure.com/'
+      this.cosmosDbUrl = 'https://pipeline-metrics.documents.azure.com/'
     }
     this.resourceLink = 'dbs/jenkins/colls/pipeline-metrics'
   }
@@ -95,7 +93,7 @@ class MetricsPublisher implements Serializable {
           return
         }
 
-        steps.echo "Publishing Metrics data"
+        steps.echo "Publishing Metrics data to ${cosmosDbUrl}"
         createDocument(collectMetrics(eventName), cosmosDbUrl)
       }
     } catch (err) {
