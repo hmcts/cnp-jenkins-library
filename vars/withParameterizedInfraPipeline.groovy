@@ -54,7 +54,9 @@ def call(String product, String environment, String subscription, Boolean planOn
         planOnly: planOnly,
         deploymentTargets: null,
         product: product,
-        component: component)
+        component: component,
+        pipelineCallbacksRunner: callbacksRunner,
+      )
 
 
     } catch (err) {
