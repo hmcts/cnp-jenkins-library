@@ -32,7 +32,18 @@ def call(params) {
           }
 
           withSubscription(subscription) {
-            dir('infrastructure') {}
+            dir('infrastructure') {
+              {
+                sectionInfraBuild(
+                  subscription: subscription,
+                  environment: environment,
+                  product: product,
+                  component: component,
+                  pipelineCallbacksRunner: pcr,
+                  planOnly: tfPlanOnly,
+                )
+              }
+            }
 
             if(!tfPlanOnly){
 
