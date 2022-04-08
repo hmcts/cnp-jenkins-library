@@ -50,8 +50,10 @@ class GradleBuilder extends AbstractBuilder {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
+    } catch(ignored) {
+          WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
-      steps.junit '**/test-results/**/*.xml'
+      steps.junit 'smoke-output/**/*result.xml'
     }
   }
 
@@ -60,8 +62,10 @@ class GradleBuilder extends AbstractBuilder {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
+    } catch(ignored) {
+          WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "Please setup functional tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
-      steps.junit '**/test-results/**/*.xml'
+      steps.junit 'functional-output/**/*result.xml'
     }
   }
 
