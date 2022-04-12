@@ -161,7 +161,7 @@ EOF
     try {
       gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-PROVIDER*.xml,**/test-results/contractTest/TEST-PROVIDER*.xml'
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
@@ -169,7 +169,7 @@ EOF
    try {
       gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
    } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-CONSUMER*.xml,**/test-results/contractTest/TEST-CONSUMER*.xml'
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
@@ -177,7 +177,7 @@ EOF
     try {
       gradle("canideploy")
      } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-CANIDEPLOY*.xml,**/test-results/contractTest/TEST-CANIDEPLOY*.xml'
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
