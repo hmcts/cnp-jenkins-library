@@ -32,7 +32,7 @@ class GradleBuilder extends AbstractBuilder {
     } catch(ignored) {
       WarningCollector.addPipelineWarning("deprecated_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
-      steps.junit '**/reports/checkstyle/*.html'
+      steps.junit '**/test-results/test/*.xml'
       steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
     }
   }
