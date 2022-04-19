@@ -55,7 +55,7 @@ class GradleBuilder extends AbstractBuilder {
     } catch(ignored) {
       WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
-      steps.junit 'smoke-output/**/*result.xml'
+      steps.junit '**/test-results/smoke/*.xml'
     }
   }
 
