@@ -30,7 +30,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       gradle("check")
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("deprecated_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
+      WarningCollector.addPipelineWarning("deprecated_test_archiving", "Please setup smoke tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
       steps.junit '**/test-results/test/*.xml'
       steps.junit '**/test-results/test-output/*.xml'
@@ -54,7 +54,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
+      WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
       steps.junit '**/test-results/smoke/*.xml'
       steps.junit '**/test-results/smoke-output/*.xml'
@@ -67,7 +67,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "Please setup functional tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
+      WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "Please setup functional tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
       steps.junit '**/test-results/functional/*.xml'
       steps.junit '**/test-results/functional-output/*.xml'
@@ -80,7 +80,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks apiGateway")
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "Please setup functional tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
+      WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "Please setup functional tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
       steps.junit '**/test-results/api/*.xml'
       steps.junit '**/test-results/api-output/*.xml'
