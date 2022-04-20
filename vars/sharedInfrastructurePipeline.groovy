@@ -1,5 +1,4 @@
 import uk.gov.hmcts.contino.azure.KeyVault
-import uk.gov.hmcts.contino.azure.ProductVaultEntries
 
 @Deprecated
 def call(String product, String environment, String subscription) {
