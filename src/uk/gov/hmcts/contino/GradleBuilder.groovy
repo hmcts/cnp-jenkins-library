@@ -166,11 +166,19 @@ EOF
   }
 
   def runConsumerTests(pactBrokerUrl, version) {
-    gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
+   try {
+      gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
+   } finally {
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
   }
 
   def runConsumerCanIDeploy() {
-    gradle("canideploy")
+    try {
+      gradle("canideploy")
+     } finally {
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
   }
 
 
