@@ -33,6 +33,7 @@ class GradleBuilder extends AbstractBuilder {
       WarningCollector.addPipelineWarning("deprecated_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
       steps.junit '**/test-results/test/*.xml'
+      steps.junit '**/test-results/test-output/*.xml'
       steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
     }
   }
@@ -56,6 +57,7 @@ class GradleBuilder extends AbstractBuilder {
       WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
       steps.junit '**/test-results/smoke/*.xml'
+      steps.junit '**/test-results/smoke-output/*.xml'
     }
   }
 
@@ -67,7 +69,8 @@ class GradleBuilder extends AbstractBuilder {
     } catch(ignored) {
       WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "Please setup functional tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
-      steps.junit 'functional-output/**/*result.xml'
+      steps.junit '**/test-results/functional/*.xml'
+      steps.junit '**/test-results/functional-output/*.xml'
     }
   }
 
@@ -79,7 +82,8 @@ class GradleBuilder extends AbstractBuilder {
     } catch(ignored) {
       WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "Please setup functional tests to archive according to the correct pattern. See <add in example PR here>", new Date().parse("dd.MM.yyyy", "11.05.2022"))
     } finally {
-      steps.junit 'api-output/*result.xml'
+      steps.junit '**/test-results/api/*.xml'
+      steps.junit '**/test-results/api-output/*.xml'
     }
   }
 
