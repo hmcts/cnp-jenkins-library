@@ -29,14 +29,9 @@ class GradleBuilder extends AbstractBuilder {
   def test() {
     try {
       gradle("check")
-      finally {
-        try {
-          steps.junit '**/test-results/test/*.xml'
-          steps.junit '**/test-results/test-output/*.xml'
-          steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
-        } catch(ignored) {
-          WarningCollector.addPipelineWarning("deprecated_test_archiving", "Please setup smoke tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "25.05.2022"))
-        }
+    } finally {
+      steps.junit '**/test-results/test/*.xml'
+      steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
     } 
   }
 
@@ -57,10 +52,9 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks smoke")
     } finally {
       try {
-        steps.junit '**/test-results/smoke/*.xml'
-        steps.junit '**/test-results/smoke-output/*.xml'
+        steps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
       } catch {
-         WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "Please setup smoke tests to archive according to the correct pattern.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
       }
     }
   }
@@ -72,10 +66,9 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks functional")
     } finally {
       try {
-        steps.junit '**/test-results/functional/*.xml'
-        steps.junit '**/test-results/functional-output/*.xml'
+        steps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       } catch {
-        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "Please setup functional tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "Please setup functional tests to archive according to the correct pattern.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
       }
     }
   }
@@ -87,12 +80,10 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks apiGateway")
     } finally {
       try {
-        steps.junit '**/test-results/api/*.xml'
-        steps.junit '**/test-results/api-output/*.xml'
+        steps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
       } catch {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "Please setup functional tests to archive according to the correct pattern." new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "Please setup API Gateway tests to archive according to the correct pattern.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
       }
-
     }
   }
 
