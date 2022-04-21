@@ -32,7 +32,7 @@ class GradleBuilder extends AbstractBuilder {
     } finally {
       steps.junit '**/test-results/test/*.xml'
       steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
-    } 
+    }
   }
 
   def sonarScan() {
