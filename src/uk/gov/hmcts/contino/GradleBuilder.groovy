@@ -54,7 +54,7 @@ class GradleBuilder extends AbstractBuilder {
       try {
         steps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
       } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "30.05.2022"))
       }
     }
   }
@@ -68,7 +68,7 @@ class GradleBuilder extends AbstractBuilder {
       try {
         steps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "30.05.2022"))
       }
     }
   }
@@ -82,7 +82,7 @@ class GradleBuilder extends AbstractBuilder {
       try {
         steps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
       } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "30.05.2022"))
       }
     }
   }
