@@ -82,7 +82,7 @@ class GradleBuilder extends AbstractBuilder {
       try {
         steps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
       } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "Please setup API Gateway tests to archive according to the correct pattern.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
+        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", new Date().parse("dd.MM.yyyy", "25.05.2022"))
       }
     }
   }
