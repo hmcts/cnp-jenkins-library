@@ -33,8 +33,6 @@ def call(params) {
 
           withSubscription(subscription) {
             dir('infrastructure') {
-              def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-              withEnv(additionalInfrastructureVariables) {
                 sectionInfraBuild(
                   subscription: subscription,
                   environment: environment,
@@ -43,7 +41,6 @@ def call(params) {
                   pipelineCallbacksRunner: pcr,
                   planOnly: tfPlanOnly,
                 )
-              }
             }
 
             if(!tfPlanOnly){
