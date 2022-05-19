@@ -34,7 +34,7 @@ dependencies {
   compile 'org.jenkins-ci.plugins:job-dsl-core:1.77'
   compile group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '2.6.4', ext: 'jar'
 
-  compile 'com.microsoft.azure:azure-documentdb:1.15.2'
+  compile 'com.microsoft.azure:azure-documentdb:1.16.4'
   compile 'com.microsoft.azure:azure:1.10.0'
   compile 'com.github.seancfoley:ipaddress:4.1.0'
   compile 'com.squareup.okio:okio:1.13.0'
