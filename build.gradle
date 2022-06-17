@@ -26,7 +26,7 @@ dependencies {
   implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.13'
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.32'
   //used for generating RandomStrings
-  implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+  implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
   implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.260'
   implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '2.22', ext: 'jar'
