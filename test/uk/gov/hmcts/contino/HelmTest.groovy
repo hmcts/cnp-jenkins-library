@@ -21,7 +21,7 @@ class HelmTest extends Specification {
     helm = new Helm(steps, CHART)
 
     def closure
-    steps.retry(3, { closure = it }) >> { closure.call() }
+    steps.retry(3, { it.call() }) >> { closure = it }
   }
 
   def "dependencyUpdate() should execute with the correct chart"() {

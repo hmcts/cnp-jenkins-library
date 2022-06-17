@@ -16,8 +16,6 @@ class MetricsPublisherTests extends Specification {
                       COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw==",
                       PROD_SUBSCRIPTION_NAME: "prod"]
 
-    def closure
-    stubSteps.withCredentials(_, { closure = it }) >> { closure.call() }
     stubSteps.echo(_) >> { System.out.println(it) }
 
     }
