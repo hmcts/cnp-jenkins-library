@@ -20,7 +20,7 @@ compileTestGroovy {
 }
 
 dependencies {
-  compileOnly 'org.apache.ivy:ivy:2.4.0'
+  compileOnly 'org.apache.ivy:ivy:2.5.0'
 
   implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.13'
   implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.13'
