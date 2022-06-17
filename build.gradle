@@ -20,34 +20,31 @@ compileTestGroovy {
 }
 
 dependencies {
-  compileOnly 'org.apache.ivy:ivy:2.4.0'
+  compileOnly 'org.apache.ivy:ivy:2.5.0'
 
-  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.13'
-  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.13'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.17'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.17'
+
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.32'
-  //used for generating RandomStrings
-  implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+  testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.260'
-  implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '2.22', ext: 'jar'
-  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '1.7.2', ext: 'jar'
-  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.77'
-  implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '2.6.4', ext: 'jar'
+  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.355'
+  implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '625.vd896b_f445a_f8', ext: 'jar'
+  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2097.v33db_b_de764b_e', ext: 'jar'
+  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.79'
+  implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '608.vfa_f971c5a_a_e9', ext: 'jar'
 
   implementation 'com.microsoft.azure:azure-documentdb:1.16.4'
   implementation 'com.microsoft.azure:azure:1.10.0'
-  implementation 'com.github.seancfoley:ipaddress:4.1.0'
-  implementation 'com.squareup.okio:okio:1.13.0'
-  implementation 'com.squareup.okhttp3:okhttp:3.14.9'
-  implementation 'org.apache.ant:ant:1.10.3'
+  implementation 'org.apache.ant:ant:1.10.12'
 
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '1.2-groovy-2.5'
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
-  testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '1.31.1'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
+  testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.35.0'
 
   testRuntimeOnly "cglib:cglib-nodep:3.3.0"
-  testRuntimeOnly "org.objenesis:objenesis:2.5.1"
+  testRuntimeOnly 'org.objenesis:objenesis:3.2'
 }
 
 
