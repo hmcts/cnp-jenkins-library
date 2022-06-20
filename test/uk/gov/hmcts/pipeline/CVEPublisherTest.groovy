@@ -19,9 +19,6 @@ class CVEPublisherTest extends Specification {
       GIT_URL: 'http://example.com',
       COSMOSDB_TOKEN_KEY: 'abcd'
     ]
-    def closure
-    steps.withCredentials(_, { closure = it }) >> { closure.call() }
-
     cvePublisher = new CVEPublisher(
       steps,
       false,
