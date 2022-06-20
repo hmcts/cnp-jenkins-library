@@ -23,8 +23,6 @@ compileTestGroovy {
 }
 
 dependencies {
-  compileOnly 'org.apache.ivy:ivy:2.5.0'
-
   implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.17'
   implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.17'
 
@@ -38,15 +36,12 @@ dependencies {
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '608.vfa_f971c5a_a_e9', ext: 'jar'
 
   implementation 'com.microsoft.azure:azure-documentdb:1.16.4'
-  implementation 'com.microsoft.azure:azure:1.10.0'
-  implementation 'org.apache.ant:ant:1.10.12'
 
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.1-groovy-2.5'
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.35.0'
 
-  testRuntimeOnly "cglib:cglib-nodep:3.3.0"
   testRuntimeOnly 'org.objenesis:objenesis:3.2'
 }
 
