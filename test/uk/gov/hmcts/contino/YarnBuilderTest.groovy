@@ -39,8 +39,8 @@ class YarnBuilderTest extends Specification {
       BRANCH_NAME: 'master',
     ]
     def closure
-    steps.withCredentials(_, { closure = it }) >> { closure.call() }
-    steps.withSauceConnect(_, { closure = it }) >> { closure.call() }
+    steps.withCredentials(_, { it.call() }) >> { closure = it }
+    steps.withSauceConnect(_, { it.call() }) >> { closure = it }
 
     builder = new YarnBuilder(steps)
   }

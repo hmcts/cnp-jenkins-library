@@ -20,8 +20,6 @@ class GradleBuilderTest extends Specification {
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
-    def closure
-    steps.withCredentials(_, { closure = it }) >> { closure.call() }
   }
 
   def "build calls 'gradle assemble'"() {
@@ -108,7 +106,7 @@ class GradleBuilderTest extends Specification {
   def "securityCheck calls 'gradle dependencyCheckAggregate"() {
     setup:
       def closure
-      steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
+      steps.withAzureKeyvault(_, { it.call() }) >> { closure = it }
       def spyGradleBuilder = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
         hasPlugin(_) >> true
       }
