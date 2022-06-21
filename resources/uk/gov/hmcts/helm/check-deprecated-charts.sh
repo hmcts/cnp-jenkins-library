@@ -34,7 +34,7 @@ if [[ -n $BLOBSTORAGE_VERSION ]] && [[ $BLOBSTORAGE_VERSION < $MIN_BLOBSTORAGE_V
     exit 1
 fi
 
-if [[ -n $STORAGEBUS_VERSION ]] && [[ $STORAGEBUS_VERSION < $MIN_STORAGEBUS_VERSION ]]; then
-    echo "Job chart version $MIN_STORAGEBUS_VERSION is deprecated, please upgrade"
+if [[ -n $SERVICEBUS_VERSION ]] && [[ $SERVICEBUS_VERSION < $MIN_SERVICEBUS_VERSION ]]; then
+    echo "Job chart version $MIN_SERVICEBUS_VERSION is deprecated, please upgrade"
     exit 1
 fi
