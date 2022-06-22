@@ -645,4 +645,9 @@ This file will point to the repository which defines, in json syntax, which infr
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Test the change by pointing a build, to the branch with the change
+ 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+
+ 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+```groovy
+@Library('Infrastructure@<your-branch-name') _
+```
