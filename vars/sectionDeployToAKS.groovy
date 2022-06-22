@@ -125,10 +125,11 @@ def call(params) {
               }
             }
           }
-          def githubApi = new GithubAPI(this)
-          def repoLabels = githubApi.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+          def repoLabels = new GithubAPI(this).getLabels(env.BRANCH_NAME, env.CHANGE_ID)
+          def testLabels = repoLabels.findAll{it.contains('enabled_')}
+          def depLabel = repoLabels.findAll{it.contains('dependencies')}.contains('dependencies')
           onMaster {
-            if (repoLabels.contains('enable_fortify_scan')) {
+            if (testLabels.contains('enable_fortify_scan')) {
               fortifyScan(
                 pipelineCallbacksRunner: pcr,
                 fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
@@ -145,7 +146,7 @@ def call(params) {
                 }
               }
             }
-            if (repoLabels.contains('enable_performance_test')) {
+            if (testLabels.contains('enable_performance_test')) {
               stageWithAgent("Performance test", product) {
                 warnError('Failure in performanceTest') {
                   pcr.callAround('PerformanceTest') {
@@ -156,7 +157,7 @@ def call(params) {
                 }
               }
             }
-            if (repoLabels.contains('enable_security_scan')) {
+            if (testLabels.contains('enable_security_scan')) {
               stageWithAgent('Security scan', product) {
                 warnError('Failure in securityScan') {
                   pcr.callAround('securityScan') {
@@ -186,7 +187,7 @@ def call(params) {
               }
             }
           }
-          if (repoLabels.contains('enable_full_functional_tests')) {
+          if (testLabels.contains('enable_full_functional_tests')) {
             stageWithAgent('Full functional tests', product) {
               warnError('Failure in fullFunctionalTest') {
                 pcr.callAround('fullFunctionalTest') {
@@ -198,7 +199,7 @@ def call(params) {
             }
           }
           def nonProdEnv = new Environment(env).nonProdName
-          if (environment == nonProdEnv || config.clearHelmRelease || githubApi.checkForDependenciesLabel(env.BRANCH_NAME)) {
+          if (environment == nonProdEnv || config.clearHelmRelease || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
         }
