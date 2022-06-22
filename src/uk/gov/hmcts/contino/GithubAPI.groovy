@@ -13,6 +13,8 @@ class GithubAPI {
     this.steps = steps
   }
 
+  private cachedLabelList = []
+
   /**
    * Add labels to the current pull request.  MUST be run with an onPR() closure.
    *
@@ -29,6 +31,7 @@ class GithubAPI {
 
   /**
    * Add labels to an issue or pull request
+   * Empties this.cachedLabelList
    *
    * @param project
    *   The project repo name, including the org e.g. 'hmcts/my-frontend-app'
@@ -49,16 +52,30 @@ class GithubAPI {
       requestBody: "${body}",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
+
+    this.cachedLabelList = []
   }
+
+/**
+ * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
+*/
+  private getLabelsFromCache() {
+    if (this.cachedLabelList.size() == 0) {
+      def project = currentProject()
+      def pullRequestNumber = currentPullRequestNumber()
+      return getLabels(project, pullRequestNumber)
+    }
+
+    return this.cachedLabelList
+  }
+
 
 /**
  * Check Pull Request for label by a pattern in name.
  */
   def getLabelsbyPattern(String branch_name, String key) {
     if (new ProjectBranch(branch_name).isPR() == true) {
-      def project = currentProject()
-      def pullRequestNumber = currentPullRequestNumber()
-      return getLabels(project, pullRequestNumber).findAll{it.contains(key)}
+      return this.getLabelsFromCache().findAll{it.contains(key)}
     } else {
       return []
     }
@@ -72,6 +89,7 @@ class GithubAPI {
 
   /**
    * Get labels from an issue or pull request
+   * Refreshes this.cachedLabelList
    *
    * @param project
    *   The project repo name, including the org e.g. 'hmcts/my-frontend-app'
@@ -89,7 +107,8 @@ class GithubAPI {
       validResponseCodes: '200')
 
     def json_response = new JsonSlurper().parseText(response.content)
-    return json_response.collect( { label -> label['name'] } )
+    this.cachedLabelList = json_response.collect( { label -> label['name'] } )
+    return this.cachedLabelList
   }
 
   def currentProject() {
