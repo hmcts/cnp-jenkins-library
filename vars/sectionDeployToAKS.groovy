@@ -125,12 +125,44 @@ def call(params) {
               }
             }
           }
+          def githubApi = new GithubAPI(this)
+          def repoLabels = githubApi.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
           onMaster {
+            if (repoLabels.contains('enable_fortify_scan')) {
+              fortifyScan(
+                pipelineCallbacksRunner: pcr,
+                fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+                builder: builder,
+                product: product,
+              )
+            }
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.crossBrowserTest()
+                  }
+                }
+              }
+            }
+            if (repoLabels.contains('enable_performance_test')) {
+              stageWithAgent("Performance test", product) {
+                warnError('Failure in performanceTest') {
+                  pcr.callAround('PerformanceTest') {
+                    timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                      builder.performanceTest()
+                    }
+                  }
+                }
+              }
+            }
+            if (repoLabels.contains('enable_security_scan')) {
+              stageWithAgent('Security scan', product) {
+                warnError('Failure in securityScan') {
+                  pcr.callAround('securityScan') {
+                    timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                      builder.securityScan()
+                    }
                   }
                 }
               }
@@ -154,8 +186,18 @@ def call(params) {
               }
             }
           }
+          if (repoLabels.contains('enable_full_functional_tests')) {
+            stageWithAgent('Full functional tests', product) {
+              warnError('Failure in fullFunctionalTest') {
+                pcr.callAround('fullFunctionalTest') {
+                  timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                    builder.fullFunctionalTest()
+                  }
+                }
+              }
+            }
+          }
           def nonProdEnv = new Environment(env).nonProdName
-          def githubApi = new GithubAPI(this)
           if (environment == nonProdEnv || config.clearHelmRelease || githubApi.checkForDependenciesLabel(env.BRANCH_NAME)) {
             helmUninstall(dockerImage, params, pcr)
           }
