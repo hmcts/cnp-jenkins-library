@@ -104,7 +104,7 @@ def call(DockerImage dockerImage, Map params) {
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
       "--set global.devMode=true",
-      "--set global.tags.teamName=${this.env.TEAM_NAME}",
+      "--set global.tags.teamName=\"${this.env.TEAM_NAME}\"",
       "--set global.tags.applicationName=${this.env.TEAM_APPLICATION_TAG}",
       "--set global.tags.builtFrom=${this.env.GIT_URL}",
       "--set global.tags.businessArea=${this.env.BUSINESS_AREA_TAG}",
