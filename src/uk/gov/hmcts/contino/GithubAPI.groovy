@@ -59,18 +59,18 @@ class GithubAPI {
     this.clearLabelCache()
   }
 
-/**
- * Clears this.cachedLabelList
-  */
+  /**
+   * Clears this.cachedLabelList
+   */
   private clearLabelCache() {
     this.cachedLabelList.cache = []
     this.cachedLabelList.isValid = false
   }
 
 
-/**
- * Refreshes this.cachedLabelList
-*/
+  /**
+   * Refreshes this.cachedLabelList
+   */
   def refreshLabelCache() {
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
@@ -88,9 +88,9 @@ class GithubAPI {
     return this.cachedLabelList.cache
   }
 
-/**
- * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
-*/
+  /**
+   * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
+   */
   private getLabelsFromCache() {
     if (!this.cachedLabelList.isValid) {
       return refreshLabelCache()
@@ -103,10 +103,9 @@ class GithubAPI {
     return this.cachedLabelList.cache
   }
 
-
-/**
- * Check Pull Request for label by a pattern in name.
- */
+  /**
+   * Check Pull Request for label by a pattern in name.
+   */
   def getLabelsbyPattern(String branch_name, String key) {
     if (new ProjectBranch(branch_name).isPR() == true) {
       return getLabels().findAll{it.contains(key)}
@@ -114,9 +113,10 @@ class GithubAPI {
       return []
     }
   }
-/**
- * Check Pull Request for dependencies label.
- */
+
+  /**
+   * Check Pull Request for dependencies label.
+   */
   def checkForDependenciesLabel(branch_name) {
       return getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
   }
