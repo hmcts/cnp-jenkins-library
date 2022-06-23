@@ -13,7 +13,7 @@ class GithubAPI {
     this.steps = steps
   }
 
-  private static cachedLabelList = []
+  private cachedLabelList = []
 
   /**
    * Add labels to the current pull request.  MUST be run with an onPR() closure.
