@@ -13,7 +13,10 @@ class GithubAPI {
     this.steps = steps
   }
 
-  private cachedLabelList = []
+  private cachedLabelList = [
+    'isValid': false,
+    'cache': []
+  ]
 
   /**
    * Add labels to the current pull request.  MUST be run with an onPR() closure.
@@ -53,8 +56,17 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.cachedLabelList = []
+    this.clearLabelCache()
   }
+
+/**
+ * Clears this.cachedLabelList
+  */
+  private clearLabelCache() {
+    this.cachedLabelList.cache = []
+    this.cachedLabelList.isValid = false
+  }
+
 
 /**
  * Refreshes this.cachedLabelList
@@ -71,19 +83,24 @@ class GithubAPI {
       validResponseCodes: '200')
 
     def json_response = new JsonSlurper().parseText(response.content)
-    this.cachedLabelList = json_response.collect( { label -> label['name'] } )
-    return this.cachedLabelList
+    this.cachedLabelList.cache = json_response.collect( { label -> label['name'] } )
+    this.cachedLabelList.isValid = true
+    return this.cachedLabelList.cache
   }
 
 /**
  * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
 */
   private getLabelsFromCache() {
-    if (this.cachedLabelList.size() == 0) {
+    if (!this.cachedLabelList.isValid) {
       return refreshLabelCache()
     }
 
-    return this.cachedLabelList
+    if (this.cachedLabelList.cache.isEmpty() && this.cachedLabelList.isValid) {
+      return []
+    }
+
+    return this.cachedLabelList.cache
   }
 
 
