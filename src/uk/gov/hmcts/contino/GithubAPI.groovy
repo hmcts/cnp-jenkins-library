@@ -57,13 +57,30 @@ class GithubAPI {
   }
 
 /**
+ * Refreshes this.cachedLabelList
+*/
+  def refreshLabelCache() {
+    def project = currentProject()
+    def issueNumber = currentPullRequestNumber()
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: "${API_URL}/${project}/issues/${issueNumber}/labels",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+    def json_response = new JsonSlurper().parseText(response.content)
+    this.cachedLabelList = json_response.collect( { label -> label['name'] } )
+    return this.cachedLabelList
+  }
+
+/**
  * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
 */
   private getLabelsFromCache() {
     if (this.cachedLabelList.size() == 0) {
-      def project = currentProject()
-      def pullRequestNumber = currentPullRequestNumber()
-      return getLabels(project, pullRequestNumber)
+      return refreshLabelCache()
     }
 
     return this.cachedLabelList
@@ -75,7 +92,7 @@ class GithubAPI {
  */
   def getLabelsbyPattern(String branch_name, String key) {
     if (new ProjectBranch(branch_name).isPR() == true) {
-      return this.getLabelsFromCache().findAll{it.contains(key)}
+      return getLabels().findAll{it.contains(key)}
     } else {
       return []
     }
@@ -88,27 +105,10 @@ class GithubAPI {
   }
 
   /**
-   * Get labels from an issue or pull request
-   * Refreshes this.cachedLabelList
-   *
-   * @param project
-   *   The project repo name, including the org e.g. 'hmcts/my-frontend-app'
-   * @param issueNumber
-   *   The issue or PR number
+   * Get all labels from an issue or pull request
    */
-  def getLabels(project, issueNumber) {
-
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
-      url: "${API_URL}/${project}/issues/${issueNumber}/labels",
-      consoleLogResponseBody: true,
-      validResponseCodes: '200')
-
-    def json_response = new JsonSlurper().parseText(response.content)
-    this.cachedLabelList = json_response.collect( { label -> label['name'] } )
-    return this.cachedLabelList
+  def getLabels() {
+    return this.getLabelsFromCache()
   }
 
   def currentProject() {
