@@ -70,7 +70,6 @@ class GithubAPI {
     echo "Cleared Cache Valid?: ${this.cachedLabelList.isValid}"
   }
 
-
   /**
    * Refreshes this.cachedLabelList
    */
