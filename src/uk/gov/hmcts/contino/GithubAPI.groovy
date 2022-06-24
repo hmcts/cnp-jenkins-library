@@ -55,8 +55,7 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    def statCode = response.getProperties().toString()
-    this.steps.echo "Response Status Code: ${statusCode}"
+    this.steps.echo "Response Status Code: ${response}"
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
 //      if (this.cachedLabelList.isValid) {
