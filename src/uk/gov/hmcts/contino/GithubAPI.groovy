@@ -13,7 +13,7 @@ class GithubAPI {
     this.steps = steps
   }
 
-  private cachedLabelList = [
+  private static cachedLabelList = [
     'isValid': false,
     'cache': []
   ]
