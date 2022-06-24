@@ -137,7 +137,7 @@ class GithubAPI {
    */
   def checkForDependenciesLabel(branch_name) {
     this.steps.echo "Checking for Dependencies Label by calling getLabelsbyPattern()."
-    depLabel = getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
+    def depLabel = getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
     this.steps.echo "Found Dependencies Label?: ${depLabel}"
     return depLabel
   }
