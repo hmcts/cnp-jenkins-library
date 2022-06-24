@@ -55,7 +55,8 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    def statusCode = response.getStatus()
+
+    def statusCode = response.status
     this.steps.echo "Response Status Code: ${statusCode}"
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
