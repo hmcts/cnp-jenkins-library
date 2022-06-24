@@ -55,9 +55,13 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.steps.echo "Github API POST Request Response: ${response}"
+    if (response.status == 200) {
+      this.steps.echo "Response OK.  Adding new labels to cache."
+      this.cachedLabelList.cache.addAll(labels)
+      this.steps.echo "Updated Cache Contents: ${this.cachedLabelList.cache}"
+    }
 
-    this.clearLabelCache()
+    // this.clearLabelCache()
   }
 
   /**
