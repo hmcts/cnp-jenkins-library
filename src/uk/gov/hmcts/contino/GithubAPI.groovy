@@ -63,18 +63,18 @@ class GithubAPI {
    * Clears this.cachedLabelList
    */
   private void clearLabelCache() {
-    echo "Clearing Label Cache."
+    this.steps.echo "Clearing Label Cache."
     this.cachedLabelList.cache = []
     this.cachedLabelList.isValid = false
-    echo "Cleared Cache Contents: ${this.cachedLabelList.cache}"
-    echo "Cleared Cache Valid?: ${this.cachedLabelList.isValid}"
+    this.steps.echo "Cleared Cache Contents: ${this.cachedLabelList.cache}"
+    this.steps.echo "Cleared Cache Valid?: ${this.cachedLabelList.isValid}"
   }
 
   /**
    * Refreshes this.cachedLabelList
    */
   def refreshLabelCache() {
-    echo "Refreshing Label Cache"
+    this.steps.echo "Refreshing Label Cache"
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
     def response = this.steps.httpRequest(httpMode: 'GET',
@@ -88,8 +88,8 @@ class GithubAPI {
     def json_response = new JsonSlurper().parseText(response.content)
     this.cachedLabelList.cache = json_response.collect( { label -> label['name'] } )
     this.cachedLabelList.isValid = true
-    echo "Cache Contents: ${this.cachedLabelList.cache}"
-    echo "Cache Valid?: ${this.cachedLabelList.isValid}"
+    this.steps.echo "Cache Contents: ${this.cachedLabelList.cache}"
+    this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
     return this.cachedLabelList.cache
   }
 
@@ -97,20 +97,20 @@ class GithubAPI {
    * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
    */
   private getLabelsFromCache() {
-    echo "Getting Labels From Cache"
-    echo "Cache Valid?: ${this.cachedLabelList.isValid}"
+    this.steps.echo "Getting Labels From Cache"
+    this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
     if (!this.cachedLabelList.isValid) {
-      echo "Cache Invalid.  Calling Refresh."
+      this.steps.echo "Cache Invalid.  Calling Refresh."
       return refreshLabelCache()
     }
 
-    echo "Cache Empty?: ${this.cachedLabelList.cache.isEmpty()}"
+    this.steps.echo "Cache Empty?: ${this.cachedLabelList.cache.isEmpty()}"
     if (this.cachedLabelList.cache.isEmpty() && this.cachedLabelList.isValid) {
-      echo "Cache is Empty and Valid.  Returning Empty List."
+      this.steps.echo "Cache is Empty and Valid.  Returning Empty List."
       return []
     }
 
-    echo "Cache is Valid.  Returning Cache Content: ${this.cachedLabelList.cache}"
+    this.steps.echo "Cache is Valid.  Returning Cache Content: ${this.cachedLabelList.cache}"
     return this.cachedLabelList.cache
   }
 
@@ -118,16 +118,16 @@ class GithubAPI {
    * Check Pull Request for label by a pattern in name.
    */
   def getLabelsbyPattern(String branch_name, String key) {
-    echo "Getting Labels for Branch: ${branch_name} by Pattern: ${key}"
+    this.steps.echo "Getting Labels for Branch: ${branch_name} by Pattern: ${key}"
     def isPR = new ProjectBranch(branch_name).isPR()
-    echo "Is this a PR?: ${isPR}"
+    this.steps.echo "Is this a PR?: ${isPR}"
     if (isPR) {
-      echo "PR Confirmed.  Calling getLabels()."
+      this.steps.echo "PR Confirmed.  Calling getLabels()."
       def foundLabels = getLabels().findAll{it.contains(key)}
-      echo "Returning Labels: ${foundLabels}"
+      this.steps.echo "Returning Labels: ${foundLabels}"
       return foundLabels
     } else {
-      echo "Negative PR.  Returning Empty List."
+      this.steps.echo "Negative PR.  Returning Empty List."
       return []
     }
   }
@@ -136,9 +136,9 @@ class GithubAPI {
    * Check Pull Request for dependencies label.
    */
   def checkForDependenciesLabel(branch_name) {
-    echo "Checking for Dependencies Label by calling getLabelsbyPattern()."
+    this.steps.echo "Checking for Dependencies Label by calling getLabelsbyPattern()."
     depLabel = getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
-    echo "Found Dependencies Label?: ${depLabel}"
+    this.steps.echo "Found Dependencies Label?: ${depLabel}"
     return depLabel
   }
 
@@ -146,7 +146,7 @@ class GithubAPI {
    * Get all labels from an issue or pull request
    */
   def getLabels() {
-    echo "Getting All Labels.  Calling getLabelsFromCache()."
+    this.steps.echo "Getting All Labels.  Calling getLabelsFromCache()."
     return this.getLabelsFromCache()
   }
 
