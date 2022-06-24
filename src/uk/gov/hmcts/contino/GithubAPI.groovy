@@ -55,7 +55,7 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    def statusCode = new JsonSlurper().parseText(response.status)
+    def statusCode = new JsonSlurper().parseText(response)
 //    this.steps.echo "Response Status Code: ${statusCode}"
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
