@@ -25,10 +25,9 @@ class GithubAPI {
    *   A List of labels
    */
   def addLabelsToCurrentPR(labels) {
-
     def project = currentProject()
     def pullRequestNumber = currentPullRequestNumber()
-
+    this.steps.echo "Adding Labels to current PR (${project} / ${pullRequestNumber})"
     addLabels(project, pullRequestNumber, labels)
   }
 
@@ -44,9 +43,9 @@ class GithubAPI {
    *   A List of labels
    */
   def addLabels(project, issueNumber, labels) {
-
+    this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
-
+    this.steps.echo "Request Body: ${body}"
     def response = this.steps.httpRequest(httpMode: 'POST',
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
@@ -55,6 +54,8 @@ class GithubAPI {
       requestBody: "${body}",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
+
+    this.steps.echo "Github API POST Request Response: ${response}"
 
     this.clearLabelCache()
   }
