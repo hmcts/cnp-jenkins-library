@@ -57,19 +57,19 @@ class GithubAPI {
 
     def statusCode = response.getStatus()
     this.steps.echo "Response Status Code: ${statusCode}"
-    if (statusCode == 200) {
-      this.steps.echo "Response Ok."
-      if (this.cachedLabelList.isValid) {
-        this.steps.echo "Cache is Valid.  Adding new labels to cache."
-        this.cachedLabelList.cache.addAll(labels)
-        this.steps.echo "Updated Cache Contents: ${this.cachedLabelList.cache}"
-      } else {
-        this.steps.echo "Cache is Invalid.  Refreshing Cache."
-        this.refreshLabelCache()
-      }
-    } else {
-      this.steps.echo "Failed to Add Labels."
-    }
+//    if (statusCode == 200) {
+//      this.steps.echo "Response Ok."
+//      if (this.cachedLabelList.isValid) {
+//        this.steps.echo "Cache is Valid.  Adding new labels to cache."
+//        this.cachedLabelList.cache.addAll(labels)
+//        this.steps.echo "Updated Cache Contents: ${this.cachedLabelList.cache}"
+//      } else {
+//        this.steps.echo "Cache is Invalid.  Refreshing Cache."
+//        this.refreshLabelCache()
+//      }
+//    } else {
+//      this.steps.echo "Failed to Add Labels."
+//    }
   }
 
   /**
