@@ -57,6 +57,7 @@ class GithubAPI {
 
     this.steps.echo "Response Status Code: "
     def response_status = new JsonSlurper().setType(JsonParserType.LAX).parseText(JsonOutput.toJson(response))
+    this.steps.echo response_status.toString()
     this.steps.echo response_status
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
