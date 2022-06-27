@@ -55,9 +55,9 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.steps.echo "Response Status Code: "
-    def response_status = new HashMap<>(new JsonSlurper().parseText(JsonOutput.toJson(response)))
-    this.steps.echo response_status.toString()
+    def lazyMapTest = new JsonSlurper().parseText(response.content)
+    def lazyMapTestInit = lazyMapTest.collect( { label -> label['name'] } )
+    this.steps.echo "Response Status Code: ${response.status}"
 
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
