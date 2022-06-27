@@ -28,6 +28,7 @@ else
 fi
 
 sed -i -e 's/@hmctspublic/https\:\/\/hmctspublic.azurecr.io\/helm\/v1\/repo\//g' charts/"${CHART_DIRECTORY}"/Chart.yaml
+git status charts/"${CHART_DIRECTORY}"/Chart.yaml | grep --quiet charts/"${CHART_DIRECTORY}"/Chart.yaml
 if [ $? -eq 0 ]; then
   echo "Updated hmctspublic alias in Chart.yaml"
   ALIAS_UPDATED=true
