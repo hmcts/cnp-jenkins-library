@@ -27,17 +27,16 @@ else
   DIFF_IN_CHART=false
 fi
 
-DIFF_IN_REQUIREMENTS=false
-if [[ -f charts/"${CHART_DIRECTORY}"/requirements.yaml ]]
-then
-  git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/requirements.yaml
-  if [ $? -eq 1 ]; then
-     echo "Diff in requirements.yaml detected"
-     DIFF_IN_REQUIREMENTS=true
-   fi
+sed -i -e 's/@hmctspublic/https\:\/\/hmctspublic.azurecr.io\/helm\/v1\/repo\//g' charts/"${CHART_DIRECTORY}"/Chart.yaml
+if [ $? -eq 0 ]; then
+  echo "Updated hmctspublic alias in Chart.yaml"
+  ALIAS_UPDATED=true
+else
+  ALIAS_UPDATED=false
 fi
 
-if [[ ${DIFF_IN_VALUES} = 'false' ]] && [[ ${DIFF_IN_REQUIREMENTS} = 'false' ]] && [[ ${DIFF_IN_CHART} = 'false' ]] ; then
+
+if [[ ${DIFF_IN_VALUES} = 'false' ]]  && [[ ${DIFF_IN_CHART} = 'false' ]]  && [[ ${ALIAS_UPDATED} = 'false' ]] ; then
   echo 'No differences requiring chart version bump detected'
   exit 0
 fi
@@ -54,17 +53,18 @@ else
   echo "=====  Jenkins will bump the version and commit for you.      ====="
   echo "==================================================================="
 
-  git fetch origin $BRANCH:$BRANCH
-  git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-  git config --global user.name ${USER_NAME}
-  git config --global user.email ${GIT_APP_EMAIL_ID}
-
   CHART_VERSION=$(cat charts/"${CHART_DIRECTORY}"/Chart.yaml | grep ^version | cut -d ':' -f 2 | sed -e 's/^[[:space:]]*//')
   NEW_VERSION=$(echo $CHART_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g' )
   sed -i -e "s/^version: $CHART_VERSION/version: $NEW_VERSION/" charts/"${CHART_DIRECTORY}"/Chart.yaml
 
-  git add charts/"${CHART_DIRECTORY}"/Chart.yaml
-  git commit -m "Bumping chart version"
-  git push origin HEAD:$BRANCH
-  exit 1
 fi
+
+git fetch origin $BRANCH:$BRANCH
+git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+git config --global user.name ${USER_NAME}
+git config --global user.email ${GIT_APP_EMAIL_ID}
+
+git add charts/"${CHART_DIRECTORY}"/Chart.yaml
+git commit -m "Bumping chart version/ fixing aliases"
+git push origin HEAD:$BRANCH
+exit 1
