@@ -75,6 +75,10 @@ class GithubAPITest extends Specification {
 
     def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
 
+    given:
+      response = Stub()
+      response.status = 200
+
     when:
       githubApi.addLabelsToCurrentPR(labels)
 
