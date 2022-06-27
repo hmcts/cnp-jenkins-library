@@ -75,9 +75,6 @@ class GithubAPITest extends Specification {
 
     def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
 
-    given:
-      response.status >> 200
-
     when:
       githubApi.addLabelsToCurrentPR(labels)
 
@@ -89,7 +86,7 @@ class GithubAPITest extends Specification {
                              it.get('url').equals("${expectedUrl}") &&
                              it.get('requestBody').equals("${expectedLabels}") &&
                              it.get('consoleLogResponseBody').equals(true) &&
-                             it.get('validResponseCodes').equals('200')})
+                             it.get('validResponseCodes').equals('200')}) >> ["status" : 200]
   }
 
 //  def "AddLabels"() {
