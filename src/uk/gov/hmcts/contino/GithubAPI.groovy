@@ -2,7 +2,6 @@ package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovy.json.JsonSlurperClassic
 
 class GithubAPI {
 
@@ -57,8 +56,8 @@ class GithubAPI {
       validResponseCodes: '200')
 
     this.steps.echo "Response Status Code: "
-    def response_status = new JsonSlurperClassic().parseText(JsonOutput.toJson(response))
-    this.steps.echo response_status
+    def response_status = new JsonSlurper().parseText(JsonOutput.toJson(response))
+    this.steps.echo response_status.get("status")
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
 //      if (this.cachedLabelList.isValid) {
