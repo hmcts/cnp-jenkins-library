@@ -68,13 +68,16 @@ class GithubAPITest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
                   CHANGE_ID: "68", GIT_CREDENTIALS_ID:"test-app-id"]
-    steps.httpRequest(_) >> response
     githubApi = new GithubAPI(steps)
   }
 
   def "AddLabelsToCurrentPR"() {
 
     def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
+
+    given:
+      steps.httpRequest(_) >> response
+      response.status >> 200
 
     when:
       githubApi.addLabelsToCurrentPR(labels)
