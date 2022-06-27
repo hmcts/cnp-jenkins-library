@@ -62,6 +62,7 @@ class GithubAPI {
       if (this.cachedLabelList.isValid) {
         this.steps.echo "Cache is Valid.  Adding new labels to cache."
         this.cachedLabelList.cache.addAll(labels)
+        this.cachedLabelList.cache.unique()
         this.steps.echo "Updated Cache Contents: ${this.cachedLabelList.cache}"
       } else {
         this.steps.echo "Cache is Invalid.  Refreshing Cache."
