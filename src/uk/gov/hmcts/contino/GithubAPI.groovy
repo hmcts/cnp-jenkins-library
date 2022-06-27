@@ -55,7 +55,8 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.steps.echo "Response Status Code: ${response}"
+    this.steps.echo "Response Status Code: "
+    this.steps.echo response.status
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
 //      if (this.cachedLabelList.isValid) {
