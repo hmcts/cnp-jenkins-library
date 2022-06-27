@@ -72,7 +72,7 @@ class GithubAPI {
   }
 
   def addLabelsToCache(response, labels) {
-    this.steps.echo response.status
+    this.steps.echo response
     this.steps.echo labels
   }
 
