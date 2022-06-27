@@ -55,9 +55,9 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.steps.echo "Response Status Code: ${response.status}"
+    this.steps.echo "Response Status Code: ${response.getStatus()}"
 
-    if (response.status == 200) {
+    if (response.getStatus() == 200) {
       this.steps.echo "Response Ok."
       if (this.cachedLabelList.isValid) {
         this.steps.echo "Cache is Valid.  Adding new labels to cache."
@@ -69,7 +69,7 @@ class GithubAPI {
         this.refreshLabelCache()
       }
     } else {
-      this.steps.echo "Failed to Add Labels.  Server returned ${response.status} response."
+      this.steps.echo "Failed to Add Labels.  Server returned ${response.getStatus()} response."
     }
   }
 
