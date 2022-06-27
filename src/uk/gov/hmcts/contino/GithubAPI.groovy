@@ -56,9 +56,9 @@ class GithubAPI {
       validResponseCodes: '200')
 
     this.steps.echo "Response Status Code: "
-    def response_status = new JsonSlurper().parseText(JsonOutput.toJson(response))
+    def response_status = new HashMap<>(new JsonSlurper().parseText(JsonOutput.toJson(response)))
     this.steps.echo response_status
-    
+
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
 //      if (this.cachedLabelList.isValid) {
