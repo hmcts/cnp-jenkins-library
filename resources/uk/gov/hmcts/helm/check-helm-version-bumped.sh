@@ -46,7 +46,9 @@ git diff origin/master charts/"${CHART_DIRECTORY}"/Chart.yaml | grep --quiet '+v
 
 if [ $? -eq 0 ]; then
   echo "Chart.yaml version has been bumped :)"
+  CHART_BUMPED=false
 else
+  CHART_BUMPED=true
   echo "==================================================================="
   echo "=====  Version is not bumped in Chart.yaml file    ====="
   echo "=====  This is required as you changed something in           ====="
@@ -60,12 +62,14 @@ else
 
 fi
 
-git fetch origin $BRANCH:$BRANCH
-git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-git config --global user.name ${USER_NAME}
-git config --global user.email ${GIT_APP_EMAIL_ID}
+if [[ ${CHART_BUMPED} = 'true' ]]  || [[ ${ALIAS_UPDATED} = 'true' ]] ; then
+  git fetch origin $BRANCH:$BRANCH
+  git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+  git config --global user.name ${USER_NAME}
+  git config --global user.email ${GIT_APP_EMAIL_ID}
 
-git add charts/"${CHART_DIRECTORY}"/Chart.yaml
-git commit -m "Bumping chart version/ fixing aliases"
-git push origin HEAD:$BRANCH
-exit 1
+  git add charts/"${CHART_DIRECTORY}"/Chart.yaml
+  git commit -m "Bumping chart version/ fixing aliases"
+  git push origin HEAD:$BRANCH
+  exit 1
+fi
