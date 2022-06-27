@@ -57,7 +57,7 @@ class GithubAPI {
 
     this.steps.echo "Response Status Code: "
     def response_status = new HashMap<>(new JsonSlurper().parseText(JsonOutput.toJson(response)))
-    this.steps.echo response_status
+    this.steps.echo response_status.toString()
 
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
