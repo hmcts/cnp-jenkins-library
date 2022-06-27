@@ -55,7 +55,7 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    addLabelsToCache(response, labels)
+    return response
 //    if (statusCode == 200) {
 //      this.steps.echo "Response Ok."
 //      if (this.cachedLabelList.isValid) {
@@ -71,9 +71,8 @@ class GithubAPI {
 //    }
   }
 
-  def addLabelsToCache(response, labels) {
-    this.steps.echo response
-    this.steps.echo labels
+  def updateCache(status) {
+
   }
 
   /**
