@@ -55,8 +55,6 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    def lazyMapTest = new JsonSlurper().parseText(response.content)
-    def lazyMapTestInit = lazyMapTest.collect( { label -> label['name'] } )
     this.steps.echo "Response Status Code: ${response.status}"
 
 //    if (statusCode == 200) {
