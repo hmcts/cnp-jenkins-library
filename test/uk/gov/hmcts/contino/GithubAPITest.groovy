@@ -68,6 +68,7 @@ class GithubAPITest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
                   CHANGE_ID: "68", GIT_CREDENTIALS_ID:"test-app-id"]
+    steps.httpRequest(_) >> response
     githubApi = new GithubAPI(steps)
   }
 
@@ -86,7 +87,7 @@ class GithubAPITest extends Specification {
                              it.get('url').equals("${expectedUrl}") &&
                              it.get('requestBody').equals("${expectedLabels}") &&
                              it.get('consoleLogResponseBody').equals(true) &&
-                             it.get('validResponseCodes').equals('200')}) >> ["status" : 200]
+                             it.get('validResponseCodes').equals('200')})
   }
 
 //  def "AddLabels"() {
