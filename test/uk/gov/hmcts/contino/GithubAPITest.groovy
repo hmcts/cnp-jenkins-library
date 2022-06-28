@@ -66,7 +66,7 @@ class GithubAPITest extends Specification {
 
   void setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.httpRequest(_) >> ["status": 200]
+    steps.httpRequest(_) >> response
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
                   CHANGE_ID: "68", GIT_CREDENTIALS_ID:"test-app-id"]
     githubApi = new GithubAPI(steps)
