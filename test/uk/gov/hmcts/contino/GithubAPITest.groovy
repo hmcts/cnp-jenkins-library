@@ -75,7 +75,7 @@ class GithubAPITest extends Specification {
 
     def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
 
-    setup:
+    given:
       steps.httpRequest(_) >> ["status": 200]
 
     when:
