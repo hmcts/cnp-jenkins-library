@@ -50,7 +50,7 @@ class GithubAPI {
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: "${API_URL}/${project}/issues/${issueNumber}/labels",
+      url: API_URL + "/${project}/issues/${issueNumber}/labels",
       requestBody: "${body}",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
@@ -95,7 +95,7 @@ class GithubAPI {
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: "${API_URL}/${project}/issues/${issueNumber}/labels",
+      url: API_URL + "/${project}/issues/${issueNumber}/labels",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 

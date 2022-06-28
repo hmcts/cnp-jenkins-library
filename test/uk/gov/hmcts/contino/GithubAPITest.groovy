@@ -11,7 +11,7 @@ class GithubAPITest extends Specification {
   def labels = ['label1', 'label2']
   def expectedLabels = '["label1","label2"]'
 
-  static def response = ["content": '''[
+  static def response = ["status": 200, "content": '''[
       {
         "id": 208045946,
         "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
@@ -75,7 +75,8 @@ class GithubAPITest extends Specification {
 
     def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
 
-    steps.httpRequest(_) >> response
+    given:
+      steps.httpRequest(_) >> response
 
     when:
       githubApi.addLabelsToCurrentPR(labels)
