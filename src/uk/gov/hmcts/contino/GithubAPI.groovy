@@ -85,6 +85,20 @@ class GithubAPI {
   }
 
   /**
+   * Return whether the cache is valid
+   */
+  def isCacheValid() {
+    return this.cachedLabelList.isValid
+  }
+
+  /**
+   * Return whether the chache is empty
+   */
+  def isCacheEmpty() {
+    return this.cachedLabelList.cache.isEmpty()
+  }
+
+  /**
    * Refreshes this.cachedLabelList
    */
   def refreshLabelCache() {
