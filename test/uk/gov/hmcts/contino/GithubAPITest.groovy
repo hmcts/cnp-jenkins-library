@@ -112,18 +112,6 @@ class GithubAPITest extends Specification {
 //        it.get('validResponseCodes').equals('200')})
 //  }
 
-  // Check test for PR status is working
-  def "checkPR"() {
-
-    when:
-      def notPr = githubApi.checkPR("master")
-      def pr = githubApi.checkPR("PR-123")
-
-    then:
-      assertThat(notPr).isFalse()
-      assertThat(pr).isTrue()
-  }
-
   // Attempt to check filtering is working on returned labels
 
   def "getLabelsbyPattern"() {
