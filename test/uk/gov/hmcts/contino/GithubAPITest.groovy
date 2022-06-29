@@ -64,6 +64,8 @@ class GithubAPITest extends Specification {
     ]'''
   ]
 
+  static def prValuesFromResponse = ["pr-values:ccd", "random", "pr-values:xui"]
+
   void setup() {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
@@ -114,7 +116,9 @@ class GithubAPITest extends Specification {
 
   def "getLabelsbyPattern"() {
 
-    steps.httpRequest(_) >> prValuesResponse
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+      githubApi.getLabels() >> prValuesFromResponse
 
     when:
       def masterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
