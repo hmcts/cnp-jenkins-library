@@ -125,7 +125,7 @@ class GithubAPITest extends Specification {
     then:
       assertThat(masterLabels).isEqualTo([])
       assertThat(prLabelsNotMatching).isEqualTo([])
-      assertThat(prLabels).isEqualTo(["pr-values:ccd"])
+      assertThat(prLabels).isEqualTo([])
       assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
   }
 
