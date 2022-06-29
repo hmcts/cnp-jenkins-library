@@ -193,4 +193,20 @@ class GithubAPITest extends Specification {
       assertThat(emptyFalse).isFalse()
       assertThat(emptyTrue).isTrue()
   }
+
+  def "getCache"() {
+    given:
+      // Ensure cache is populated and valid
+      steps.httpRequest(_) >> response
+      githubApi.addLabelsToCurrentPR(labels)
+
+    when:
+      def cache = githubApi.getCache()
+      githubApi.clearLabelCache()
+      def emptyCache = githubApi.getCache()
+
+    then:
+      assertThat(cache).isEqualTo(responseLabels)
+      assertThat(emptyCache).isEqualTo([])
+  }
 }
