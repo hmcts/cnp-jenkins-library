@@ -93,23 +93,26 @@ class GithubAPITest extends Specification {
                              it.get('validResponseCodes').equals('200')})
   }
 
-//  def "AddLabels"() {
-//
-//    def expectedUrl = 'https://api.github.com/repos/evilcorp/my-project/issues/89/labels'
-//
-//    when:
-//      githubApi.addLabels('evilcorp/my-project', '89', labels)
-//
-//    then:
-//      1 * steps.httpRequest({it.get('httpMode').equals('POST') &&
-//        it.get('authentication').equals("test-app-id") &&
-//        it.get('acceptType').equals('APPLICATION_JSON') &&
-//        it.get('contentType').equals('APPLICATION_JSON') &&
-//        it.get('url').equals("${expectedUrl}") &&
-//        it.get('requestBody').equals("${expectedLabels}") &&
-//        it.get('consoleLogResponseBody').equals(true) &&
-//        it.get('validResponseCodes').equals('200')})
-//  }
+  def "AddLabels"() {
+
+    def expectedUrl = 'https://api.github.com/repos/evilcorp/my-project/issues/89/labels'
+
+    given:
+      steps.httpRequest(_) >> response
+
+    when:
+      githubApi.addLabels('evilcorp/my-project', '89', labels)
+
+    then:
+      steps.httpRequest({it.get('httpMode').equals('POST') &&
+        it.get('authentication').equals("test-app-id") &&
+        it.get('acceptType').equals('APPLICATION_JSON') &&
+        it.get('contentType').equals('APPLICATION_JSON') &&
+        it.get('url').equals("${expectedUrl}") &&
+        it.get('requestBody').equals("${expectedLabels}") &&
+        it.get('consoleLogResponseBody').equals(true) &&
+        it.get('validResponseCodes').equals('200')})
+  }
 
   // Attempt to check filtering is working on returned labels
 
