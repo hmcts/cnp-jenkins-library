@@ -76,7 +76,7 @@ class GithubAPITest extends Specification {
     def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
 
     given:
-      steps.httpRequest(_) >> response
+      steps.httpRequest(_) >> prValuesResponse
 
     when:
       githubApi.addLabelsToCurrentPR(labels)
