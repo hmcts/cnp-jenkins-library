@@ -121,7 +121,6 @@ class GithubAPITest extends Specification {
   // Attempt to check filtering is working on returned labels
 
   def "getLabelsbyPattern"() {
-
     given:
       steps.httpRequest(_) >> prValuesResponse
 
@@ -139,7 +138,6 @@ class GithubAPITest extends Specification {
   }
 
   def "clearLabelCache"() {
-
     given:
       // Ensure cache is populated and valid
       steps.httpRequest(_) >> response
@@ -171,5 +169,37 @@ class GithubAPITest extends Specification {
 
     then:
       assertThat(prNumber).isEqualTo('68')
+  }
+
+  def "isCacheValid"() {
+    given:
+      // Ensure cache is populated and valid
+      steps.httpRequest(_) >> response
+      githubApi.addLabelsToCurrentPR(labels)
+
+    when:
+      def validTrue = githubApi.isCacheValid()
+      githubApi.clearLabelCache()
+      def validFalse = githubApi.isCacheValid()
+
+    then:
+      assertThat(validTrue).isTrue()
+      assertThat(validFalse).isFalse()
+  }
+
+  def "isCacheEmpty"() {
+    given:
+      // Ensure cache is populated and valid
+      steps.httpRequest(_) >> response
+      githubApi.addLabelsToCurrentPR(labels)
+
+    when:
+      def emptyFalse = githubApi.isCacheEmpty()
+      githubApi.clearLabelCache()
+      def emptyTrue = githubApi.isCacheEmpty()
+
+    then:
+      assertThat(emptyFalse).isFalse()
+      assertThat(emptyTrue).isTrue()
   }
 }
