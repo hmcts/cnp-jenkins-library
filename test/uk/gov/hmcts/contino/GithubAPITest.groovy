@@ -139,6 +139,15 @@ class GithubAPITest extends Specification {
   }
 
   def "clearLabelCache"() {
+
+    given:
+      // Ensure cache is populated and valid
+      steps.httpRequest(_) >> response
+      githubApi.addLabelsToCurrentPR(labels)
+
+      // Clear the cache
+      githubApi.clearLabelCache()
+
     when:
       def isValid = githubApi.isCacheValid()
       def isEmpty = githubApi.isCacheEmpty()
