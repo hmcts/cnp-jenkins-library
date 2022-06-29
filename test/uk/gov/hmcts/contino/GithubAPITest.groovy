@@ -33,7 +33,7 @@ class GithubAPITest extends Specification {
     ]'''
   ]
 
-  static def prValuesResponse = ["content": '''[
+  static def prValuesResponse = ["status": 200, "content": '''[
       {
         "id": 208045946,
         "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
