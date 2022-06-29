@@ -33,6 +33,8 @@ class GithubAPITest extends Specification {
     ]'''
   ]
 
+  static def responseLabels = ["bug", "enhancement"]
+
   static def prValuesResponse = ["status": 200, "content": '''[
       {
         "id": 208045946,
@@ -64,6 +66,8 @@ class GithubAPITest extends Specification {
     ]'''
   ]
 
+  static def prValuesResponseLabels = ["pr-values:ccd", "random", "pr-values:xui"]
+
   void setup() {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
@@ -73,49 +77,25 @@ class GithubAPITest extends Specification {
   }
 
   def "AddLabelsToCurrentPR"() {
-
-    def expectedUrl = 'https://api.github.com/repos/hmcts/some-project/issues/68/labels'
-
     given:
       steps.httpRequest(_) >> response
 
     when:
-      githubApi.addLabelsToCurrentPR(labels)
+      def cache = githubApi.addLabelsToCurrentPR(labels)
 
     then:
-      steps.httpRequest({
-        it.get('httpMode').equals('POST') &&
-        it.get('authentication').equals("test-app-id") &&
-        it.get('acceptType').equals('APPLICATION_JSON') &&
-        it.get('contentType').equals('APPLICATION_JSON') &&
-        it.get('url').equals("${expectedUrl}") &&
-        it.get('requestBody').equals("${expectedLabels}") &&
-        it.get('consoleLogResponseBody').equals(true) &&
-        it.get('validResponseCodes').equals('200')
-      })
+      assertThat(cache).isEqualTo(responseLabels)
   }
 
   def "AddLabels"() {
-
-    def expectedUrl = 'https://api.github.com/repos/evilcorp/my-project/issues/89/labels'
-
     given:
       steps.httpRequest(_) >> response
 
     when:
-      githubApi.addLabels('evilcorp/my-project', '89', labels)
+      def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
 
     then:
-      steps.httpRequest({
-        it.get('httpMode').equals('POST') &&
-        it.get('authentication').equals("test-app-id") &&
-        it.get('acceptType').equals('APPLICATION_JSON') &&
-        it.get('contentType').equals('APPLICATION_JSON') &&
-        it.get('url').equals("${expectedUrl}") &&
-        it.get('requestBody').equals("${expectedLabels}") &&
-        it.get('consoleLogResponseBody').equals(true) &&
-        it.get('validResponseCodes').equals('200')
-      })
+      assertThat(cache).isEqualTo(responseLabels)
   }
 
   // Attempt to check filtering is working on returned labels
