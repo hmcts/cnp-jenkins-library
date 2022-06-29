@@ -83,14 +83,16 @@ class GithubAPITest extends Specification {
       githubApi.addLabelsToCurrentPR(labels)
 
     then:
-      steps.httpRequest({it.get('httpMode').equals('POST') &&
-                             it.get('authentication').equals("test-app-id") &&
-                             it.get('acceptType').equals('APPLICATION_JSON') &&
-                             it.get('contentType').equals('APPLICATION_JSON') &&
-                             it.get('url').equals("${expectedUrl}") &&
-                             it.get('requestBody').equals("${expectedLabels}") &&
-                             it.get('consoleLogResponseBody').equals(true) &&
-                             it.get('validResponseCodes').equals('200')})
+      steps.httpRequest({
+        it.get('httpMode').equals('POST') &&
+        it.get('authentication').equals("test-app-id") &&
+        it.get('acceptType').equals('APPLICATION_JSON') &&
+        it.get('contentType').equals('APPLICATION_JSON') &&
+        it.get('url').equals("${expectedUrl}") &&
+        it.get('requestBody').equals("${expectedLabels}") &&
+        it.get('consoleLogResponseBody').equals(true) &&
+        it.get('validResponseCodes').equals('200')
+      })
   }
 
   def "AddLabels"() {
@@ -104,21 +106,24 @@ class GithubAPITest extends Specification {
       githubApi.addLabels('evilcorp/my-project', '89', labels)
 
     then:
-      steps.httpRequest({it.get('httpMode').equals('POST') &&
+      steps.httpRequest({
+        it.get('httpMode').equals('POST') &&
         it.get('authentication').equals("test-app-id") &&
         it.get('acceptType').equals('APPLICATION_JSON') &&
         it.get('contentType').equals('APPLICATION_JSON') &&
         it.get('url').equals("${expectedUrl}") &&
         it.get('requestBody').equals("${expectedLabels}") &&
         it.get('consoleLogResponseBody').equals(true) &&
-        it.get('validResponseCodes').equals('200')})
+        it.get('validResponseCodes').equals('200')
+      })
   }
 
   // Attempt to check filtering is working on returned labels
 
   def "getLabelsbyPattern"() {
 
-    steps.httpRequest(_) >> prValuesResponse
+    given:
+      steps.httpRequest(_) >> prValuesResponse
 
     when:
       def masterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
