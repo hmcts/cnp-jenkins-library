@@ -129,20 +129,13 @@ class GithubAPI {
   }
 
   /**
-   * Check if we are working with a PR
-   */
-  def checkPR(String branch_name) {
-    def isPR = new ProjectBranch(branch_name).isPR()
-    this.steps.echo "Is ${branch_name} a PR?: ${isPR}"
-    return isPR
-  }
-
-  /**
    * Check Pull Request for label by a pattern in name.
    */
   def getLabelsbyPattern(String branch_name, String key) {
     this.steps.echo "Getting Labels for Branch: ${branch_name} by Pattern: ${key}"
-    if (checkPR(branch_name)) {
+    def isPR = new ProjectBranch(branch_name).isPR()
+    this.steps.echo "Is this a PR?: ${isPR}"
+    if (isPR) {
       this.steps.echo "PR Confirmed.  Calling getLabels()."
       def foundLabels = getLabels().findAll{it.contains(key)}
       this.steps.echo "Returning Labels: ${foundLabels}"
