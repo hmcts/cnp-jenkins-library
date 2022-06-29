@@ -76,7 +76,7 @@ class GithubAPI {
   /**
    * Clears this.cachedLabelList
    */
-  private void clearLabelCache() {
+  void clearLabelCache() {
     this.steps.echo "Clearing Label Cache."
     this.cachedLabelList.cache = []
     this.cachedLabelList.isValid = false
