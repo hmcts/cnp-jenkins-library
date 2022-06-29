@@ -135,6 +135,17 @@ class GithubAPITest extends Specification {
       assertThat(isEmpty).isTrue()
   }
 
+  def "refreshLabelCache"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def cache = githubApi.refreshLabelCache()
+
+    then:
+      assertThat(cache).isEqualTo(prValuesResponseLabels)
+  }
+
   def "CurrentProject"() {
     when:
       def project = githubApi.currentProject()
