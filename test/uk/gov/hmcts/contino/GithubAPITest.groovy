@@ -82,7 +82,7 @@ class GithubAPITest extends Specification {
       githubApi.addLabelsToCurrentPR(labels)
 
     then:
-      1 * steps.httpRequest({it.get('httpMode').equals('POST') &&
+      steps.httpRequest({it.get('httpMode').equals('POST') &&
                              it.get('authentication').equals("test-app-id") &&
                              it.get('acceptType').equals('APPLICATION_JSON') &&
                              it.get('contentType').equals('APPLICATION_JSON') &&
