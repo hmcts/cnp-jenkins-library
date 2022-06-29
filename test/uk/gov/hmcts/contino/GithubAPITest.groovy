@@ -140,8 +140,8 @@ class GithubAPITest extends Specification {
 
   def "clearLabelCache"() {
     when:
-      def isValid = gitHubApi.isCacheValid()
-      def isEmpty = gitHubApi.isCacheEmpty()
+      def isValid = githubApi.isCacheValid()
+      def isEmpty = githubApi.isCacheEmpty()
 
     then:
       assertThat(isValid).isFalse()
