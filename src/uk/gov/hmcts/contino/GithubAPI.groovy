@@ -99,6 +99,13 @@ class GithubAPI {
   }
 
   /**
+   * Return cache contents as list
+   */
+  def getCache() {
+    return this.cachedLabelList.cache
+  }
+
+  /**
    * Refreshes this.cachedLabelList
    */
   def refreshLabelCache() {
