@@ -68,7 +68,7 @@ class GithubAPITest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
                   CHANGE_ID: "68", GIT_CREDENTIALS_ID:"test-app-id"]
-    githubApi = Spy(GithubAPI, constructorArgs: [steps])
+    githubApi = Spy(new GithubAPI(steps))
   }
 
   def "AddLabelsToCurrentPR"() {
