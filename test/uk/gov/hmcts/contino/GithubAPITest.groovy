@@ -68,6 +68,8 @@ class GithubAPITest extends Specification {
 
   static def prValuesResponseLabels = ["pr-values:ccd", "random", "pr-values:xui"]
 
+  static def invalidResponse = ["status": 500]
+
   void setup() {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
@@ -87,7 +89,7 @@ class GithubAPITest extends Specification {
       assertThat(cache).isEqualTo(responseLabels)
   }
 
-  def "AddLabels"() {
+  def "AddLabels [200 response]"() {
     given:
       steps.httpRequest(_) >> response
 
@@ -96,6 +98,17 @@ class GithubAPITest extends Specification {
 
     then:
       assertThat(cache).isEqualTo(responseLabels)
+  }
+
+  def "AddLabels [Invalid response]"() {
+    given:
+      steps.httpRequest(_) >> invalidResponse
+
+    when:
+      def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
+
+    then:
+      assertThat(cache).isEqualTo([])
   }
 
   // Attempt to check filtering is working on returned labels
@@ -148,7 +161,7 @@ class GithubAPITest extends Specification {
       assertThat(isEmpty).isTrue()
   }
 
-  def "refreshLabelCache"() {
+  def "refreshLabelCache [200 response]"() {
     given:
       steps.httpRequest(_) >> prValuesResponse
 
@@ -157,6 +170,17 @@ class GithubAPITest extends Specification {
 
     then:
       assertThat(cache).isEqualTo(prValuesResponseLabels)
+  }
+
+  def "refreshLabelCache [Invalid response]"() {
+    given:
+      steps.httpRequest(_) >> invalidResponse
+
+    when:
+      def cache = githubApi.refreshLabelCache()
+
+    then:
+      assertThat(cache).isEqualTo([])
   }
 
   def "CurrentProject"() {
