@@ -82,12 +82,20 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    def json_response = new JsonSlurper().parseText(response.content)
-    this.cachedLabelList.cache = json_response.collect( { label -> label['name'] } )
-    this.cachedLabelList.isValid = true
-    this.steps.echo "Cache Contents: ${this.cachedLabelList.cache}"
-    this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
-    return this.cachedLabelList.cache
+    this.steps.echo "Response Status Code: ${response.status}"
+
+    if (response.status == 200) {
+      this.steps.echo "Response Ok."
+      def json_response = new JsonSlurper().parseText(response.content)
+      this.cachedLabelList.cache = json_response.collect({ label -> label['name'] })
+      this.cachedLabelList.isValid = true
+      this.steps.echo "Cache Contents: ${this.cachedLabelList.cache}"
+      this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
+      return this.cachedLabelList.cache
+    } else {
+      this.steps.echo "Failed to Update cache.  Server returned ${response.status} response."
+      return this.cachedLabelList.cache
+    }
   }
 
   /**
