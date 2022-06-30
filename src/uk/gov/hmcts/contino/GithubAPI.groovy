@@ -133,11 +133,12 @@ class GithubAPI {
         this.steps.echo "Updated Cache Contents: ${this.cachedLabelList.cache}"
       } else {
         this.steps.echo "Cache is Invalid.  Refreshing Cache."
-        this.refreshLabelCache()
+        return this.refreshLabelCache()
       }
     } else {
       this.steps.echo "Failed to Add Labels.  Server returned ${response.status} response."
     }
+    return this.cachedLabelList.cache
   }
 
   /**
@@ -150,7 +151,7 @@ class GithubAPI {
     def project = currentProject()
     def pullRequestNumber = currentPullRequestNumber()
     this.steps.echo "Adding Labels to current PR (${project} / ${pullRequestNumber})"
-    addLabels(project, pullRequestNumber, labels)
+    return addLabels(project, pullRequestNumber, labels)
   }
 
   /**
