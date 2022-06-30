@@ -150,15 +150,22 @@ class GithubAPI {
   }
 
   /**
+   * Check for Pull Request
+   */
+  private isPR(String branch_name) {
+    def isPr = new ProjectBranch(branch_name).isPR()
+    this.steps.echo "Is ${branch_name} a PR?: ${isPr}"
+    return isPr
+  }
+
+  /**
    * Check Pull Request for label by a pattern in name.
    */
   def getLabelsbyPattern(String branch_name, String key) {
     this.steps.echo "Getting Labels for Branch: ${branch_name} by Pattern: ${key}"
-    def isPR = new ProjectBranch(branch_name).isPR()
-    this.steps.echo "Is this a PR?: ${isPR}"
-    if (isPR) {
+    if (isPR(branch_name)) {
       this.steps.echo "PR Confirmed.  Calling getLabels()."
-      def foundLabels = getLabels().findAll{it.contains(key)}
+      def foundLabels = getLabels(branch_name).findAll{it.contains(key)}
       this.steps.echo "Returning Labels: ${foundLabels}"
       return foundLabels
     } else {
@@ -180,9 +187,15 @@ class GithubAPI {
   /**
    * Get all labels from an issue or pull request
    */
-  def getLabels() {
-    this.steps.echo "Getting All Labels.  Calling getLabelsFromCache()."
-    return this.getLabelsFromCache()
+  def getLabels(String branch_name) {
+    this.steps.echo "Getting All Labels for ${branch_name}."
+    if (isPR(branch_name)) {
+      this.steps.echo "PR Confirmed.  Calling getLabelsFromCache()."
+      return this.getLabelsFromCache()
+    } else {
+      this.steps.echo "Negative PR.  Returning Empty List."
+      return []
+    }
   }
 
   def currentProject() {
