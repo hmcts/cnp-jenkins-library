@@ -63,8 +63,8 @@ class GithubAPI {
     this.steps.echo "Clearing Label Cache."
     this.cachedLabelList.cache = []
     this.cachedLabelList.isValid = false
-    this.steps.echo "Cleared Cache Contents: ${this.cachedLabelList.cache}"
-    this.steps.echo "Cleared Cache Valid?: ${this.cachedLabelList.isValid}"
+    this.steps.echo "Cleared Cache Contents: ${getCache()}"
+    this.steps.echo "Cleared Cache Valid?: ${isCacheValid()}"
   }
 
   /**
@@ -89,13 +89,13 @@ class GithubAPI {
       def json_response = new JsonSlurper().parseText(response.content)
       this.cachedLabelList.cache = json_response.collect({ label -> label['name'] })
       this.cachedLabelList.isValid = true
-      this.steps.echo "Cache Contents: ${this.cachedLabelList.cache}"
-      this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
-      return this.cachedLabelList.cache
+      this.steps.echo "Cache Contents: ${getCache()}"
+      this.steps.echo "Cache Valid?: ${isCacheValid()}"
     } else {
       this.steps.echo "Failed to Update cache.  Server returned ${response.status} response."
-      return this.cachedLabelList.cache
     }
+
+    return getCache()
   }
 
   /**
@@ -126,11 +126,11 @@ class GithubAPI {
 
     if (response.status == 200) {
       this.steps.echo "Response Ok."
-      if (this.cachedLabelList.isValid) {
+      if (isCacheValid()) {
         this.steps.echo "Cache is Valid.  Adding new labels to cache."
         this.cachedLabelList.cache.addAll(labels)
         this.cachedLabelList.cache.unique()
-        this.steps.echo "Updated Cache Contents: ${this.cachedLabelList.cache}"
+        this.steps.echo "Updated Cache Contents: ${getCache()}"
       } else {
         this.steps.echo "Cache is Invalid.  Refreshing Cache."
         return this.refreshLabelCache()
@@ -138,7 +138,8 @@ class GithubAPI {
     } else {
       this.steps.echo "Failed to Add Labels.  Server returned ${response.status} response."
     }
-    return this.cachedLabelList.cache
+
+    return getCache()
   }
 
   /**
@@ -159,20 +160,20 @@ class GithubAPI {
    */
   private getLabelsFromCache() {
     this.steps.echo "Getting Labels From Cache"
-    this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
-    if (!this.cachedLabelList.isValid) {
+    this.steps.echo "Cache Valid?: ${isCacheValid()}"
+    if (!isCacheValid()) {
       this.steps.echo "Cache Invalid.  Calling Refresh."
       return refreshLabelCache()
     }
 
-    this.steps.echo "Cache Empty?: ${this.cachedLabelList.cache.isEmpty()}"
-    if (this.cachedLabelList.cache.isEmpty() && this.cachedLabelList.isValid) {
+    this.steps.echo "Cache Empty?: ${isCacheEmpty()}"
+    if (isCacheEmpty() && isCacheValid()) {
       this.steps.echo "Cache is Empty and Valid.  Returning Empty List."
       return []
     }
 
-    this.steps.echo "Cache is Valid.  Returning Cache Content: ${this.cachedLabelList.cache}"
-    return this.cachedLabelList.cache
+    this.steps.echo "Cache is Valid.  Returning Cache Content: ${getCache()}"
+    return getCache()
   }
 
   /**
