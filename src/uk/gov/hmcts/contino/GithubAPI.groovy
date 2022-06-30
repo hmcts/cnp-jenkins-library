@@ -38,22 +38,22 @@ class GithubAPI {
   /**
    * Return whether the cache is valid
    */
-  def isCacheValid() {
-    return this.cachedLabelList.isValid
+  def static isCacheValid() {
+    return cachedLabelList.isValid
   }
 
   /**
-   * Return whether the chache is empty
+   * Return whether the cache is empty
    */
-  def isCacheEmpty() {
-    return this.cachedLabelList.cache.isEmpty()
+  def static isCacheEmpty() {
+    return cachedLabelList.cache.isEmpty()
   }
 
   /**
    * Return cache contents as list
    */
-  def getCache() {
-    return this.cachedLabelList.cache
+  def static getCache() {
+    return cachedLabelList.cache
   }
 
   /**
@@ -61,8 +61,8 @@ class GithubAPI {
    */
   void clearLabelCache() {
     this.steps.echo "Clearing Label Cache."
-    this.cachedLabelList.cache = []
-    this.cachedLabelList.isValid = false
+    cachedLabelList.cache = []
+    cachedLabelList.isValid = false
     this.steps.echo "Cleared Cache Contents: ${getCache()}"
     this.steps.echo "Cleared Cache Valid?: ${isCacheValid()}"
   }
@@ -87,8 +87,8 @@ class GithubAPI {
     if (response.status == 200) {
       this.steps.echo "Response Ok."
       def json_response = new JsonSlurper().parseText(response.content)
-      this.cachedLabelList.cache = json_response.collect({ label -> label['name'] })
-      this.cachedLabelList.isValid = true
+      cachedLabelList.cache = json_response.collect({ label -> label['name'] })
+      cachedLabelList.isValid = true
       this.steps.echo "Cache Contents: ${getCache()}"
       this.steps.echo "Cache Valid?: ${isCacheValid()}"
     } else {
@@ -128,8 +128,8 @@ class GithubAPI {
       this.steps.echo "Response Ok."
       if (isCacheValid()) {
         this.steps.echo "Cache is Valid.  Adding new labels to cache."
-        this.cachedLabelList.cache.addAll(labels)
-        this.cachedLabelList.cache.unique()
+        cachedLabelList.cache.addAll(labels)
+        cachedLabelList.cache.unique()
         this.steps.echo "Updated Cache Contents: ${getCache()}"
       } else {
         this.steps.echo "Cache is Invalid.  Refreshing Cache."
