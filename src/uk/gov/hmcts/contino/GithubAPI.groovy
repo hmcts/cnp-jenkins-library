@@ -195,15 +195,9 @@ class GithubAPI {
    */
   def getLabelsbyPattern(String branch_name, String key) {
     this.steps.echo "Getting Labels for Branch: ${branch_name} by Pattern: ${key}"
-    if (isPR(branch_name)) {
-      this.steps.echo "PR Confirmed.  Calling getLabels()."
-      def foundLabels = getLabels(branch_name).findAll{it.contains(key)}
-      this.steps.echo "Returning Labels: ${foundLabels}"
-      return foundLabels
-    } else {
-      this.steps.echo "Negative PR.  Returning Empty List."
-      return []
-    }
+    def foundLabels = getLabels(branch_name).findAll{it.contains(key)}
+    this.steps.echo "Returning Labels: ${foundLabels}"
+    return foundLabels
   }
 
   /**
