@@ -78,111 +78,6 @@ class GithubAPITest extends Specification {
     githubApi.clearLabelCache()
   }
 
-  def "AddLabelsToCurrentPR"() {
-    given:
-      steps.httpRequest(_) >> response
-
-    when:
-      def cache = githubApi.addLabelsToCurrentPR(labels)
-
-    then:
-      assertThat(cache).isEqualTo(responseLabels)
-  }
-
-  def "AddLabels [200 response]"() {
-    given:
-      steps.httpRequest(_) >> response
-
-    when:
-      def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
-
-    then:
-      assertThat(cache).isEqualTo(responseLabels)
-  }
-
-  def "AddLabels [Invalid response]"() {
-    given:
-      steps.httpRequest(_) >> invalidResponse
-
-    when:
-      def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
-
-    then:
-      assertThat(cache).isEqualTo([])
-  }
-
-  // Attempt to check filtering is working on returned labels
-
-  def "getLabelsbyPattern"() {
-    given:
-      steps.httpRequest(_) >> prValuesResponse
-
-    when:
-      def masterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
-      def prLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values:ccd")
-      def prLabelsNotMatching = githubApi.getLabelsbyPattern("PR-123", "doesntexist")
-      def multiplePRLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values")
-
-    then:
-      assertThat(masterLabels).isEqualTo([])
-      assertThat(prLabelsNotMatching).isEqualTo([])
-      assertThat(prLabels).isEqualTo(["pr-values:ccd"])
-      assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
-  }
-
-  def "getLabels"() {
-    given:
-      steps.httpRequest(_) >> prValuesResponse
-
-    when:
-      def masterLabels = githubApi.getLabels("master")
-      def prLabels = githubApi.getLabels("PR-123")
-
-    then:
-      assertThat(masterLabels).isEqualTo([])
-      assertThat(prLabels).isEqualTo(prValuesResponseLabels)
-  }
-
-  def "clearLabelCache"() {
-    given:
-      // Ensure cache is populated and valid
-      steps.httpRequest(_) >> response
-      githubApi.addLabelsToCurrentPR(labels)
-
-      // Clear the cache
-      githubApi.clearLabelCache()
-
-    when:
-      def isValid = githubApi.isCacheValid()
-      def isEmpty = githubApi.isCacheEmpty()
-
-    then:
-      assertThat(isValid).isFalse()
-      assertThat(isEmpty).isTrue()
-  }
-
-  def "refreshLabelCache [200 response]"() {
-    given:
-      steps.httpRequest(_) >> prValuesResponse
-
-    when:
-      def cache = githubApi.refreshLabelCache()
-
-    then:
-      assertThat(cache).isEqualTo(prValuesResponseLabels)
-  }
-
-  def "refreshLabelCache [Invalid response]"() {
-    given:
-      steps.httpRequest(_) >> invalidResponse
-
-    when:
-      def cache = githubApi.refreshLabelCache()
-
-    then:
-      assertThat(cache).isEqualTo([])
-  }
-
   def "CurrentProject"() {
     when:
       def project = githubApi.currentProject()
@@ -245,5 +140,110 @@ class GithubAPITest extends Specification {
     then:
       assertThat(cache).isEqualTo(responseLabels)
       assertThat(emptyCache).isEqualTo([])
+  }
+
+  def "clearLabelCache"() {
+    given:
+      // Ensure cache is populated and valid
+      steps.httpRequest(_) >> response
+      githubApi.addLabelsToCurrentPR(labels)
+
+    when:
+      // Clear the cache
+      githubApi.clearLabelCache()
+
+      def isValid = githubApi.isCacheValid()
+      def isEmpty = githubApi.isCacheEmpty()
+
+    then:
+      assertThat(isValid).isFalse()
+      assertThat(isEmpty).isTrue()
+  }
+
+  def "refreshLabelCache [200 response]"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def cache = githubApi.refreshLabelCache()
+
+    then:
+      assertThat(cache).isEqualTo(prValuesResponseLabels)
+  }
+
+  def "refreshLabelCache [Invalid response]"() {
+    given:
+      steps.httpRequest(_) >> invalidResponse
+
+    when:
+      def cache = githubApi.refreshLabelCache()
+
+    then:
+      assertThat(cache).isEqualTo([])
+  }
+
+  def "AddLabels [200 response]"() {
+    given:
+      steps.httpRequest(_) >> response
+
+    when:
+      def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
+
+    then:
+      assertThat(cache).isEqualTo(responseLabels)
+  }
+
+  // Attempt to check filtering is working on returned labels
+
+  def "AddLabels [Invalid response]"() {
+    given:
+      steps.httpRequest(_) >> invalidResponse
+
+    when:
+      def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
+
+    then:
+      assertThat(cache).isEqualTo([])
+  }
+
+  def "AddLabelsToCurrentPR"() {
+    given:
+      steps.httpRequest(_) >> response
+
+    when:
+      def cache = githubApi.addLabelsToCurrentPR(labels)
+
+    then:
+      assertThat(cache).isEqualTo(responseLabels)
+  }
+
+  def "getLabels"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def masterLabels = githubApi.getLabels("master")
+      def prLabels = githubApi.getLabels("PR-123")
+
+    then:
+      assertThat(masterLabels).isEqualTo([])
+      assertThat(prLabels).isEqualTo(prValuesResponseLabels)
+  }
+
+  def "getLabelsbyPattern"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def masterLabels = githubApi.getLabelsbyPattern("master", "pr-values")
+      def prLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values:ccd")
+      def prLabelsNotMatching = githubApi.getLabelsbyPattern("PR-123", "doesntexist")
+      def multiplePRLabels = githubApi.getLabelsbyPattern("PR-123", "pr-values")
+
+    then:
+      assertThat(masterLabels).isEqualTo([])
+      assertThat(prLabelsNotMatching).isEqualTo([])
+      assertThat(prLabels).isEqualTo(["pr-values:ccd"])
+      assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
   }
 }
