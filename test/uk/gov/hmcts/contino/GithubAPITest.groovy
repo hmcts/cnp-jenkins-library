@@ -62,11 +62,20 @@ class GithubAPITest extends Specification {
         "description": "pr-values:xui",
         "color": "a2eeef",
         "default": false
+      },
+      {
+        "id": 208045947,
+        "node_id": "MDU6TGFiZWwyMDgwNDU5NDc=",
+        "url": "https://api.github.com/repos/hmcts/some-project/labels/dependencies",
+        "name": "dependencies",
+        "description": "dependencies",
+        "color": "a2eeef",
+        "default": false
       }
     ]'''
   ]
 
-  static def prValuesResponseLabels = ["pr-values:ccd", "random", "pr-values:xui"]
+  static def prValuesResponseLabels = ["pr-values:ccd", "random", "pr-values:xui", "dependencies"]
 
   static def invalidResponse = ["status": 500]
 
@@ -245,5 +254,31 @@ class GithubAPITest extends Specification {
       assertThat(prLabelsNotMatching).isEqualTo([])
       assertThat(prLabels).isEqualTo(["pr-values:ccd"])
       assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
+  }
+
+  def "checkForLabel"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def masterLabelExists = githubApi.checkForLabel("master", "pr-values")
+      def prLabelExists = githubApi.checkForLabel("PR-123", "pr-values:ccd")
+
+    then:
+      assertThat(masterLabelExists).isFalse()
+      assertThat(prLabelExists).isTrue()
+  }
+
+  def "checkForDependenciesLabel"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def masterLabelExists = githubApi.checkForDependenciesLabel("master")
+      def prLabelExists = githubApi.checkForDependenciesLabel("PR-123")
+
+    then:
+      assertThat(masterLabelExists).isFalse()
+      assertThat(prLabelExists).isTrue()
   }
 }

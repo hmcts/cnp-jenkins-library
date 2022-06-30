@@ -207,11 +207,21 @@ class GithubAPI {
   }
 
   /**
+   * Check Pull Request for specified label.
+   */
+  def checkForLabel(String branch_name, String key) {
+    this.steps.echo "Checking ${branch_name} Labels for: ${key}"
+    def labelExists = getLabels(branch_name).contains(key)
+    this.steps.echo "Found ${key} Label?: ${labelExists}"
+    return labelExists
+  }
+
+  /**
    * Check Pull Request for dependencies label.
    */
   def checkForDependenciesLabel(branch_name) {
-    this.steps.echo "Checking for Dependencies Label by calling getLabelsbyPattern()."
-    def depLabel = getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
+    this.steps.echo "Checking for Dependencies Label by calling checkForLabel()."
+    def depLabel = checkForLabel(branch_name, "dependencies")
     this.steps.echo "Found Dependencies Label?: ${depLabel}"
     return depLabel
   }
