@@ -117,6 +117,19 @@ class GithubAPITest extends Specification {
       assertThat(multiplePRLabels).isEqualTo(["pr-values:ccd","pr-values:xui"])
   }
 
+  def "getLabels"() {
+    given:
+      steps.httpRequest(_) >> prValuesResponse
+
+    when:
+      def masterLabels = githubApi.getLabels("master")
+      def prLabels = githubApi.getLabels("PR-123")
+
+    then:
+      assertThat(masterLabels).isEqualTo([])
+      assertThat(prLabels).isEqualTo(prValuesResponseLabels)
+  }
+
   def "clearLabelCache"() {
     given:
       // Ensure cache is populated and valid
