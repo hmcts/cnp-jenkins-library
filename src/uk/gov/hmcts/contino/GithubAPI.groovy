@@ -18,22 +18,81 @@ class GithubAPI {
     'cache': []
   ]
 
+  def currentProject() {
+    return new RepositoryUrl().getShort(this.steps.env.CHANGE_URL)
+  }
+
+  def currentPullRequestNumber() {
+    return this.steps.env.CHANGE_ID
+  }
+
   /**
-   * Add labels to the current pull request.  MUST be run with an onPR() closure.
-   *
-   * @param labels
-   *   A List of labels
+   * Check for Pull Request
    */
-  def addLabelsToCurrentPR(labels) {
+  private isPR(String branch_name) {
+    def isPr = new ProjectBranch(branch_name).isPR()
+    this.steps.echo "Is ${branch_name} a PR?: ${isPr}"
+    return isPr
+  }
+
+  /**
+   * Return whether the cache is valid
+   */
+  def isCacheValid() {
+    return this.cachedLabelList.isValid
+  }
+
+  /**
+   * Return whether the chache is empty
+   */
+  def isCacheEmpty() {
+    return this.cachedLabelList.cache.isEmpty()
+  }
+
+  /**
+   * Return cache contents as list
+   */
+  def getCache() {
+    return this.cachedLabelList.cache
+  }
+
+  /**
+   * Clears this.cachedLabelList
+   */
+  void clearLabelCache() {
+    this.steps.echo "Clearing Label Cache."
+    this.cachedLabelList.cache = []
+    this.cachedLabelList.isValid = false
+    this.steps.echo "Cleared Cache Contents: ${this.cachedLabelList.cache}"
+    this.steps.echo "Cleared Cache Valid?: ${this.cachedLabelList.isValid}"
+  }
+
+  /**
+   * Refreshes this.cachedLabelList
+   */
+  def refreshLabelCache() {
+    this.steps.echo "Refreshing Label Cache"
     def project = currentProject()
-    def pullRequestNumber = currentPullRequestNumber()
-    this.steps.echo "Adding Labels to current PR (${project} / ${pullRequestNumber})"
-    addLabels(project, pullRequestNumber, labels)
+    def issueNumber = currentPullRequestNumber()
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/issues/${issueNumber}/labels",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+    def json_response = new JsonSlurper().parseText(response.content)
+    this.cachedLabelList.cache = json_response.collect( { label -> label['name'] } )
+    this.cachedLabelList.isValid = true
+    this.steps.echo "Cache Contents: ${this.cachedLabelList.cache}"
+    this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
+    return this.cachedLabelList.cache
   }
 
   /**
    * Add labels to an issue or pull request
-   * Empties this.cachedLabelList
+   * If the API call is successful, valid cache will be directly updated whilst Invalid cache will be refreshed.
    *
    * @param project
    *   The project repo name, including the org e.g. 'hmcts/my-frontend-app'
@@ -74,58 +133,16 @@ class GithubAPI {
   }
 
   /**
-   * Clears this.cachedLabelList
+   * Add labels to the current pull request.  MUST be run with an onPR() closure.
+   *
+   * @param labels
+   *   A List of labels
    */
-  void clearLabelCache() {
-    this.steps.echo "Clearing Label Cache."
-    this.cachedLabelList.cache = []
-    this.cachedLabelList.isValid = false
-    this.steps.echo "Cleared Cache Contents: ${this.cachedLabelList.cache}"
-    this.steps.echo "Cleared Cache Valid?: ${this.cachedLabelList.isValid}"
-  }
-
-  /**
-   * Return whether the cache is valid
-   */
-  def isCacheValid() {
-    return this.cachedLabelList.isValid
-  }
-
-  /**
-   * Return whether the chache is empty
-   */
-  def isCacheEmpty() {
-    return this.cachedLabelList.cache.isEmpty()
-  }
-
-  /**
-   * Return cache contents as list
-   */
-  def getCache() {
-    return this.cachedLabelList.cache
-  }
-
-  /**
-   * Refreshes this.cachedLabelList
-   */
-  def refreshLabelCache() {
-    this.steps.echo "Refreshing Label Cache"
+  def addLabelsToCurrentPR(labels) {
     def project = currentProject()
-    def issueNumber = currentPullRequestNumber()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
-      url: API_URL + "/${project}/issues/${issueNumber}/labels",
-      consoleLogResponseBody: true,
-      validResponseCodes: '200')
-
-    def json_response = new JsonSlurper().parseText(response.content)
-    this.cachedLabelList.cache = json_response.collect( { label -> label['name'] } )
-    this.cachedLabelList.isValid = true
-    this.steps.echo "Cache Contents: ${this.cachedLabelList.cache}"
-    this.steps.echo "Cache Valid?: ${this.cachedLabelList.isValid}"
-    return this.cachedLabelList.cache
+    def pullRequestNumber = currentPullRequestNumber()
+    this.steps.echo "Adding Labels to current PR (${project} / ${pullRequestNumber})"
+    addLabels(project, pullRequestNumber, labels)
   }
 
   /**
@@ -150,12 +167,17 @@ class GithubAPI {
   }
 
   /**
-   * Check for Pull Request
+   * Get all labels from an issue or pull request
    */
-  private isPR(String branch_name) {
-    def isPr = new ProjectBranch(branch_name).isPR()
-    this.steps.echo "Is ${branch_name} a PR?: ${isPr}"
-    return isPr
+  def getLabels(String branch_name) {
+    this.steps.echo "Getting All Labels for ${branch_name}."
+    if (isPR(branch_name)) {
+      this.steps.echo "PR Confirmed.  Calling getLabelsFromCache()."
+      return this.getLabelsFromCache()
+    } else {
+      this.steps.echo "Negative PR.  Returning Empty List."
+      return []
+    }
   }
 
   /**
@@ -182,27 +204,5 @@ class GithubAPI {
     def depLabel = getLabelsbyPattern(branch_name, "dependencies").contains("dependencies")
     this.steps.echo "Found Dependencies Label?: ${depLabel}"
     return depLabel
-  }
-
-  /**
-   * Get all labels from an issue or pull request
-   */
-  def getLabels(String branch_name) {
-    this.steps.echo "Getting All Labels for ${branch_name}."
-    if (isPR(branch_name)) {
-      this.steps.echo "PR Confirmed.  Calling getLabelsFromCache()."
-      return this.getLabelsFromCache()
-    } else {
-      this.steps.echo "Negative PR.  Returning Empty List."
-      return []
-    }
-  }
-
-  def currentProject() {
-    return new RepositoryUrl().getShort(this.steps.env.CHANGE_URL)
-  }
-
-  def currentPullRequestNumber() {
-    return this.steps.env.CHANGE_ID
   }
 }
