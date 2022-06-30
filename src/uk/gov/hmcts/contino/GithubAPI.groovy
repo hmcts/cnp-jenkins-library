@@ -27,15 +27,6 @@ class GithubAPI {
   }
 
   /**
-   * Check for Pull Request
-   */
-  private isPR(String branch_name) {
-    def isPr = new ProjectBranch(branch_name).isPR()
-    this.steps.echo "Is ${branch_name} a PR?: ${isPr}"
-    return isPr
-  }
-
-  /**
    * Return whether the cache is valid
    */
   def static isCacheValid() {
@@ -60,18 +51,16 @@ class GithubAPI {
    * Clears this.cachedLabelList
    */
   void clearLabelCache() {
-    this.steps.echo "Clearing Label Cache."
     cachedLabelList.cache = []
     cachedLabelList.isValid = false
-    this.steps.echo "Cleared Cache Contents: ${getCache()}"
-    this.steps.echo "Cleared Cache Valid?: ${isCacheValid()}"
+    this.steps.echo "Cleared and invalidated label cache."
   }
 
   /**
    * Refreshes this.cachedLabelList
    */
   def refreshLabelCache() {
-    this.steps.echo "Refreshing Label Cache"
+    this.steps.echo "Refreshing label cache."
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
     def response = this.steps.httpRequest(httpMode: 'GET',
@@ -82,17 +71,13 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.steps.echo "Response Status Code: ${response.status}"
-
     if (response.status == 200) {
-      this.steps.echo "Response Ok."
       def json_response = new JsonSlurper().parseText(response.content)
       cachedLabelList.cache = json_response.collect({ label -> label['name'] })
       cachedLabelList.isValid = true
-      this.steps.echo "Cache Contents: ${getCache()}"
-      this.steps.echo "Cache Valid?: ${isCacheValid()}"
+      this.steps.echo "Updated cache contents: ${getCache()}"
     } else {
-      this.steps.echo "Failed to Update cache.  Server returned ${response.status} response."
+      this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
     }
 
     return getCache()
@@ -112,7 +97,6 @@ class GithubAPI {
   def addLabels(project, issueNumber, labels) {
     this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
-    this.steps.echo "Request Body: ${body}"
     def response = this.steps.httpRequest(httpMode: 'POST',
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
@@ -122,21 +106,17 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    this.steps.echo "Response Status Code: ${response.status}"
-
     if (response.status == 200) {
-      this.steps.echo "Response Ok."
       if (isCacheValid()) {
-        this.steps.echo "Cache is Valid.  Adding new labels to cache."
         cachedLabelList.cache.addAll(labels)
         cachedLabelList.cache.unique()
-        this.steps.echo "Updated Cache Contents: ${getCache()}"
+        this.steps.echo "Cache is valid. Updated cache contents: ${getCache()}"
       } else {
-        this.steps.echo "Cache is Invalid.  Refreshing Cache."
+        this.steps.echo "Cache is invalid. Calling refresh."
         return this.refreshLabelCache()
       }
     } else {
-      this.steps.echo "Failed to Add Labels.  Server returned ${response.status} response."
+      this.steps.echo "Failed to add labels. Server returned status: ${response.status}"
     }
 
     return getCache()
@@ -151,7 +131,6 @@ class GithubAPI {
   def addLabelsToCurrentPR(labels) {
     def project = currentProject()
     def pullRequestNumber = currentPullRequestNumber()
-    this.steps.echo "Adding Labels to current PR (${project} / ${pullRequestNumber})"
     return addLabels(project, pullRequestNumber, labels)
   }
 
@@ -159,20 +138,14 @@ class GithubAPI {
    * Check this.cachedLabelList, if empty, call getLabels() to repopulate.
    */
   private getLabelsFromCache() {
-    this.steps.echo "Getting Labels From Cache"
-    this.steps.echo "Cache Valid?: ${isCacheValid()}"
     if (!isCacheValid()) {
-      this.steps.echo "Cache Invalid.  Calling Refresh."
       return refreshLabelCache()
     }
 
-    this.steps.echo "Cache Empty?: ${isCacheEmpty()}"
     if (isCacheEmpty() && isCacheValid()) {
-      this.steps.echo "Cache is Empty and Valid.  Returning Empty List."
       return []
     }
 
-    this.steps.echo "Cache is Valid.  Returning Cache Content: ${getCache()}"
     return getCache()
   }
 
@@ -180,12 +153,9 @@ class GithubAPI {
    * Get all labels from an issue or pull request
    */
   def getLabels(String branch_name) {
-    this.steps.echo "Getting All Labels for ${branch_name}."
-    if (isPR(branch_name)) {
-      this.steps.echo "PR Confirmed.  Calling getLabelsFromCache()."
+    if (new ProjectBranch(branch_name).isPR()) {
       return this.getLabelsFromCache()
     } else {
-      this.steps.echo "Negative PR.  Returning Empty List."
       return []
     }
   }
@@ -194,29 +164,20 @@ class GithubAPI {
    * Check Pull Request for label by a pattern in name.
    */
   def getLabelsbyPattern(String branch_name, String key) {
-    this.steps.echo "Getting Labels for Branch: ${branch_name} by Pattern: ${key}"
-    def foundLabels = getLabels(branch_name).findAll{it.contains(key)}
-    this.steps.echo "Returning Labels: ${foundLabels}"
-    return foundLabels
+    return getLabels(branch_name).findAll{it.contains(key)}
   }
 
   /**
    * Check Pull Request for specified label.
    */
   def checkForLabel(String branch_name, String key) {
-    this.steps.echo "Checking ${branch_name} Labels for: ${key}"
-    def labelExists = getLabels(branch_name).contains(key)
-    this.steps.echo "Found ${key} Label?: ${labelExists}"
-    return labelExists
+    return getLabels(branch_name).contains(key)
   }
 
   /**
    * Check Pull Request for dependencies label.
    */
   def checkForDependenciesLabel(branch_name) {
-    this.steps.echo "Checking for Dependencies Label by calling checkForLabel()."
-    def depLabel = checkForLabel(branch_name, "dependencies")
-    this.steps.echo "Found Dependencies Label?: ${depLabel}"
-    return depLabel
+    return checkForLabel(branch_name, "dependencies")
   }
 }
