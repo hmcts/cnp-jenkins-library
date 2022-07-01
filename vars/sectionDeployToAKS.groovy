@@ -125,9 +125,9 @@ def call(params) {
               }
             }
           }
-          def repoLabels = new GithubAPI(this).getLabels(env.BRANCH_NAME, env.CHANGE_ID)
-          def testLabels = repoLabels.findAll{it.contains('enabled_')}
-          def depLabel = repoLabels.findAll{it.contains('dependencies')}.contains('dependencies')
+          def gitHubAPI = new GithubAPI(this)
+          def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enabled_')
+          def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
           onMaster {
             if (testLabels.contains('enable_fortify_scan')) {
               fortifyScan(
