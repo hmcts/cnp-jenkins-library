@@ -133,14 +133,6 @@ def call(params) {
           }
 
           onMaster {
-            if (testLabels.contains('enable_fortify_scan')) {
-              fortifyScan(
-                pipelineCallbacksRunner: pcr,
-                fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
-                builder: builder,
-                product: product,
-              )
-            }
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
@@ -200,6 +192,17 @@ def call(params) {
                   }
                 }
               }
+            }
+          }
+
+          onPR {
+            if (testLabels.contains('enable_fortify_scan')) {
+              fortifyScan(
+                pipelineCallbacksRunner: pcr,
+                fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+                builder: builder,
+                product: product,
+              )
             }
           }
           def nonProdEnv = new Environment(env).nonProdName
