@@ -126,7 +126,7 @@ def call(params) {
             }
           }
           def gitHubAPI = new GithubAPI(this)
-          def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enabled_')
+          def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
           def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
           onMaster {
             if (testLabels.contains('enable_fortify_scan')) {
