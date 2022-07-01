@@ -49,6 +49,10 @@ def call(params) {
   def deploymentNamespace = projectBranch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
+  def gitHubAPI = new GithubAPI(this)
+  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+
   lock("${deploymentProduct}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
@@ -85,12 +89,14 @@ def call(params) {
             }
           }
 
-          onFunctionalTestEnvironment(environment) {
-            stageWithAgent("Functional Test - AKS ${environment}", product) {
-              testEnv(aksUrl) {
-                pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                    builder.functionalTest()
+          if (!testLabels.contains('enable_full_functional_tests')) {
+            onFunctionalTestEnvironment(environment) {
+              stageWithAgent("Functional Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      builder.functionalTest()
+                    }
                   }
                 }
               }
@@ -125,9 +131,7 @@ def call(params) {
               }
             }
           }
-          def gitHubAPI = new GithubAPI(this)
-          def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-          def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+
           onMaster {
             if (testLabels.contains('enable_fortify_scan')) {
               fortifyScan(
@@ -186,13 +190,13 @@ def call(params) {
                 }
               }
             }
-          }
-          if (testLabels.contains('enable_full_functional_tests')) {
-            stageWithAgent('Full functional tests', product) {
-              warnError('Failure in fullFunctionalTest') {
-                pcr.callAround('fullFunctionalTest') {
-                  timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                    builder.fullFunctionalTest()
+            if (testLabels.contains('enable_full_functional_tests')) {
+              stageWithAgent('Full functional tests', product) {
+                warnError('Failure in fullFunctionalTest') {
+                  pcr.callAround('fullFunctionalTest') {
+                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                      builder.fullFunctionalTest()
+                    }
                   }
                 }
               }
