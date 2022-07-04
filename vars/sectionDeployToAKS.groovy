@@ -196,6 +196,7 @@ def call(params) {
           }
 
           def nonProdEnv = new Environment(env).nonProdName
+          def triggerUninstall = environment == nonProdEnv
 
           onPR {
             if (testLabels.contains('enable_fortify_scan')) {
@@ -208,7 +209,7 @@ def call(params) {
             }
           }
 
-          if (environment == nonProdEnv || config.clearHelmRelease || depLabel) {
+          if (triggerUninstall || config.clearHelmRelease || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
         }
