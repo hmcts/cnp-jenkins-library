@@ -118,8 +118,8 @@ def call(DockerImage dockerImage, Map params) {
         options.add("--set global.smoketestscron.enabled=false")
         options.add("--set global.functionaltestscron.enabled=false")
       //deleting job for non service apps before installing as K8s doesn't allow editing image/spec of deployed Jobs
-      if(kubectl.getJob(dockerImage.getImageTag()+"-job") == 0){
-        kubectl.deleteJob(dockerImage.getImageTag()+"-job")
+      if(kubectl.getJob(dockerImage.getAksServiceName()+"-job") == 0){
+        kubectl.deleteJob(dockerImage.getAksServiceName()+"-job")
       }
     }
 
