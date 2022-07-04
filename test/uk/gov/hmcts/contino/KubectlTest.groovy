@@ -8,6 +8,7 @@ class KubectlTest extends Specification {
   static final String NAMESPACE = 'cnp'
   static final String SUBSCRIPTION = 'sandbox'
   static final String DEPLOYMENT = 'my-deployment'
+  static final String PLUM_JOB= 'plum-job'
 
   def steps
   def kubectl
@@ -91,6 +92,28 @@ class KubectlTest extends Specification {
         it.get('script').contains("kubectl delete deployment ${DEPLOYMENT} -n ${NAMESPACE}") &&
         it.containsKey('returnStatus') &&
         it.get('returnStatus').equals(true)})
+  }
+
+  def "getJob() should have Job, namespace and return exit status"() {
+    when:
+    kubectl.getJob(PLUM_JOB)
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("kubectl get job ${PLUM_JOB} -n ${NAMESPACE}") &&
+      it.containsKey('returnStatus') &&
+      it.get('returnStatus').equals(true)})
+  }
+
+  def "deleteJob() should have delete Job, namespace and return exit status"() {
+    when:
+    kubectl.deleteJob(PLUM_JOB)
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("kubectl delete job ${PLUM_JOB} -n ${NAMESPACE}") &&
+      it.containsKey('returnStatus') &&
+      it.get('returnStatus').equals(true)})
   }
 
   def "getService() should have namespace and JSON output"() {
