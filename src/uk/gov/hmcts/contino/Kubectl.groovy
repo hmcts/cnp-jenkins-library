@@ -49,11 +49,11 @@ class Kubectl {
   }
 
   def getJob(String name) {
-    this.steps.sh(returnStatus: true, script: "kubectl get Job ${name} -n ${this.namespace}")
+    this.steps.sh(returnStatus: true, script: "kubectl get job ${name} -n ${this.namespace}")
   }
 
   def deleteJob(String name) {
-    this.steps.sh(returnStatus: true, script: "kubectl delete Job ${name} -n ${this.namespace}")
+    this.steps.sh(returnStatus: true, script: "kubectl delete job ${name} -n ${this.namespace}")
   }
 
   def getServiceLoadbalancerIP(String name) {
