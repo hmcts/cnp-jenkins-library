@@ -19,6 +19,7 @@ def call(DockerImage dockerImage, Map params) {
   AppPipelineConfig config = params.appPipelineConfig
 
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
+  def namespace = env.TEAM_NAMESPACE
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
@@ -27,12 +28,10 @@ def call(DockerImage dockerImage, Map params) {
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
-  def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
+  def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-
-  def namespace = env.TEAM_NAMESPACE
 
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
