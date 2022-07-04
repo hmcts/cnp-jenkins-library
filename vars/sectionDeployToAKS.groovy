@@ -89,7 +89,7 @@ def call(params) {
             }
           }
 
-//          if (!testLabels.contains('enable_full_functional_tests')) {
+          if (!testLabels.contains('enable_full_functional_tests')) {
             onFunctionalTestEnvironment(environment) {
               stageWithAgent("Functional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
@@ -101,7 +101,7 @@ def call(params) {
                 }
               }
             }
-//          }
+          }
           if (config.performanceTest) {
             stageWithAgent("Performance Test - AKS ${environment}", product) {
               testEnv(aksUrl) {
