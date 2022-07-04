@@ -134,7 +134,6 @@ def call(params) {
 
           onMaster {
             if (testLabels.contains('enable_fortify_scan')) {
-              enableFortifyScan()
               fortifyScan(
                 pipelineCallbacksRunner: pcr,
                 fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
