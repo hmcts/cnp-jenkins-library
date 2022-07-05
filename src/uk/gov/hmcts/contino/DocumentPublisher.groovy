@@ -47,6 +47,7 @@ class DocumentPublisher implements Serializable {
 
   Map getBuildInfo() {
     [
+      id                           : UUID.randomUUID().toString(),
       product                      : params.product,
       component                    : params.component,
       environment                  : params.environment,
