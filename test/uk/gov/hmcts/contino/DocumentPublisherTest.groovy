@@ -22,7 +22,7 @@ class DocumentPublisherTest extends Specification {
 
   private static final String DATA = "{\"simulation\": \"RhubarbReferenceSimulation\"}"
 
-  def documentPublisher
+  DocumentPublisher documentPublisher
   def steps = Mock(JenkinsStepMock)
   def params = [product: PRODUCT, component: COMPONENT, environment: ENVIRONMENT, subscription: SUBSCRIPTION]
 
