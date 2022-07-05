@@ -38,7 +38,6 @@ dependencies {
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.1-groovy-2.5'
   testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.3'
 
-
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.14'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.35.0'
