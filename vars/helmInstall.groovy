@@ -19,6 +19,7 @@ def call(DockerImage dockerImage, Map params) {
   AppPipelineConfig config = params.appPipelineConfig
 
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
+  def namespace = env.TEAM_NAMESPACE
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
@@ -27,12 +28,10 @@ def call(DockerImage dockerImage, Map params) {
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
-  def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
+  def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-
-  def namespace = env.TEAM_NAMESPACE
 
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
@@ -118,9 +117,9 @@ def call(DockerImage dockerImage, Map params) {
         options.add("--set global.jobKind=Job")
         options.add("--set global.smoketestscron.enabled=false")
         options.add("--set global.functionaltestscron.enabled=false")
-      //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
-      if(helm.exists(dockerImage.getImageTag(), namespace)){
-        helm.delete(dockerImage.getImageTag(), namespace)
+      //deleting job for non service apps before installing as K8s doesn't allow editing image/spec of deployed Jobs
+      if(kubectl.getJob(dockerImage.getAksServiceName()+"-job") == 0){
+        kubectl.deleteJob(dockerImage.getAksServiceName()+"-job")
       }
     }
 
