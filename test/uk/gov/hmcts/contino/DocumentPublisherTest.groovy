@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import net.javacrumbs.jsonunit.core.Option
 import spock.lang.Specification
 
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson

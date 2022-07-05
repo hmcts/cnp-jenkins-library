@@ -12,9 +12,7 @@ class MetricsPublisherTests extends Specification {
   def setup() {
     stubSteps = Mock(JenkinsStepMock.class)
     stubSteps.currentBuild >>  ["timeInMillis" : 1513613748925]
-    stubSteps.env >> [BRANCH_NAME: "master",
-                      COSMOSDB_TOKEN_KEY: "ABCDEFGHIJKLMNOPQRSTUVWXYZdIpG9oDdCvHL57pW52CzcCTKNLYV4xWjAhIRI7rScUfDAfA6oiPV7piAwdpw==",
-                      PROD_SUBSCRIPTION_NAME: "prod"]
+    stubSteps.env >> [BRANCH_NAME: "master"]
 
     stubSteps.echo(_) >> { System.out.println(it) }
 
@@ -22,8 +20,7 @@ class MetricsPublisherTests extends Specification {
 
   def "Executes without throwing uncaught errors"() {
     when:
-    def subscription = new Subscription(stubSteps.env)
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', subscription.prodName)
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
     metricsPublisher.publish()
 
     then:
@@ -32,8 +29,7 @@ class MetricsPublisherTests extends Specification {
 
   def "collects build metrics"() {
     when:
-    def subscription = new Subscription(stubSteps.env)
-    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', subscription.prodName)
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent')
     def metricsMap = metricsPublisher.collectMetrics('current stepName')
 
     then:

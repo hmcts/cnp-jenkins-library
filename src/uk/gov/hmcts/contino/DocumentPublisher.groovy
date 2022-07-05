@@ -1,35 +1,20 @@
 package uk.gov.hmcts.contino
 
-@Grab('com.microsoft.azure:azure-documentdb:1.15.2')
-import com.microsoft.azure.documentdb.Document
-import com.microsoft.azure.documentdb.DocumentClient
 import groovy.json.JsonOutput
-import com.cloudbees.groovy.cps.NonCPS
 
 class DocumentPublisher implements Serializable {
 
   def steps
   def params
   def env
-  def cosmosDbUrl
 
   DocumentPublisher(steps, params) {
     this.steps = steps
     this.params = params
     this.env = steps.env
-
-    def tmpCosmosDbUrl = this.env.PIPELINE_METRICS_URL
-    if (tmpCosmosDbUrl?.trim()) {
-      this.cosmosDbUrl = tmpCosmosDbUrl
-    } else {
-      this.cosmosDbUrl = params.subscription == 'sandbox' ?
-        'https://sandbox-pipeline-metrics.documents.azure.com/' :
-        'https://pipeline-metrics.documents.azure.com/'
-    }
   }
 
-  void publishAll(String collectionLink, String baseDir, String pattern) {
-
+  void publishAll(String containerName, String baseDir, String pattern) {
     def files = findFiles(baseDir, pattern)
     List documents = new ArrayList()
 
@@ -39,27 +24,12 @@ class DocumentPublisher implements Serializable {
       documents.add(wrapWithBuildInfo(it.name, json))
     }
 
-    publish(getCosmosDbKey(), collectionLink, documents)
+    publish(containerName, documents)
   }
 
-  @NonCPS
-  private def publish(cosmosDbKey, collectionLink, documents) {
-
-    def documentClient = new DocumentClient(cosmosDbUrl, cosmosDbKey, null, null)
-
-    try {
-      documents.each {
-        documentClient.createDocument(collectionLink, new Document(it), null, false)
-      }
-    }
-    finally {
-      documentClient.close()
-    }
-  }
-
-  def getCosmosDbKey() {
-    steps.withCredentials([[$class: 'StringBinding', credentialsId: 'COSMOSDB_TOKEN_KEY', variable: 'COSMOSDB_TOKEN_KEY']]) {
-      return env.COSMOSDB_TOKEN_KEY
+  private def publish(containerName, documents) {
+    documents.each {
+      steps.azureCosmosDBCreateDocument(container: containerName, credentialsId: 'cosmos-connection', database: 'jenkins', document: it)
     }
   }
 
