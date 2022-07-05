@@ -133,14 +133,6 @@ def call(params) {
           }
 
           onMaster {
-            if (testLabels.contains('enable_fortify_scan')) {
-              fortifyScan(
-                pipelineCallbacksRunner: pcr,
-                fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
-                builder: builder,
-                product: product,
-              )
-            }
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
@@ -204,7 +196,20 @@ def call(params) {
           }
 
           def nonProdEnv = new Environment(env).nonProdName
-          if (environment == nonProdEnv || config.clearHelmRelease || depLabel) {
+          def triggerUninstall = environment == nonProdEnv
+
+//          onPR {
+//            if (testLabels.contains('enable_fortify_scan')) {
+//              fortifyScan(
+//                pipelineCallbacksRunner: pcr,
+//                fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+//                builder: builder,
+//                product: product,
+//              )
+//            }
+//          }
+
+          if (triggerUninstall || config.clearHelmRelease || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
         }
