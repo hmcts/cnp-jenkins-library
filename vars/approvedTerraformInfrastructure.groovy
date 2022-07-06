@@ -2,6 +2,8 @@ import uk.gov.hmcts.pipeline.TerraformInfraApprovals
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
+import java.time.LocalDate
+
 /**
  * approvedTerraformInfrastructure(environment)
  *
@@ -52,7 +54,7 @@ non whitelisted resources:
 ${results.replace("Error matching resources: ", "")}
 ```
 """
-        , new Date().parse("dd.MM.yyyy", "24.09.2019"))
+        , LocalDate.of(2019, 9, 24))
     } else {
       log.info("All infrastructure is approved")
     }

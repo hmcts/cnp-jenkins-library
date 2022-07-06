@@ -133,12 +133,8 @@ class YarnBuilder extends AbstractBuilder {
 
       def cveReport = prepareCVEReport(issues, knownIssues)
 
-      if (steps.env.COSMOSDB_TOKEN_KEY != null) {
-        CVEPublisher.create(steps)
-          .publishCVEReport('node', cveReport)
-      } else {
-        steps.echo "Set the 'COSMOSDB_TOKEN_KEY' environment variable to enable metrics publishing"
-      }
+      new CVEPublisher(steps)
+        .publishCVEReport('node', cveReport)
     }
   }
 

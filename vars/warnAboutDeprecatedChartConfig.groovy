@@ -1,5 +1,7 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
+import java.time.LocalDate
+
 def call(Map<String, String> params) {
 
   def product = params.product
@@ -23,7 +25,7 @@ def call(Map<String, String> params) {
     ./check-deprecated-charts.sh $product $component
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See https://github.com/hmcts/chart-java/releases, https://github.com/hmcts/chart-nodejs/releases, https://github.com/hmcts/chart-job/releases, https://github.com/hmcts/chart-blobstorage/releases, https://github.com/hmcts/chart-servicebus/releases ", new Date().parse("dd.MM.yyyy", "08.07.2022"))
+    WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See https://github.com/hmcts/chart-java/releases, https://github.com/hmcts/chart-nodejs/releases, https://github.com/hmcts/chart-job/releases, https://github.com/hmcts/chart-blobstorage/releases, https://github.com/hmcts/chart-servicebus/releases ", LocalDate.of(2022, 7, 22))
   } finally {
     sh 'rm -f check-deprecated-charts.sh'
   }

@@ -9,7 +9,7 @@ class Gatling implements Serializable {
   public static final String GATLING_CONF_DIR      = '$WORKSPACE/src/gatling/conf'
   public static final String GATLING_JAVA_11_IMAGE  = 'hmcts/gatling:3.1.1-java-11-1.0'
   @SuppressWarnings("unused") // used in publishPerformanceReports
-  public static final String COSMOSDB_COLLECTION   = 'dbs/jenkins/colls/performance-metrics'
+  public static final String COSMOSDB_CONTAINER   = 'performance-metrics'
 
   // with Gatling command-line you can't specify a configuration directory, so we need to bind-mount it
   // TODO: use host networking for now as 1) DNS seems to be broken in container and 2) may need it for local perf. testing against localhost

@@ -18,7 +18,7 @@ def call(params) {
 
   Builder builder = pipelineType.builder
   def tfOutput
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   approvedEnvironmentRepository(environment, metricsPublisher) {
     lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
       folderExists('infrastructure') {

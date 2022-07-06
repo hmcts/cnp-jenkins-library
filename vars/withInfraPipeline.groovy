@@ -11,7 +11,7 @@ def call(String product, String component = null, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription.prodName )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
 
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
