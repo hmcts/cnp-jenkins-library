@@ -104,7 +104,7 @@ def call(params) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
                   warnError('Failure in fullFunctionalTest') {
-                    pcr.callAround('fullFunctionalTest') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
                         builder.fullFunctionalTest()
                       }
@@ -166,7 +166,7 @@ def call(params) {
             if (config.fullFunctionalTest) {
               stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  pcr.callAround("crossBrowserTest:${environment}") {
+                  pcr.callAround("fullFunctionalTest:${environment}") {
                     builder.fullFunctionalTest()
                   }
                 }
