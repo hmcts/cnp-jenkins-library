@@ -195,20 +195,20 @@ def call(params) {
             }
           }
 
-          def nonProdEnv = new Environment(env).nonProdName
-          def triggerUninstall = environment == nonProdEnv
 
+          def nonProdEnv = new Environment(env).nonProdName
           onPR {
             if (testLabels.contains('enable_fortify_scan')) {
               fortifyScan(
                 pipelineCallbacksRunner: pcr,
-                fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+                fortifyVaultName: config.fortifyVaultName ?: "${product}-${nonProdEnv}",
                 builder: builder,
                 product: product,
               )
             }
           }
 
+          def triggerUninstall = environment == nonProdEnv
           if (triggerUninstall || config.clearHelmRelease || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
