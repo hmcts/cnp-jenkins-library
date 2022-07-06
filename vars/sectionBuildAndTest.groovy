@@ -61,84 +61,80 @@ def call(params) {
       }
     }
 
-    def parallelStages = [
-      "Unit tests and Sonar scan": {
-        pcr.callAround('test') {
-          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-            builder.test()
+    def parallelStages = [:]
+    parallelStages["Unit tests and Sonar scan"] = {
+      pcr.callAround('test') {
+        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+          builder.test()
+        }
+      }
+
+      pcr.callAround('sonarscan') {
+        pluginActive('sonar') {
+          withSonarQubeEnv("SonarQube") {
+            builder.sonarScan()
+          }
+
+          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+            def qg = waitForQualityGate()
+            if (qg.status != 'OK') {
+              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+            }
           }
         }
+      }
+    }
+    parallelStages["Security Checks"] = {
+      pcr.callAround('securitychecks') {
+        builder.securityCheck()
+      }
+    }
+    parallelStages["Docker Build"] = {
+      withAcrClient(subscription) {
+        def acbTemplateFilePath = 'acb.tpl.yaml'
 
-        pcr.callAround('sonarscan') {
-          pluginActive('sonar') {
-            withSonarQubeEnv("SonarQube") {
-              builder.sonarScan()
-            }
-
-            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-              def qg = waitForQualityGate()
-              if (qg.status != 'OK') {
-                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-              }
-            }
-          }
-        }
-      },
-      "Security Checks": {
-        pcr.callAround('securitychecks') {
-          builder.securityCheck()
-        }
-      },
-      "Docker Build": {
-        withAcrClient(subscription) {
-          def acbTemplateFilePath = 'acb.tpl.yaml'
-
-          pcr.callAround('dockerbuild') {
-            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
-              if (!fileExists('.dockerignore')) {
-                writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-              } else {
-                writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-                sh script: """
+        pcr.callAround('dockerbuild') {
+          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+            if (!fileExists('.dockerignore')) {
+              writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+            } else {
+              writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+              sh script: """
                       # in case anyone doesn't have a trailing new line in their file
                       echo -e '\n' >> .dockerignore
                       cat .dockerignore_build >> .dockerignore
                     """
-              }
-              def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-              if (fileExists(acbTemplateFilePath)) {
-                acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-              } else {
-                acr.build(dockerImage, buildArgs)
+            }
+            def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+            if (fileExists(acbTemplateFilePath)) {
+              acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+            } else {
+              acr.build(dockerImage, buildArgs)
+            }
+          }
+        }
+      }
+    }
+
+    onMaster {
+      if (fileExists('build.gradle')) {
+        parallelStages["Docker Test Build"] = {
+          withAcrClient(subscription) {
+            def dockerfileTest = 'Dockerfile_test'
+
+            pcr.callAround('dockertestbuild') {
+              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
+                writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
+                writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
+                if (!fileExists(dockerfileTest)) {
+                  writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+                }
+                def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+                acr.build(dockerImageTest, " -f ${dockerfileTest}")
               }
             }
           }
         }
-      },
-    ]
-
-    onMaster {
-      if (fileExists('build.gradle')) {
-        def containerParallelStage = [
-          "Docker Test Build": {
-              withAcrClient(subscription) {
-                def dockerfileTest = 'Dockerfile_test'
-
-                pcr.callAround('dockertestbuild') {
-                  timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-                    writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
-                    writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
-                    if (!fileExists(dockerfileTest)) {
-                      writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
-                    }
-                    def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-                    acr.build(dockerImageTest, " -f ${dockerfileTest}")
-                  }
-                }
-              }
-          },
-        ]
-        parallelStages = parallelStages + containerParallelStage
       }
     }
 
@@ -146,18 +142,15 @@ def call(params) {
       GithubAPI gitHubAPI = new GithubAPI(this)
       def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
       if (testLabels.contains('enable_fortify_scan')) {
-        def fortifyScanStage = [
-          "Fortify scan": {
-            withFortifySecrets(config.fortifyVaultName ?: "${product}-${nonProdEnv}") {
-              warnError('Failure in Fortify Scan') {
-                pcr.callAround('fortify-scan') {
-                  builder.fortifyScan()
-                }
+        parallelStages["Fortify scan"] = {
+          withFortifySecrets(config.fortifyVaultName ?: "${product}-${nonProdEnv}") {
+            warnError('Failure in Fortify Scan') {
+              pcr.callAround('fortify-scan') {
+                builder.fortifyScan()
               }
             }
           }
-        ]
-        parallelStages += parallelStages + fortifyScanStage
+        }
       }
     }
 
