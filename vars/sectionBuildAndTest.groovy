@@ -61,8 +61,8 @@ def call(params) {
       }
     }
 
-    def parallelStages = [:]
-    parallelStages["Unit tests and Sonar scan"] = {
+    LinkedHashMap<String, Object> branches = [failFast: true]
+    branches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
           builder.test()
@@ -84,12 +84,12 @@ def call(params) {
         }
       }
     }
-    parallelStages["Security Checks"] = {
+    branches["Security Checks"] = {
       pcr.callAround('securitychecks') {
         builder.securityCheck()
       }
     }
-    parallelStages["Docker Build"] = {
+    branches["Docker Build"] = {
       withAcrClient(subscription) {
         def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -118,7 +118,7 @@ def call(params) {
 
     onMaster {
       if (fileExists('build.gradle')) {
-        parallelStages["Docker Test Build"] = {
+        branches["Docker Test Build"] = {
           withAcrClient(subscription) {
             def dockerfileTest = 'Dockerfile_test'
 
@@ -142,7 +142,7 @@ def call(params) {
       GithubAPI gitHubAPI = new GithubAPI(this)
       def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
       if (testLabels.contains('enable_fortify_scan')) {
-        parallelStages["Fortify scan"] = {
+        branches["Fortify scan"] = {
           withFortifySecrets(config.fortifyVaultName ?: "${product}-${nonProdEnv}") {
             warnError('Failure in Fortify Scan') {
               pcr.callAround('fortify-scan') {
@@ -156,10 +156,7 @@ def call(params) {
 
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
-        parallel(
-          parallelStages,
-          failFast: true
-        )
+        parallel branches
       }
     }
 
