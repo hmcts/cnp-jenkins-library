@@ -26,12 +26,13 @@ class CVEPublisher {
     try {
       steps.echo "Publishing CVE report"
       def summary = [
-        build: [
-          branch_name                  : steps.env.BRANCH_NAME,
-          build_display_name           : steps.env.BUILD_DISPLAY_NAME,
-          build_tag                    : steps.env.BUILD_TAG,
-          git_url                      : steps.env.GIT_URL,
-          codebase_type                : codeBaseType
+        id    : UUID.randomUUID().toString(),
+        build : [
+          branch_name       : steps.env.BRANCH_NAME,
+          build_display_name: steps.env.BUILD_DISPLAY_NAME,
+          build_tag         : steps.env.BUILD_TAG,
+          git_url           : steps.env.GIT_URL,
+          codebase_type     : codeBaseType
         ],
         report: report
       ]
