@@ -102,10 +102,12 @@ def call(params) {
               }
             } else {
               stageWithAgent('Functional test (Full)', product) {
-                warnError('Failure in fullFunctionalTest') {
-                  pcr.callAround('fullFunctionalTest') {
-                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                      builder.fullFunctionalTest()
+                testEnv(aksUrl) {
+                  warnError('Failure in fullFunctionalTest') {
+                    pcr.callAround('fullFunctionalTest') {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
+                      }
                     }
                   }
                 }
