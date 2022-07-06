@@ -49,7 +49,7 @@ def call(params) {
   def deploymentNamespace = projectBranch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
-  def gitHubAPI = new GithubAPI(this)
+  GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
   def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
 
@@ -89,9 +89,9 @@ def call(params) {
             }
           }
 
-          if (!testLabels.contains('enable_full_functional_tests')) {
-            onFunctionalTestEnvironment(environment) {
-              stageWithAgent("Functional Test - AKS ${environment}", product) {
+          onFunctionalTestEnvironment(environment) {
+            if (!testLabels.contains('enable_full_functional_tests')) {
+              stageWithAgent("Functional Test - ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("functionalTest:${environment}") {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
@@ -100,10 +100,20 @@ def call(params) {
                   }
                 }
               }
+            } else {
+              stageWithAgent('Functional test (Full)', product) {
+                warnError('Failure in fullFunctionalTest') {
+                  pcr.callAround('fullFunctionalTest') {
+                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                      builder.fullFunctionalTest()
+                    }
+                  }
+                }
+              }
             }
           }
           if (config.performanceTest) {
-            stageWithAgent("Performance Test - AKS ${environment}", product) {
+            stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
@@ -142,6 +152,29 @@ def call(params) {
                 }
               }
             }
+            if (config.mutationTest) {
+              stageWithAgent("Mutation Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("mutationTest:${environment}") {
+                    builder.mutationTest()
+                  }
+                }
+              }
+            }
+            if (config.fullFunctionalTest) {
+              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("crossBrowserTest:${environment}") {
+                    builder.fullFunctionalTest()
+                  }
+                }
+              }
+            }
+          }
+
+
+          def nonProdEnv = new Environment(env).nonProdName
+          onPR {
             if (testLabels.contains('enable_performance_test')) {
               stageWithAgent("Performance test", product) {
                 warnError('Failure in performanceTest') {
@@ -163,48 +196,6 @@ def call(params) {
                   }
                 }
               }
-            }
-            if (config.mutationTest) {
-              stageWithAgent("Mutation Test - AKS ${environment}", product) {
-                testEnv(aksUrl) {
-                  pcr.callAround("mutationTest:${environment}") {
-                    builder.mutationTest()
-                  }
-                }
-              }
-            }
-            if (config.fullFunctionalTest) {
-              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
-                testEnv(aksUrl) {
-                  pcr.callAround("crossBrowserTest:${environment}") {
-                    builder.fullFunctionalTest()
-                  }
-                }
-              }
-            }
-            if (testLabels.contains('enable_full_functional_tests')) {
-              stageWithAgent('Full functional tests', product) {
-                warnError('Failure in fullFunctionalTest') {
-                  pcr.callAround('fullFunctionalTest') {
-                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                      builder.fullFunctionalTest()
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-
-          def nonProdEnv = new Environment(env).nonProdName
-          onPR {
-            if (testLabels.contains('enable_fortify_scan')) {
-              fortifyScan(
-                pipelineCallbacksRunner: pcr,
-                fortifyVaultName: config.fortifyVaultName ?: "${product}-${nonProdEnv}",
-                builder: builder,
-                product: product,
-              )
             }
           }
 
