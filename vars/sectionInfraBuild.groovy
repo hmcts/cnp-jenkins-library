@@ -8,7 +8,7 @@ def call(params) {
   def component = params.component ?: null
   def pcr = params.pipelineCallbacksRunner
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", subscription )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
     withSubscription(subscription) {
       pcr.callAround("buildinfra:${environment}") {

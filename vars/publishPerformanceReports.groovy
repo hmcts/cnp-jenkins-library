@@ -9,5 +9,5 @@ def call(steps, params)  {
       "due to the following error: ${ex}"
   }
   def reportsPath = "${WORKSPACE}/" + steps.env.GATLING_REPORTS_PATH
-  publishToCosmosDb(steps, params, Gatling.COSMOSDB_COLLECTION, reportsPath, '**/*.json')
+  publishToCosmosDb(steps, params, Gatling.COSMOSDB_CONTAINER, reportsPath, '**/*.json')
 }

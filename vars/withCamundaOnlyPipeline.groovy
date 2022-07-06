@@ -3,7 +3,6 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
-import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.pipeline.TeamConfig
@@ -14,10 +13,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 
 def call(type, String product, String component, String s2sServiceName, String tenantId, Closure body) {
-
-  Subscription subscription = new Subscription(env)
-  Environment environment = new Environment(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
 
   def branch = new ProjectBranch(env.BRANCH_NAME)
   def deploymentNamespace = branch.deploymentNamespace()
@@ -111,8 +107,9 @@ def call(type, String product, String component, String s2sServiceName, String t
 
       // AAT and Prod camunda promotion
       onMaster {
-        def nonProdEnv = new Environment(env).nonProdName
-        def prodEnv = new Environment(env).prodName
+        Environment environment = new Environment(env)
+        def nonProdEnv = environment.nonProdName
+        def prodEnv = environment.prodName
 
         camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
 

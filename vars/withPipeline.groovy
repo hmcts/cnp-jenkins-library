@@ -40,7 +40,7 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)

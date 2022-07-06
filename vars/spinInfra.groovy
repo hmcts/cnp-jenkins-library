@@ -25,7 +25,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def pipelineTags
 
   metricsPublisher = new MetricsPublisher(
-    this, currentBuild, product, component, subscription
+    this, currentBuild, product, component
   )
 
   onPreview {

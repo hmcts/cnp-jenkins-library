@@ -35,9 +35,9 @@ dependencies {
   implementation 'org.jenkins-ci.plugins:job-dsl-core:1.80'
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '608.vfa_f971c5a_a_e9', ext: 'jar'
 
-  implementation 'com.microsoft.azure:azure-documentdb:1.16.4'
-
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.1-groovy-2.5'
+  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.3'
+
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.14'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.35.0'
