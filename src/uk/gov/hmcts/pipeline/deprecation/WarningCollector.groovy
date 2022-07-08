@@ -1,26 +1,27 @@
 package uk.gov.hmcts.pipeline.deprecation
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 class WarningCollector implements Serializable {
 
   static List<DeprecationWarning> pipelineWarnings = new ArrayList<>()
+  static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
+    .ofPattern("dd/MM/yyyy");
 
   static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate) {
     if (deprecationDate.isBefore(LocalDate.now())){
-      throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format("dd/MM/yyyy HH:mm")} ")
+      throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format(DATE_FORMATTER)} ")
     }
     pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
   }
 
   static String getMessageByDays(LocalDate deprecationDate) {
-    String date = deprecationDate.format("dd/MM/yyyy")
-
     LocalDate currentDate = LocalDate.now()
     LocalDate nextDay = currentDate.plusDays(1)
 
-    String message = "${date}"
+    String message =  deprecationDate.format(DATE_FORMATTER)
     if (currentDate == deprecationDate) {
       return message.concat(" ( today )")
     } else if (nextDay == deprecationDate){
