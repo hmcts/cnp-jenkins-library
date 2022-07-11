@@ -111,10 +111,11 @@ def call(DockerImage dockerImage, Map params) {
       "--namespace ${namespace}"
     ]
 
+    echo "Value from jenkins ${this.env.DISABLE_TRAEFIK_TLS}"
     if (this.env.DISABLE_TRAEFIK_TLS == true) {
       //Add global disableTraefikTls flag as true if DISABLE_TRAEFIK_TLS is set to true in jenkins
         options.add("--set global.disableTraefikTls=true")
-    }else{
+    } else {
         options.add("--set global.disableTraefikTls=false")
     }
 
