@@ -191,11 +191,13 @@ def call(params) {
               }
             }
             if (testLabels.contains('enable_security_scan')) {
-              stageWithAgent('Security scan', product) {
-                warnError('Failure in securityScan') {
-                  pcr.callAround('securityScan') {
-                    timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-                      builder.securityScan()
+              testEnv(aksUrl) {
+                stageWithAgent('Security scan', product) {
+                  warnError('Failure in securityScan') {
+                    pcr.callAround('securityScan') {
+                      timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                        builder.securityScan()
+                      }
                     }
                   }
                 }
