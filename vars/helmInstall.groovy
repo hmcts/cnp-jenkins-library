@@ -112,13 +112,6 @@ def call(DockerImage dockerImage, Map params) {
       "--namespace ${namespace}"
     ]
 
-    if (this.env.DISABLE_TRAEFIK_TLS == "true") {
-      //Add global disableTraefikTls flag as true if DISABLE_TRAEFIK_TLS is set to true in jenkins
-        options.add("--set global.disableTraefikTls=true")
-    } else {
-        options.add("--set global.disableTraefikTls=false")
-    }
-
     if (!config.serviceApp) {
       //Forcing Jobs deployed through Jenkins to be Job to avoid cronJobs being run forever.
         options.add("--set global.job.kind=Job")
