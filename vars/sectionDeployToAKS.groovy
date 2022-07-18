@@ -90,8 +90,8 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            if (!testLabels.contains('enable_full_functional_tests')) {
-              onPR {
+            onPR {
+              if (!testLabels.contains('enable_full_functional_tests')) {
                 stageWithAgent("Functional Test - ${environment}", product) {
                   testEnv(aksUrl) {
                     pcr.callAround("functionalTest:${environment}") {
@@ -102,14 +102,13 @@ def call(params) {
                   }
                 }
               }
-            } else {
-              stageWithAgent('Functional test (Full)', product) {
-                testEnv(aksUrl) {
-                  warnError('Failure in fullFunctionalTest') {
-                    pcr.callAround("fullFunctionalTest:${environment}") {
-                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                        builder.fullFunctionalTest()
-                      }
+            }
+            stageWithAgent('Functional test (Full)', product) {
+              testEnv(aksUrl) {
+                warnError('Failure in fullFunctionalTest') {
+                  pcr.callAround("fullFunctionalTest:${environment}") {
+                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                      builder.fullFunctionalTest()
                     }
                   }
                 }
