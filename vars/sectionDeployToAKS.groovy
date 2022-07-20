@@ -90,16 +90,7 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            stageWithAgent("Functional Test - ${environment}", product) {
-              testEnv(aksUrl) {
-                pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                    builder.functionalTest()
-                  }
-                }
-              }
-            }
-            if (!testLabels.contains('enable_full_functional_tests')) {
+            if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
                   warnError('Failure in fullFunctionalTest') {
@@ -107,6 +98,16 @@ def call(params) {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
                         builder.fullFunctionalTest()
                       }
+                    }
+                  }
+                }
+              }
+            } else {
+              stageWithAgent("Functional Test - ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      builder.functionalTest()
                     }
                   }
                 }
