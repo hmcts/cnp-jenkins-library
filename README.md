@@ -245,7 +245,7 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release on Successful Build
 
-If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster. 
+If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster.
 
 To clear helm release, do the following:
 
@@ -306,7 +306,7 @@ Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 def product = "rhubarb"
 
 //Optional
-def component = "extra-detail" 
+def component = "extra-detail"
 
 withInfraPipeline(product, component) {
 
@@ -405,6 +405,19 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
+## Optional Tests for PRs
+It is possible to trigger optional Full Functional Tests, Performance Tests, Fortify Scans and Security Scans on your PRs.  To trigger a test, add the appropriate label(s) to your PR in GitHub:
+
+- enable_full_functional_tests
+- enable_performance_test
+- enable_fortify_scan
+- enable_security_scan
+
+#### Please note that if you add a label for a test which is not configured within your application, the build will fail.
+
+Some tests may require additional configuration - please copy this from your Jenkinsfile_Nightly to your Jenkinsfile_CNP.
+
+#### NB: The fortify scan will be triggered asynchronously as part of the Tests/Checks/Container Build step.  You may use the Blue Ocean view via jenkins to directly monitor progress.
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
