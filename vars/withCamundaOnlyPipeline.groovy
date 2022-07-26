@@ -10,6 +10,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 
 def call(type, String product, String component, String s2sServiceName, String tenantId, Closure body) {
@@ -26,7 +27,8 @@ def call(type, String product, String component, String s2sServiceName, String t
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component)
+    angular: new AngularPipelineType(this, deploymentProduct, component),
+    ruby: new RubyPipelineType(this, deploymentProduct, component)
   ]
 
   PipelineType pipelineType

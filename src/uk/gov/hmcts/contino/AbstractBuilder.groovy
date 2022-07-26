@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 abstract class AbstractBuilder implements Builder, Serializable {
 
-  def steps
+  public steps
   def gatling
   def securitytest
 
@@ -10,6 +10,11 @@ abstract class AbstractBuilder implements Builder, Serializable {
     this.steps = steps
     this.gatling = new Gatling(this.steps)
     this.securitytest = new SecurityScan(this.steps)
+  }
+
+  // some tests only issue relates to https://issues.jenkins.io/browse/JENKINS-47355
+  def getSteps() {
+    return steps
   }
 
   @Override

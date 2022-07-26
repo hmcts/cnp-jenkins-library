@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
@@ -16,7 +17,8 @@ def call(type,product,component,Closure body) {
   def pipelineTypes = [
     nodejs : new NodePipelineType(this, product, component),
     java   : new SpringBootPipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component)
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType = pipelineTypes.get(type)
