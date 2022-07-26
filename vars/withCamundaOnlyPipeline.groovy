@@ -26,7 +26,8 @@ def call(type, String product, String component, String s2sServiceName, String t
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component)
+    angular: new AngularPipelineType(this, deploymentProduct, component),
+    ruby: new RubyPipelineType(this, deploymentProduct, component)
   ]
 
   PipelineType pipelineType

@@ -1,0 +1,239 @@
+package uk.gov.hmcts.contino
+
+import groovy.json.JsonSlurper
+import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.SonarProperties
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
+
+class RubyBuilder extends AbstractBuilder {
+
+  def product
+
+    RubyBuilder(steps, product) {
+    super(steps)
+    this.product = product
+  }
+
+  def build() {
+    addVersionInfo()
+    ruby("assemble")
+  }
+
+  def fortifyScan() {
+    ruby("fortifyScan")
+  }
+
+  def test() {
+    try {
+      ruby("check")
+    } finally {
+      steps.junit '**/test-results/test/*.xml'
+      steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
+    }
+  }
+
+  def sonarScan() {
+      String properties = SonarProperties.get(steps)
+
+      ruby("--info ${properties} sonarqube")
+  }
+
+  def highLevelDataSetup(String dataSetupEnvironment) {
+    ruby("highLevelDataSetup --args=${dataSetupEnvironment}")
+  }
+
+  def smokeTest() {
+    try {
+      // By default ruby will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      ruby("--rerun-tasks smoke")
+    } finally {
+      try {
+        steps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
+      } catch (ignored) {
+        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
+      }
+    }
+  }
+
+  def functionalTest() {
+    try {
+      // By default ruby will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      ruby("--rerun-tasks functional")
+    } finally {
+      try {
+        steps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      } catch (ignored) {
+        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
+      }
+    }
+  }
+
+  def apiGatewayTest() {
+    try {
+      // By default ruby will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      ruby("--rerun-tasks apiGateway")
+    } finally {
+      try {
+        steps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
+      } catch (ignored) {
+        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
+      }
+    }
+  }
+
+  def crossBrowserTest() {
+    try {
+      // By default ruby will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      steps.withSauceConnect("reform_tunnel") {
+        ruby("--rerun-tasks crossbrowser")
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      steps.saucePublisher()
+    }
+  }
+
+  def crossBrowserTest(String browser) {
+    try {
+      // By default ruby will skip task execution if it's already been run (is 'up to date').
+      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
+      steps.withSauceConnect("reform_tunnel") {
+        ruby("--rerun-tasks crossbrowser", "BROWSER_GROUP=$browser")
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      steps.saucePublisher()
+    }
+  }
+
+  def mutationTest(){
+    try {
+      ruby("pitest")
+    }
+    finally {
+      steps.archiveArtifacts '**/reports/pitest/**/*.*'
+    }
+  }
+
+  def securityCheck() {
+    def secrets = [
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
+    ]
+    steps.withAzureKeyvault(secrets) {
+      try {
+          ruby("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+      }
+      finally {
+        steps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        String dependencyReport = steps.readFile('build/reports/dependency-check-report.json')
+
+        def cveReport = prepareCVEReport(dependencyReport)
+
+        new CVEPublisher(steps)
+          .publishCVEReport('java', cveReport)
+      }
+    }
+  }
+
+  def prepareCVEReport(String owaspReportJSON) {
+    def report = new JsonSlurper().parseText(owaspReportJSON)
+    // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+    report.dependencies = report.dependencies.findAll {
+      it.vulnerabilities || it.suppressedVulnerabilities
+    }
+
+    return report
+  }
+
+  @Override
+  def addVersionInfo() {
+    // TODO look at this
+  }
+
+  def runProviderVerification(pactBrokerUrl, version, publish) {
+    try {
+      ruby("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
+  }
+
+  def runConsumerTests(pactBrokerUrl, version) {
+   try {
+      ruby("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
+   } finally {
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
+  }
+
+  def runConsumerCanIDeploy() {
+    try {
+      ruby("canideploy")
+     } finally {
+      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
+  }
+
+
+  def ruby(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
+    steps.sh("${prepend}./rubyw --no-daemon --init-script init.ruby ${task}")
+  }
+
+  private String rubyWithOutput(String task) {
+    addInitScript()
+    steps.sh(script: "./rubyw --no-daemon --init-script init.ruby ${task}", returnStdout: true).trim()
+  }
+
+  def fullFunctionalTest() {
+      functionalTest()
+  }
+
+  def dbMigrate(String vaultName, String microserviceName) {
+    def secrets = [
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
+    ]
+
+    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
+
+    steps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
+      ruby("-Pdburl='${steps.env.POSTGRES_HOST}:${steps.env.POSTGRES_PORT}/${steps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES_USER}' -Pflyway.password='${steps.env.POSTGRES_PASS}' migratePostgresDatabase")
+    }
+  }
+
+  @Override
+  def setupToolVersion() {
+    ruby("--version") // ensure wrapper has been downloaded
+    steps.sh "java -version"
+  }
+
+  def hasPlugin(String pluginName) {
+    return rubyWithOutput("buildEnvironment").contains(pluginName)
+  }
+
+  @Override
+  def performanceTest() {
+    if (hasPlugin("ruby-gatling-plugin")) {
+      steps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
+      steps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + steps.env.GATLING_REPORTS_PATH
+      ruby("gatlingRun")
+      this.steps.gatlingArchive()
+    } else {
+      super.executeGatling()
+    }
+  }
+
+}

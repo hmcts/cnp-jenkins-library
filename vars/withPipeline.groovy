@@ -24,7 +24,8 @@ def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component)
+    angular: new AngularPipelineType(this, deploymentProduct, component),
+    ruby: new RubyPipelineType(this, deploymentProduct, component)
   ]
 
   Subscription subscription = new Subscription(env)
