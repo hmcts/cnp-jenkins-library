@@ -9,7 +9,8 @@ class ProjectBranch implements Serializable {
   }
 
   boolean isMaster() {
-    branchName == 'master'
+    // TODO revert temp branch change
+    branchName == 'master' || branchName == 'dtspo-9578-jenkins-setup'
   }
 
   boolean isPreview() {
