@@ -29,11 +29,11 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String s2sServiceName
 
   int crossBrowserTestTimeout
-  int perfTestTimeout
+  int perfTestTimeout = 15
   int apiGatewayTestTimeout
   int mutationTestTimeout
-  int fullFunctionalTestTimeout
-  int securityScanTimeout
+  int fullFunctionalTestTimeout = 30
+  int securityScanTimeout = 120
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)
