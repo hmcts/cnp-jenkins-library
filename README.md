@@ -405,19 +405,21 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
-## Optional Tests for PRs
-It is possible to trigger optional Full Functional Tests, Performance Tests, Fortify Scans and Security Scans on your PRs.  To trigger a test, add the appropriate label(s) to your PR in GitHub:
 
-- enable_full_functional_tests
-- enable_performance_test
-- enable_fortify_scan
-- enable_security_scan
+## Enabling nightly checks on pull requests
 
-#### Please note that if you add a label for a test which is not configured within your application, the build will fail.
+It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
 
-Some tests may require additional configuration - please copy this from your Jenkinsfile_Nightly to your Jenkinsfile_CNP.
+- `enable_full_functional_tests`
+- `enable_performance_test`
+- `enable_fortify_scan`
+- `enable_security_scan`
 
-#### NB: The fortify scan will be triggered asynchronously as part of the Tests/Checks/Container Build step.  You may use the Blue Ocean view via jenkins to directly monitor progress.
+#### If you add a label for a test which is not configured within your application, the build will fail.
+
+Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.
+
+The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
