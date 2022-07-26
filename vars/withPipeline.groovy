@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
