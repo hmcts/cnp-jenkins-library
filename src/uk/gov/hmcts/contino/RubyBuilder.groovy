@@ -13,6 +13,9 @@ class RubyBuilder extends AbstractBuilder {
 
   RubyBuilder(steps, product) {
     super(steps)
+    println("Calling build constructor")
+    println("Calling build constructor: steps: is steps null" + this.steps == null)
+    println("Calling build: constructor steps: is steps null" + steps == null)
     this.product = product
   }
 
