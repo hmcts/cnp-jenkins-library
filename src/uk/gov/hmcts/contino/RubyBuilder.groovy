@@ -13,16 +13,10 @@ class RubyBuilder extends AbstractBuilder {
 
   RubyBuilder(steps, product) {
     super(steps)
-    println("Calling build constructor")
-    println("Calling build constructor: steps: is steps null" + this.steps == null)
-    println("Calling build: constructor steps: is steps null" + steps == null)
     this.product = product
   }
 
   def build() {
-    println("Calling build")
-    println("Calling build: steps: is steps null" + steps == null)
-    println("Calling build: steps: " + steps.toString())
     addVersionInfo()
     bundle("config set path 'vendor/bundle'")
     bundle("install --jobs=4 --retry=3")
@@ -139,8 +133,6 @@ class RubyBuilder extends AbstractBuilder {
 
 
   def bundle(String task) {
-    steps.echo "About to run ${task}"
-
     steps.sh(script: """#!/bin/bash -l
       set +x
       source /usr/local/rvm/scripts/rvm
