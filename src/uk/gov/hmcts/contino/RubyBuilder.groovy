@@ -18,6 +18,7 @@ class RubyBuilder extends AbstractBuilder {
 
   def build() {
     println("Calling build")
+    println("Calling build: steps: is steps null" + steps == null)
     println("Calling build: steps: " + steps.toString())
     addVersionInfo()
     bundle("config set path 'vendor/bundle'")
