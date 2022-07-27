@@ -18,7 +18,8 @@ class RubyBuilder extends AbstractBuilder {
 
   def build() {
     addVersionInfo()
-    bundle("install --jobs=4 --retry=3 --path vendor/bundle")
+    bundle("config set path 'vendor/bundle'")
+    bundle("install --jobs=4 --retry=3")
   }
 
   def fortifyScan() {
