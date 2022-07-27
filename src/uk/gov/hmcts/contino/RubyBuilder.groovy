@@ -11,12 +11,14 @@ class RubyBuilder extends AbstractBuilder {
 
   def product
 
-    RubyBuilder(steps, product) {
+  RubyBuilder(steps, product) {
     super(steps)
     this.product = product
   }
 
   def build() {
+    println("Calling build")
+    println("Calling build: steps: " + steps.toString())
     addVersionInfo()
     bundle("config set path 'vendor/bundle'")
     bundle("install --jobs=4 --retry=3")
@@ -39,8 +41,8 @@ class RubyBuilder extends AbstractBuilder {
     steps.error "Not implemented"
 //      String properties = SonarProperties.get(steps)
 
-      // TODO
-      // bundle("--info ${properties} sonarqube")
+    // TODO
+    // bundle("--info ${properties} sonarqube")
   }
 
   def highLevelDataSetup(String dataSetupEnvironment) {
@@ -106,7 +108,7 @@ class RubyBuilder extends AbstractBuilder {
     steps.error "Not implemented"
   }
 
-  def mutationTest(){
+  def mutationTest() {
     steps.error "Not implemented"
   }
 
@@ -146,7 +148,7 @@ class RubyBuilder extends AbstractBuilder {
   }
 
   def fullFunctionalTest() {
-      functionalTest()
+    functionalTest()
   }
 
   def dbMigrate(String vaultName, String microserviceName) {
