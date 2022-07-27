@@ -133,7 +133,7 @@ class RubyBuilder extends AbstractBuilder {
 
 
   def bundle(String task) {
-    steps.sh(script:"""#!/bin/bash -l
+    steps.sh(script: """#!/bin/bash -l
       set +x
       source /usr/local/rvm/scripts/rvm
       rvm use
