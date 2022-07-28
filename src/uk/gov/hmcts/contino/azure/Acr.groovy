@@ -129,7 +129,7 @@ class Acr extends Az {
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
-    def repositoryName = dockerImage.getRepositoryName
+    def repositoryName = return dockerImage.getRepositoryName()
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
     steps.echo "the repositoryName variable is ${repositoryName}"
   }
