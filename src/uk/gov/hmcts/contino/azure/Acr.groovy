@@ -129,13 +129,13 @@ class Acr extends Az {
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
-    return repositoryName(dockerImage.getRepositoryName())
+    // return repositoryName(dockerImage.getRepositoryName())
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 
-  private def repositoryName(String repository) {
-      steps.echo "the repositoryName variable is ${repositoryName}"
-  }
+  // private def repositoryName(String repository) {
+  //     steps.echo "the repositoryName variable is ${repositoryName}"
+  // }
 
   def untag(DockerImage dockerImage) {
     if (!dockerImage.isLatest()) {
@@ -158,6 +158,8 @@ class Acr extends Az {
   }
 
   private def hasRepoTag(String tag, String repository) {
+    steps.echo "Repository is ${repository}"
+    
     // staging and latest are not really tags for our purposes, it just marks the most recent master build before and after tests are run in AAT.
     if (tag in ['staging' , 'latest'] ) {
       steps.echo "Warning: matching '${tag}' tag for ${repository}"
