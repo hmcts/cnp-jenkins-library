@@ -133,7 +133,7 @@ class Acr extends Az {
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
 
-  def repositoryName(String repository) {
+  private def repositoryName(String repository) {
       steps.echo "the repositoryName variable is ${repositoryName}"
   }
 
