@@ -2,39 +2,21 @@
 set -x
 
 CHART_DIRECTORY=${1}-${2}
-MIN_JAVA_VERSION="4.0.1"
-MIN_NODEJS_VERSION="2.4.5"
-MIN_JOB_VERSION="0.7.3"
-MIN_BLOBSTORAGE_VERSION="0.3.0"
-MIN_SERVICEBUS_VERSION="0.4.0"
+declare -A deprecationMap
 
-JAVA_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "java" |awk '{ print $2}' | sed "s/~//g")
-NODEJS_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "nodejs" |awk '{ print $2}' | sed "s/~//g")
-JOB_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "job" |awk '{ print $2}' | sed "s/~//g")
-BLOBSTORAGE_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "blobstorage" |awk '{ print $2}' | sed "s/~//g")
-SERVICEBUS_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "servicebus" |awk '{ print $2}' | sed "s/~//g")
+deprecationMap["java"]="4.0.1"
+deprecationMap["nodejs"]="2.4.5"
+deprecationMap["job"]="0.7.3"
+deprecationMap["blobstorage"]="0.3.0"
+deprecationMap["servicebus"]="0.4.0"
+deprecationMap["ccd"]="8.0.17"
+deprecationMap["elasticsearch"]="7.8.2"
 
-if [[ -n $JAVA_VERSION ]] &&  [[ $JAVA_VERSION < $MIN_JAVA_VERSION ]]; then
-    echo "Java chart version $JAVA_VERSION is deprecated, please upgrade"
-    exit 1
-fi
-
-if [[ -n $NODEJS_VERSION ]] && [[ $NODEJS_VERSION < $MIN_NODEJS_VERSION ]]; then
-    echo "Nodejs chart version $NODEJS_VERSION is deprecated, please upgrade"
-    exit 1
-fi
-
-if [[ -n $JOB_VERSION ]] && [[ $JOB_VERSION < $MIN_JOB_VERSION ]]; then
-    echo "Job chart version $MIN_JOB_VERSION is deprecated, please upgrade"
-    exit 1
-fi
-
-if [[ -n $BLOBSTORAGE_VERSION ]] && [[ $BLOBSTORAGE_VERSION < $MIN_BLOBSTORAGE_VERSION ]]; then
-    echo "Job chart version $BLOBSTORAGE_VERSION is deprecated, please upgrade"
-    exit 1
-fi
-
-if [[ -n $SERVICEBUS_VERSION ]] && [[ $SERVICEBUS_VERSION < $MIN_SERVICEBUS_VERSION ]]; then
-    echo "Job chart version $MIN_SERVICEBUS_VERSION is deprecated, please upgrade"
-    exit 1
-fi
+for deprecation in "${!deprecationMap[@]}"
+do
+  CURRENT_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "^$deprecation " |awk '{ print $2}' | sed "s/~//g")
+  if [[ -n $CURRENT_VERSION ]] &&  [[ $CURRENT_VERSION < ${deprecationMap[$deprecation]} ]]; then
+      echo "$deprecation chart $CURRENT_VERSION is deprecated, please upgrade to at least ${deprecationMap[$deprecation]}"
+      exit 1
+  fi
+done
