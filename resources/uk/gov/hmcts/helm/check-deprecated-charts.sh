@@ -1,4 +1,4 @@
--#!/bin/bash
+#!/bin/bash
 set -x
 
 CHART_DIRECTORY=${1}-${2}
