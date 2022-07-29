@@ -25,7 +25,8 @@ def call(Map<String, String> params) {
     ./check-deprecated-charts.sh $product $component
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-java/releases", LocalDate.of(2022, 8, 1))  } finally {
+    WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-java/releases", LocalDate.of(2022, 8, 1))
+  } finally {
     sh 'rm -f check-deprecated-charts.sh'
   }
 
