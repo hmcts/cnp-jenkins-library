@@ -245,7 +245,7 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release on Successful Build
 
-If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster. 
+If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster.
 
 To clear helm release, do the following:
 
@@ -306,7 +306,7 @@ Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 def product = "rhubarb"
 
 //Optional
-def component = "extra-detail" 
+def component = "extra-detail"
 
 withInfraPipeline(product, component) {
 
@@ -405,6 +405,21 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
+
+## Enabling nightly checks on pull requests
+
+It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
+
+- `enable_full_functional_tests`
+- `enable_performance_test`
+- `enable_fortify_scan`
+- `enable_security_scan`
+
+#### If you add a label for a test which is not configured within your application, the build will fail.
+
+Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.
+
+The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.

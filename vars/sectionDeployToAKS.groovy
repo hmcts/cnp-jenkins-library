@@ -49,6 +49,10 @@ def call(params) {
   def deploymentNamespace = projectBranch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
+  GithubAPI gitHubAPI = new GithubAPI(this)
+  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+
   lock("${deploymentProduct}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
@@ -86,18 +90,32 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            stageWithAgent("Functional Test - AKS ${environment}", product) {
-              testEnv(aksUrl) {
-                pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                    builder.functionalTest()
+            if (testLabels.contains('enable_full_functional_tests')) {
+              stageWithAgent('Functional test (Full)', product) {
+                testEnv(aksUrl) {
+                  warnError('Failure in fullFunctionalTest') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
+                      }
+                    }
+                  }
+                }
+              }
+            } else {
+              stageWithAgent("Functional Test - ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      builder.functionalTest()
+                    }
                   }
                 }
               }
             }
           }
           if (config.performanceTest) {
-            stageWithAgent("Performance Test - AKS ${environment}", product) {
+            stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
@@ -125,6 +143,7 @@ def call(params) {
               }
             }
           }
+
           onMaster {
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
@@ -147,16 +166,45 @@ def call(params) {
             if (config.fullFunctionalTest) {
               stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  pcr.callAround("crossBrowserTest:${environment}") {
+                  pcr.callAround("fullFunctionalTest:${environment}") {
                     builder.fullFunctionalTest()
                   }
                 }
               }
             }
           }
+
+
           def nonProdEnv = new Environment(env).nonProdName
-          def githubApi = new GithubAPI(this)
-          if (environment == nonProdEnv || config.clearHelmRelease || githubApi.checkForDependenciesLabel(env.BRANCH_NAME)) {
+          onPR {
+            if (testLabels.contains('enable_performance_test')) {
+              stageWithAgent("Performance test", product) {
+                warnError('Failure in performanceTest') {
+                  pcr.callAround('PerformanceTest') {
+                    timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                      builder.performanceTest()
+                    }
+                  }
+                }
+              }
+            }
+            if (testLabels.contains('enable_security_scan')) {
+              testEnv(aksUrl) {
+                stageWithAgent('Security scan', product) {
+                  warnError('Failure in securityScan') {
+                    pcr.callAround('securityScan') {
+                      timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                        builder.securityScan()
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          def triggerUninstall = environment == nonProdEnv
+          if (triggerUninstall || config.clearHelmRelease || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
         }
