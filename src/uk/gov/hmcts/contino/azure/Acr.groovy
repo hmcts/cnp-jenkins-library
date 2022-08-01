@@ -7,6 +7,8 @@ class Acr extends Az {
   def registryName
   def resourceGroup
   def registrySubscription
+  def product
+  def component
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -25,6 +27,8 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
+    this.product = product
+    this.component = component
   }
 
   /**
@@ -90,6 +94,10 @@ class Acr extends Az {
     this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
   }
 
+  def reconcile() {
+    steps.echo "Product is ${product} and component is ${component}"
+  }
+
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
     def defaultAcrScriptFilePath = "acb.yaml"
     steps.sh(
@@ -141,14 +149,6 @@ class Acr extends Az {
     if (!dockerImage.isLatest()) {
       this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --image ${dockerImage.getShortName()}"
     }
-  }
-
-  def myVar = {
-    value = "Hello there!"
-  }
-
-  def myValue(myVar) {
-    steps.echo "${myVar}"
   }
 
   // def chartDirectory(DockerImage dockerImage) {
