@@ -88,7 +88,6 @@ class Acr extends Az {
    */
   def run() {
     this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
-    this.azJenkins "flux reconcile image repository ${chartdir}"
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
@@ -159,9 +158,6 @@ class Acr extends Az {
   }
 
   private def hasRepoTag(String tag, String repository) {
-    def chartdir = repository.replace("/", "-")
-    steps.echo "Repository is ${repository}"
-    steps.echo "Chart directory is ${chartdir}"
     
     // staging and latest are not really tags for our purposes, it just marks the most recent master build before and after tests are run in AAT.
     if (tag in ['staging' , 'latest'] ) {
@@ -180,3 +176,10 @@ class Acr extends Az {
   }
 
 }
+
+  def chartDirectory(String, repository) {
+    String chartDirectory = repository.replace("/", "-")
+    return chartDirectory
+    steps.echo "Repository is ${repository}"
+    steps.echo "Chart directory is ${chartDirectory}"
+  } 
