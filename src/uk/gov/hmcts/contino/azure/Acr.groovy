@@ -79,6 +79,12 @@ class Acr extends Az {
     this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
   }
 
+  def chartDirectory(String, repository) {
+    String chartDirectory = repository.replace("/", "-")
+    steps.echo "Repository is ${repository}"
+    steps.echo "Chart directory is ${chartDirectory}"
+  } 
+
   /**
    * Run ACR scripts using the current subscription,
    * registry name and resource group
@@ -155,7 +161,6 @@ class Acr extends Az {
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     String tag = dockerImage.getTag(stage)
     return hasRepoTag(tag, dockerImage.getRepositoryName())
-    return chartDirectory(dockerImage.getRepositoryName())
   }
 
   private def hasRepoTag(String tag, String repository) {
@@ -175,11 +180,4 @@ class Acr extends Az {
 
     return tagFound
   }
-
-  private def chartDirectory(String, repository) {
-    String chartDirectory = repository.replace("/", "-")
-    return chartDirectory
-    steps.echo "Repository is ${repository}"
-    steps.echo "Chart directory is ${chartDirectory}"
-  } 
 }
