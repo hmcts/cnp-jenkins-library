@@ -7,8 +7,6 @@ class Acr extends Az {
   def registryName
   def resourceGroup
   def registrySubscription
-  def product
-  def component
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -27,8 +25,6 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
-    this.product = product
-    this.component = component
   }
 
   /**
@@ -94,8 +90,8 @@ class Acr extends Az {
     this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
   }
 
-  def reconcile() {
-    steps.echo "Product is ${product} and component is ${component}"
+  def reconcile(DockerImage dockerImage) {
+    steps.echo "Repository is ${dockerImage.getRepositoryName()}"
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
