@@ -143,14 +143,18 @@ class Acr extends Az {
     }
   }
 
-  def chartDirectory(DockerImage dockerImage) {
+  def myVar = "Hello there!" {
+    steps.echo ${myVar}
+  }
+
+  // def chartDirectory(DockerImage dockerImage) {
     // String chartDirectory = repository.replace("/", "-")
     // String repository = dockerImage.getRepositoryName()
     // return chartDirectory2(dockerImage.getRepositoryName())
     // repository = dockerImage.getRepositoryName()
-    echo "Hello there!"
+    // echo "Hello there!"
     // steps.echo "Chart directory is ${chartDirectory}"
-  }
+  // }
 
   def hasTag(DockerImage dockerImage) {
     // on the master branch we search for an AAT tagged image with the same commit hash
