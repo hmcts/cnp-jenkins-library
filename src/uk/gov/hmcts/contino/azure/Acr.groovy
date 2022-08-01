@@ -91,7 +91,7 @@ class Acr extends Az {
   }
 
   def reconcile(DockerImage dockerImage) {
-    steps.echo "Repository is ${dockerImage.getRepositoryName()}"
+    steps.echo "Repository is ${dockerImage.repositoryName()}"
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
