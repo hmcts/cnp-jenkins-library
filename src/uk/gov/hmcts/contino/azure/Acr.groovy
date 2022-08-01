@@ -143,6 +143,15 @@ class Acr extends Az {
     }
   }
 
+  def chartDirectory(DockerImage dockerImage) {
+    // String chartDirectory = repository.replace("/", "-")
+    // String repository = dockerImage.getRepositoryName()
+    // return chartDirectory2(dockerImage.getRepositoryName())
+    repository = dockerImage.getRepositoryName()
+    steps.echo "Repository is ${repository}"
+    // steps.echo "Chart directory is ${chartDirectory}"
+  }
+
   def hasTag(DockerImage dockerImage) {
     // on the master branch we search for an AAT tagged image with the same commit hash
     if (dockerImage.getTag().startsWith("staging")) {
@@ -155,7 +164,6 @@ class Acr extends Az {
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     String tag = dockerImage.getTag(stage)
     return hasRepoTag(tag, dockerImage.getRepositoryName())
-    return chartDirectory(tag, dockerImage.getRepositoryName())
   }
 
   private def hasRepoTag(String tag, String repository) {
@@ -174,14 +182,5 @@ class Acr extends Az {
     } // Do nothing -> return false
 
     return tagFound
-  }
-
-  def chartDirectory(String tag, String repository) {
-    // String chartDirectory = repository.replace("/", "-")
-    // String repository = dockerImage.getRepositoryName()
-    // return chartDirectory2(dockerImage.getRepositoryName())
-    printIn dockerImage.getRepositoryName()
-    steps.echo "Repository is ${repository}"
-    // steps.echo "Chart directory is ${chartDirectory}"
   }
 }
