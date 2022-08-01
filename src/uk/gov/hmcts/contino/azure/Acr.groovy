@@ -143,8 +143,12 @@ class Acr extends Az {
     }
   }
 
-  def myVar = "Hello there!" {
-    steps.echo ${myVar}
+  def myVar = {
+    value = "Hello there!"
+  }
+
+  def myValue(myVar) {
+    steps.echo "${myVar}"
   }
 
   // def chartDirectory(DockerImage dockerImage) {
