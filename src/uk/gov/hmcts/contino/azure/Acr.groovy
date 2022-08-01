@@ -175,7 +175,7 @@ class Acr extends Az {
     return tagFound
   }
 
-    def chartDirectory(DockerImage dockerImage) {
+  def chartDirectory(DockerImage dockerImage) {
     // String chartDirectory = repository.replace("/", "-")
     // String repository = dockerImage.getRepositoryName()
     return chartDirectory2(dockerImage.getRepositoryName())
