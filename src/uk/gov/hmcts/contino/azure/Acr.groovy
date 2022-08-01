@@ -155,6 +155,7 @@ class Acr extends Az {
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     String tag = dockerImage.getTag(stage)
     return hasRepoTag(tag, dockerImage.getRepositoryName())
+    return chartDirectory(tag, dockerImage.getRepositoryName())
   }
 
   private def hasRepoTag(String tag, String repository) {
@@ -175,19 +176,11 @@ class Acr extends Az {
     return tagFound
   }
 
-  def chartDirectory(DockerImage dockerImage) {
-    // String chartDirectory = repository.replace("/", "-")
-    // String repository = dockerImage.getRepositoryName()
-    return chartDirectory2(dockerImage.getRepositoryName())
-    // steps.echo "Repository is ${repository}"
-    // steps.echo "Chart directory is ${chartDirectory}"
-  }
-
-  private def chartDirectory2(String repository) {
+  def chartDirectory(String tag, String repository) {
     // String chartDirectory = repository.replace("/", "-")
     // String repository = dockerImage.getRepositoryName()
     // return chartDirectory2(dockerImage.getRepositoryName())
     steps.echo "Repository is ${repository}"
     // steps.echo "Chart directory is ${chartDirectory}"
-  } 
+  }
 }
