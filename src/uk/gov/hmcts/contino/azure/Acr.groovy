@@ -155,7 +155,7 @@ class Acr extends Az {
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
     String tag = dockerImage.getTag(stage)
     return hasRepoTag(tag, dockerImage.getRepositoryName())
-    return chartDirectoryString tag, 
+    return chartDirectory(tag, dockerImage.getRepositoryName())
   }
 
   private def hasRepoTag(String tag, String repository) {
