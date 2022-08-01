@@ -147,8 +147,8 @@ class Acr extends Az {
     // String chartDirectory = repository.replace("/", "-")
     // String repository = dockerImage.getRepositoryName()
     // return chartDirectory2(dockerImage.getRepositoryName())
-    repository = dockerImage.getRepositoryName()
-    steps.echo "Repository is ${repository}"
+    // repository = dockerImage.getRepositoryName()
+    echo "Hello there!"
     // steps.echo "Chart directory is ${chartDirectory}"
   }
 
