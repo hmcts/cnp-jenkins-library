@@ -176,7 +176,7 @@ class Acr extends Az {
     return tagFound
   }
 
-  def chartDirectory(String, repository) {
+  private def chartDirectory(String, repository) {
     String chartDirectory = repository.replace("/", "-")
     return chartDirectory
     steps.echo "Repository is ${repository}"
