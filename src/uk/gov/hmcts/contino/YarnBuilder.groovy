@@ -248,9 +248,20 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private isYarnV1() {
+    def status = steps.sh label:"Determine if is YarnV1", script: '''
+                ! grep \"packageManager\": package.json
+          ''', returnStatus: true
+    return status
+  }
+
   def yarn(task) {
     if (!steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
-      runYarn("--mutex network install --frozen-lockfile")
+      if (!isYarnV1()) {
+        runYarn("install")
+      } else {
+        runYarn("--mutex network install --frozen-lockfile")
+      }
       steps.sh("touch ${INSTALL_CHECK_FILE}")
     }
     runYarn(task)
