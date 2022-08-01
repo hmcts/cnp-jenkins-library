@@ -158,7 +158,8 @@ class Acr extends Az {
   }
 
   private def hasRepoTag(String tag, String repository) {
-    steps.echo "Repository is ${repository}"
+    def chartdir = repository.replace("/", "-")
+    steps.echo "Repository is ${chartdir}"
     
     // staging and latest are not really tags for our purposes, it just marks the most recent master build before and after tests are run in AAT.
     if (tag in ['staging' , 'latest'] ) {
