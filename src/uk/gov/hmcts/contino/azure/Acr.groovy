@@ -79,22 +79,6 @@ class Acr extends Az {
     this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
   }
 
-  def chartDirectory(DockerImage dockerImage) {
-    // String chartDirectory = repository.replace("/", "-")
-    // String repository = dockerImage.getRepositoryName()
-    return chartDirectory2(dockerImage.getRepositoryName())
-    // steps.echo "Repository is ${repository}"
-    // steps.echo "Chart directory is ${chartDirectory}"
-  }
-
-  private def chartDirectory2(String repository) {
-    // String chartDirectory = repository.replace("/", "-")
-    // String repository = dockerImage.getRepositoryName()
-    // return chartDirectory2(dockerImage.getRepositoryName())
-    steps.echo "Repository is ${repository}"
-    // steps.echo "Chart directory is ${chartDirectory}"
-  } 
-
   /**
    * Run ACR scripts using the current subscription,
    * registry name and resource group
@@ -190,4 +174,20 @@ class Acr extends Az {
 
     return tagFound
   }
+
+    def chartDirectory(DockerImage dockerImage) {
+    // String chartDirectory = repository.replace("/", "-")
+    // String repository = dockerImage.getRepositoryName()
+    return chartDirectory2(dockerImage.getRepositoryName())
+    // steps.echo "Repository is ${repository}"
+    // steps.echo "Chart directory is ${chartDirectory}"
+  }
+
+  private def chartDirectory2(String repository) {
+    // String chartDirectory = repository.replace("/", "-")
+    // String repository = dockerImage.getRepositoryName()
+    // return chartDirectory2(dockerImage.getRepositoryName())
+    steps.echo "Repository is ${repository}"
+    // steps.echo "Chart directory is ${chartDirectory}"
+  } 
 }
