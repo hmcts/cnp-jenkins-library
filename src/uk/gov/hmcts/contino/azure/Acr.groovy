@@ -88,6 +88,7 @@ class Acr extends Az {
    */
   def run() {
     this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
+    flux reconcile image repository ${chartdir}
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
