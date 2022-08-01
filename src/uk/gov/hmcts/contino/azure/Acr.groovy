@@ -91,7 +91,7 @@ class Acr extends Az {
   }
 
   def reconcile(DockerImage dockerImage) {
-    repository = ${dockerImage.getRepositoryName()}.replace("/", "-")
+    repository = ${dockerImage.getRepositoryName()}
     steps.echo "Repository is ${repository}"
   }
 
