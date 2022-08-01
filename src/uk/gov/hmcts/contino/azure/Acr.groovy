@@ -79,10 +79,11 @@ class Acr extends Az {
     this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
   }
 
-  def chartDirectory(String, repository) {
-    String chartDirectory = repository.replace("/", "-")
+  def chartDirectory(DockerImage dockerImage) {
+    // String chartDirectory = repository.replace("/", "-")
+    repository = dockerImage.getRepositoryName()
     steps.echo "Repository is ${repository}"
-    steps.echo "Chart directory is ${chartDirectory}"
+    // steps.echo "Chart directory is ${chartDirectory}"
   } 
 
   /**
