@@ -101,8 +101,11 @@ class Acr extends Az {
 
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
-    steps.echo "Flux Will attempt reconcilation of image repository ${repository}"
-    "flux reconcile image repository ${repository}"
+    steps.echo "Flux will attempt reconcilation of image repository ${repository}"
+    steps.sh(
+      script: "flux reconcile image repository ${repository}"
+      returnStdout: true
+    )
   }
 
   /**
