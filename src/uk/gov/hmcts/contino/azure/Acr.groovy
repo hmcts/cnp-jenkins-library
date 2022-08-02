@@ -90,11 +90,6 @@ class Acr extends Az {
     this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
   }
 
-  def reconcile(DockerImage dockerImage) {
-    String repository = dockerImage.getRepositoryName().replace("/", "-")
-    steps.echo "Repository is ${repository}"
-  }
-
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
     def defaultAcrScriptFilePath = "acb.yaml"
     steps.sh(
@@ -102,6 +97,13 @@ class Acr extends Az {
       returnStdout: true
     )?.trim()
     this.run()
+  }
+
+  def reconcile(DockerImage dockerImage) {
+    String repository = dockerImage.getRepositoryName().replace("/", "-")
+    steps.echo "Repository is ${repository}"
+    steps.echo "Will attempt flux reconcile..."
+    this.azJenkins "flux reconcile image repository ${repository}"
   }
 
   /**
@@ -134,28 +136,14 @@ class Acr extends Az {
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
-    // return repositoryName(dockerImage.getRepositoryName())
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
   }
-
-  // private def repositoryName(String repository) {
-  //     steps.echo "the repositoryName variable is ${repositoryName}"
-  // }
 
   def untag(DockerImage dockerImage) {
     if (!dockerImage.isLatest()) {
       this.az "acr repository untag -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --image ${dockerImage.getShortName()}"
     }
   }
-
-  // def chartDirectory(DockerImage dockerImage) {
-    // String chartDirectory = repository.replace("/", "-")
-    // String repository = dockerImage.getRepositoryName()
-    // return chartDirectory2(dockerImage.getRepositoryName())
-    // repository = dockerImage.getRepositoryName()
-    // echo "Hello there!"
-    // steps.echo "Chart directory is ${chartDirectory}"
-  // }
 
   def hasTag(DockerImage dockerImage) {
     // on the master branch we search for an AAT tagged image with the same commit hash
