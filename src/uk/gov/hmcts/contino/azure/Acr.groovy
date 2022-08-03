@@ -103,7 +103,7 @@ class Acr extends Az {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
     steps.echo "Flux will attempt to get info about image repository ${repository}"
     steps.sh(
-      script: "/usr/local/bin/flux get image repository ${repository}",
+      script: "which flux",
       returnStdout: true
     )
   }
