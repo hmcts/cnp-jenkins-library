@@ -107,10 +107,8 @@ def call(params) {
             }
             def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
             if (fileExists(acbTemplateFilePath)) {
-              acr.reconcile(dockerImage)
               acr.runWithTemplate(acbTemplateFilePath, dockerImage)
             } else {
-              acr.reconcile(dockerImage)
               acr.build(dockerImage, buildArgs)
             }
           }
@@ -133,7 +131,6 @@ def call(params) {
                 }
                 def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
                 acr.build(dockerImageTest, " -f ${dockerfileTest}")
-                acr.reconcile(dockerImage)
               }
             }
           }
