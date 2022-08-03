@@ -248,23 +248,25 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
-  private isYarnV1() {
-    def status = steps.sh label:"Determine if is YarnV1", script: '''
-                ! grep \"packageManager\": package.json
+  private yarnV2OrNewer() {
+    def status = steps.sh label: "Determine if is yarn v1", script: '''
+                grep \"packageManager\": package.json
           ''', returnStatus: true
     return status
   }
 
   def yarn(task) {
-    if (!steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
-      if (!isYarnV1()) {
-        runYarn("install")
-      } else {
-        runYarn("--mutex network install --frozen-lockfile")
-      }
-      steps.sh("touch ${INSTALL_CHECK_FILE}")
-    }
-    runYarn(task)
+      boolean yarnV2OrNewer = isYarnV2OrNewer()
+          if (yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE)) {
+              steps.sh """
+                  corepack enable
+                  touch ${INSTALL_CHECK_FILE}
+              """
+          } else if (!yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
+              runYarn("--mutex network install --frozen-lockfile")
+                  steps.sh("touch ${INSTALL_CHECK_FILE}")
+          }
+      runYarn(task)
   }
 
   @Override
