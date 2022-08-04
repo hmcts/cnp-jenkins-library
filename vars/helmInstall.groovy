@@ -159,7 +159,8 @@ def call(DockerImage dockerImage, Map params) {
     onPR {
       if (subscription != 'sandbox') {
         addGithubLabels(product)
-        sh "flux get image repository ${env.CHART_NAME}"
+        // sh "flux get image repository ${env.CHART_NAME}"
+        sh "flux get kustomization"
       }
     }
 
