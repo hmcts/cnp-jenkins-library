@@ -51,5 +51,5 @@ def call(params) {
       azJenkins 'account show'
     }
     // }
-  }
+  // }
 }
