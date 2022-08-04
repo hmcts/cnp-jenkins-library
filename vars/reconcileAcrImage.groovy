@@ -49,6 +49,7 @@ def call(params) {
       def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
       azJenkins 'login --identity'
       azJenkins 'account show'
+      sh "flux get kustomization"
     }
     // }
   // }
