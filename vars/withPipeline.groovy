@@ -131,7 +131,6 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
-            subscription: "jenkins",
             namespace: "flux-system",
             resourceGroup: "ss-ptl-00-rg",
             aksSubscription: "DTS-SHAREDSERVICESPTL",
