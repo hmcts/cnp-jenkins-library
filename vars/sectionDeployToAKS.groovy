@@ -43,7 +43,7 @@ def call(params) {
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
     onPR {
       acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
-      steps.sh(['script': 'ls /usr/local/bin', 'returnStatus': true])
+      acr.reconcile(dockerImage)
     }
   }
 
