@@ -41,10 +41,8 @@ def call(params) {
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent(stageName, product) {  
-    withSubscription(subscription) {
-      def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
-      kubectl.login()
-      sh "flux get kustomization"
-    }
+    def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
+    kubectl.login()
+    sh "flux get kustomization"
   }
 }
