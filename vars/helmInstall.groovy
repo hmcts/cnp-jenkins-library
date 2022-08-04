@@ -40,7 +40,7 @@ def call(DockerImage dockerImage, Map params) {
     "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
     "INGRESS_IP=${ingressIP}",
-    "CHART_NAME=${chartName}"
+    "CHART_NAME=${product}-${component}"
   ]
 
   withEnv(templateEnvVars) {
