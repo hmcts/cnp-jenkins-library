@@ -181,7 +181,7 @@ def call(DockerImage dockerImage, Map params) {
       // call flux commands
       def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
       def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-      acr.reconcile(DockerImage)
+      acr.reconcile(DockerImage, dockerImage)
     }
   }
 }
