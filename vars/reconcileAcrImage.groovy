@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Kubectl
+import uk.gov.hmcts.contino.DockerImage
 
 /*
  * Retagging in ACR is used to promote an image to a
