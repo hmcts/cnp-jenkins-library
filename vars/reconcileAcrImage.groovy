@@ -40,7 +40,7 @@ def call(params) {
   def stageName = "Reconcile ACR Image"
   DockerImage.DeploymentStage deploymentStage = params.stage
 
-  stageWithAgent(stageName) {  
+  stageWithAgent(stageName, product) {  
     withSubscription(subscription) {
       def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
       kubectl.login()
