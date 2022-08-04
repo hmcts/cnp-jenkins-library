@@ -45,7 +45,7 @@ def call(params) {
       // def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
       // kubectl.login()
       // sh "flux get kustomization"
-      def call(String subscription, Closure body) {
+      // def call(String subscription, Closure body) {
       def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
       azJenkins 'login --identity'
       azJenkins 'account show'
