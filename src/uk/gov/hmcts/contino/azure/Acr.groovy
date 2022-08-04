@@ -100,14 +100,11 @@ class Acr extends Az {
   }
 
   def reconcile(DockerImage dockerImage) {
-    sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azlogin --identity"
-    sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azaccount show"
-    sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a"
     String repository = dockerImage.getRepositoryName().replace("/", "-")
     steps.echo "Flux will attempt to get info about image repository ${repository}"
     steps.sh(
       // script: "flux get image repository ${repository}",
-      script: "flux get kustomization",
+      script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azlogin --identity \ env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azaccount show \ env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a \ flux get kustomization",
       returnStdout: true
     )
   }
