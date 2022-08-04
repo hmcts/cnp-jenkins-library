@@ -41,16 +41,10 @@ def call(params) {
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent(stageName, product) {  
-    // withSubscription(subscription) {
-      // def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
-      // kubectl.login()
-      // sh "flux get kustomization"
-      // def call(String subscription, Closure body) {
-      def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
-      azJenkins 'login --identity'
-      azJenkins 'account show'
+    withSubscription(subscription) {
+      def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
+      kubectl.login()
       sh "flux get kustomization"
     }
-    // }
-  // }
+  }
 }
