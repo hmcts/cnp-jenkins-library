@@ -127,17 +127,30 @@ def call(type, String product, String component, Closure body) {
             product: product,
           )
 
-          sectionDeployToAKS(
+          reconcileAcrImage(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
-            subscription: subscription.nonProdName,
-            aksSubscription: aksSubscriptions.preview,
-            environment: environment.previewName,
+            subscription: "DTS-SHAREDSERVICESPTL"
+            namespace: "flux-system",
+            resourceGroup: "ss-ptl-00-rg",
+            aksSubscription: "DTS-SHAREDSERVICESPTL",
+            environment: "ptl",
             product: product,
-            component: component,
-            pactBrokerUrl: environment.pactBrokerUrl
+            component: component
           )
+
+          // sectionDeployToAKS(
+          //   appPipelineConfig: pipelineConfig,
+          //   pipelineCallbacksRunner: callbacksRunner,
+          //   pipelineType: pipelineType,
+          //   subscription: subscription.nonProdName,
+          //   aksSubscription: aksSubscriptions.preview,
+          //   environment: environment.previewName,
+          //   product: product,
+          //   component: component,
+          //   pactBrokerUrl: environment.pactBrokerUrl
+          // )
 
         }
 
