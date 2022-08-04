@@ -39,7 +39,8 @@ def call(DockerImage dockerImage, Map params) {
     "SERVICE_NAME=${aksServiceName}",
     "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
-    "INGRESS_IP=${ingressIP}"
+    "INGRESS_IP=${ingressIP}",
+    "CHART_NAME=${chartName}"
   ]
 
   withEnv(templateEnvVars) {
@@ -158,7 +159,7 @@ def call(DockerImage dockerImage, Map params) {
     onPR {
       if (subscription != 'sandbox') {
         addGithubLabels(product)
-        echo "the repository is " ${chartName}
+        echo "the repository is ${env.CHART_NAME}"
       }
     }
 
