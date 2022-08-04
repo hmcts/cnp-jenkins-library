@@ -105,8 +105,8 @@ class Acr extends Az {
     steps.sh(
       // script: "flux get image repository ${repository}",
       script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azlogin --identity\n" +
-              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azaccount show\n"
-              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n"
+              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins azaccount show\n" +
+              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n" +
               "flux get kustomization",
       returnStdout: true
     )
