@@ -158,7 +158,7 @@ def call(DockerImage dockerImage, Map params) {
     onPR {
       if (subscription != 'sandbox') {
         addGithubLabels(product)
-        steps.sh(['script': 'echo the repository is ${product}-${component}', 'returnStatus': true])
+        echo "the repository is " ${chartName}
       }
     }
 
