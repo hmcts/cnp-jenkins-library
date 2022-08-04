@@ -42,7 +42,10 @@ def call(params) {
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent(stageName, product) {  
-    sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure az aks get-credentials --resource-group ${resourceGroup} --name ${clusterName} --subscription  ${aksSubscription} -a"
+    def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
+    azJenkins 'login --identity'
+    azJenkins 'account show'
+    azJenkins 'aks get-credentials --resource-group ${resourceGroup} --name ${clusterName} --subscription  ${aksSubscription} -a'
     sh "flux get kustomization"
   }
 }
