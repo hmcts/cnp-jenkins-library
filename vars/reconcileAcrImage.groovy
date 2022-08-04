@@ -41,7 +41,7 @@ def call(params) {
   def stageName = "Reconcile ACR Image"
   DockerImage.DeploymentStage deploymentStage = params.stage
 
-  stageWithAgent(stageName, product) {  
+  withAcrClient(subscription) {
     def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
     azJenkins 'login --identity'
     azJenkins 'account show'
