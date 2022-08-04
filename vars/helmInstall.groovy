@@ -178,7 +178,7 @@ def call(DockerImage dockerImage, Map params) {
 
     onPR {
       // call flux commands
-      acr.reconcile(DockerImage, imageName)
+      steps.sh(['script': 'flux get image repository toffee-frontend', 'returnStatus': true])
     }
   }
 }
