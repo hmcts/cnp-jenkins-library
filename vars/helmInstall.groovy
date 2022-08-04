@@ -178,7 +178,7 @@ def call(DockerImage dockerImage, Map params) {
 
     onPR {
       // call flux commands
-      acr.reconcile(DockerImage dockerImage)
+      acr.reconcile(DockerImage)
     }
   }
 }
