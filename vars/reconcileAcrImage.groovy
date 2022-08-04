@@ -42,8 +42,8 @@ def call(params) {
 
   stageWithAgent(stageName, product) {  
     withSubscription(subscription) {
-      def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
-      kubectl.login()
+      // def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
+      // kubectl.login()
       sh "flux get kustomization"
     }
   }
