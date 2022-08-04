@@ -111,31 +111,41 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
-    try {
-      steps.sh """
-        set +ex
-        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
-        . /opt/nvm/nvm.sh || true
-        nvm install
-        set -ex
+      boolean yarnV2OrNewer = isYarnV2OrNewer()
+      try {
+          steps.sh """
+            set +ex
+            export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
+            . /opt/nvm/nvm.sh || true
+            nvm install
+            set -ex
+          """
 
-        chmod +x yarn-audit-with-suppressions.sh
+          if (yarnV2OrNewer) {
+              steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnV2OrNewer-audit-with-suppressions.sh'))
+          } else {
+              steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+          }
 
-        ./yarn-audit-with-suppressions.sh
-    """
-    } finally {
-      String issues = steps.readFile('yarn-audit-issues-result')
-      String knownIssues = null
-      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
-        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+          steps.sh """
+            chmod +x yarn-audit-with-suppressions.sh
+            ./yarn-audit-with-suppressions.sh
+          """
+      } finally {
+            if (yarnV2OrNewer) {
+              steps.sh """
+              cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result
+              """
+            }
+            String issues = steps.readFile('yarn-audit-issues-result')
+            String knownIssues = null
+            if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+                knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+            }
+            def cveReport = prepareCVEReport(issues, knownIssues)
+            new CVEPublisher(steps)
+              .publishCVEReport('node', cveReport)
       }
-
-      def cveReport = prepareCVEReport(issues, knownIssues)
-
-      new CVEPublisher(steps)
-        .publishCVEReport('node', cveReport)
-    }
   }
 
   def prepareCVEReport(String issues, String knownIssues) {
@@ -248,7 +258,7 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
-  private yarnV2OrNewer() {
+  private isYarnV2OrNewer() {
     def status = steps.sh label: "Determine if is yarn v1", script: '''
                 grep \"packageManager\": package.json
           ''', returnStatus: true
@@ -259,7 +269,7 @@ EOF
       boolean yarnV2OrNewer = isYarnV2OrNewer()
           if (yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE)) {
               steps.sh """
-                  corepack enable
+                  sudo corepack enable
                   touch ${INSTALL_CHECK_FILE}
               """
           } else if (!yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
