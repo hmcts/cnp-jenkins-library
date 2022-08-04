@@ -46,6 +46,6 @@ def call(params) {
     azJenkins 'login --identity'
     azJenkins 'account show'
     azJenkins "aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a"
-    sh "flux get kustomization"
+    acr.reconcile(DockerImage dockerImage)
   }
 }

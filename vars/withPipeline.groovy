@@ -131,12 +131,10 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
-            subscription: "stg",
+            subscription: subscription.nonProdName,
             clusterName: "ss-ptl-00-aks",
-            namespace: "flux-system",
             resourceGroup: "ss-ptl-00-rg",
             aksSubscription: "DTS-SHAREDSERVICESPTL",
-            environment: "ptl",
             product: product,
             component: component
           )
