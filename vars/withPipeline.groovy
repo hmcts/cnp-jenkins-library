@@ -131,7 +131,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             pipelineType: pipelineType,
-            // subscription: "ptl",
+            subscription: "stg",
             clusterName: "ss-ptl-00-aks",
             namespace: "flux-system",
             resourceGroup: "ss-ptl-00-rg",
