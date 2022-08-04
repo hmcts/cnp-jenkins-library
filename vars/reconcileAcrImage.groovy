@@ -39,6 +39,7 @@ def call(params) {
   def product = params.product
   def component = params.component
   def stageName = "Reconcile ACR Image"
+  def imageRegistry
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   withAcrClient(subscription) {
@@ -46,6 +47,8 @@ def call(params) {
     azJenkins 'login --identity'
     azJenkins 'account show'
     azJenkins "aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a"
+    imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     acr.reconcile(DockerImage dockerImage)
   }
 }
