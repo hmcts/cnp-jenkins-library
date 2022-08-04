@@ -45,7 +45,7 @@ def call(params) {
     def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
     azJenkins 'login --identity'
     azJenkins 'account show'
-    azJenkins 'aks get-credentials --resource-group ${resourceGroup} --name ${clusterName} --subscription  ${aksSubscription} -a'
+    azJenkins "aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a"
     sh "flux get kustomization"
   }
 }
