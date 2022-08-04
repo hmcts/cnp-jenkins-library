@@ -32,6 +32,7 @@ def call(params) {
   PipelineType pipelineType = params.pipelineType
 
   def subscription = params.subscription
+  def clusterName = params.clusterName
   def namespace = params.namespace
   def resourceGroup = params.resourceGroup
   def aksSubscription = params.aksSubscription
@@ -41,7 +42,7 @@ def call(params) {
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent(stageName, product) {  
-    def kubectl = new Kubectl(this, subscription, namespace, aksSubscription)
+    def kubectl = new Kubectl(this, resourceGroup, clusterName, aksSubscription)
     kubectl.login()
     sh "flux get kustomization"
   }
