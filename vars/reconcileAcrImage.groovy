@@ -42,8 +42,7 @@ def call(params) {
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent(stageName, product) {  
-    def kubectl = new Kubectl(this, resourceGroup, clusterName, aksSubscription)
-    kubectl.login()
+    sh "env AZURE_CONFIG_DIR=/opt/jenkins/.azure az aks get-credentials --resource-group ${resourceGroup} --name ${clusterName} --subscription  ${aksSubscription} -a"
     sh "flux get kustomization"
   }
 }
