@@ -141,6 +141,7 @@ def call(params) {
     onPR {
       GithubAPI gitHubAPI = new GithubAPI(this)
       def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+      acr.reconcile(dockerImage)
       if (testLabels.contains('enable_fortify_scan')) {
         branches["Fortify scan"] = {
           withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
@@ -157,7 +158,6 @@ def call(params) {
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         parallel branches
-        acr.reconcile(dockerImage)
       }
     }
 
