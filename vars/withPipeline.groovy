@@ -127,16 +127,16 @@ def call(type, String product, String component, Closure body) {
             product: product,
           )
 
-          // sectionPromoteBuildToStage(
-          //   appPipelineConfig: pipelineConfig,
-          //   pipelineCallbacksRunner: callbacksRunner,
-          //   pipelineType: pipelineType,
-          //   subscription: subscription.nonProdName,
-          //   product: product,
-          //   component: component,
-          //   stage: DockerImage.DeploymentStage.PROD,
-          //   environment: environment.nonProdName
-          // )
+          sectionPromoteBuildToStage(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component,
+            stage: DockerImage.DeploymentStage.PROD,
+            environment: environment.nonProdName
+          )
 
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
