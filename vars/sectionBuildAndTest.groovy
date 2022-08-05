@@ -157,6 +157,7 @@ def call(params) {
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         parallel branches
+        acr.reconcile(dockerImage)
       }
     }
 
