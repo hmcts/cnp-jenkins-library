@@ -8,6 +8,8 @@ class Acr extends Az {
   def registryName
   def resourceGroup
   def registrySubscription
+  def subscription = params.subscription
+  def namespace = env.TEAM_NAMESPACE
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -103,7 +105,7 @@ class Acr extends Az {
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
     steps.echo "Flux will attempt to get info about image repository ${repository}"
-    def kubectl = new Kubectl()
+    def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
     steps.sh (
       script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity\n" +
               "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az account show\n",
