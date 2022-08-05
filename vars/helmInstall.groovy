@@ -8,7 +8,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
 import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
-import uk.gov.hmcts.contino.azure.Acr
 
 def call(DockerImage dockerImage, Map params) {
 
@@ -39,7 +38,7 @@ def call(DockerImage dockerImage, Map params) {
     "SERVICE_NAME=${aksServiceName}",
     "IMAGE_NAME=${imageName}",
     "SERVICE_FQDN=${serviceFqdn}",
-    "INGRESS_IP=${ingressIP}",
+    "INGRESS_IP=${ingressIP}"
   ]
 
   withEnv(templateEnvVars) {
@@ -158,8 +157,6 @@ def call(DockerImage dockerImage, Map params) {
     onPR {
       if (subscription != 'sandbox') {
         addGithubLabels(product)
-        // sh "flux get image repository ${env.CHART_NAME}"
-        // sh "flux get kustomization"
       }
     }
 
