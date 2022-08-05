@@ -102,12 +102,15 @@ class Acr extends Az {
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
     steps.echo "Flux will attempt to get info about image repository ${repository}"
-    String KUSTOMIZATION_OUTPUT = steps.sh (
-      // script: "flux get image repository ${repository}",
+    steps.sh (
       script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity\n" +
               "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az account show\n" +
-              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n" +
-              "flux get kustomization",
+              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n",
+      returnStdout: true
+    ).trim()
+    String KUSTOMIZATION_OUTPUT = steps.sh (
+      // script: "flux get image repository ${repository}",
+      script: "flux get kustomization",
       returnStdout: true
     ).trim()
     steps.echo "Here is the output ${KUSTOMIZATION_OUTPUT}"
