@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino.azure
 
 import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.Kubectl
 
 class Acr extends Az {
 
@@ -102,12 +103,14 @@ class Acr extends Az {
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
     steps.echo "Flux will attempt to get info about image repository ${repository}"
+    def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
     steps.sh (
       script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity\n" +
-              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az account show\n" +
-              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n",
+              "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az account show\n",
+              // "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n",
       returnStdout: true
     ).trim()
+    kubectl.login(subscription == "jenkins", resourceGroup == "ss-ptl-00-rg", clusterName == "ss-ptl-00-aks", aksSubscription == "DTS-SHAREDSERVICESPTL")
     String FLUX_OUTPUT = steps.sh (
       script: "flux get image repository ${repository}",
       // script: "flux get kustomization",
