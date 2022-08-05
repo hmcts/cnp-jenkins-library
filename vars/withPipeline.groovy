@@ -127,18 +127,6 @@ def call(type, String product, String component, Closure body) {
             product: product,
           )
 
-          // reconcileAcrImage(
-          //   appPipelineConfig: pipelineConfig,
-          //   pipelineCallbacksRunner: callbacksRunner,
-          //   pipelineType: pipelineType,
-          //   subscription: subscription.nonProdName,
-          //   clusterName: "ss-ptl-00-aks",
-          //   resourceGroup: "ss-ptl-00-rg",
-          //   aksSubscription: "DTS-SHAREDSERVICESPTL",
-          //   product: product,
-          //   component: component
-          // )
-
           // sectionDeployToAKS(
           //   appPipelineConfig: pipelineConfig,
           //   pipelineCallbacksRunner: callbacksRunner,
