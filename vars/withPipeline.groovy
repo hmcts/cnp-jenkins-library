@@ -134,8 +134,8 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.nonProdName,
             product: product,
             component: component,
-            stage: DockerImage.DeploymentStage.PROD,
-            environment: environment.nonProdName
+            stage: DockerImage.DeploymentStage.PREVIEW,
+            environment: environment.previewName
           )
 
           sectionDeployToAKS(
