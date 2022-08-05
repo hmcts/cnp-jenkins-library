@@ -108,12 +108,12 @@ class Acr extends Az {
               "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a\n",
       returnStdout: true
     ).trim()
-    String KUSTOMIZATION_OUTPUT = steps.sh (
-      // script: "flux get image repository ${repository}",
-      script: "flux get kustomization",
+    String FLUX_OUTPUT = steps.sh (
+      script: "flux get image repository ${repository}",
+      // script: "flux get kustomization",
       returnStdout: true
     ).trim()
-    steps.echo "${KUSTOMIZATION_OUTPUT}"
+    steps.echo "${FLUX_OUTPUT}"
   }
 
   /**
