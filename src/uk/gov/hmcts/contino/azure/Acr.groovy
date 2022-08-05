@@ -1,12 +1,14 @@
 package uk.gov.hmcts.contino.azure
 
 import uk.gov.hmcts.contino.DockerImage
+import uk.gov.hmcts.contino.Kubectl
 
 class Acr extends Az {
 
   def registryName
   def resourceGroup
   def registrySubscription
+  def namespace = env.TEAM_NAMESPACE
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -101,6 +103,8 @@ class Acr extends Az {
 
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
+    def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
+    kubectl.loginJenkins()
     steps.sh (
       script: "kubectl config get-contexts",
     )
@@ -122,7 +126,7 @@ class Acr extends Az {
     //   script: "flux get image repository ${repository}",
     //   returnStdout: true
     // ).trim()
-    steps.echo FLUX_OUTPUT
+    // steps.echo FLUX_OUTPUT
   }
 
   /**
