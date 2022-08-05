@@ -108,10 +108,10 @@ def call(params) {
             def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
             if (fileExists(acbTemplateFilePath)) {
               acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-              acr.reconcile(dockerImage)
+              // acr.reconcile(dockerImage)
             } else {
               acr.build(dockerImage, buildArgs)
-              acr.reconcile(dockerImage)
+              // acr.reconcile(dockerImage)
             }
           }
         }

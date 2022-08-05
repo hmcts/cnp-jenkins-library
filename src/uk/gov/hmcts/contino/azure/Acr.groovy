@@ -101,23 +101,27 @@ class Acr extends Az {
 
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
-    steps.echo "Flux will attempt to get info about image repository ${repository}"
     steps.sh (
-      script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity",
-      returnStdout: true
-    ).trim()
-    steps.sh (
-      script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az account show",
-      returnStdout: true
-    ).trim()
-    steps.sh (
-      script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a",
-      returnStdout: true
-    ).trim()
-    String FLUX_OUTPUT = steps.sh (
-      script: "flux reconcile image repository ${repository}",
-      returnStdout: true
-    ).trim()
+      script: "kubectl get context",
+    )
+    // steps.echo "Flux will attempt to get info about image repository ${repository}"
+    // steps.sh (
+    //   script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity",
+    //   returnStdout: true
+    // ).trim()
+    // steps.sh (
+    //   script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az account show",
+    //   returnStdout: true
+    // ).trim()
+    // steps.sh (
+    //   script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ss-ptl-00-rg --name ss-ptl-00-aks --subscription DTS-SHAREDSERVICESPTL -a",
+    //   returnStdout: true
+    // ).trim()
+    // String FLUX_OUTPUT = steps.sh (
+    //   // script: "flux reconcile image repository ${repository}",
+    //   script: "flux get image repository ${repository}",
+    //   returnStdout: true
+    // ).trim()
     steps.echo FLUX_OUTPUT
   }
 
