@@ -108,8 +108,10 @@ def call(params) {
             def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
             if (fileExists(acbTemplateFilePath)) {
               acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+              acr.reconcile(dockerImage)
             } else {
               acr.build(dockerImage, buildArgs)
+              acr.reconcile(dockerImage)
             }
           }
         }
@@ -141,7 +143,6 @@ def call(params) {
     onPR {
       GithubAPI gitHubAPI = new GithubAPI(this)
       def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-      acr.reconcile(dockerImage)
       if (testLabels.contains('enable_fortify_scan')) {
         branches["Fortify scan"] = {
           withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
