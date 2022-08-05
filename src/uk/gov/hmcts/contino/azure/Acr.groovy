@@ -115,8 +115,7 @@ class Acr extends Az {
       returnStdout: true
     ).trim()
     String FLUX_OUTPUT = steps.sh (
-      script: "flux get image repository ${repository}",
-      // script: "flux get kustomization",
+      script: "flux reconcile image repository ${repository}",
       returnStdout: true
     ).trim()
     steps.echo FLUX_OUTPUT
