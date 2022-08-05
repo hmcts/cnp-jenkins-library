@@ -119,7 +119,7 @@ class Acr extends Az {
       // script: "flux get kustomization",
       returnStdout: true
     ).trim()
-    steps.echo "${FLUX_OUTPUT}"
+    steps.echo FLUX_OUTPUT
   }
 
   /**
