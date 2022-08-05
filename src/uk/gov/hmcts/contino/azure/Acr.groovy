@@ -9,6 +9,8 @@ class Acr extends Az {
   def resourceGroup
   def registrySubscription
   def namespace
+  def aksSubscription
+  def clusterName
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
