@@ -102,7 +102,7 @@ class Acr extends Az {
   def reconcile(DockerImage dockerImage) {
     String repository = dockerImage.getRepositoryName().replace("/", "-")
     steps.sh (
-      script: "kubectl get context",
+      script: "kubectl config get-contexts",
     )
     // steps.echo "Flux will attempt to get info about image repository ${repository}"
     // steps.sh (
