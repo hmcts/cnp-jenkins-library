@@ -9,6 +9,7 @@ class Acr extends Az {
   def resourceGroup
   def registrySubscription
   def namespace = env.TEAM_NAMESPACE
+  def environment = params.environment
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
