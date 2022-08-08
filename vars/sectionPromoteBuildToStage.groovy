@@ -33,9 +33,6 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
-  def resourceGroup = steps.env.PTL_AKS_RESOURCE_GROUP
-  def clusterName = steps.env.PTL_AKS_CLUSTER_NAME
-  def aksSubscription = steps.env.AKS_PTL_SUBSCRIPTION_NAME
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent("${deploymentStage.label} build promotion", product) {
@@ -47,6 +44,9 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
+          def resourceGroup = steps.env.PTL_AKS_RESOURCE_GROUP
+          def clusterName = steps.env.PTL_AKS_CLUSTER_NAME
+          def aksSubscription = steps.env.AKS_PTL_SUBSCRIPTION_NAME
           reconcileFluxImageRepository product: product, component: component, resourceGroup: resourceGroup, clusterName: clusterName, aksSubscription: aksSubscription
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
