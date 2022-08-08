@@ -1,15 +1,13 @@
 package uk.gov.hmcts.contino.azure
 
 import uk.gov.hmcts.contino.DockerImage
-import uk.gov.hmcts.contino.Kubectl
+// import uk.gov.hmcts.contino.Kubectl
 
 class Acr extends Az {
 
   def registryName
   def resourceGroup
   def registrySubscription
-  def namespace = env.TEAM_NAMESPACE
-  def environment = params.environment
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
