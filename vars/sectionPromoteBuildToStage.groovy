@@ -33,7 +33,6 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
-  def environment = params.environment
   DockerImage.DeploymentStage deploymentStage = params.stage
 
   stageWithAgent("${deploymentStage.label} build promotion", product) {
@@ -46,7 +45,6 @@ def call(params) {
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
           reconcileFluxImageRepository product: product, component: component
-          }
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
             if (projectBranch.isMaster() && fileExists('build.gradle')) {
