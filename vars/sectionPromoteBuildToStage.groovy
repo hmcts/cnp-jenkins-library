@@ -45,10 +45,7 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
-          withAksClient(subscription, environment, product) {
-            params.environment = "ptl"
-            log.info("Using AKS environment: ${params.environment}")
-            reconcileFluxImageRepository product: product, component: component
+          reconcileFluxImageRepository product: product, component: component
           }
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
