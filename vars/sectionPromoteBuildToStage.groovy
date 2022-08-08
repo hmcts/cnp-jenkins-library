@@ -5,7 +5,6 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
-import uk.gov.hmcts.contino.Environment
 
 /*
  * Retagging in ACR is used to promote an image to a
@@ -45,7 +44,10 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
-          reconcileFluxImageRepository product: product, component: component, resourceGroup: env.PTL_AKS_RESOURCE_GROUP, clusterName: env.PTL_AKS_CLUSTER_NAME, aksSubscription: env.AKS_PTL_SUBSCRIPTION_NAME
+          def resourceGroup = env.PTL_AKS_RESOURCE_GROUP
+          def clusterName = env.PTL_AKS_CLUSTER_NAME
+          def aksSubscription = env.AKS_PTL_SUBSCRIPTION_NAME
+          reconcileFluxImageRepository product: product, component: component, resourceGroup: resourceGroup, clusterName: clusterName, aksSubscription: aksSubscription
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
             if (projectBranch.isMaster() && fileExists('build.gradle')) {
