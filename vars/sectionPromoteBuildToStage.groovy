@@ -44,10 +44,13 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
-          acr.reconcile(dockerImage)
+          withAksClient(subscription, environment, product) {
+            params.environment = "ptl"
+            log.info("Using AKS environment: ${params.environment}")
+            reconcileFluxImageRepository product: product, component: component
+          }
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
-            acr.reconcile(dockerImage)
             if (projectBranch.isMaster() && fileExists('build.gradle')) {
               def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
               acr.retagForStage(deploymentStage, dockerImageTest)

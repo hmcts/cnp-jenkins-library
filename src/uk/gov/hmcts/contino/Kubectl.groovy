@@ -12,8 +12,6 @@ class Kubectl {
   def resourceGroup
   def clusterName
   def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
-  def businessArea
-  def jenkinsSubscription
 
   Kubectl(steps, subscription, namespace) {
     this.steps = steps
@@ -22,8 +20,6 @@ class Kubectl {
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
     this.aksSubscription = new AKSSubscriptions(steps).preview.name
-    this.businessArea = steps.env.BUSINESS_AREA_TAG ?: 'sds'
-    this.jenkinsSubscription = steps.env.JENKINS_SUBSCRIPTION_NAME
   }
 
   Kubectl(steps, subscription, namespace, aksSubscription) {
@@ -33,8 +29,6 @@ class Kubectl {
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
     this.aksSubscription = aksSubscription
-    this.businessArea = steps.env.BUSINESS_AREA_TAG ?: 'sds'
-    this.jenkinsSubscription = JENKINS_SUBSCRIPTION_NAME
   }
 
   // ignore return status so doesn't fail if namespace already exists
@@ -99,10 +93,6 @@ class Kubectl {
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a ", returnStdout: true)
-  }
-
-  def loginJenkins() {
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ${this.businessArea}-ptl-00-rg --name ${this.businessArea}-ptl-00-aks --subscription  ${this.jenkinsSubscription} -a ", returnStdout: true)
   }
 
   private String getILBIP(String serviceName, String namespace) {
