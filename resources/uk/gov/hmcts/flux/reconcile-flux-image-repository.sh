@@ -7,7 +7,7 @@ echo "Checking for flux image repository"
 
 env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity
 
-az aks get-credentials --resource-group ${3} --name ${4} --subscription ${5} -a 
+env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group ${3} --name ${4} --subscription ${5} -a 
 
 kubectl config get-contexts
 
