@@ -1,9 +1,11 @@
 #!/bin/bash
 set -x
 
-CHART_DIRECTORY=${1}-${2}
+CHART_DIRECTORY=${product}-${component}
 
 echo "Checking for flux image repository"
+
+az aks get-credentials --resource-group ${resourceGroup} --name ${clusterName} --subscription  ${aksSubscription} -a 
 
 kubectl config get-contexts
 
