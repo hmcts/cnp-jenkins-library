@@ -16,4 +16,5 @@ if [[ -z $GET_FLUX_IMAGE_REPOSITORY ]]; then
     echo "No image repository found called ${CHART_DIRECTORY}. Are you sure this is the correct image repository name?"
     else
     echo "flux will now reconcile the image repository ${CHART_DIRECTORY}"
+    flux reconcile image repository ${CHART_DIRECTORY}
 fi
