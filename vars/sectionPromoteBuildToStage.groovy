@@ -47,7 +47,9 @@ def call(params) {
           def resourceGroup = env.PTL_AKS_RESOURCE_GROUP
           def clusterName = env.PTL_AKS_CLUSTER_NAME
           def aksSubscription = env.AKS_PTL_SUBSCRIPTION_NAME
-          reconcileFluxImageRepository product: product, component: component, resourceGroup: resourceGroup, clusterName: clusterName, aksSubscription: aksSubscription
+          if (subscription != 'sandbox') {
+            reconcileFluxImageRepository product: product, component: component, resourceGroup: resourceGroup, clusterName: clusterName, aksSubscription: aksSubscription
+          }
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
             if (projectBranch.isMaster() && fileExists('build.gradle')) {
