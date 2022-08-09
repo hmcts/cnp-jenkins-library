@@ -3,10 +3,6 @@ set -x
 
 CHART_DIRECTORY=${1}-${2}
 
-if [[ $CHART_DIRECTORY = "plum-frontend" ]]; then
-    CHART_DIRECTORY="cnp-plum-frontend"
-fi
-
 echo "Checking for flux image repository"
 
 GET_FLUX_IMAGE_REPOSITORY=$(flux get image repository ${CHART_DIRECTORY})
