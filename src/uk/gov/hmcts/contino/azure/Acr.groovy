@@ -1,7 +1,6 @@
 package uk.gov.hmcts.contino.azure
 
 import uk.gov.hmcts.contino.DockerImage
-// import uk.gov.hmcts.contino.Kubectl
 
 class Acr extends Az {
 

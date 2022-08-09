@@ -5,9 +5,6 @@ def call(Map<String, String> params) {
 
   def product = params.product
   def component = params.component
-  def resourceGroup = env.PTL_AKS_RESOURCE_GROUP
-  def clusterName = env.PTL_AKS_CLUSTER_NAME
-  def aksSubscription = env.AKS_PTL_SUBSCRIPTION_NAME
 
   writeFile file: 'reconcile-flux-image-repository.sh', text: libraryResource('uk/gov/hmcts/flux/reconcile-flux-image-repository.sh')
 
@@ -15,7 +12,7 @@ def call(Map<String, String> params) {
     sh """
     export AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins
     az login --identity > /dev/null
-    az aks get-credentials --resource-group $resourceGroup --name $clusterName --subscription $aksSubscription -a > /dev/null 
+    az aks get-credentials --resource-group $PTL_AKS_RESOURCE_GROUP --name $PTL_AKS_CLUSTER_NAME --subscription $AKS_PTL_SUBSCRIPTION_NAME -a > /dev/null 
     chmod +x reconcile-flux-image-repository.sh
     ./reconcile-flux-image-repository.sh $product $component
     """
