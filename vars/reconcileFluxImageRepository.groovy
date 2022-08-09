@@ -13,8 +13,10 @@ def call(Map<String, String> params) {
 
   try {
     sh """
+    env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az login --identity > /dev/null
+    env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az aks get-credentials --resource-group $resourceGroup --name $clusterName --subscription $aksSubscription -a > /dev/null 
     chmod +x reconcile-flux-image-repository.sh
-    ./reconcile-flux-image-repository.sh $product $component $resourceGroup $clusterName $aksSubscription
+    ./reconcile-flux-image-repository.sh $product $component
     """
   } finally {
     sh 'rm -f reconcile-flux-image-repository.sh'
