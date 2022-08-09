@@ -44,9 +44,6 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
-          def resourceGroup = env.PTL_AKS_RESOURCE_GROUP
-          def clusterName = env.PTL_AKS_CLUSTER_NAME
-          def aksSubscription = env.AKS_PTL_SUBSCRIPTION_NAME
           if (subscription != 'sandbox') {
             reconcileFluxImageRepository product: product, component: component, resourceGroup: resourceGroup, clusterName: clusterName, aksSubscription: aksSubscription
           }
