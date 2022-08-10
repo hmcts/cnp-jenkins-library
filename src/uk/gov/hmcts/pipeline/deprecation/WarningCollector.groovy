@@ -20,7 +20,7 @@ class WarningCollector implements Serializable {
   static String getMessageByDays(LocalDate deprecationDate) {
     LocalDate currentDate = LocalDate.now()
     LocalDate nextDay = currentDate.plusDays(1)
-    LocalDate nextYear = now.plusYears(1)
+    LocalDate nextYear = currentDate.plusYears(1)
 
     String message =  deprecationDate.format(DATE_FORMATTER)
     if (currentDate == deprecationDate) {
