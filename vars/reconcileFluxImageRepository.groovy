@@ -8,6 +8,7 @@ def call(Map<String, String> params) {
   def product = params.product
   def component = params.component
 
+  LocalDate currentDate = LocalDate.now()
   LocalDate nextYear = currentDate.plusYears(1)
 
   writeFile file: 'reconcile-flux-image-repository.sh', text: libraryResource('uk/gov/hmcts/flux/reconcile-flux-image-repository.sh')
