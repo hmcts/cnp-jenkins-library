@@ -119,22 +119,30 @@ class YarnBuilder extends AbstractBuilder {
             . /opt/nvm/nvm.sh || true
             nvm install
             set -ex
+            wget -O /tmp/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x /tmp/jq
           """
 
           if (yarnV2OrNewer) {
+              corepackEnable()
               steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnV2OrNewer-audit-with-suppressions.sh'))
           } else {
               steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
           }
 
           steps.sh """
+            if ${yarnV2OrNewer}; then
+              export PATH=\$HOME/.local/bin:\$PATH
+            fi
             chmod +x yarn-audit-with-suppressions.sh
             ./yarn-audit-with-suppressions.sh
           """
       } finally {
             if (yarnV2OrNewer) {
               steps.sh """
-              cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result
+              cat yarn-audit-result | /tmp/jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+              cat yarn-audit-result | /tmp/jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+              cat  yarn-audit-issues-result-summary  yarn-audit-issues-advisories > yarn-audit-issues-result
               """
             }
             String issues = steps.readFile('yarn-audit-issues-result')
@@ -233,10 +241,11 @@ EOF
   }
 
   def runConsumerCanIDeploy() {
-    steps.sh("yarn test:can-i-deploy:consumer")
+    yarn("test:can-i-deploy:consumer")
   }
 
   private runYarn(task){
+    boolean yarnV2OrNewer = isYarnV2OrNewer()
     if (steps.fileExists(NVMRC)) {
       steps.sh """
         set +ex
@@ -245,15 +254,29 @@ EOF
         nvm install
         set -ex
 
+        if ${yarnV2OrNewer}; then
+          export PATH=\$HOME/.local/bin:\$PATH
+        fi
         yarn ${task}
       """
     } else {
-      steps.sh("yarn ${task}")
+      steps.sh("""
+        if ${yarnV2OrNewer}; then
+          export PATH=\$HOME/.local/bin:\$PATH
+        fi
+        yarn ${task}
+      """)
     }
   }
 
   private runYarnQuiet(task) {
-    def status = steps.sh(script: "yarn ${task} 1> /dev/null 2> /dev/null", returnStatus: true)
+    boolean yarnV2OrNewer = isYarnV2OrNewer()
+    def status = steps.sh(script: """
+        if ${yarnV2OrNewer}; then
+          export PATH=\$HOME/.local/bin:\$PATH
+        fi
+        yarn ${task} 1> /dev/null 2> /dev/null
+    """, returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
   }
@@ -265,16 +288,24 @@ EOF
     return status
   }
 
+  private corepackEnable() {
+    def status = steps.sh label: "corepack enable", script: '''
+                mkdir -p \$HOME/.local/bin
+                corepack enable  --install-directory \$HOME/.local/bin
+          ''', returnStatus: true
+    return status
+  }
+
   def yarn(task) {
       boolean yarnV2OrNewer = isYarnV2OrNewer()
           if (yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE)) {
+              corepackEnable()
               steps.sh """
-                  sudo corepack enable
                   touch ${INSTALL_CHECK_FILE}
               """
           } else if (!yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
               runYarn("--mutex network install --frozen-lockfile")
-                  steps.sh("touch ${INSTALL_CHECK_FILE}")
+              steps.sh("touch ${INSTALL_CHECK_FILE}")
           }
       runYarn(task)
   }

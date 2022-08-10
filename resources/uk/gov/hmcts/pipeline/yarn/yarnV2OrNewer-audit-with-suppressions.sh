@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # This is a wrapper script for yarn audit that allows suppressing
 # vulnerabilities without a fix
 
@@ -14,17 +13,17 @@ set -e
 if [ "$result" != 0 ]; then
   if [ -f yarn-audit-known-issues ]; then
     set +e
-    cat yarn-audit-result | jq -r '.advisories | keys | join("\n")' | sort -nr > yarn-audit-advisories
+    cat yarn-audit-result | /tmp/jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' > yarn-audit-issues
     set -e
 
-    if diff -q yarn-audit-known-advisories yarn-audit-advisories > /dev/null 2>&1; then
-      rm -f yarn-audit-advisories
+    if diff -q yarn-audit-known-issues yarn-audit-issues > /dev/null 2>&1; then
+      rm -f yarn-audit-issues
       echo
       echo Ignorning known vulnerabilities
       exit 0
     fi
   fi
-  cat <<EOF
+  cat <<'EOF'
     Security vulnerabilities were found that were not ignored
 
     Check to see if these vulnerabilities apply to production
@@ -33,12 +32,12 @@ if [ "$result" != 0 ]; then
 
     To ignore these vulnerabilities, run:
 
-    `yarn npm audit --environment production --json | jq -r '.advisories | keys | join("\n")' | sort -nr > yarn-audit-known-advisories`
+    `yarn npm audit --environment production --json | jq -r '.advisories | keys | join("\n")' | sort -nr > yarn-audit-known-issues`
 
     and commit the yarn-audit-known-issues file
 EOF
 
-  rm -f yarn-audit-advisories
+  rm -f yarn-audit-issues
 
   exit "$result"
 fi
