@@ -22,7 +22,7 @@ def call(Map<String, String> params) {
   }
 
   if (fileExists('no-image-repo')) {
-    WarningCollector.addPipelineWarning("Flux could not reconcile the image repository caled $product-$component. Please check that the name of the image repository is correct.")
+    WarningCollector.addPipelineWarning("image_repo_not_found", "Flux could not reconcile the image repository called $product-$component. Please check that the name of the image repository is correct.")
     sh "rm -f no-image-repo"
   }
 
