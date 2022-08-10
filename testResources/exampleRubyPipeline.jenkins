@@ -1,0 +1,11 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "product"
+
+def app = "app"
+
+withPipeline('ruby', product, app) {
+
+}

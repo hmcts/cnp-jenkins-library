@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 abstract class AbstractBuilder implements Builder, Serializable {
 
-  def steps
+  public steps
   def gatling
   def securitytest
 

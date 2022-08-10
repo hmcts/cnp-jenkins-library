@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
@@ -20,7 +21,8 @@ def call(type, String product, String component, String environment, String subs
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component)
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, deploymentProduct, component)
   ]
 
   PipelineType pipelineType
