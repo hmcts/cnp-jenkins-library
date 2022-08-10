@@ -1,5 +1,6 @@
 import java.time.LocalDate
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(Map<String, String> params) {
 
@@ -18,6 +19,11 @@ def call(Map<String, String> params) {
     """
   } finally {
     sh 'rm -f reconcile-flux-image-repository.sh'
+  }
+
+  if (fileExists('no-image-repo')) {
+    WarningCollector.addPipelineWarning("Flux could not reconcile the image repository caled $product-$component. Please check that the name of the image repository is correct.")
+    sh "rm -f no-image-repo"
   }
 
 }
