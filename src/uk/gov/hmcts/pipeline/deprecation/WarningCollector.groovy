@@ -20,12 +20,15 @@ class WarningCollector implements Serializable {
   static String getMessageByDays(LocalDate deprecationDate) {
     LocalDate currentDate = LocalDate.now()
     LocalDate nextDay = currentDate.plusDays(1)
+    LocalDate nextYear = currentDate.plusYears(1)
 
     String message =  deprecationDate.format(DATE_FORMATTER)
     if (currentDate == deprecationDate) {
       return message.concat(" ( today )")
     } else if (nextDay == deprecationDate){
       return message.concat(" ( tomorrow )")
+    } else if (nextYear == deprecationDate){
+      return message
     }else{
       def daysBetween = ChronoUnit.DAYS.between(currentDate, deprecationDate)
       return message.concat(" ( in ${daysBetween} days )")
