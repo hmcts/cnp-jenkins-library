@@ -44,7 +44,7 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
-          if (subscription != 'sbox') {
+          if (subscription != 'sandbox' && subscription != 'sbox') {
             reconcileFluxImageRepository product: product, component: component
           }
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
