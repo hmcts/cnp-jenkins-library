@@ -103,7 +103,7 @@ class GradleBuilderTest extends Specification {
     1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
   }
 
-  def "securityCheck calls 'gradle dependencyCheckAggregate"() {
+  def "securityCheck calls 'gradle dependencyCheckAggregate'"() {
     setup:
       def closure
       steps.withAzureKeyvault(_, { it.call() }) >> { closure = it }
