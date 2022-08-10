@@ -1,8 +1,7 @@
 #!/bin/bash
 set -x
 
-# CHART_DIRECTORY=${1}-${2}
-CHART_DIRECTORY="cnp-plum-frontend"
+CHART_DIRECTORY=${1}-${2}
 
 echo "Checking for flux image repository"
 
