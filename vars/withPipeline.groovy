@@ -3,7 +3,6 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
-import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.SpringBootPipelineType
@@ -25,8 +24,7 @@ def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component),
-    ruby: new RubyPipelineType(this, deploymentProduct, component)
+    angular: new AngularPipelineType(this, deploymentProduct, component)
   ]
 
   Subscription subscription = new Subscription(env)
@@ -127,6 +125,17 @@ def call(type, String product, String component, Closure body) {
             builder: pipelineType.builder,
             environment: environment.previewName,
             product: product,
+          )
+          
+          sectionPromoteBuildToStage(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component,
+            stage: DockerImage.DeploymentStage.PREVIEW,
+            environment: environment.previewName
           )
 
           sectionDeployToAKS(
