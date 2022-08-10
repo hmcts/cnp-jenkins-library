@@ -28,7 +28,7 @@ class WarningCollector implements Serializable {
     } else if (nextDay == deprecationDate){
       return message.concat(" ( tomorrow )")
     } else if (nextYear == deprecationDate){
-      return message.concat(" ( in one year )")
+      return message
     }else{
       def daysBetween = ChronoUnit.DAYS.between(currentDate, deprecationDate)
       return message.concat(" ( in ${daysBetween} days )")
