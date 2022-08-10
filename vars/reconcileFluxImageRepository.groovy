@@ -8,6 +8,8 @@ def call(Map<String, String> params) {
   def product = params.product
   def component = params.component
 
+  LocalDate nextYear = currentDate.plusYears(1)
+
   writeFile file: 'reconcile-flux-image-repository.sh', text: libraryResource('uk/gov/hmcts/flux/reconcile-flux-image-repository.sh')
 
   try {
@@ -23,7 +25,7 @@ def call(Map<String, String> params) {
   }
 
   if (fileExists('no-image-repo')) {
-    WarningCollector.addPipelineWarning("image_repo_not_found", "Flux could not reconcile the image repository called $product-$component. Please check that the name of the image repository is correct.", WarningCollector.getMessageByDays.nextYear)
+    WarningCollector.addPipelineWarning("image_repo_not_found", "Flux could not reconcile the image repository called $product-$component. Please check that the name of the image repository is correct.", nextYear)
     sh "rm -f no-image-repo"
   }
 
