@@ -12,11 +12,6 @@ abstract class AbstractBuilder implements Builder, Serializable {
     this.securitytest = new SecurityScan(this.steps)
   }
 
-  // some tests only issue relates to https://issues.jenkins.io/browse/JENKINS-47355
-  def getSteps() {
-    return steps
-  }
-
   @Override
   def performanceTest() {
     executeGatling()

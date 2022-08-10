@@ -11,9 +11,13 @@ class GradleBuilder extends AbstractBuilder {
 
   def product
 
+  // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
+  def localSteps
+
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
+    this.localSteps = steps
   }
 
   def build() {
@@ -26,20 +30,20 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def addInitScript() {
-    steps.writeFile(file: 'init.gradle', text: steps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
+    localSteps.writeFile(file: 'init.gradle', text: localSteps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
   }
 
   def test() {
     try {
       gradle("check")
     } finally {
-      steps.junit '**/test-results/test/*.xml'
-      steps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
+      localSteps.junit '**/test-results/test/*.xml'
+      localSteps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
     }
   }
 
   def sonarScan() {
-      String properties = SonarProperties.get(steps)
+      String properties = SonarProperties.get(localSteps)
 
       gradle("--info ${properties} sonarqube")
   }
@@ -55,7 +59,7 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks smoke")
     } finally {
       try {
-        steps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
+        localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
       } catch (ignored) {
         WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
       }
@@ -69,7 +73,7 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks functional")
     } finally {
       try {
-        steps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       } catch (ignored) {
         WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
       }
@@ -83,7 +87,7 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks apiGateway")
     } finally {
       try {
-        steps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
+        localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
       } catch (ignored) {
         WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
       }
@@ -94,12 +98,12 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      steps.withSauceConnect("reform_tunnel") {
+      localSteps.withSauceConnect("reform_tunnel") {
         gradle("--rerun-tasks crossbrowser")
       }
     } finally {
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
-      steps.saucePublisher()
+      localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      localSteps.saucePublisher()
     }
   }
 
@@ -107,12 +111,12 @@ class GradleBuilder extends AbstractBuilder {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      steps.withSauceConnect("reform_tunnel") {
+      localSteps.withSauceConnect("reform_tunnel") {
         gradle("--rerun-tasks crossbrowser", "BROWSER_GROUP=$browser")
       }
     } finally {
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
-      steps.saucePublisher()
+      localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      localSteps.saucePublisher()
     }
   }
 
@@ -121,30 +125,26 @@ class GradleBuilder extends AbstractBuilder {
       gradle("pitest")
     }
     finally {
-      steps.archiveArtifacts '**/reports/pitest/**/*.*'
+      localSteps.archiveArtifacts '**/reports/pitest/**/*.*'
     }
   }
 
   def securityCheck() {
-    def tmpSteps = getSteps()
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
     ]
-    tmpSteps.withAzureKeyvault(secrets) {
+    localSteps.withAzureKeyvault(secrets) {
       try {
-          tmpSteps.echo("Inside with AZ KeyVault")
-          steps.echo("Inside with AZ KeyVault steps")
-          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${steps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${steps.env.OWASPDB_V6_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
-          tmpSteps.echo("At end")
+          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${localSteps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V6_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
         // groovy Jenkins bug in resolving object from super class
-        tmpSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
-        String dependencyReport = tmpSteps.readFile('build/reports/dependency-check-report.json')
+        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
 
         def cveReport = prepareCVEReport(dependencyReport)
 
-        new CVEPublisher(tmpSteps)
+        new CVEPublisher(localSteps)
           .publishCVEReport('java', cveReport)
       }
     }
@@ -163,7 +163,7 @@ class GradleBuilder extends AbstractBuilder {
   @Override
   def addVersionInfo() {
     addInitScript()
-    steps.sh '''
+    localSteps.sh '''
 mkdir -p src/main/resources/META-INF
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
@@ -180,7 +180,7 @@ EOF
     try {
       gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.provider.version=${version} -Dpact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
@@ -188,7 +188,7 @@ EOF
    try {
       gradle("-Dpact.broker.url=${pactBrokerUrl} -Dpact.consumer.version=${version} runAndPublishConsumerPactTests")
    } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
@@ -196,7 +196,7 @@ EOF
     try {
       gradle("canideploy")
      } finally {
-      steps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
   }
 
@@ -206,12 +206,12 @@ EOF
       prepend += ' '
     }
     addInitScript()
-    steps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
   private String gradleWithOutput(String task) {
     addInitScript()
-    steps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+    localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
   }
 
   def fullFunctionalTest() {
@@ -229,15 +229,15 @@ EOF
 
     def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
-    steps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
-      gradle("-Pdburl='${steps.env.POSTGRES_HOST}:${steps.env.POSTGRES_PORT}/${steps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${steps.env.POSTGRES_USER}' -Pflyway.password='${steps.env.POSTGRES_PASS}' migratePostgresDatabase")
+    localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
+      gradle("-Pdburl='${localSteps.env.POSTGRES_HOST}:${localSteps.env.POSTGRES_PORT}/${localSteps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${localSteps.env.POSTGRES_USER}' -Pflyway.password='${localSteps.env.POSTGRES_PASS}' migratePostgresDatabase")
     }
   }
 
   @Override
   def setupToolVersion() {
     gradle("--version") // ensure wrapper has been downloaded
-    steps.sh "java -version"
+    localSteps.sh "java -version"
   }
 
   def hasPlugin(String pluginName) {
@@ -247,10 +247,10 @@ EOF
   @Override
   def performanceTest() {
     if (hasPlugin("gradle-gatling-plugin")) {
-      steps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
-      steps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + steps.env.GATLING_REPORTS_PATH
+      localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
+      localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
-      this.steps.gatlingArchive()
+      this.localSteps.gatlingArchive()
     } else {
       super.executeGatling()
     }
