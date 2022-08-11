@@ -11,7 +11,7 @@ class EnvironmentDnsConfig {
     this.steps = steps
   }
 
-  def getDnsConfig() {
+  def getDnsConfig(product) {
     if (this.envDnsConfigMap == null ){
       def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
 
@@ -24,12 +24,12 @@ class EnvironmentDnsConfig {
         validResponseCodes: '200'
       )
       dnsConfigMap = steps.readYaml (text: response.content)
-      this.envDnsConfigMap = mapToEnvironmentConfig(dnsConfigMap)
+      this.envDnsConfigMap = mapToEnvironmentConfig(product, dnsConfigMap)
     }
     return this.envDnsConfigMap
   }
 
-  def mapToEnvironmentConfig(dnsConfigMap) {
+  def mapToEnvironmentConfig(product, dnsConfigMap) {
     def envDnsConfigMap = [:]
     def engine = new SimpleTemplateEngine()
     for (s in dnsConfigMap['subscriptions']) {
@@ -39,7 +39,7 @@ class EnvironmentDnsConfig {
           subscription: s['name'],
           resourceGroup: s['resourceGroup'],
           ttl: e['ttl'] != null ? e['ttl'] : s['ttl'],
-          zone: e['zone'] != null ? e['zone'] : engine.createTemplate(s['zoneTemplate']).make([environment:e['name']]).toString(),
+          zone: e['zone'] != null ? e['zone'] : engine.createTemplate(s['zoneTemplate']).make([environment:e['name'], product: product]).toString(),
           active: e['active'] != null ? e['active'] : s['active'],
         )
         envDnsConfigMap[e['name']] = envConfig
@@ -48,8 +48,8 @@ class EnvironmentDnsConfig {
     return envDnsConfigMap
   }
 
-  def getEntry(environment) {
-    return getDnsConfig()[environment]
+  def getEntry(environment, product) {
+    return getDnsConfig(product)[environment]
   }
 
 }

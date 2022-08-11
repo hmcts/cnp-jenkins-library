@@ -13,11 +13,7 @@ class AzPrivateDns {
         this.steps = steps
         this.environment = environment
         this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
-        if (environmentDnsConfigEntry != null) {
-          this.environmentDnsConfigEntry = environmentDnsConfigEntry
-        } else {
-          this.environmentDnsConfigEntry = new EnvironmentDnsConfig(steps).getEntry(environment)
-        }
+        this.environmentDnsConfigEntry = environmentDnsConfigEntry
     }
 
    def getHostName(recordName) {
