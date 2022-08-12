@@ -24,7 +24,7 @@ class AzPrivateDnsTest extends Specification {
     steps.httpRequest(_) >> response
     steps.error(_) >> { throw new Exception(_ as String) }
     steps.env >> ["SUBSCRIPTION_NAME": "sandbox"]
-    environmentDnsConfigEntry = new EnvironmentDnsConfig(steps).getEntry(ENVIRONMENT, 'plum')
+    environmentDnsConfigEntry = new EnvironmentDnsConfig(steps).getEntry(ENVIRONMENT, 'plum', 'recipes-service')
     azPrivateDns = new AzPrivateDns(steps, ENVIRONMENT, environmentDnsConfigEntry)
   }
 
@@ -62,7 +62,7 @@ class AzPrivateDnsTest extends Specification {
     def ip = "4.3.2.1"
 
     when:
-      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, environment, 'plum', new EnvironmentDnsConfig(steps).getEntry(environment, 'plum')])
+      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, environment, new EnvironmentDnsConfig(steps).getEntry(environment, 'plum', 'recipes-service')])
       azPrivateDns.registerDns(recordName, ip)
 
     then:
