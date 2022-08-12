@@ -24,7 +24,7 @@ def call(DockerImage dockerImage, Map params) {
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
 
-  EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product)
+  EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
