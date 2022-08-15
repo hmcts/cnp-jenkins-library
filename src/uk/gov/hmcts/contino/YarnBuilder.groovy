@@ -75,7 +75,7 @@ class YarnBuilder extends AbstractBuilder {
     }
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
-      steps.saucePublisher()
+      //steps.saucePublisher()  //commenting out publishing as all the builds are failing on publish
     }
   }
 
@@ -87,7 +87,7 @@ class YarnBuilder extends AbstractBuilder {
     }
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: "functional-output/$browser*/*"
-      steps.saucePublisher()
+      //steps.saucePublisher()  //commenting out publishing as all the builds are failing on publish
     }
   }
 
