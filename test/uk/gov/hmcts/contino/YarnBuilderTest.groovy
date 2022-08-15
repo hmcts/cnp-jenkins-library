@@ -109,7 +109,7 @@ class YarnBuilderTest extends Specification {
     then:
     1 * steps.sh({ it.contains('BROWSER_GROUP=chrome yarn test:crossbrowser') })
     1 * steps.archiveArtifacts(['allowEmptyArchive':true, artifacts: "functional-output/chrome*/*"])
-    1 * steps.saucePublisher()
+   // 1 * steps.saucePublisher() //commenting out publishing
   }
 
   def "mutationTest calls 'yarn test:mutation'"() {
