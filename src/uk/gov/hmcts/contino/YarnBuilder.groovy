@@ -119,8 +119,6 @@ class YarnBuilder extends AbstractBuilder {
             . /opt/nvm/nvm.sh || true
             nvm install
             set -ex
-            wget -O /tmp/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-            chmod +x /tmp/jq
           """
 
           if (yarnV2OrNewer) {
@@ -140,8 +138,8 @@ class YarnBuilder extends AbstractBuilder {
       } finally {
             if (yarnV2OrNewer) {
               steps.sh """
-              cat yarn-audit-result | /tmp/jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-              cat yarn-audit-result | /tmp/jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+              cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+              cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
               cat  yarn-audit-issues-result-summary  yarn-audit-issues-advisories > yarn-audit-issues-result
               """
             }

@@ -13,7 +13,7 @@ set -e
 if [ "$result" != 0 ]; then
   if [ -f yarn-audit-known-issues ]; then
     set +e
-    cat yarn-audit-result | /tmp/jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' > yarn-audit-issues
+    cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' > yarn-audit-issues
     set -e
 
     if diff -q yarn-audit-known-issues yarn-audit-issues > /dev/null 2>&1; then
@@ -32,7 +32,7 @@ if [ "$result" != 0 ]; then
 
     To ignore these vulnerabilities, run:
 
-    `yarn npm audit --environment production --json | jq -r '.advisories | keys | join("\n")' | sort -nr > yarn-audit-known-issues`
+    `yarn npm audit --environment production --json | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' > yarn-audit-known-issues`
 
     and commit the yarn-audit-known-issues file
 EOF
