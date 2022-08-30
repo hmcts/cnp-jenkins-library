@@ -242,7 +242,10 @@ EOF
     yarn("test:can-i-deploy:consumer")
   }
 
-  private runYarn(task){
+  private runYarn(String task, String prepend = ""){
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
     boolean yarnV2OrNewer = isYarnV2OrNewer()
     if (steps.fileExists(NVMRC)) {
       steps.sh """
@@ -255,25 +258,43 @@ EOF
         if ${yarnV2OrNewer}; then
           export PATH=\$HOME/.local/bin:\$PATH
         fi
-        yarn ${task}
+
+        if ${prepend.toBoolean()}; then
+          ${prepend}yarn ${task}
+        else
+          yarn ${task}
+        fi
       """
     } else {
       steps.sh("""
         if ${yarnV2OrNewer}; then
           export PATH=\$HOME/.local/bin:\$PATH
         fi
-        yarn ${task}
+
+        if ${prepend.toBoolean()}; then
+          ${prepend}yarn ${task}
+        else
+          yarn ${task}
+        fi
       """)
     }
   }
 
-  private runYarnQuiet(task) {
+  private runYarnQuiet(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
     boolean yarnV2OrNewer = isYarnV2OrNewer()
     def status = steps.sh(script: """
         if ${yarnV2OrNewer}; then
           export PATH=\$HOME/.local/bin:\$PATH
         fi
-        yarn ${task} 1> /dev/null 2> /dev/null
+
+        if ${prepend.toBoolean()}; then
+          ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
+        else
+          yarn ${task} 1> /dev/null 2> /dev/null
+        fi
     """, returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
@@ -294,7 +315,7 @@ EOF
     return status
   }
 
-  def yarn(task) {
+  def yarn(String task, String prepend = "") {
       boolean yarnV2OrNewer = isYarnV2OrNewer()
           if (yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE)) {
               corepackEnable()
@@ -305,7 +326,7 @@ EOF
               runYarn("--mutex network install --frozen-lockfile")
               steps.sh("touch ${INSTALL_CHECK_FILE}")
           }
-      runYarn(task)
+      runYarn(task, prepend)
   }
 
   @Override
