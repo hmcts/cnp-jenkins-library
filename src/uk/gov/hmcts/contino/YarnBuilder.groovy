@@ -82,7 +82,7 @@ class YarnBuilder extends AbstractBuilder {
   def crossBrowserTest(String browser) {
     try {
       steps.withSauceConnect("reform_tunnel") {
-        steps.sh("BROWSER_GROUP=$browser yarn test:crossbrowser")
+        yarn("test:crossbrowser", "BROWSER_GROUP=$browser")
       }
     }
     finally {
@@ -222,9 +222,9 @@ EOF
    */
   def runProviderVerification(pactBrokerUrl, version, publish) {
     if (publish) {
-      steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish")
+      yarn("test:pact:verify-and-publish", "PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version}")
     } else {
-      steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify")
+      yarn("test:pact:verify", "PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version}")
     }
   }
 
@@ -235,7 +235,7 @@ EOF
    * @return
    */
   def runConsumerTests(pactBrokerUrl, version) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish")
+    yarn("test:pact:run-and-publish", "PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version}")
   }
 
   def runConsumerCanIDeploy() {
@@ -302,7 +302,7 @@ EOF
 
   private isYarnV2OrNewer() {
     def status = steps.sh label: "Determine if is yarn v1", script: '''
-                grep \"packageManager\": package.json
+                ! grep packageManager package.json
           ''', returnStatus: true
     return status
   }
@@ -317,15 +317,15 @@ EOF
 
   def yarn(String task, String prepend = "") {
       boolean yarnV2OrNewer = isYarnV2OrNewer()
-          if (yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE)) {
-              corepackEnable()
-              steps.sh """
-                  touch ${INSTALL_CHECK_FILE}
-              """
-          } else if (!yarnV2OrNewer && !steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
-              runYarn("--mutex network install --frozen-lockfile")
-              steps.sh("touch ${INSTALL_CHECK_FILE}")
-          }
+
+      if (!steps.fileExists(INSTALL_CHECK_FILE)) {
+        steps.sh("touch ${INSTALL_CHECK_FILE}")
+        if (yarnV2OrNewer) {
+          corepackEnable()
+        } else if (!runYarnQuiet("check")) {
+          runYarn("--mutex network install --frozen-lockfile")
+        }
+      }
       runYarn(task, prepend)
   }
 
