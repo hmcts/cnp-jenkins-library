@@ -82,7 +82,7 @@ class YarnBuilder extends AbstractBuilder {
   def crossBrowserTest(String browser) {
     try {
       steps.withSauceConnect("reform_tunnel") {
-        steps.sh("BROWSER_GROUP=$browser yarn test:crossbrowser")
+        yarn("test:crossbrowser", "BROWSER_GROUP=$browser")
       }
     }
     finally {
@@ -111,7 +111,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+    boolean yarnV2OrNewer = isYarnV2OrNewer()
     try {
       steps.sh """
         set +ex
@@ -119,20 +119,36 @@ class YarnBuilder extends AbstractBuilder {
         . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
+      """
 
+      if (yarnV2OrNewer) {
+        corepackEnable()
+        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnV2OrNewer-audit-with-suppressions.sh'))
+      } else {
+        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+      }
+
+      steps.sh """
+        if ${yarnV2OrNewer}; then
+          export PATH=\$HOME/.local/bin:\$PATH
+        fi
         chmod +x yarn-audit-with-suppressions.sh
-
         ./yarn-audit-with-suppressions.sh
-    """
+      """
     } finally {
+      if (yarnV2OrNewer) {
+        steps.sh """
+          cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+          cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+          cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
+        """
+      }
       String issues = steps.readFile('yarn-audit-issues-result')
       String knownIssues = null
       if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
         knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
       }
-
       def cveReport = prepareCVEReport(issues, knownIssues)
-
       new CVEPublisher(steps)
         .publishCVEReport('node', cveReport)
     }
@@ -206,9 +222,9 @@ EOF
    */
   def runProviderVerification(pactBrokerUrl, version, publish) {
     if (publish) {
-      steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish")
+      yarn("test:pact:verify-and-publish", "PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version}")
     } else {
-      steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify")
+      yarn("test:pact:verify", "PACT_BROKER_URL=${pactBrokerUrl} PACT_PROVIDER_VERSION=${version}")
     }
   }
 
@@ -219,14 +235,19 @@ EOF
    * @return
    */
   def runConsumerTests(pactBrokerUrl, version) {
-    steps.sh("PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish")
+    yarn("test:pact:run-and-publish", "PACT_BROKER_URL=${pactBrokerUrl} PACT_CONSUMER_VERSION=${version}")
   }
 
   def runConsumerCanIDeploy() {
-    steps.sh("yarn test:can-i-deploy:consumer")
+    yarn("test:can-i-deploy:consumer")
   }
 
-  private runYarn(task){
+  private runYarn(String task, String prepend = ""){
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
+    boolean yarnV2OrNewer = isYarnV2OrNewer()
+
     if (steps.fileExists(NVMRC)) {
       steps.sh """
         set +ex
@@ -235,25 +256,81 @@ EOF
         nvm install
         set -ex
 
-        yarn ${task}
+        if ${yarnV2OrNewer}; then
+          export PATH=\$HOME/.local/bin:\$PATH
+        fi
+
+        if ${prepend.toBoolean()}; then
+          ${prepend}yarn ${task}
+        else
+          yarn ${task}
+        fi
       """
     } else {
-      steps.sh("yarn ${task}")
+      steps.sh("""
+        if ${yarnV2OrNewer}; then
+          export PATH=\$HOME/.local/bin:\$PATH
+        fi
+
+        if ${prepend.toBoolean()}; then
+          ${prepend}yarn ${task}
+        else
+          yarn ${task}
+        fi
+      """)
     }
   }
 
-  private runYarnQuiet(task) {
-    def status = steps.sh(script: "yarn ${task} 1> /dev/null 2> /dev/null", returnStatus: true)
+  private runYarnQuiet(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
+    boolean yarnV2OrNewer = isYarnV2OrNewer()
+    def status = steps.sh(script: """
+      if ${yarnV2OrNewer}; then
+        export PATH=\$HOME/.local/bin:\$PATH
+      fi
+
+      if ${prepend.toBoolean()}; then
+        ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
+      else
+        yarn ${task} 1> /dev/null 2> /dev/null
+      fi
+    """, returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
   }
 
-  def yarn(task) {
-    if (!steps.fileExists(INSTALL_CHECK_FILE) && !runYarnQuiet("check")) {
-      runYarn("--mutex network install --frozen-lockfile")
+  private isYarnV2OrNewer() {
+    def status = steps.sh label: "Determine if is yarn v1", script: '''
+                ! grep packageManager package.json
+          ''', returnStatus: true
+    return status
+  }
+
+  private corepackEnable() {
+    def status = steps.sh label: "corepack enable", script: '''
+      mkdir -p \$HOME/.local/bin
+      corepack enable  --install-directory \$HOME/.local/bin
+    ''', returnStatus: true
+    return status
+  }
+
+  def yarn(String task, String prepend = "") {
+    boolean yarnV2OrNewer = isYarnV2OrNewer()
+    if (!steps.fileExists(INSTALL_CHECK_FILE)) {
       steps.sh("touch ${INSTALL_CHECK_FILE}")
+      if (yarnV2OrNewer) {
+        corepackEnable()
+        boolean zeroInstallEnabled = steps.fileExists(".yarn/cache")
+        if (!zeroInstallEnabled) {
+          runYarn("install")
+        }
+      } else if (!runYarnQuiet("check")) {
+        runYarn("--mutex network install --frozen-lockfile")
+      }
     }
-    runYarn(task)
+    runYarn(task, prepend)
   }
 
   @Override
