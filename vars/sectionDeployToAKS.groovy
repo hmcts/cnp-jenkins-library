@@ -53,7 +53,7 @@ def call(params) {
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
   def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
 
-  lock("${deploymentProduct}-${environment}-deploy") {
+  lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
