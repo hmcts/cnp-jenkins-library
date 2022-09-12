@@ -14,7 +14,7 @@ RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks smokeTestCla
 RUN ["sh", "-c", "/opt/app/gradlew --info --no-daemon --rerun-tasks functionalTestClasses || :"]
 
 
-FROM hmctspublic.azurecr.io/base/java:openjdk-11-debug-distroless-1.4
+FROM hmctspublic.azurecr.io/base/java:17-distroless
 
 WORKDIR /opt/app
 USER hmcts
