@@ -457,7 +457,7 @@ If you use AKS deployments, a docker image is built and pushed remotely to ACR.
 
 You can optionally make this build faster by using explicit ACR tasks, in a `acb.tpl.yaml` file located at the root of your project (watch out, the extension is .yaml, not .yml).
 
-This is particularly effective for nodejs projecs pulling loads of npm packages.
+This is particularly effective for nodejs projects pulling loads of npm packages.
 
 Here is a sample file, assuming you use docker multi stage build:
 

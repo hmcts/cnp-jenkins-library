@@ -47,7 +47,7 @@ class EnvironmentDnsConfigTest extends Specification {
     def environment = 'idam-sandbox'
 
     when:
-    def idamSandbox = environmentDnsConfig.getEntry(environment)
+    def idamSandbox = environmentDnsConfig.getEntry(environment, 'idam', 'api')
 
     then:
     assertThat(idamSandbox.environment).isEqualTo(environment)
@@ -61,7 +61,7 @@ class EnvironmentDnsConfigTest extends Specification {
     def environment = 'idam-sbox'
 
     when:
-    def idamSbox = environmentDnsConfig.getEntry(environment)
+    def idamSbox = environmentDnsConfig.getEntry(environment, 'idam', 'api')
 
     then:
     assertThat(idamSbox).isNull()
