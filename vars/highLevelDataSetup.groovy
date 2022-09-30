@@ -13,7 +13,7 @@ def call(params) {
 
   if (config.highLevelDataSetup) {
     stageWithAgent("High Level Data Setup - ${environment}", product) {
-      withDefinitionImportSecretsAndEnvVars(product, environment, config.vaultEnvironmentOverrides, config.highLevelDataSetupKeyVaultName){
+      withDefinitionImportSecretsAndEnvVars(product, environment, config.highLevelDataSetupKeyVaultName, config.vaultEnvironmentOverrides){
         pcr.callAround('highleveldatasetup') {
           builder.highLevelDataSetup(environment)
         }

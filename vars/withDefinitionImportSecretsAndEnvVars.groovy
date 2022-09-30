@@ -1,5 +1,5 @@
 
-def call(String product, String environment, Map<String, String> vaultOverrides, Closure body) {
+def call(String product, String environment, String highLevelDataSetupKeyVaultName, Map<String, String> vaultOverrides, Closure body) {
   def dependedEnv = vaultOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
@@ -29,7 +29,7 @@ def call(String product, String environment, Map<String, String> vaultOverrides,
     ]
   ]
 
-  executeClosure(secrets.entrySet().iterator(), product, dependedEnv) {
+  executeClosure(secrets.entrySet().iterator(), product, dependedEnv, highLevelDataSetupKeyVaultName) {
     body.call()
   }
 }
@@ -41,7 +41,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
   // this assumes that the team, a) has a product vault, b) is named the same as their product
   def productName = entry.key != '${product}' ? entry.key : product
     String theKeyVaultUrl = ""
-    if (highLevelDataSetupKeyVaultName.isEmpty() || highLevelDataSetupKeyVaultName.isBlank()) {
+    if (!highLevelDataSetupKeyVaultName?.trim()) {
         theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
     }
     else {
@@ -53,7 +53,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     keyVaultURLOverride: theKeyVaultUrl
   ) {
     if (secretIterator.hasNext()) {
-      return executeClosure(secretIterator, product, dependedEnv, body)
+      return executeClosure(secretIterator, product, dependedEnv, highLevelDataSetupKeyVaultName, body)
     } else {
       body.call()
     }
