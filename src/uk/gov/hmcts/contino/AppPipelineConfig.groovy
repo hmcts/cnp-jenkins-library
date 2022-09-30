@@ -27,6 +27,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean clearHelmRelease = false
   String fortifyVaultName
   String s2sServiceName
+  String highLevelDataSetupKeyVaultName
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15

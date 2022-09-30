@@ -87,8 +87,9 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.pactConsumerCanIDeployEnabled = roles.contains(PactRoles.CONSUMER_DEPLOY_CHECK)
   }
 
-  void enableHighLevelDataSetup() {
+  void enableHighLevelDataSetup(String highLevelDataSetupKeyvaultName = "") {
     config.highLevelDataSetup = true
+    config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
   }
 
   void enableFortifyScan(String fortifyVaultName = "") {
