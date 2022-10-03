@@ -45,7 +45,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
         theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
     }
     else {
-        def productKeyVaultName = (entry.key != '${product}' && entry.key != '${highLevelDataSetupKeyVaultName}') ? entry.key : ${highLevelDataSetupKeyVaultName}
+        def productKeyVaultName = (entry.key != '${product}' && !entry.key.equalsIgnoreCase(highLevelDataSetupKeyVaultName)) ? entry.key : highLevelDataSetupKeyVaultName
         theKeyVaultUrl = "https://${productKeyVaultName}-${dependedEnv}.vault.azure.net/"
     }
 
