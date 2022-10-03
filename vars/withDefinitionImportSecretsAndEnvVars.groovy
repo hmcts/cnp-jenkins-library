@@ -1,5 +1,5 @@
 
-def call(String product, String environment, Map<String, String> vaultOverrides, Closure body) {
+def call(String product, String environment, String highLevelDataSetupKeyVaultName, Map<String, String> vaultOverrides, Closure body) {
   def dependedEnv = vaultOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
@@ -29,7 +29,7 @@ def call(String product, String environment, Map<String, String> vaultOverrides,
     ]
   ]
 
-  executeClosure(secrets.entrySet().iterator(), product, dependedEnv) {
+  executeClosure(secrets.entrySet().iterator(), product, dependedEnv, highLevelDataSetupKeyVaultName) {
     body.call()
   }
 }
