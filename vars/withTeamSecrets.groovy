@@ -44,7 +44,7 @@ private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry
     } else {
         if (entry.key.equalsIgnoreCase(highLevelDataSetupKeyVaultName)) {
             theKeyVaultUrl = "https://${entry.key.replace(highLevelDataSetupKeyVaultName, vaultEnv)}.vault.azure.net/"
-        } else {
+        } else if (entry.key != '${product}') {
             theKeyVaultUrl = "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
 
         }
