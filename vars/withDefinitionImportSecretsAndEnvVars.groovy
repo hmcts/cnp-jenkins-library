@@ -53,7 +53,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     keyVaultURLOverride: theKeyVaultUrl
   ) {
     if (secretIterator.hasNext()) {
-      return executeClosure(secretIterator, product, dependedEnv, body)
+      return executeClosure(secretIterator, product, dependedEnv, highLevelDataSetupKeyVaultName, body)
     } else {
       body.call()
     }
