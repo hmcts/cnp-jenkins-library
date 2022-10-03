@@ -9,16 +9,16 @@ def call(AppPipelineConfig config, String environment, Closure body) {
     return
   }
 
-  executeClosure(secrets.entrySet().iterator(), environment, vaultOverrides) {
+  executeClosure(secrets.entrySet().iterator(), environment, config.highLevelDataSetupKeyVaultName, vaultOverrides) {
     body.call()
   }
 }
 
-def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, Map<String, String> vaultOverrides, Closure body) {
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, String highLevelDataSetupKeyVaultName, Map<String, String> vaultOverrides, Closure body) {
   //noinspection ChangeToOperator doesn't work in jenkins
   def entry = secretIterator.next()
 
-  String theKeyVaultUrl = getKeyVaultUrl(entry, environment, vaultOverrides)
+  String theKeyVaultUrl = getKeyVaultUrl(entry, environment, highLevelDataSetupKeyVaultName, vaultOverrides)
 
   withAzureKeyvault(
     azureKeyVaultSecrets: entry.value,
@@ -35,7 +35,14 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 }
 
 @SuppressWarnings("GrMethodMayBeStatic") // no idea how a static method would work inside a jenkins step...
-private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry, String environment, Map<String, String> vaultOverrides) {
+private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry, String environment, String highLevelDataSetupKeyVaultName, Map<String, String> vaultOverrides) {
   def vaultEnv = vaultOverrides.get(environment, environment)
-  return "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
+
+    String theKeyVaultUrl = ""
+    if (!highLevelDataSetupKeyVaultName?.trim()) {
+        theKeyVaultUrl = "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
+    } else {
+        theKeyVaultUrl = "https://${entry.key.replace(highLevelDataSetupKeyVaultName, vaultEnv)}.vault.azure.net/"
+    }
+  return theKeVaultUrl
 }
