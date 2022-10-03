@@ -51,5 +51,5 @@ private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry
         }
     }
     print(theKeyVaultUrl)
-  return "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
+  return theKeyVaultUrl
 }
