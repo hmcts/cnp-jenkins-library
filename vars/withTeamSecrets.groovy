@@ -9,16 +9,16 @@ def call(AppPipelineConfig config, String environment, Closure body) {
     return
   }
 
-  executeClosure(secrets.entrySet().iterator(), environment, config.highLevelDataSetupKeyVaultName, vaultOverrides) {
+  executeClosure(secrets.entrySet().iterator(), environment, vaultOverrides) {
     body.call()
   }
 }
 
-def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, String highLevelDataSetupKeyVaultName, Map<String, String> vaultOverrides, Closure body) {
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String environment, Map<String, String> vaultOverrides, Closure body) {
   //noinspection ChangeToOperator doesn't work in jenkins
   def entry = secretIterator.next()
 
-  String theKeyVaultUrl = getKeyVaultUrl(entry, environment, highLevelDataSetupKeyVaultName, vaultOverrides)
+  String theKeyVaultUrl = getKeyVaultUrl(entry, environment, vaultOverrides)
 
   withAzureKeyvault(
     azureKeyVaultSecrets: entry.value,
@@ -27,7 +27,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     applicationSecretOverride: env.AZURE_CLIENT_SECRET
   ) {
     if (secretIterator.hasNext()) {
-      return executeClosure(secretIterator, environment, highLevelDataSetupKeyVaultName, vaultOverrides, body)
+      return executeClosure(secretIterator, environment, vaultOverrides, body)
     } else {
       body.call()
     }
@@ -35,21 +35,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 }
 
 @SuppressWarnings("GrMethodMayBeStatic") // no idea how a static method would work inside a jenkins step...
-private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry, String environment, String highLevelDataSetupKeyVaultName, Map<String, String> vaultOverrides) {
+private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry, String environment, Map<String, String> vaultOverrides) {
   def vaultEnv = vaultOverrides.get(environment, environment)
-
-    String theKeyVaultUrl = ""
-    if (!highLevelDataSetupKeyVaultName?.trim()) {
-        theKeyVaultUrl = "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
-    } else {
-        if (entry.key == '${product}') {
-            theKeyVaultUrl = "https://${entry.key.replace(entry.key, highLevelDataSetupKeyVaultName?.trim()).replace('${env}', vaultEnv)}.vault.azure.net/"
-        }
-        else {
-            theKeyVaultUrl = "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
-
-        }
-    }
-    print(theKeyVaultUrl)
-  return theKeyVaultUrl
+  return "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/"
 }
