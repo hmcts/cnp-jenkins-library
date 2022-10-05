@@ -1,5 +1,5 @@
 
-def call(String product, String environment, Map<String, String> vaultOverrides, Closure body) {
+def call(String vaultName, String environment, Map<String, String> vaultOverrides, Closure body) {
   def dependedEnv = vaultOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
@@ -23,23 +23,22 @@ def call(String product, String environment, Map<String, String> vaultOverrides,
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    '${product}': [
+    '${vaultName}': [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
       secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
     ]
   ]
 
-  executeClosure(secrets.entrySet().iterator(), product, dependedEnv) {
+  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
 
-def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String product, String dependedEnv, Closure body) {
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String vaultName, String dependedEnv, Closure body) {
   def entry = secretIterator.next()
 
-  // ${product} is a placeholder for the team's vault
-  // this assumes that the team, a) has a product vault, b) is named the same as their product
-  def productName = entry.key != '${product}' ? entry.key : product
+  def productName = entry.key != '${vaultName}' ? entry.key : vaultName
+
   String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
 
   withAzureKeyvault(
@@ -47,7 +46,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     keyVaultURLOverride: theKeyVaultUrl
   ) {
     if (secretIterator.hasNext()) {
-      return executeClosure(secretIterator, product, dependedEnv, body)
+      return executeClosure(secretIterator, vaultName, dependedEnv, body)
     } else {
       body.call()
     }
