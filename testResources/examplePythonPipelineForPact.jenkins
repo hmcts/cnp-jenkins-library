@@ -1,0 +1,16 @@
+#!groovy
+
+@Library("Infrastructure")
+import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
+
+def product = "product"
+
+def app = "app"
+
+withPipeline('python', product, app) {
+  enablePactAs([
+    PactRoles.CONSUMER,
+    PactRoles.PROVIDER,
+    PactRoles.CONSUMER_DEPLOY_CHECK
+  ])
+}

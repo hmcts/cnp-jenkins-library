@@ -1,0 +1,13 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "product"
+
+def app = "app"
+
+withNightlyPipeline('python', product, app) {
+  enableCrossBrowserTest()
+  enableCrossBrowserTest(['chrome', 'firefox', 'safari', 'microsoft'])
+  enableMutationTest()
+}
