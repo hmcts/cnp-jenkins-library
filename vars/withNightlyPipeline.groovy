@@ -19,7 +19,7 @@ def call(type,product,component,Closure body) {
     java   : new SpringBootPipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
     ruby: new RubyPipelineType(this, product, component),
-    python: new PythonPipelineType(this, deploymentProduct, component)
+    python: new PythonPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType = pipelineTypes.get(type)
