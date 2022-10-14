@@ -82,6 +82,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
+              publishPerformanceReports(this, params)
             }
           }
         }
