@@ -245,7 +245,8 @@ EOF
 
   @Override
   def performanceTest() {
-    if (hasPlugin("gradle-gatling-plugin")) {
+    //support for the old (deprecated) and new gatling gradle plugins
+    if (hasPlugin("gradle-gatling-plugin") || hasPlugin("gatling-gradle-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
