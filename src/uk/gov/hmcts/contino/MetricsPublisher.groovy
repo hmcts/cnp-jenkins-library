@@ -38,6 +38,7 @@ class MetricsPublisher implements Serializable {
       build_url                    : env.BUILD_URL,
       job_url                      : env.JOB_URL,
       git_url                      : env.GIT_URL,
+      git_commit                   : env.GIT_COMMIT,
       current_build_number         : currentBuild.number,
       current_step_name            : currentStepName,
       current_build_result         : currentBuild.result,
