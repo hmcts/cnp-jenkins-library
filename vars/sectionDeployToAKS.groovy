@@ -80,7 +80,7 @@ def call(params) {
         appPipelineConfig: config,
         pipelineCallbacksRunner: pcr,
         builder: builder,
-        environment: environment.previewName,
+        environment: environment,
         product: product,
       )
     }
