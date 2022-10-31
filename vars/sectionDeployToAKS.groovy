@@ -75,7 +75,15 @@ def call(params) {
         }
       }
     }
-
+    onPR {
+      highLevelDataSetup(
+        appPipelineConfig: config,
+        pipelineCallbacksRunner: pcr,
+        builder: builder,
+        environment: environment.previewName,
+        product: product,
+      )
+    }
     if (config.serviceApp) {
       withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
