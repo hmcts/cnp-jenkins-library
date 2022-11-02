@@ -121,14 +121,6 @@ def call(type, String product, String component, Closure body) {
             )
           }
 
-          highLevelDataSetup(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            builder: pipelineType.builder,
-            environment: environment.previewName,
-            product: product,
-          )
-
           sectionDeployToAKS(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
