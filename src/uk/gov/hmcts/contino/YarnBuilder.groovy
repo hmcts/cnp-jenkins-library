@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -17,8 +18,12 @@ class YarnBuilder extends AbstractBuilder {
 
   def securitytest
 
+  // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
+  def localSteps
+
   YarnBuilder(steps) {
     super(steps)
+    this.localSteps = steps
     this.securitytest = new SecurityScan(this.steps)
   }
 
@@ -151,6 +156,32 @@ class YarnBuilder extends AbstractBuilder {
       def cveReport = prepareCVEReport(issues, knownIssues)
       new CVEPublisher(steps)
         .publishCVEReport('node', cveReport)
+    }
+  }
+
+  @Override
+  def techStackMaintenance() {
+    this.steps.echo "Running Yarn Tech stack maintenance"
+    def secrets = [
+      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) {
+      if (localSteps.fileExists('Dockerfile')) {
+        String dependencies = localSteps.readFile('yarn.lock')
+        String repositoryName = new RepositoryUrl().getShortWithoutOrgOrSuffix(steps.env.GIT_URL)
+        steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
+        steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}' > languageVersionProc"
+        
+        String languageProc = steps.readFile('languageProc')
+        String languageVersionProc = steps.readFile('languageVersionProc')
+
+        def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+        client.updateDependencies(dependencies, "foobar", repositoryName, 'yarn', languageProc, languageVersionProc)
+      } else {
+        this.steps.echo "No Dockerfile found, skipping tech stack maintenance"
+      }
+
     }
   }
 

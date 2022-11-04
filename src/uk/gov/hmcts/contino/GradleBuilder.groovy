@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -156,25 +157,26 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def techStackMaintenance() {
-//    def secrets = [
-//      [ secretType: 'Secret', name: 'Ardoq-API-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
-//      [ secretType: 'Secret', name: 'Ardoq-API-url', version: '', envVariable: 'ARDOQ_API_URL' ]
-//    ]
-//    localSteps.withAzureKeyvault(secrets) {
-      try {
-        def depString = gradleWithOutput(" -q dependencies | grep ^\\+ | cut -c 5- | sed 's/ \\-\\> /:/g' | sed -E 's/(.*):/\\1 -> /' | sed 's/([\\*n])//'")
-        List deps = depString.split("\n");
-        steps.echo "found " + deps.size() + " dependencies"
-      } finally {
-//        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
-//        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
-//
-//        def cveReport = prepareCVEReport(dependencyReport)
-//
-//        new CVEPublisher(localSteps)
-//          .publishCVEReport('java', cveReport)
+    def secrets = [
+      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) {
+      if (localSteps.fileExists('Dockerfile')) {
+
+        // @todo this isn't right, needs to dump deps from gradle, not just use the build file
+        String dependencies = localSteps.readFile('build.gradle')
+        String repositoryName = new RepositoryUrl().getShortWithoutOrgOrSuffix(steps.env.GIT_URL)
+        def languageProc = "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1".execute()
+        def languageVersionProc = "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}'".execute()
+
+        def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+        client.updateDependencies(dependencies, "foobar", repositoryName, 'gradle', languageProc.text, languageVersionProc.text)
+      } else {
+        this.steps.echo "No Dockerfile found, skipping tech stack maintenance"
       }
-//    }
+
+    }
   }
 
   def prepareCVEReport(String owaspReportJSON) {
