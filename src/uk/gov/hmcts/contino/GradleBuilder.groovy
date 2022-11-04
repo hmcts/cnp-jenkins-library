@@ -154,6 +154,29 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
+  @Override
+  def techStackMaintenance() {
+//    def secrets = [
+//      [ secretType: 'Secret', name: 'Ardoq-API-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+//      [ secretType: 'Secret', name: 'Ardoq-API-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+//    ]
+//    localSteps.withAzureKeyvault(secrets) {
+      try {
+        def depString = gradleWithOutput(" -q dependencies | grep ^\\+ | cut -c 5- | sed 's/ \\-\\> /:/g' | sed -E 's/(.*):/\\1 -> /' | sed 's/([\\*n])//'")
+        List deps = depString.split("\n");
+        steps.echo "found " + deps.size() + " dependencies"
+      } finally {
+//        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
+//        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
+//
+//        def cveReport = prepareCVEReport(dependencyReport)
+//
+//        new CVEPublisher(localSteps)
+//          .publishCVEReport('java', cveReport)
+      }
+//    }
+  }
+
   def prepareCVEReport(String owaspReportJSON) {
     def report = new JsonSlurper().parseText(owaspReportJSON)
     // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
