@@ -22,7 +22,6 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
-  boolean dockerFileExists = fileExists('Dockerfile')
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
@@ -37,6 +36,7 @@ def call(params) {
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
     }
   }
+  boolean dockerFileExists = fileExists('Dockerfile')
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
