@@ -22,6 +22,7 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
+  boolean dockerFileExists= fileExists('Dockerfile')
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
@@ -84,7 +85,7 @@ def call(params) {
         builder.securityCheck()
       }
     }
-    if (fileExists('Dockerfile')) {
+    if (dockerFileExists) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
           def acbTemplateFilePath = 'acb.tpl.yaml'
@@ -114,7 +115,7 @@ def call(params) {
     }
 
     onMaster {
-      if (fileExists('build.gradle') && fileExists('Dockerfile')) {
+      if (fileExists('build.gradle') && dockerFileExists) {
         branches["Docker Test Build"] = {
           withAcrClient(subscription) {
             def dockerfileTest = 'Dockerfile_test'
