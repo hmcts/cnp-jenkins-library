@@ -37,6 +37,7 @@ def call(params) {
     }
   }
   env.DOCKER_IMAGE_EXISTS= fileExists('Dockerfile')
+  echo("Docker file exists: ${env.DOCKER_IMAGE_EXISTS}")
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
