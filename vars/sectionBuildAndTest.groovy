@@ -86,7 +86,7 @@ def call(params) {
       }
     }
     echo("Docker file exists: ${env.DOCKER_IMAGE_EXISTS}")
-    if (env.DOCKER_IMAGE_EXISTS) {
+    if (${env.DOCKER_IMAGE_EXISTS}) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
           def acbTemplateFilePath = 'acb.tpl.yaml'
