@@ -36,7 +36,6 @@ def call(params) {
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
     }
   }
-  env.DOCKER_IMAGE_EXISTS= fileExists('Dockerfile')
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -85,8 +84,7 @@ def call(params) {
         builder.securityCheck()
       }
     }
-    echo("Docker file exists: ${env.DOCKER_IMAGE_EXISTS}")
-    if (${env.DOCKER_IMAGE_EXISTS}) {
+    if (fileExists('Dockerfile')) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
           def acbTemplateFilePath = 'acb.tpl.yaml'
@@ -116,7 +114,7 @@ def call(params) {
     }
 
     onMaster {
-      if (fileExists('build.gradle') && env.DOCKER_IMAGE_EXISTS) {
+      if (fileExists('build.gradle') && fileExists('Dockerfile')) {
         branches["Docker Test Build"] = {
           withAcrClient(subscription) {
             def dockerfileTest = 'Dockerfile_test'

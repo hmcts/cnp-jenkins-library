@@ -26,7 +26,7 @@ import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
 
-  if(env.DOCKER_IMAGE_EXISTS) {
+  if(fileExists('Dockerfile')) {
     PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
     AppPipelineConfig config = params.appPipelineConfig
     PipelineType pipelineType = params.pipelineType
