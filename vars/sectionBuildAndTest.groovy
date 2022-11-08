@@ -22,7 +22,7 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
-  boolean dockerFileExists= fileExists('Dockerfile')
+  boolean dockerFileExists = fileExists('Dockerfile')
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
