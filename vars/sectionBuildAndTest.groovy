@@ -22,6 +22,7 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
+  boolean dockerFileExists = fileExists('Dockerfile')
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
@@ -36,7 +37,6 @@ def call(params) {
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
     }
   }
-
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -45,10 +45,6 @@ def call(params) {
       }
 
       builder.setupToolVersion()
-
-      if (!fileExists('Dockerfile')) {
-        error "Please add a Dockerfile"
-      }
 
       // always build master and demo as we currently do not deploy an image there
       boolean envSub = autoDeployEnvironment() != null
@@ -89,27 +85,29 @@ def call(params) {
         builder.securityCheck()
       }
     }
-    branches["Docker Build"] = {
-      withAcrClient(subscription) {
-        def acbTemplateFilePath = 'acb.tpl.yaml'
+    if (dockerFileExists) {
+      branches["Docker Build"] = {
+        withAcrClient(subscription) {
+          def acbTemplateFilePath = 'acb.tpl.yaml'
 
-        pcr.callAround('dockerbuild') {
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
-            if (!fileExists('.dockerignore')) {
-              writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-            } else {
-              writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-              sh script: """
-                      # in case anyone doesn't have a trailing new line in their file
-                      echo -e '\n' >> .dockerignore
-                      cat .dockerignore_build >> .dockerignore
-                    """
-            }
-            def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-            if (fileExists(acbTemplateFilePath)) {
-              acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-            } else {
-              acr.build(dockerImage, buildArgs)
+          pcr.callAround('dockerbuild') {
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+              if (!fileExists('.dockerignore')) {
+                writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+              } else {
+                writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                sh script: """
+                        # in case anyone doesn't have a trailing new line in their file
+                        echo -e '\n' >> .dockerignore
+                        cat .dockerignore_build >> .dockerignore
+                      """
+              }
+              def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+              if (fileExists(acbTemplateFilePath)) {
+                acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+              } else {
+                acr.build(dockerImage, buildArgs)
+              }
             }
           }
         }
@@ -117,7 +115,7 @@ def call(params) {
     }
 
     onMaster {
-      if (fileExists('build.gradle')) {
+      if (fileExists('build.gradle') && dockerFileExists) {
         branches["Docker Test Build"] = {
           withAcrClient(subscription) {
             def dockerfileTest = 'Dockerfile_test'

@@ -42,7 +42,9 @@ def call(params) {
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
     onPR {
-      acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+      if (fileExists('Dockerfile')) {
+        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+      }
     }
   }
 

@@ -26,17 +26,18 @@ import uk.gov.hmcts.contino.azure.Acr
 
 def call(params) {
 
-  PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
-  AppPipelineConfig config = params.appPipelineConfig
-  PipelineType pipelineType = params.pipelineType
+  if(fileExists('Dockerfile')) {
+    PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
+    AppPipelineConfig config = params.appPipelineConfig
+    PipelineType pipelineType = params.pipelineType
 
-  def subscription = params.subscription
-  def product = params.product
-  def component = params.component
-  DockerImage.DeploymentStage deploymentStage = params.stage
+    def subscription = params.subscription
+    def product = params.product
+    def component = params.component
+    DockerImage.DeploymentStage deploymentStage = params.stage
 
-  stageWithAgent("${deploymentStage.label} build promotion", product) {
-    withAcrClient(subscription) {
+    stageWithAgent("${deploymentStage.label} build promotion", product) {
+      withAcrClient(subscription) {
         def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
         def projectBranch = new ProjectBranch(env.BRANCH_NAME)
         def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
@@ -56,5 +57,6 @@ def call(params) {
           }
         }
       }
+    }
   }
 }
