@@ -37,7 +37,6 @@ def call(params) {
     }
   }
   env.DOCKER_IMAGE_EXISTS= fileExists('Dockerfile')
-  echo("Docker file exists: ${env.DOCKER_IMAGE_EXISTS}")
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -86,6 +85,7 @@ def call(params) {
         builder.securityCheck()
       }
     }
+    echo("Docker file exists: ${env.DOCKER_IMAGE_EXISTS}")
     if (env.DOCKER_IMAGE_EXISTS) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
