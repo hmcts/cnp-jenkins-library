@@ -133,7 +133,7 @@ withPipeline(type, product, component) {
 }
 ```
 
-#### tf ouput for functional / smoke testing
+#### tf output for functional / smoke testing
 Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
 If your functional tests require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
