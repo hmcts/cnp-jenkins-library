@@ -143,7 +143,7 @@ def call(DockerImage dockerImage, Map params) {
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
-        if (!deleted || attempts >= 3) {
+        if (attempts >= 3) {
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
