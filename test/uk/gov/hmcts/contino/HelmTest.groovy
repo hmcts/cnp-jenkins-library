@@ -19,9 +19,6 @@ class HelmTest extends Specification {
                   AKS_CLUSTER_NAME: "cnp-aks-cluster",
                   SUBSCRIPTION_NAME: "${SUBSCRIPTION}"]
     helm = new Helm(steps, CHART)
-
-    def closure
-    steps.retry(3, { it.call() }) >> { closure = it }
   }
 
   def "dependencyUpdate() should execute with the correct chart"() {
