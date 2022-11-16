@@ -195,7 +195,15 @@ Branch | HighDataSetup Stage
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
 
-You can use the `before(stage)` and `after(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
+You can use the `before(stage)` and `after<Condition>(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage.
+
+Conditions are:
+
+* Success
+* Failure
+* Always
+
+Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
 
  * checkout
  * build
@@ -214,11 +222,11 @@ withPipeline(type, product, component) {
 
   ...
 
-  after('checkout') {
+  afterSuccess('checkout') {
     echo 'Checked out'
   }
 
-  after('build') {
+  afterSuccess('build') {
     sh 'yarn setup'
   }
 }
@@ -319,7 +327,15 @@ withInfraPipeline(product, component) {
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
 
-You can use the `before(stage)` and `after(stage)` within the `withInfraPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name
+You can use the `before(stage)` and `after<Condition>(stage)` within the `withInfraPipeline` block to add extra steps at the beginning or end of a named stage.
+
+Conditions are:
+
+* Success
+* Failure
+* Always
+
+Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name:
 
  * checkout
  * buildinfra:ENV
@@ -331,7 +347,7 @@ withInfraPipeline(product) {
 
   ...
 
-  after('checkout') {
+  afterSuccess('checkout') {
     echo 'Checked out'
   }
 
@@ -385,7 +401,14 @@ When initially setting up the nightly pipeline for use in your repo, you should 
 
 #### Extending the test pipeline
 
-You can use the `before(stage)` and `after(stage)` within the `withNightlyPipeline` block to add extra steps at the beginning or end of a named stage.
+You can use the `before(stage)` and `after<Condition>(stage)` within the `withNightlyPipeline` block to add extra steps at the beginning or end of a named stage.
+
+Conditions are:
+
+* Success
+* Failure
+* Always
+
 ```
 withNightlyPipeline(type, product, component) {
   enableCrossBrowserTest()
@@ -396,11 +419,11 @@ withNightlyPipeline(type, product, component) {
     yarnBuilder.smokeTest()
   }
 
-  after('crossBrowserTest') {
+  afterAlways('crossBrowserTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
   }
 
-  after('fullFunctionalTest') {
+  afterAlways('fullFunctionalTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
 }

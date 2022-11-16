@@ -1,5 +1,9 @@
 package uk.gov.hmcts.contino
 
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
+
 class PipelineCallbacksRunner implements Serializable {
   final PipelineCallbacksConfig config
 
@@ -7,8 +11,23 @@ class PipelineCallbacksRunner implements Serializable {
     this.config = config
   }
 
-  void callAfter(String stage) {
+  private def callAfter(String stage) {
+    if (config.bodies.containsKey('after:' + stage)) {
+      WarningCollector.addPipelineWarning("deprecated_after", "after(${stage}) is deprecated, consider using 'afterSuccess', 'afterFailure', 'afterAlways' instead", LocalDate.of(2023, 1, 30))
+    }
     nullSafeCall('after:' + stage, stage)
+  }
+
+  void callAfterSuccess(String stage) {
+    nullSafeCall('after:' + stage + ':success', stage)
+  }
+
+  void callAfterFailure(String stage) {
+    nullSafeCall('after:' + stage + ':failure', stage)
+  }
+
+  void callAfterAlways(String stage) {
+    nullSafeCall('after:' + stage + ':always', stage)
   }
 
   void callBefore(String stage) {
@@ -16,23 +35,36 @@ class PipelineCallbacksRunner implements Serializable {
   }
 
   void callAround(String stage, Closure body) {
+    def errToThrow = null
+
     callBefore(stage)
     try {
       body.call()
+      callAfterSuccess(stage)
     } catch (err) {
       call('onStageFailure', stage)
+
+      callAfterFailure(stage)
       throw err
     } finally {
-      callAfter(stage)
+      /* Deprecated, to be replaced once 'after()' is no longer in use */
+      try {
+        callAfter(stage)
+      } catch (err) {
+        call('onStageFailure', stage)
+        errToThrow = err
+      }
+      /* end deprecated section */
+      try {
+        callAfterAlways(stage)
+      } catch (err) {
+        call('onStageFailure', stage)
+        errToThrow = err
+      }
       nullSafeCall('after:all', stage)
-    }
-  }
-
-  void callAround(String stage, boolean condition, Closure body) {
-    if (condition) {
-      callAround(stage, body)
-    } else {
-      echo "Stage ${stage} skipped"
+      if (errToThrow != null) {
+        throw errToThrow
+      }
     }
   }
 
