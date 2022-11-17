@@ -57,7 +57,7 @@ class Kubectl {
   }
 
   def getEventsAndFilterByPattern(String pattern) {
-    this.steps.sh(returnStatus: true, script: "kubectl get events -n ${this.namespace} | grep ${pattern}")
+    this.steps.sh(returnStatus: true, script: "kubectl get events --field-selector='type!=Normal' --sort-by=.metadata.creationTimestamp -n ${this.namespace} | grep ${pattern}")
   }
 
   def getPodsByLabelSelector(String labelSelector) {
