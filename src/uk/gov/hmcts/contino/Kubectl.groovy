@@ -56,8 +56,12 @@ class Kubectl {
     this.steps.sh(returnStatus: true, script: "kubectl delete job ${name} -n ${this.namespace}")
   }
 
-  def getEventsByLabel(String labelSelector) {
-    this.steps.sh(returnStatus: true, script: "kubectl get events -l ${labelSelector} -n ${this.namespace}")
+  def getEventsAndFilterByPattern(String pattern) {
+    this.steps.sh(returnStatus: true, script: "kubectl get events -n ${this.namespace} | grep ${pattern}")
+  }
+
+  def getPodsByLabelSelector(String labelSelector) {
+    this.steps.sh(returnStatus: true, script: "kubectl get pods -l ${labelSelector} -n ${this.namespace} ")
   }
 
   def getServiceLoadbalancerIP(String name) {

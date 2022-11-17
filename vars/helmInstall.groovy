@@ -143,7 +143,8 @@ def call(DockerImage dockerImage, Map params) {
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
-        kubectl.getEventsByLabel(dockerImage.aksServiceName())
+        kubectl.getEventsAndFilterByPattern(dockerImage.aksServiceName())
+        kubectl.getPodsByLabelSelector("app.kubernetes.io/instance="+dockerImage.aksServiceName())
         if (attempts >= 3) {
           throw upgradeError
         }
