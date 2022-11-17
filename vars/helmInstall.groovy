@@ -143,7 +143,7 @@ def call(DockerImage dockerImage, Map params) {
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
-        kubectl.getEventsByLabel(dockerImage.getImageTag())
+        kubectl.getEventsByLabel(dockerImage.aksServiceName())
         if (attempts >= 3) {
           throw upgradeError
         }
