@@ -9,7 +9,7 @@ class Helm {
   public static final String HELM_RESOURCES_DIR = "charts"
   def steps
   def acr
-  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true)}
+  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options || echo \"fails\"", returnStdout: true)}
 
   def subscription
   def subscriptionId
@@ -149,7 +149,7 @@ class Helm {
   private Object execute(String command, String name, List<String> values, List<String> options) {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
-    helm command, name, "${valuesStr} ${optionsStr}" || echo "fails"
+    helm command, name, "${valuesStr} ${optionsStr}"
   }
 
 }
