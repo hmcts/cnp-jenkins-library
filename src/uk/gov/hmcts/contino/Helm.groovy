@@ -111,12 +111,7 @@ class Helm {
 
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
-    this.steps.sh (
-      """
-      chmod +x push-helm-charts-to-git.sh
-      ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $version
-      """
-    )
+    this.steps.sh ("chmod +x aks-debug-info.sh")
     def optionsStr = (options + ["--install", "--wait", "--timeout 500s"]).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
     steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
