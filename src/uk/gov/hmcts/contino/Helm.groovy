@@ -9,7 +9,7 @@ class Helm {
   public static final String HELM_RESOURCES_DIR = "charts"
   def steps
   def acr
-  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options || echo \"fails\"", returnStdout: true)}
+  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true)}
 
   def subscription
   def subscriptionId
