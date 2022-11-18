@@ -144,6 +144,7 @@ def call(DockerImage dockerImage, Map params) {
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
+        echo "$upgradeError"
         if (attempts >= 3) {
           throw upgradeError
         }
