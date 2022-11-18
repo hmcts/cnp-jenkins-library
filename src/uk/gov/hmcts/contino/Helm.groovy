@@ -105,10 +105,8 @@ class Helm {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
-    this.steps.echo "in helm upgrade"
     def releaseName = "${this.chartName}-${imageTag}"
     dependencyUpdate()
-    this.steps.echo "after dependency update"
     lint(values)
 
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
