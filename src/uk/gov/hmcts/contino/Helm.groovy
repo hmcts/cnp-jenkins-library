@@ -108,7 +108,7 @@ class Helm {
     def releaseName = ${this.chartName}-${imageTag}
     dependencyUpdate()
     lint(values)
-
+    echo "in helm upgrade"
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh ("chmod +x aks-debug-info.sh")
