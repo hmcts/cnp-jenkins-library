@@ -139,7 +139,7 @@ def call(DockerImage dockerImage, Map params) {
     def attempts = 1
     while (attempts < 4) {
       try {
-        helm.installOrUpgrade(dockerImage.getImageTag(), values, options) || echo "look at logs"
+        helm.installOrUpgrade(dockerImage.getImageTag(), values, options)
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
