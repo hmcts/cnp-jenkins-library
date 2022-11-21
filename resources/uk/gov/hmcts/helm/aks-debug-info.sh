@@ -14,5 +14,22 @@ echo "
 Status of pods:
 
 "
-kubectl get pods -n "${NAMESPACE}"  | grep  "${RELEASE_NAME}"
+kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
+
+# Commenting describe output as that is already covered by events on the namespace
+# echo "
+#================================================================================
+#Describe output of Pending pods:
+#"
+
+#kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/instance="${RELEASE_NAME}" --field-selector status.phase=Pending -o json | jq '.items[] |  .metadata.name' | xargs kubectl describe pods -n "${NAMESPACE}"
+
+echo "
+================================================================================
+Output of CrashLoopBackOff pod logs:
+
+"
+
+kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/instance="${RELEASE_NAME}"  -o json | jq '.items[] | select(.status.containerStatuses[] | ((.ready|not) and .state.waiting.reason=="CrashLoopBackOff")) |  .metadata.name'| xargs  kubectl logs  -n "${NAMESPACE}" --tail=1000 -p
+
 exit 1
