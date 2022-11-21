@@ -30,6 +30,6 @@ Output of CrashLoopBackOff pod logs (if any):
 
 "
 
-kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/instance="${RELEASE_NAME}"  -o json | jq '.items[] | select(.status.containerStatuses[] | ((.ready|not) and .state.waiting.reason=="CrashLoopBackOff")) |  .metadata.name'| xargs  kubectl logs  -n "${NAMESPACE}" --tail=1000 -p
+kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/instance="${RELEASE_NAME}"  -o json | jq '.items[] | select(.status.containerStatuses[] | ((.ready|not) and .state.waiting.reason=="CrashLoopBackOff")) |  .metadata.name'| xargs  kubectl logs  -n "${NAMESPACE}" -p
 
 exit 1
