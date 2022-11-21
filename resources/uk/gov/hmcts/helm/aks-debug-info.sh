@@ -26,7 +26,7 @@ kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAM
 
 echo "
 ================================================================================
-Output of CrashLoopBackOff pod logs:
+Output of CrashLoopBackOff pod logs (if any):
 
 "
 
