@@ -1,13 +1,6 @@
 #!/bin/bash
-
 RELEASE_NAME=${1}
 NAMESPACE=${2}
-export TERM=xterm-256color
-function execute_command () {
-tput setaf 3;
-"$@"
-tput sgr0
-}
 
 echo "
 
@@ -15,13 +8,17 @@ See below debug information to help troubleshooting the issue.
 ================================================================================
 kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
 "
-execute_command kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
+tput setaf 3
+kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
+tput sgr0
 echo "
 ================================================================================
 kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
 
 "
-execute_command kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
+tput setaf 3
+kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
+tput sgr0
 # Commenting describe output as that is already covered by events on the namespace
 # echo "
 #================================================================================
@@ -38,7 +35,9 @@ Logs for crashing pod $podName:
 kubectl logs  -n "${NAMESPACE}" ${podName} -p
 "
 
-execute_command kubectl logs  -n "${NAMESPACE}" ${podName} -p
+tput setaf 3
+kubectl logs  -n "${NAMESPACE}" ${podName} -p
+tput sgr0
 
 done
 
