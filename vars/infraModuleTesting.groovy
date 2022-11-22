@@ -5,7 +5,7 @@ def call () {
   }
 
   stage('Terraform Linting Checks') {
-    sh 'terraform validate -check-variables=false -no-color'
+    sh 'terraform validate -no-color'
   }
 
   stage('Integration tests') {
