@@ -31,7 +31,7 @@ $(tput setaf 3)=================================================================
 $(tput setaf 3)Logs for crashing pod $podName:
 $(tput setaf 3)kubectl logs  -n "${NAMESPACE}" ${podName} -p
 "
-tput setaf 3; kubectl logs  -n "${NAMESPACE}" ${podName} -p
+kubectl logs  -n "${NAMESPACE}" ${podName} -p
 
 done
 
