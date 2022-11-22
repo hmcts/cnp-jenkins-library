@@ -5,13 +5,13 @@ NAMESPACE=${2}
 echo "
 See below debug information to help troubleshooting the issue.
 ================================================================================
-Events on namespace:
+kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
 "
 kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
 
 echo "
 ================================================================================
-Status of pods:
+kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
 
 "
 kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
@@ -29,9 +29,10 @@ for podName in $(kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/instanc
 echo "
 ================================================================================
 Logs for crashing pod $podName:
+kubectl logs  -n "${NAMESPACE}" ${podName} -p
 "
 
-  kubectl logs  -n "${NAMESPACE}" ${podName} -p
+kubectl logs  -n "${NAMESPACE}" ${podName} -p
 done
 
 exit 1
