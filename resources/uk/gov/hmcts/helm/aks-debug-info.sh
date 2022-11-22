@@ -1,6 +1,7 @@
 #!/bin/bash
 RELEASE_NAME=${1}
 NAMESPACE=${2}
+export TERM=xterm-256color
 
 echo "
 
