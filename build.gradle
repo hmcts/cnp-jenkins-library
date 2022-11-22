@@ -36,7 +36,7 @@ dependencies {
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '608.vfa_f971c5a_a_e9', ext: 'jar'
 
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
-  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0'
+  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.1'
 
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.16'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
