@@ -2,7 +2,7 @@
 
 RELEASE_NAME=${1}
 NAMESPACE=${2}
-
+export TERM=xterm-256color
 function execute_command () {
 tput setaf 3;
 "$@"
