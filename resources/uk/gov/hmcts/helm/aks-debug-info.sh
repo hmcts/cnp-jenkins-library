@@ -7,15 +7,15 @@ echo "
 $(tput setaf 3)See below debug information to help troubleshooting the issue.
 ================================================================================
 kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
-$(tput sgr0)"
+"
 
-kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
+tput setaf 3; kubectl get events '--field-selector=type!=Normal' '--sort-by=.metadata.creationTimestamp' -n "${NAMESPACE}" | grep  "${RELEASE_NAME}"
 
 echo "$(tput setaf 3)================================================================================
 kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
-$(tput sgr0)"
+"
 
-kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
+tput setaf 3; kubectl get pods -n "${NAMESPACE}"  -l app.kubernetes.io/instance="${RELEASE_NAME}"
 
 # Commenting describe output as that is already covered by events on the namespace
 # echo "
@@ -30,8 +30,8 @@ echo "
 $(tput setaf 3)================================================================================
 Logs for crashing pod $podName:
 kubectl logs  -n "${NAMESPACE}" ${podName} -p
-$(tput sgr0)"
-kubectl logs  -n "${NAMESPACE}" ${podName} -p
+"
+tput setaf 3; kubectl logs  -n "${NAMESPACE}" ${podName} -p
 
 done
 
