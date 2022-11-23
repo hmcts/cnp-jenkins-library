@@ -41,7 +41,7 @@ Logs for crashing pod $podName:
 kubectl logs  -n "${NAMESPACE}" ${podName} -p
 "
 
-  kubectl logs -n "${NAMESPACE}" ${podName} -p
+  kubectl logs -n "${NAMESPACE}" ${podName} -p | colour_print
 
 done
 
