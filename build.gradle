@@ -31,7 +31,7 @@ dependencies {
 
   implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.379'
   implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '625.vd896b_f445a_f8', ext: 'jar'
-  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2097.v33db_b_de764b_e', ext: 'jar'
+  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2114.v2654ca_721309', ext: 'jar'
   implementation 'org.jenkins-ci.plugins:job-dsl-core:1.81'
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '616.ve67136f6c77d', ext: 'jar'
 
