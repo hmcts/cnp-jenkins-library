@@ -4,9 +4,12 @@ RELEASE_NAME=${1}
 NAMESPACE=${2}
 export TERM=xterm-256color
 function colour_print() {
+  DEFAULT_IFS=$IFS
+  IFS=$'\n'
   while read -r line; do
     tput setaf 3; echo "$line"
   done
+  IFS=$DEFAULT_IFS
 }
 
 echo "
@@ -38,7 +41,7 @@ Logs for crashing pod $podName:
 kubectl logs  -n "${NAMESPACE}" ${podName} -p
 "
 
-  kubectl logs -n "${NAMESPACE}" ${podName} -p | colour_print
+  kubectl logs -n "${NAMESPACE}" ${podName} -p
 
 done
 
