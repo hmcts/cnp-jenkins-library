@@ -156,7 +156,7 @@ class GradleBuilderTest extends Specification {
 
     then:
     // Report has 2 dependencies with vulnerabilities and 3 with suppressed vulnerabilities.
-    result.dependencies.size == 5
+    result.dependencies.size() == 5
     // Only dependencies with vulnerabilities or suppressed vulnerabilities should be reported
     result.dependencies.every {
       it.vulnerabilities || it.suppressedVulnerabilities

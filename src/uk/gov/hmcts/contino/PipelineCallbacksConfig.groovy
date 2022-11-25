@@ -11,6 +11,10 @@ class PipelineCallbacksConfig {
     bodies.put('after:' + stage, body)
   }
 
+  void registerAfter(String stage, String condition, Closure body) {
+    bodies.put('after:' + stage + ':' + condition, body)
+  }
+
   void registerOnStageFailure(Closure body) {
     bodies.put('onStageFailure', body)
   }
