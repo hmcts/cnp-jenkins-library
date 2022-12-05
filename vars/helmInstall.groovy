@@ -109,6 +109,7 @@ def call(DockerImage dockerImage, Map params) {
       "--set global.tags.businessArea=${this.env.BUSINESS_AREA_TAG}",
       "--set global.tags.environment=${environmentTag}",
       "--set global.disableTraefikTls=false",
+      "--set global.dtDashboardEnabled=false",
       "--namespace ${namespace}"
     ]
 
