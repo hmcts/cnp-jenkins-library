@@ -96,4 +96,9 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.fortifyScan = true
     config.fortifyVaultName = fortifyVaultName
   }
+
+  void enableMasterTestBuild() {
+    config.masterTestBuild = true
+  }
+
 }

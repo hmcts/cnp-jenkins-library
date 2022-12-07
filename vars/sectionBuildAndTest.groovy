@@ -115,7 +115,7 @@ def call(params) {
     }
 
     onMaster {
-      if (fileExists('build.gradle') && dockerFileExists) {
+      if (config.masterTestBuild && fileExists('build.gradle') && dockerFileExists) {
         branches["Docker Test Build"] = {
           withAcrClient(subscription) {
             def dockerfileTest = 'Dockerfile_test'
