@@ -130,7 +130,7 @@ def call(params) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                     builder.performanceTest()
-                    publishPerformanceReports(this, params)
+                    publishPerformanceReports(params)
                   }
                 }
               }
