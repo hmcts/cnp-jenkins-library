@@ -226,6 +226,20 @@ def call(params) {
         withTeamSecrets(config, environment) {
 
           onPR() {
+            if (config.fullFunctionalTest) {
+              stageWithAgent('Functional test (Full)', product) {
+                testEnv(aksUrl) {
+                  warnError('Failure in fullFunctionalTest') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
             if (config.clearHelmRelease) {
               helmUninstall(dockerImage, params, pcr)
             }
