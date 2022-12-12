@@ -219,6 +219,20 @@ def call(params) {
           }
         }
       }
+
+    } else { // i.e. non service app
+
+      withSubscriptionLogin(subscription) {
+        withTeamSecrets(config, environment) {
+
+          onPR() {
+            if (config.clearHelmRelease) {
+              helmUninstall(dockerImage, params, pcr)
+            }
+          }
+
+        }
+      }
     }
   }
 }
