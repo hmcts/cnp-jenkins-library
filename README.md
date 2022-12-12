@@ -158,6 +158,15 @@ called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
 
+#### Docker Test Build
+
+A Docker Test Build can be enabled providing static unit tests, security checks & Sonar scanning for builds from Master if needed. This stage is always run on PR so in most cases does not need enabling for Master builds if following common git workflow. 
+
+By adding `enableDockerTestBuild()` to the Jenkinsfile, `Static Checks/Container Build` stages will be executed in the pipeline for Master instead of skipped.
+
+This stage was previously enabled by default however is now optional. 
+
+
 #### High level data setup
 
 This can be used to import data required for the application.
@@ -190,6 +199,7 @@ Branch | HighDataSetup Stage
 `perftest` | `perftest`
 `demo` | `demo`
 `ithc` | `ithc`
+
 
 #### Extending the opinionated pipeline
 
