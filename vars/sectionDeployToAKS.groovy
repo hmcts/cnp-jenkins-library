@@ -228,12 +228,15 @@ def call(params) {
           onPR() {
             if (config.fullFunctionalTest) {
               stageWithAgent('Functional test (Full)', product) {
-                testEnv(aksUrl) {
-                  warnError('Failure in fullFunctionalTest') {
-                    pcr.callAround("fullFunctionalTest:${environment}") {
-                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                        builder.fullFunctionalTest()
-                      }
+                // NB: non-service apps will have no URL of their own: 
+                //     therefore not using `testEnv(aksUrl)` to generate the
+                //     TEST_URL, as it's expected to be set elsewhere and any
+                //     call to `testEnv()` would reset it.
+
+                warnError('Failure in fullFunctionalTest') {
+                  pcr.callAround("fullFunctionalTest:${environment}") {
+                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                      builder.fullFunctionalTest()
                     }
                   }
                 }
