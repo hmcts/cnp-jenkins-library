@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
 
-def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product) {
+def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component) {
 
   Environment environment = new Environment(env)
 
@@ -72,7 +72,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
         })
       }
       stageWithAgent('Cross browser tests', product) {
-        parallel( crossBrowserStages )
+        parallel(crossBrowserStages)
       }
     }
 
@@ -82,7 +82,11 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
-              publishPerformanceReports(this, params)
+              publishPerformanceReports(
+                product: product,
+                component: component,
+                environment: environment.nonProdName
+              )
             }
           }
         }

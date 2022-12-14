@@ -54,7 +54,7 @@ def call(type,product,component,Closure body) {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product)
+          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component)
         }
         assert  pipelineType!= null
       } catch (err) {
