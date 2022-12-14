@@ -158,14 +158,15 @@ called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
 
-#### Docker Test Build
+#### Docker test build for continuous functional and smoke tests
 
-A Docker Test Build can be enabled providing static unit tests, security checks & Sonar scanning for builds from Master if needed. This stage is always run on PR so in most cases does not need enabling for Master builds if following common git workflow. 
+An application can configure running continuous smoke/functional tests on java app deployments managed through flux. 
 
-By adding `enableDockerTestBuild()` to the Jenkinsfile, `Static Checks/Container Build` stages will be executed in the pipeline for Master instead of skipped.
+https://github.com/hmcts/chart-java/#smoke-and-functional-tests
 
-This stage was previously enabled by default however is now optional. 
+To build docker images for this, add `enableDockerTestBuild()` in `Jenkinsfile_CNP`. `Static Checks/Container Build` stage in the pipeline will execute, including a test docker image.
 
+A Docker test build was previously built by default however has been made optional for pipeline speed and reliability.
 
 #### High level data setup
 
