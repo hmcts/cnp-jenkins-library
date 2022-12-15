@@ -158,6 +158,16 @@ called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
 
+#### Docker test build for continuous functional and smoke tests
+
+An application can configure running continuous smoke/functional tests on java app deployments managed through flux. 
+
+https://github.com/hmcts/chart-java/#smoke-and-functional-tests
+
+To build docker images for this, add `enableDockerTestBuild()` in `Jenkinsfile_CNP`. `Static Checks/Container Build` stage in the pipeline will execute, including a test docker image.
+
+A Docker test build was previously built by default however has been made optional for pipeline speed and reliability.
+
 #### High level data setup
 
 This can be used to import data required for the application.
@@ -190,6 +200,7 @@ Branch | HighDataSetup Stage
 `perftest` | `perftest`
 `demo` | `demo`
 `ithc` | `ithc`
+
 
 #### Extending the opinionated pipeline
 
@@ -685,5 +696,5 @@ This file will point to the repository which defines, in json syntax, which infr
  1. Use the Github pull requests to make change
  2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
-@Library('Infrastructure@<your-branch-name') _
+@Library('Infrastructure@<your-branch-name>') _
 ```
