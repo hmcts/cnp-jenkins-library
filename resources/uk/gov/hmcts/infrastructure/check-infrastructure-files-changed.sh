@@ -3,4 +3,9 @@ set -ex
 
 git fetch origin master:master
 
-git diff -s --exit-code origin/master infrastructure/
+changes=$(git diff origin/master --name-status infrastructure/)
+
+if [ ! -z "$changes" -a "$changes" != " " ];
+then
+  exit 1
+fi
