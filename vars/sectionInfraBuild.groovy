@@ -4,13 +4,15 @@ import java.time.LocalDate
 LocalDate currentDate = LocalDate.now()
 LocalDate nextMonth = currentDate.plusDays(30)
 
+def nextMonth = nextMonth
+
 def call(params) {
   def environment = params.environment
   def subscription = params.subscription
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter ?: LocalDate.nextMonth
+  def expiresAfter = params.expiresAfter ?: nextMonth
   def pcr = params.pipelineCallbacksRunner
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
