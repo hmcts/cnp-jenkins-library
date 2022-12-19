@@ -4,8 +4,6 @@ import java.time.LocalDate
 LocalDate currentDate = LocalDate.now()
 LocalDate nextMonth = currentDate.plusDays(30)
 
-def nextMonth = nextMonth
-
 def call(params) {
   def environment = params.environment
   def subscription = params.subscription
@@ -21,7 +19,7 @@ def call(params) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // build environment infrastructure once
-          return spinInfra(product, component, environment, planOnly, subscription)
+          return spinInfra(product, component, environment, planOnly, subscription, expiresAfter)
         }
       }
     }
