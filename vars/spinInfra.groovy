@@ -8,15 +8,15 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 import java.time.LocalDate
 
-def call(productName, environment, tfPlanOnly, subscription) {
-  call(productName, null, environment, tfPlanOnly, subscription)
+def call(productName, environment, tfPlanOnly, subscription, expires) {
+  call(productName, null, environment, tfPlanOnly, subscription, expires)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription) {
-  call(product, component, environment, tfPlanOnly, subscription, "")
+def call(product, component, environment, tfPlanOnly, subscription, expires) {
+  call(product, component, environment, tfPlanOnly, subscription, "", expires)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget, expires) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
@@ -25,7 +25,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
-  def expiresAfter = expiresAfter ?: nextMonth
+  def expiresAfter = expires ?: nextMonth
 
   LocalDate currentDate = LocalDate.now()
   LocalDate nextMonth = currentDate.plusDays(30)
