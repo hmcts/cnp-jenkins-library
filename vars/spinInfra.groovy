@@ -52,7 +52,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        if (env.Environment.toTagName(environment) == "sandbox") {
+        if (env.Environment == "sandbox") {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: nextMonth ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expiresAfter'; tfPlanOnly='$tfPlanOnly'"
         } else
