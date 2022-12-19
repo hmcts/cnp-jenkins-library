@@ -10,7 +10,7 @@ def call(params) {
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter ?: nextMonth
+  def expiresAfter = params.expiresAfter ?: LocalDate.nextMonth
   def pcr = params.pipelineCallbacksRunner
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
