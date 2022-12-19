@@ -6,17 +6,17 @@ import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
-import java.time.LocalDate
+// import java.time.LocalDate
 
-def call(productName, environment, tfPlanOnly, subscription, expires) {
-  call(productName, null, environment, tfPlanOnly, subscription, expires)
+def call(productName, environment, tfPlanOnly, subscription, expiresAfter) {
+  call(productName, null, environment, tfPlanOnly, subscription, expiresAfter)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription, expires) {
-  call(product, component, environment, tfPlanOnly, subscription, "", expires)
+def call(product, component, environment, tfPlanOnly, subscription, expiresAfter) {
+  call(product, component, environment, tfPlanOnly, subscription, "", expiresAfter)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget, expires) {
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget, expiresAfter) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
@@ -25,10 +25,11 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
-  def expiresAfter = expires ?: nextMonth
+  // def expiresAfter = expires ?: nextMonth
+  def expiresAfter
 
-  LocalDate currentDate = LocalDate.now()
-  LocalDate nextMonth = currentDate.plusDays(30)
+  // LocalDate currentDate = LocalDate.now()
+  // LocalDate nextMonth = currentDate.plusDays(30)
 
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
