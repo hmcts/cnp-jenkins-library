@@ -8,15 +8,15 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 import java.time.LocalDate
 
-def call(productName, environment, tfPlanOnly, subscription) {
-  call(productName, null, environment, tfPlanOnly, subscription)
+def call(productName, environment, tfPlanOnly, subscription, expiresAfter) {
+  call(productName, null, environment, tfPlanOnly, subscription, expiresAfter)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription) {
-  call(product, component, environment, tfPlanOnly, subscription, "")
+def call(product, component, environment, tfPlanOnly, subscription, expiresAfter) {
+  call(product, component, environment, tfPlanOnly, subscription, "", expiresAfter)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget, expiresAfter) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
@@ -25,6 +25,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
+  def expiresAfter
 
   LocalDate currentDate = LocalDate.now()
   LocalDate nextMonth = currentDate.plusDays(30)
@@ -52,7 +53,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        def expiresAfter = nextMonth
+        def expiresAfter = expiresAfter ?: nextMonth
 
         if (environment != 'sandbox' && environment != 'sbox') {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
