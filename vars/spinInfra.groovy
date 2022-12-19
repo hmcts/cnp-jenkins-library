@@ -55,10 +55,9 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         if (env.Environment.toTagName(environment) == "sandbox") {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: nextMonth ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expiresAfter'; tfPlanOnly='$tfPlanOnly'"
-        else
+        } else
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
-        }
 
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
