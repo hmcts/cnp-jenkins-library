@@ -25,7 +25,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
-  def expiresAfter
+  def expiresAfter = expiresAfter ?: nextMonth
 
   LocalDate currentDate = LocalDate.now()
   LocalDate nextMonth = currentDate.plusDays(30)
@@ -52,8 +52,6 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
-
-        def expiresAfter = expiresAfter ?: nextMonth
 
         if (environment != 'sandbox' && environment != 'sbox') {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
