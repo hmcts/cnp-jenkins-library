@@ -7,7 +7,7 @@ def call(params) {
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter
+  def expiresAfter = params.expiresAfter ?: "test"
   def pcr = params.pipelineCallbacksRunner
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
@@ -16,7 +16,7 @@ def call(params) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // build environment infrastructure once
-          return spinInfra(product, component, environment, planOnly, subscription, expiresAfter)
+          return spinInfra(product, component, expiresAfter, environment, planOnly, subscription)
         }
       }
     }

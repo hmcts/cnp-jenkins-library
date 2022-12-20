@@ -8,8 +8,8 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 // import java.time.LocalDate
 
-def call(productName, environment, tfPlanOnly, subscription, expiresAfter) {
-  call(productName, null, environment, tfPlanOnly, subscription, expiresAfter)
+def call(productName, environment, tfPlanOnly, subscription, expires) {
+  call(productName, null, environment, tfPlanOnly, subscription, expires)
 }
 
 def call(product, component, environment, tfPlanOnly, subscription, expiresAfter) {
@@ -26,7 +26,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def teamName
   def pipelineTags
   // def expiresAfter = expires ?: nextMonth
-  // def expiresAfter
+  def expires = expiresAfter ?: "test"
 
   // LocalDate currentDate = LocalDate.now()
   // LocalDate nextMonth = currentDate.plusDays(30)
@@ -97,6 +97,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         env.TF_VAR_deployment_namespace = deploymentNamespace
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
+        env.TF_VAR_expiresAfter = expiresAfter
 
         def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
 
