@@ -26,8 +26,8 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def teamName
   def pipelineTags
 
-  println environment
-  println expiresAfter
+  println "The environment is " environment
+  println "expiresAfter is " expiresAfter
   // def expiresAfter
   // def expiresAfter = expires ?: nextMonth
 
