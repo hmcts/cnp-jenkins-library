@@ -2,7 +2,7 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import java.time.LocalDate
 
 LocalDate currentDate = LocalDate.now()
-LocalDate nextMonth = currentDate.plusDays(30)
+def nextMonth = currentDate.plusDays(30)
 
 def call(params) {
   def environment = params.environment
