@@ -7,7 +7,7 @@ import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
 
-def call(String product, String component = null, String expiresAfter = null, Closure body) {
+def call(String product, String component = null, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
