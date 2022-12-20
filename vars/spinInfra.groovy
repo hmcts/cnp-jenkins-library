@@ -26,7 +26,6 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def teamName
   def pipelineTags
   // def expiresAfter = expires ?: nextMonth
-  def expires = expiresAfter ?: "test"
 
   // LocalDate currentDate = LocalDate.now()
   // LocalDate nextMonth = currentDate.plusDays(30)
@@ -53,12 +52,14 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
+        def expires = expiresAfter ?: "test"
+
 
         if (environment != 'sandbox' && environment != 'sbox') {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
         } else {
-          pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: expiresAfter ]).toString()
+          pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: expires ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expiresAfter'; tfPlanOnly='$tfPlanOnly'"
         }
 
