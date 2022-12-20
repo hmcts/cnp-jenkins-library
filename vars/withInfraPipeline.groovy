@@ -18,7 +18,6 @@ def call(String product, String component = null, String expiresAfter, Closure b
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
   def nextMonth = LocalDate.now().plusDays(30)
-  def expiresAfter = params.expiresAfter ?: nextMonth
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
@@ -82,7 +81,7 @@ def call(String product, String component = null, String expiresAfter, Closure b
           planOnly: true,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
-          expiresAfter: expiresAfter,
+          expiresAfter: expiresAfter ?: nextMonth,
         )
       }
     } catch (err) {
