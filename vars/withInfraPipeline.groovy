@@ -8,8 +8,6 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
 import java.time.LocalDate
 
-LocalDate currentDate = LocalDate.now()
-
 def call(String product, String component = null, Closure body) {
 
   Subscription subscription = new Subscription(env)
@@ -19,7 +17,7 @@ def call(String product, String component = null, Closure body) {
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
-  def nextMonth = LocalDate.currentDate.plusDays(30)
+  def nextMonth = LocalDate.now().plusDays(30)
   def expiresAfter = params.expiresAfter ?: nextMonth
 
   callbacks.registerAfterAll { stage ->
