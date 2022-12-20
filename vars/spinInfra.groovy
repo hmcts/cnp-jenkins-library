@@ -25,6 +25,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
+  def expiresAfter
   // def expiresAfter = expires ?: nextMonth
 
   // LocalDate currentDate = LocalDate.now()
@@ -52,7 +53,6 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
-        def expiresAfter = expiresAfter ?: "test"
 
 
         if (environment != 'sandbox' && environment != 'sbox') {
