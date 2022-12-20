@@ -8,7 +8,7 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
 import java.time.LocalDate
 
-def call(String product, String component = null, String expires, Closure body) {
+def call(String product, String component = null, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
@@ -81,7 +81,7 @@ def call(String product, String component = null, String expires, Closure body) 
           planOnly: true,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
-          expiresAfter: expires,
+          expiresAfter: expiresAfter,
         )
       }
     } catch (err) {
