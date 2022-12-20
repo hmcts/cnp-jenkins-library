@@ -9,7 +9,6 @@ import uk.gov.hmcts.pipeline.TeamConfig
 import java.time.LocalDate
 
 LocalDate currentDate = LocalDate.now()
-LocalDate nextMonth = currentDate.plusDays(30)
 
 def call(String product, String component = null, Closure body) {
 
@@ -20,6 +19,7 @@ def call(String product, String component = null, Closure body) {
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
+  def nextMonth = LocalDate.currentDate.plusDays(30)
   def expiresAfter = params.expiresAfter ?: nextMonth
 
   callbacks.registerAfterAll { stage ->
