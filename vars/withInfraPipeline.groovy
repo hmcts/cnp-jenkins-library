@@ -11,7 +11,7 @@ import java.time.LocalDate
 LocalDate currentDate = LocalDate.now()
 LocalDate nextMonth = currentDate.plusDays(30)
 
-def call(String product, String component = null, String expiresAfter, Closure body) {
+def call(String product, String component = null, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
