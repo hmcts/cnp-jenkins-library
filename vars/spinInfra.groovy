@@ -26,7 +26,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def teamName
   def pipelineTags
   // def expiresAfter = expires ?: nextMonth
-  def expiresAfter
+  // def expiresAfter
 
   // LocalDate currentDate = LocalDate.now()
   // LocalDate nextMonth = currentDate.plusDays(30)
