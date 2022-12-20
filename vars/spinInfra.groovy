@@ -25,7 +25,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
-  def expiresAfter
+  // def expiresAfter
   // def expiresAfter = expires ?: nextMonth
 
   // LocalDate currentDate = LocalDate.now()
