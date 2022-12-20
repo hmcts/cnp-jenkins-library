@@ -6,8 +6,9 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
+import java.time.LocalDate
 
-def call(String product, String component = null, Closure body) {
+def call(String product, String component = null, String expiresAfter, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
@@ -16,6 +17,7 @@ def call(String product, String component = null, Closure body) {
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
+  def nextMonth = LocalDate.now().plusDays(30)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
@@ -79,6 +81,7 @@ def call(String product, String component = null, Closure body) {
           planOnly: true,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
+          expiresAfter: expiresAfter,
         )
       }
     } catch (err) {
