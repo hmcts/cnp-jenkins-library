@@ -9,7 +9,7 @@ import uk.gov.hmcts.contino.RepositoryUrl
 // import java.time.LocalDate
 
 def call(productName, expiresAfter, environment, tfPlanOnly, subscription) {
-  call(productName, null, environment, tfPlanOnly, subscription)
+  call(productName, expiresAfter, environment, tfPlanOnly, subscription)
 }
 
 def call(product, component, environment, tfPlanOnly, subscription, expiresAfter) {
