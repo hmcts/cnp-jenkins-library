@@ -12,11 +12,11 @@ def call(productName, environment, tfPlanOnly, subscription, expires) {
   call(productName, null, environment, tfPlanOnly, subscription, expires)
 }
 
-def call(product, component, environment, tfPlanOnly, subscription, expiresAfter) {
-  call(product, component, environment, tfPlanOnly, subscription, "", expiresAfter)
+def call(product, component, environment, tfPlanOnly, subscription) {
+  call(product, component, environment, tfPlanOnly, subscription, "")
 }
 
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget, expiresAfter) {
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
   def deploymentNamespace = branch.deploymentNamespace()
