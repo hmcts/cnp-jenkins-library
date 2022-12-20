@@ -1,15 +1,13 @@
 import uk.gov.hmcts.contino.MetricsPublisher
 import java.time.LocalDate
 
-def nextMonth = LocalDate.now().plusDays(30)
-
 def call(params) {
   def environment = params.environment
   def subscription = params.subscription
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter ?: nextMonth
+  def expiresAfter = params.expiresAfter ?: LocalDate.now().plusDays(30)
   def pcr = params.pipelineCallbacksRunner
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
