@@ -8,8 +8,8 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 // import java.time.LocalDate
 
-def call(productName, expiresAfter, environment, tfPlanOnly, subscription) {
-  call(productName, expiresAfter, environment, tfPlanOnly, subscription)
+def call(productName, environment, tfPlanOnly, subscription) {
+  call(productName, environment, tfPlanOnly, subscription)
 }
 
 def call(product, component, expiresAfter, environment, tfPlanOnly, subscription) {
