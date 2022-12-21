@@ -344,6 +344,13 @@ If you want your resources to remain for longer than 30 days, you can override t
 
 For resources that must remain permanently, specify a value of `"3000-01-01"`
 
+You must specify a value for the `component` parameter as well as `expiresAfter`. You can set `component` to `null` e.g.
+
+```
+def component = null
+def expiresAfter = "3000-01-01"
+```
+
 #### Extending the opinionated infratructure pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
