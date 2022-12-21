@@ -25,7 +25,7 @@ def call(product, component, expiresAfter, environment, tfPlanOnly, subscription
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
-  def expires = expiresAfter ? LocalDate.now().plusDays(30)
+  def expires = expiresAfter ?: LocalDate.now().plusDays(30)
 
   sh "echo 'The environment is $environment'"
   sh "echo 'The expiresAfter is $expiresAfter'"
