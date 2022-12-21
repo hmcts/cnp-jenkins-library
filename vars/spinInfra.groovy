@@ -6,7 +6,7 @@ import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
-// import java.time.LocalDate
+import java.time.LocalDate
 
 def call(productName, environment, tfPlanOnly, subscription) {
   call(productName, environment, tfPlanOnly, subscription)
