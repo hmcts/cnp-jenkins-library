@@ -315,6 +315,7 @@ These parameters include:
 | parameter name | description
 | --- | --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
+| expiresAfter | |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
@@ -326,13 +327,22 @@ def product = "rhubarb"
 
 //Optional
 def component = "extra-detail"
+def expiresAfter = "YYYY-MM-DD"
 
-withInfraPipeline(product, component) {
+withInfraPipeline(product, component, expiresAfter) {
 
   enableSlackNotifications('#my-team-builds')
 
 }
 ```
+
+The expiresAfter parameter is used in the **Sandbox environment** to tag resources with an end date after which they are no longer needed. They will then be automatically deleted after this date.
+
+By default the tag value will be `now() + 30 days`.
+
+If you want your resources to remain for longer than 30 days, you can override the parameter manually in your Jenkinsfile by specifying the `expiresAfter` parameter as a date in the format shown above.
+
+For resources that must remain permanently, specify a value of `"3000-01-01"`
 
 #### Extending the opinionated infratructure pipeline
 
