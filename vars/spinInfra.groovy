@@ -27,15 +27,6 @@ def call(product, component, expiresAfter, environment, tfPlanOnly, subscription
   def pipelineTags
   def expires = expiresAfter ?: LocalDate.now().plusDays(30)
 
-  sh "echo 'The environment is $environment'"
-  sh "echo 'The expiresAfter is $expiresAfter'"
-  sh "echo 'The expires is $expires'"
-  // def expiresAfter
-  // def expiresAfter = expires ?: nextMonth
-
-  // LocalDate currentDate = LocalDate.now()
-  // LocalDate nextMonth = currentDate.plusDays(30)
-
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
   )
