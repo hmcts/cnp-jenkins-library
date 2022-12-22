@@ -9,20 +9,19 @@ import uk.gov.hmcts.contino.RepositoryUrl
 import java.time.LocalDate
 
 def call(params) {
-  def product = params.product
-  def component = params.component ?: null
-  def expiresAfter = params.expiresAfter ?: null
+  def productName = component ? "$product-$component" : product
+  def expiresAfter = params.expiresAfter ?: LocalDate.now().plusDays(30)
   def environment = params.environment
   def tfPlanOnly = params.tfPlanOnly ?: false
   def subscription = params.subscription
+  def product = params.product
+  def component = params.component ?: null
   def branch = new ProjectBranch(env.BRANCH_NAME)
   def deploymentNamespace = branch.deploymentNamespace()
-  def productName = component ? "$product-$component" : product
   def changeUrl = ""
   def environmentDeploymentTarget = "$environment"
   def teamName
   def pipelineTags
-  def expires = expiresAfter ?: LocalDate.now().plusDays(30)
 
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
@@ -52,8 +51,8 @@ def call(params) {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
         } else {
-          pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: expires ]).toString()
-          log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expires'; tfPlanOnly='$tfPlanOnly'"
+          pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: expiresAfter ]).toString()
+          log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expiresAfter'; tfPlanOnly='$tfPlanOnly'"
         }
 
         if (env.STORE_rg_name_template != null &&
