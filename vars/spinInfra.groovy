@@ -14,10 +14,7 @@ def call(params) {
   def expiresAfter = params.expiresAfter ?: LocalDate.now().plusDays(30)
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
-  def subscription = params.subscription
-}
-
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) { 
+  def subscription = params.subscription 
   def productName = component ? "$product-$component" : product
   def branch = new ProjectBranch(env.BRANCH_NAME)
   def deploymentNamespace = branch.deploymentNamespace()
