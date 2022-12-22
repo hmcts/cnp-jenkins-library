@@ -11,7 +11,7 @@ import java.time.LocalDate
 def call(params) {
   def product = params.product
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter ?: LocalDate.now().plusDays(30)
+  def expires = params.expires ?: LocalDate.now().plusDays(30)
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
   def subscription = params.subscription 
@@ -51,8 +51,8 @@ def call(params) {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
           log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
         } else {
-          pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: expiresAfter ]).toString()
-          log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expiresAfter'; tfPlanOnly='$tfPlanOnly'"
+          pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expires: expires ]).toString()
+          log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expires'; tfPlanOnly='$tfPlanOnly'"
         }
 
         if (env.STORE_rg_name_template != null &&
