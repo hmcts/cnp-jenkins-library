@@ -30,7 +30,6 @@ def call(String product, String component = null, Closure body) {
 
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-    def expiresAfter = pipelineConfig.expiresAfter
     
     try {
       dockerAgentSetup()
@@ -81,7 +80,7 @@ def call(String product, String component = null, Closure body) {
           planOnly: true,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
-          expires: expiresAfter
+          expires: pipelineConfig.expiresAfter
         )
       }
     } catch (err) {
