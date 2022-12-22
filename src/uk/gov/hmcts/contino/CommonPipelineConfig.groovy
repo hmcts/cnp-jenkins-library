@@ -5,6 +5,6 @@ class CommonPipelineConfig implements Serializable {
 
   Set<String> branchesToSyncWithMaster = []
 
-  String expiresAfter
+  String expires
 
 }
