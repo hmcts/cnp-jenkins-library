@@ -11,7 +11,7 @@ import java.time.LocalDate
 def call(params) {
   def product = params.product
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter
+  def expiresAfter = params.expiresAfter ?: null
   def environment = params.environment
   def tfPlanOnly = params.tfPlanOnly ?: false
   def subscription = params.subscription
