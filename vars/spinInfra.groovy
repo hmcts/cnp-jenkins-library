@@ -9,13 +9,13 @@ import uk.gov.hmcts.contino.RepositoryUrl
 import java.time.LocalDate
 
 def call(params) {
+  def product = params.product
+  def component = params.component ?: null
   def productName = component ? "$product-$component" : product
   def expiresAfter = params.expiresAfter ?: LocalDate.now().plusDays(30)
   def environment = params.environment
   def tfPlanOnly = params.tfPlanOnly ?: false
   def subscription = params.subscription
-  def product = params.product
-  def component = params.component ?: null
   def branch = new ProjectBranch(env.BRANCH_NAME)
   def deploymentNamespace = branch.deploymentNamespace()
   def changeUrl = ""
