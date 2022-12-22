@@ -30,7 +30,8 @@ def call(String product, String component = null, Closure body) {
 
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-    def expiresAfter = env.EXPIRES_AFTER
+    def expiresAfter = pipelineConfig.infraExpiresAfterTag
+    
     try {
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"

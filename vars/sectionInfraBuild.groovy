@@ -7,7 +7,7 @@ def call(params) {
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
-  def expiresAfter = params.expiresAfter ?: null
+  def expiresAfter = params.expiresAfter
   def pcr = params.pipelineCallbacksRunner
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")

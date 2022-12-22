@@ -8,17 +8,14 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 import java.time.LocalDate
 
-def call(productName, expiresAfter, environment, tfPlanOnly, subscription) {
-  call(productName, null, expiresAfter, environment, tfPlanOnly, subscription)
-}
-
-def call(product, component, expiresAfter, environment, tfPlanOnly, subscription) {
-  call(product, component, expiresAfter, environment, tfPlanOnly, subscription, "")
-}
-
-def call(product, component, expiresAfter, environment, tfPlanOnly, subscription, deploymentTarget) {
+def call(params) {
+  def product = params.product
+  def component = params.component ?: null
+  def expiresAfter = params.expiresAfter
+  def environment = params.environment
+  def tfPlanOnly = params.tfPlanOnly ?: false
+  def subscription = params.subscription
   def branch = new ProjectBranch(env.BRANCH_NAME)
-
   def deploymentNamespace = branch.deploymentNamespace()
   def productName = component ? "$product-$component" : product
   def changeUrl = ""

@@ -4,4 +4,7 @@ class CommonPipelineConfig implements Serializable {
   String slackChannel
 
   Set<String> branchesToSyncWithMaster = []
+
+  String expiresAfter
+
 }

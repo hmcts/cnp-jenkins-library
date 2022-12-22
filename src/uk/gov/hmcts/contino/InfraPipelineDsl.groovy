@@ -11,9 +11,4 @@ class InfraPipelineDsl extends CommonPipelineDsl implements Serializable {
     this.steps = steps
   }
 
-  void expiresAfter(String expiresAfter) {
-    config.expiresAfter = expiresAfter
-    steps.env.EXPIRES_AFTER = expiresAfter
-  }
-
 }
