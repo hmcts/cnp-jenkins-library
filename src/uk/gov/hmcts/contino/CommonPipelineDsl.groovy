@@ -56,8 +56,8 @@ abstract class CommonPipelineDsl implements Serializable {
     config.branchesToSyncWithMaster = branches
   }
 
-  void expiresAfter(String expiresAfter) {
-    config.expiresAfter = expiresAfter
-    steps.env.EXPIRES_AFTER = expiresAfter
+  void expiresAfter(String expires) {
+    config.expires = expires
+    steps.env.EXPIRES_AFTER = expires
   }
 }
