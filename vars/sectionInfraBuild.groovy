@@ -1,5 +1,4 @@
 import uk.gov.hmcts.contino.MetricsPublisher
-import java.time.LocalDate
 
 def call(params) {
   def environment = params.environment

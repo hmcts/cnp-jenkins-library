@@ -6,12 +6,11 @@ import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
-import java.time.LocalDate
 
 def call(params) {
   def product = params.product
   def component = params.component ?: null
-  def expires = params.expires ?: LocalDate.now().plusDays(30)
+  def expires = params.expires
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
   def subscription = params.subscription 
@@ -46,6 +45,15 @@ def call(params) {
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
+        // pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
+        
+        // if (environment != 'sandbox' && environment != 'sbox') {} 
+        
+        // else {
+        //   pipelineTags = new TerraformTagMap([pipelineTags, expires: expires ]).toString()
+        // }
+
+        // log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
 
         if (environment != 'sandbox' && environment != 'sbox') {
           pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
