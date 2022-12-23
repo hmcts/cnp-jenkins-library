@@ -1,8 +1,10 @@
-apply plugin: 'groovy'
+plugins {
+  id 'groovy'
+}
 
 repositories {
 
-  jcenter()
+  mavenCentral()
   maven {
     url 'https://repo.jenkins-ci.org/public/'
   }
@@ -10,6 +12,7 @@ repositories {
 
 test {
   systemProperty 'groovy.grape.enable', 'false'
+  useJUnitPlatform()
 }
 
 compileGroovy {
@@ -20,34 +23,26 @@ compileTestGroovy {
 }
 
 dependencies {
-  compileOnly 'org.apache.ivy:ivy:2.4.0'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.19'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.19'
 
-  compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.13'
-  compile group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.13'
-  compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.32'
-  //used for generating RandomStrings
-  compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+  implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3583.v4f58de0d78d5'
+  testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-  compile group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.260'
-  compile group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '2.22', ext: 'jar'
-  compile group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '1.7.2', ext: 'jar'
-  compile 'org.jenkins-ci.plugins:job-dsl-core:1.77'
-  compile group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '2.6.4', ext: 'jar'
+  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.383'
+  implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '625.vd896b_f445a_f8', ext: 'jar'
+  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2114.v2654ca_721309', ext: 'jar'
+  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.81'
+  implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '616.ve67136f6c77d', ext: 'jar'
 
-  compile 'com.microsoft.azure:azure-documentdb:1.15.2'
-  compile 'com.microsoft.azure:azure:1.10.0'
-  compile 'com.github.seancfoley:ipaddress:4.1.0'
-  compile 'com.squareup.okio:okio:1.13.0'
-  compile 'com.squareup.okhttp3:okhttp:3.9.1'
-  compile 'org.apache.ant:ant:1.10.3'
+  testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
+  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.1'
 
-  testCompile group: 'org.spockframework', name: 'spock-core', version: '1.2-groovy-2.5'
-  testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.4.1'
-  testCompile group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '1.31.0'
+  testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.16'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
+  testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.36.0'
 
-  testRuntime "cglib:cglib-nodep:3.3.0"
-  testRuntime "org.objenesis:objenesis:2.5.1"
+  testRuntimeOnly 'org.objenesis:objenesis:3.3'
 }
 
 

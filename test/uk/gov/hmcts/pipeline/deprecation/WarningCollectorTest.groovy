@@ -1,18 +1,19 @@
 package uk.gov.hmcts.pipeline.deprecation
 
-import org.apache.commons.lang3.time.DateUtils
 import spock.lang.Specification
+
+import java.time.LocalDate
 
 import static org.assertj.core.api.Assertions.assertThat
 
 class WarningCollectorTest extends Specification {
 
-  Date nextDay = DateUtils.addDays(new Date(),1)
-  Date now = new Date()
-  Date nextWeek = DateUtils.addHours(DateUtils.addDays(new Date(),7), -1)
+  LocalDate nextDay = LocalDate.now().plusDays(1)
+  LocalDate now = LocalDate.now()
+  LocalDate nextWeek = now.plusWeeks(1)
 
-  String nextWeekFormattedDate = nextWeek.format("dd/MM/yyyy HH:mm aa", TimeZone.getTimeZone("UTC"))
-  String nextDayFormattedDate = nextDay.format("dd/MM/yyyy HH:mm aa", TimeZone.getTimeZone("UTC"))
+  String nextWeekFormattedDate = nextWeek.format("dd/MM/yyyy")
+  String nextDayFormattedDate = nextDay.format("dd/MM/yyyy")
 
   void setup() {
 
@@ -31,7 +32,7 @@ class WarningCollectorTest extends Specification {
   def "addPipelineWarning() with past date should throw exception"() {
 
     when:
-    WarningCollector.addPipelineWarning("test_key","test failure",new Date().parse("dd.MM.yyyy", "01.08.2019") )
+    WarningCollector.addPipelineWarning("test_key","test failure",LocalDate.parse("dd.MM.yyyy", "01.08.2019") )
 
     then:
     thrown RuntimeException
@@ -40,7 +41,7 @@ class WarningCollectorTest extends Specification {
 
   def "getMessageByDays() with same day should return today"() {
 
-    String formattedDate = now.format("dd/MM/yyyy HH:mm aa", TimeZone.getTimeZone("UTC"))
+    String formattedDate = now.format("dd/MM/yyyy")
 
     when:
     String message = WarningCollector.getMessageByDays(now)
@@ -58,13 +59,13 @@ class WarningCollectorTest extends Specification {
     assertThat(message).isEqualTo(nextDayFormattedDate+" ( tomorrow )")
   }
 
-  def "getMessageByDays() with a week later should return in 6 days"() {
+  def "getMessageByDays() with a week later should return in 7 days"() {
 
     when:
     String message = WarningCollector.getMessageByDays(nextWeek)
 
     then:
-    assertThat(message).isEqualTo(nextWeekFormattedDate+" ( in 6 days )")
+    assertThat(message).isEqualTo(nextWeekFormattedDate+" ( in 7 days )")
   }
 
   def "getSlackWarningMessage() should return expected message"() {
@@ -76,7 +77,7 @@ class WarningCollectorTest extends Specification {
     String message = WarningCollector.getSlackWarningMessage()
 
     String expectedMessage = "Test deprecation. This configuration will stop working by ${nextDayFormattedDate} ( tomorrow )\n\n" +
-      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 6 days )\n\n"
+      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )\n\n"
     then:
     assertThat(message).isEqualTo(expectedMessage)
   }

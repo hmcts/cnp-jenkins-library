@@ -1,4 +1,4 @@
-FROM openjdk:11.0-jdk AS build-env
+FROM openjdk:11.0.16-jdk AS build-env
 WORKDIR /opt/app
 
 RUN groupadd -g 1000 hmcts && useradd -u 1000 -d /opt/app -g hmcts hmcts

@@ -3,19 +3,21 @@ import uk.gov.hmcts.contino.InfraPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
-import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(String product, String environment, String subscription, Closure body) {
-  call(product, environment, subscription, false, '', body)
+  call(product, environment, subscription, false, null, body)
+}
+
+def call(String product, String environment, String subscription, String component, Closure body) {
+  call(product, environment, subscription, false, component, body)
 }
 def call(String product, String environment, String subscription, Boolean planOnly, Closure body) {
-  call(product, environment, subscription, planOnly, '', body)
+  call(product, environment, subscription, planOnly, body)
 }
-def call(String product, String environment, String subscription, Boolean planOnly, String deploymentTargets, Closure body) {
+def call(String product, String environment, String subscription, Boolean planOnly, String component, Closure body) {
 
-  Subscription metricsSubscription = new Subscription(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "", metricsSubscription.prodName )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
 
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
@@ -29,8 +31,6 @@ def call(String product, String environment, String subscription, Boolean planOn
   body.delegate = dsl
   body.call() // register pipeline config
 
-  def deploymentTargetList = (deploymentTargets) ? deploymentTargets.split(',') as List : null
-
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
@@ -41,9 +41,7 @@ def call(String product, String environment, String subscription, Boolean planOn
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
-        callbacksRunner.callAround('checkout') {
-          checkoutScm()
-        }
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
 
@@ -52,8 +50,11 @@ def call(String product, String environment, String subscription, Boolean planOn
         subscription: subscription,
         environment: environment,
         planOnly: planOnly,
-        deploymentTargets: deploymentTargetList,
-        product: product)
+        deploymentTargets: null,
+        product: product,
+        component: component,
+        pipelineCallbacksRunner: callbacksRunner,
+      )
 
 
     } catch (err) {

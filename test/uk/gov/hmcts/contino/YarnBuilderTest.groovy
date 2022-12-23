@@ -39,8 +39,8 @@ class YarnBuilderTest extends Specification {
       BRANCH_NAME: 'master',
     ]
     def closure
-    steps.withCredentials(_, { closure = it }) >> { closure.call() }
-    steps.withSauceConnect(_, { closure = it }) >> { closure.call() }
+    steps.withCredentials(_, { it.call() }) >> { closure = it }
+    steps.withSauceConnect(_, { it.call() }) >> { closure = it }
 
     builder = new YarnBuilder(steps)
   }
@@ -49,62 +49,47 @@ class YarnBuilderTest extends Specification {
     when:
       builder.build()
     then:
-      1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
+      1 * steps.sh({ it.toString().contains('yarn check 1> /dev/null 2> /dev/null') })
+      1 * steps.sh({ it.contains('--mutex network install --frozen-lockfile') })
       1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('lint') })
+      1 * steps.sh({ it.contains('lint') })
   }
 
   def "test calls 'yarn test' and 'yarn test:coverage' and 'yarn test:a11y'"() {
     when:
     builder.test()
     then:
-    1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-    1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test') })
-    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:coverage') })
-    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:a11y') })
+    1 * steps.sh({ it.contains('test') })
+    1 * steps.sh({ it.contains('test:coverage') })
+    1 * steps.sh({ it.contains('test:a11y') })
   }
 
   def "sonarScan calls 'yarn sonar-scan'"() {
     when:
       builder.sonarScan()
     then:
-      1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-      1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('sonar-scan') })
+      1 * steps.sh({ it.contains('sonar-scan') })
   }
 
   def "smokeTest calls 'yarn test:smoke'"() {
     when:
       builder.smokeTest()
     then:
-      1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-      1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:smoke') })
+      1 * steps.sh({ it.contains('test:smoke') })
   }
 
   def "functionalTest calls 'yarn test:functional'"() {
     when:
       builder.functionalTest()
     then:
-      1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-      1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:functional') })
+      1 * steps.sh({ it.contains('test:functional') })
   }
 
   def "apiGatewayTest calls 'yarn test:apiGateway'"() {
     when:
       builder.apiGatewayTest()
     then:
-      1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-      1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-      1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:apiGateway') })
+      1 * steps.sh({ it.contains('test:apiGateway') })
   }
 
   def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
@@ -115,10 +100,7 @@ class YarnBuilderTest extends Specification {
     when:
     builder.yarn("test:crossbrowser")
     then:
-    1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-    1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-    1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:crossbrowser') })
+    1 * steps.sh({ it.contains('test:crossbrowser') })
   }
 
   def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
@@ -134,10 +116,7 @@ class YarnBuilderTest extends Specification {
     when:
         builder.mutationTest()
     then:
-        1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-        1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-        1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-        1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:mutation') })
+        1 * steps.sh({ it.contains('test:mutation') })
   }
 
   def "securityCheck calls 'yarn audit'"() {
@@ -151,10 +130,7 @@ class YarnBuilderTest extends Specification {
     when:
         builder.fullFunctionalTest()
     then:
-        1 * steps.sh(['script':'yarn check 1> /dev/null 2> /dev/null', 'returnStatus':true])
-        1 * steps.sh({ it.startsWith(YARN_CMD) && it.contains('--mutex network install --frozen-lockfile') })
-        1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-        1*steps.sh({ it.startsWith(YARN_CMD) && it.contains('test:fullfunctional') })
+        1*steps.sh({ it.contains('test:fullfunctional') })
   }
 
   def "runProviderVerification triggers a yarn hook with publish"() {

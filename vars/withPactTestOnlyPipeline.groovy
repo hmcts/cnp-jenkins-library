@@ -5,8 +5,8 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
-import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
@@ -23,10 +23,9 @@ def call(type, String product, String component, Closure body) {
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component)
+    angular: new AngularPipelineType(this, deploymentProduct, component),
+    ruby: new RubyPipelineType(this, deploymentProduct, component)
   ]
-
-  Subscription subscription = new Subscription(env)
 
   PipelineType pipelineType
 
@@ -38,7 +37,7 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
@@ -76,9 +75,7 @@ def call(type, String product, String component, Closure body) {
         boolean noSkipImgBuild = true
 
         stageWithAgent('Checkout', product) {
-          pcr.callAround('checkout') {
-            checkoutScm()
-          }
+          checkoutScm(pipelineCallbacksRunner: callbacksRunner)
         }
 
         stageWithAgent("Build", product) {

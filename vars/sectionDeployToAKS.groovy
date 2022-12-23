@@ -42,34 +42,52 @@ def call(params) {
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
     onPR {
-      acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+      if (fileExists('Dockerfile')) {
+        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
+      }
     }
   }
 
-  stageWithAgent("AKS deploy - ${environment}", product) {
-    withTeamSecrets(config, environment) {
-      pcr.callAround('akschartsinstall') {
-        withAksClient(subscription, environment, product) {
-          timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
-            onPR {
-              deploymentNumber = githubCreateDeployment()
-            }
-            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-            log.info("Using AKS environment: ${params.environment}")
-            warnAboutDeprecatedChartConfig product: product, component: component
-            aksUrl = helmInstall(dockerImage, params)
-            log.info("deployed component URL: ${aksUrl}")
-            onPR {
-              githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+  def deploymentNamespace = projectBranch.deploymentNamespace()
+  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+
+  GithubAPI gitHubAPI = new GithubAPI(this)
+  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+
+  lock("${deploymentProduct}-${component}-${environment}-deploy") {
+    stageWithAgent("AKS deploy - ${environment}", product) {
+      withTeamSecrets(config, environment) {
+        pcr.callAround('akschartsinstall') {
+          withAksClient(subscription, environment, product) {
+            timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+              onPR {
+                deploymentNumber = githubCreateDeployment()
+              }
+              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+              log.info("Using AKS environment: ${params.environment}")
+              warnAboutDeprecatedChartConfig product: product, component: component
+              aksUrl = helmInstall(dockerImage, params)
+              log.info("deployed component URL: ${aksUrl}")
+              onPR {
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+              }
             }
           }
         }
       }
     }
-  }
-
-  if (config.serviceApp) {
-    withSubscriptionLogin(subscription) {
+    onPR {
+      highLevelDataSetup(
+        appPipelineConfig: config,
+        pipelineCallbacksRunner: pcr,
+        builder: builder,
+        environment: environment,
+        product: product,
+      )
+    }
+    if (config.serviceApp) {
+      withSubscriptionLogin(subscription) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
@@ -82,23 +100,37 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            stageWithAgent("Functional Test - AKS ${environment}", product) {
-              testEnv(aksUrl) {
-                pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                    builder.functionalTest()
+            if (testLabels.contains('enable_full_functional_tests')) {
+              stageWithAgent('Functional test (Full)', product) {
+                testEnv(aksUrl) {
+                  warnError('Failure in fullFunctionalTest') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
+                      }
+                    }
+                  }
+                }
+              }
+            } else {
+              stageWithAgent("Functional Test - ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      builder.functionalTest()
+                    }
                   }
                 }
               }
             }
           }
           if (config.performanceTest) {
-            stageWithAgent("Performance Test - AKS ${environment}", product) {
+            stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                     builder.performanceTest()
-                    publishPerformanceReports(this, params)
+                    publishPerformanceReports(params)
                   }
                 }
               }
@@ -121,6 +153,7 @@ def call(params) {
               }
             }
           }
+
           onMaster {
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
@@ -143,19 +176,49 @@ def call(params) {
             if (config.fullFunctionalTest) {
               stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  pcr.callAround("crossBrowserTest:${environment}") {
+                  pcr.callAround("fullFunctionalTest:${environment}") {
                     builder.fullFunctionalTest()
                   }
                 }
               }
             }
           }
+
+
           def nonProdEnv = new Environment(env).nonProdName
-          def githubApi = new GithubAPI(this)
-          if (environment == nonProdEnv || githubApi.checkForDependenciesLabel(env.BRANCH_NAME)) {
+          onPR {
+            if (testLabels.contains('enable_performance_test')) {
+              stageWithAgent("Performance test", product) {
+                warnError('Failure in performanceTest') {
+                  pcr.callAround('PerformanceTest') {
+                    timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                      builder.performanceTest()
+                    }
+                  }
+                }
+              }
+            }
+            if (testLabels.contains('enable_security_scan')) {
+              testEnv(aksUrl) {
+                stageWithAgent('Security scan', product) {
+                  warnError('Failure in securityScan') {
+                    pcr.callAround('securityScan') {
+                      timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                        builder.securityScan()
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          def triggerUninstall = environment == nonProdEnv
+          if (triggerUninstall || config.clearHelmRelease || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
         }
       }
     }
+  }
 }

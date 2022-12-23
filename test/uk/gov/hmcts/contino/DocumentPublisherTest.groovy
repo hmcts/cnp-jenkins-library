@@ -1,6 +1,5 @@
 package uk.gov.hmcts.contino
 
-import net.javacrumbs.jsonunit.core.Option
 import spock.lang.Specification
 
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson
@@ -23,7 +22,7 @@ class DocumentPublisherTest extends Specification {
 
   private static final String DATA = "{\"simulation\": \"RhubarbReferenceSimulation\"}"
 
-  def documentPublisher
+  DocumentPublisher documentPublisher
   def steps = Mock(JenkinsStepMock)
   def params = [product: PRODUCT, component: COMPONENT, environment: ENVIRONMENT, subscription: SUBSCRIPTION]
 

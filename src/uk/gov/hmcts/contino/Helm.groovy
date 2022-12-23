@@ -19,7 +19,7 @@ class Helm {
   def chartName
   def notFoundMessage = "Not found"
   String registrySubscription
-  String tlsOptions = ""
+  def namespace
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -31,6 +31,7 @@ class Helm {
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
+    this.namespace = this.steps.env.TEAM_NAMESPACE
   }
 
   def setup() {
@@ -104,13 +105,17 @@ class Helm {
     if (!values) {
       throw new RuntimeException("Helm charts need at least a values file (none given).")
     }
-
+    def releaseName = "${this.chartName}-${imageTag}"
     dependencyUpdate()
     lint(values)
 
-    def allOptions = ["--install", "--wait", "--timeout 500s", this.tlsOptions] + (options == null ? [] : options)
-    def allValues = values.flatten()
-    this.execute("upgrade", "${this.chartName}-${imageTag} ${this.chartLocation}", allValues, allOptions)
+    this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
+
+    this.steps.sh ("chmod +x aks-debug-info.sh")
+    def optionsStr = (options + ["--install", "--wait", "--timeout 500s"]).join(' ')
+    def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
+    steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
+    this.steps.sh 'rm aks-debug-info.sh'
   }
 
   def dependencyUpdate() {
@@ -118,26 +123,28 @@ class Helm {
   }
 
   def delete(String imageTag, String namespace) {
-    this.execute("uninstall", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", this.tlsOptions])
+    this.execute("uninstall", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}"])
   }
 
   def exists(String imageTag, String namespace) {
-    def deployments = this.execute("list", "", null, ["--all", "-q", "--namespace ${namespace}", this.tlsOptions])
+    def deployments = this.execute("list", "", null, ["--all", "-q", "--namespace ${namespace}"])
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
   def history(String imageTag, String namespace) {
-    this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json", this.tlsOptions])
+    this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json"])
   }
 
-  def hasAnyDeployed(String imageTag, String namespace) {
+  def hasAnyFailedToDeploy(String imageTag, String namespace) {
     if (!exists(imageTag, namespace)) {
       this.steps.echo "No release deployed for: $imageTag in namespace $namespace"
       return false
     }
     def releases = this.history(imageTag, namespace)
     this.steps.echo releases
-    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "deployed" }
+    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
+                                                                    it.status?.toLowerCase() == "pending-upgrade" ||
+                                                                    it.status?.toLowerCase() == "pending-install" }
   }
 
   private Object execute(String command, String name) {
@@ -145,11 +152,9 @@ class Helm {
   }
 
   private Object execute(String command, String name, List<String> values, List<String> options) {
-    steps.retry(3) {
-      def optionsStr = "${options == null ?  '' : options.join(' ')}"
-      def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
-      helm command, name, "${valuesStr} ${optionsStr}"
-    }
+    def optionsStr = "${options == null ?  '' : options.join(' ')}"
+    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
+    helm command, name, "${valuesStr} ${optionsStr}"
   }
 
 }

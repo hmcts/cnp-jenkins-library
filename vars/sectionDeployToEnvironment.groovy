@@ -18,7 +18,7 @@ def call(params) {
 
   Builder builder = pipelineType.builder
   def tfOutput
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription )
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   approvedEnvironmentRepository(environment, metricsPublisher) {
     lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
       folderExists('infrastructure') {
@@ -33,14 +33,14 @@ def call(params) {
 
           withSubscription(subscription) {
             dir('infrastructure') {
-              pcr.callAround("buildinfra:${environment}") {
-                timeoutWithMsg(time: 120, unit: 'MINUTES', action: "buildinfra:${environment}") {
-                  def additionalInfrastructureVariables = collectAdditionalInfrastructureVariablesFor(subscription, product, environment)
-                  withEnv(additionalInfrastructureVariables) {
-                    tfOutput = spinInfra(product, component, environment, tfPlanOnly, subscription)
-                  }
-                }
-              }
+                sectionInfraBuild(
+                  subscription: subscription,
+                  environment: environment,
+                  product: product,
+                  component: component,
+                  pipelineCallbacksRunner: pcr,
+                  planOnly: tfPlanOnly,
+                )
             }
 
             if(!tfPlanOnly){

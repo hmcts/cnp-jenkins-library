@@ -2,25 +2,21 @@
 set -x
 
 CHART_DIRECTORY=${1}-${2}
-MIN_JAVA_VERSION="3.6.0"
-MIN_NODEJS_VERSION="2.3.7"
-MIN_JOB_VERSION="0.7.1"
+declare -A deprecationMap
 
-JAVA_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "java" |awk '{ print $2}' | sed "s/~//g")
-NODEJS_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "nodejs" |awk '{ print $2}' | sed "s/~//g")
-JOB_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "job" |awk '{ print $2}' | sed "s/~//g")
+deprecationMap["java"]="4.0.4"
+deprecationMap["nodejs"]="2.4.8"
+deprecationMap["job"]="0.7.4"
+deprecationMap["blobstorage"]="0.3.0"
+deprecationMap["servicebus"]="0.4.0"
+deprecationMap["ccd"]="8.0.17"
+deprecationMap["elasticsearch"]="7.8.2"
 
-if [[ -n $JAVA_VERSION ]] &&  [[ $JAVA_VERSION < $MIN_JAVA_VERSION ]]; then
-    echo "Java chart version $JAVA_VERSION is deprecated, please upgrade"
-    exit 1
-fi
-
-if [[ -n $NODEJS_VERSION ]] && [[ $NODEJS_VERSION < $MIN_NODEJS_VERSION ]]; then
-    echo "Nodejs chart version $NODEJS_VERSION is deprecated, please upgrade"
-    exit 1
-fi
-
-if [[ -n $JOB_VERSION ]] && [[ $JOB_VERSION < $MIN_JOB_VERSION ]]; then
-    echo "Job chart version $MIN_JOB_VERSION is deprecated, please upgrade"
-    exit 1
-fi
+for deprecation in "${!deprecationMap[@]}"
+do
+  CURRENT_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "^$deprecation " |awk '{ print $2}' | sed "s/~//g")
+  if [[ -n $CURRENT_VERSION ]] &&  [[ $CURRENT_VERSION < ${deprecationMap[$deprecation]} ]]; then
+      echo "$deprecation chart $CURRENT_VERSION is deprecated, please upgrade to at least ${deprecationMap[$deprecation]}"
+      exit 1
+  fi
+done

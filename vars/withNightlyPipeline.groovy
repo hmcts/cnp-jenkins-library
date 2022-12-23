@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
@@ -16,7 +17,8 @@ def call(type,product,component,Closure body) {
   def pipelineTypes = [
     nodejs : new NodePipelineType(this, product, component),
     java   : new SpringBootPipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component)
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType = pipelineTypes.get(type)
@@ -25,7 +27,7 @@ def call(type,product,component,Closure body) {
 
   Subscription subscription = new Subscription(env)
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
@@ -46,13 +48,13 @@ def call(type,product,component,Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
-    timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+    timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product)
+          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component)
         }
         assert  pipelineType!= null
       } catch (err) {

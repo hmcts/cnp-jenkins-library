@@ -30,6 +30,8 @@ interface JenkinsStepMock {
   Object retry(Integer, Closure)
   Object readYaml(LinkedHashMap)
   String readFile(String)
+
+  void azureCosmosDBCreateDocument(LinkedHashMap)
 }
 
 

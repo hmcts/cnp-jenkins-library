@@ -133,7 +133,7 @@ withPipeline(type, product, component) {
 }
 ```
 
-#### tf ouput for functional / smoke testing
+#### tf output for functional / smoke testing
 Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
 If your functional tests require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
@@ -157,6 +157,16 @@ so this must be implemented as a command in package.json. The pipeline exposes t
 called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
+
+#### Docker test build for continuous functional and smoke tests
+
+An application can configure running continuous smoke/functional tests on java app deployments managed through flux. 
+
+https://github.com/hmcts/chart-java/#smoke-and-functional-tests
+
+To build docker images for this, add `enableDockerTestBuild()` in `Jenkinsfile_CNP`. `Static Checks/Container Build` stage in the pipeline will execute, including a test docker image.
+
+A Docker test build was previously built by default however has been made optional for pipeline speed and reliability.
 
 #### High level data setup
 
@@ -191,11 +201,20 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
+
 #### Extending the opinionated pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
 
-You can use the `before(stage)` and `after(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
+You can use the `before(stage)` and `after<Condition>(stage)` within the `withPipeline` block to add extra steps at the beginning or end of a named stage.
+
+Conditions are:
+
+* Success
+* Failure
+* Always
+
+Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
 
  * checkout
  * build
@@ -214,11 +233,11 @@ withPipeline(type, product, component) {
 
   ...
 
-  after('checkout') {
+  afterSuccess('checkout') {
     echo 'Checked out'
   }
 
-  after('build') {
+  afterSuccess('build') {
     sh 'yarn setup'
   }
 }
@@ -241,6 +260,21 @@ tests for that API. For the pipeline to run those tests, do the following:
   ```
 
 The API tests run after smoke tests.
+
+
+#### Clear Helm Release on Successful Build
+
+If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster.
+
+To clear helm release, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseOnSuccess()
+    ...
+  }
+  ```
 
 ### Opinionated infrastructure pipeline
 
@@ -291,7 +325,7 @@ Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 def product = "rhubarb"
 
 //Optional
-def component = "extra-detail" 
+def component = "extra-detail"
 
 withInfraPipeline(product, component) {
 
@@ -304,7 +338,15 @@ withInfraPipeline(product, component) {
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
 
-You can use the `before(stage)` and `after(stage)` within the `withInfraPipeline` block to add extra steps at the beginning or end of a named stage. Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name
+You can use the `before(stage)` and `after<Condition>(stage)` within the `withInfraPipeline` block to add extra steps at the beginning or end of a named stage.
+
+Conditions are:
+
+* Success
+* Failure
+* Always
+
+Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name:
 
  * checkout
  * buildinfra:ENV
@@ -316,7 +358,7 @@ withInfraPipeline(product) {
 
   ...
 
-  after('checkout') {
+  afterSuccess('checkout') {
     echo 'Checked out'
   }
 
@@ -370,7 +412,14 @@ When initially setting up the nightly pipeline for use in your repo, you should 
 
 #### Extending the test pipeline
 
-You can use the `before(stage)` and `after(stage)` within the `withNightlyPipeline` block to add extra steps at the beginning or end of a named stage.
+You can use the `before(stage)` and `after<Condition>(stage)` within the `withNightlyPipeline` block to add extra steps at the beginning or end of a named stage.
+
+Conditions are:
+
+* Success
+* Failure
+* Always
+
 ```
 withNightlyPipeline(type, product, component) {
   enableCrossBrowserTest()
@@ -381,15 +430,30 @@ withNightlyPipeline(type, product, component) {
     yarnBuilder.smokeTest()
   }
 
-  after('crossBrowserTest') {
+  afterAlways('crossBrowserTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
   }
 
-  after('fullFunctionalTest') {
+  afterAlways('fullFunctionalTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
 }
 ```
+
+## Enabling nightly checks on pull requests
+
+It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
+
+- `enable_full_functional_tests`
+- `enable_performance_test`
+- `enable_fortify_scan`
+- `enable_security_scan`
+
+#### If you add a label for a test which is not configured within your application, the build will fail.
+
+Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.
+
+The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
@@ -427,7 +491,7 @@ If you use AKS deployments, a docker image is built and pushed remotely to ACR.
 
 You can optionally make this build faster by using explicit ACR tasks, in a `acb.tpl.yaml` file located at the root of your project (watch out, the extension is .yaml, not .yml).
 
-This is particularly effective for nodejs projecs pulling loads of npm packages.
+This is particularly effective for nodejs projects pulling loads of npm packages.
 
 Here is a sample file, assuming you use docker multi stage build:
 
@@ -482,7 +546,7 @@ If you want to learn more about ACR tasks, [here is the documentation](https://d
 
 ## Tool versions
 
-Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/cnp-vm-hardening/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
+Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/jenkins-packer/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
 
 ### Java
 Java 11 is installed on the Jenkins agent.
@@ -630,4 +694,7 @@ This file will point to the repository which defines, in json syntax, which infr
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Test the change by pointing a build, to the branch with the change
+ 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+```groovy
+@Library('Infrastructure@<your-branch-name>') _
+```

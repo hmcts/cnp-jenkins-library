@@ -23,6 +23,18 @@ abstract class CommonPipelineDsl implements Serializable {
     callbacks.registerAfter(stage, body)
   }
 
+  void afterSuccess(String stage, Closure body) {
+    callbacks.registerAfter(stage, 'success', body)
+  }
+
+  void afterFailure(String stage, Closure body) {
+    callbacks.registerAfter(stage, 'failure', body)
+  }
+
+  void afterAlways(String stage, Closure body) {
+    callbacks.registerAfter(stage, 'always', body)
+  }
+
   void onStageFailure(Closure body) {
     callbacks.registerOnStageFailure(body)
   }

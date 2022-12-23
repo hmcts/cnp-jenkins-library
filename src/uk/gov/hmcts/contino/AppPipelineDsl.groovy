@@ -74,6 +74,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.aksStagingDeployment = true
   }
 
+  void enableCleanupOfHelmReleaseOnSuccess() {
+    config.clearHelmRelease = true;
+  }
+
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
 
   void enablePactAs(List<PactRoles> roles) {
@@ -83,12 +87,18 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.pactConsumerCanIDeployEnabled = roles.contains(PactRoles.CONSUMER_DEPLOY_CHECK)
   }
 
-  void enableHighLevelDataSetup() {
+  void enableHighLevelDataSetup(String highLevelDataSetupKeyvaultName = "") {
     config.highLevelDataSetup = true
+    config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
   }
 
   void enableFortifyScan(String fortifyVaultName = "") {
     config.fortifyScan = true
     config.fortifyVaultName = fortifyVaultName
   }
+
+  void enableDockerTestBuild() {
+    config.dockerTestBuild = true
+  }
+
 }

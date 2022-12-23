@@ -17,11 +17,9 @@ class HelmTest extends Specification {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
                   AKS_CLUSTER_NAME: "cnp-aks-cluster",
-                  SUBSCRIPTION_NAME: "${SUBSCRIPTION}"]
+                  TEAM_NAMESPACE: "cnp",
+                  SUBSCRIPTION_NAME: "${SUBSCRIPTION}",]
     helm = new Helm(steps, CHART)
-
-    def closure
-    steps.retry(3, { closure = it }) >> { closure.call() }
   }
 
   def "dependencyUpdate() should execute with the correct chart"() {
@@ -47,13 +45,12 @@ class HelmTest extends Specification {
 
   def "upgrade() should execute with the correct chart and values"() {
     when:
-    helm.installOrUpgrade("pr-1", ["val1", "val2"], null)
+    helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm upgrade ${CHART}-pr-1 ${CHART_PATH}  -f val1 -f val2 --install --wait") &&
-      it.containsKey('returnStdout') &&
-      it.get('returnStdout').equals(true)
+      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --wait --timeout 500s") &&
+      it.get('script').contains("|| ./aks-debug-info.sh ${CHART}-pr-1 cnp")
     })
   }
 

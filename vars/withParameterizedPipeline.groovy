@@ -4,8 +4,8 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
-import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
@@ -21,7 +21,8 @@ def call(type, String product, String component, String environment, String subs
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component)
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
@@ -36,8 +37,7 @@ def call(type, String product, String component, String environment, String subs
 
   Builder builder = pipelineType.builder
   def pactBrokerUrl = (new Environment(env)).pactBrokerUrl
-  Subscription metricsSubscription = new Subscription(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, metricsSubscription.prodName)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
@@ -68,9 +68,7 @@ def call(type, String product, String component, String environment, String subs
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
-        callbacksRunner.callAround('checkout') {
-          checkoutScm()
-        }
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
       stageWithAgent("Build", product) {

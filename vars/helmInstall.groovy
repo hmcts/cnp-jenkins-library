@@ -19,20 +19,19 @@ def call(DockerImage dockerImage, Map params) {
   AppPipelineConfig config = params.appPipelineConfig
 
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
+  def namespace = env.TEAM_NAMESPACE
 
   def imageName = dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
 
-  EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment)
+  EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
-  def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
+  def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
-
-  def namespace = env.TEAM_NAMESPACE
 
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
@@ -86,7 +85,7 @@ def call(DockerImage dockerImage, Map params) {
         }
       }
     }
-    
+
     def requirementsEnv = "${helmResourcesDir}/${chartName}/requirements.${environment}.yaml"
     def requirements = "${helmResourcesDir}/${chartName}/requirements.yaml"
     if (fileExists(requirementsEnv)) {
@@ -97,12 +96,19 @@ def call(DockerImage dockerImage, Map params) {
       helmOptionEnvironment = new Environment(env).nonProdName
     }
 
+    def environmentTag = Environment.toTagName(environment)
     def options = [
       "--set global.subscriptionId=${this.env.ARM_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
       "--set global.devMode=true",
+      "--set global.tags.teamName=\"${this.env.TEAM_NAME}\"",
+      "--set global.tags.applicationName=${this.env.TEAM_APPLICATION_TAG}",
+      "--set global.tags.builtFrom=${this.env.GIT_URL}",
+      "--set global.tags.businessArea=${this.env.BUSINESS_AREA_TAG}",
+      "--set global.tags.environment=${environmentTag}",
+      "--set global.disableTraefikTls=false",
       "--namespace ${namespace}"
     ]
 
@@ -112,20 +118,19 @@ def call(DockerImage dockerImage, Map params) {
         options.add("--set global.jobKind=Job")
         options.add("--set global.smoketestscron.enabled=false")
         options.add("--set global.functionaltestscron.enabled=false")
-      //deleting non service apps before installing as K8s doesn't allow editing image of deployed Jobs
-      if(helm.exists(dockerImage.getImageTag(), namespace)){
-        helm.delete(dockerImage.getImageTag(), namespace)
+      //deleting job for non service apps before installing as K8s doesn't allow editing image/spec of deployed Jobs
+      if(kubectl.getJob(dockerImage.getAksServiceName()+"-job") == 0){
+        kubectl.deleteJob(dockerImage.getAksServiceName()+"-job")
       }
     }
 
-    // Helm throws error if trying to upgrade , when there have only been failed deployments
+    // // Helm throws error if trying to upgrade when there have only been failed deployments, or if the previous one is in a 'pending' status
     def deleted = false
-    if (helm.exists(dockerImage.getImageTag(), namespace) &&
-      !helm.hasAnyDeployed(dockerImage.getImageTag(), namespace)) {
+    if (helm.hasAnyFailedToDeploy(dockerImage.getImageTag(), namespace)) {
 
       deleted = true
       helm.delete(dockerImage.getImageTag(), namespace)
-      echo "Deleted release for ${dockerImage.getImageTag()} as previous release was not 'deployed'"
+      echo "Deleted release for ${dockerImage.getImageTag()} as previous release was not 'deployed' successfully"
     } else {
       echo "Skipping delete for ${dockerImage.getImageTag()} as it doesn't exist or the last version was deployed successfully"
     }
@@ -138,7 +143,7 @@ def call(DockerImage dockerImage, Map params) {
         echo "Install/upgrade completed(${attempts})."
         break
       } catch (upgradeError) {
-        if (!deleted || attempts >= 3) {
+        if (attempts >= 3) {
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt

@@ -2,7 +2,7 @@
 @Library('Infrastructure') _
 import uk.gov.hmcts.contino.GradleBuilder
 
-def channel = '#rpe-build-notices'
+def channel = '#platops-build-notices'
 GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
@@ -29,21 +29,21 @@ try {
   }
 
   stage('Run shared infra pipeline') {
-    build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-shared-infrastructure/master',
+    build job: 'Pipeline_Test_Sandbox/cnp-plum-shared-infrastructure/master',
       parameters: [string(name: 'LIB_VERSION', value: testBranch)]
   }
 
   parallel (
     backend: {
       stage('Run pipeline for backend') {
-        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-recipes-service/master',
+        build job: 'Pipeline_Test_Sandbox/cnp-plum-recipes-service/master',
           parameters: [string(name: 'LIB_VERSION', value: testBranch)]
       }
     },
 
     frontend: {
       stage('Run pipeline for frontend') {
-        build job: 'HMCTS_Sandbox_Pipeline_Test/cnp-plum-frontend/master',
+        build job: 'Pipeline_Test_Sandbox/cnp-plum-frontend/master',
           parameters: [string(name: 'LIB_VERSION', value: testBranch)]
       }
     }

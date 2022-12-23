@@ -5,6 +5,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
+import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(productName, environment, tfPlanOnly, subscription) {
   call(productName, null, environment, tfPlanOnly, subscription)
@@ -25,7 +26,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
   def pipelineTags
 
   metricsPublisher = new MetricsPublisher(
-    this, currentBuild, product, component, subscription
+    this, currentBuild, product, component
   )
 
   onPreview {
@@ -97,6 +98,20 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
           (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+
+        onPR {
+          String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
+          def credentialsId = env.GIT_CREDENTIALS_ID
+          withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'APP_ID')]) {
+            sh """
+              tfcmt --owner hmcts \
+                --repo ${repositoryShortUrl} \
+                --pr ${env.CHANGE_ID} \
+                plan -patch -- \
+                terraform show tfplan
+            """
+          }
+        }
       }
       if (!tfPlanOnly) {
         stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {

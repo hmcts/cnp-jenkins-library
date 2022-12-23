@@ -1,33 +1,36 @@
 package uk.gov.hmcts.pipeline.deprecation
 
-import org.apache.commons.lang.time.DateUtils
-import org.joda.time.Days
-import org.joda.time.DateTime;
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class WarningCollector implements Serializable {
 
   static List<DeprecationWarning> pipelineWarnings = new ArrayList<>()
+  static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
+    .ofPattern("dd/MM/yyyy");
 
-  static void addPipelineWarning(String warningKey, String warningMessage, Date deprecationDate) {
-    if (deprecationDate.before(new Date())){
-      throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format("dd/MM/yyyy HH:mm", TimeZone.getTimeZone("UTC"))} ")
+  static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate) {
+    if (deprecationDate.isBefore(LocalDate.now())){
+      throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format(DATE_FORMATTER)} ")
     }
     pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
   }
 
-  static String getMessageByDays(Date deprecationDate) {
-    String date = deprecationDate.format("dd/MM/yyyy HH:mm aa", TimeZone.getTimeZone("UTC"))
+  static String getMessageByDays(LocalDate deprecationDate) {
+    LocalDate currentDate = LocalDate.now()
+    LocalDate nextDay = currentDate.plusDays(1)
+    LocalDate nextYear = currentDate.plusYears(1)
 
-    Date currentDate = new Date();
-    Date nextDay = DateUtils.addDays(currentDate,1);
-
-    String message = "${date}"
-    if (DateUtils.isSameDay(currentDate, deprecationDate)){
+    String message =  deprecationDate.format(DATE_FORMATTER)
+    if (currentDate == deprecationDate) {
       return message.concat(" ( today )")
-    } else if (DateUtils.isSameDay(nextDay, deprecationDate)){
+    } else if (nextDay == deprecationDate){
       return message.concat(" ( tomorrow )")
+    } else if (nextYear == deprecationDate){
+      return message
     }else{
-      def daysBetween = Days.daysBetween(new DateTime(), new DateTime(deprecationDate)).getDays()
+      def daysBetween = ChronoUnit.DAYS.between(currentDate, deprecationDate)
       return message.concat(" ( in ${daysBetween} days )")
     }
   }

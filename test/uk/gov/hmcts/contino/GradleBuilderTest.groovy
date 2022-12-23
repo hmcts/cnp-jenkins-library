@@ -20,8 +20,6 @@ class GradleBuilderTest extends Specification {
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
-    def closure
-    steps.withCredentials(_, { closure = it }) >> { closure.call() }
   }
 
   def "build calls 'gradle assemble'"() {
@@ -105,10 +103,10 @@ class GradleBuilderTest extends Specification {
     1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
   }
 
-  def "securityCheck calls 'gradle dependencyCheckAggregate"() {
+  def "securityCheck calls 'gradle dependencyCheckAggregate'"() {
     setup:
       def closure
-      steps.withAzureKeyvault(_, { closure = it }) >> { closure.call() }
+      steps.withAzureKeyvault(_, { it.call() }) >> { closure = it }
       def spyGradleBuilder = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
         hasPlugin(_) >> true
       }
@@ -158,7 +156,7 @@ class GradleBuilderTest extends Specification {
 
     then:
     // Report has 2 dependencies with vulnerabilities and 3 with suppressed vulnerabilities.
-    result.dependencies.size == 5
+    result.dependencies.size() == 5
     // Only dependencies with vulnerabilities or suppressed vulnerabilities should be reported
     result.dependencies.every {
       it.vulnerabilities || it.suppressedVulnerabilities

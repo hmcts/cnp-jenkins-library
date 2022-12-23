@@ -3,7 +3,6 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
-import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.pipeline.TeamConfig
@@ -11,13 +10,11 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 
 def call(type, String product, String component, String s2sServiceName, String tenantId, Closure body) {
-
-  Subscription subscription = new Subscription(env)
-  Environment environment = new Environment(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component, subscription.prodName)
+  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
 
   def branch = new ProjectBranch(env.BRANCH_NAME)
   def deploymentNamespace = branch.deploymentNamespace()
@@ -30,7 +27,8 @@ def call(type, String product, String component, String s2sServiceName, String t
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, deploymentProduct, component),
     nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component)
+    angular: new AngularPipelineType(this, deploymentProduct, component),
+    ruby: new RubyPipelineType(this, deploymentProduct, component)
   ]
 
   PipelineType pipelineType
@@ -68,9 +66,7 @@ def call(type, String product, String component, String s2sServiceName, String t
       Builder builder = pipelineType.builder
 
       stageWithAgent('Checkout', product) {
-        pcr.callAround('checkout') {
-          checkoutScm()
-        }
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
       parallel(
@@ -113,15 +109,16 @@ def call(type, String product, String component, String s2sServiceName, String t
 
       // AAT and Prod camunda promotion
       onMaster {
-        def nonProdEnv = new Environment(env).nonProdName
-        def prodEnv = new Environment(env).prodName
-        
+        Environment environment = new Environment(env)
+        def nonProdEnv = environment.nonProdName
+        def prodEnv = environment.prodName
+
         camundaPublish(s2sServiceName, nonProdEnv, product, tenantId)
-        
+
         approvedEnvironmentRepository(prodEnv, metricsPublisher) {
           camundaPublish(s2sServiceName, prodEnv, product, tenantId)
         }
-        
+
         sectionSyncBranchesWithMaster(
             branchestoSync: pipelineConfig.branchesToSyncWithMaster,
             product: product

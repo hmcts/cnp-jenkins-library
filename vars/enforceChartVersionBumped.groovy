@@ -15,7 +15,7 @@ def call(Map<String, String> params) {
       returnStatus: true
     )
     if (CHART_BUMP==1) {
-      error('AUTO_ABORT Automatically bumped chart version due to changes in the chart')
+      error('AUTO_ABORT Automatically bumped chart version or fixing aliases in chart')
     }
   }
 

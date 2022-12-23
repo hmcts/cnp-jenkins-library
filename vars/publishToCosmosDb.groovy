@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.DocumentPublisher
 
-def call(steps, params, collectionLink, baseDir, pattern) {
-  def documentPublisher = new DocumentPublisher(steps, params)
-  documentPublisher.publishAll(collectionLink, baseDir, pattern)
+def call(params, containerName, baseDir, pattern) {
+  def documentPublisher = new DocumentPublisher(this, params)
+  documentPublisher.publishAll(containerName, baseDir, pattern)
 }

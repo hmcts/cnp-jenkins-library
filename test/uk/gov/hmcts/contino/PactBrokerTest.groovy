@@ -23,19 +23,16 @@ class PactBrokerTest extends Specification {
       pactBroker = new PactBroker(steps, PRODUCT, COMPONENT, PACT_BROKER_URL)
       version = "rand0mha5h"
       def closure
+      steps.withDocker(_, _, { it.call() }) >> { closure = it }
 
     when:
       pactBroker.canIDeploy(version)
 
     then:
-      1 * steps.withDocker(PACT_BROKER_IMAGE, '--entrypoint ""', { closure = it })
-
-    when:
-      closure.call()
-
-    then:
-      1 * steps.sh({ it.get('script').contains("pact-broker can-i-deploy --retry-while-unknown=12 --retry-interval=10 -a product_component -b ${PACT_BROKER_URL} -e ${version}") &&
-                     it.get('returnStdout').equals(true) })
+    1 * steps.sh({
+      it.get('script').contains("pact-broker can-i-deploy --retry-while-unknown=12 --retry-interval=10 -a product_component -b ${PACT_BROKER_URL} -e ${version}") &&
+        it.get('returnStdout').equals(true)
+    })
 
   }
 
