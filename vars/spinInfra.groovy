@@ -38,11 +38,11 @@ def call(params) {
 
   approvedTerraformInfrastructure(environment, product, metricsPublisher) {
     stateStoreInit(environment, subscription, deploymentTarget)
-    def environmentDeploymentTarget = "$environment"
-    def deploymentNamespace = branch.deploymentNamespace()
-    def changeUrl = ""
-    def teamName
-    def pipelineTags
+    // def environmentDeploymentTarget = "$environment"
+    // def deploymentNamespace = branch.deploymentNamespace()
+    // def changeUrl = ""
+    // def teamName
+    // def pipelineTags
 
     lock("${productName}-${environmentDeploymentTarget}") {
       stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", product) {
