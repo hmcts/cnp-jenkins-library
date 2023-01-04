@@ -8,33 +8,15 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(params) {
-  def productName = params.product
-  def environment = params.environment
-  def tfPlanOnly = params.planOnly ?: false
-  def subscription = params.subscription
-}
-
-def call(params) {
   def product = params.product
   def component = params.component ?: null
   def expires = params.expires
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
-  def subscription = params.subscription
-}
-
-def call(params) {
-  def product = params.product
-  def component = params.component ?: null
-  def expires = params.expires
-  def environment = params.environment
-  def tfPlanOnly = params.planOnly ?: false
-  def subscription = params.subscription
-
-  def branch = new ProjectBranch(env.BRANCH_NAME)
-
-  def deploymentNamespace = branch.deploymentNamespace()
+  def subscription = params.subscription 
   def productName = component ? "$product-$component" : product
+  def branch = new ProjectBranch(env.BRANCH_NAME)
+  def deploymentNamespace = branch.deploymentNamespace()
   def changeUrl = ""
   def environmentDeploymentTarget = "$environment"
   def teamName
@@ -43,8 +25,6 @@ def call(params) {
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
   )
-
-  // def branch = new ProjectBranch(env.BRANCH_NAME)
 
   onPreview {
     changeUrl = env.CHANGE_URL
@@ -56,11 +36,6 @@ def call(params) {
 
   approvedTerraformInfrastructure(environment, product, metricsPublisher) {
     stateStoreInit(environment, subscription, deploymentTarget)
-    // def environmentDeploymentTarget = "$environment"
-    // def deploymentNamespace = branch.deploymentNamespace()
-    // def changeUrl = ""
-    // def teamName
-    // def pipelineTags
 
     lock("${productName}-${environmentDeploymentTarget}") {
       stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", product) {
