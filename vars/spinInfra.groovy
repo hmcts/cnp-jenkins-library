@@ -99,7 +99,7 @@ def call(params) {
         env.TF_VAR_deployment_namespace = deploymentNamespace
         env.TF_VAR_subscription = subscription
         env.TF_VAR_component = component
-        env.TF_VAR_expiresAfter = expiresAfter
+        env.TF_VAR_expiresAfter = expires
 
         def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
 
