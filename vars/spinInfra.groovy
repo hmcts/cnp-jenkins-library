@@ -19,6 +19,7 @@ def call(params) {
   def deploymentNamespace = branch.deploymentNamespace()
   def changeUrl = ""
   def environmentDeploymentTarget = "$environment"
+  def deploymentTarget
   def teamName
   def pipelineTags
 
