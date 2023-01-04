@@ -10,7 +10,7 @@ import uk.gov.hmcts.contino.RepositoryUrl
 def call(params) {
   def product = params.product
   def component = params.component ?: null
-  def expires = params.expires
+  def expires = params.expires ?: "3000-01-01"
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
   def subscription = params.subscription 
