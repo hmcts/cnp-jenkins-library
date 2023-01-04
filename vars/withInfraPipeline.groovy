@@ -79,8 +79,8 @@ def call(String product, String component = null, Closure body) {
           product: product,
           planOnly: true,
           component: component,
+          expires: pipelineConfig.expiresAfter,
           pipelineCallbacksRunner: callbacksRunner,
-          expires: pipelineConfig.expiresAfter
         )
       }
     } catch (err) {
