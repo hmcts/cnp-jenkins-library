@@ -48,8 +48,9 @@ def call(params) {
 
         plTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
         
-        if (environment != 'sandbox' && environment != 'sbox') {} 
+        if (environment != 'sandbox' && environment != 'sbox') { 
           pipelineTags = plTags
+        }
         else {
           expireTags = new TerraformTagMap([expiresAfter: expires]).toString()
           pipelineTags = plTags + expireTags
