@@ -51,7 +51,7 @@ def call(params) {
         if (environment != 'sandbox' && environment != 'sbox') {} 
         
         else {
-          pipelineTags.put("expiresAfter", "$expires").toString()
+          pipelineTags.putAt("expiresAfter", "$expires").toString()
         }
 
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
