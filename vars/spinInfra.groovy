@@ -51,7 +51,7 @@ def call(params) {
         if (environment != 'sandbox' && environment != 'sbox') {} 
         
         else {
-          def expiresTag = new TerraformTagMap([expiresAfter: expires]).toString()
+          expiresTag = new TerraformTagMap([expiresAfter: expires]).toString()
           pipelineTags << expiresTag
         }
 
