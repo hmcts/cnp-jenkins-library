@@ -15,16 +15,18 @@ def call(params) {
   def tfPlanOnly = params.planOnly ?: false
   def subscription = params.subscription 
   def productName = component ? "$product-$component" : product
-  def branch = new ProjectBranch(env.BRANCH_NAME)
-  def deploymentNamespace = branch.deploymentNamespace()
-  def changeUrl = ""
-  def environmentDeploymentTarget = "$environment"
-  def teamName
-  def pipelineTags
+  // def branch = new ProjectBranch(env.BRANCH_NAME)
+  // def deploymentNamespace = branch.deploymentNamespace()
+  // def changeUrl = ""
+  // def environmentDeploymentTarget = "$environment"
+  // def teamName
+  // def pipelineTags
 
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
   )
+
+  // def branch = new ProjectBranch(env.BRANCH_NAME)
 
   onPreview {
     changeUrl = env.CHANGE_URL
@@ -36,6 +38,11 @@ def call(params) {
 
   approvedTerraformInfrastructure(environment, product, metricsPublisher) {
     stateStoreInit(environment, subscription, deploymentTarget)
+    def environmentDeploymentTarget = "$environment"
+    def deploymentNamespace = branch.deploymentNamespace()
+    def changeUrl = ""
+    def teamName
+    def pipelineTags
 
     lock("${productName}-${environmentDeploymentTarget}") {
       stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", product) {
