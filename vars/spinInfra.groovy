@@ -14,7 +14,7 @@ def call(params) {
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
   def subscription = params.subscription 
-  def productName = component ? "$product-$component" : product
+  // def productName = component ? "$product-$component" : product
   // def branch = new ProjectBranch(env.BRANCH_NAME)
   // def deploymentNamespace = branch.deploymentNamespace()
   // def changeUrl = ""
