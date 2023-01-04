@@ -46,12 +46,13 @@ def call(params) {
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
+        plTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
         
         if (environment != 'sandbox' && environment != 'sbox') {} 
-        
+          pipelineTags = plTags
         else {
-          pipelineTags["expiresAfter" + i] = "$expires"
+          expireTags = new TerraformTagMap([expiresAfter: expires]).toString()
+          pipelineTags = plTags + expireTags
         }
 
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
