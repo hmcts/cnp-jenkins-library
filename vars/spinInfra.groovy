@@ -8,19 +8,37 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(params) {
+  def productName = params.product
+  def environment = params.environment
+  def tfPlanOnly = params.planOnly ?: false
+  def subscription = params.subscription
+}
+
+def call(params) {
   def product = params.product
   def component = params.component ?: null
   def expires = params.expires
   def environment = params.environment
   def tfPlanOnly = params.planOnly ?: false
-  def subscription = params.subscription 
-  // def productName = component ? "$product-$component" : product
-  // def branch = new ProjectBranch(env.BRANCH_NAME)
-  // def deploymentNamespace = branch.deploymentNamespace()
-  // def changeUrl = ""
-  // def environmentDeploymentTarget = "$environment"
-  // def teamName
-  // def pipelineTags
+  def subscription = params.subscription
+}
+
+def call(params) {
+  def product = params.product
+  def component = params.component ?: null
+  def expires = params.expires
+  def environment = params.environment
+  def tfPlanOnly = params.planOnly ?: false
+  def subscription = params.subscription
+
+  def branch = new ProjectBranch(env.BRANCH_NAME)
+
+  def deploymentNamespace = branch.deploymentNamespace()
+  def productName = component ? "$product-$component" : product
+  def changeUrl = ""
+  def environmentDeploymentTarget = "$environment"
+  def teamName
+  def pipelineTags
 
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
