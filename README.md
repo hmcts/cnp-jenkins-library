@@ -315,7 +315,7 @@ These parameters include:
 | parameter name | description
 | --- | --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
-| expiresAfter | |
+| expires | | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
@@ -329,9 +329,10 @@ def product = "rhubarb"
 def component = "extra-detail"
 def expiresAfter = "YYYY-MM-DD"
 
-withInfraPipeline(product, component, expiresAfter) {
+withInfraPipeline(product, component) {
 
   enableSlackNotifications('#my-team-builds')
+  expires(expiresAfter)
 
 }
 ```
@@ -344,10 +345,7 @@ If you want your resources to remain for longer than 30 days, you can override t
 
 For resources that must remain permanently, specify a value of `"3000-01-01"`
 
-You must specify a value for the `component` parameter as well as `expiresAfter`. You can set `component` to `null` e.g.
-
 ```
-def component = null
 def expiresAfter = "3000-01-01"
 ```
 
