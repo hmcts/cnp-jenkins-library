@@ -160,7 +160,7 @@ The smoke tests are to be non-destructive (i.e. have no data impact, such as not
 
 #### Docker test build for continuous functional and smoke tests
 
-An application can configure running continuous smoke/functional tests on java app deployments managed through flux. 
+An application can configure running continuous smoke/functional tests on java app deployments managed through flux.
 
 https://github.com/hmcts/chart-java/#smoke-and-functional-tests
 
@@ -642,9 +642,9 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `PACT_BROKER_URL`
   - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
 - `gradlew`:
-  - `-Dpact.broker.url`
-  - `-Dpact.consumer.version`/`-Dpact.provider.version`
-  - `-Dpact.verifier.publishResults=${onMaster}` is passed by default for providers
+  - `-Ppact.broker.url`
+  - `-Ppact.consumer.version`/`-Ppact.provider.version`
+  - `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
 
 🛎️  `onMaster` is a boolean that is true if the current branch is `master`
 🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
