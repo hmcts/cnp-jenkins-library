@@ -79,7 +79,7 @@ def call(String product, String component = null, Closure body) {
           product: product,
           planOnly: true,
           component: component,
-          expires: pipelineConfig.expiresAfter,
+          expires: pipelineConfig.expiryDate,
           pipelineCallbacksRunner: callbacksRunner,
         )
       }
