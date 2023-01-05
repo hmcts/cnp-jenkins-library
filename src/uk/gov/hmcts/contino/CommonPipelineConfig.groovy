@@ -7,8 +7,9 @@ class CommonPipelineConfig implements Serializable {
 
   Set<String> branchesToSyncWithMaster = []
 
-  def expiryDate = LocalDate.now().plusDays(30).toString()
+  String expiryDate = LocalDate.now().plusDays(30).toString()
 
-  println LocalDate.now().plusDays(30).toString()
-
+  protected void printName() {
+        println this.expiryDate
+    }
 }
