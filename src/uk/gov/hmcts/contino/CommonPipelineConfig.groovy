@@ -6,7 +6,7 @@ class CommonPipelineConfig implements Serializable {
 
   Set<String> branchesToSyncWithMaster = []
 
-  String nextMonth = LocalDate.now().plusDays(30)
+  LocalDate nextMonth = LocalDate.now().plusDays(30)
 
   String expiresAfter = nextMonth.format("yyyy-MM-dd")
 
