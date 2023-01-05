@@ -9,4 +9,6 @@ class CommonPipelineConfig implements Serializable {
 
   def expiryDate = LocalDate.now().plusDays(30).toString()
 
+  println LocalDate.now().plusDays(30).toString()
+
 }
