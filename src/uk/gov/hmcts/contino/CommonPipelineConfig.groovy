@@ -8,6 +8,6 @@ class CommonPipelineConfig implements Serializable {
 
   String nextMonth = LocalDate.now().plusDays(30)
 
-  Set<String> expiresAfter = nextMonth.format("yyyy-MM-dd")
+  String expiresAfter = nextMonth.format("yyyy-MM-dd")
 
 }
