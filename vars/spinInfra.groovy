@@ -58,14 +58,6 @@ def call(params) {
 
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
 
-        // if (environment != 'sandbox' && environment != 'sbox') {
-        //   pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
-        //   log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
-        // } else {
-        //   pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG, expiresAfter: expires ]).toString()
-        //   log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; expiresAfter='$expires'; tfPlanOnly='$tfPlanOnly'"
-        // }
-
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
           env.STORE_sa_container_name_template != null) {
