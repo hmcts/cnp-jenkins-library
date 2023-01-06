@@ -71,10 +71,12 @@ def call(params) {
         def builtFrom = env.GIT_URL ?: 'unknown'
 
         def tags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
-        
-        if (this.environment == sandbox) { 
-          pipelineTags = tags + [expiresAfter: expires]
-        }
+
+        println new Environment(this).sandbox
+
+        // if (new Environment(this).sandbox == environment) { 
+        //   pipelineTags = tags + [expiresAfter: expires]
+        // }
         
         pipelineTags = new TerraformTagMap(tags).toString()
 
