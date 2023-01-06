@@ -19,7 +19,7 @@ class Environment implements Serializable {
 
     nonProdName = env.NONPROD_ENVIRONMENT_NAME ?: 'aat'
     prodName = env.PROD_ENVIRONMENT_NAME ?: 'prod'
-    demoName = env.DEMO_ENVIRONMENT_NAME ?: 'demo'
+    // demoName = env.DEMO_ENVIRONMENT_NAME ?: 'demo'
     previewName = env.PREVIEW_ENVIRONMENT_NAME ?: 'preview'
     perftestName = env.PERFTEST_ENVIRONMENT_NAME ?: 'perftest'
     ithcName = env.ITHC_ENVIRONMENT_NAME ?: 'ithc'
