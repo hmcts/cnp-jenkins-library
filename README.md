@@ -315,7 +315,7 @@ These parameters include:
 | parameter name | description
 | --- | --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
-| expires | | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
+| expires | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
