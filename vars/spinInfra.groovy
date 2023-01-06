@@ -7,6 +7,30 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
+def call(productName, environment, tfPlanOnly, subscription) {
+  def product = params.product
+  def component = params.component ?: null
+  def environment = params.environment
+  def tfPlanOnly = params.planOnly ?: false
+  def subscription = params.subscription 
+}
+
+def call(product, component, environment, tfPlanOnly, subscription) {
+  def product = params.product
+  def component = params.component ?: null
+  def environment = params.environment
+  def tfPlanOnly = params.planOnly ?: false
+  def subscription = params.subscription
+}
+
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+  def product = params.product
+  def component = params.component ?: null
+  def environment = params.environment
+  def tfPlanOnly = params.planOnly ?: false
+  def subscription = params.subscription
+}
+
 def call(params) {
   def product = params.product
   def component = params.component ?: null
@@ -46,15 +70,13 @@ def call(params) {
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        plTags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
+        def tags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
         
-        if (environment != 'sandbox' && environment != 'sbox') { 
-          pipelineTags = new TerraformTagMap(plTags).toString()
+        if (new Environment(this).sandbox == environment) { 
+          pipelineTags = tags + [expiresAfter: expires]
         }
-        else {
-          expireTags = [expiresAfter: expires]
-          pipelineTags = new TerraformTagMap(plTags + expireTags).toString()
-        }
+        
+        pipelineTags = new TerraformTagMap(tags).toString()
 
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
 
