@@ -55,8 +55,8 @@ def call(params) {
     changeUrl = env.CHANGE_URL
   }
 
-  def test = new Environment(env)
-  println "test var is " test
+  test = new Environment(env)
+  // println "test var is " test
 
 
   if (env.SUBSCRIPTION_NAME == null) {
