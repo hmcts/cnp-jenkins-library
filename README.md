@@ -312,8 +312,8 @@ withInfraPipeline(product) {
 You have the ability to pass extra parameters to the `withInfraPipeline`.
 
 These parameters include:
-| parameter name | description
-| --- | --- | --- |
+| parameter name | description |
+| --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
 | expires | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
 
