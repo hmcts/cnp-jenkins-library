@@ -46,6 +46,7 @@ def call(params) {
   def deploymentTarget
   def teamName
   def pipelineTags
+  def test
 
   metricsPublisher = new MetricsPublisher(
     this, currentBuild, product, component
