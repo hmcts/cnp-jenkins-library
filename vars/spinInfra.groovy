@@ -55,7 +55,7 @@ def call(params) {
     changeUrl = env.CHANGE_URL
   }
 
-  test = new Environment(env)
+  test = new Environment(this).sandbox
   // println "test var is " test
 
 
