@@ -72,7 +72,7 @@ def call(params) {
 
         def tags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
         
-        if (new Environment(env).sandbox == environment) { 
+        if (this.environment == sandbox) { 
           pipelineTags = tags + [expiresAfter: expires]
         }
         
