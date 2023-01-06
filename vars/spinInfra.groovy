@@ -72,7 +72,7 @@ def call(params) {
 
         def tags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
 
-        def test = new Environment(env).sandbox
+        def test = new Environment(env).sandbox ?: "unknown"
 
         println "test var is " test
 
