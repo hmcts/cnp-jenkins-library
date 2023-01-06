@@ -1,6 +1,8 @@
+import uk.gov.hmcts.contino.AppPipelineConfig
 
-def call(String vaultName, String environment, Map<String, String> vaultOverrides, Closure body) {
-  def dependedEnv = vaultOverrides.get(environment, environment)
+def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
+  def secrets = config.vaultSecrets
+  def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
   env.S2S_URL_BASE = "http://rpe-service-auth-provider-${dependedEnv}.service.core-compute-${dependedEnv}.internal"
@@ -16,20 +18,20 @@ def call(String vaultName, String environment, Map<String, String> vaultOverride
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def secrets = [
+  def hldsSecrets = [
     'ccd': [
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    '${vaultName}': [
+    '${vaultName}': secrets['${vaultName}'] + [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
       secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
     ]
   ]
 
-  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
+  executeClosure(hldsSecrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
