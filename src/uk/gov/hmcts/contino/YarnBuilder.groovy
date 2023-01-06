@@ -14,6 +14,15 @@ class YarnBuilder extends AbstractBuilder {
     super(steps)
   }
 
+  def savePodLogs(String scope) {
+    steps.writeFile(file: 'save-pods-logs.sh', text: steps.libraryResource('uk/gov/hmcts/helm/save-pods-logs.sh'))
+    steps.sh """
+        chmod +x save-pods-logs.sh
+        ./save-pods-logs.sh ${releaseName} ${this.namespace} pods-logs-${scope}
+      """
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'pods-logs/**'
+  }
+
   def build() {
     yarn("lint")
 
@@ -46,6 +55,7 @@ class YarnBuilder extends AbstractBuilder {
     } finally {
       steps.junit allowEmptyResults: true, testResults: 'smoke-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/**'
+      savePodLogs("smoke")
     }
   }
 
@@ -55,6 +65,7 @@ class YarnBuilder extends AbstractBuilder {
     } finally {
       steps.junit allowEmptyResults: true, testResults: 'functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
+      savePodLogs("functional")
     }
   }
 
@@ -64,6 +75,7 @@ class YarnBuilder extends AbstractBuilder {
     } finally {
       steps.junit allowEmptyResults: true, testResults: 'api-output/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'api-output/*'
+      savePodLogs("apigateway")
     }
   }
 
@@ -76,6 +88,7 @@ class YarnBuilder extends AbstractBuilder {
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
       steps.saucePublisher()
+      savePodLogs("crossbrowser")
     }
   }
 
@@ -88,6 +101,7 @@ class YarnBuilder extends AbstractBuilder {
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: "functional-output/$browser*/*"
       steps.saucePublisher()
+      savePodLogs("crossbrowser-${browser}")
     }
   }
 
@@ -98,6 +112,7 @@ class YarnBuilder extends AbstractBuilder {
     finally {
       steps.junit allowEmptyResults: true, testResults: 'functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
+      savePodLogs("full-functional")
     }
   }
 
@@ -107,6 +122,7 @@ class YarnBuilder extends AbstractBuilder {
     }
     finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
+      savePodLogs("mutation")
     }
   }
 
