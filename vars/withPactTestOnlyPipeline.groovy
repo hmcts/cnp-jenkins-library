@@ -103,7 +103,7 @@ def call(type, String product, String component, Closure body) {
           env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
           env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
           env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-          env.PACT_BROKER_PORT = env.PACT_BROKER_SCHEME ?: '443'
+          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
           /*
          * These instructions have to be kept in order
