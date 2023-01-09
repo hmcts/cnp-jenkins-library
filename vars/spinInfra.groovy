@@ -55,10 +55,6 @@ def call(params) {
     changeUrl = env.CHANGE_URL
   }
 
-  test = new Environment(this).sandbox
-  // println "test var is " test
-
-
   if (env.SUBSCRIPTION_NAME == null) {
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
   }
@@ -76,13 +72,9 @@ def call(params) {
 
         def tags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
 
-        // test = new Environment(env).sandbox
-
-        // println "test var is " test
-
-        // if (new Environment(this).sandbox == environment) { 
-        //   pipelineTags = tags + [expiresAfter: expires]
-        // }
+        if (new Environment.this(sandbox) == environment) { 
+          pipelineTags = tags + [expiresAfter: expires]
+        }
         
         pipelineTags = new TerraformTagMap(tags).toString()
 
