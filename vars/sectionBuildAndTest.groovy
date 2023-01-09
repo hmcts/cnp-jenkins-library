@@ -16,7 +16,6 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
-  def pactBrokerUrl = params.pactBrokerUrl
   def acr
   def dockerImage
   def projectBranch
@@ -165,13 +164,15 @@ def call(params) {
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
           env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = pactBrokerUrl
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+          env.PACT_BROKER_PORT = env.PACT_BROKER_SCHEME ?: '443'
 
           /*
          * These instructions have to be kept in order
          */
           pcr.callAround('pact-consumer-tests') {
-            builder.runConsumerTests(pactBrokerUrl, version)
+            builder.runConsumerTests(env.PACT_BROKER_URL, version)
           }
         }
       }
