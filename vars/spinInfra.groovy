@@ -74,6 +74,7 @@ def call(params) {
 
         if (new Environment(env).sandbox == environment) { 
           pipelineTags = tags + [expiresAfter: expires]
+          log.info "This condition has been evaluated"
         }
         
         pipelineTags = new TerraformTagMap(tags).toString()
