@@ -72,11 +72,9 @@ def call(params) {
 
         def tags = [environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]
 
-        if (new Environment(env).sandbox != environment) { 
+        if (new Environment(env).sandbox == environment) { 
           pipelineTags = tags + [expiresAfter: expires]
-          // def testVar = Environment(env).sandbox
-          log.info "Environment is $environment"
-          // log.info "$testVar"
+          log.info "Pipeline tags are $pipelineTags"
         }
         
         pipelineTags = new TerraformTagMap(tags).toString()
