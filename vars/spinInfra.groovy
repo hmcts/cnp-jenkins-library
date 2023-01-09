@@ -7,28 +7,28 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
-def call(productName, environment, tfPlanOnly, subscription) {
-  product = params.product
-  environment = params.environment
-  tfPlanOnly = params.planOnly ?: false
-  subscription = params.subscription 
-}
+// def call(productName, environment, tfPlanOnly, subscription) {
+//   product = params.product
+//   environment = params.environment
+//   tfPlanOnly = params.planOnly ?: false
+//   subscription = params.subscription 
+// }
 
-def call(product, component, environment, tfPlanOnly, subscription) {
-  product = params.product
-  component = params.component ?: null
-  environment = params.environment
-  tfPlanOnly = params.planOnly ?: false
-  subscription = params.subscription
-}
+// def call(product, component, environment, tfPlanOnly, subscription) {
+//   product = params.product
+//   component = params.component ?: null
+//   environment = params.environment
+//   tfPlanOnly = params.planOnly ?: false
+//   subscription = params.subscription
+// }
 
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
-  product = params.product
-  component = params.component ?: null
-  environment = params.environment
-  tfPlanOnly = params.planOnly ?: false
-  subscription = params.subscription
-}
+// def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+//   product = params.product
+//   component = params.component ?: null
+//   environment = params.environment
+//   tfPlanOnly = params.planOnly ?: false
+//   subscription = params.subscription
+// }
 
 def call(params) {
   def product = params.product
