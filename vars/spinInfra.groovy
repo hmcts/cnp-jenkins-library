@@ -74,10 +74,10 @@ def call(params) {
 
         if (new Environment(env).sandbox == environment) { 
           pipelineTags = tags + [expiresAfter: expires]
-          log.info "Pipeline tags are $pipelineTags"
-        }
-        
+        } else
+
         pipelineTags = new TerraformTagMap(tags).toString()
+        
 
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
 
