@@ -79,7 +79,6 @@ def call(type, String product, String component, Closure body) {
           environment: environment.nonProdName,
           product: product,
           component: component,
-          pactBrokerUrl: environment.pactBrokerUrl
         )
 
         if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
@@ -116,7 +115,6 @@ def call(type, String product, String component, Closure body) {
               environment: environment.nonProdName,
               product: product,
               component: component,
-              pactBrokerUrl: environment.pactBrokerUrl,
               tfPlanOnly: true
             )
           }
@@ -130,7 +128,6 @@ def call(type, String product, String component, Closure body) {
             environment: environment.previewName,
             product: product,
             component: component,
-            pactBrokerUrl: environment.pactBrokerUrl
           )
 
         }
@@ -157,7 +154,6 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component,
-            pactBrokerUrl: environment.pactBrokerUrl,
             tfPlanOnly: false
           )
 
@@ -178,7 +174,6 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component,
-            pactBrokerUrl: environment.pactBrokerUrl
           )
 
           stageWithAgent('Publish Helm chart', product) {
@@ -200,7 +195,6 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component,
             aksSubscription: aksSubscriptions.prod,
-            pactBrokerUrl: environment.pactBrokerUrl,
             tfPlanOnly: false
           )
 
@@ -247,7 +241,6 @@ def call(type, String product, String component, Closure body) {
             product: product,
             component: component,
             aksSubscription: aksSubscription,
-            pactBrokerUrl: environment.pactBrokerUrl,
             tfPlanOnly: false
           )
         }
@@ -262,7 +255,6 @@ def call(type, String product, String component, Closure body) {
             product: deploymentProduct,
             component: component,
             aksSubscription: aksSubscriptions.preview,
-            pactBrokerUrl: environment.pactBrokerUrl,
             tfPlanOnly: false
           )
         }

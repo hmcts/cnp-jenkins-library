@@ -36,7 +36,6 @@ def call(type, String product, String component, String environment, String subs
   assert pipelineType != null
 
   Builder builder = pipelineType.builder
-  def pactBrokerUrl = (new Environment(env)).pactBrokerUrl
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
@@ -89,7 +88,6 @@ def call(type, String product, String component, String environment, String subs
         product: product,
         component: component,
         deploymentTargets: deploymentTargetList,
-        pactBrokerUrl: pactBrokerUrl,
         tfPlanOnly: false
       )
     } catch (err) {
