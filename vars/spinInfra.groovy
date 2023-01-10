@@ -23,21 +23,25 @@ def call(productName, environment, tfPlanOnly, subscription) {
   )
 }
 
-// def call(product, component, environment, tfPlanOnly, subscription) {
-//   product = params.product
-//   component = params.component ?: null
-//   environment = params.environment
-//   tfPlanOnly = params.planOnly ?: false
-//   subscription = params.subscription
-// }
+def call(product, component, environment, tfPlanOnly, subscription) {
+  call(
+    product: params.product,
+    component: params.component ?: null,
+    environment: params.environment,
+    tfPlanOnly: params.planOnly ?: false,
+    subscription: params.subscription
+  )
+}
 
-// def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
-//   product = params.product
-//   component = params.component ?: null
-//   environment = params.environment
-//   tfPlanOnly = params.planOnly ?: false
-//   subscription = params.subscription
-// }
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+  call(
+    product: params.product,
+    component: params.component ?: null,
+    environment: params.environment,
+    tfPlanOnly: params.planOnly ?: false,
+    subscription: params.subscription
+  )
+}
 
 def call(params) {
   def product = params.product
