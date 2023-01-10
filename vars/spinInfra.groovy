@@ -12,7 +12,7 @@ def call(productName, environment, tfPlanOnly, subscription) {
     product: params.product,
     null,
     environment: params.environment,
-    tfPlanOnly: params.planOnly ?: false,
+    tfPlanOnly: params.planOnly,
     subscription: params.subscription
   )
 }
@@ -22,7 +22,7 @@ def call(product, component, environment, tfPlanOnly, subscription) {
     product: params.product,
     component: params.component ?: null,
     environment: params.environment,
-    tfPlanOnly: params.planOnly ?: false,
+    tfPlanOnly: params.planOnly,
     subscription: params.subscription
   )
 }
@@ -32,7 +32,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
     product: params.product,
     component: params.component ?: null,
     environment: params.environment,
-    tfPlanOnly: params.planOnly ?: false,
+    tfPlanOnly: params.planOnly,
     subscription: params.subscription
   )
 }
@@ -42,7 +42,7 @@ def call(params) {
   def component = params.component ?: null
   def expires = params.expires
   def environment = params.environment
-  def tfPlanOnly = params.planOnly ?: false
+  def tfPlanOnly = params.planOnly
   def subscription = params.subscription 
   def productName = component ? "$product-$component" : product
   def branch = new ProjectBranch(env.BRANCH_NAME)
