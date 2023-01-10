@@ -10,7 +10,6 @@ import uk.gov.hmcts.contino.RepositoryUrl
 def call(productName, environment, tfPlanOnly, subscription) {
   call(
     product: params.product,
-    null,
     environment: params.environment,
     tfPlanOnly: params.planOnly,
     subscription: params.subscription
@@ -34,6 +33,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
     environment: params.environment,
     tfPlanOnly: params.planOnly,
     subscription: params.subscription
+    deploymentTarget ?: null
   )
 }
 
