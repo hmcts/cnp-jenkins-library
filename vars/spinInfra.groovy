@@ -33,7 +33,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
     environment: params.environment,
     tfPlanOnly: params.planOnly,
     subscription: params.subscription,
-    deploymentTarget ?: null
+    deploymentTarget: params.deploymentTarget ?: null
   )
 }
 
