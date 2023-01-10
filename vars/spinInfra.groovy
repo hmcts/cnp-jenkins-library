@@ -7,13 +7,6 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
-// def call(productName, environment, tfPlanOnly, subscription) {
-//   product = params.product
-//   environment = params.environment
-//   tfPlanOnly = params.planOnly ?: false
-//   subscription = params.subscription 
-// }
-
 def call(productName, environment, tfPlanOnly, subscription) {
   call(
     product: params.product,
