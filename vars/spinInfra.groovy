@@ -16,10 +16,10 @@ import uk.gov.hmcts.contino.RepositoryUrl
 
 def call(productName, environment, tfPlanOnly, subscription) {
   call(
-    product = params.product
-    environment = params.environment
-    tfPlanOnly = params.planOnly ?: false
-    subscription = params.subscription
+    product: params.product,
+    environment: params.environment,
+    tfPlanOnly: params.planOnly ?: false,
+    subscription: params.subscription
   )
 }
 
