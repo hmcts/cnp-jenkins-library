@@ -14,6 +14,13 @@ import uk.gov.hmcts.contino.RepositoryUrl
 //   subscription = params.subscription 
 // }
 
+def call(
+  productName = params.product, 
+  environment = params.environment, 
+  tfPlanOnly = params.planOnly ?: false, 
+  subscription = params.subscription
+  )
+
 // def call(product, component, environment, tfPlanOnly, subscription) {
 //   product = params.product
 //   component = params.component ?: null
