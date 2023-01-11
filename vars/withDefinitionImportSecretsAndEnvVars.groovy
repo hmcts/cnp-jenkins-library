@@ -5,7 +5,6 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
   echo "secrets configured  ...... $secrets['${vaultName}']"
   echo "Vault Name1   ...... ${vaultName}"
-  echo "Vault Name2   ...... vaultName"
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
   env.S2S_URL_BASE = "http://rpe-service-auth-provider-${dependedEnv}.service.core-compute-${dependedEnv}.internal"
@@ -23,12 +22,14 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
 
   def hldsSecrets = [
     'ccd': [
-      secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
+      secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET'),
+      secret('ccd-befta-master-caseworker-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_STAFF_PWD'),
+      secret('ccd-befta-master-caseworker-regional-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_REGIONAL_STAFF_PWD')
     ],
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    '${vaultName}': secrets['${vaultName}'] + [
+    '${vaultName}': [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
       secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
     ]
