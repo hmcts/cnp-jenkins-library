@@ -103,6 +103,7 @@ def call(params) {
                     builder.smokeTest()
                   } catch(err) {
                     clearHelmReleaseForFailure(dockerImage, params, pcr)
+                    error 'Build failed'
                   }
                 }
               }
@@ -120,6 +121,7 @@ def call(params) {
                           builder.fullFunctionalTest()
                         } catch(err) {
                           clearHelmReleaseForFailure(dockerImage, params, pcr)
+                          error 'Build failed'
                         }
 
                       }
@@ -136,6 +138,7 @@ def call(params) {
                         builder.functionalTest()
                       } catch(err) {
                         clearHelmReleaseForFailure(dockerImage, params, pcr)
+                        error 'Build failed'
                       }
 
                     }
