@@ -24,7 +24,6 @@ def call(params) {
   AppPipelineConfig config = params.appPipelineConfig
   PipelineType pipelineType = params.pipelineType
 
-  def pactBrokerUrl = params.pactBrokerUrl
   def subscription = params.subscription
   def product = params.product
   def component = params.component
@@ -159,9 +158,11 @@ def call(params) {
               def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
               env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-              env.PACT_BROKER_URL = pactBrokerUrl
+              env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+              env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+              env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
               pcr.callAround('pact-provider-verification') {
-                  builder.runProviderVerification(pactBrokerUrl, version, isOnMaster)
+                  builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
               }
             }
           }
