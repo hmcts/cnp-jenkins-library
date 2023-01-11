@@ -22,16 +22,16 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
 
   def hldsSecrets = [
     'ccd': [
-      secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET'),
-      secret('ccd-befta-master-caseworker-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_STAFF_PWD'),
-      secret('ccd-befta-master-caseworker-regional-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_REGIONAL_STAFF_PWD')
+      secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
     '${vaultName}': [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
-      secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
+      secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD'),
+      secret('ccd-befta-master-caseworker-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_STAFF_PWD'),
+      secret('ccd-befta-master-caseworker-regional-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_REGIONAL_STAFF_PWD')
     ]
   ]
 
