@@ -94,6 +94,7 @@ def call(params) {
               pcr.callAround("smoketest:${environment}") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                   builder.smokeTest()
+                  savePodsLogs(dockerImage, params, "smoke")
                 }
               }
             }
@@ -107,6 +108,7 @@ def call(params) {
                     pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
                         builder.fullFunctionalTest()
+                        savePodsLogs(dockerImage, params, "full-functional")
                       }
                     }
                   }
@@ -118,6 +120,7 @@ def call(params) {
                   pcr.callAround("functionalTest:${environment}") {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
                       builder.functionalTest()
+                      savePodsLogs(dockerImage, params, "functional")
                     }
                   }
                 }
@@ -193,6 +196,7 @@ def call(params) {
                   pcr.callAround('PerformanceTest') {
                     timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
                       builder.performanceTest()
+                      savePodsLogs(dockerImage, params, "performance")
                     }
                   }
                 }
