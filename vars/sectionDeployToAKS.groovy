@@ -19,6 +19,13 @@ def testEnv(String testUrl, block) {
   }
 }
 
+def clearHelmReleaseForFailure(DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+  if (config.clearHelmReleaseOnFail) {
+    helmUninstall(dockerImage, params, pcr)
+  }
+
+}
+
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
@@ -92,7 +99,11 @@ def call(params) {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:${environment}") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                  builder.smokeTest()
+                  try {
+                    builder.smokeTest()
+                  } catch(err) {
+                    clearHelmReleaseForFailure(dockerImage, params, pcr)
+                  }
                 }
               }
             }
@@ -105,7 +116,12 @@ def call(params) {
                   warnError('Failure in fullFunctionalTest') {
                     pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                        builder.fullFunctionalTest()
+                        try {
+                          builder.fullFunctionalTest()
+                        } catch(err) {
+                          clearHelmReleaseForFailure(dockerImage, params, pcr)
+                        }
+
                       }
                     }
                   }
@@ -116,7 +132,12 @@ def call(params) {
                 testEnv(aksUrl) {
                   pcr.callAround("functionalTest:${environment}") {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                      builder.functionalTest()
+                      try {
+                        builder.functionalTest()
+                      } catch(err) {
+                        clearHelmReleaseForFailure(dockerImage, params, pcr)
+                      }
+
                     }
                   }
                 }

@@ -276,6 +276,35 @@ To clear helm release, do the following:
   }
   ```
 
+#### Clear Helm Release on Failed Build
+
+If your team doesn't need to keep the helm releases for their PR even for failing builds, it is possible to clean them to free further resources.
+This may be useful to reduce resource contention in difficult projects with large teams, where pipeline stability is not yet where it should be.
+
+To clear helm releases for failing builds, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseOnFail()
+    ...
+  }
+  ```
+
+If you know you want to keep the helm releases for specific failures, you can do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    disableCleanupOfHelmReleaseOnFail()
+    ...
+  }
+  ```
+
+Note that the above works only for PR builds. Master builds are unaffected by this toggle.
+
+
+
 ### Opinionated infrastructure pipeline
 
 For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.
