@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
   def secrets = config.vaultSecrets
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
-  echo "secrets configured are ...... $secrets"
+  echo "secrets configured are ...... secrets['${vaultName}']"
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
   env.S2S_URL_BASE = "http://rpe-service-auth-provider-${dependedEnv}.service.core-compute-${dependedEnv}.internal"
