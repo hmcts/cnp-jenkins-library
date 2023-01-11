@@ -28,6 +28,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String fortifyVaultName
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
+  boolean dockerTestBuild = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15
