@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.DockerImage
 
 
 def call(DockerImage dockerImage, Map params, String scope) {
