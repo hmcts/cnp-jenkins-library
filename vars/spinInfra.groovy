@@ -7,16 +7,33 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
+Map infraArgs = [
+            product                    : params.product,
+            component                  : params.component,
+            expires                    : params.expires,
+            environment                : params.environment,
+            tfPlanOnly                 : params.planOnly,
+            subscription               : params.subscription,
+            productName                : params.component,
+            branch                     : new ProjectBranch(env.BRANCH_NAME),
+            deploymentNamespace        : branch.deploymentNamespace(),
+            changeUrl                  : "",
+            environmentDeploymentTarget: "$environment",
+            deploymentTarget           : ""
+    ]
+
 def call(productName, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+  
+  infraArgs(Map args = [:]) {
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
         productName     : component ? "$product-$component" : params.product,
-  ]
+  ] << args
 
   def productName = config.component
   def changeUrl = config.changeUrl
@@ -138,4 +155,5 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         log.warning "Skipping apply due to tfPlanOnly flag set"
     }
   }
+}
 }
