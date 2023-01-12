@@ -7,12 +7,6 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
-def call(productName, environment, tfPlanOnly, subscription) {}
-
-def call(product, component, environment, tfPlanOnly, subscription) {}
-
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
-
 Map infraArgs = [
             product                    : params.product,
             component                  : params.component,
@@ -28,26 +22,24 @@ Map infraArgs = [
             deploymentTarget           : ""
     ]
 
-def call(params) {
+infraSpin(infraArgs).call()
 
+def call(productName, environment, tfPlanOnly, subscription) {}
+
+def call(product, component, environment, tfPlanOnly, subscription) {}
+
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
+
+Closure infraSpin(Map args = [:]) {
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
         productName     : component ? "$product-$component" : params.product,
-  ] << infraArgs
+  ] << args
 
-  def product = config.product
-  def component = config.component
-  def expires = config.expires
-  def environment = config.environment
-  def tfPlanOnly = config.planOnly
-  def subscription = config.subscription 
   def productName = config.component
-  def branch = config.branch
-  def deploymentNamespace = config.deploymentNamespace
   def changeUrl = config.changeUrl
   def environmentDeploymentTarget = config.environmentDeploymentTarget
-  def deploymentTarget = config.deploymentTarget ?: null
   def teamName
   def pipelineTags
 
