@@ -16,14 +16,15 @@ def call(params) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // build environment infrastructure once
-          return spinInfra(
-             product: product,
-             component: component, 
-             expires: expires, 
-             environment: environment,
-             planOnly: planOnly,
-             subscription: subscription
-            )
+          // return spinInfra(
+          //    product: product,
+          //    component: component, 
+          //    expires: expires, 
+          //    environment: environment,
+          //    planOnly: planOnly,
+          //    subscription: subscription
+          //   )
+          return spinInfra(product, component, environment, planOnly, subscription)
         }
       }
     }
