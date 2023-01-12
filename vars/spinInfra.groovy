@@ -13,30 +13,41 @@ def call(product, component, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
 
+Map infraArgs = [
+            product                    : params.product,
+            component                  : params.component,
+            expires                    : params.expires,
+            environment                : params.environment,
+            tfPlanOnly                 : params.planOnly,
+            subscription               : params.subscription,
+            productName                : params.component,
+            branch                     : new ProjectBranch(env.BRANCH_NAME)
+            deploymentNamespace        : branch.deploymentNamespace(),
+            changeUrl                  : "",
+            environmentDeploymentTarget: "$environment",
+            deploymentTarget           : ""
+    ]
+
 def call(params) {
 
   def config = [
-        component                  : params.component ?: null,
-        deploymentTarget           : params.deploymentTarget ?: null,
-        productName                : component ? "$product-$component" : product,
-        branch                     : new ProjectBranch(env.BRANCH_NAME),
-        deploymentNamespace        : branch.deploymentNamespace(),
-        changeUrl                  : "",
-        environmentDeploymentTarget: "$environment"
+        component       : params.component ?: null,
+        deploymentTarget: params.deploymentTarget ?: null,
+        productName     : component ? "$product-$component" : params.product,
   ] << args
 
-  def product = params.product
+  def product = config.product
   def component = config.component
-  def expires = params.expires
-  def environment = params.environment
-  def tfPlanOnly = params.planOnly
-  def subscription = params.subscription 
+  def expires = config.expires
+  def environment = config.environment
+  def tfPlanOnly = config.planOnly
+  def subscription = config.subscription 
   def productName = config.component
   def branch = config.branch
   def deploymentNamespace = config.deploymentNamespace
   def changeUrl = config.changeUrl
   def environmentDeploymentTarget = config.environmentDeploymentTarget
-  def deploymentTarget = params.deploymentTarget ?: null
+  def deploymentTarget = config.deploymentTarget ?: null
   def teamName
   def pipelineTags
 
