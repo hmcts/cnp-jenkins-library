@@ -13,20 +13,20 @@ def call(product, component, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
 
-Map infraArgs = [
-            product                    : params.product,
-            component                  : params.component,
-            expires                    : params.expires,
-            environment                : params.environment,
-            tfPlanOnly                 : params.planOnly,
-            subscription               : params.subscription,
-            productName                : params.component,
-            branch                     : new ProjectBranch(env.BRANCH_NAME),
-            deploymentNamespace        : branch.deploymentNamespace(),
-            changeUrl                  : "",
-            environmentDeploymentTarget: "$environment",
-            deploymentTarget           : ""
-    ]
+// Map infraArgs = [
+//             product                    : params.product,
+//             component                  : params.component,
+//             expires                    : params.expires,
+//             environment                : params.environment,
+//             tfPlanOnly                 : params.planOnly,
+//             subscription               : params.subscription,
+//             productName                : params.component,
+//             branch                     : new ProjectBranch(env.BRANCH_NAME),
+//             deploymentNamespace        : branch.deploymentNamespace(),
+//             changeUrl                  : "",
+//             environmentDeploymentTarget: "$environment",
+//             deploymentTarget           : ""
+//     ]
 
 def call(params) {
 
