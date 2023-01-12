@@ -21,7 +21,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
             tfPlanOnly                 : params.planOnly,
             subscription               : params.subscription,
             productName                : params.component,
-            branch                     : new ProjectBranch(env.BRANCH_NAME),
+            // branch                     : new ProjectBranch(env.BRANCH_NAME),
             deploymentNamespace        : branch.deploymentNamespace(),
             changeUrl                  : "",
             environmentDeploymentTarget: "$environment",
