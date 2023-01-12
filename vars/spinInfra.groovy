@@ -37,7 +37,6 @@ def call(params) {
   ] << args
 
   def product = params.product
-  def component = config.component
   def expires = params.expires
   def environment = params.environment
   def tfPlanOnly = params.planOnly
