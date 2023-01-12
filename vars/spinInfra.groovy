@@ -28,7 +28,7 @@ def call(product, component, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
   
-  infraArgs(Map args = [:]) {
+  call(infraArgs(Map args = [:])) {
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
