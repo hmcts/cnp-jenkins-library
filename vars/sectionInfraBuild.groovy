@@ -24,7 +24,7 @@ def call(params) {
           //    planOnly: planOnly,
           //    subscription: subscription
           //   )
-          return spinInfra(product, component, environment, planOnly, subscription)
+          return spinInfra(product, component, expires, environment, planOnly, subscription)
         }
       }
     }
