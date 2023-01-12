@@ -11,7 +11,7 @@ def call(productName, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription) {}
 
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
 
 // Map infraArgs = [
 //             product                    : params.product,
@@ -28,8 +28,6 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 //             deploymentTarget           : ""
 //     ]
 
-def call(params) {
-
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
@@ -37,7 +35,7 @@ def call(params) {
   ] << args
 
   def product = params.product
-  String component = config.component
+  def component = config.component
   def expires = params.expires
   def environment = params.environment
   def tfPlanOnly = params.planOnly
