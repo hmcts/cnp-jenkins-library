@@ -12,13 +12,11 @@ def call(productName, environment, tfPlanOnly, subscription) {}
 def call(product, component, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
-
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
         productName     : component ? "$product-$component" : params.product,
-  ] << args
-
+  ]
   def productName = config.component
   def changeUrl = params.changeUrl
   def environmentDeploymentTarget = params.environmentDeploymentTarget
