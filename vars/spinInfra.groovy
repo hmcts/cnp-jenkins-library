@@ -22,13 +22,13 @@ Closure infraArgs(Map args = [:]) {
           environmentDeploymentTarget: "$environment"
   ] << args
 
-  def call(productName, environment, tfPlanOnly, subscription) {}
+  call(productName, environment, tfPlanOnly, subscription) {}
 
-  def call(product, component, environment, tfPlanOnly, subscription) {}
+  call(product, component, environment, tfPlanOnly, subscription) {}
 
-  def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
+  call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {}
 
-  def call(params) {
+  call(params) {
     def product = config.product
     def component = config.component
     def expires = config.expires
