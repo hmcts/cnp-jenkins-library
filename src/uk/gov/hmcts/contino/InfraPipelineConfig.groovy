@@ -1,4 +1,3 @@
 package uk.gov.hmcts.contino
 
-class InfraPipelineConfig extends CommonPipelineConfig implements Serializable {
-}
+class InfraPipelineConfig extends CommonPipelineConfig implements Serializable {}
