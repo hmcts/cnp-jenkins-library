@@ -28,7 +28,7 @@ Map infraArgs = [
             deploymentTarget           : ""
     ]
 
-def call(params) {
+def call(infraArgs) {
 
   def config = [
         component       : params.component ?: null,
