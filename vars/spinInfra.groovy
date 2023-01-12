@@ -155,4 +155,3 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
     }
   }
 }
-}
