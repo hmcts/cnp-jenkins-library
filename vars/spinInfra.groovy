@@ -7,7 +7,13 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
-Map infraArgs = [
+def call(productName, environment, tfPlanOnly, subscription) {}
+
+def call(product, component, environment, tfPlanOnly, subscription) {}
+
+def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
+  
+  Map infraArgs = [
             product                    : params.product,
             component                  : params.component,
             expires                    : params.expires,
@@ -22,18 +28,11 @@ Map infraArgs = [
             deploymentTarget           : ""
     ]
 
-def call(productName, environment, tfPlanOnly, subscription) {}
-
-def call(product, component, environment, tfPlanOnly, subscription) {}
-
-def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
-  
-  call(infraArgs(Map args = [:])) {
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
         productName     : component ? "$product-$component" : params.product,
-  ] << args
+  ] << infraArgs
 
   def productName = config.component
   def changeUrl = config.changeUrl
