@@ -25,18 +25,18 @@ def call(params) {
         environmentDeploymentTarget: "$environment"
   ] << args
 
-  def product = config.product
+  def product = params.product
   def component = config.component
-  def expires = config.expires
-  def environment = config.environment
-  def tfPlanOnly = config.planOnly
-  def subscription = config.subscription 
+  def expires = params.expires
+  def environment = params.environment
+  def tfPlanOnly = params.planOnly
+  def subscription = params.subscription 
   def productName = config.component
   def branch = config.branch
   def deploymentNamespace = config.deploymentNamespace
   def changeUrl = config.changeUrl
   def environmentDeploymentTarget = config.environmentDeploymentTarget
-  def deploymentTarget = config.deploymentTarget
+  def deploymentTarget = params.deploymentTarget ?: null
   def teamName
   def pipelineTags
 
