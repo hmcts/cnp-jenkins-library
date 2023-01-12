@@ -34,18 +34,12 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         productName     : component ? "$product-$component" : params.product,
   ] << args
 
-  String product = params.product
-  String component = config.component
   def expires = params.expires
-  String environment = params.environment
-  String tfPlanOnly = params.planOnly
-  String subscription = params.subscription 
   def productName = config.component
   def branch = params.branch
   def deploymentNamespace = params.deploymentNamespace
   def changeUrl = params.changeUrl
   def environmentDeploymentTarget = params.environmentDeploymentTarget
-  String deploymentTarget = config.deploymentTarget
   def teamName
   def pipelineTags
 
