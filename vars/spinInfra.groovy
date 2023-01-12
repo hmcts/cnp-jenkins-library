@@ -11,7 +11,7 @@ def call(productName, environment, tfPlanOnly, subscription) {}
 
 def call(product, component, environment, tfPlanOnly, subscription) {}
 
-def call(product, component, environment, expires, tfPlanOnly, subscription, deploymentTarget) {
+def call(product, component, expires, environment, tfPlanOnly, subscription, deploymentTarget) {
   def config = [
         component       : params.component ?: null,
         deploymentTarget: params.deploymentTarget ?: null,
