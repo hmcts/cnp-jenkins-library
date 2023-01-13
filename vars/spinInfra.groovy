@@ -30,7 +30,6 @@ def call(Map<String, ?> params) {
   def config = [
         productName     : params.component ? "$params.product-$params.component" : params.product,
         deploymentNamespace : new ProjectBranch(env.BRANCH_NAME).deploymentNamespace(),
-        tfPlanOnly: params.planOnly ?: true
   ] << params
 
   def productName = config.component
