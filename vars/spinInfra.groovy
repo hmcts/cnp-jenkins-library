@@ -52,8 +52,8 @@ def call(Map<String, ?> params) {
   approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
     stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
-    lock("${config.productName}-${config.environment}") {
-      stageWithAgent("Plan ${config.productName} in ${config.environment}", config.product) {
+    lock("${config.productName}-${environmentDeploymentTarget}") {
+      stageWithAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
@@ -76,7 +76,7 @@ def call(Map<String, ?> params) {
           log.warning("Using following stateStore={" +
             "'rg_name': '${env.STORE_rg_name_template}-${config.subscription}', " +
             "'sa_name': '${env.STORE_sa_name_template}${config.subscription}', " +
-            "'sa_container_name': '${env.STORE_sa_container_name_template}${config.environment}'}")
+            "'sa_container_name': '${env.STORE_sa_container_name_template}${environmentDeploymentTarget}'}")
         } else
           throw new Exception("State store name details not found in environment variables?")
 
@@ -96,9 +96,9 @@ def call(Map<String, ?> params) {
         sh """
           terraform init -reconfigure \
             -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${config.environment}" \
+            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
             -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
-            -backend-config "key=${config.productName}/${config.environment}/terraform.tfstate"
+            -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
         env.TF_VAR_ilbIp = 'TODO remove after some time'
@@ -106,7 +106,7 @@ def call(Map<String, ?> params) {
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
-        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(config.environment)
+        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
 
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
@@ -133,7 +133,7 @@ def call(Map<String, ?> params) {
         }
       }
       if (!config.tfPlanOnly) {
-        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", config.product) {
+        stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {
