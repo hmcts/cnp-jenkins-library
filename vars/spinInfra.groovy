@@ -28,7 +28,7 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
 def call(Map<String, ?> params) {
   def config = [
-        productName     : params.component ?: "$params.product-$params.component" : params.product,
+        productName     : params.component ? "$params.product-$params.component" : params.product,
         deploymentNamespace : new ProjectBranch(env.BRANCH_NAME).deploymentNamespace()
   ] << params
 
