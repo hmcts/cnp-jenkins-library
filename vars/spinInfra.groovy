@@ -52,8 +52,8 @@ def call(Map<String, ?> params) {
   approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
     stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
-    lock("${config.productName}-${config.environmentDeploymentTarget}") {
-      stageWithAgent("Plan ${config.productName} in ${config.environmentDeploymentTarget}", config.product) {
+    lock("${config.productName}-${config.environment}") {
+      stageWithAgent("Plan ${config.productName} in ${config.environment}", config.product) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
@@ -96,9 +96,9 @@ def call(Map<String, ?> params) {
         sh """
           terraform init -reconfigure \
             -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${config.environmentDeploymentTarget}" \
+            -backend-config "container_name=${env.STORE_sa_container_name_template}${config.environment}" \
             -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
-            -backend-config "key=${config.productName}/${config.environmentDeploymentTarget}/terraform.tfstate"
+            -backend-config "key=${config.productName}/${config.environment}/terraform.tfstate"
         """
 
         env.TF_VAR_ilbIp = 'TODO remove after some time'
