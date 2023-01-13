@@ -34,7 +34,7 @@ def call(Map<String, ?> params) {
 
   def productName = config.component
   def changeUrl = config.changeUrl
-  def environmentDeploymentTarget = config.environment
+  def environmentDeploymentTarget = params.environment
   def teamName
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(
