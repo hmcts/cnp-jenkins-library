@@ -50,7 +50,7 @@ def call(Map<String, ?> params) {
   }
 
   approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
-    stateStoreInit(environment, subscription, deploymentTarget)
+    stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
     lock("${productName}-${environmentDeploymentTarget}") {
       stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", config.product) {
