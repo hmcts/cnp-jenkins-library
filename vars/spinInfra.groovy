@@ -62,7 +62,7 @@ def call(Map<String, ?> params) {
 
         def tags = [environment: Environment.toTagName(config.environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
 
-        if (new Environment(env).sandbox == config.environment) {
+        if (new Environment(env).sandbox == config.environment || config.environment == "sbox") {
           tags = tags + [expiresAfter: config.expires]
         }
 
