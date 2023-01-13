@@ -76,7 +76,7 @@ def call(Map<String, ?> params) {
           log.warning("Using following stateStore={" +
             "'rg_name': '${env.STORE_rg_name_template}-${config.subscription}', " +
             "'sa_name': '${env.STORE_sa_name_template}${config.subscription}', " +
-            "'sa_container_name': '${env.STORE_sa_container_name_template}${config.environmentDeploymentTarget}'}")
+            "'sa_container_name': '${env.STORE_sa_container_name_template}${config.environment}'}")
         } else
           throw new Exception("State store name details not found in environment variables?")
 
