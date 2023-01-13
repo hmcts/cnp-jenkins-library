@@ -21,7 +21,7 @@ def call(params) {
               component: component,
               expires: expires,
               environment: environment,
-              planOnly: planOnly,
+              tfPlanOnly: planOnly,
               subscription: subscription
              )
         }
