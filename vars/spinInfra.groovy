@@ -133,7 +133,7 @@ def call(Map<String, ?> params) {
         }
       }
       if (!config.tfPlanOnly) {
-        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", config.product) {
+        stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {
