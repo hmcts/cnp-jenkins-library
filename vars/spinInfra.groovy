@@ -106,7 +106,7 @@ def call(Map<String, ?> params) {
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
-        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
+        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(config.environment)
 
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
@@ -133,7 +133,7 @@ def call(Map<String, ?> params) {
         }
       }
       if (!config.tfPlanOnly) {
-        stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
+        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", config.product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {
