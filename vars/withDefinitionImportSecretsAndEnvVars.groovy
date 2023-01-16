@@ -34,8 +34,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
       secret('ccd-role-assignment-solicitor-password','ROLE_ASSIGNMENT_USER_PASSWORD'),
 
       secret('ccd-befta-master-caseworker-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_STAFF_PWD'),
-      secret('ccd-befta-master-caseworker-regional-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_REGIONAL_STAFF_PWD'),
-      secret('microservicekey-ccd-data', 'ROLE_ASSIGNMENT_API_GATEWAY_S2S_CLIENT_KEY')
+      secret('ccd-befta-master-caseworker-regional-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_REGIONAL_STAFF_PWD')
     ]
   ]
 
