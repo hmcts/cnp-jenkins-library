@@ -29,12 +29,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     ],
     '${vaultName}': [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
-      secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD'),
-      secret('ccd-role-assignment-solicitor-email','ROLE_ASSIGNMENT_USER_EMAIL'),
-      secret('ccd-role-assignment-solicitor-password','ROLE_ASSIGNMENT_USER_PASSWORD'),
-
-      secret('ccd-befta-master-caseworker-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_STAFF_PWD'),
-      secret('ccd-befta-master-caseworker-regional-staff-pwd','ROLE_ASSIGNMENT_CASEWORKER_REGIONAL_STAFF_PWD')
+      secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
     ]
   ]
 
