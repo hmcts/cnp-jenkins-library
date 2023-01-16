@@ -4,6 +4,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   def secrets = config.vaultSecrets
   echo "secrets configured  ...... $secrets['${vaultName}']"
   echo "Vault Name   ...... ${vaultName}"
+  echo "env Name   ...... ${env}"
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
@@ -27,7 +28,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    '${vaultName}': secrets['${vaultName}'] + [
+    '${vaultName}': secrets['${env}'] + [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
       secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
     ]
