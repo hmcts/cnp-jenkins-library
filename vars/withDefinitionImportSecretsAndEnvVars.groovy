@@ -28,7 +28,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    '${vaultName}': secrets['${env}'] + [
+    '${vaultName}': $secrets['${vaultName}'] + [
       secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
       secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
     ]
