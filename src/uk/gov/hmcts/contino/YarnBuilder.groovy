@@ -310,7 +310,7 @@ EOF
 
   private yarnDepreciationCheck() {
      if (!isYarnV2OrNewer()){
-       WarningCollector.addPipelineWarning("packageManager required", "Please upgrade to Yarn V3 by adding packageManager to package.json. For examples see: https://github.com/hmcts/cnp-plum-frontend/blob/2bfb6eac580c0965e331731496619c0b5920d596/package.json#L47 and https://github.com/hmcts/dtsse-ardoq-adapter", LocalDate.of(2023, 03, 10 ))
+       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3 by adding packageManager to package.json. For examples see: https://github.com/hmcts/cnp-plum-frontend/blob/2bfb6eac580c0965e331731496619c0b5920d596/package.json#L47 and https://github.com/hmcts/dtsse-ardoq-adapter", LocalDate.of(2023, 03, 10 ))
     }  
   }
 
