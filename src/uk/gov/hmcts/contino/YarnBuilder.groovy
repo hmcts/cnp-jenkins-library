@@ -308,18 +308,18 @@ EOF
     return status
   }
 
+  private nagAboutOldYarnVersions() {
+     if (!isYarnV2OrNewer()){
+       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 03, 10 ))
+    }  
+  }
+
   private corepackEnable() {
     def status = steps.sh label: "corepack enable", script: '''
       mkdir -p \$HOME/.local/bin
       corepack enable  --install-directory \$HOME/.local/bin
     ''', returnStatus: true
     return status
-  }
-
-  def nagAboutOldYarnVersions(){
-    if (!isYarnV2OrNewer()){
-      WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 03, 10 ))
-    }
   }
 
   def yarn(String task, String prepend = "") {
