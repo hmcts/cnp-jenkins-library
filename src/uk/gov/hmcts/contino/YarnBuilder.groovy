@@ -345,4 +345,7 @@ EOF
 
   }
 
+  def nagAboutOldYarnVersions(){
+  }
+  
 }
