@@ -10,8 +10,8 @@ deprecationMap["nodejs"]="2.4.11"
 deprecationMap["job"]="0.7.4"
 deprecationMap["blobstorage"]="0.3.0"
 deprecationMap["servicebus"]="0.4.0"
-deprecationMap["ccd"]="8.0.17"
-deprecationMap["elasticsearch"]="7.8.2"
+deprecationMap["ccd"]="8.0.22"
+deprecationMap["elasticsearch"]="7.17.3"
 
 for deprecation in "${!deprecationMap[@]}"
 do
