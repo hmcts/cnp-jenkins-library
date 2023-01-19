@@ -21,7 +21,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def valutSecrets = '${vaultName}': secrets['${vaultName}'] + [
+  def valutSecrets = '${vaultName}' + [
     secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
     secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
   ]
