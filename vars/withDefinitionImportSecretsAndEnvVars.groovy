@@ -35,7 +35,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    ${valutSecrets}
+    [ ${valutSecrets} ]
   ]
 
   hldsSecrets = hldsSecrets.entrySet()
