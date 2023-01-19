@@ -2,9 +2,9 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
   def secrets = config.vaultSecrets
-  echo "secrets configured  ...... $secrets['${vaultName}']"
-  echo "Vault Name   ...... ${vaultName}"
-  echo "env Name   ...... ${env}"
+  echo ("secrets configured  ...... $secrets['${vaultName}']")
+  echo ("Vault Name   ...... ${vaultName}")
+  echo ("env Name   ...... ${env}")
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
