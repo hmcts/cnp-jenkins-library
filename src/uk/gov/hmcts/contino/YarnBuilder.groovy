@@ -342,7 +342,7 @@ EOF
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
-
+    nagAboutOldYarnVersions()
   }
 
 }
