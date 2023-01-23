@@ -19,7 +19,7 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def clearHelmReleaseForFailure(DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+def clearHelmReleaseForFailure(AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
   if (config.clearHelmReleaseOnFail) {
     helmUninstall(dockerImage, params, pcr)
   }
@@ -104,7 +104,7 @@ def call(params) {
                     savePodsLogs(dockerImage, params, "smoke")
                   } catch(err) {
                     savePodsLogs(dockerImage, params, "smoke")
-                    clearHelmReleaseForFailure(dockerImage, params, pcr)
+                    clearHelmReleaseForFailure(config, dockerImage, params, pcr)
                     error 'Build failed'
                   }
                 }
@@ -124,7 +124,7 @@ def call(params) {
                           savePodsLogs(dockerImage, params, "full-functional")
                         } catch(err) {
                           savePodsLogs(dockerImage, params, "full-functional")
-                          clearHelmReleaseForFailure(dockerImage, params, pcr)
+                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
                           error 'Build failed'
                         }
                       }
@@ -142,7 +142,7 @@ def call(params) {
                         savePodsLogs(dockerImage, params, "functional")
                       } catch(err) {
                         savePodsLogs(dockerImage, params, "functional")
-                        clearHelmReleaseForFailure(dockerImage, params, pcr)
+                        clearHelmReleaseForFailure(config, dockerImage, params, pcr)
                         error 'Build failed'
                       }
                     }
