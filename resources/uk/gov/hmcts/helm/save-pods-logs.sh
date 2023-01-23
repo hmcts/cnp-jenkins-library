@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 RELEASE_NAME=${1}
 NAMESPACE=${2}
