@@ -101,7 +101,9 @@ def call(params) {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                   try {
                     builder.smokeTest()
+                    savePodsLogs(dockerImage, params, "smoke")
                   } catch(err) {
+                    savePodsLogs(dockerImage, params, "smoke")
                     clearHelmReleaseForFailure(dockerImage, params, pcr)
                     error 'Build failed'
                   }
@@ -119,11 +121,12 @@ def call(params) {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
                         try {
                           builder.fullFunctionalTest()
+                          savePodsLogs(dockerImage, params, "full-functional")
                         } catch(err) {
+                          savePodsLogs(dockerImage, params, "full-functional")
                           clearHelmReleaseForFailure(dockerImage, params, pcr)
                           error 'Build failed'
                         }
-
                       }
                     }
                   }
@@ -136,11 +139,12 @@ def call(params) {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
                       try {
                         builder.functionalTest()
+                        savePodsLogs(dockerImage, params, "functional")
                       } catch(err) {
+                        savePodsLogs(dockerImage, params, "functional")
                         clearHelmReleaseForFailure(dockerImage, params, pcr)
                         error 'Build failed'
                       }
-
                     }
                   }
                 }
@@ -217,7 +221,11 @@ def call(params) {
                 warnError('Failure in performanceTest') {
                   pcr.callAround('PerformanceTest') {
                     timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                      builder.performanceTest()
+                      try {
+                        builder.performanceTest()
+                      } finally {
+                        savePodsLogs(dockerImage, params, "performance")
+                      }
                     }
                   }
                 }
