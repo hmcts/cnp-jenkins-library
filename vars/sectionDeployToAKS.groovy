@@ -105,7 +105,7 @@ def call(params) {
                   } catch(err) {
                     savePodsLogs(dockerImage, params, "smoke")
                     clearHelmReleaseForFailure(config, dockerImage, params, pcr)
-                    error 'Build failed'
+                    throw err
                   }
                 }
               }
@@ -125,7 +125,7 @@ def call(params) {
                         } catch(err) {
                           savePodsLogs(dockerImage, params, "full-functional")
                           clearHelmReleaseForFailure(config, dockerImage, params, pcr)
-                          error 'Build failed'
+                          throw err
                         }
                       }
                     }
@@ -143,7 +143,7 @@ def call(params) {
                       } catch(err) {
                         savePodsLogs(dockerImage, params, "functional")
                         clearHelmReleaseForFailure(config, dockerImage, params, pcr)
-                        error 'Build failed'
+                        throw err
                       }
                     }
                   }
