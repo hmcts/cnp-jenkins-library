@@ -301,8 +301,6 @@ If you know you want to keep the helm releases for specific failures, you can do
   }
   ```
 
-Note that the above works only for PR builds. Master builds are unaffected by this toggle.
-
 
 
 ### Opinionated infrastructure pipeline
