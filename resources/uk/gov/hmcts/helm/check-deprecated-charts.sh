@@ -4,8 +4,8 @@ set -x
 CHART_DIRECTORY=${1}-${2}
 declare -A deprecationMap
 
-deprecationMap["java"]="4.0.4"
-deprecationMap["nodejs"]="2.4.8"
+deprecationMap["java"]="4.0.11"
+deprecationMap["nodejs"]="2.4.13"
 deprecationMap["job"]="0.7.4"
 deprecationMap["blobstorage"]="0.3.0"
 deprecationMap["servicebus"]="0.4.0"
