@@ -105,7 +105,7 @@ def call(params) {
                   } catch(err) {
                     savePodsLogs(dockerImage, params, "smoke")
                     clearHelmReleaseForFailure(config, dockerImage, params, pcr)
-                    throw err
+                    error 'Build failed. Please check the build logs and the pods logs for further information. You will find the pods logs under Artifacts.'
                   }
                 }
               }
@@ -125,7 +125,7 @@ def call(params) {
                         } catch(err) {
                           savePodsLogs(dockerImage, params, "full-functional")
                           clearHelmReleaseForFailure(config, dockerImage, params, pcr)
-                          throw err
+                          error 'Build failed. Please check the build logs and the pods logs for further information. You will find the pods logs under Artifacts.'
                         }
                       }
                     }
@@ -143,7 +143,7 @@ def call(params) {
                       } catch(err) {
                         savePodsLogs(dockerImage, params, "functional")
                         clearHelmReleaseForFailure(config, dockerImage, params, pcr)
-                        throw err
+                        error 'Build failed. Please check the build logs and the pods logs for further information. You will find the pods logs under Artifacts.'
                       }
                     }
                   }
