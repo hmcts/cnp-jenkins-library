@@ -15,10 +15,10 @@ def call(DockerImage dockerImage, Map params, String scope) {
 
       steps.writeFile(file: 'save-pods-logs.sh', text: steps.libraryResource('uk/gov/hmcts/helm/save-pods-logs.sh'))
       steps.sh(label: "Save pods logs in artifacts, under pods-logs-${scope}", script: """
-    chmod +x save-pods-logs.sh
-    ./save-pods-logs.sh ${releaseName} ${namespace} pods-logs-${scope}
-    rm -f save-pods-logs.sh
-    """)
+        chmod +x save-pods-logs.sh
+        ./save-pods-logs.sh ${releaseName} ${namespace} pods-logs-${scope}
+        rm -f save-pods-logs.sh
+      """)
 
       steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "pods-logs-${scope}/**")
     }
