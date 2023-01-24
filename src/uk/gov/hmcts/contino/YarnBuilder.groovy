@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class YarnBuilder extends AbstractBuilder {
 
