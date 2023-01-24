@@ -4,6 +4,7 @@ import groovy.json.JsonSlurper
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+import java.time.LocalDate
 
 class YarnBuilder extends AbstractBuilder {
 
