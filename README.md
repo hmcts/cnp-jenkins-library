@@ -286,7 +286,7 @@ To clear helm releases for failing builds, do the following:
   ```
   withPipeline(type, product, component) {
     ...
-    enableCleanupOfHelmReleaseOnFail()
+    enableCleanupOfHelmReleaseOnFailure()
     ...
   }
   ```

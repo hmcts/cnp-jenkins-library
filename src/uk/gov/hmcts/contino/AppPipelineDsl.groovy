@@ -78,8 +78,13 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.clearHelmRelease = true;
   }
 
-  void enableCleanupOfHelmReleaseOnFail() {
-    config.clearHelmReleaseOnFail = true;
+  void enableCleanupOfHelmReleaseOnFailure() {
+    config.clearHelmReleaseOnFailure = true;
+  }
+
+  void enableCleanupOfHelmReleaseAlways() {
+    config.clearHelmRelease = true;
+    config.clearHelmReleaseOnFailure = true;
   }
 
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}

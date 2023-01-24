@@ -20,7 +20,7 @@ def testEnv(String testUrl, block) {
 }
 
 def clearHelmReleaseForFailure(AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-  if (config.clearHelmReleaseOnFail) {
+  if (config.clearHelmReleaseOnFailure) {
     helmUninstall(dockerImage, params, pcr)
   }
 
@@ -99,13 +99,17 @@ def call(params) {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:${environment}") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  def success = true
                   try {
                     builder.smokeTest()
-                    savePodsLogs(dockerImage, params, "smoke")
                   } catch(err) {
-                    savePodsLogs(dockerImage, params, "smoke")
-                    clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                    success = false
                     throw err
+                  } finally {
+                    savePodsLogs(dockerImage, params, "smoke")
+                    if (!success) {
+                      clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                    }
                   }
                 }
               }
@@ -119,13 +123,17 @@ def call(params) {
                   warnError('Failure in fullFunctionalTest') {
                     pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        def success = true
                         try {
                           builder.fullFunctionalTest()
-                          savePodsLogs(dockerImage, params, "full-functional")
                         } catch(err) {
-                          savePodsLogs(dockerImage, params, "full-functional")
-                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                          success = false
                           throw err
+                        } finally {
+                          savePodsLogs(dockerImage, params, "full-functional")
+                          if (!success) {
+                            clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                          }
                         }
                       }
                     }
@@ -137,13 +145,17 @@ def call(params) {
                 testEnv(aksUrl) {
                   pcr.callAround("functionalTest:${environment}") {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      def success = true
                       try {
                         builder.functionalTest()
-                        savePodsLogs(dockerImage, params, "functional")
                       } catch(err) {
-                        savePodsLogs(dockerImage, params, "functional")
-                        clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                        success = false
                         throw err
+                      } finally {
+                        savePodsLogs(dockerImage, params, "functional")
+                        if (!success) {
+                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                        }
                       }
                     }
                   }
