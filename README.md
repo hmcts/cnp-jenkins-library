@@ -266,6 +266,8 @@ The API tests run after smoke tests.
 If your server never uses the deployed resources, teams can clear the helm release to free resources on the cluster.
 This can be done always or depending on success.
 
+To note that clearing the helm release won't deny you access to the pods logs, as they are saved before the helm release is cleared.
+
 To clear the helm release regardless of success or failure, do the following:
 
   ```
@@ -295,8 +297,6 @@ To clear the helm release on a failing build, do the following:
     ...
   }
   ```
-
-To note that clearing the helm release won't deny you access to the pods logs, as they are saved before the helm release is cleared.
 
 
 ### Opinionated infrastructure pipeline
