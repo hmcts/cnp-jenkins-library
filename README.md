@@ -263,10 +263,8 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-If your server never uses the deployed resources, teams can clear the helm release to free resources on the cluster.
-This can be done always or depending on success.
+If your service never uses the deployed resources after the pipeline is successful or if you refer to them only for logs in case of failure, you can uninstall the helm release to free resources on the cluster. Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
 
-To note that clearing the helm release won't deny you access to the pods logs, as they are saved before the helm release is cleared.
 
 To clear the helm release regardless of success or failure, do the following:
 
