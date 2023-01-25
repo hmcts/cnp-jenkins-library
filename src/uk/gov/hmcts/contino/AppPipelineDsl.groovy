@@ -75,7 +75,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableCleanupOfHelmReleaseOnSuccess() {
-    config.clearHelmRelease = true;
+    config.clearHelmReleaseOnSuccess = true;
   }
 
   void enableCleanupOfHelmReleaseOnFailure() {
@@ -83,7 +83,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableCleanupOfHelmReleaseAlways() {
-    config.clearHelmRelease = true;
+    config.clearHelmReleaseOnSuccess = true;
     config.clearHelmReleaseOnFailure = true;
   }
 

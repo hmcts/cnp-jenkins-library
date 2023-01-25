@@ -259,7 +259,7 @@ def call(params) {
           }
 
           def triggerUninstall = environment == nonProdEnv
-          if (triggerUninstall || config.clearHelmRelease || depLabel) {
+          if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
             helmUninstall(dockerImage, params, pcr)
           }
         }
