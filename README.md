@@ -291,6 +291,22 @@ To clear helm releases for failing builds, do the following:
   }
   ```
 
+#### Clear Helm Release always
+
+If your team doesn't need to keep the helm releases for their PR regardless of success or failure, it is possible to clean them.
+
+To clear helm releases regardless of success, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseOnFailure()
+    ...
+  }
+  ```
+
+This essentially combines `enableCleanupOfHelmReleaseOnSuccess` and `enableCleanupOfHelmReleaseOnFailure` in one command.
+
 
 ### Opinionated infrastructure pipeline
 
