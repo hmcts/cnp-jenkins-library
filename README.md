@@ -261,12 +261,22 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+#### Clear Helm Release
 
-#### Clear Helm Release on Successful Build
+If your server never uses the deployed resources, teams can clear the helm release to free resources on the cluster.
+This can be done always or depending on success.
 
-If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster.
+To clear the helm release regardless of success or failure, do the following:
 
-To clear helm release, do the following:
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseAlways()
+    ...
+  }
+  ```
+
+To clear the helm release on a successful build, do the following:
 
   ```
   withPipeline(type, product, component) {
@@ -276,12 +286,7 @@ To clear helm release, do the following:
   }
   ```
 
-#### Clear Helm Release on Failed Build
-
-If your team doesn't need to keep the helm releases for their PR even for failing builds, it is possible to clean them to free further resources.
-This may be useful to reduce resource contention in difficult projects with large teams, where pipeline stability is not yet where it should be.
-
-To clear helm releases for failing builds, do the following:
+To clear the helm release on a failing build, do the following:
 
   ```
   withPipeline(type, product, component) {
@@ -291,21 +296,7 @@ To clear helm releases for failing builds, do the following:
   }
   ```
 
-#### Clear Helm Release always
-
-If your team doesn't need to keep the helm releases for their PR regardless of success or failure, it is possible to clean them.
-
-To clear helm releases regardless of success, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnFailure()
-    ...
-  }
-  ```
-
-This essentially combines `enableCleanupOfHelmReleaseOnSuccess` and `enableCleanupOfHelmReleaseOnFailure` in one command.
+To note that clearing the helm release won't deny you access to the pods logs, as they are saved before the helm release is cleared.
 
 
 ### Opinionated infrastructure pipeline
