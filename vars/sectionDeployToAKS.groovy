@@ -92,8 +92,8 @@ def call(params) {
         product: product,
       )
     }
-    if (config.serviceApp) {
-      withSubscriptionLogin(subscription) {
+    withSubscriptionLogin(subscription) {
+      if (config.serviceApp) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
@@ -102,7 +102,7 @@ def call(params) {
                   def success = true
                   try {
                     builder.smokeTest()
-                  } catch(err) {
+                  } catch (err) {
                     success = false
                     throw err
                   } finally {
@@ -126,7 +126,7 @@ def call(params) {
                         def success = true
                         try {
                           builder.fullFunctionalTest()
-                        } catch(err) {
+                        } catch (err) {
                           success = false
                           throw err
                         } finally {
@@ -148,7 +148,7 @@ def call(params) {
                       def success = true
                       try {
                         builder.functionalTest()
-                      } catch(err) {
+                      } catch (err) {
                         success = false
                         throw err
                       } finally {
@@ -190,7 +190,7 @@ def call(params) {
               env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
               env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
               pcr.callAround('pact-provider-verification') {
-                  builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
+                builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
               }
             }
           }
@@ -257,12 +257,11 @@ def call(params) {
               }
             }
           }
-
-          def triggerUninstall = environment == nonProdEnv
-          if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
-            helmUninstall(dockerImage, params, pcr)
-          }
         }
+      }
+      def triggerUninstall = environment == nonProdEnv
+      if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
+        helmUninstall(dockerImage, params, pcr)
       }
     }
   }
