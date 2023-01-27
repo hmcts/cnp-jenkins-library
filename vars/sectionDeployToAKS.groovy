@@ -281,14 +281,25 @@ def call(params) {
                 warnError('Failure in fullFunctionalTest') {
                   pcr.callAround("fullFunctionalTest:${environment}") {
                     timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                      builder.fullFunctionalTest()
+                      def success = true
+                      try {
+                        builder.fullFunctionalTest()
+                      } catch(err) {
+                        success = false
+                        throw err
+                      } finally {
+                        savePodsLogs(dockerImage, params, "full-functional")
+                        if (!success) {
+                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                        }
+                      }
                     }
                   }
                 }
               }
             }
 
-            if (config.clearHelmRelease) {
+            if (config.clearHelmReleaseOnSuccess) {
               helmUninstall(dockerImage, params, pcr)
             }
           }
