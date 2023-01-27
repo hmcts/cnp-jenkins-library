@@ -23,13 +23,13 @@ compileTestGroovy {
 }
 
 dependencies {
-  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.20'
-  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.20'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.21'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.21'
 
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3583.v4f58de0d78d5'
   testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.385'
+  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.388'
   implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '625.vd896b_f445a_f8', ext: 'jar'
   implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2114.v2654ca_721309', ext: 'jar'
   implementation 'org.jenkins-ci.plugins:job-dsl-core:1.81'
@@ -38,8 +38,8 @@ dependencies {
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
   testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.1'
 
-  testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.16'
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
+  testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.17'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.36.0'
 
   testRuntimeOnly 'org.objenesis:objenesis:3.3'

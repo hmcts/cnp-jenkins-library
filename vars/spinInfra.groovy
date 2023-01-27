@@ -7,8 +7,8 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
-def call(productName, environment, tfPlanOnly, subscription) {
-  call(productName, null, environment, tfPlanOnly, subscription)
+def call(product, environment, tfPlanOnly, subscription) {
+  call(product, null, environment, tfPlanOnly, subscription)
 }
 
 def call(product, component, environment, tfPlanOnly, subscription) {
@@ -16,17 +16,29 @@ def call(product, component, environment, tfPlanOnly, subscription) {
 }
 
 def call(product, component, environment, tfPlanOnly, subscription, deploymentTarget) {
-  def branch = new ProjectBranch(env.BRANCH_NAME)
+  call(
+    product: product,
+    component: component,
+    environment: environment,
+    tfPlanOnly: tfPlanOnly,
+    subscription: subscription,
+    deploymentTarget: deploymentTarget,
+  )
+}
 
-  def deploymentNamespace = branch.deploymentNamespace()
-  def productName = component ? "$product-$component" : product
-  def changeUrl = ""
-  def environmentDeploymentTarget = "$environment"
+def call(Map<String, ?> params) {
+  def config = [
+        productName     : params.component ? "$params.product-$params.component" : params.product,
+        deploymentNamespace : new ProjectBranch(env.BRANCH_NAME).deploymentNamespace(),
+  ] << params
+
+  def productName = config.component
+  def changeUrl = config.changeUrl
+  def environmentDeploymentTarget = params.environment
   def teamName
-  def pipelineTags
 
-  metricsPublisher = new MetricsPublisher(
-    this, currentBuild, product, component
+  MetricsPublisher metricsPublisher = new MetricsPublisher(
+    this, currentBuild, config.product, config.component
   )
 
   onPreview {
@@ -37,26 +49,33 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
   }
 
-  approvedTerraformInfrastructure(environment, product, metricsPublisher) {
-    stateStoreInit(environment, subscription, deploymentTarget)
+  approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
+    stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
-    lock("${productName}-${environmentDeploymentTarget}") {
-      stageWithAgent("Plan ${productName} in ${environmentDeploymentTarget}", product) {
+    lock("${config.productName}-${environmentDeploymentTarget}") {
+      stageWithAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        pipelineTags = new TerraformTagMap([environment: Environment.toTagName(environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG ]).toString()
-        log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$product'; component='$component'; deploymentNamespace='$deploymentNamespace'; environment='$environment'; subscription='$subscription'; tfPlanOnly='$tfPlanOnly'"
+        def tags = [environment: Environment.toTagName(config.environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
+
+        if (new Environment(env).sandbox == config.environment || config.environment == "sbox") {
+          tags = tags + [expiresAfter: config.expires]
+        }
+
+        String pipelineTags = new TerraformTagMap(tags).toString()
+
+        log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$config.product'; component='$config.component'; deploymentNamespace='$config.deploymentNamespace'; environment='$config.environment'; subscription='$config.subscription'; tfPlanOnly='$config.tfPlanOnly'"
 
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
           env.STORE_sa_container_name_template != null) {
           log.warning("Using following stateStore={" +
-            "'rg_name': '${env.STORE_rg_name_template}-${subscription}', " +
-            "'sa_name': '${env.STORE_sa_name_template}${subscription}', " +
+            "'rg_name': '${env.STORE_rg_name_template}-${config.subscription}', " +
+            "'sa_name': '${env.STORE_sa_name_template}${config.subscription}', " +
             "'sa_container_name': '${env.STORE_sa_container_name_template}${environmentDeploymentTarget}'}")
         } else
           throw new Exception("State store name details not found in environment variables?")
@@ -72,22 +91,22 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
 
         sh "terraform --version"
 
-        warnAboutOldTfAzureProvider()
-
         sh """
           terraform init -reconfigure \
-            -backend-config "storage_account_name=${env.STORE_sa_name_template}${subscription}" \
+            -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
             -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${subscription}" \
-            -backend-config "key=${productName}/${environmentDeploymentTarget}/terraform.tfstate"
+            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
+            -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
-        env.TF_VAR_ilbIp = 'TODO remove after some time'
-        env.TF_VAR_deployment_namespace = deploymentNamespace
-        env.TF_VAR_subscription = subscription
-        env.TF_VAR_component = component
+        warnAboutOldTfAzureProvider()
 
-        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(environment)
+        env.TF_VAR_ilbIp = 'TODO remove after some time'
+        env.TF_VAR_deployment_namespace = config.deploymentNamespace
+        env.TF_VAR_subscription = config.subscription
+        env.TF_VAR_component = config.component
+
+        def aksSubscription = new AKSSubscriptions(this).getAKSSubscriptionByEnvName(config.environment)
 
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
@@ -96,8 +115,8 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
         sh "terraform get -update=true"
-        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${environment}' -var 'product=${product}'" +
-          (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
+        sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
+          (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
 
         onPR {
           String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
@@ -113,8 +132,8 @@ def call(product, component, environment, tfPlanOnly, subscription, deploymentTa
           }
         }
       }
-      if (!tfPlanOnly) {
-        stageWithAgent("Apply ${productName} in ${environmentDeploymentTarget}", product) {
+      if (!config.tfPlanOnly) {
+        stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {

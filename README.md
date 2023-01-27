@@ -261,12 +261,22 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+#### Clear Helm Release
 
-#### Clear Helm Release on Successful Build
+If your service never uses the deployed resources after the pipeline is successful or if you refer to them only for logs in case of failure, you can uninstall the helm release to free resources on the cluster. Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
 
-If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster.
 
-To clear helm release, do the following:
+To clear the helm release regardless of success or failure, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseAlways()
+    ...
+  }
+  ```
+
+To clear the helm release on a successful build, do the following:
 
   ```
   withPipeline(type, product, component) {
@@ -275,6 +285,17 @@ To clear helm release, do the following:
     ...
   }
   ```
+
+To clear the helm release on a failing build, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseOnFailure()
+    ...
+  }
+  ```
+
 
 ### Opinionated infrastructure pipeline
 
@@ -312,9 +333,10 @@ withInfraPipeline(product) {
 You have the ability to pass extra parameters to the `withInfraPipeline`.
 
 These parameters include:
-| parameter name | description
-| --- | --- | --- |
+| parameter name | description |
+| --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
+| expires | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
@@ -326,12 +348,26 @@ def product = "rhubarb"
 
 //Optional
 def component = "extra-detail"
+def expiresAfter = "YYYY-MM-DD"
 
 withInfraPipeline(product, component) {
 
   enableSlackNotifications('#my-team-builds')
+  expires(expiresAfter)
 
 }
+```
+
+The expiresAfter parameter is used in the **Sandbox environment** to tag resources with an end date after which they are no longer needed. They will then be automatically deleted after this date.
+
+By default the tag value will be `now() + 30 days`.
+
+If you want your resources to remain for longer than 30 days, you can override the parameter manually in your Jenkinsfile by specifying the `expiresAfter` parameter as a date in the format shown above.
+
+For resources that must remain permanently, specify a value of `"3000-01-01"`
+
+```
+def expiresAfter = "3000-01-01"
 ```
 
 #### Extending the opinionated infratructure pipeline
