@@ -40,6 +40,7 @@ def call(params) {
   def dockerImage
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  def nonProdEnv = new Environment(env).nonProdName
 
   Builder builder = pipelineType.builder
 
@@ -226,7 +227,6 @@ def call(params) {
           }
 
 
-          def nonProdEnv = new Environment(env).nonProdName
           onPR {
             if (testLabels.contains('enable_performance_test')) {
               stageWithAgent("Performance test", product) {
