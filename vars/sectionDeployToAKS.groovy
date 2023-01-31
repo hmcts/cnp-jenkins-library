@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.HealthChecker
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -94,8 +95,9 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
-      if (config.serviceApp) {
-        withTeamSecrets(config, environment) {
+      withTeamSecrets(config, environment) {
+
+        if (config.serviceApp) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:${environment}") {
@@ -257,8 +259,44 @@ def call(params) {
               }
             }
           }
+
+        } else {
+
+          onFunctionalTestEnvironment(environment) {
+            // NB: non-service apps have no URL of their own: therefore require an alternative test URL when
+            //     running functional tests.
+            if (config.fullFunctionalTest && config.fullFunctionalTestNonServiceAppTestUrl != null) {
+              stageWithAgent("Functional Test - ${environment}", product) {
+                testEnv(config.fullFunctionalTestNonServiceAppTestUrl) {
+                  pcr.callAround("functionalTest:${environment}") {
+                    timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      def success = true
+                      try {
+                        // NB: standard health check during `helmInstall` not performed on non-service apps
+                        def url = config.fullFunctionalTestNonServiceAppTestUrl + '/health'
+                        def healthChecker = new HealthChecker(this)
+                        healthChecker.check(url, 10, 40)
+
+                        builder.functionalTest()
+                      } catch (err) {
+                        success = false
+                        throw err
+                      } finally {
+                        savePodsLogs(dockerImage, params, "functional")
+                        if (!success) {
+                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
         }
       }
+
       def triggerUninstall = environment == nonProdEnv
       if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
         helmUninstall(dockerImage, params, pcr)

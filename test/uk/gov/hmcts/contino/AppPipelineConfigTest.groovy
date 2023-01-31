@@ -96,6 +96,32 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.fullFunctionalTestTimeout).isEqualTo(30)
   }
 
+  def "ensure enable full functional test - with timeout"() {
+    when:
+      dsl.enableFullFunctionalTest(100)
+    then:
+      assertThat(pipelineConfig.fullFunctionalTest).isTrue()
+      assertThat(pipelineConfig.fullFunctionalTestTimeout).isEqualTo(100)
+  }
+
+  def "ensure enable full functional test for non-service app"() {
+    when:
+      dsl.enableFullFunctionalTestNonServiceApp("http://localhost:1234/test")
+    then:
+      assertThat(pipelineConfig.fullFunctionalTest).isTrue()
+      assertThat(pipelineConfig.fullFunctionalTestTimeout).isEqualTo(30)
+      assertThat(pipelineConfig.fullFunctionalTestNonServiceAppTestUrl).isEqualTo("http://localhost:1234/test")
+  }
+
+  def "ensure enable full functional test for non-service app - with timeout"() {
+    when:
+      dsl.enableFullFunctionalTestNonServiceApp("http://localhost:1234/test2", 100)
+    then:
+      assertThat(pipelineConfig.fullFunctionalTest).isTrue()
+      assertThat(pipelineConfig.fullFunctionalTestTimeout).isEqualTo(100)
+      assertThat(pipelineConfig.fullFunctionalTestNonServiceAppTestUrl).isEqualTo("http://localhost:1234/test2")
+  }
+
   def "ensure enable mutation test"() {
     when:
       dsl.enableMutationTest()
