@@ -46,6 +46,7 @@ allprojects {
       configure(project) {
         dependencyCheck {
           autoUpdate = false
+          hostedSuppressions.forceupdate = true
           // Any CVE should fail the build.
           failBuildOnCVSS = 0
 

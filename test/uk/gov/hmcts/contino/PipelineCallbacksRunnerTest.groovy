@@ -22,7 +22,7 @@ class PipelineCallBacksRunnerTest extends Specification {
       assertThat(text.toString()).isEqualTo('callbackbody')
   }
 
-  def "ensure correctly registered call after is called after body"() {
+  def "ensure deprecated call after  throws exception"() {
     given:
       PipelineCallbacksConfig config = new PipelineCallbacksConfig()
       StringBuilder text = new StringBuilder()
@@ -35,26 +35,7 @@ class PipelineCallBacksRunnerTest extends Specification {
           text.append('body')
       }
     then:
-      assertThat(text.toString()).isEqualTo('bodycallback')
-  }
-
-  def "ensure that both callbacks are called correctly" () {
-    given:
-      PipelineCallbacksConfig config = new PipelineCallbacksConfig()
-      StringBuilder text = new StringBuilder()
-      config.registerAfter('build') {
-        text.append('after')
-      }
-      config.registerBefore('build') {
-        text.append('before')
-      }
-      PipelineCallbacksRunner pcr = new PipelineCallbacksRunner(config)
-    when:
-      pcr.callAround('build') {
-          text.append('body')
-      }
-    then:
-      assertThat(text.toString()).isEqualTo('beforebodyafter')
+      thrown(RuntimeException)
   }
 
   def "ensure that afterAll callbacks are called correctly" () {
@@ -120,7 +101,7 @@ class PipelineCallBacksRunnerTest extends Specification {
         beforeBuildCalled = true
       }
     then:
-      assertThat(beforeBuildCalled).isFalse()    
+      assertThat(beforeBuildCalled).isFalse()
   }
 
 }
