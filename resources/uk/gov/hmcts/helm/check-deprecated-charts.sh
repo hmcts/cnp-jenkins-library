@@ -7,7 +7,7 @@ function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 
 deprecationMap["java"]="4.0.11"
 deprecationMap["nodejs"]="2.4.13"
-deprecationMap["job"]="0.7.4"
+deprecationMap["job"]="0.7.9"
 deprecationMap["blobstorage"]="0.3.0"
 deprecationMap["servicebus"]="0.4.0"
 deprecationMap["ccd"]="8.0.23"
