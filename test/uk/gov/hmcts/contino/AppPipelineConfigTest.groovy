@@ -153,7 +153,7 @@ class AppPipelineConfigTest extends Specification {
     when:
     dsl.enableCleanupOfHelmReleaseOnSuccess()
     then:
-    assertThat(pipelineConfig.clearHelmRelease).isTrue()
+    assertThat(pipelineConfig.clearHelmReleaseOnSuccess).isTrue()
   }
 
     def "ensure enable high level data setup"() {
