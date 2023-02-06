@@ -101,8 +101,6 @@ def call(Map<String, ?> params) {
 
         warnAboutOldTfAzureProvider()
 
-        env.TF_VAR_ilbIp = 'TODO remove after some time'
-        env.TF_VAR_deployment_namespace = config.deploymentNamespace
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
