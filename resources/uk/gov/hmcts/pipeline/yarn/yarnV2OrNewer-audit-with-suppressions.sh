@@ -3,10 +3,10 @@
 # vulnerabilities without a fix
 
 set +e
-yarn npm audit --environment production
+yarn npm audit -R --environment production
 result=$?
 
-yarn npm audit --environment production --json > yarn-audit-result
+yarn npm audit -R --environment production --json > yarn-audit-result
 
 set -e
 
