@@ -44,9 +44,9 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
-    String properties = SonarProperties.get(localSteps)
+      String properties = SonarProperties.get(localSteps)
 
-    gradle("--info ${properties} sonarqube")
+      gradle("--info ${properties} sonarqube")
   }
 
   def highLevelDataSetup(String dataSetupEnvironment) {
@@ -121,7 +121,7 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
-  def mutationTest() {
+  def mutationTest(){
     try {
       gradle("pitest")
     }
@@ -132,38 +132,44 @@ class GradleBuilder extends AbstractBuilder {
 
   def securityCheck() {
     def secrets = [
-      [secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT'],
-      [secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD']
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
     ]
     localSteps.withAzureKeyvault(secrets) {
       try {
-        gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${localSteps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V6_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate", "set +x")
-      }finally {
-          localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
-          String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
+        localSteps.sh('''
+set +x
+./gradlew --no-daemon --init-script init.gradle --stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name="org.postgresql.Driver" -Ddata.connection_string="jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck" -Ddata.user=$OWASPDB_V6_ACCOUNT -Ddata.password=$OWASPDB_V6_PASSWORD -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate
+set -x
+''')
+      } catch (Exception e){
+        Functions.printThrowable(e)
+      } finally {
+        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
 
-          def cveReport = prepareCVEReport(dependencyReport)
+        def cveReport = prepareCVEReport(dependencyReport)
 
-          new CVEPublisher(localSteps)
-            .publishCVEReport('java', cveReport)
-        }
+        new CVEPublisher(localSteps)
+          .publishCVEReport('java', cveReport)
       }
     }
+  }
 
-    def prepareCVEReport(String owaspReportJSON) {
-      def report = new JsonSlurper().parseText(owaspReportJSON)
-      // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
-      report.dependencies = report.dependencies.findAll {
-        it.vulnerabilities || it.suppressedVulnerabilities
-      }
-
-      return report
+  def prepareCVEReport(String owaspReportJSON) {
+    def report = new JsonSlurper().parseText(owaspReportJSON)
+    // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+    report.dependencies = report.dependencies.findAll {
+      it.vulnerabilities || it.suppressedVulnerabilities
     }
 
-    @Override
-    def addVersionInfo() {
-      addInitScript()
-      localSteps.sh '''
+    return report
+  }
+
+  @Override
+  def addVersionInfo() {
+    addInitScript()
+    localSteps.sh '''
 mkdir -p src/main/resources/META-INF
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
@@ -174,87 +180,87 @@ build.date=$(date)
 EOF
 
 '''
-    }
-
-    def runProviderVerification(pactBrokerUrl, version, publish) {
-      try {
-        gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
-      } finally {
-        localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
-      }
-    }
-
-    def runConsumerTests(pactBrokerUrl, version) {
-      try {
-        gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
-      } finally {
-        localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
-      }
-    }
-
-    def runConsumerCanIDeploy() {
-      try {
-        gradle("canideploy")
-      } finally {
-        localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
-      }
-    }
-
-
-    def gradle(String task, String prepend = "") {
-      if (prepend && !prepend.endsWith(' ')) {
-        prepend += ' '
-      }
-      addInitScript()
-      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
-    }
-
-    private String gradleWithOutput(String task) {
-      addInitScript()
-      localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
-    }
-
-    def fullFunctionalTest() {
-      functionalTest()
-    }
-
-    def dbMigrate(String vaultName, String microserviceName) {
-      def secrets = [
-        [secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE'],
-        [secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST'],
-        [secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS'],
-        [secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT'],
-        [secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER']
-      ]
-
-      def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
-
-      localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
-        gradle("-Pdburl='${localSteps.env.POSTGRES_HOST}:${localSteps.env.POSTGRES_PORT}/${localSteps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${localSteps.env.POSTGRES_USER}' -Pflyway.password='${localSteps.env.POSTGRES_PASS}' migratePostgresDatabase")
-      }
-    }
-
-    @Override
-    def setupToolVersion() {
-      gradle("--version") // ensure wrapper has been downloaded
-      localSteps.sh "java -version"
-    }
-
-    def hasPlugin(String pluginName) {
-      return gradleWithOutput("buildEnvironment").contains(pluginName)
-    }
-
-    @Override
-    def performanceTest() {
-      //support for the new and old (deprecated) gatling gradle plugins
-      if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
-        localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
-        localSteps.env.GATLING_REPORTS_DIR = '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
-        gradle("gatlingRun")
-        this.localSteps.gatlingArchive()
-      } else {
-        super.executeGatling()
-      }
-    }
-
   }
+
+  def runProviderVerification(pactBrokerUrl, version, publish) {
+    try {
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
+    } finally {
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
+  }
+
+  def runConsumerTests(pactBrokerUrl, version) {
+   try {
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
+   } finally {
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
+  }
+
+  def runConsumerCanIDeploy() {
+    try {
+      gradle("canideploy")
+     } finally {
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
+    }
+  }
+
+
+  def gradle(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
+    addInitScript()
+    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+  }
+
+  private String gradleWithOutput(String task) {
+    addInitScript()
+    localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+  }
+
+  def fullFunctionalTest() {
+      functionalTest()
+  }
+
+  def dbMigrate(String vaultName, String microserviceName) {
+    def secrets = [
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
+    ]
+
+    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
+
+    localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
+      gradle("-Pdburl='${localSteps.env.POSTGRES_HOST}:${localSteps.env.POSTGRES_PORT}/${localSteps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${localSteps.env.POSTGRES_USER}' -Pflyway.password='${localSteps.env.POSTGRES_PASS}' migratePostgresDatabase")
+    }
+  }
+
+  @Override
+  def setupToolVersion() {
+    gradle("--version") // ensure wrapper has been downloaded
+    localSteps.sh "java -version"
+  }
+
+  def hasPlugin(String pluginName) {
+    return gradleWithOutput("buildEnvironment").contains(pluginName)
+  }
+
+  @Override
+  def performanceTest() {
+    //support for the new and old (deprecated) gatling gradle plugins
+    if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
+      localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
+      localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
+      gradle("gatlingRun")
+      this.localSteps.gatlingArchive()
+    } else {
+      super.executeGatling()
+    }
+  }
+
+}
