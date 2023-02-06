@@ -107,15 +107,12 @@ class GradleBuilderTest extends Specification {
     setup:
       def closure
       steps.withAzureKeyvault(_, { it.call() }) >> { closure = it }
-      def spyGradleBuilder = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
-        hasPlugin(_) >> true
-      }
     when:
-    spyGradleBuilder.securityCheck()
+    builder.securityCheck()
     then:
       1 * steps.sh({
-        GString it -> it.contains(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
-        it.contains('jdbc:postgresql://owaspdependency-v6-prod')
+        it.contains(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
+        it.contains('jdbc:postgresql://owaspdependency-v6-prod') && it.contains('$OWASPDB_V6_ACCOUNT')
       })
   }
 
