@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import hudson.Functions
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -142,7 +143,7 @@ set +x
 set -x
 """, returnStdout: true)
       } catch (Exception e){
-          e.printStackTrace()
+        Functions.printThrowable(e)
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
