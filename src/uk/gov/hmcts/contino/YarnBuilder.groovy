@@ -305,7 +305,7 @@ EOF
 
   private isYarnV2OrNewer() {
     def status = steps.sh label: "Determine if is yarn v1", script: '''
-                ! grep packageManager package.json | grep yarn@1
+                ! grep packageManager package.json | grep yarn@[2-9]
           ''', returnStatus: true
     return status
   }
