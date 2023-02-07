@@ -6,7 +6,7 @@ set +e
 yarn npm audit --recursive --environment production
 result=$?
 
-yarn npm audit -R --environment production --json > yarn-audit-result
+yarn npm audit --recursive --environment production --json > yarn-audit-result
 
 set -e
 
