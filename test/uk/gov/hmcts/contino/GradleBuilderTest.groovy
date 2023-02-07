@@ -106,7 +106,7 @@ class GradleBuilderTest extends Specification {
   def "securityCheck calls 'gradle dependencyCheckAggregate'"() {
     setup:
       def closure
-      steps.azureKeyvault(_, { it.call() }) >> { closure = it }
+      steps.azureKeyVault(_, { it.call() }) >> { closure = it }
     when:
     builder.securityCheck()
     then:
