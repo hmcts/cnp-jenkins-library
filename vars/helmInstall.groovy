@@ -98,7 +98,6 @@ def call(DockerImage dockerImage, Map params) {
 
     def environmentTag = Environment.toTagName(environment)
     def options = [
-      "--set global.subscriptionId=${this.env.ARM_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
