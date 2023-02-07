@@ -135,7 +135,7 @@ class GradleBuilder extends AbstractBuilder {
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
     ]
-    localSteps.withAzureKeyvault(secrets) {
+    localSteps.azureKeyVault(secrets) {
       try {
         // using sh directly so that secrets don't get interpolated in the gradle function
         steps.sh(
