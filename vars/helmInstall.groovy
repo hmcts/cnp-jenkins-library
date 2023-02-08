@@ -31,8 +31,8 @@ def call(DockerImage dockerImage, Map params) {
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
-  if(serviceFqdn.endsWith(".internal")) {
-    WarningCollector.addPipelineWarning("update_", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1675868743958669", LocalDate.of(2023, 04, 26))
+  if (serviceFqdn.endsWith(".internal")) {
+    WarningCollector.addPipelineWarning("internal_domain", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1675868743958669", LocalDate.of(2023, 04, 26))
   }
 
   def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
