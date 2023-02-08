@@ -8,6 +8,9 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
 import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
 
 def call(DockerImage dockerImage, Map params) {
 
@@ -27,6 +30,10 @@ def call(DockerImage dockerImage, Map params) {
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
+
+  if(serviceFqdn.endsWith(".internal")) {
+    WarningCollector.addPipelineWarning("update_", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1660297337235819", LocalDate.of(2023, 04, 26))
+  }
 
   def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
