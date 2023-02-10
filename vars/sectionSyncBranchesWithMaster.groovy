@@ -10,19 +10,21 @@
 // }
 
 def call(params) {
-    def branchesToSync = params.branchestoSync
+    def branchesToSync = params.branchestoSync ?: ['ithc', 'demo', 'perftest']
     def product = params.product
     def credentialsId = env.GIT_CREDENTIALS_ID
 
-    if (!branchesToSync.isEmpty()) {
-        stageWithAgent("Sync Branches with Master", product) {
-            withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
-                sh '''
-                    set -e
-                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-                '''
 
-                for (branch in branchesToSync) {
+    stageWithAgent("Sync Branches with Master", product) {
+        withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
+            sh '''
+                set -e
+                git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+            '''
+
+            for (branch in branchesToSync) {
+                def status = sh(returnStatus: true, script: "git ls-remote --exit-code --heads origin $branch")
+                if (status == 0) {    
                     try {
                         echo "Syncing branch - ${branch}"
 
@@ -37,8 +39,11 @@ def call(params) {
                         echo "Failed to update branch - $branch"
                         echo err.getMessage()
                     }
+                } else {
+                    echo "Sync didn't run as $branch doesn't exist"
                 }
             }
         }
     }
+    
 }

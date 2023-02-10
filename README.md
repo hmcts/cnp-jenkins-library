@@ -674,11 +674,11 @@ The Pact broker url and other parameters are passed to these hooks as following:
 
 #### Usage
 
-The environment specific branches such as demo, ithc and perftest can be automatically synced with master branch.
+The environment specific branches such as demo, ithc and perftest are set by default to automatically be synced with master branch. If the branch doesn't exist it will not be synced.
 
-This can be achieved by using the `syncBranchesWithMaster()` method in Application, Infrastructure and Camunda pipelines. This method will be invoked in the master build and execute as the last stage in the build.
+By using the `syncBranchesWithMaster()` method in Application, Infrastructure and Camunda pipelines you can manually override what branches are synced, leaving the array empty will cause it to go back to the default. This method will be invoked in the master build and execute as the last stage in the build.
 
-Example of usage
+Example of overriding branches
 ```groovy
 
 def branchesToSync = ['demo', 'perftest']
