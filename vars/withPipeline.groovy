@@ -130,6 +130,11 @@ def call(type, String product, String component, Closure body) {
             component: component,
           )
 
+          sectionSyncBranchesWithMaster(
+            branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+            product: product
+          )
+
         }
 
         onMaster {
