@@ -305,15 +305,15 @@ EOF
 
   private isYarnV2OrNewer() {
     def status = steps.sh label: "Determine if is yarn v1", script: '''
-                ! grep packageManager package.json
+                ! grep packageManager package.json | grep yarn@[2-9]
           ''', returnStatus: true
     return status
   }
 
   private nagAboutOldYarnVersions() {
      if (!isYarnV2OrNewer()){
-       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 02, 9))
-    }  
+       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
+    }
   }
 
   private corepackEnable() {
