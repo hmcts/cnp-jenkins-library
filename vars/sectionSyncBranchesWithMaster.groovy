@@ -16,34 +16,36 @@ def call(params) {
 
 
     stageWithAgent("Sync Branches with Master", product) {
-        withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
-            sh '''
-                set -e
-                git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-            '''
+        if (!config.branchesToSyncWithMaster.isEmpty()) {
 
-            for (branch in branchesToSync) {
-                def status = sh(returnStatus: true, script: "git ls-remote --exit-code --heads origin $branch")
-                if (status == 0) {    
-                    try {
-                        echo "Syncing branch - ${branch}"
+            withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
+                sh '''
+                    set -e
+                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+                '''
 
-                        sh """
-                            git fetch origin ${branch}:${branch}
-                            git push --force origin HEAD:refs/heads/${branch}
-                        """
+                for (branch in branchesToSync) {
+                    def status = sh(returnStatus: true, script: "git ls-remote --exit-code --heads origin $branch")
+                    if (status == 0) {    
+                        try {
+                            echo "Syncing branch - ${branch}"
 
-                        echo "Sync completed for branch - ${branch}"
+                            sh """
+                                git fetch origin ${branch}:${branch}
+                                git push --force origin HEAD:refs/heads/${branch}
+                            """
+
+                            echo "Sync completed for branch - ${branch}"
                         
-                    } catch (err) {
-                        echo "Failed to update branch - $branch"
-                        echo err.getMessage()
+                        } catch (err) {
+                            echo "Failed to update branch - $branch"
+                            echo err.getMessage()
+                        }
+                    } else {
+                        echo "Sync didn't run as $branch doesn't exist"
                     }
-                } else {
-                    echo "Sync didn't run as $branch doesn't exist"
                 }
             }
         }
     }
-    
 }
