@@ -14,7 +14,7 @@ def call(params) {
     def product = params.product
     def credentialsId = env.GIT_CREDENTIALS_ID
 
-    if (!branchesToSync.isEmpty()) {
+    if (!branchesToSync.contains("false")) {
         stageWithAgent("Sync Branches with Master", product) {
             withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
                 sh '''
