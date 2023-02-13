@@ -42,7 +42,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
 
   def hldsSecretsEntrySet = hldsSecrets.entrySet()
 
-  executeClosure(hldsSecretsEntrySet.entrySet().iterator(), vaultName, dependedEnv) {
+  executeClosure(hldsSecretsEntrySet.iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
