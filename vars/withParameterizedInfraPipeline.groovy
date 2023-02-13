@@ -53,6 +53,7 @@ def call(String product, String environment, String subscription, Boolean planOn
         deploymentTargets: null,
         product: product,
         component: component,
+        expires: pipelineConfig.expiryDate,
         pipelineCallbacksRunner: callbacksRunner,
       )
 
