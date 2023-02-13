@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
   def secrets = config.vaultSecrets
+  echo ("secrets   ...... $secrets")
   echo ("secrets configured  ...... $secrets['${vaultName}']")
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
@@ -22,7 +23,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def vaultSecrets = secrets['${vaultName}'] + [
+  def vaultSecrets = $secrets['${vaultName}'] + [
     secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
     secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
   ]
