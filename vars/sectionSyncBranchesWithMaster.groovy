@@ -10,7 +10,7 @@
 // }
 
 def call(params) {
-    def branchesToSync = params.branchestoSync ?: ['ithc', 'demo', 'perftest']
+    def branchesToSync = params.branchestoSync.exist ?: ['ithc', 'demo', 'perftest']
     def product = params.product
     def credentialsId = env.GIT_CREDENTIALS_ID
 
