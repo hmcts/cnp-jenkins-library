@@ -261,12 +261,22 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+#### Clear Helm Release
 
-#### Clear Helm Release on Successful Build
+If your service never uses the deployed resources after the pipeline is successful or if you refer to them only for logs in case of failure, you can uninstall the helm release to free resources on the cluster. Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
 
-If your service never use the deployed resources once the build is green, teams can clear the helm release to free resources on the cluster.
 
-To clear helm release, do the following:
+To clear the helm release regardless of success or failure, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseAlways()
+    ...
+  }
+  ```
+
+To clear the helm release on a successful build, do the following:
 
   ```
   withPipeline(type, product, component) {
@@ -275,6 +285,17 @@ To clear helm release, do the following:
     ...
   }
   ```
+
+To clear the helm release on a failing build, do the following:
+
+  ```
+  withPipeline(type, product, component) {
+    ...
+    enableCleanupOfHelmReleaseOnFailure()
+    ...
+  }
+  ```
+
 
 ### Opinionated infrastructure pipeline
 

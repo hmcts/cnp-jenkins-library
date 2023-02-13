@@ -19,6 +19,13 @@ def testEnv(String testUrl, block) {
   }
 }
 
+def clearHelmReleaseForFailure(AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+  if (config.clearHelmReleaseOnFailure) {
+    helmUninstall(dockerImage, params, pcr)
+  }
+
+}
+
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
@@ -33,6 +40,7 @@ def call(params) {
   def dockerImage
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  def nonProdEnv = new Environment(env).nonProdName
 
   Builder builder = pipelineType.builder
 
@@ -85,14 +93,25 @@ def call(params) {
         product: product,
       )
     }
-    if (config.serviceApp) {
-      withSubscriptionLogin(subscription) {
+    withSubscriptionLogin(subscription) {
+      if (config.serviceApp) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
               pcr.callAround("smoketest:${environment}") {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                  builder.smokeTest()
+                  def success = true
+                  try {
+                    builder.smokeTest()
+                  } catch (err) {
+                    success = false
+                    throw err
+                  } finally {
+                    savePodsLogs(dockerImage, params, "smoke")
+                    if (!success) {
+                      clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                    }
+                  }
                 }
               }
             }
@@ -105,7 +124,18 @@ def call(params) {
                   warnError('Failure in fullFunctionalTest') {
                     pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                        builder.fullFunctionalTest()
+                        def success = true
+                        try {
+                          builder.fullFunctionalTest()
+                        } catch (err) {
+                          success = false
+                          throw err
+                        } finally {
+                          savePodsLogs(dockerImage, params, "full-functional")
+                          if (!success) {
+                            clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                          }
+                        }
                       }
                     }
                   }
@@ -116,7 +146,18 @@ def call(params) {
                 testEnv(aksUrl) {
                   pcr.callAround("functionalTest:${environment}") {
                     timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                      builder.functionalTest()
+                      def success = true
+                      try {
+                        builder.functionalTest()
+                      } catch (err) {
+                        success = false
+                        throw err
+                      } finally {
+                        savePodsLogs(dockerImage, params, "functional")
+                        if (!success) {
+                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                        }
+                      }
                     }
                   }
                 }
@@ -150,7 +191,7 @@ def call(params) {
               env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
               env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
               pcr.callAround('pact-provider-verification') {
-                  builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
+                builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
               }
             }
           }
@@ -186,14 +227,17 @@ def call(params) {
           }
 
 
-          def nonProdEnv = new Environment(env).nonProdName
           onPR {
             if (testLabels.contains('enable_performance_test')) {
               stageWithAgent("Performance test", product) {
                 warnError('Failure in performanceTest') {
                   pcr.callAround('PerformanceTest') {
                     timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                      builder.performanceTest()
+                      try {
+                        builder.performanceTest()
+                      } finally {
+                        savePodsLogs(dockerImage, params, "performance")
+                      }
                     }
                   }
                 }
@@ -213,12 +257,11 @@ def call(params) {
               }
             }
           }
-
-          def triggerUninstall = environment == nonProdEnv
-          if (triggerUninstall || config.clearHelmRelease || depLabel) {
-            helmUninstall(dockerImage, params, pcr)
-          }
         }
+      }
+      def triggerUninstall = environment == nonProdEnv
+      if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
+        helmUninstall(dockerImage, params, pcr)
       }
     }
   }

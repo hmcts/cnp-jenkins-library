@@ -91,8 +91,6 @@ def call(Map<String, ?> params) {
 
         sh "terraform --version"
 
-        warnAboutOldTfAzureProvider()
-
         sh """
           terraform init -reconfigure \
             -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
@@ -101,8 +99,8 @@ def call(Map<String, ?> params) {
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
-        env.TF_VAR_ilbIp = 'TODO remove after some time'
-        env.TF_VAR_deployment_namespace = config.deploymentNamespace
+        warnAboutOldTfAzureProvider()
+
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
