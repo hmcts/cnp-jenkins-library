@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
   def secrets = config.vaultSecrets
   echo ("secrets   ...... $secrets")
-  echo ("secrets configured  ...... $secrets['${vaultName}']")
+  //echo ("secrets configured  ...... $secrets['${vaultName}']")
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
@@ -36,8 +36,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   ]
   ]
 
-
-  hldsSecrets.put('${vaultName}', secrets)
+  //hldsSecrets.put('${vaultName}', secrets)
   echo ("hldsSecrets   ...... $hldsSecrets")
 
   def hldsSecretsEntrySet = hldsSecrets.entrySet()
