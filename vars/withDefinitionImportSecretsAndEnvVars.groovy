@@ -36,10 +36,13 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   ]
   ]
 
+
   hldsSecrets.put('${vaultName}', secrets)
-  hldsSecrets = hldsSecrets.entrySet()
   echo ("hldsSecrets   ...... $hldsSecrets")
-  executeClosure(hldsSecrets.entrySet().iterator(), vaultName, dependedEnv) {
+
+  def hldsSecretsEntrySet = hldsSecrets.entrySet()
+
+  executeClosure(hldsSecretsEntrySet.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
