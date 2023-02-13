@@ -2,9 +2,9 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
   def secrets = config.vaultSecrets
-  echo "secrets configured  ...... $secrets['${vaultName}']"
-  echo "Vault Name   ...... ${vaultName}"
-  echo "env Name   ...... ${env}"
+  echo ("secrets configured  ...... $secrets['${vaultName}']")
+  echo ("Vault Name   ...... ${vaultName}")
+  echo ("env Name   ...... ${env}")
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
@@ -21,7 +21,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def valutSecrets = '${vaultName}': secrets['${vaultName}'] + [
+  def valutSecrets = secrets('${vaultName}') + ':' + [
     secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
     secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
   ]
@@ -35,7 +35,10 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    ${valutSecrets}
+    secret('${vaultName}') + ':' + [
+    secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
+    secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
+  ]
   ]
 
   hldsSecrets = hldsSecrets.entrySet()
