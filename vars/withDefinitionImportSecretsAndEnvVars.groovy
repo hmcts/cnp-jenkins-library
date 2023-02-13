@@ -6,6 +6,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
+  echo ("dependedEnv Name   ...... ${dependedEnv}")
 
   env.IDAM_API_URL_BASE = "https://idam-api.${dependedEnv}.platform.hmcts.net"
   env.S2S_URL_BASE = "http://rpe-service-auth-provider-${dependedEnv}.service.core-compute-${dependedEnv}.internal"
@@ -21,12 +22,12 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def valutSecrets = secrets['${vaultName}'] + ':' + [
+  def vaultSecrets = secrets['${vaultName}'] + [
     secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
     secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
   ]
 
-  echo "valutSecrets   ...... ${valutSecrets}"
+  echo "vaultSecrets   ...... ${vaultSecrets}"
 
   def hldsSecrets = [
     'ccd': [
