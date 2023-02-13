@@ -1,7 +1,9 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
-  def secrets = config.vaultSecrets
+  //def secrets = config.vaultSecrets
+
+  Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
   echo ("secrets   ...... $secrets")
   //echo ("secrets configured  ...... $secrets['${vaultName}']")
   echo ("Vault Name   ...... ${vaultName}")
@@ -36,7 +38,8 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   ]
   ]
 
-  //hldsSecrets.put('${vaultName}', secrets)
+  def secretList = secrets.values();
+  hldsSecrets.put("${vaultName}", secretList)
   echo ("hldsSecrets   ...... $hldsSecrets")
 
   def hldsSecretsEntrySet = hldsSecrets.entrySet()
