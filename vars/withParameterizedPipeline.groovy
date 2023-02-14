@@ -88,7 +88,7 @@ def call(type, String product, String component, String environment, String subs
         product: product,
         component: component,
         deploymentTargets: deploymentTargetList,
-        expires: pipelineConfig.expiryDate,
+        expires: "3000-01-01",
         tfPlanOnly: false
       )
     } catch (err) {
