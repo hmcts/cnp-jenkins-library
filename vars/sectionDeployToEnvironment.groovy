@@ -41,7 +41,7 @@ def call(params) {
                   component: component,
                   pipelineCallbacksRunner: pcr,
                   planOnly: tfPlanOnly,
-                  expires: "3000-01-01"
+                  expires: expires
                 )
             }
 
