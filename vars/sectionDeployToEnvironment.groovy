@@ -14,6 +14,7 @@ def call(params) {
   def product = params.product
   def component = params.component
   def tfPlanOnly = params.tfPlanOnly
+  def expires = params.expires
   Long deploymentNumber
 
   Builder builder = pipelineType.builder
@@ -40,6 +41,7 @@ def call(params) {
                   component: component,
                   pipelineCallbacksRunner: pcr,
                   planOnly: tfPlanOnly,
+                  expires: pipelineConfig.expiryDate
                 )
             }
 
