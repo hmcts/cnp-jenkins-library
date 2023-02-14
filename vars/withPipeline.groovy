@@ -115,7 +115,6 @@ def call(type, String product, String component, Closure body) {
               environment: environment.nonProdName,
               product: product,
               component: component,
-              expires: pipelineConfig.expiryDate,
               tfPlanOnly: true
             )
           }
