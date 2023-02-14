@@ -691,7 +691,7 @@ withPipeline(type, product, component) {
 Example of disabling sync
 ```groovy
 
-def branchesToSync = ['false']
+def branchesToSync = []
 
 withPipeline(type, product, component) {
   syncBranchesWithMaster(branchesToSync)
