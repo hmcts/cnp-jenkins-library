@@ -24,7 +24,8 @@ def call(params) {
 
                 for (branch in branchesToSync) {
                     def status = sh(returnStatus: true, script: "git ls-remote --exit-code --heads origin $branch")
-                    if (status == 0) {    
+                    def exists = 0
+                    if (status == exists) {    
                         try {
                             echo "Syncing branch - ${branch}"
 
