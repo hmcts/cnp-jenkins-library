@@ -10,7 +10,7 @@
 // }
 
 def call(params) {
-    def branchesToSync = params.branchestoSync
+    def branchesToSync = params.branchestoSync != null ? params.branchestoSync : ['ithc', 'demo', 'perftest']
     def product = params.product
     def credentialsId = env.GIT_CREDENTIALS_ID
 
@@ -23,19 +23,25 @@ def call(params) {
                 '''
 
                 for (branch in branchesToSync) {
-                    try {
-                        echo "Syncing branch - ${branch}"
+                    def status = sh(returnStatus: true, script: "git ls-remote --exit-code --heads origin $branch")
+                    def exists = 0
+                    if (status == exists) {    
+                        try {
+                            echo "Syncing branch - ${branch}"
 
-                        sh """
-                            git fetch origin ${branch}:${branch}
-                            git push --force origin HEAD:refs/heads/${branch}
-                        """
+                            sh """
+                                git fetch origin ${branch}:${branch}
+                                git push --force origin HEAD:refs/heads/${branch}
+                            """
 
-                        echo "Sync completed for branch - ${branch}"
+                            echo "Sync completed for branch - ${branch}"
                         
-                    } catch (err) {
-                        echo "Failed to update branch - $branch"
-                        echo err.getMessage()
+                        } catch (err) {
+                            echo "Failed to update branch - $branch"
+                            echo err.getMessage()
+                        }
+                    } else {
+                        echo "Sync didn't run as $branch doesn't exist"
                     }
                 }
             }
