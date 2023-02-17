@@ -1,11 +1,8 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
-  //def secrets = config.vaultSecrets
-
-  Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
+  def secrets = config.vaultSecrets
   echo ("secrets   ...... $secrets")
-  //echo ("secrets configured  ...... $secrets['${vaultName}']")
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
   def dependedEnv = config.vaultEnvironmentOverrides.get(environment, environment)
@@ -25,26 +22,20 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def hldsSecrets = [
+  def secrets = [
     'ccd': [
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
     's2s': [
       secret('microservicekey-ccd-gw', 'CCD_API_GATEWAY_S2S_KEY')
     ],
-    '${vaultName}': [
-    secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
-    secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
+    '${vaultName}':  [
+      secret('definition-importer-username', 'DEFINITION_IMPORTER_USERNAME'),
+      secret('definition-importer-password', 'DEFINITION_IMPORTER_PASSWORD')
+    ]
   ]
-  ]
 
-  def secretList = secrets.values();
-  hldsSecrets.put("${vaultName}", secretList)
-  echo ("hldsSecrets   ...... $hldsSecrets")
-
-  def hldsSecretsEntrySet = hldsSecrets.entrySet()
-
-  executeClosure(hldsSecretsEntrySet.iterator(), vaultName, dependedEnv) {
+  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
