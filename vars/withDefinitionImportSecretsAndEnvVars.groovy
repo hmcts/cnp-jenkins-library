@@ -22,7 +22,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def secrets = [
+  def hldsSecrets = [
     'ccd': [
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
@@ -35,7 +35,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     ]
   ]
 
-  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
+  executeClosure(hldsSecrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
