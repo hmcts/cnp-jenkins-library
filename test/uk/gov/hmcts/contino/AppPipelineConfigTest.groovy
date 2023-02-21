@@ -203,7 +203,7 @@ class AppPipelineConfigTest extends Specification {
     when:
       dsl.enablePactAs([])
     then:
-      assertThat(pipelineConfig.pactBrokerEnabled).isTrue()
+      assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
   }
 
   def "ensure enable pact consumer tests"() {
