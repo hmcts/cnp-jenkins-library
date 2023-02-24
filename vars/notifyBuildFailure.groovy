@@ -30,6 +30,7 @@ def call(Map args = [:]) {
 
   try {
     slackSend(
+        failOnError: true,
       channel: channel,
       color: 'danger',
       message: message)

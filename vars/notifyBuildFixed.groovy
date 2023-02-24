@@ -32,6 +32,7 @@ def call(Map args = [:]) {
   try {
     if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
       slackSend(
+        failOnError: true,
         channel: channel,
         color: 'good',
         message: message)
