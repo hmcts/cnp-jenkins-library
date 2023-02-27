@@ -40,7 +40,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
       .concat(warningMessage)
 
     slackSend(
-        failOnError: true,
+      failOnError: true,
       channel: channel,
       color: 'warning',
       message: slackWarningMessage)

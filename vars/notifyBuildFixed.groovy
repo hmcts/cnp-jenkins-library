@@ -39,6 +39,7 @@ def call(Map args = [:]) {
     }
   } catch (Exception ex) {
     echo "ERROR: Failed to notify ${channel} due to the following error: ${ex}"
+    throw ex
   }
 }
 
