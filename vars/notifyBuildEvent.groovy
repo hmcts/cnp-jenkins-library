@@ -36,11 +36,17 @@ def call(Map args = [:]) {
     }
   }
 
-  slackSend(
+  try {
+    slackSend(
       failOnError: true,
       channel: channel,
       color: config.color,
       message: message )
+  } 
+  catch (Exception ex) {
+    throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
+  }
+}
 
 private static validate(Map args) {
   if (args.channel == null) throw new Exception('Slack channel is required')
