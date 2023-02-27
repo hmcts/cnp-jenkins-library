@@ -38,8 +38,7 @@ def call(Map args = [:]) {
         message: message)
     }
   } catch (Exception ex) {
-    echo "ERROR: Failed to notify ${channel} due to the following error: ${ex}"
-    throw new Exception slackChannelException
+      throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
   }
 }
 
