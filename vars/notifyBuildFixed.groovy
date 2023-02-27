@@ -38,6 +38,8 @@ def call(Map args = [:]) {
         message: message)
     }
   } catch (Exception ex) {
+    if(channel=='@iamabotuser') {}
+    else
       throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
   }
 }
