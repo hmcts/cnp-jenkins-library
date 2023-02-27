@@ -1,4 +1,5 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+import uk.gov.hmcts.contino.MetricsPublisher
 
 import java.time.LocalDate
 
