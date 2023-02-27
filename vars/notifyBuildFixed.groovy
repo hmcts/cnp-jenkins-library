@@ -34,6 +34,7 @@ slackSend(
   channel: channel,
   color: 'good',
   message: message)
+}
 
 private static validate(Map args) {
   if (args.channel == null) throw new Exception('Slack channel is required')
