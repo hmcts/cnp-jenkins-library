@@ -29,18 +29,11 @@ def call(Map args = [:]) {
     }
   }
 
-  try {
-    if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
-      slackSend(
-        failOnError: true,
-        channel: channel,
-        color: 'good',
-        message: message)
-    }
-  } catch (Exception ex) {
-      throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
-  }
-}
+slackSend(
+  failOnError: true,
+  channel: channel,
+  color: 'good',
+  message: message)
 
 private static validate(Map args) {
   if (args.channel == null) throw new Exception('Slack channel is required')
