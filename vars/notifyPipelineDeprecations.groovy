@@ -43,8 +43,8 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
       slackSend(
         failOnError: true,
         channel: channel,
-        color: 'danger',
-        message: message)
+        color: 'warning',
+        message: slackWarningMessage)
     } 
     catch (Exception ex) {
       throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
