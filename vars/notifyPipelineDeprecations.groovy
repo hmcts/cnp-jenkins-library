@@ -47,8 +47,9 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
         message: slackWarningMessage)
     } 
     catch (Exception ex) {
-      if(channel!='@iamabotuser') {
+      if(channel=='@iamabotuser') {
         throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
+      }
     }
   }
 }
