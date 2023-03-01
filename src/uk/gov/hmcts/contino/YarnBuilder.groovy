@@ -306,7 +306,7 @@ EOF
   }
 
   private auditDisparity() {
-    def status = steps.sh label: "Determine whether yarn audit returns dev dependency issues that are not currently caught.",
+    def status = steps.sh label: "Determine whether yarn audit returns transitive dependency issues that are not currently caught.",
       script: "yarn npm audit --recursive --environment production", returnStatus: true
     return status
   }
