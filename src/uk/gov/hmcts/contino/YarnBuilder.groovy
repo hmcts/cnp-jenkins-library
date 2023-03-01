@@ -139,6 +139,7 @@ class YarnBuilder extends AbstractBuilder {
       """
     } finally {
       if (yarnV2OrNewer) {
+
         steps.sh """
           cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
           cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
@@ -158,10 +159,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
-    if (!isYarnV2OrNewer()){
-      WarningCollector.addPipelineWarning("new_suppressions",
-        "On March 15th, we will be adding the --recursive flag to CVE reports. This means that your dev dependencies in frontend repositories will also be checked for vulnerabilities. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 03, 15))
-    }
+
     List<Object> issuesParsed = issues.split( '\n' ).collect { jsonSlurper.parseText(it) }
 
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
@@ -307,6 +305,19 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private auditDisparity() {
+    def status = steps.sh label: "Determine whether yarn audit returns dev dependency issues that are not currently caught.",
+      script: "yarn npm audit --recursive --environment production", returnStatus: true
+    return status
+  }
+
+  private nagAboutYarnAuditChange() {
+    if (auditDisparity()){
+      WarningCollector.addPipelineWarning("new_suppressions",
+        "On March 15th, we will be adding the --recursive flag to CVE reports. This means that your dev dependencies in frontend repositories will also be checked for vulnerabilities. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 03, 15))
+    }
+    }
+
   private isYarnV2OrNewer() {
     def status = steps.sh label: "Determine if is yarn v1", script: '''
                 ! grep packageManager package.json | grep yarn@[2-9]
@@ -349,6 +360,7 @@ EOF
   def setupToolVersion() {
     super.setupToolVersion()
     nagAboutOldYarnVersions()
+    nagAboutYarnAuditChange()
   }
 
 }

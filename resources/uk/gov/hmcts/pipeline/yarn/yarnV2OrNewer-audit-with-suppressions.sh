@@ -4,7 +4,7 @@
 
 set +e
 today=$(date +%Y-%m-%d)
-enddate="2023-15-03"
+enddate="2023-03-15"
 
 if [[ "$today" > "$enddate" ]]; then
 yarn npm audit --recursive --environment production
