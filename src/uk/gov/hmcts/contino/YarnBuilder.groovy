@@ -313,8 +313,8 @@ EOF
 
   private nagAboutYarnAuditChange() {
     if (auditDisparity()){
-      WarningCollector.addPipelineWarning("new_suppressions",
-        "On March 15th, we will be adding the --recursive flag to CVE reports. This means that your dev dependencies in frontend repositories will also be checked for vulnerabilities. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 03, 15))
+      WarningCollector.addPipelineWarning("transitive_dependency_audit_incoming",
+        "You are receiving this warning as you will be directly impacted by this change as there are existing vulnerabilities in your transitive dependencies. We will be adding the --recursive flag to CVE reporting. This means that your transitive dependencies within frontend repositories will also be checked for vulnerabilities. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 03, 15))
     }
     }
 
