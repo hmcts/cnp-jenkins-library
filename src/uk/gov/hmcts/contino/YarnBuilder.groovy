@@ -158,6 +158,10 @@ class YarnBuilder extends AbstractBuilder {
 
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
+    if (!isYarnV2OrNewer()){
+      WarningCollector.addPipelineWarning("new_suppressions",
+        "On March 15th, we will be adding the --recursive flag to CVE reports. This means that your dev dependencies will also be checked for vulnerabilities. Run `yarn npm audit --recursive --environment production` ahead of time so you won't be blocked on the day.", LocalDate.of(2023, 03, 15))
+    }
     List<Object> issuesParsed = issues.split( '\n' ).collect { jsonSlurper.parseText(it) }
 
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
