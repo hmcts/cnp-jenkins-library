@@ -236,6 +236,18 @@ EOF
   @Override
   def setupToolVersion() {
     gradle("--version") // ensure wrapper has been downloaded
+
+    try {
+      def javaVersion = gradleWithOutput("-q :javaVersion")
+      steps.echo "Found java version: ${javaVersion}"
+      if (javaVersion == '17') {
+        steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
+        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      }
+    } catch(err) {
+      steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
+    }
+
     localSteps.sh "java -version"
   }
 
