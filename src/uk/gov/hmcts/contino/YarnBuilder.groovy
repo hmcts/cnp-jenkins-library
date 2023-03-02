@@ -93,8 +93,8 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
-  def fullFunctionalTest(){
-    try{
+  def fullFunctionalTest() {
+    try {
       yarn("test:fullfunctional")
     }
     finally {
@@ -104,7 +104,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def mutationTest() {
-    try{
+    try {
       yarn("test:mutation")
     }
     finally {
@@ -160,12 +160,12 @@ class YarnBuilder extends AbstractBuilder {
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
 
-    List<Object> issuesParsed = issues.split( '\n' ).collect { jsonSlurper.parseText(it) }
+    List<Object> issuesParsed = issues.split('\n').collect { jsonSlurper.parseText(it) }
 
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
     issuesParsed.removeIf { it.type == 'auditSummary' }
 
-   issuesParsed = issuesParsed.collect {
+    issuesParsed = issuesParsed.collect {
       mapYarnAuditToOurReport(it)
     }
 
@@ -246,7 +246,7 @@ EOF
     yarn("test:can-i-deploy:consumer")
   }
 
-  private runYarn(String task, String prepend = ""){
+  private runYarn(String task, String prepend = "") {
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
