@@ -238,7 +238,7 @@ EOF
     gradle("--version") // ensure wrapper has been downloaded
 
     try {
-      def statusCode = steps.sh script: 'grep -F JavaLanguageVersion.of(17) build.gradle', returnStatus: true
+      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
       if (statusCode == 0) {
         steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
