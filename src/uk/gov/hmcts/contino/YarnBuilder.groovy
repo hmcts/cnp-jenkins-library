@@ -314,7 +314,7 @@ EOF
   private nagAboutYarnAuditChange() {
     if (auditDisparity()){
       WarningCollector.addPipelineWarning("transitive_dependency_audit_incoming",
-        "You are receiving this warning as you will be directly impacted by this change as there are existing vulnerabilities in your transitive dependencies. We will be adding the --recursive flag to CVE reporting. This means that your transitive dependencies within frontend repositories will also be checked for vulnerabilities. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 03, 15))
+        "We will be adding the --recursive flag to CVE scanning to check your transitive dependencies, your security scan is currently failing with these dependencies added to the scan. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 03, 15))
     }
     }
 
