@@ -16,8 +16,8 @@ class SecurityScan implements Serializable {
         try {
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
-                    chmod +x security-frontend.sh
-                    ./security-frontend.sh
+                    chmod +x security.sh
+                    ./security.sh
                     '''
             }
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
