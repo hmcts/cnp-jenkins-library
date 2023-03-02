@@ -242,6 +242,8 @@ EOF
       if (statusCode == 0) {
         steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+        // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
+        steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
       }
     } catch(err) {
       steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
