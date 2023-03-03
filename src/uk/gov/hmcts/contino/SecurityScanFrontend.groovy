@@ -8,6 +8,8 @@ class SecurityScanFrontend implements Serializable {
     public static final String GLUE_ARGS = '-u 0:0 --name=Glue -w $(pwd):/tmp'
     def steps
 
+    writeFile file: 'security-frontend.sh', text: libraryResource('uk/gov/hmcts/pipeline/security/security-frontend.sh')
+    
     SecurityScanFrontend(steps) {
         this.steps = steps
     }
