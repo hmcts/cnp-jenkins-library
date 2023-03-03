@@ -16,8 +16,8 @@ class SecurityScanFrontend implements Serializable {
         try {
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
-                    chmod +x uk/gov/hmcts/pipeline/security/security-frontend.sh
-                    ./uk/gov/hmcts/pipeline/security/security-frontend.sh
+                    chmod +x ./security-frontend.sh
+                    ./security-frontend.sh
                     '''
             }
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
