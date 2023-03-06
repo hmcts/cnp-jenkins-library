@@ -13,9 +13,9 @@ class SecurityScanFrontend implements Serializable {
     }
 
     def execute() {
-        
+
         writeFile file: 'security.sh', text: libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh')
-        
+
         try {
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
