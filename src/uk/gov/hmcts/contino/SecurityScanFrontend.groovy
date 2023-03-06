@@ -6,7 +6,6 @@ class SecurityScanFrontend implements Serializable {
     public static final String OWASP_ZAP_ARGS = '-u 0:0 --name zap -p 1001:1001 -v $WORKSPACE:/zap/wrk/:rw'
     public static final String GLUEIMAGE = 'hmcts/zap-glue:latest'
     public static final String GLUE_ARGS = '-u 0:0 --name=Glue -w $(pwd):/tmp'
-    public static final String FILE_CONTENTS = libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh')
     def steps
     
     SecurityScanFrontend(steps) {
@@ -15,7 +14,7 @@ class SecurityScanFrontend implements Serializable {
 
     def execute() {
 
-        writeFile file: 'security.sh', text: FILE_CONTENTS
+        writeFile file: "security.sh", text: libraryResource("uk/gov/hmcts/pipeline/security/security-frontend/security.sh")
 
         try {
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
