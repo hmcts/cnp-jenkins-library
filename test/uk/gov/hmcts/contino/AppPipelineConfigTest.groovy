@@ -40,7 +40,7 @@ class AppPipelineConfigTest extends Specification {
 
   def "ensure securityScan can be set in steps"() {
     when:
-      dsl.enableSecurityScan()
+      dsl.enableFrontendSecurityScan()
 
     then:
       assertThat(pipelineConfig.securityScan).isTrue()
