@@ -14,7 +14,7 @@ def call() {
   def autoDeployEnvironments = [
     preview: [
       environmentName: environment.previewName,
-      subscriptionName: subscription.nonProdName,
+      subscriptionName: subscription.previewName,
       aksSubscription: aksSubscriptions.preview,
       aksInfraRgName: null
     ],
