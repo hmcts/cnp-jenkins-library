@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
-  LinkedHashMap<String, List<LinkedHashMap<String, Object>>> secrets = config.vaultSecrets
+  Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
   echo ("secrets   ...... $secrets")
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
@@ -22,7 +22,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  LinkedHashMap<String, List<LinkedHashMap<String, Object>>> hldsSecrets = [
+  Map<String, List<Map<String, Object>>> hldsSecrets = [
     'ccd': [
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
@@ -40,15 +40,22 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   }
   echo("final secrets   ...... $secrets")
 
-  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
+  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv, environment) {
     body.call()
   }
 }
 
-def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String vaultName, String dependedEnv, Closure body) {
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String vaultName, String dependedEnv, String environment, Closure body) {
   def entry = secretIterator.next()
 
-  def productName = entry.key != '${vaultName}' ? entry.key : vaultName
+  String productName
+  if (entry.key.contains('${env}')) {// TODO Is -${env} expected?
+    productName = entry.key.replace('${env}', environment)
+  } else if (entry.key != '${vaultName}') {
+    productName = entry.key
+  } else {
+    productName = vaultName
+  }
 
   String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
 
@@ -57,7 +64,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     keyVaultURLOverride: theKeyVaultUrl
   ) {
     if (secretIterator.hasNext()) {
-      return executeClosure(secretIterator, vaultName, dependedEnv, body)
+      return executeClosure(secretIterator, vaultName, dependedEnv, environment,body)
     } else {
       body.call()
     }
