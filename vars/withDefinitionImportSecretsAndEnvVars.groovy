@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
-  def secrets = config.vaultSecrets
+  LinkedHashMap<String, List<LinkedHashMap<String, Object>>> secrets = config.vaultSecrets
   echo ("secrets   ...... $secrets")
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
@@ -22,7 +22,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  def hldsSecrets = [
+  LinkedHashMap<String, List<LinkedHashMap<String, Object>>> hldsSecrets = [
     'ccd': [
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
@@ -35,7 +35,12 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     ]
   ]
 
-  executeClosure(hldsSecrets.entrySet().iterator(), vaultName, dependedEnv) {
+  hldsSecrets.iterator().forEachRemaining {
+    secrets.putIfAbsent(it.key, it.value)
+  }
+  echo("final secrets   ...... $secrets")
+
+  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
