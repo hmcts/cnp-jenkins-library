@@ -40,17 +40,17 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   }
   echo("final secrets   ...... $secrets")
 
-  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv, environment) {
+  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
 
-def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String vaultName, String dependedEnv, String environment, Closure body) {
+def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String vaultName, String dependedEnv, Closure body) {
   def entry = secretIterator.next()
 
   String productName
-  if (entry.key.contains('${env}')) {// TODO Is -${env} expected?
-    productName = entry.key.replace('${env}', environment)
+  if (entry.key.contains('${env}')) {// TODO Should -${env} be expected?
+    productName = entry.key.replace('-${env}', "")
   } else if (entry.key != '${vaultName}') {
     productName = entry.key
   } else {
@@ -64,7 +64,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
     keyVaultURLOverride: theKeyVaultUrl
   ) {
     if (secretIterator.hasNext()) {
-      return executeClosure(secretIterator, vaultName, dependedEnv, environment,body)
+      return executeClosure(secretIterator, vaultName, dependedEnv, body)
     } else {
       body.call()
     }
