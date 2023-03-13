@@ -5,6 +5,8 @@ abstract class AbstractBuilder implements Builder, Serializable {
   public steps
   def gatling
   def securitytest
+  def securitytestfrontend
+  def securitytestbackend
 
   AbstractBuilder(steps) {
     this.steps = steps
