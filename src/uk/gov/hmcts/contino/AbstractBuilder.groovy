@@ -30,12 +30,12 @@ abstract class AbstractBuilder implements Builder, Serializable {
   
   @Override
   def securityScanFrontend(){
-    this.securitytest.execute()
+    this.securitytestfrontend.execute()
   }
 
   @Override
   def securityScanBackend(){
-    this.securitytest.execute()
+    this.securitytestbackend.execute()
   }
 
   @Override

@@ -16,6 +16,8 @@ class AbstractBuilderTest extends Specification {
     builder = new BuilderImpl(mockSteps)
     builder.gatling = mockGatling
     builder.securitytest = mockSecurity
+    builder.securitytestfrontend = mockSecurity
+    builder.securitytestbackend = mockSecurity
   }
 
   def "performanceTest calls 'gatling.execute()'"() {
