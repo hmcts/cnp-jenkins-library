@@ -35,8 +35,10 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     ]
   ]
 
-  hldsSecrets.iterator().forEachRemaining {
-    secrets.putIfAbsent(it.key, it.value)
+  if (!secrets.isEmpty()) {
+    secrets = compareMappedSecrets(hldsSecrets, secrets)
+  } else {
+    secrets = hldsSecrets
   }
   echo("final secrets   ...... $secrets")
 
@@ -48,14 +50,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
 def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIterator, String vaultName, String dependedEnv, Closure body) {
   def entry = secretIterator.next()
 
-  String productName
-  if (entry.key.contains('${env}')) {// TODO Should -${env} be expected?
-    productName = entry.key.replace('-${env}', "")
-  } else if (entry.key != '${vaultName}') {
-    productName = entry.key
-  } else {
-    productName = vaultName
-  }
+  def productName = entry.key != '${vaultName}' ? entry.key : vaultName
 
   String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
 
@@ -79,3 +74,38 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
    envVariable: envVar
   ]
 }
+
+static def compareMappedSecrets(Map<String, List<Map<String, Object>>> defaultSecretsGroup, Map<String, List<Map<String, Object>>> newSecretsGroup) {
+  List<Map<String, Object>> finalSecretsList = new ArrayList()
+  defaultSecretsGroup.iterator().forEachRemaining {
+    def currentDefaultItem = it
+    newSecretsGroup.putIfAbsent(currentDefaultItem.key, currentDefaultItem.getValue())
+    if (currentDefaultItem.value != newSecretsGroup.get(currentDefaultItem.key)) {
+      finalSecretsList = compareListOfMappedSecrets(currentDefaultItem.value, newSecretsGroup.get(currentDefaultItem.key))
+      newSecretsGroup.replace(currentDefaultItem.key, finalSecretsList)
+    }
+  }
+  return newSecretsGroup
+}
+
+// compare values inside the map
+static List<Map<String, Object>> compareListOfMappedSecrets(List<Map<String, Object>> defaultSecretsList, List<Map<String, Object>> newSecretsList) {
+  List<Map<String, Object>> finalList = new ArrayList<>()
+  defaultSecretsList.iterator().forEachRemaining {
+    def defaultSecret = it
+    newSecretsList.forEach {
+      def newSecret = it
+      if (defaultSecret != newSecret) {
+        if (defaultSecret.get("envVariable").toString() != newSecret.get("envVariable").toString()) {
+          finalList.addAll(newSecret, defaultSecret)
+        } else if (!finalList.contains(newSecret)) {
+          finalList.add(newSecret)
+        }
+      } else {
+        finalList.add(newSecret)
+      }
+    }
+  }
+  return finalList
+}
+
