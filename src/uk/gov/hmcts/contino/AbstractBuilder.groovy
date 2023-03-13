@@ -9,8 +9,8 @@ abstract class AbstractBuilder implements Builder, Serializable {
   AbstractBuilder(steps) {
     this.steps = steps
     this.gatling = new Gatling(this.steps)
-    this.securitytest = new SecurityScanFrontend(this.steps)
-    this.securitytest = new SecurityScanBackend(this.steps)
+    this.securitytestfrontend = new SecurityScanFrontend(this.steps)
+    this.securitytestbackend = new SecurityScanBackend(this.steps)
   }
 
   @Override
@@ -25,6 +25,16 @@ abstract class AbstractBuilder implements Builder, Serializable {
   @Override
   def securityScan(){
     this.securitytest.execute()
+  }
+  
+  @Override
+  def securityScan(){
+    this.securitytestfrontend.execute()
+  }
+
+  @Override
+  def securityScan(){
+    this.securitytestbackend.execute()
   }
 
   @Override
