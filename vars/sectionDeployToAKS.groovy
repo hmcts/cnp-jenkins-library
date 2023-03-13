@@ -256,6 +256,32 @@ def call(params) {
                 }
               }
             }
+            if (testLabels.contains('enable_security_scan_frontend')) {
+              testEnv(aksUrl) {
+                stageWithAgent('Security scan frontend', product) {
+                  warnError('Failure in securityScanFrontend') {
+                    pcr.callAround('securityScanFrontend') {
+                      timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                        builder.securityScanFrontend()
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            if (testLabels.contains('enable_security_scan_backend')) {
+              testEnv(aksUrl) {
+                stageWithAgent('Security scan backend', product) {
+                  warnError('Failure in securityScanBackend') {
+                    pcr.callAround('securityScanBackend') {
+                      timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                        builder.securityScanBackend()
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

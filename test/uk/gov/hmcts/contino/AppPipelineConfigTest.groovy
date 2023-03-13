@@ -30,6 +30,8 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.mutationTest).isFalse()
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
       assertThat(pipelineConfig.securityScan).isFalse()
+      assertThat(pipelineConfig.securityScanFrontend).isFalse()
+      assertThat(pipelineConfig.securityScanBackend).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
@@ -40,12 +42,31 @@ class AppPipelineConfigTest extends Specification {
 
   def "ensure securityScan can be set in steps"() {
     when:
-      dsl.enableFrontendSecurityScan()
+      dsl.enableSecurityScan()
 
     then:
       assertThat(pipelineConfig.securityScan).isTrue()
       assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
   }
+
+  def "ensure securityScanFrontend can be set in steps"() {
+    when:
+      dsl.enableSecurityScanFrontend()
+
+    then:
+      assertThat(pipelineConfig.securityScanFrontend).isTrue()
+      assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
+  }
+
+  def "ensure securityScanBackend can be set in steps"() {
+    when:
+      dsl.enableSecurityScanBackend()
+
+    then:
+      assertThat(pipelineConfig.securityScanBackend).isTrue()
+      assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
+  }
+
 
   def "load vault secrets"() {
     given:
