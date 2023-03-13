@@ -10,6 +10,7 @@ abstract class AbstractBuilder implements Builder, Serializable {
     this.steps = steps
     this.gatling = new Gatling(this.steps)
     this.securitytest = new SecurityScanFrontend(this.steps)
+    this.securitytest = new SecurityScanBackend(this.steps)
   }
 
   @Override
