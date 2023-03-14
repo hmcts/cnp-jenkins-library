@@ -36,7 +36,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   ]
 
   if (!secrets.isEmpty()) {
-    secrets = compareMappedSecrets(hldsSecrets, secrets)
+    secrets = compareMappedSecrets(hldsSecrets, createCopyOf(secrets))
   } else {
     secrets = hldsSecrets
   }
@@ -79,7 +79,7 @@ static def compareMappedSecrets(Map<String, List<Map<String, Object>>> defaultSe
   List<Map<String, Object>> finalSecretsList = new ArrayList()
   defaultSecretsGroup.iterator().forEachRemaining {
     def currentDefaultItem = it
-    newSecretsGroup.putIfAbsent(currentDefaultItem.key, currentDefaultItem.getValue())
+    newSecretsGroup.putIfAbsent(currentDefaultItem.key, currentDefaultItem.value)
     if (currentDefaultItem.value != newSecretsGroup.get(currentDefaultItem.key)) {
       finalSecretsList = compareListOfMappedSecrets(currentDefaultItem.value, newSecretsGroup.get(currentDefaultItem.key))
       newSecretsGroup.replace(currentDefaultItem.key, finalSecretsList)
@@ -88,24 +88,26 @@ static def compareMappedSecrets(Map<String, List<Map<String, Object>>> defaultSe
   return newSecretsGroup
 }
 
-// compare values inside the map
+// compare each secret in the list
 static List<Map<String, Object>> compareListOfMappedSecrets(List<Map<String, Object>> defaultSecretsList, List<Map<String, Object>> newSecretsList) {
-  List<Map<String, Object>> finalList = new ArrayList<>()
+  Set<Map<String, Object>> finalSet = new HashSet<>()
   defaultSecretsList.iterator().forEachRemaining {
     def defaultSecret = it
     newSecretsList.forEach {
       def newSecret = it
-      if (defaultSecret != newSecret) {
-        if (defaultSecret.get("envVariable").toString() != newSecret.get("envVariable").toString()) {
-          finalList.addAll(newSecret, defaultSecret)
-        } else if (!finalList.contains(newSecret)) {
-          finalList.add(newSecret)
-        }
-      } else {
-        finalList.add(newSecret)
-      }
+      finalSet.addAll(defaultSecret.get("envVariable").toString() == newSecret.get("envVariable").toString() ? newSecret : defaultSecret, newSecret)
     }
   }
-  return finalList
+  return new ArrayList<>(finalSet)
 }
 
+static def createCopyOf(Map<String, List<Map<String, Object>>> secrets) {
+  Map<String, List<Map<String, Object>>> secretsCopy = new HashMap<>()
+  secrets.iterator().forEachRemaining {
+    def key = it.key
+    secretsCopy.putAll(!it.key.contains('-${env}') ?
+            Map.of(it.key, it.getValue()) :
+            Map.of(key.replace('-${env}', ""), it.getValue()))
+  }
+  return secretsCopy
+}
