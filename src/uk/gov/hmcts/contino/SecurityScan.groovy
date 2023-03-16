@@ -14,9 +14,10 @@ class SecurityScan implements Serializable {
 
     def execute() {
         try {
+            WarningCollector.addPipelineWarning("security_scan_moved", "Please remove security.sh from repository and use enableSecurityScanFrontend() or enableSecurityScanBackend() instead of enabledSecurityScan(), see <insert_reference_here>", LocalDate.of(2023, 04, 26))
+
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
-                    WarningCollector.addPipelineWarning("security_scan_moved", "Please remove security.sh from repository and use enableSecurityScanFrontend() or enableSecurityScanBackend() instead of enabledSecurityScan(), see <insert_reference_here>", LocalDate.of(2023, 04, 26))
                     chmod +x security.sh
                     ./security.sh
                     '''
