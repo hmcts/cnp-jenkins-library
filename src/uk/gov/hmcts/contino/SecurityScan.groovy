@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class SecurityScan implements Serializable {
     public static final String OWASP_ZAP_IMAGE = 'owasp/zap2docker-stable:2.11.1'
