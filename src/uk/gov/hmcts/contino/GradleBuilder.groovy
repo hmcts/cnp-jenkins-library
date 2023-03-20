@@ -258,7 +258,7 @@ EOF
 
   class SecurityScanBackend extends SecurityScan
   {  
-
+    securityScript = "test"
   }  
 
   @Override
