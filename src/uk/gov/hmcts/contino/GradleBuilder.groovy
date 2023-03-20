@@ -258,7 +258,7 @@ EOF
 
   class SecurityScanBackend extends SecurityScan
   {  
-    env.securityScript = libraryResource('uk/gov/hmcts/pipeline/security/security-backend/security.sh')
+
   }  
 
   @Override
