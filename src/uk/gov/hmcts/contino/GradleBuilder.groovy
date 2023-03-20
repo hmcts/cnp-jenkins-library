@@ -258,7 +258,7 @@ EOF
 
   class SecurityScanBackend extends SecurityScan
   {  
-    writeFile file: "security.sh", text: libraryResource('uk/gov/hmcts/pipeline/security/security-backend/security.sh')
+    env.securityScript = libraryResource('uk/gov/hmcts/pipeline/security/security-backend/security.sh')
   }  
 
   @Override
