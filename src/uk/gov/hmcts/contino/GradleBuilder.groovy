@@ -256,6 +256,11 @@ EOF
     return gradleWithOutput("buildEnvironment").contains(pluginName)
   }
 
+  class SecurityScanBackend extends SecurityScan
+  {  
+    this.steps.writeFile file: "security.sh", text: this.steps.libraryResource('uk/gov/hmcts/pipeline/security/security-backend/security.sh')
+  }  
+
   @Override
   def performanceTest() {
     //support for the new and old (deprecated) gatling gradle plugins
@@ -268,5 +273,4 @@ EOF
       super.executeGatling()
     }
   }
-
 }
