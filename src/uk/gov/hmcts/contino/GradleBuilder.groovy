@@ -258,7 +258,7 @@ EOF
 
   class SecurityScanBackend extends SecurityScan
   {  
-    String securityScript = "test"
+    String securityScript = this.steps.writeFile file: "security.sh", text: this.steps.libraryResource('uk/gov/hmcts/pipeline/security/security-backend/security.sh')
   }  
 
   @Override
