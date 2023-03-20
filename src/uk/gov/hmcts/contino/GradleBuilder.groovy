@@ -258,7 +258,7 @@ EOF
 
   class SecurityScanBackend extends SecurityScan
   {  
-    def securityScript
+    String securityScript = "test"
   }  
 
   @Override
