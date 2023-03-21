@@ -343,7 +343,7 @@ EOF
 
   @Override
   def securityScan() {
-    steps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh'))
+    steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh'))
     this.securitytest.execute()
   }
 
