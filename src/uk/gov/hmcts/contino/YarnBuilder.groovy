@@ -345,6 +345,8 @@ EOF
   def securityScan() {
     steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh'))
     this.securitytest.execute()
+    WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 03, 29))
+
   }
 
   @Override
