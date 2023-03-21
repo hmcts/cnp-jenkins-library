@@ -341,8 +341,10 @@ EOF
     runYarn(task, prepend)
   }
 
+  @Override
   def securityScan() {
-    String securityScript = this.steps.writeFile file: "security.sh", text: this.steps.libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh')
+    localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh'))
+    this.securitytest.execute()
   }
 
   @Override
