@@ -341,6 +341,10 @@ EOF
     runYarn(task, prepend)
   }
 
+  def securityScan() {
+    String securityScript = this.steps.writeFile file: "security.sh", text: this.steps.libraryResource('uk/gov/hmcts/pipeline/security/security-frontend/security.sh')
+  }
+
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
