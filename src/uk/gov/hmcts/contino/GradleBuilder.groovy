@@ -256,13 +256,10 @@ EOF
     return gradleWithOutput("buildEnvironment").contains(pluginName)
   }
 
-
-  // class SecurityScanBackend extends SecurityScan
-  // {  
-  // }  
-
+  @Override
   def securityScan() {
     localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/security-backend/security.sh'))
+    this.securitytest.execute()
   }
 
   @Override
