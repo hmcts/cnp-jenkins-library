@@ -343,7 +343,7 @@ EOF
 
   @Override
   def securityScan() {
-    if (steps.fileExists(".security.sh")) {
+    if (steps.fileExists("security.sh")) {
       echo "file exists"
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 03, 29))
     }
