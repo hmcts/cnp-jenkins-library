@@ -12,14 +12,11 @@ class YarnBuilder extends AbstractBuilder {
   private static final String NVMRC = '.nvmrc'
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
 
+  def securitytest
+
   YarnBuilder(steps) {
     super(steps)
-  }
-
-  def securityScan
-
-  def SecurityScan(steps) {
-    this.steps = steps
+    this.securitytest = new SecurityScan(this.steps)
   }
 
   def build() {
@@ -348,10 +345,9 @@ EOF
   }
 
   @Override
-  def securityScan() {
-    this.securityScan = new SecurityScan(steps)
-    securityScan(steps)
-
+  def securityScan(){
+    this.securitytest.execute()
+  }
 
     // if (steps.fileExists("security.sh")) {
     //   WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 03, 29))
@@ -359,7 +355,7 @@ EOF
     // steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
 
 
-  }
+
 
   @Override
   def setupToolVersion() {
