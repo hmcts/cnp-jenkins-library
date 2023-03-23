@@ -349,12 +349,8 @@ EOF
 
   @Override
   def securityScan() {
-    SecurityScan(steps) {
-      this.steps = steps
-  }
-
     this.securityScan = new SecurityScan(steps)
-
+    securityScan(steps)
 
 
     // if (steps.fileExists("security.sh")) {
