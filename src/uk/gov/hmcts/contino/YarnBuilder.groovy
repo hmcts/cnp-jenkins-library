@@ -22,7 +22,7 @@ class YarnBuilder extends AbstractBuilder {
     this.steps = steps
     this.securityScan = securityScan
   }
-👀
+
   def build() {
     yarn("lint")
 
