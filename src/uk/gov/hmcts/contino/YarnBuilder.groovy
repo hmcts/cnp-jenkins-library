@@ -16,6 +16,11 @@ class YarnBuilder extends AbstractBuilder {
     super(steps)
   }
 
+  SecurityScan(steps) {
+    super(steps)
+    this.steps = steps
+  }
+
   def build() {
     yarn("lint")
 
@@ -343,18 +348,15 @@ EOF
 
   @Override
   def securityScan() {
+    this.securityScan = new SecurityScan(steps)
 
 
+    // if (steps.fileExists("security.sh")) {
+    //   WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 03, 29))
+    // }
+    // steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
 
-    if (steps.fileExists("security.sh")) {
-      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 03, 29))
-    }
-    steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
-    this.securitytest.execute()
 
-    SecurityScan(steps) {
-      super(steps)
-    }
   }
 
   @Override
