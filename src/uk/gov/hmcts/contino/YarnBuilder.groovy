@@ -351,12 +351,8 @@ EOF
     } else {
       steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
     }
-
-
     this.securitytest.execute()
   }
-
-
 
   @Override
   def setupToolVersion() {
