@@ -18,9 +18,8 @@ class YarnBuilder extends AbstractBuilder {
 
   def securityScan
 
-  def SecurityScan(steps, securityScan) {
+  def SecurityScan(steps) {
     this.steps = steps
-    this.securityScan = securityScan
   }
 
   def build() {
