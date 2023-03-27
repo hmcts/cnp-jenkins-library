@@ -36,24 +36,13 @@ def call(params) {
   def component = params.component
   def aksUrl
   def environment = params.environment
-  def acr
-  def dockerImage
-  def imageRegistry
+  def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+  def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
   def nonProdEnv = new Environment(env).nonProdName
 
   Builder builder = pipelineType.builder
-
-  withAcrClient(subscription) {
-    imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-    dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-    onPR {
-      if (fileExists('Dockerfile')) {
-        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
-      }
-    }
-  }
 
   def deploymentNamespace = projectBranch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
