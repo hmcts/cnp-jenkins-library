@@ -38,11 +38,15 @@ def call(Map args = [:]) {
 
   try {
     slackSend(
-        channel: channel,
-        color: config.color,
-        message: message )
-  } catch (Exception ex) {
-    echo "ERROR: Failed to notify ${channel} due to the following error: ${ex}"
+      failOnError: true,
+      channel: channel,
+      color: config.color,
+      message: message )
+  } 
+  catch (Exception ex) {
+    if(channel!='@iamabotuser') {
+      throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
+    }
   }
 }
 
