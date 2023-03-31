@@ -160,7 +160,7 @@ def call(params) {
     stageWithAgent("Promote Docker Image", product) {
       if (dockerFileExists) {
         def deploymentStage = DockerImage.DeploymentStage.STAGING
-        onPR{
+        onPR {
           deploymentStage = DockerImage.DeploymentStage.PR
         }
         withAcrClient(subscription) {
