@@ -157,13 +157,15 @@ def call(params) {
       }
     }
 
-    if (dockerFileExists) {
-      def deploymentStage = DockerImage.DeploymentStage.STAGING
-      onPR{
-        deploymentStage = DockerImage.DeploymentStage.PR
-      }
-      withAcrClient(subscription) {
-          acr.retagForStage(deploymentStage, dockerImage)
+    stageWithAgent("Promote Docker Image", product) {
+      if (dockerFileExists) {
+        def deploymentStage = DockerImage.DeploymentStage.STAGING
+        onPR{
+          deploymentStage = DockerImage.DeploymentStage.PR
+        }
+        withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+        }
       }
     }
 
