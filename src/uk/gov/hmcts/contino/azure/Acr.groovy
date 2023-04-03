@@ -139,12 +139,7 @@ class Acr extends Az {
   }
 
   def hasTag(DockerImage dockerImage) {
-    // on the master branch we search for an AAT tagged image with the same commit hash
-    if (dockerImage.getTag().startsWith("staging")) {
-      return hasTag(DockerImage.DeploymentStage.AAT, dockerImage)
-    } else {
       return hasRepoTag(dockerImage.getTag(), dockerImage.getRepositoryName())
-    }
   }
 
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
