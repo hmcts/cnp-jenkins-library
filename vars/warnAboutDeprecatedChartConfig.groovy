@@ -33,7 +33,7 @@ def call(Map<String, String> params) {
 
   deprecationMap.each { chart, deprecatedVersions ->
     try {
-      sh './check-deprecated-charts.sh $product $component $chart $deprecatedVersions.version'
+      sh """./check-deprecated-charts.sh $product $component $chart $deprecatedVersions.version """
     } catch(ignored) {
       WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecatedVersions.deprecationDate))
     }
