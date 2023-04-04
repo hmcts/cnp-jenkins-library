@@ -157,6 +157,18 @@ def call(params) {
       }
     }
 
+    stageWithAgent("Promote Docker Image", product) {
+      if (dockerFileExists) {
+        def deploymentStage = DockerImage.DeploymentStage.STAGING
+        onPR {
+          deploymentStage = DockerImage.DeploymentStage.PR
+        }
+        withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+        }
+      }
+    }
+
     if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {

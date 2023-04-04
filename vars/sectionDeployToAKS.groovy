@@ -48,11 +48,6 @@ def call(params) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-    onPR {
-      if (fileExists('Dockerfile')) {
-        acr.retagForStage(DockerImage.DeploymentStage.PR, dockerImage)
-      }
-    }
   }
 
   def deploymentNamespace = projectBranch.deploymentNamespace()
