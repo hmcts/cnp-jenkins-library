@@ -14,10 +14,13 @@ class GradleBuilder extends AbstractBuilder {
   // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
   def localSteps
 
+  def securitytest
+
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
     this.localSteps = steps
+    this.securitytest = new SecurityScan(this.steps)
   }
 
   def build() {
@@ -257,6 +260,16 @@ EOF
   }
 
   @Override
+  def securityScan(){
+    if (localSteps.fileExists("security.sh")) {
+      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 06))
+    } else {
+      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
+    }
+    this.securitytest.execute()
+  }
+
+  @Override
   def performanceTest() {
     //support for the new and old (deprecated) gatling gradle plugins
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
@@ -268,5 +281,4 @@ EOF
       super.executeGatling()
     }
   }
-
 }
