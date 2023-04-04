@@ -150,6 +150,9 @@ def call(DockerImage dockerImage, Map params) {
         break
       } catch (upgradeError) {
         if (attempts >= 3) {
+          if (config.clearHelmReleaseOnFailure) {
+            helmUninstall(dockerImage, params, params.pipelineCallbacksRunner)
+          }
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
