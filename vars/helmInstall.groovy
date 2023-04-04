@@ -151,7 +151,7 @@ def call(DockerImage dockerImage, Map params) {
       } catch (upgradeError) {
         if (attempts >= 3) {
           if (config.clearHelmReleaseOnFailure) {
-            helmUninstall(dockerImage, params, params.pipelineCallbacksRunner)
+            helm.delete(dockerImage.getImageTag(), namespace)
           }
           throw upgradeError
         }
