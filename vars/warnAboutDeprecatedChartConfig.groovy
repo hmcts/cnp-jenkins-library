@@ -8,13 +8,13 @@ def call(Map<String, String> params) {
   def component = params.component
 
   def deprecationMap = [
-    'java' : ['version':'4.0.13', deprecationDate: '29/03/2023'],
-    'nodejs' : ['version':'2.4.14', deprecationDate: '29/03/2023'],
-    'job' : ['version':'0.7.11', deprecationDate: '29/03/2023'],
-    'blobstorage' : ['version':'0.3.0', deprecationDate: '29/03/2023'],
-    'servicebus' : ['version':'0.4.0', deprecationDate: '29/03/2023'],
-    'ccd' : ['version':'8.0.27', deprecationDate: '29/03/2023'],
-    'elasticsearch' : ['version':'7.17.3', deprecationDate: '29/03/2023'],
+    'java' : ['version':'4.0.13', deprecationDate: '2023-03-29'],
+    'nodejs' : ['version':'2.4.14', deprecationDate: '2023-03-29'],
+    'job' : ['version':'0.7.11', deprecationDate: '2023-03-29'],
+    'blobstorage' : ['version':'0.3.0', deprecationDate: '2023-03-29'],
+    'servicebus' : ['version':'0.4.0', deprecationDate: '2023-03-29'],
+    'ccd' : ['version':'8.0.27', deprecationDate: '2023-03-29'],
+    'elasticsearch' : ['version':'7.17.3', deprecationDate: '2023-03-29'],
   ]
 
   writeFile file: 'check-helm-api-version.sh', text: libraryResource('uk/gov/hmcts/helm/check-helm-api-version.sh')
@@ -35,7 +35,7 @@ def call(Map<String, String> params) {
     try {
       sh """./check-deprecated-charts.sh $product $component $chart $deprecatedVersions.version """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecatedVersions.deprecationDate, "dd/MM/yyyy"))
+      WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecatedVersions.deprecationDate))
     }
   }
   sh 'rm -f check-deprecated-charts.sh'
