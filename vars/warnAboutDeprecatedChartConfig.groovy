@@ -1,21 +1,13 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 import java.time.LocalDate
+import uk.gov.hmcts.pipeline.DeprecationConfig
 
 def call(Map<String, String> params) {
 
   def product = params.product
   def component = params.component
-
-  def deprecationMap = [
-    'java' : ['version':'4.0.13', deprecationDate: '2023-03-29'],
-    'nodejs' : ['version':'2.4.14', deprecationDate: '2023-03-29'],
-    'job' : ['version':'0.7.11', deprecationDate: '2023-03-29'],
-    'blobstorage' : ['version':'0.3.0', deprecationDate: '2023-03-29'],
-    'servicebus' : ['version':'0.4.0', deprecationDate: '2023-03-29'],
-    'ccd' : ['version':'8.0.27', deprecationDate: '2023-03-29'],
-    'elasticsearch' : ['version':'7.17.3', deprecationDate: '2023-03-29'],
-  ]
+  def helmChartDeprecationConfig = DeprecationConfig.deprecationConfig.helm
 
   writeFile file: 'check-helm-api-version.sh', text: libraryResource('uk/gov/hmcts/helm/check-helm-api-version.sh')
   writeFile file: 'check-deprecated-charts.sh', text: libraryResource('uk/gov/hmcts/helm/check-deprecated-charts.sh')
@@ -31,11 +23,13 @@ def call(Map<String, String> params) {
 
   sh 'chmod +x check-deprecated-charts.sh'
 
-  deprecationMap.each { chart, deprecatedVersions ->
-    try {
-      sh """./check-deprecated-charts.sh $product $component $chart $deprecatedVersions.version """
-    } catch(ignored) {
-      WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecatedVersions.deprecationDate))
+  helmChartDeprecationConfig.each { chart, deprecatedVersions ->
+    deprecatedVersions.each { deprecatedVersion, deprecationDate ->
+      try {
+        sh """./check-deprecated-charts.sh $product $component $chart $deprecatedVersion """
+      } catch (ignored) {
+        WarningCollector.addPipelineWarning("deprecated_helmcharts", "Please upgrade base helm charts to latest. See releases on the chart repo for latest updates, example: https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecationDate))
+      }
     }
   }
   sh 'rm -f check-deprecated-charts.sh'
