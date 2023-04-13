@@ -14,7 +14,7 @@ class DeprecationConfig {
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/adddeprecatedconfig/deprecation-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/deprecation-config.yml",
         validResponseCodes: '200'
       )
       deprecationConfig = steps.readYaml (text: response.content)
