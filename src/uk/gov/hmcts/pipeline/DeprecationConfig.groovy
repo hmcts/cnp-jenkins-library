@@ -17,7 +17,7 @@ class DeprecationConfig {
         url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/deprecation-config.yml",
         validResponseCodes: '200'
       )
-      deprecationConfig = steps.readYaml (text: response.content)
+      deprecationConfig = steps.readYaml(text: response.content)
     }
     return deprecationConfig
   }
