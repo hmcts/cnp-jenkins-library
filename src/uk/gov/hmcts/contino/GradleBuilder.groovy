@@ -247,6 +247,15 @@ EOF
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
         // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
         steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
+      } else {
+        WarningCollector.addPipelineWarning("java_11_deprecated",
+          "Please upgrade to Java 17, upgrade to " +
+            "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
+            "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
+            "Make sure you use the latest version of the Application insights agent, see the configuration in " +
+            "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
+            "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+        )
       }
     } catch(err) {
       steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
@@ -262,9 +271,9 @@ EOF
   @Override
   def securityScan(){
     if (localSteps.fileExists("security.sh")) {
-      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 06))
+      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
     } else {
-      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
+      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
     }
     this.securitytest.execute()
   }
