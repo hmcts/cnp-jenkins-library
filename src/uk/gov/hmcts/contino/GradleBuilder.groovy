@@ -270,14 +270,14 @@ EOF
   @Override
   def securityScan(){
     if (localSteps.fileExists(".ci/security.sh")) {
-      echo "Override: use local security.sh script"
+      this.securitytest.execute()
     }
     else if (localSteps.fileExists("security.sh")) {
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
     } else {
       localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
+      this.securitytest.execute()
     }
-    this.securitytest.execute()
   }
 
   @Override
