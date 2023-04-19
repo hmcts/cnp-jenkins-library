@@ -238,8 +238,6 @@ EOF
 
   @Override
   def setupToolVersion() {
-    gradle("--version") // ensure wrapper has been downloaded
-
     try {
       def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
       if (statusCode == 0) {
@@ -261,6 +259,7 @@ EOF
       steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
     }
 
+    gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
   }
 
