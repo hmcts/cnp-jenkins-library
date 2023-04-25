@@ -319,6 +319,14 @@ EOF
     }
   }
 
+  private isNodeJSnotdepricated() {
+    def status = steps.sh label: "Determine if is nodejs is v18", script: '''
+              CURRENT_NODE_VERSION=`jq -r .engines.node package.json`
+              echo $CURRENT_NODE_VERSION
+          ''', returnStatus: true
+    return status
+  }
+
   private corepackEnable() {
     def status = steps.sh label: "corepack enable", script: '''
       mkdir -p \$HOME/.local/bin
