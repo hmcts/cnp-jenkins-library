@@ -319,12 +319,17 @@ EOF
     }
   }
 
-  private isNodeJSnotdepricated() {
-    def status = steps.sh label: "Determine if is nodejs is v18", script: '''
-              CURRENT_NODE_VERSION=`jq -r .engines.node package.json`
-              echo $CURRENT_NODE_VERSION
-          ''', returnStatus: true
-    return status
+private isNodeJSnotdepricated() {
+  def status = steps.sh label: "Determine if is nodejs is v18", script: '''
+          CURRENT_NODE_VERSION=`jq -r .engines.node package.json` | grep -Eo '[0-9][0-9]'
+          echo $CURRENT_NODE_VERSION
+      ''', returnStatus: true
+  return status
+
+if [ "$CURRENT_NODE_VERSION" <= 18 ]; then
+      echo output $CURRENT_NODE_VERSION
+  fi
+  cat <<'EOF'
   }
 
   private corepackEnable() {
