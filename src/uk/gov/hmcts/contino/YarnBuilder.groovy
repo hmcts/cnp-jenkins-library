@@ -319,7 +319,7 @@ EOF
     }
   }
 
-private isNodeJSnotdepricated() {
+private boolean isNodeJSnotdepricated() {
   def status = steps.sh label: "Determine if is nodejs is v18", script: '''
         CURRENT_NODE_VERSION=`jq -r .engines.node package.json` | grep -Eo '[0-9][0-9]'
 
@@ -327,14 +327,15 @@ private isNodeJSnotdepricated() {
 
         if [ "$CURRENT_NODE_VERSION" <= 18 ]; then
           echo $CURRENT_NODE_VERSION
+          exit 1
         fi
        ''', returnStatus: true
-    return status
+    return status == 0
   }
 
- private nagAboutOldYNodeJSVersions() {
+ private void nagAboutOldYNodeJSVersions() {
      if (!isNodeJSnotdepricated()){
-       WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls as v8 is EOL, https://nodejs.org/en/blog/release/v18.12.0" LocalDate.of(2023, 08, 1 ))
+       WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls as v8 is EOL, https://nodejs.org/en/blog/release/v18.12.0", LocalDate.of(2023, 08, 1 ))
     }
   }
 
