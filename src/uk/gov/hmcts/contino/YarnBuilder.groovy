@@ -321,15 +321,21 @@ EOF
 
 private isNodeJSnotdepricated() {
   def status = steps.sh label: "Determine if is nodejs is v18", script: '''
-          CURRENT_NODE_VERSION=`jq -r .engines.node package.json` | grep -Eo '[0-9][0-9]'
-          echo $CURRENT_NODE_VERSION
-      ''', returnStatus: true
-  return status
+        CURRENT_NODE_VERSION=`jq -r .engines.node package.json` | grep -Eo '[0-9][0-9]'
 
-if [ "$CURRENT_NODE_VERSION" <= 18 ]; then
-      echo output $CURRENT_NODE_VERSION
-  fi
-  cat <<'EOF'
+        echo "current node version is $CURRENT_NODE_VERSION" 
+
+        if [ "$CURRENT_NODE_VERSION" <= 18 ]; then
+          echo $CURRENT_NODE_VERSION
+        fi
+       ''', returnStatus: true
+    return status
+  }
+
+ private nagAboutOldYNodeJSVersions() {
+     if (!isNodeJSnotdepricated()){
+       WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls as v8 is EOL, https://nodejs.org/en/blog/release/v18.12.0" LocalDate.of(2023, 08, 1 ))
+    }
   }
 
   private corepackEnable() {
@@ -374,6 +380,7 @@ if [ "$CURRENT_NODE_VERSION" <= 18 ]; then
   def setupToolVersion() {
     super.setupToolVersion()
     nagAboutOldYarnVersions()
+    nagAboutOldYNodeJSVersions()
   }
 
 }
