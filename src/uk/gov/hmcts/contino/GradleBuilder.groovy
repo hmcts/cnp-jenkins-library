@@ -11,7 +11,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def prodName = System.getenv("PROD_SUBSCRIPTION_NAME")
 
-  def owaspenv = prodName == "sandbox" || nonProdName == "sbox" ? 'sandbox' : 'prod'
+  def owaspenv = prodName == "sandbox" || prodName == "sbox" ? 'sandbox' : 'prod'
 
   def product
 
