@@ -11,9 +11,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def nonProdName = System.getenv("SUBSCRIPTION_NAME")
 
-  WarningCollector.addPipelineWarning("env is ${nonProdName}", LocalDate.of(2022, 6, 30))
-
-  def owaspenv = nonProdName == "nonprod" || nonProdName == "prod" ? 'prod' : 'sandbox'
+  def owaspenv = nonProdName
 
   def product
 
