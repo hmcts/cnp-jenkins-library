@@ -11,7 +11,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def nonProdName = System.getenv("SUBSCRIPTION_NAME")
 
-  localSteps.sh '''
+  sh '''
     echo "env is ${nonProdName}"
   '''
 
