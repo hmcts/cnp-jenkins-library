@@ -81,7 +81,7 @@ def call(params) {
     }
     branches["Security Checks"] = {
       pcr.callAround('securitychecks') {
-        builder.securityCheck()
+        builder.securityCheck(subscription)
       }
     }
     if (dockerFileExists) {

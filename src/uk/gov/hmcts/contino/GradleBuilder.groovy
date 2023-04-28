@@ -132,12 +132,12 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
-  def securityCheck() {
+  def securityCheck(String subscription) {
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ]
     ]
-    def owaspenv = System.getenv("NONPROD_SUBSCRIPTION_NAME")
+    def owaspenv = $subscription
     localSteps.withAzureKeyvault(secrets) {
       try {
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v14-flexible-${owaspenv}.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
