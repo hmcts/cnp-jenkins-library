@@ -114,8 +114,7 @@ class GradleBuilderTest extends Specification {
     spyGradleBuilder.securityCheck()
     then:
       1 * steps.sh({
-        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
-        it.contains('${OWASPDB_V14_CONNECTION_STRING}')
+        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate')
       })
   }
 
