@@ -9,9 +9,9 @@ import java.time.LocalDate
 
 class GradleBuilder extends AbstractBuilder {
 
-  def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
+  def prodName = System.getenv("PROD_SUBSCRIPTION_NAME")
 
-  def owaspenv = nonProdName == "sandbox" || nonProdName == "sbox" ? 'sandbox' : 'prod'
+  def owaspenv = prodName == "sandbox" || nonProdName == "sbox" ? 'sandbox' : 'prod'
 
   def product
 
