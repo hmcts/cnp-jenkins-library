@@ -115,7 +115,7 @@ class GradleBuilderTest extends Specification {
     then:
       1 * steps.sh({
         GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
-        it.contains('${localSteps.env.OWASPDB_V14_CONNECTION_STRING}')
+        it.contains('${OWASPDB_V14_CONNECTION_STRING}')
       })
   }
 
