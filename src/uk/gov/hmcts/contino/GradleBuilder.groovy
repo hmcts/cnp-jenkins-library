@@ -11,7 +11,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def nonProdName = System.getenv("SUBSCRIPTION_NAME")
 
-  echo "env is ${nonProdName}"
+  localSteps.sh 'echo "env is ${nonProdName}"'
 
   def owaspenv = nonProdName == "nonprod" || nonProdName == "prod" ? 'prod' : 'sandbox'
 
