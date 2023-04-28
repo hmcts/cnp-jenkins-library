@@ -9,7 +9,9 @@ import java.time.LocalDate
 
 class GradleBuilder extends AbstractBuilder {
 
-  def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
+  def nonProdName = System.getenv("SUBSCRIPTION_NAME")
+
+  echo "env is ${nonProdName}"
 
   def owaspenv = nonProdName == "nonprod" || nonProdName == "prod" ? 'prod' : 'sandbox'
 
