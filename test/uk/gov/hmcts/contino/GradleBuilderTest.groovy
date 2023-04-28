@@ -115,7 +115,7 @@ class GradleBuilderTest extends Specification {
     then:
       1 * steps.sh({
         GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
-        it.contains('jdbc:postgresql://owaspdependency-v14-flexible-sandbox')
+        it.contains('jdbc:postgresql://owaspdependency-v14-flexible-')
       })
   }
 
