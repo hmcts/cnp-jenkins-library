@@ -323,14 +323,14 @@ private isNodeJSnotdepricated() {
   def status = steps.sh label: "Determine if is nodejs is v18", script: '''
         CURRENT_NODE_VERSION=`jq -r .engines.node package.json` | grep -Eo '[0-9][0-9]'
 
-        echo "current node version is $CURRENT_NODE_VERSION" 
+        echo "current node version is $CURRENT_NODE_VERSION"
 
         if [ "$CURRENT_NODE_VERSION" <= 18 ]; then
           echo $CURRENT_NODE_VERSION
           exit 1
         fi
        ''', returnStatus: true
-    return status == 0
+    return status
   }
 
  private  nagAboutOldYNodeJSVersions() {
