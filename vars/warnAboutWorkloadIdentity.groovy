@@ -1,4 +1,6 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+import java.time.LocalDate
+
 
 def call(Map<String, String> params) {
   def product = params.product
