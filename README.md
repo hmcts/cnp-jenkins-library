@@ -65,7 +65,7 @@ Branch | Environment
 `master` | `aat` then `prod`
 `demo` | `demo`
 `perftest` | `perftest`
-PR branch| `preview` (ASE or AKS depending on your config)
+PR branch| `preview`
 
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
