@@ -57,7 +57,7 @@ withPipeline(type, product, component) {
 }
 ```
 
-## Branch and Environment Mapping
+#### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
 Branch | Environment
@@ -215,7 +215,7 @@ Conditions are:
 * Failure
 * Always
 
-Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-environment-mapping)
+Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-and-environment-mapping)
 
  * checkout
  * build
