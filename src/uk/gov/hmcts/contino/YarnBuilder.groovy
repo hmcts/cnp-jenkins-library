@@ -321,13 +321,13 @@ EOF
 
 private isNodeJSV18OrNewer() {
   def status = steps.sh label: "Determine if is nodejs is v18 or lower", script: '''
+        TARGET_MIN_VERSION=18.16
         CURRENT_NODE_VERSION=$(jq -r .engines.node package.json | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
 
         echo 'Current node version is $CURRENT_NODE_VERSION'
 
-        echo "current node version is $CURRENT_NODE_VERSION"
-        if (( $(echo "$CURRENT_NODE_VERSION < 18.16" | bc -l) )); then
-            echo 'NodeJS version of $CURRENT_NODE_VERSION needs to be upgrade to at least 18.16.x'
+        if (( $(echo "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION" | bc -l) )); then
+            echo "NodeJS version of ${CURRENT_NODE_VERSION} needs to be upgraded to at least 18.16.x"
             exit 1
         fi
        ''', returnStatus: true
