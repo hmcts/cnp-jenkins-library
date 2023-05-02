@@ -40,7 +40,7 @@ def call(params) {
     stageWithAgent("Build", product) {
       onPR {
         enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
+        warnAboutWorkloadIdentity product: product, component: component
       }
 
       builder.setupToolVersion()
