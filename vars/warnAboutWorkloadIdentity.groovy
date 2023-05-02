@@ -11,7 +11,7 @@ def call(Map<String, String> params) {
       ./warn-about-workload-identity.sh $product $component
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("workoad_identity_set", "Please migrate your application to use Workload Identity, as aad-pod-identity project is deprecated.", new Date().parse("dd.MM.yyyy", "30.06.2023"))
+    WarningCollector.addPipelineWarning("workoad_identity_set", "Please migrate your application to use Workload Identity, as aad-pod-identity project is deprecated.", LocalDate.of(2023, 06, 30))
   }
 
   sh 'rm warn-about-workload-identity.sh'
