@@ -322,7 +322,7 @@ EOF
 private isNodeJSV18OrNewer() {
   def status = steps.sh label: "Determine if is nodejs is v18 or lower", script: '''
         TARGET_MIN_VERSION=18.16
-        CURRENT_NODE_VERSION=$(jq -r .engines.node package.json | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
+        CURRENT_NODE_VERSION=$(cat .nvmrc | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
 
         echo 'Current node version is $CURRENT_NODE_VERSION'
 
