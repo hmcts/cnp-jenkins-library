@@ -134,12 +134,14 @@ class GradleBuilder extends AbstractBuilder {
 
   def securityCheck() {
     def secrets = [
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Connection-String', version: '', envVariable: 'OWASPDB_V14_CONNECTION_STRING' ]
     ]
+
     localSteps.withAzureKeyvault(secrets) {
       try {
-          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${localSteps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V6_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
