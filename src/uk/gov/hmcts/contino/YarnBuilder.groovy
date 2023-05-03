@@ -331,10 +331,11 @@ private isNodeJSV18OrNewer() {
             exit 1
         fi
        ''', returnStatus: true
-      if (status ==null)
-            status = false 
-      return status
-  }
+             if (status == null || status == 1) {
+        return false
+    }
+    return true
+}
 
  private nagAboutOldNodeJSVersions() {
      if (!isNodeJSV18OrNewer()){
