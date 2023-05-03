@@ -341,7 +341,7 @@ private isNodeJSV18OrNewer() {
      if (!isNodeJSV18OrNewer()){
        WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls, https://nodejs.org/en", LocalDate.of(2023, 8, 1 ))
     }
-  }
+  }  
 
   private corepackEnable() {
     def status = steps.sh label: "corepack enable", script: '''
