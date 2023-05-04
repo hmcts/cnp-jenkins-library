@@ -331,10 +331,7 @@ private isNodeJSV18OrNewer() {
             exit 1
         fi
        ''', returnStatus: true
-             if (status == null || status == 1) {
-        return false
-    }
-    return true
+        return status
 }
 
  private nagAboutOldNodeJSVersions() {
