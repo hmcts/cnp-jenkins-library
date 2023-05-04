@@ -335,8 +335,9 @@ private isNodeJSV18OrNewer() {
 }
 
  private nagAboutOldNodeJSVersions() {
-     if (!isNodeJSV18OrNewer()){
-       WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls, https://nodejs.org/en", LocalDate.of(2023, 8, 1 ))
+      def versionStatus = isNodeJSV18OrNewer ()
+      if (versionStatus == 1) {
+        WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls, https://nodejs.org/en", LocalDate.of(2023, 8, 31 ))
     }
   }  
 
