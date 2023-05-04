@@ -345,7 +345,7 @@ private isNodeJSV18OrNewer() {
       mkdir -p \$HOME/.local/bin
       corepack enable  --install-directory \$HOME/.local/bin
     ''', returnStatus: true
-    return status
+    return status 
   }
 
   def yarn(String task, String prepend = "") {
