@@ -324,10 +324,10 @@ private isNodeJSV18OrNewer() {
         TARGET_MIN_VERSION=18.16
         CURRENT_NODE_VERSION=$(cat .nvmrc | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
 
-        echo 'Current node version is $CURRENT_NODE_VERSION'
+        echo "Current node version is $CURRENT_NODE_VERSION"
 
         if (( $(bc <<< "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION") > 0 )); then
-          exit 1;
+          exit 1
         fi
        ''', returnStatus: true
   return status
