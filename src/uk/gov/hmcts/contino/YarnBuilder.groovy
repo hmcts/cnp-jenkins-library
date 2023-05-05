@@ -12,6 +12,7 @@ class YarnBuilder extends AbstractBuilder {
   private static final String NVMRC = '.nvmrc'
   private static final Float DESIRED_MIN_VERSION = 18.16
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
+  private static final NODEJS_EXPIRATION = LocalDate.of(2023, 04, 26)
 
   def securitytest
 
@@ -316,31 +317,25 @@ EOF
 
   private nagAboutOldYarnVersions() {
      if (!isYarnV2OrNewer()){
-       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
+       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", NODEJS_EXPIRATION)
     }
   }
 
-//  private isNodeJSV18OrNewer() {
-//    if (steps.fileExists(NVMRC)) {
-//      String nodeVersion = steps.readFile(NVMRC)
-//      nodeVersion = nodeVersion.trim().substring(nodeVersion.lastIndexOf("."))
-//      Float current_version = Float.valueOf(nodeVersion)
-//      return current_version >= DESIRED_MIN_VERSION
-//    }
-//    return true
-//  }
-
   private isNodeJSV18OrNewer() {
-   def status = steps.sh(label: "Determine if is nodejs is v18.16.x or lower", script: '''
-        TARGET_MIN_VERSION=18.16
-        CURRENT_NODE_VERSION=$(cat .nvmrc | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
+    boolean validVersion = true;
 
-        if (( $(echo "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION" | bc -l) )); then
-            echo "$CURRENT_NODE_VERSION"
-        fi
-       ''', returnStdout: true).trim()
-    steps.echo("return status is-> ${status}")
-   return status == 0
+    if (steps.fileExists(NVMRC)) {
+        String nodeVersion = steps.readFile(NVMRC)
+        nodeVersion = nodeVersion.trim().substring(nodeVersion.lastIndexOf("."))
+        Float current_version = Float.valueOf(nodeVersion)
+        steps.echo("NodeJS version is -> ${current_version}")
+        validVersion = current_version >= DESIRED_MIN_VERSION
+    } else {
+        steps.echo(".nvrmc file is missing for this project")
+        WarningCollector.addPipelineWarning("old_yarn_version", "An .nvrmc file is missing for the project. see https://", NODEJS_EXPIRATION)
+    }
+
+    return validVersion
   }
 
  private nagAboutOldNodeJSVersions() {
