@@ -340,7 +340,7 @@ EOF
 
  private nagAboutOldNodeJSVersions() {
       if (!isNodeJSV18OrNewer()) {
-        steps.echo("Existing NodeJS version is less than v18.16.0 and would need to be upgraded")
+        steps.echo("NodeJS version is less than v18.16.0 and would need to be upgraded")
         WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
