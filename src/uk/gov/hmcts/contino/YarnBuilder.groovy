@@ -326,14 +326,15 @@ EOF
 
     if (steps.fileExists(NVMRC)) {
         String nodeVersion = steps.readFile(NVMRC)
-      steps.echo("nvmrc data -> ${nodeVersion}")
-        nodeVersion = nodeVersion.trim().substring(nodeVersion.lastIndexOf("."))
+        steps.echo("nvmrc data -> ${nodeVersion}")
+        nodeVersion = nodeVersion.trim()
+        nodeVersion = nodeVersion.substring(nodeVersion.lastIndexOf("."))
         Float current_version = Float.valueOf(nodeVersion)
         steps.echo("NodeJS version is -> ${current_version}")
         validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
-        steps.echo(".nvrmc file is missing for this project")
-        WarningCollector.addPipelineWarning("missing_nvrmc_file", "An .nvrmc file is missing for the project. see https://", NODEJS_EXPIRATION)
+        steps.echo(".nvmcr file is missing for this project")
+        WarningCollector.addPipelineWarning("missing_nvrmc_file", "An .nvmrc file is missing for the project. see https://", NODEJS_EXPIRATION)
     }
 
     return validVersion
