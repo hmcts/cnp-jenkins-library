@@ -330,7 +330,7 @@ private isNodeJSV18OrNewer() {
        '''
   steps.echo("return status is -> ${status}")
   String nodeVersion = steps.readFile(".nvmrc")
-  steps.echo("nodeVersion is ->" nodeVersion)
+  steps.echo("nodeVersion is -> ${nodeVersion}")
   return false
 }
 
