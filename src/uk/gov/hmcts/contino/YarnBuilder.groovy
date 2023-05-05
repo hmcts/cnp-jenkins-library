@@ -330,6 +330,7 @@ private isNodeJSV18OrNewer() {
             exit 1
         fi
        ''', returnStatus: true
+  steps.echo("return status is -> ${status}")
   return status
 }
 
