@@ -324,15 +324,14 @@ private isNodeJSV18OrNewer() {
         TARGET_MIN_VERSION=18.16
         CURRENT_NODE_VERSION=$(cat .nvmrc | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
 
-        echo "Current node version is $CURRENT_NODE_VERSION"
-
         if (( $(echo "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION" | bc -l) )); then
-            exit 1
+            echo "$CURRENT_NODE_VERSION"
         fi
-       ''', returnStatus: true
+       '''
   steps.echo("return status is -> ${status}")
-
-  return status
+  String nodeVersion = steps.readFile(".nvmrc")
+  steps.echo("nodeVersion is ->" nodeVersion)
+  return false
 }
 
  private nagAboutOldNodeJSVersions() {
