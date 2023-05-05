@@ -12,7 +12,7 @@ class YarnBuilder extends AbstractBuilder {
   private static final String NVMRC = '.nvmrc'
   private static final Float DESIRED_MIN_VERSION = 18.16
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
-  private static final NODEJS_EXPIRATION = LocalDate.of(2023, 04, 26)
+  private static final NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
 
   def securitytest
 
@@ -317,7 +317,7 @@ EOF
 
   private nagAboutOldYarnVersions() {
      if (!isYarnV2OrNewer()){
-       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", NODEJS_EXPIRATION)
+       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
     }
   }
 
