@@ -10,6 +10,7 @@ class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
+  private static final Float DESIRED_MIN_VERSION = 18.16
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
 
   def securitytest
@@ -319,20 +320,15 @@ EOF
     }
   }
 
-private isNodeJSV18OrNewer() {
-  def status = steps.sh label: "Determine if is nodejs is v18 or lower", script: '''
-        TARGET_MIN_VERSION=18.16
-        CURRENT_NODE_VERSION=$(cat .nvmrc | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
-
-        if (( $(echo "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION" | bc -l) )); then
-            echo "$CURRENT_NODE_VERSION"
-        fi
-       '''
-  steps.echo("return status is -> ${status}")
-  String nodeVersion = steps.readFile(".nvmrc")
-  steps.echo("nodeVersion is -> ${nodeVersion}")
-  return false
-}
+  private isNodeJSV18OrNewer() {
+    if (steps.fileExists(NVMRC)) {
+      String nodeVersion = steps.readFile(NVMRC)
+      nodeVersion = nodeVersion.trim().substring(nodeVersion.lastIndexOf("."))
+      Float current_version = Float.valueOf(nodeVersion)
+      return current_version >= DESIRED_MIN_VERSION
+    }
+    return true
+  }
 
  private nagAboutOldNodeJSVersions() {
       if (!isNodeJSV18OrNewer()) {
