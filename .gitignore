@@ -8,3 +8,4 @@ out
 .project
 bin
 .settings
+.DS_Store
