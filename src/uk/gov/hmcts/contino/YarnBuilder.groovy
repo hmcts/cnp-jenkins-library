@@ -329,13 +329,12 @@ private isNodeJSV18OrNewer() {
         if (( $(bc <<< "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION") > 0 )); then
           exit 1;
         fi
-       '''
+       ''', returnStatus: true
   return status
 }
 
  private nagAboutOldNodeJSVersions() {
-      def versionStatus = isNodeJSV18OrNewer ()
-      if (versionStatus == 1) {
+      if (!isNodeJSV18OrNewer()) {
         WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls, https://nodejs.org/en", LocalDate.of(2023, 8, 31 ))
     }
   }
@@ -345,7 +344,7 @@ private isNodeJSV18OrNewer() {
       mkdir -p \$HOME/.local/bin
       corepack enable  --install-directory \$HOME/.local/bin
     ''', returnStatus: true
-    return status 
+    return status
   }
 
   def yarn(String task, String prepend = "") {
