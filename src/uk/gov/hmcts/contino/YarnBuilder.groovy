@@ -326,8 +326,8 @@ private isNodeJSV18OrNewer() {
 
         echo "Current node version is $CURRENT_NODE_VERSION"
 
-        if (( $(bc <<< "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION") > 0 )); then
-          exit 1
+        if (( $(echo "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION" | bc -l) )); then
+            exit 1
         fi
        ''', returnStatus: true
   return status
