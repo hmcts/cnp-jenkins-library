@@ -331,18 +331,16 @@ EOF
 //  }
 
   private isNodeJSV18OrNewer() {
-  def status = steps.sh(label: "Determine if is nodejs is v18.16.x or lower", script: '''
-        set +ex
+   def status = steps.sh(label: "Determine if is nodejs is v18.16.x or lower", script: '''
         TARGET_MIN_VERSION=18.16
         CURRENT_NODE_VERSION=$(cat .nvmrc | grep -Eo '\\<[0-9]{2}\\.[0-9]{2,5}\\>')
 
         if (( $(echo "$CURRENT_NODE_VERSION < $TARGET_MIN_VERSION" | bc -l) )); then
             echo "$CURRENT_NODE_VERSION"
-            exit 1
         fi
-       ''', returnStatus: true)
+       ''', returnStdout: true).trim()
     steps.echo("return status is-> ${status}")
-  return status
+   return status == 0
   }
 
  private nagAboutOldNodeJSVersions() {
