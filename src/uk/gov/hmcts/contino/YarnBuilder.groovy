@@ -10,6 +10,8 @@ class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
+  private static final Float DESIRED_MIN_VERSION = 18.16
+  private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
 
   def securitytest
@@ -166,7 +168,7 @@ class YarnBuilder extends AbstractBuilder {
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
     issuesParsed.removeIf { it.type == 'auditSummary' }
 
-   issuesParsed = issuesParsed.collect {
+    issuesParsed = issuesParsed.collect {
       mapYarnAuditToOurReport(it)
     }
 
@@ -314,8 +316,32 @@ EOF
   }
 
   private nagAboutOldYarnVersions() {
-     if (!isYarnV2OrNewer()){
-       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
+    if (!isYarnV2OrNewer()){
+      WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
+    }
+  }
+
+  private isNodeJSV18OrNewer() {
+    boolean validVersion = true;
+
+    if (steps.fileExists(NVMRC)) {
+      String nodeVersion = steps.readFile(NVMRC)
+      nodeVersion = nodeVersion.trim().substring(0, nodeVersion.lastIndexOf("."))
+      Float current_version = Float.valueOf(nodeVersion)
+      steps.echo("Existing NodeJS at v${current_version}.x")
+      validVersion = current_version >= DESIRED_MIN_VERSION
+    } else {
+      steps.echo(".nvrmc file is missing for this project")
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An .nvrmc file is missing for the project. see https://", NODEJS_EXPIRATION)
+    }
+
+    return validVersion
+  }
+
+  private nagAboutOldNodeJSVersions() {
+    if (!isNodeJSV18OrNewer()) {
+      steps.echo("NodeJS version is less than v18.16.0 and would need to be upgraded")
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18ls, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
 
@@ -361,6 +387,7 @@ EOF
   def setupToolVersion() {
     super.setupToolVersion()
     nagAboutOldYarnVersions()
+    nagAboutOldNodeJSVersions()
   }
 
 }
