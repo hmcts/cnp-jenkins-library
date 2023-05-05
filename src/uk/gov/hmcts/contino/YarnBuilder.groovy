@@ -326,7 +326,9 @@ EOF
 
     if (steps.fileExists(NVMRC)) {
       String nodeVersion = steps.readFile(NVMRC)
-      nodeVersion = nodeVersion.trim().substring(0, nodeVersion.lastIndexOf("."))
+      nodeVersion = nodeVersion
+                    .trim()
+                    .substring(0, nodeVersion.lastIndexOf("."))
       Float current_version = Float.valueOf(nodeVersion)
       steps.echo("Existing NodeJS at v${current_version}.x")
       validVersion = current_version >= DESIRED_MIN_VERSION
@@ -341,7 +343,7 @@ EOF
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
       steps.echo("NodeJS version is less than v18.16.0 and would need to be upgraded")
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 at least, https://nodejs.org/en", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 at latest, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
 
