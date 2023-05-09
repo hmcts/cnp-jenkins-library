@@ -340,7 +340,7 @@ EOF
 
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater, https://nodejs.org/en", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
 
