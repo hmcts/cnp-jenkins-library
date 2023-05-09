@@ -150,7 +150,7 @@ class AcrTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:${IMAGE_TAG}- --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
+      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:${IMAGE_TAG}-.* --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
   }
