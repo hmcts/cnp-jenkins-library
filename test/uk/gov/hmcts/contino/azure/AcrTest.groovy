@@ -145,12 +145,12 @@ class AcrTest extends Specification {
     when:
     dockerImage.getImageTag() >> IMAGE_TAG
     dockerImage.getShortName() >> IMAGE_NAME
-    dockerImage.getBaseShortName() >> "${IMAGE_REPO}:${IMAGE_TAG}"
+    dockerImage.getRepositoryName() >> IMAGE_REPO
     acr.purgeOldTags(DockerImage.DeploymentStage.PROD, dockerImage)
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:${IMAGE_TAG}-.* --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
+      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:^${IMAGE_TAG}-.* --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
   }
