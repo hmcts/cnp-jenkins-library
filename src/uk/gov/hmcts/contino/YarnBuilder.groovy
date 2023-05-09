@@ -330,10 +330,8 @@ EOF
       Float current_version = valueOf(nodeVersion
                                           .trim()
                                           .substring(0, nodeVersion.lastIndexOf(".")))
-      steps.echo("Existing NodeJS at v${current_version}.x")
       validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
-      steps.echo(".nvrmc file is missing for this project")
       WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", NODEJS_EXPIRATION)
     }
 
@@ -342,7 +340,6 @@ EOF
 
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
-      steps.echo("NodeJS version is less than v18.16.0. Please update your projects .nvmrc file with the desired version")
       WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
