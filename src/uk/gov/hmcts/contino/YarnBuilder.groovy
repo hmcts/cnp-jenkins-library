@@ -334,7 +334,7 @@ EOF
       validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
       steps.echo(".nvrmc file is missing for this project")
-      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template", NODEJS_EXPIRATION)
     }
 
     return validVersion
@@ -342,7 +342,7 @@ EOF
 
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
-      steps.echo("NodeJS version is less than v18.16.0 and would need to be upgraded")
+      steps.echo("NodeJS version is less than v18.16.0. Please update your projects .nvmrc file with the desired version")
       WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
