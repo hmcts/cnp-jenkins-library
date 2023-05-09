@@ -11,14 +11,14 @@ class DockerImage {
     PR('pr'),
     STAGING('staging'),
     PREVIEW('preview'),
-    PROD('prod', "5d", 5),
+    PROD('prod', "5d", 6),
     LATEST('latest')
 
     final String label
     final String purgeAgo
     final String purgeKeep
 
-    private DeploymentStage(String label, String purgeAgo="2d", int keep=3) {
+    private DeploymentStage(String label, String purgeAgo="2h", int keep=3) {
       this.label = label
       this.purgeAgo = purgeAgo
       this.purgeKeep = keep
