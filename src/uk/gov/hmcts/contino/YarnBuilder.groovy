@@ -334,7 +334,7 @@ EOF
       validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
       steps.echo(".nvrmc file is missing for this project")
-      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", NODEJS_EXPIRATION)
     }
 
     return validVersion
