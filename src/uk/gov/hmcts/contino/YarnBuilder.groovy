@@ -5,11 +5,14 @@ import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
+import static java.lang.Float.valueOf
 
 class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
+  private static final Float DESIRED_MIN_VERSION = 18.16
+  private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
 
   def securitytest
@@ -329,8 +332,30 @@ EOF
   }
 
   private nagAboutOldYarnVersions() {
-    if (!isYarnV2OrNewer()) {
+
+    if (!isYarnV2OrNewer()){
       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
+    }
+  }
+
+  private isNodeJSV18OrNewer() {
+    boolean validVersion = true;
+    if (steps.fileExists(NVMRC)) {
+      String nodeVersion = steps.readFile(NVMRC)
+      Float current_version = valueOf(nodeVersion
+                                          .trim()
+                                          .substring(0, nodeVersion.lastIndexOf(".")))
+      validVersion = current_version >= DESIRED_MIN_VERSION
+    } else {
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", NODEJS_EXPIRATION)
+    }
+
+    return validVersion
+  }
+
+  private nagAboutOldNodeJSVersions() {
+    if (!isNodeJSV18OrNewer()) {
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
 
@@ -377,6 +402,7 @@ EOF
     super.setupToolVersion()
     nagAboutOldYarnVersions()
     nagAboutYarnAuditChange()
+    nagAboutOldNodeJSVersions()
   }
 
 }
