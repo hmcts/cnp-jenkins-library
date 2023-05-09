@@ -5,6 +5,7 @@ import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
+import static java.lang.Float.valueOf
 
 class YarnBuilder extends AbstractBuilder {
 
@@ -326,10 +327,9 @@ EOF
 
     if (steps.fileExists(NVMRC)) {
       String nodeVersion = steps.readFile(NVMRC)
-      nodeVersion = nodeVersion
-                    .trim()
-                    .substring(0, nodeVersion.lastIndexOf("."))
-      Float current_version = Float.valueOf(nodeVersion)
+      Float current_version = valueOf(nodeVersion
+                                          .trim()
+                                          .substring(0, nodeVersion.lastIndexOf(".")))
       steps.echo("Existing NodeJS at v${current_version}.x")
       validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
@@ -343,7 +343,7 @@ EOF
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
       steps.echo("NodeJS version is less than v18.16.0 and would need to be upgraded")
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 at latest, https://nodejs.org/en", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater, https://nodejs.org/en", NODEJS_EXPIRATION)
     }
   }
 
