@@ -10,15 +10,18 @@ class DockerImage {
   enum DeploymentStage {
     PR('pr'),
     STAGING('staging'),
-    AAT('aat'),
     PREVIEW('preview'),
-    PROD('prod'),
+    PROD('prod', "5d", 5),
     LATEST('latest')
 
     final String label
+    final String purgeAgo
+    final String purgeKeep
 
-    private DeploymentStage(String label) {
+    private DeploymentStage(String label, String purgeAgo="2d", int keep=3) {
       this.label = label
+      this.purgeAgo = purgeAgo
+      this.purgeKeep = keep
     }
   }
 
