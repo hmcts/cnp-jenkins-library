@@ -165,7 +165,8 @@ class Acr extends Az {
   }
 
   private def purgeOldTags(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
-    String filterPattern = dockerImage.getRepositoryName()+":^"+dockerImage.getImageTag()+"-.*"
+    String purgeTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getImageTag() : stage.getLabel()
+    String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
     this.az "acr run --registry ${registryName} --subscription ${registrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
   }
 }

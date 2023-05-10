@@ -130,8 +130,8 @@ class AcrTest extends Specification {
 
   def "hasTag should return false in case of error"() {
     when:
-      dockerImage.getTag() >> "some_tag"
-      dockerImage.getRepositoryName() >> "some_repo_name"
+      dockerImage.getTag() >> IMAGE_TAG
+      dockerImage.getRepositoryName() >> IMAGE_REPO
       acr.steps.sh(_) >> ''
       acr.steps.error(_) >> { throw new Exception(_ as String) }
 
@@ -150,7 +150,7 @@ class AcrTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:^${IMAGE_TAG}-.* --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
+      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:^prod-.* --ago 5d --keep 6 --untagged --concurrency 5\" /dev/null") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
   }
