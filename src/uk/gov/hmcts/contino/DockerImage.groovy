@@ -11,7 +11,7 @@ class DockerImage {
     PR('pr'),
     STAGING('staging'),
     PREVIEW('preview'),
-    PROD('prod', "5d", 6),
+    PROD('prod', "5d", 5),
     LATEST('latest')
 
     final String label
