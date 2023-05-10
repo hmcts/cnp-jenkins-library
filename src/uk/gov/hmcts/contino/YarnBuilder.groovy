@@ -99,8 +99,8 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
-  def fullFunctionalTest(){
-    try{
+  def fullFunctionalTest() {
+    try {
       yarn("test:fullfunctional")
     }
     finally {
@@ -110,7 +110,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def mutationTest() {
-    try{
+    try {
       yarn("test:mutation")
     }
     finally {
@@ -145,6 +145,7 @@ class YarnBuilder extends AbstractBuilder {
       """
     } finally {
       if (yarnV2OrNewer) {
+
         steps.sh """
           cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
           cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
@@ -164,7 +165,8 @@ class YarnBuilder extends AbstractBuilder {
 
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
-    List<Object> issuesParsed = issues.split( '\n' ).collect { jsonSlurper.parseText(it) }
+
+    List<Object> issuesParsed = issues.split('\n').collect { jsonSlurper.parseText(it) }
 
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
     issuesParsed.removeIf { it.type == 'auditSummary' }
@@ -250,7 +252,7 @@ EOF
     yarn("test:can-i-deploy:consumer")
   }
 
-  private runYarn(String task, String prepend = ""){
+  private runYarn(String task, String prepend = "") {
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
@@ -309,6 +311,19 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private auditDisparity() {
+    def status = steps.sh label: "Determine whether yarn audit returns transitive dependency issues that are not currently caught.",
+      script: "yarn npm audit --recursive --environment production", returnStatus: true
+    return status
+  }
+
+  private nagAboutYarnAuditChange() {
+    if (auditDisparity()) {
+      WarningCollector.addPipelineWarning("transitive_dependency_audit_incoming",
+        "We will be adding the --recursive flag to CVE scanning to check your transitive dependencies, your security scan is currently failing with these dependencies added to the scan. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 06, 15))
+    }
+  }
+
   private isYarnV2OrNewer() {
     def status = steps.sh label: "Determine if is yarn v1", script: '''
                 ! grep packageManager package.json | grep yarn@[2-9]
@@ -317,6 +332,7 @@ EOF
   }
 
   private nagAboutOldYarnVersions() {
+
     if (!isYarnV2OrNewer()){
       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
     }
@@ -324,7 +340,6 @@ EOF
 
   private isNodeJSV18OrNewer() {
     boolean validVersion = true;
-
     if (steps.fileExists(NVMRC)) {
       String nodeVersion = steps.readFile(NVMRC)
       Float current_version = valueOf(nodeVersion
@@ -386,6 +401,7 @@ EOF
   def setupToolVersion() {
     super.setupToolVersion()
     nagAboutOldYarnVersions()
+    nagAboutYarnAuditChange()
     nagAboutOldNodeJSVersions()
   }
 

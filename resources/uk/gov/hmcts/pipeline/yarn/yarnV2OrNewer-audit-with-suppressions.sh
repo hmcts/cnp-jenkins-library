@@ -3,10 +3,18 @@
 # vulnerabilities without a fix
 
 set +e
-yarn npm audit --environment production
-result=$?
+today=$(date +%Y-%m-%d)
+enddate="2023-06-15"
 
-yarn npm audit --environment production --json > yarn-audit-result
+if [[ "$today" > "$enddate" ]]; then
+yarn npm audit --recursive --environment production
+result=$?
+yarn npm audit --recursive --environment production --json > yarn-audit-result
+else
+ yarn npm audit --environment production
+ result=$?
+ yarn npm audit --environment production --json > yarn-audit-result
+fi
 
 set -e
 
@@ -19,7 +27,7 @@ if [ "$result" != 0 ]; then
     if diff -q yarn-audit-known-issues yarn-audit-issues > /dev/null 2>&1; then
       rm -f yarn-audit-issues
       echo
-      echo Ignorning known vulnerabilities
+      echo Ignoring known vulnerabilities
       exit 0
     fi
   fi
