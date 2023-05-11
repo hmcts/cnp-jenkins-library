@@ -45,6 +45,7 @@ def call(params) {
 
         pcr.callAround("${deploymentStage.label}:promotion") {
           acr.retagForStage(deploymentStage, dockerImage)
+          acr.purgeOldTags(deploymentStage, dockerImage)
           if (subscription != 'sandbox' && subscription != 'sbox') {
             reconcileFluxImageRepository product: product, component: component
           }
@@ -53,6 +54,7 @@ def call(params) {
             if (config.dockerTestBuild && projectBranch.isMaster() && fileExists('build.gradle')) {
               def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
               acr.retagForStage(deploymentStage, dockerImageTest)
+              acr.purgeOldTags(deploymentStage, dockerImageTest)
             }
           }
         }

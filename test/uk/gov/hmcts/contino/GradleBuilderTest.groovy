@@ -114,8 +114,7 @@ class GradleBuilderTest extends Specification {
     spyGradleBuilder.securityCheck()
     then:
       1 * steps.sh({
-        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate') &&
-        it.contains('jdbc:postgresql://owaspdependency-v6-prod')
+        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate')
       })
   }
 

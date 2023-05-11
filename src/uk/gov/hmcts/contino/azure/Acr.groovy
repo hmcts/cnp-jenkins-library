@@ -139,12 +139,7 @@ class Acr extends Az {
   }
 
   def hasTag(DockerImage dockerImage) {
-    // on the master branch we search for an AAT tagged image with the same commit hash
-    if (dockerImage.getTag().startsWith("staging")) {
-      return hasTag(DockerImage.DeploymentStage.AAT, dockerImage)
-    } else {
       return hasRepoTag(dockerImage.getTag(), dockerImage.getRepositoryName())
-    }
   }
 
   def hasTag(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
@@ -169,4 +164,9 @@ class Acr extends Az {
     return tagFound
   }
 
+  private def purgeOldTags(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
+    String purgeTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getImageTag() : stage.getLabel()
+    String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
+    this.az "acr run --registry ${registryName} --subscription ${registrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
+  }
 }
