@@ -10,7 +10,9 @@ class AcrTest extends Specification {
   static final String REGISTRY_NAME = 'cnpacr'
   static final String REGISTRY_RESOURCE_GROUP = 'cnp-acr-rg'
   static final String REGISTRY_SUBSCRIPTION = 'a-sub'
-  static final String IMAGE_NAME    = 'hmcts/alpine:sometag'
+  static final String IMAGE_NAME = 'hmcts/alpine:sometag'
+  static final String IMAGE_REPO = 'hmcts/alpine'
+  static final String IMAGE_TAG = "sometag"
 
   def steps
   def acr
@@ -46,7 +48,7 @@ class AcrTest extends Specification {
 
   def "build() should call az with acr build and correct arguments"() {
     when:
-      dockerImage.getImageTag() >> "sometag"
+      dockerImage.getImageTag() >> IMAGE_TAG
       dockerImage.getBaseShortName() >> IMAGE_NAME
       acr.build(dockerImage)
 
@@ -59,7 +61,7 @@ class AcrTest extends Specification {
 
   def "build() should call az with acr build and correct additional arguments"() {
     when:
-    dockerImage.getImageTag() >> "sometag"
+    dockerImage.getImageTag() >> IMAGE_TAG
     dockerImage.getBaseShortName() >> IMAGE_NAME
     acr.build(dockerImage, " --build-arg DEV_MODE=true")
 
@@ -113,7 +115,7 @@ class AcrTest extends Specification {
 
   def "retagForStage() should call the import command with the provided arguments"() {
     when:
-      dockerImage.getImageTag() >> "sometag"
+      dockerImage.getImageTag() >> IMAGE_TAG
       dockerImage.getShortName() >> IMAGE_NAME
       dockerImage.getShortName(DockerImage.DeploymentStage.PROD) >> "${IMAGE_NAME}-prod"
       dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
@@ -128,8 +130,8 @@ class AcrTest extends Specification {
 
   def "hasTag should return false in case of error"() {
     when:
-      dockerImage.getTag() >> "some_tag"
-      dockerImage.getRepositoryName() >> "some_repo_name"
+      dockerImage.getTag() >> IMAGE_TAG
+      dockerImage.getRepositoryName() >> IMAGE_REPO
       acr.steps.sh(_) >> ''
       acr.steps.error(_) >> { throw new Exception(_ as String) }
 
@@ -137,6 +139,20 @@ class AcrTest extends Specification {
 
     then:
       assert hasTag == false
+  }
+
+  def "purgeOldTags() should call the purge command with the provided arguments"() {
+    when:
+    dockerImage.getImageTag() >> IMAGE_TAG
+    dockerImage.getShortName() >> IMAGE_NAME
+    dockerImage.getRepositoryName() >> IMAGE_REPO
+    acr.purgeOldTags(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:^prod-.* --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
   }
 
 }

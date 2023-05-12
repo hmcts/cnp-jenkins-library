@@ -3,8 +3,8 @@ build
 out
 .idea
 *.iml
-.gradle
 .classpath
 .project
 bin
 .settings
+.DS_Store

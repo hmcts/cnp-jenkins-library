@@ -57,6 +57,7 @@ withPipeline(type, product, component) {
 }
 ```
 
+#### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
 Branch | Environment
@@ -64,7 +65,7 @@ Branch | Environment
 `master` | `aat` then `prod`
 `demo` | `demo`
 `perftest` | `perftest`
-PR branch| `preview` (ASE or AKS depending on your config)
+PR branch| `preview`
 
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
@@ -214,7 +215,7 @@ Conditions are:
 * Failure
 * Always
 
-Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
+Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-and-environment-mapping)
 
  * checkout
  * build
