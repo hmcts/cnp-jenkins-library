@@ -81,6 +81,15 @@ def call(String product, String component = null, Closure body) {
           expires: pipelineConfig.expiryDate,
           pipelineCallbacksRunner: callbacksRunner,
         )
+
+        sectionInfraBuild(
+          subscription: subscription.previewName,
+          environment: environment.previewName,
+          product: product,
+          planOnly: true,
+          component: component,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

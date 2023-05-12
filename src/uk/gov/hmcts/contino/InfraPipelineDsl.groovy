@@ -11,4 +11,8 @@ class InfraPipelineDsl extends CommonPipelineDsl implements Serializable {
     this.steps = steps
   }
 
+  void planOnly() {
+    config.planOnly = true
+  }
+
 }
