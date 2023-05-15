@@ -157,6 +157,25 @@ def call(params) {
       }
     }
 
+    if (noSkipImgBuild) {
+      stageWithAgent("Promote Docker Image", product) {
+        if (dockerFileExists) {
+          def deploymentStage = DockerImage.DeploymentStage.STAGING
+          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
+          if (isOnPreview) {
+            deploymentStage = DockerImage.DeploymentStage.PREVIEW
+          }
+          onPR {
+            deploymentStage = DockerImage.DeploymentStage.PR
+          }
+          withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
+          }
+        }
+      }
+    }
+
     if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {

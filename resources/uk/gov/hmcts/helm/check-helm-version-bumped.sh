@@ -9,7 +9,7 @@ EMAIL_ID=${6}
 
 git fetch origin master:master
 
-git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/values.yaml
+git diff -s --exit-code master charts/"${CHART_DIRECTORY}"/values.yaml
 
 if [ $? -eq 1 ]; then
   echo "Diff in values.yaml detected"
@@ -18,7 +18,7 @@ else
   DIFF_IN_VALUES=false
 fi
 
-git diff -s --exit-code origin/master charts/"${CHART_DIRECTORY}"/Chart.yaml
+git diff -s --exit-code master charts/"${CHART_DIRECTORY}"/Chart.yaml
 
 if [ $? -eq 1 ]; then
   echo "Diff in Chart.yaml detected"
@@ -42,7 +42,7 @@ if [[ ${DIFF_IN_VALUES} = 'false' ]]  && [[ ${DIFF_IN_CHART} = 'false' ]]  && [[
   exit 0
 fi
 
-git diff origin/master charts/"${CHART_DIRECTORY}"/Chart.yaml | grep --quiet '+version'
+git diff master charts/"${CHART_DIRECTORY}"/Chart.yaml | grep --quiet '+version'
 
 if [ $? -eq 0 ]; then
   echo "Chart.yaml version has been bumped :)"
