@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(String vaultName, String environment, AppPipelineConfig config, Closure body) {
-  Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
+  def secrets = config.vaultSecrets
   echo ("secrets   ...... $secrets")
   echo ("Vault Name   ...... ${vaultName}")
   echo ("env Name   ...... ${environment}")
@@ -22,7 +22,7 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
     env.DEFINITION_STORE_URL_BASE = "http://ccd-definition-store-api-prod.service.core-compute-prod.internal"
   }
 
-  Map<String, List<Map<String, Object>>> hldsSecrets = [
+  def hldsSecrets = [
     'ccd': [
       secret('ccd-api-gateway-oauth2-client-secret', 'CCD_API_GATEWAY_OAUTH2_CLIENT_SECRET')
     ],
@@ -36,13 +36,12 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   ]
 
   if (!secrets.isEmpty()) {
-    secrets = compareMappedSecrets(hldsSecrets, createCopyOf(secrets))
+    echo "TODO: Implement HLD secrets override to include: \n $secrets"
   } else {
-    secrets = hldsSecrets
+    echo "No Secrets Provided.."
   }
-  echo("final secrets   ...... $secrets")
 
-  executeClosure(secrets.entrySet().iterator(), vaultName, dependedEnv) {
+  executeClosure(hldsSecrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
   }
 }
@@ -73,41 +72,4 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
    version    : '',
    envVariable: envVar
   ]
-}
-
-static def compareMappedSecrets(Map<String, List<Map<String, Object>>> defaultSecretsGroup, Map<String, List<Map<String, Object>>> newSecretsGroup) {
-  List<Map<String, Object>> finalSecretsList = new ArrayList()
-  defaultSecretsGroup.iterator().forEachRemaining {
-    def currentDefaultItem = it
-    newSecretsGroup.putIfAbsent(currentDefaultItem.key, currentDefaultItem.value)
-    if (currentDefaultItem.value != newSecretsGroup.get(currentDefaultItem.key)) {
-      finalSecretsList = compareListOfMappedSecrets(currentDefaultItem.value, newSecretsGroup.get(currentDefaultItem.key))
-      newSecretsGroup.replace(currentDefaultItem.key, finalSecretsList)
-    }
-  }
-  return newSecretsGroup
-}
-
-// compare each secret in the list
-static List<Map<String, Object>> compareListOfMappedSecrets(List<Map<String, Object>> defaultSecretsList, List<Map<String, Object>> newSecretsList) {
-  Set<Map<String, Object>> finalSet = new HashSet<>()
-  defaultSecretsList.iterator().forEachRemaining {
-    def defaultSecret = it
-    newSecretsList.forEach {
-      def newSecret = it
-      finalSet.addAll(defaultSecret.get("envVariable").toString() == newSecret.get("envVariable").toString() ? newSecret : defaultSecret, newSecret)
-    }
-  }
-  return new ArrayList<>(finalSet)
-}
-
-static def createCopyOf(Map<String, List<Map<String, Object>>> secrets) {
-  Map<String, List<Map<String, Object>>> secretsCopy = new HashMap<>()
-  secrets.iterator().forEachRemaining {
-    def key = it.key
-    secretsCopy.putAll(!it.key.contains('-${env}') ?
-            Map.of(it.key, it.getValue()) :
-            Map.of(key.replace('-${env}', ""), it.getValue()))
-  }
-  return secretsCopy
 }
