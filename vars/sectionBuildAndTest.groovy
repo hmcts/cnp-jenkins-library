@@ -170,6 +170,7 @@ def call(params) {
           }
           withAcrClient(subscription) {
             acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
           }
         }
       }
