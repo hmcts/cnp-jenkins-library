@@ -79,15 +79,19 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 def overrideHldsSecrets(Map<String, List<Map<String, Object>>> hldsSecrets, Iterator<Map.Entry<String, List<Map<String, Object>>>> secretIterator) {
   def entry = secretIterator.next()
+  String entryKey = entry.key
+  if (entry.key.contains('-${env}')) {
+    // Some entries may have the env suffix. We strip that out here
+    entryKey = entry.key.replace('-${env}', '')
+  }
 
-  if (!hldsSecrets.keySet().contains(entry.key)) {
-    hldsSecrets.putIfAbsent(entry.key, entry.value)
+  if (!hldsSecrets.keySet().contains(entryKey)) {
+    hldsSecrets.putIfAbsent(entryKey, entry.value)
   } else {
-    echo "Overriding secrets in item: " + entry.key
-
-    def existingItems = hldsSecrets.get(entry.key)
+    echo ("Overriding secrets in item: " + entryKey)
+    def existingItems = hldsSecrets.get(entryKey)
     List<Map<String, Object>> finalSecrets = new ArrayList<>()
-    
+
     // Compare the new secrets with the existing ones. Add the new ones to the final list
     for (Map<String, Object> secretValue : entry.value) {
       for (Map<String, Object> existingItem : existingItems) {
@@ -106,7 +110,7 @@ def overrideHldsSecrets(Map<String, List<Map<String, Object>>> hldsSecrets, Iter
       if (!finalSecrets["envVariable"].contains(existingItem["envVariable"]) && !finalSecrets.contains(existingItem)) {
         finalSecrets.add(existingItem)
       }}
-    hldsSecrets.replace(entry.getKey(), finalSecrets as List<Map<String, Object>>)
+    hldsSecrets.replace(entryKey, finalSecrets as List<Map<String, Object>>)
   }
 
   if (secretIterator.hasNext()) {
