@@ -36,10 +36,13 @@ def call(String vaultName, String environment, AppPipelineConfig config, Closure
   ]
 
   if (!secrets.isEmpty()) {
-    echo "TODO: Implement HLD secrets override to include: \n $secrets"
+    echo "New Secrets Provided.."
+    overrideHldsSecrets(hldsSecrets, secrets.entrySet().iterator())
   } else {
     echo "No Secrets Provided.."
   }
+
+  echo "final secrets  ...... $hldsSecrets"
 
   executeClosure(hldsSecrets.entrySet().iterator(), vaultName, dependedEnv) {
     body.call()
@@ -72,4 +75,41 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
    version    : '',
    envVariable: envVar
   ]
+}
+
+def overrideHldsSecrets(Map<String, List<Map<String, Object>>> hldsSecrets, Iterator<Map.Entry<String, List<Map<String, Object>>>> secretIterator) {
+  def entry = secretIterator.next()
+
+  if (!hldsSecrets.keySet().contains(entry.key)) {
+    hldsSecrets.putIfAbsent(entry.key, entry.value)
+  } else {
+    echo "Overriding secrets in item: " + entry.key
+
+    def existingItems = hldsSecrets.get(entry.key)
+    List<Map<String, Object>> finalSecrets = new ArrayList<>()
+    
+    // Compare the new secrets with the existing ones. Add the new ones to the final list
+    for (Map<String, Object> secretValue : entry.value) {
+      for (Map<String, Object> existingItem : existingItems) {
+        if (secretValue["envVariable"].toString() == existingItem["envVariable"].toString()) {
+          finalSecrets.add(secretValue)
+          break
+        }
+      }
+      if (!finalSecrets.contains(secretValue)) {
+        finalSecrets.add(secretValue)
+      }
+    }
+
+    // Add the existing hldsSecrets if they are not in the final list
+    for (Map<String, Object> existingItem : existingItems) {
+      if (!finalSecrets["envVariable"].contains(existingItem["envVariable"]) && !finalSecrets.contains(existingItem)) {
+        finalSecrets.add(existingItem)
+      }}
+    hldsSecrets.replace(entry.getKey(), finalSecrets as List<Map<String, Object>>)
+  }
+
+  if (secretIterator.hasNext()) {
+    overrideHldsSecrets(hldsSecrets, secretIterator)
+  }
 }
