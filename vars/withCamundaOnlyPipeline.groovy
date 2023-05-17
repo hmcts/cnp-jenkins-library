@@ -73,6 +73,7 @@ def call(type, String product, String component, String s2sServiceName, String t
         'Unit tests and Sonar scan': {
           pcr.callAround('test') {
             timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+              builder.setupToolVersion()
               builder.test()
             }
           }
