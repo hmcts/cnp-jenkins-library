@@ -67,6 +67,7 @@ def call(type, String product, String component, String s2sServiceName, String t
 
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
+        builder.setupToolVersion()
       }
 
       parallel(
