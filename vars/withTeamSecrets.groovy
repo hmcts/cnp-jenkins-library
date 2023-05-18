@@ -3,6 +3,8 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 def call(AppPipelineConfig config, String environment, Closure body) {
   Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
   Map<String, String> vaultOverrides = config.vaultEnvironmentOverrides
+  
+  echo ("withTeamSecrets   ...... $secrets")
 
   if (secrets.isEmpty()) {
     body.call()
@@ -36,6 +38,12 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 
 @SuppressWarnings("GrMethodMayBeStatic") // no idea how a static method would work inside a jenkins step...
 private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry, String environment, Map<String, String> vaultOverrides) {
-  def vaultEnv = vaultOverrides.get(environment, environment)
-  return "https://${entry.key.replace('${env}', vaultEnv)}.vault.azure.net/" // temp comment.TODO remove me
+  // temp comment.TODO remove me
+  def productName = entry.key
+  def dependedEnv = vaultOverrides.get(environment, environment)
+  String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
+  echo "theKeyVaultUrl: ${theKeyVaultUrl}"
+  //
+
+  return "https://${entry.key.replace('${env}', dependedEnv)}.vault.azure.net/"
 }
