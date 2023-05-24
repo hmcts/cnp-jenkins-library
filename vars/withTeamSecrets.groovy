@@ -42,7 +42,7 @@ private String getKeyVaultUrl(Map.Entry<String, List<Map<String, Object>>> entry
   def productName = entry.key
   def dependedEnv = vaultOverrides.get(environment, environment)
   String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
-  echo "theKeyVaultUrl: ${theKeyVaultUrl}"
+  echo "withTeamSecrets theKeyVaultUrl: ${theKeyVaultUrl}"
   //
 
   return "https://${entry.key.replace('${env}', dependedEnv)}.vault.azure.net/"

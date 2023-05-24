@@ -55,6 +55,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
   def productName = entry.key != '${vaultName}' ? entry.key : vaultName
 
   String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
+  echo "withDefinitionImport theKeyVaultUrl: ${theKeyVaultUrl}"
 
   withAzureKeyvault(
     azureKeyVaultSecrets: entry.value,
