@@ -1,18 +1,25 @@
 {
   "extends": [
-    "config:base"
+    "local>hmcts/.github:renovate-config"
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["org.codehaus.groovy:groovy-dateutil", "org.codehaus.groovy:groovy-all"],
+      "matchPackageNames": [
+        "org.codehaus.groovy:groovy-dateutil",
+        "org.codehaus.groovy:groovy-all"
+      ],
       "allowedVersions": "<3"
     },
     {
-      "matchPackageNames": ["org.spockframework:spock-core"],
+      "matchPackageNames": [
+        "org.spockframework:spock-core"
+      ],
       "allowedVersions": "/^[0-9]+\\.[0-9]+(\\.[0-9]+)?-groovy-2\\.5$/"
     },
     {
-      "matchPackageNames": ["openjdk"],
+      "matchPackageNames": [
+        "openjdk"
+      ],
       "allowedVersions": "<12"
     }
   ]
