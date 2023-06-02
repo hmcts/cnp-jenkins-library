@@ -237,6 +237,9 @@ EOF
         steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
       }
+      } catch(err) {
+      steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
+    }
     }
 
     def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
