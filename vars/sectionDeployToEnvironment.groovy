@@ -31,7 +31,6 @@ def call(params) {
           onPreview {
             deploymentNumber = githubCreateDeployment()
           }
-          builder.setupToolVersion()
 
           withSubscription(subscription) {
             dir('infrastructure') {
