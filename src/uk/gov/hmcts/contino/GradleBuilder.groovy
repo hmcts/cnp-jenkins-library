@@ -222,35 +222,6 @@ EOF
       functionalTest()
   }
 
-  def dbMigrate(String vaultName, String microserviceName) {
-    def secrets = [
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT' ],
-      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
-    ]
-
-    try {
-      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
-      if (statusCode == 0) {
-        steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
-        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-      }
-      } catch(err) {
-      steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
-    }
-
-    gradle("--version") // ensure wrapper has been downloaded
-    localSteps.sh "java -version"
-
-    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
-
-    localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
-      gradle("-Pdburl='${localSteps.env.POSTGRES_HOST}:${localSteps.env.POSTGRES_PORT}/${localSteps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${localSteps.env.POSTGRES_USER}' -Pflyway.password='${localSteps.env.POSTGRES_PASS}' migratePostgresDatabase")
-    }
-  }
-
   @Override
   def setupToolVersion() {
     try {
@@ -276,6 +247,22 @@ EOF
 
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
+  }
+
+  def dbMigrate(String vaultName, String microserviceName) {
+    def secrets = [
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
+    ]
+
+    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
+
+    localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
+      gradle("-Pdburl='${localSteps.env.POSTGRES_HOST}:${localSteps.env.POSTGRES_PORT}/${localSteps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${localSteps.env.POSTGRES_USER}' -Pflyway.password='${localSteps.env.POSTGRES_PASS}' migratePostgresDatabase")
+    }
   }
 
   def hasPlugin(String pluginName) {
