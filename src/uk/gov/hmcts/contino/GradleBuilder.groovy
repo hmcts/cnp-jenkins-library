@@ -243,7 +243,6 @@ EOF
 
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
-    }
 
     def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
