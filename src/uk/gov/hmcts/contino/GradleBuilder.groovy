@@ -240,12 +240,12 @@ EOF
       } catch(err) {
       steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
     }
-    }
-
-    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
+    }
+
+    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
     localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
       gradle("-Pdburl='${localSteps.env.POSTGRES_HOST}:${localSteps.env.POSTGRES_PORT}/${localSteps.env.POSTGRES_DATABASE}?ssl=true&sslmode=require' -Pflyway.user='${localSteps.env.POSTGRES_USER}' -Pflyway.password='${localSteps.env.POSTGRES_PASS}' migratePostgresDatabase")
