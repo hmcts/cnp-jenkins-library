@@ -231,6 +231,14 @@ EOF
       [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
     ]
 
+    try {
+      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
+      if (statusCode == 0) {
+        steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
+        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+      }
+    }
+
     def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
 
     localSteps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
