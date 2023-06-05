@@ -150,6 +150,9 @@ def call(DockerImage dockerImage, Map params) {
         break
       } catch (upgradeError) {
         if (attempts >= 3) {
+          if (config.clearHelmReleaseOnFailure) {
+            helm.delete(dockerImage.getImageTag(), namespace)
+          }
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt
