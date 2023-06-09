@@ -34,6 +34,7 @@ def call(params) {
       noSkipImgBuild = envOverrideForSkip || !hasTag
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
     }
+    builder.setupToolVersion()
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   onPathToLive {
@@ -42,8 +43,6 @@ def call(params) {
         enforceChartVersionBumped product: product, component: component
         warnAboutAADIdentityPreviewHack product: product, component: component
       }
-
-      builder.setupToolVersion()
 
       // always build master and demo as we currently do not deploy an image there
       boolean envSub = autoDeployEnvironment() != null
