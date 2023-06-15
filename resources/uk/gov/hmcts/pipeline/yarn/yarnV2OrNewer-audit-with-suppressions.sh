@@ -40,7 +40,7 @@ if [ "$result" != 0 ]; then
 
     To ignore these vulnerabilities, run:
 
-    `yarn npm audit --environment production --json | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' > yarn-audit-known-issues`
+    `yarn npm audit --environment production --recursive --json | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' > yarn-audit-known-issues`
 
     and commit the yarn-audit-known-issues file
 EOF
