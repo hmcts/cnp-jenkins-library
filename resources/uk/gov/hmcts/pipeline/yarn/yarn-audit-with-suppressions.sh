@@ -13,8 +13,9 @@
 # - prettyPrintAudit.sh: Script to pretty print the audit results
 #
 # Usage:
+# Mostly used in the pipeline but feel free to use the script locally, should still work there:
 # Execute the script in the directory containing your project and yarn-audit-known-issues file:
-# ./audit_wrapper.sh
+# ./yarn-audit-with-suppressions.sh
 #
 # Exit Codes:
 # 0 - Success, no vulnerabilities found or only known vulnerabilities found
