@@ -293,19 +293,6 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
-  private auditDisparity() {
-    def status = steps.sh label: "Determine whether yarn audit returns transitive dependency issues that are not currently caught.",
-      script: "yarn npm audit --recursive --environment production", returnStatus: true
-    return status
-  }
-
-  private nagAboutYarnAuditChange() {
-    if (auditDisparity()) {
-      WarningCollector.addPipelineWarning("transitive_dependency_audit_incoming",
-        "We will be adding the --recursive flag to CVE scanning to check your transitive dependencies, your security scan is currently failing with these dependencies added to the scan. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 06, 15))
-    }
-  }
-
   private isNodeJSV18OrNewer() {
     boolean validVersion = true;
     if (steps.fileExists(NVMRC)) {
@@ -363,8 +350,6 @@ EOF
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
-    nagAboutOldYarnVersions()
-    nagAboutYarnAuditChange()
     nagAboutOldNodeJSVersions()
   }
 
