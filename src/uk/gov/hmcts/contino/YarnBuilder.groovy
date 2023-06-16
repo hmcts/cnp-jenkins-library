@@ -119,7 +119,6 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
     try {
       steps.sh """
         set +ex
@@ -129,29 +128,20 @@ class YarnBuilder extends AbstractBuilder {
         set -ex
       """
 
-      if (yarnV2OrNewer) {
-        corepackEnable()
-        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnV2OrNewer-audit-with-suppressions.sh'))
-      } else {
-        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
-      }
+      corepackEnable()
+      steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
 
       steps.sh """
-        if ${yarnV2OrNewer}; then
-          export PATH=\$HOME/.local/bin:\$PATH
-        fi
+         export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
     } finally {
-      if (yarnV2OrNewer) {
-
-        steps.sh """
-          cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-          cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
-          cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
-        """
-      }
+      steps.sh """
+        cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+        cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+        cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
+      """
       String issues = steps.readFile('yarn-audit-issues-result')
       String knownIssues = null
       if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
@@ -256,7 +246,6 @@ EOF
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
 
     if (steps.fileExists(NVMRC)) {
       steps.sh """
@@ -266,9 +255,7 @@ EOF
         nvm install
         set -ex
 
-        if ${yarnV2OrNewer}; then
-          export PATH=\$HOME/.local/bin:\$PATH
-        fi
+        export PATH=\$HOME/.local/bin:\$PATH
 
         if ${prepend.toBoolean()}; then
           ${prepend}yarn ${task}
@@ -278,9 +265,7 @@ EOF
       """
     } else {
       steps.sh("""
-        if ${yarnV2OrNewer}; then
-          export PATH=\$HOME/.local/bin:\$PATH
-        fi
+        export PATH=\$HOME/.local/bin:\$PATH
 
         if ${prepend.toBoolean()}; then
           ${prepend}yarn ${task}
@@ -295,11 +280,8 @@ EOF
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
     def status = steps.sh(script: """
-      if ${yarnV2OrNewer}; then
-        export PATH=\$HOME/.local/bin:\$PATH
-      fi
+      export PATH=\$HOME/.local/bin:\$PATH
 
       if ${prepend.toBoolean()}; then
         ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
@@ -309,33 +291,6 @@ EOF
     """, returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
-  }
-
-  private auditDisparity() {
-    def status = steps.sh label: "Determine whether yarn audit returns transitive dependency issues that are not currently caught.",
-      script: "yarn npm audit --recursive --environment production", returnStatus: true
-    return status
-  }
-
-  private nagAboutYarnAuditChange() {
-    if (auditDisparity()) {
-      WarningCollector.addPipelineWarning("transitive_dependency_audit_incoming",
-        "We will be adding the --recursive flag to CVE scanning to check your transitive dependencies, your security scan is currently failing with these dependencies added to the scan. Run `yarn npm audit --recursive --environment production` ahead of time to catch and fix issues so you won't be blocked on the day of the change.", LocalDate.of(2023, 06, 15))
-    }
-  }
-
-  private isYarnV2OrNewer() {
-    def status = steps.sh label: "Determine if is yarn v1", script: '''
-                ! grep packageManager package.json | grep yarn@[2-9]
-          ''', returnStatus: true
-    return status
-  }
-
-  private nagAboutOldYarnVersions() {
-
-    if (!isYarnV2OrNewer()){
-      WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 04, 26))
-    }
   }
 
   private isNodeJSV18OrNewer() {
@@ -368,17 +323,12 @@ EOF
   }
 
   def yarn(String task, String prepend = "") {
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
     if (!steps.fileExists(INSTALL_CHECK_FILE)) {
       steps.sh("touch ${INSTALL_CHECK_FILE}")
-      if (yarnV2OrNewer) {
-        corepackEnable()
-        boolean zeroInstallEnabled = steps.fileExists(".yarn/cache")
-        if (!zeroInstallEnabled) {
-          runYarn("install")
-        }
-      } else if (!runYarnQuiet("check")) {
-        runYarn("--mutex network install --frozen-lockfile")
+      corepackEnable()
+      boolean zeroInstallEnabled = steps.fileExists(".yarn/cache")
+      if (!zeroInstallEnabled) {
+        runYarn("install")
       }
     }
     runYarn(task, prepend)
@@ -400,8 +350,6 @@ EOF
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
-    nagAboutOldYarnVersions()
-    nagAboutYarnAuditChange()
     nagAboutOldNodeJSVersions()
   }
 
