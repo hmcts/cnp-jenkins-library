@@ -3,19 +3,9 @@
 # vulnerabilities without a fix
 
 set +e
-today=$(date +%Y-%m-%d)
-enddate="2023-06-15"
-
-if [[ "$today" > "$enddate" ]]; then
 yarn npm audit --recursive --environment production
 result=$?
 yarn npm audit --recursive --environment production --json > yarn-audit-result
-else
- yarn npm audit --environment production
- result=$?
- yarn npm audit --environment production --json > yarn-audit-result
-fi
-
 set -e
 
 if [ "$result" != 0 ]; then
