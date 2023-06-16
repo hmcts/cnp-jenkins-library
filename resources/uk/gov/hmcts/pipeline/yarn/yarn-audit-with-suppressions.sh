@@ -23,8 +23,6 @@ if [ "$result" != 0 ]; then
     # Check each issue in sorted_yarn-audit-result is also present in sorted_yarn-audit-known-issues
     while IFS= read -r line; do
       if ! grep -Fxq "$line" sorted_yarn-audit-known-issues; then
-        echo "New unsuppressed vulnerability found:"
-        echo "$line"
         new_vulnerability_found=true
       fi
     done < sorted_yarn-audit-result
