@@ -24,7 +24,8 @@
 
 # Temporary files cleanup function
 cleanup() {
-rm -f new_vulnerabilities sorted-yarn-audit-issues sorted-yarn-audit-known-issues
+rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions
+
 }
 
 # Function to print guidance message in case of found vulnerabilities
@@ -47,6 +48,20 @@ cat <<'EOF'
 EOF
 }
 
+# Function to check for unneeded suppressions
+check_for_unneeded_suppressions() {
+  while IFS= read -r line; do
+    if ! grep -Fxq "$line" sorted-yarn-audit-issues; then
+      echo "$line" >> unneeded_suppressions
+    fi
+  done < sorted-yarn-audit-known-issues
+
+  if [[ -s unneeded_suppressions ]]; then
+    echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
+    source prettyPrintAudit.sh unneeded_suppressions
+  fi
+}
+
 # Perform yarn audit and process the results
 yarn npm audit --recursive --environment production --json \
 | jq -cr '.advisories | to_entries[].value' \
@@ -54,7 +69,19 @@ yarn npm audit --recursive --environment production --json \
 
 # Check if there were any vulnerabilities
 if [[ ! -s sorted-yarn-audit-issues ]];  then
-  echo "Congratulations! No vulnerable dependencies found!"
+  echo "No vulnerabilities found in project dependencies."
+
+  # Check for unneeded suppressions when no vulnerabilities are present
+  if [ -f yarn-audit-known-issues ]; then
+    # Convert JSON array into sorted list of suppressed issues
+    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
+    | sort > sorted-yarn-audit-known-issues
+
+    # When no vulnerabilities are found, all suppressions are unneeded
+    check_for_unneeded_suppressions
+  fi
+
+  cleanup
   exit 0
 fi
 
@@ -63,13 +90,13 @@ if [ ! -f yarn-audit-known-issues ]; then
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
   cleanup
+  exit 1
 else
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
   jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
   | sort > sorted-yarn-audit-known-issues
 
-  # Edge case for when known-issues file is a proper superset of result file.
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do
     if ! grep -Fxq "$line" sorted-yarn-audit-known-issues; then
@@ -77,16 +104,25 @@ else
     fi
   done < sorted-yarn-audit-issues
 
+  # Check for unneeded suppressions
+  check_for_unneeded_suppressions
+
   # Check if there were any new vulnerabilities
-  if [[ ! -s new_vulnerabilities ]];  then
-    # If new vulnerabilities were found, exit with an error status
-    echo "Unsuppressed vulnerabilities found: "
+  if [[ -s new_vulnerabilities ]]; then
+    echo "Unsuppressed vulnerabilities found:"
     source prettyPrintAudit.sh new_vulnerabilities
     print_guidance
     cleanup
     exit 1
   else
-    echo "Ignoring known vulnerabilities."
+    echo "Active suppressed vulnerabilities:"
+    while IFS= read -r line; do
+        if grep -Fxq "$line" sorted-yarn-audit-issues; then
+            echo "$line" >> active_suppressions
+        fi
+    done < sorted-yarn-audit-known-issues
+
+    source prettyPrintAudit.sh active_suppressions
     cleanup
     exit 0
   fi
