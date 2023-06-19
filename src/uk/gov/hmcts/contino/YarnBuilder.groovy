@@ -13,7 +13,7 @@ class YarnBuilder extends AbstractBuilder {
   private static final String NVMRC = '.nvmrc'
   private static final Float DESIRED_MIN_VERSION = 18.16
   private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
-  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
+  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues-result'
 
   def securitytest
 

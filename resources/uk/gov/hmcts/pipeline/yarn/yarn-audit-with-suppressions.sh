@@ -63,8 +63,8 @@ check_for_unneeded_suppressions() {
 }
 
 # Perform yarn audit and process the results
-yarn npm audit --recursive --environment production --json \
-| jq -cr '.advisories | to_entries[].value' \
+yarn npm audit --recursive --environment production --json > yarn-audit-result
+cat yarn-audit-result | jq -cr '.advisories | to_entries[].value' \
 | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
@@ -96,6 +96,10 @@ else
   # Convert JSON array into sorted list of issues.
   jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
   | sort > sorted-yarn-audit-known-issues
+
+  # Retain old data ingestion style for cosmosDB
+  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues \
+  | yarn-audit-known-issues-result
 
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do
