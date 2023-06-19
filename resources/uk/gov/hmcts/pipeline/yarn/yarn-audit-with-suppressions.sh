@@ -98,8 +98,7 @@ else
   | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
-  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues \
-  | yarn-audit-known-issues-result
+  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues > yarn-audit-known-issues-result
 
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do
