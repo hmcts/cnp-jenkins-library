@@ -22,6 +22,18 @@
 # 1 - Unhandled vulnerabilities were found
 ################################################################################
 
+
+# Exit script on error
+set -e
+
+# Check for dependencies
+command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
+if [ ! -x prettyPrintAudit.sh ]; then
+    echo >&2 "prettyPrintAudit.sh is required but it's not executable or not found. Aborting."
+    exit 1
+fi
+
 # Temporary files cleanup function
 cleanup() {
 rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions
@@ -64,8 +76,7 @@ check_for_unneeded_suppressions() {
 
 # Perform yarn audit and process the results
 yarn npm audit --recursive --environment production --json > yarn-audit-result
-cat yarn-audit-result | jq -cr '.advisories | to_entries[].value' \
-| sort > sorted-yarn-audit-issues
+jq -cr '.advisories | to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
 if [[ ! -s sorted-yarn-audit-issues ]];  then
@@ -92,14 +103,19 @@ if [ ! -f yarn-audit-known-issues ]; then
   cleanup
   exit 1
 else
+  # Test for old format of yarn-audit-known-issues
+  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues | grep -q true; then
+    echo "You have an invalid `yarn-audit-known-issues` file. \nThe command to suppress known vulnerabilities has changed. Please now use the following: \n`yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`"
+    exit 1
+  fi
+
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
   jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
   | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
-  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues \
-  | yarn-audit-known-issues-result
+  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues > yarn-audit-known-issues-result
 
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do
