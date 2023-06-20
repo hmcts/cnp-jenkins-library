@@ -29,7 +29,6 @@ set -e
 # Check for dependencies
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
-fi
 
 # Temporary files cleanup function
 cleanup() {
