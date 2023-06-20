@@ -327,6 +327,7 @@ EOF
     if (!steps.fileExists(INSTALL_CHECK_FILE)) {
       steps.sh("touch ${INSTALL_CHECK_FILE}")
       corepackEnable()
+      runYarn("install")
     }
     runYarn(task, prepend)
   }
