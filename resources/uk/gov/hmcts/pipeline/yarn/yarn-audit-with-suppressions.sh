@@ -56,6 +56,20 @@ cat <<'EOF'
 EOF
 }
 
+print_borked_known_issues() {
+cat <<'EOF'
+
+  You have an invalid yarn-audit-known-issues file.
+
+  The command to suppress known vulnerabilities has changed.
+
+  Please now use the following:
+
+  `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
+
+EOF
+}
+
 # Function to check for unneeded suppressions
 check_for_unneeded_suppressions() {
   while IFS= read -r line; do
@@ -101,7 +115,7 @@ if [ ! -f yarn-audit-known-issues ]; then
 else
   # Test for old format of yarn-audit-known-issues
   if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues | grep -q true; then
-    echo "You have an invalid `yarn-audit-known-issues` file. \nThe command to suppress known vulnerabilities has changed. Please now use the following: \n`yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`"
+    print_borked_known_issues
     exit 1
   fi
 
