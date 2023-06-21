@@ -13,7 +13,7 @@ class YarnBuilder extends AbstractBuilder {
   private static final String NVMRC = '.nvmrc'
   private static final Float DESIRED_MIN_VERSION = 18.16
   private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
-  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
+  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues-result'
 
   def securitytest
 
@@ -130,6 +130,7 @@ class YarnBuilder extends AbstractBuilder {
 
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+      steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
 
       steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
@@ -326,10 +327,7 @@ EOF
     if (!steps.fileExists(INSTALL_CHECK_FILE)) {
       steps.sh("touch ${INSTALL_CHECK_FILE}")
       corepackEnable()
-      boolean zeroInstallEnabled = steps.fileExists(".yarn/cache")
-      if (!zeroInstallEnabled) {
-        runYarn("install")
-      }
+      runYarn("install")
     }
     runYarn(task, prepend)
   }
