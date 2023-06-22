@@ -8,6 +8,9 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
 import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
 
 def call(DockerImage dockerImage, Map params) {
 
@@ -27,6 +30,10 @@ def call(DockerImage dockerImage, Map params) {
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
+
+  if (serviceFqdn.endsWith(".internal")) {
+    WarningCollector.addPipelineWarning("internal_domain", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1675868743958669", LocalDate.of(2023, 04, 26))
+  }
 
   def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
@@ -76,7 +83,7 @@ def call(DockerImage dockerImage, Map params) {
     onPR {
       def githubApi = new GithubAPI(this)
       for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, "pr-values") ) {
-        def prLabel = label.minus("pr-values:")
+        def prLabel = label.minus("pr-values:").replaceAll("\\s","")
         def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.template.yaml"
         def valuesLabelEnv = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.yaml"
         if (fileExists(valuesLabelTemplate)) {
@@ -98,7 +105,6 @@ def call(DockerImage dockerImage, Map params) {
 
     def environmentTag = Environment.toTagName(environment)
     def options = [
-      "--set global.subscriptionId=${this.env.ARM_SUBSCRIPTION_ID} ",
       "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
       "--set global.enableKeyVaults=true",
@@ -144,6 +150,9 @@ def call(DockerImage dockerImage, Map params) {
         break
       } catch (upgradeError) {
         if (attempts >= 3) {
+          if (config.clearHelmReleaseOnFailure) {
+            helm.delete(dockerImage.getImageTag(), namespace)
+          }
           throw upgradeError
         }
         // Clean up the latest install/upgrade attempt

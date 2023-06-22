@@ -5,15 +5,21 @@ import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
+import static java.lang.Float.valueOf
 
 class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
-  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues'
+  private static final Float DESIRED_MIN_VERSION = 18.16
+  private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
+  private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues-result'
+
+  def securitytest
 
   YarnBuilder(steps) {
     super(steps)
+    this.securitytest = new SecurityScan(this.steps)
   }
 
   def build() {
@@ -93,8 +99,8 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
-  def fullFunctionalTest(){
-    try{
+  def fullFunctionalTest() {
+    try {
       yarn("test:fullfunctional")
     }
     finally {
@@ -104,7 +110,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def mutationTest() {
-    try{
+    try {
       yarn("test:mutation")
     }
     finally {
@@ -113,7 +119,6 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
     try {
       steps.sh """
         set +ex
@@ -123,28 +128,21 @@ class YarnBuilder extends AbstractBuilder {
         set -ex
       """
 
-      if (yarnV2OrNewer) {
-        corepackEnable()
-        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnV2OrNewer-audit-with-suppressions.sh'))
-      } else {
-        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
-      }
+      corepackEnable()
+      steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+      steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
 
       steps.sh """
-        if ${yarnV2OrNewer}; then
-          export PATH=\$HOME/.local/bin:\$PATH
-        fi
+         export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
     } finally {
-      if (yarnV2OrNewer) {
-        steps.sh """
-          cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-          cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
-          cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
-        """
-      }
+      steps.sh """
+        cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+        cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+        cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
+      """
       String issues = steps.readFile('yarn-audit-issues-result')
       String knownIssues = null
       if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
@@ -158,12 +156,13 @@ class YarnBuilder extends AbstractBuilder {
 
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
-    List<Object> issuesParsed = issues.split( '\n' ).collect { jsonSlurper.parseText(it) }
+
+    List<Object> issuesParsed = issues.split('\n').collect { jsonSlurper.parseText(it) }
 
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
     issuesParsed.removeIf { it.type == 'auditSummary' }
 
-   issuesParsed = issuesParsed.collect {
+    issuesParsed = issuesParsed.collect {
       mapYarnAuditToOurReport(it)
     }
 
@@ -244,11 +243,10 @@ EOF
     yarn("test:can-i-deploy:consumer")
   }
 
-  private runYarn(String task, String prepend = ""){
+  private runYarn(String task, String prepend = "") {
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
 
     if (steps.fileExists(NVMRC)) {
       steps.sh """
@@ -258,9 +256,7 @@ EOF
         nvm install
         set -ex
 
-        if ${yarnV2OrNewer}; then
-          export PATH=\$HOME/.local/bin:\$PATH
-        fi
+        export PATH=\$HOME/.local/bin:\$PATH
 
         if ${prepend.toBoolean()}; then
           ${prepend}yarn ${task}
@@ -270,9 +266,7 @@ EOF
       """
     } else {
       steps.sh("""
-        if ${yarnV2OrNewer}; then
-          export PATH=\$HOME/.local/bin:\$PATH
-        fi
+        export PATH=\$HOME/.local/bin:\$PATH
 
         if ${prepend.toBoolean()}; then
           ${prepend}yarn ${task}
@@ -287,11 +281,8 @@ EOF
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
     def status = steps.sh(script: """
-      if ${yarnV2OrNewer}; then
-        export PATH=\$HOME/.local/bin:\$PATH
-      fi
+      export PATH=\$HOME/.local/bin:\$PATH
 
       if ${prepend.toBoolean()}; then
         ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
@@ -303,17 +294,25 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
-  private isYarnV2OrNewer() {
-    def status = steps.sh label: "Determine if is yarn v1", script: '''
-                ! grep packageManager package.json
-          ''', returnStatus: true
-    return status
+  private isNodeJSV18OrNewer() {
+    boolean validVersion = true;
+    if (steps.fileExists(NVMRC)) {
+      String nodeVersion = steps.readFile(NVMRC)
+      Float current_version = valueOf(nodeVersion
+                                          .trim()
+                                          .substring(0, nodeVersion.lastIndexOf(".")))
+      validVersion = current_version >= DESIRED_MIN_VERSION
+    } else {
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", NODEJS_EXPIRATION)
+    }
+
+    return validVersion
   }
 
-  private nagAboutOldYarnVersions() {
-     if (!isYarnV2OrNewer()){
-       WarningCollector.addPipelineWarning("old_yarn_version", "Please upgrade to Yarn V3, see https://moj.enterprise.slack.com/files/T1L0WSW9F/F04784SLAJC?origin_team=T1L0WSW9F", LocalDate.of(2023, 02, 9))
-    }  
+  private nagAboutOldNodeJSVersions() {
+    if (!isNodeJSV18OrNewer()) {
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", NODEJS_EXPIRATION)
+    }
   }
 
   private corepackEnable() {
@@ -325,26 +324,31 @@ EOF
   }
 
   def yarn(String task, String prepend = "") {
-    boolean yarnV2OrNewer = isYarnV2OrNewer()
     if (!steps.fileExists(INSTALL_CHECK_FILE)) {
       steps.sh("touch ${INSTALL_CHECK_FILE}")
-      if (yarnV2OrNewer) {
-        corepackEnable()
-        boolean zeroInstallEnabled = steps.fileExists(".yarn/cache")
-        if (!zeroInstallEnabled) {
-          runYarn("install")
-        }
-      } else if (!runYarnQuiet("check")) {
-        runYarn("--mutex network install --frozen-lockfile")
-      }
+      corepackEnable()
+      runYarn("install")
     }
     runYarn(task, prepend)
   }
 
   @Override
+  def securityScan(){
+    if (steps.fileExists(".ci/security.sh")) {
+      // hook to allow teams to override the default `security.sh` that we provide
+      steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
+    } else if (steps.fileExists("security.sh")) {
+      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
+    } else {
+      steps.writeFile(file: 'security.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
+    }
+    this.securitytest.execute()
+  }
+
+  @Override
   def setupToolVersion() {
     super.setupToolVersion()
-    nagAboutOldYarnVersions()
+    nagAboutOldNodeJSVersions()
   }
 
 }

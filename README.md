@@ -57,6 +57,7 @@ withPipeline(type, product, component) {
 }
 ```
 
+#### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
 Branch | Environment
@@ -64,7 +65,7 @@ Branch | Environment
 `master` | `aat` then `prod`
 `demo` | `demo`
 `perftest` | `perftest`
-PR branch| `preview` (ASE or AKS depending on your config)
+PR branch| `preview`
 
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
@@ -214,7 +215,7 @@ Conditions are:
 * Failure
 * Always
 
-Valid values for the `stage` variable are as follows where `ENV` must be replaced by the short environment name
+Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-and-environment-mapping)
 
  * checkout
  * build
@@ -432,7 +433,7 @@ TestName | How to enable | Example
  CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" and call enableCrossBrowserTest()| [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
  FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-case-management-web/pull/1102/files)
  Performance* | Add Gatling config and call enablePerformancetest() | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
- SecurityScan | Add a file in root of repository called security.sh and call enableSecurityScan() | [Web Application example](https://github.com/hmcts/probate-frontend/blob/a56b63fb306b6b2139148c27b7b1daf001f2743c/security.sh) <br>[API example](https://github.com/hmcts/document-management-store-app/blob/master/security.sh)
+ SecurityScan | Call enableSecurityScan() | [Web Application example](https://github.com/hmcts/sds-toffee-frontend/pull/119) <br>[API example](https://github.com/hmcts/sds-toffee-recipes-service/pull/135)
  Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
  FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
 
@@ -674,14 +675,24 @@ The Pact broker url and other parameters are passed to these hooks as following:
 
 #### Usage
 
-The environment specific branches such as demo, ithc and perftest can be automatically synced with master branch.
+The environment specific branches such as demo, ithc and perftest are set by default to automatically be synced with master branch. If the branch doesn't exist it will not be synced.
 
-This can be achieved by using the `syncBranchesWithMaster()` method in Application, Infrastructure and Camunda pipelines. This method will be invoked in the master build and execute as the last stage in the build.
+By using the `syncBranchesWithMaster()` method in Application, Infrastructure and Camunda pipelines, you can manually override what environment branches are synced. Setting the value to '[]' will disable the sync for all branches. This method will be invoked in the master build and execute as the last stage in the build.
 
-Example of usage
+Example of overriding branches
 ```groovy
 
 def branchesToSync = ['demo', 'perftest']
+
+withPipeline(type, product, component) {
+  syncBranchesWithMaster(branchesToSync)
+}
+
+```
+Example of disabling sync
+```groovy
+
+def branchesToSync = []
 
 withPipeline(type, product, component) {
   syncBranchesWithMaster(branchesToSync)

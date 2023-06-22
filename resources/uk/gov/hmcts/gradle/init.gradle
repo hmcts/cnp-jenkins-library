@@ -17,16 +17,12 @@ allprojects {
       mavenCentral()
     }
     dependencies {
-      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.5.1'
+      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
     }
   }
 
   task printVersionInit {
     doLast { println project.version }
-  }
-
-  task javaVersion {
-    doLast { println project.sourceCompatibility }
   }
 }
 
