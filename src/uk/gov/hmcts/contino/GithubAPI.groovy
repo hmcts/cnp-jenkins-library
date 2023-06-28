@@ -195,3 +195,4 @@ withPipeline(type, product, component) {
     if (!checkForEnableHelmLabel(env.BRANCH_NAME)) {
       enableCleanupOfHelmReleaseAlways();
     }
+  }
