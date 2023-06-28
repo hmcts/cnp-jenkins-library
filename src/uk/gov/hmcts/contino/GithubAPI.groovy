@@ -181,3 +181,17 @@ class GithubAPI {
     return checkForLabel(branch_name, "dependencies")
   }
 }
+
+def checkForEnableHelmLabel(branch_name) {
+    return new GithubAPI(this).getLabelsbyPattern(branch_name, "pr-values: enableHelm").contains("pr-values: enableHelm")
+}
+
+withPipeline(type, product, component) {
+
+  onPR {
+    env.ENVIRONMENT = "preview"
+    env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    loadVaultSecrets(secrets)
+    if (!checkForEnableHelmLabel(env.BRANCH_NAME)) {
+      enableCleanupOfHelmReleaseAlways();
+    }
