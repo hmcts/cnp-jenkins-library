@@ -196,3 +196,4 @@ withPipeline(type, product, component) {
       enableCleanupOfHelmReleaseAlways();
     }
   }
+}
