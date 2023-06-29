@@ -9,7 +9,7 @@ class GithubAPI_Helm {
 
   def steps
 
-  GithubAPI(steps) {
+  GithubAPI_Helm(steps) {
     this.steps = steps
   }
 
