@@ -134,12 +134,14 @@ class GradleBuilder extends AbstractBuilder {
 
   def securityCheck() {
     def secrets = [
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Account', version: '', envVariable: 'OWASPDB_V6_ACCOUNT' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v6-Password', version: '', envVariable: 'OWASPDB_V6_PASSWORD' ]
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Connection-String', version: '', envVariable: 'OWASPDB_V14_CONNECTION_STRING' ]
     ]
+
     localSteps.withAzureKeyvault(secrets) {
       try {
-          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='jdbc:postgresql://owaspdependency-v6-prod.postgres.database.azure.com/owaspdependencycheck' -Ddata.user='${localSteps.env.OWASPDB_V6_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V6_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
@@ -238,8 +240,6 @@ EOF
 
   @Override
   def setupToolVersion() {
-    gradle("--version") // ensure wrapper has been downloaded
-
     try {
       def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
       if (statusCode == 0) {
@@ -247,11 +247,21 @@ EOF
         steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
         // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
         steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
+      } else {
+        WarningCollector.addPipelineWarning("java_11_deprecated",
+          "Please upgrade to Java 17, upgrade to " +
+            "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
+            "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
+            "Make sure you use the latest version of the Application insights agent, see the configuration in " +
+            "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
+            "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+        )
       }
     } catch(err) {
       steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
     }
 
+    gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
   }
 
@@ -261,10 +271,13 @@ EOF
 
   @Override
   def securityScan(){
-    if (localSteps.fileExists("security.sh")) {
-      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 06))
+    if (steps.fileExists(".ci/security.sh")) {
+      // hook to allow teams to override the default `security.sh` that we provide
+      steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
+    } else if (localSteps.fileExists("security.sh")) {
+      WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
     } else {
-      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
+      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
     }
     this.securitytest.execute()
   }
