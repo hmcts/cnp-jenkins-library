@@ -3,13 +3,13 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-class GithubAPI_Helm {
+class GithubAPI {
 
   static final String API_URL = 'https://api.github.com/repos'
 
   def steps
 
-  GithubAPI_Helm(steps) {
+  GithubAPI (steps) {
     this.steps = steps
   }
 
