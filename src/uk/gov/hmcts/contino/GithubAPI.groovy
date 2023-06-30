@@ -163,7 +163,7 @@ class GithubAPI {
   /**
    * Check Pull Request for label by a pattern in name.
    */
-  def getLabelsbyPattern(String branch_name, String key) {
+  def getLabelsbyPattern(branch_name, "pr-values: enableHelm").contains("pr-values: enableHelm") {
     return getLabels(branch_name).findAll { it.contains(key) }
   }
 
