@@ -180,4 +180,8 @@ class GithubAPI {
   def checkForDependenciesLabel(branch_name) {
     return checkForLabel(branch_name, "dependencies")
   }
+
+  def checkForEnableHelmLabel(branch_name) {
+    return getLabelsbyPattern(branch_name, "pr-values: enableHelm").contains("pr-values: enableHelm")
+  }
 }

@@ -36,7 +36,8 @@ class Helm {
 
   def setup() {
     configureAcr()
-    addRepo()
+    addRepo() 
+    
   }
 
   def configureAcr() {
