@@ -19,11 +19,11 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def clearHelmReleaseForFailure(AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-  if (config.clearHelmReleaseOnFailure) {
-    helmUninstall(dockerImage, params, pcr)
+def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  if((projectBranch.isPR() && !enableHelmLabel) || (projectBranch.isMaster() && config.clearHelmReleaseOnFailure)) {
+      helmUninstall(dockerImage, params, pcr)
   }
-
 }
 
 def call(params) {
@@ -55,7 +55,7 @@ def call(params) {
 
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+  def enableHelmLabel = gitHubAPI.checkForLabel(env.BRANCH_NAME, 'enable-helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
@@ -104,7 +104,7 @@ def call(params) {
                   } finally {
                     savePodsLogs(dockerImage, params, "smoke")
                     if (!success) {
-                      clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     }
                   }
                 }
@@ -128,7 +128,7 @@ def call(params) {
                         } finally {
                           savePodsLogs(dockerImage, params, "full-functional")
                           if (!success) {
-                            clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                            clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                           }
                         }
                       }
@@ -150,7 +150,7 @@ def call(params) {
                       } finally {
                         savePodsLogs(dockerImage, params, "functional")
                         if (!success) {
-                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                          clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                         }
                       }
                     }
@@ -255,7 +255,7 @@ def call(params) {
         }
       }
       def triggerUninstall = environment == nonProdEnv
-      if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
+      if (triggerUninstall || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
     }
