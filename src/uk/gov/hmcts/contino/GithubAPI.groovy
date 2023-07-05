@@ -180,6 +180,4 @@ class GithubAPI {
   def checkForDependenciesLabel(branch_name) {
     return checkForLabel(branch_name, "dependencies")
   }
-
 }
-
