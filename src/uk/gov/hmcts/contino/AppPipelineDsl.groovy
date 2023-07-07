@@ -76,8 +76,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableCleanupOfHelmReleaseOnSuccess() {
     config.clearHelmReleaseOnSuccess = true;
-    WarningCollector.addPipelineWarning ("helm_cleanup_failure", "The CleanupOfHelmReleaseOnSuccess function will be depricated, please use the enable-helm label to keep helm resources", LocalDate.of (2023, 8, 14))
-  }
+
+    if (isLabelEnabled("enableCleanupOfHelmReleaseOnSuccess")) {
+        WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-Deprication", "The CleanupOfHelmReleaseOnSuccess function will be deprecated. Please use the enable-helm label to keep Helm resources.", LocalDate.of(2023, 8, 14));
+    }
+}
 
   void enableCleanupOfHelmReleaseOnFailure() {
     config.clearHelmReleaseOnFailure = true;
@@ -86,7 +89,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableCleanupOfHelmReleaseAlways() {
     config.clearHelmReleaseOnSuccess = true;
     config.clearHelmReleaseOnFailure = true;
-    WarningCollector.addPipelineWarning ("helm_cleanup_failure", "The enableCleanupOfHelmReleaseAlways function will be depricated, please use the enable-helm label to keep helm resources", LocalDate.of (2023, 8, 14))
+
+    if (isLabelEnabled("enableCleanupOfHelmReleaseAlways")) {
+        WarningCollector.addPipelineWarning("Helm-ReleaseAlways-Deprication", "The CleanupOfHelmReleaseOnSuccess function will be deprecated. Please use the enable-helm label to keep Helm resources.", LocalDate.of(2023, 8, 14));
+    }
+
   }
 
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
