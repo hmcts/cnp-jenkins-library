@@ -746,4 +746,3 @@ This file will point to the repository which defines, in json syntax, which infr
 @Library('Infrastructure@<your-branch-name>') _
 ```
 
-
