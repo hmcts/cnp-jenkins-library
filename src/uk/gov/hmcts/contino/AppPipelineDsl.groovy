@@ -88,7 +88,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.clearHelmReleaseOnFailure = true;
     WarningCollector.addPipelineWarning ("helm_cleanup_failure", "The enableCleanupOfHelmReleaseAlways function will be depricated, please use the enable-helm label to keep helm resources", LocalDate.of (2023, 8, 14))
   }
-  }
 
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
 
