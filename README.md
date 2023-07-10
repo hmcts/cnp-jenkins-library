@@ -57,6 +57,7 @@ withPipeline(type, product, component) {
 }
 ```
 
+
 #### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
