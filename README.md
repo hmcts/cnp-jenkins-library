@@ -477,6 +477,7 @@ withNightlyPipeline(type, product, component) {
 }
 ```
 
+
 ## Enabling nightly checks on pull requests
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
