@@ -126,7 +126,7 @@ def call(Map<String, ?> params) {
 
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
-          (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")i
+          (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
 
         onPR {
           String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
