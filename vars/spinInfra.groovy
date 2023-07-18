@@ -111,6 +111,16 @@ def call(Map<String, ?> params) {
       //check tf version
         def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive' )
         echo "Terraform fmt exit status was ${fmtTerraformcheck}"
+        
+        if (fmtExitCode != 0) {
+            echo 'Terraform code is not formatted properly. Formatting...'
+
+      // Format the Terraform code recursively
+       sh 'terraform fmt -recursive'
+
+     // Commit the formatting changes
+      sh 'git add .'
+      sh 'git commit -m "Format Terraform code"'
 
         warnAboutOldTfAzureProvider()
 
