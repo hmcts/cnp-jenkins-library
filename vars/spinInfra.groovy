@@ -110,6 +110,7 @@ def call(Map<String, ?> params) {
 
       //check tf version
         def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive' )
+        echo "Terraform fmt exit status was ${fmtTerraformcheck}"
 
         warnAboutOldTfAzureProvider()
 
