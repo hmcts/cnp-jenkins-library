@@ -80,7 +80,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     if (isLabelEnabled("enableCleanupOfHelmReleaseOnSuccess")) {
         WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-Deprication", "The CleanupOfHelmReleaseOnSuccess function will be deprecated. Please use the enable-helm label to keep Helm resources.", LocalDate.of(2023, 8, 14));
     }
-}
+  }
 
   void enableCleanupOfHelmReleaseOnFailure() {
     config.clearHelmReleaseOnFailure = true;
