@@ -98,29 +98,32 @@ def call(Map<String, ?> params) {
             -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
-      //check for changes
-        git fetch origin $BRANCH:$BRANCH
-
-      //fetches latest change from remote repo to local branch 
-        git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-
-      //authenticate personal tokens in github 
-        git config --global user.name ${USER_NAME}
-        git config --global user.email ${GIT_APP_EMAIL_ID}
 
       //check tf version
         def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive' )
         echo "Terraform fmt exit status was ${fmtTerraformcheck}"
         
         if (fmtExitCode != 0) {
-            echo 'Terraform code is not formatted properly. Formatting...'
+          echo 'Terraform code is not formatted properly. Formatting...'
 
       // Format the Terraform code recursively
        sh 'terraform fmt -recursive'
 
      // Commit the formatting changes
-      sh 'git add .'
-      sh 'git commit -m "Format Terraform code"'
+       git fetch origin $BRANCH:$BRANCH
+       git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+       git config --global user.name ${USER_NAME}
+       git config --global user.email ${GIT_APP_EMAIL_ID}
+
+      git add $(find . -type f -name "*.tf")
+      git commit -m "Updating Terraform Formatting"
+      git push origin HEAD:$BRANCH
+
+      error("The Terraform code was not formatted properly. It has been automatically formatted and pushed back to the pull request.")
+       } else {
+            echo 'Terraform correctly formatted'
+       }
+
 
         warnAboutOldTfAzureProvider()
 
