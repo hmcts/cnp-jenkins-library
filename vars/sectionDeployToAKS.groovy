@@ -19,9 +19,10 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def clearHelmReleaseForFailure(AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-  if (config.clearHelmReleaseOnFailure) {
-    helmUninstall(dockerImage, params, pcr)
+def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  if((projectBranch.isPR() && !enableHelmLabel) || (projectBranch.isMaster() && config.clearHelmReleaseOnFailure)) {
+      helmUninstall(dockerImage, params, pcr)
   }
 
 }
