@@ -78,15 +78,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
         return githubApi.checkForLabel(branch_name, key)
     }
 
-    boolean checkForRequiredLabels() {
-        def helmLabels = ["enableCleanupOfHelmReleaseOnSuccess", "enableCleanupOfHelmReleaseAlways"]
-        for (String label : helmLabels) {
-            if (!checkForLabel(steps.env.BRANCH_NAME, label)) {
-                return false
-            }
-        }
-        return true
-    }
+  }
     
     boolean isLabelEnabled(String label) {
         def requiredLabels = ["enableCleanupOfHelmReleaseOnSuccess", "enableCleanupOfHelmReleaseAlways"]
@@ -96,9 +88,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableCleanupOfHelmReleaseOnSuccess() {
     config.clearHelmReleaseOnSuccess = true;
 
-    if (isLabelEnabled("enableCleanupOfHelmReleaseOnSuccess")) {
-        WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-Deprication", "The CleanupOfHelmReleaseOnSuccess function will be deprecated. Please use the enable-helm label to keep Helm resources.", LocalDate.of(2023, 8, 14));
-    }
+        WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-Deprication", "The CleanupOfHelmReleaseOnSuccess function is deprecated. Please add enable-helm label to the PR to keep your Helm resources.", LocalDate.of(2023, 8, 14));
+    
   }
 
   void enableCleanupOfHelmReleaseOnFailure() {
@@ -109,9 +100,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.clearHelmReleaseOnSuccess = true;
     config.clearHelmReleaseOnFailure = true;
 
-    if (isLabelEnabled("enableCleanupOfHelmReleaseAlways")) {
-        WarningCollector.addPipelineWarning("Helm-ReleaseAlways-Deprication", "The CleanupOfHelmReleaseOnSuccess function will be deprecated. Please use the enable-helm label to keep Helm resources.", LocalDate.of(2023, 8, 14));
-    }
+        WarningCollector.addPipelineWarning("Helm-ReleaseAlways-Deprication", "The CleanupOfHelmReleaseOnSuccess function is deprecated. Please add enable-helm label to the PR keep Helm resources.", LocalDate.of(2023, 8, 14));
+  
   }
 
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
