@@ -87,7 +87,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
         }
         return true
     }
-
+    
+    boolean isLabelEnabled(String label) {
+        def requiredLabels = ["enableCleanupOfHelmReleaseOnSuccess", "enableCleanupOfHelmReleaseAlways"]
+        return requiredLabels.contains(label) && checkForLabel(steps.env.BRANCH_NAME, label)
+    }
 
   void enableCleanupOfHelmReleaseOnSuccess() {
     config.clearHelmReleaseOnSuccess = true;
