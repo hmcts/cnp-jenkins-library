@@ -74,15 +74,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.aksStagingDeployment = true
   }
 
-     boolean checkForLabel(String branch_name, String key) {
-        return githubApi.checkForLabel(branch_name, key)
-    }
-    
-    boolean isLabelEnabled(String label) {
-        def requiredLabels = ["enableCleanupOfHelmReleaseOnSuccess", "enableCleanupOfHelmReleaseAlways"]
-        return requiredLabels.contains(label) && checkForLabel(steps.env.BRANCH_NAME, label)
-    }
-
   void enableCleanupOfHelmReleaseOnSuccess() {
     config.clearHelmReleaseOnSuccess = true;
 
