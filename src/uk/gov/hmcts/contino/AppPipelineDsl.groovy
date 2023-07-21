@@ -77,7 +77,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableCleanupOfHelmReleaseOnSuccess() {
     config.clearHelmReleaseOnSuccess = true;
 
-        WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-Deprication", "The CleanupOfHelmReleaseOnSuccess function is deprecated. Please add enable-helm label to the PR to keep your Helm resources.", LocalDate.of(2023, 8, 14));
+        WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-Deprication", "The CleanupOfHelmReleaseOnSuccess function is now deprecated. Please add the enable-helm label to the PR to keep your Helm resources.", LocalDate.of(2023, 8, 14));
     
   }
 
@@ -89,7 +89,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.clearHelmReleaseOnSuccess = true;
     config.clearHelmReleaseOnFailure = true;
 
-        WarningCollector.addPipelineWarning("Helm-ReleaseAlways-Deprication", "The CleanupOfHelmReleaseOnSuccess function is deprecated. Please add enable-helm label to the PR keep Helm resources.", LocalDate.of(2023, 8, 14));
+        WarningCollector.addPipelineWarning("Helm-ReleaseAlways-Deprication", "The CleanupOfHelmReleaseOnSuccess function is now deprecated. Please add the enable-helm label to the PR keep your Helm resources.", LocalDate.of(2023, 8, 14));
   
   }
 
