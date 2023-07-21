@@ -77,8 +77,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
      boolean checkForLabel(String branch_name, String key) {
         return githubApi.checkForLabel(branch_name, key)
     }
-
-  }
     
     boolean isLabelEnabled(String label) {
         def requiredLabels = ["enableCleanupOfHelmReleaseOnSuccess", "enableCleanupOfHelmReleaseAlways"]
