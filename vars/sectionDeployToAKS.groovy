@@ -72,6 +72,7 @@ def call(params) {
               log.info("Using AKS environment: ${params.environment}")
               warnAboutDeprecatedChartConfig product: product, component: component
               aksUrl = helmInstall(dockerImage, params)
+              params.subscription = params.subscription
               log.info("deployed component URL: ${aksUrl}")
               onPR {
                 githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
