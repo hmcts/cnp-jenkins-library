@@ -1,6 +1,7 @@
 import uk.gov.hmcts.contino.Helm
 
 def call(Map params) {
+  withAcrClient(params.subscription) {
 
     String chartName = "${params.product}-${params.component}"
 
@@ -31,4 +32,5 @@ def call(Map params) {
       helm.publishIfNotExists()
       helm.publishToGitIfNotExists()
     }
+  }
 }
