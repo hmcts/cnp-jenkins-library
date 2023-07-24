@@ -4,6 +4,8 @@ import spock.lang.Specification
 
 import static org.assertj.core.api.Assertions.assertThat
 
+import uk.gov.hmcts.contino.deprecation.WarningCollector
+
 class AppPipelineConfigTest extends Specification {
 
   AppPipelineConfig pipelineConfig
