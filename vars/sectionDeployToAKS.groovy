@@ -68,9 +68,7 @@ def call(params) {
               onPR {
                 deploymentNumber = githubCreateDeployment()
               }
-              params.subscription = params.subscription
               params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-              params.product = params.product
               log.info("Using AKS environment: ${params.environment}")
               warnAboutDeprecatedChartConfig product: product, component: component
               aksUrl = helmInstall(dockerImage, params)
