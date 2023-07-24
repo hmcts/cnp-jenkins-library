@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.deprecation.WarningCollector
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
