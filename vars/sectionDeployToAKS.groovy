@@ -48,6 +48,8 @@ def call(params) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+    env.AKS_CLUSTER_NAME = env."${envName}_AKS_CLUSTER_NAME" ?: "cnp-${environment}-cluster"
+    env.AKS_RESOURCE_GROUP = env."${envName}_AKS_RESOURCE_GROUP" ?: "cnp-${environment}-rg"
   }
 
   def deploymentNamespace = projectBranch.deploymentNamespace()
