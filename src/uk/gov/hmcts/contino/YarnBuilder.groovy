@@ -4,6 +4,7 @@ import groovy.json.JsonSlurper
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
+import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 import static java.lang.Float.valueOf
@@ -161,6 +162,11 @@ class YarnBuilder extends AbstractBuilder {
 
   @Override
   def techStackMaintenance() {
+    def ardoqAppId = this.steps.env.ARDOQ_APPLICATION_ID
+    if (!ardoqAppId?.trim()) {
+      this.steps.echo "Ardoq Application Id is not configured for ${this.product}"
+      return
+    }
     this.steps.echo "Running Yarn Tech stack maintenance"
     def secrets = [
       [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
@@ -172,12 +178,12 @@ class YarnBuilder extends AbstractBuilder {
         String repositoryName = new RepositoryUrl().getShortWithoutOrgOrSuffix(steps.env.GIT_URL)
         steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
         steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}' > languageVersionProc"
-        
+
         String languageProc = steps.readFile('languageProc')
         String languageVersionProc = steps.readFile('languageVersionProc')
 
         def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
-        client.updateDependencies(dependencies, "foobar", repositoryName, 'yarn', languageProc, languageVersionProc)
+        client.updateDependencies(dependencies, ardoqAppId, repositoryName, 'yarn', languageProc, languageVersionProc)
       } else {
         this.steps.echo "No Dockerfile found, skipping tech stack maintenance"
       }

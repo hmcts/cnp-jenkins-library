@@ -30,29 +30,32 @@ class ArdoqClient {
 
     this.steps.echo("JSON Payload to send: ${jsonPayload}")
 
+    this.steps.writeFile(file: 'payload.json', text: jsonPayload);
     // gzip the payload
-//    byte[] gzippedPayload = zip(jsonPayload)
+    this.steps.sh "gzip payload.json"
 
-    // curl -w "%{http_code}" --location --request POST '${{ secrets.ARDOQ_ADAPTER_URL }}?async=true' \
-    //            --header 'Authorization: Bearer ${{ secrets.ARDOQ_ADAPTER_KEY }}' \
-    //            --header 'Content-Type: application/json' \
-    //            --header 'content-encoding: gzip' \
-    //            --data-binary '@payload.json.gz'
+//     curl -w "%{http_code}" --location --request POST '${{ secrets.ARDOQ_ADAPTER_URL }}?async=true' \
+//                --header 'Authorization: Bearer ${{ secrets.ARDOQ_ADAPTER_KEY }}' \
+//                --header 'Content-Type: application/json' \
+//                --header 'content-encoding: gzip' \
+//                --data-binary '@payload.json.gz'
 
-//    def response = this.steps.httpRequest(httpMode: 'POST',
-//      customHeaders:[[name:'Authorization', value:"Bearer " + this.apiKey]],
-//      contentType: 'APPLICATION_JSON',
-//      contentEncoding: 'gzip',
-//      requestBody: gzippedPayload,
-//      url: this.apiUrl + "/dependencies",
-//      consoleLogResponseBody: true,
-//      validResponseCodes: '202')
-//
-//    if (response.status == 200) {
-//      this.steps.echo "Dependencies sent to API successfully"
-//    } else {
-//      this.steps.echo "Error sending dependencies to API. Status code: ${response.status}\n${response.content}"
-//    }
+    def response = this.steps.httpRequest(httpMode: 'POST',
+      customHeaders:[
+        [name:'Authorization', value:"Bearer " + this.apiKey],
+        [name:'content-encoding', value:'gzip']
+      ],
+      contentType: 'APPLICATION_JSON',
+      uploadFile: 'payload.json.gz',
+      url: this.apiUrl + "/api/dependencies",
+      consoleLogResponseBody: true,
+      validResponseCodes: '202')
+
+    if (response.status == 200) {
+      this.steps.echo "Dependencies sent to API successfully"
+    } else {
+      this.steps.echo "Error sending dependencies to API. Status code: ${response.status}\n${response.content}"
+    }
   }
 
   private static def zip(String s) {
