@@ -61,7 +61,6 @@ def call(params) {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
-          withAksClient(subscription, environment, product) {
             timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
               onPR {
                 deploymentNumber = githubCreateDeployment()
@@ -75,7 +74,6 @@ def call(params) {
                 githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
               }
             }
-          }
         }
       }
     }
