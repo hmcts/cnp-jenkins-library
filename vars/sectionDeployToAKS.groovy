@@ -41,6 +41,7 @@ def call(params) {
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
+  def envName = environment.replace('idam-', '').toUpperCase()
 
   Builder builder = pipelineType.builder
 
