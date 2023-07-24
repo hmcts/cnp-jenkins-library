@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   final AppPipelineConfig config
   def final steps
