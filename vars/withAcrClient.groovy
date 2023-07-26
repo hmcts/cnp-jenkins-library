@@ -1,6 +1,6 @@
 
 def call(String subscription, Closure block) {
-    doAcrOrKubectlTask(subscription, false, block)
+    doAcrOrKubectlTask(subscription, true, block)
 }
 
 def doAcrOrKubectlTask(String subscription, boolean alwaysLogin, Closure block) {
