@@ -9,7 +9,7 @@ def call(DockerImage dockerImage, Map params, String scope) {
     def releaseName = "${chartName}-${imageTag}"
     def namespace = env.TEAM_NAMESPACE
 
-  withAksClient(params.subscription, params.environment, params.product) {
+    withAksClient(params.subscription, params.environment, params.product) {
       def kubectl = new Kubectl(this, params.subscription, namespace, params.aksSubscription.name)
       kubectl.login()
 
