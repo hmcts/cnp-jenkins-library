@@ -57,7 +57,7 @@ def call(params) {
 
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+  def enableHelmLabel = gitHubAPI.checkForLabel(env.BRANCH_NAME, 'enable-helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
@@ -106,7 +106,7 @@ def call(params) {
                   } finally {
                     savePodsLogs(dockerImage, params, "smoke")
                     if (!success) {
-                      clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     }
                   }
                 }
@@ -130,7 +130,7 @@ def call(params) {
                         } finally {
                           savePodsLogs(dockerImage, params, "full-functional")
                           if (!success) {
-                            clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                            clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                           }
                         }
                       }
@@ -152,7 +152,7 @@ def call(params) {
                       } finally {
                         savePodsLogs(dockerImage, params, "functional")
                         if (!success) {
-                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                          clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                         }
                       }
                     }
@@ -257,7 +257,7 @@ def call(params) {
         }
       }
       def triggerUninstall = environment == nonProdEnv
-      if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
+      if (triggerUninstall || !enableHelmLabel)  {
         helmUninstall(dockerImage, params, pcr)
       }
     }
