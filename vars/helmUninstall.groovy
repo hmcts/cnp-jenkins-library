@@ -8,7 +8,9 @@ def call(DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
   try {
     stageWithAgent("Uninstall Helm Release - ${params.environment}", params.product) {
       pcr.callAround("helmReleaseUninstall:${params.environment}") {
+        withAksClient(params.subscription, params.environment, params.product) {
           uninstallRelease(dockerImage, params)
+        }
       }
     }
   } catch (ignored) {

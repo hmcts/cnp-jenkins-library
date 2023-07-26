@@ -41,7 +41,6 @@ def call(params) {
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
-  def envName = environment.replace('idam-', '').toUpperCase()
 
   Builder builder = pipelineType.builder
 
@@ -49,8 +48,6 @@ def call(params) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-    env.AKS_CLUSTER_NAME = env."${envName}_AKS_CLUSTER_NAME" ?: "cnp-${environment}-cluster"
-    env.AKS_RESOURCE_GROUP = env."${envName}_AKS_RESOURCE_GROUP" ?: "cnp-${environment}-rg"
   }
 
   def deploymentNamespace = projectBranch.deploymentNamespace()
@@ -64,7 +61,7 @@ def call(params) {
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
-          withAcrClient(subscription) {
+          withAksClient(subscription, environment, product) {
             timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
               onPR {
                 deploymentNumber = githubCreateDeployment()
