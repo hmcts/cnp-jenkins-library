@@ -1,7 +1,7 @@
 import uk.gov.hmcts.contino.Helm
 
 def call(Map params) {
-  withAksClient(params.subscription, params.environment, params.product){
+  withAksClient(params.subscription, params.environment, params.product) {
 
     String chartName = "${params.product}-${params.component}"
 
