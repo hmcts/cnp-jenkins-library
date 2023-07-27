@@ -96,9 +96,8 @@ def call(params) {
                 writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
                 sh script: """
                         # in case anyone doesn't have a trailing new line in their file
-                        echo -e '\n' >> .dockerignore
+                        printf '\r\n' >> .dockerignore
                         cat .dockerignore_build >> .dockerignore
-                        sed -i 's/-e//g' .dockerignore
                       """
               }
               def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
