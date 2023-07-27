@@ -82,7 +82,7 @@ def call(DockerImage dockerImage, Map params) {
 
     onPR {
       def githubApi = new GithubAPI(this)
-      for ( githublabel inApi.getLabelsbyPattern(env.BRANCH_NAME, "pr-values") ) {
+      for ( label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, "pr-values") ) {
         def prLabel = label.minus("pr-values:").replaceAll("\\s","")
         def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.template.yaml"
         def valuesLabelEnv = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.yaml"
