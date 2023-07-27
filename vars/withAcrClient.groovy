@@ -1,6 +1,6 @@
 
 def call(String subscription, Closure block) {
-  withSubscriptionLogin(subscription, alwaysLogin) {
+  withSubscriptionLogin(subscription) {
     withRegistrySecrets {
       block.call()
     }
