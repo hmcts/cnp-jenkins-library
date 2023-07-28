@@ -264,40 +264,22 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-If your service never uses the deployed resources after the pipeline is successful or if you refer to them only for logs in case of failure, you can uninstall the helm release to free resources on the cluster. Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
+By default your helm resources are uninstalled to free up resources on the cluster, you can keep these resources by adding the **enable-helm** label on your PR.  
 
+Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
 
-To clear the helm release regardless of success or failure, do the following:
+As the behaviour is now mandatory, we have deprecated the **enableCleanupOfHelmReleaseOnSuccess** & **enableCleanupOfHelmReleaseAlways** flags within the Jenkins library and a warning will be sent until the 31st August 23, there after it will fail in the pipeline.
 
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseAlways()
-    ...
-  }
-  ```
-
-To clear the helm release on a successful build, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnSuccess()
-    ...
-  }
-  ```
 
 To clear the helm release on a failing build, do the following:
 
   ```
   withPipeline(type, product, component) {
     ...
-    enableCleanupOfHelmReleaseOnFailure()
+    enableCleanupOfHelmReleaseOnFail
     ...
-  }
+    }
   ```
-
-
 ### Opinionated infrastructure pipeline
 
 For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.
