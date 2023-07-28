@@ -57,7 +57,7 @@ def call(params) {
 
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def enableHelmLabel = gitHubAPI.checkForLabel(env.BRANCH_NAME, 'enable-helm')
+  def enableHelmLabel = gitHubAPI.checkForLabel(env.BRANCH_NAME, 'enable_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
