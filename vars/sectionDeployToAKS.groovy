@@ -22,7 +22,7 @@ def testEnv(String testUrl, block) {
 
 def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-  if((projectBranch.isPR() && !enableHelmLabel) || (projectBranch.isMaster() && config.clearHelmReleaseOnFailure)) {
+  if ((projectBranch.isPR() && !enableHelmLabel) || projectBranch.isMaster()) {
       helmUninstall(dockerImage, params, pcr)
   }
 
