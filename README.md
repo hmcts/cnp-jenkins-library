@@ -266,9 +266,8 @@ The API tests run after smoke tests.
 
 By default your helm resources are uninstalled to free up resources on the cluster, you can keep these resources by adding the **enable-helm** label on your PR.  
 
-Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
+Note that Pod logs as are saved as artefacts in Jenkins before the helm release is cleared.
 
-As the behaviour is now mandatory, we have deprecated the **enableCleanupOfHelmReleaseOnSuccess** & **enableCleanupOfHelmReleaseAlways** flags within the Jenkins library and a warning will be sent until the 31st August 23, there after it will fail in the pipeline.
 
 
 To clear the helm release on a failing build, do the following:
