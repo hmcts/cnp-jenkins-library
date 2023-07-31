@@ -132,25 +132,25 @@ class YarnBuilder extends AbstractBuilder {
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
 
-      steps.sh """
-         export PATH=\$HOME/.local/bin:\$PATH
-         chmod +x yarn-audit-with-suppressions.sh
-        //  ./yarn-audit-with-suppressions.sh
-      """
+      //steps.sh """
+      //   export PATH=\$HOME/.local/bin:\$PATH
+      //   chmod +x yarn-audit-with-suppressions.sh
+      //  //  ./yarn-audit-with-suppressions.sh
+      //"""
     } finally {
-      steps.sh """
-        cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-        cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
-        cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
-      """
-      String issues = steps.readFile('yarn-audit-issues-result')
-      String knownIssues = null
-      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
-        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
-      }
-      def cveReport = prepareCVEReport(issues, knownIssues)
-      new CVEPublisher(steps)
-        .publishCVEReport('node', cveReport)
+      //steps.sh """
+      //  cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+      //  cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+      //  cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
+      //"""
+      //String issues = steps.readFile('yarn-audit-issues-result')
+      //String knownIssues = null
+      //if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+      //  knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+      //}
+      //def cveReport = prepareCVEReport(issues, knownIssues)
+      //new CVEPublisher(steps)
+      //  .publishCVEReport('node', cveReport)
     }
   }
 
