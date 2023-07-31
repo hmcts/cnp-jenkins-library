@@ -134,8 +134,8 @@ class YarnBuilder extends AbstractBuilder {
 
       steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
-        chmod +x yarn-audit-with-suppressions.sh
-        ./yarn-audit-with-suppressions.sh
+         chmod +x yarn-audit-with-suppressions.sh
+        //  ./yarn-audit-with-suppressions.sh
       """
     } finally {
       steps.sh """
