@@ -29,7 +29,3 @@ def call(String subscription, Closure body) {
     }
   }
 }
-
-def call(String subscription, Closure body) {
-  call(subscription, false, body)
-}
