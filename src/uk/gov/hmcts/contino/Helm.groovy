@@ -43,8 +43,10 @@ class Helm {
     this.acr.az "configure --defaults acr=${registryName}"
   }
 
-  this.steps.echo "Clear out helm repo before re-adding"
-  this.steps.sh(script: "helm repo rm ${registryName}")
+  def removeRepo() {
+    this.steps.echo "Clear out helm repo before re-adding"
+    this.steps.sh(script: "helm repo rm ${registryName}")
+  }
 
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
