@@ -96,7 +96,7 @@ def call(params) {
                 writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
                 sh script: """
                         # in case anyone doesn't have a trailing new line in their file
-                        printf '\r\n' >> .dockerignore
+                        echo -e '\n' >> .dockerignore
                         cat .dockerignore_build >> .dockerignore
                       """
               }
