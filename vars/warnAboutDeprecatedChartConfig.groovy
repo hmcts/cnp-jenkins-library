@@ -7,7 +7,8 @@ def call(Map<String, String> params) {
 
   def product = params.product
   def component = params.component
-  def helmChartDeprecationConfig = DeprecationConfig.deprecationConfig.helm
+
+  def helmChartDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().helm
 
   writeFile file: 'check-helm-api-version.sh', text: libraryResource('uk/gov/hmcts/helm/check-helm-api-version.sh')
   writeFile file: 'check-deprecated-charts.sh', text: libraryResource('uk/gov/hmcts/helm/check-deprecated-charts.sh')
