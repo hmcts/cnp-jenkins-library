@@ -36,6 +36,7 @@ class Helm {
 
   def setup() {
     configureAcr()
+    removeRepo()
     addRepo()
   }
 
@@ -54,6 +55,7 @@ class Helm {
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
+    removeRepo()
     addRepo()
     dependencyUpdate()
     lint(values)
