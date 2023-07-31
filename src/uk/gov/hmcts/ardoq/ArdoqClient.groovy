@@ -1,7 +1,5 @@
 package uk.gov.hmcts.ardoq
 
-import java.util.zip.GZIPOutputStream
-
 class ArdoqClient {
   String apiKey
   String apiUrl
@@ -34,37 +32,11 @@ class ArdoqClient {
     // gzip the payload
     this.steps.sh "gzip payload.json"
 
-//     curl -w "%{http_code}" --location --request POST '${{ secrets.ARDOQ_ADAPTER_URL }}?async=true' \
-//                --header 'Authorization: Bearer ${{ secrets.ARDOQ_ADAPTER_KEY }}' \
-//                --header 'Content-Type: application/json' \
-//                --header 'content-encoding: gzip' \
-//                --data-binary '@payload.json.gz'
-
-    def response = this.steps.httpRequest(httpMode: 'POST',
-      customHeaders:[
-        [name:'Authorization', value:"Bearer " + this.apiKey],
-        [name:'content-encoding', value:'gzip']
-      ],
-      contentType: 'APPLICATION_JSON',
-      uploadFile: 'payload.json.gz',
-      url: this.apiUrl + "/api/dependencies",
-      consoleLogResponseBody: true,
-      validResponseCodes: '202')
-
-    if (response.status == 200) {
-      this.steps.echo "Dependencies sent to API successfully"
-    } else {
-      this.steps.echo "Error sending dependencies to API. Status code: ${response.status}\n${response.content}"
-    }
-  }
-
-  private static def zip(String s) {
-    def targetStream = new ByteArrayOutputStream()
-    def zipStream = new GZIPOutputStream(targetStream)
-    zipStream.write(s.getBytes('UTF-8'))
-    zipStream.close()
-    def zippedBytes = targetStream.toByteArray()
-    targetStream.close()
-    return zippedBytes
+    this.steps.sh """curl -w "%{http_code}" --location --request POST '${this.apiUrl}/api/dependencies' \
+                --header 'Authorization: Bearer ${this.apiKey}' \
+                --header 'Content-Type: application/json' \
+                --header 'content-encoding: gzip' \
+                --data-binary '@payload.json.gz'
+                """
   }
 }
