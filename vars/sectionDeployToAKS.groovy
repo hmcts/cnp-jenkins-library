@@ -56,8 +56,7 @@ def call(params) {
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   GithubAPI gitHubAPI = new GithubAPI(this)
-  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def enableHelmLabel = gitHubAPI.checkForLabel(env.BRANCH_NAME, 'enable_keep_helm')
+  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_') 
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
  
 
