@@ -46,7 +46,7 @@ class Helm {
 
   def removeRepo() {
     this.steps.echo "Clear out helm repo before re-adding"
-    this.steps.sh(script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk...skipping remove'")
+    this.steps.sh(script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
   def addRepo() {
