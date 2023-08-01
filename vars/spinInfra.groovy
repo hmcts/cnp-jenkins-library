@@ -60,10 +60,14 @@ def call(Map<String, ?> params) {
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        def tags = [environment: Environment.toTagName(config.environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
+        def tags = [environment: Environment.toTagName(config.environment), managedBy: teamName, builtFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
 
         if (Environment.toTagName(config.environment) == "sandbox") {
           tags = tags + [expiresAfter: config.expires]
+        }
+
+        if (changeUrl && changeUrl != "null" && changeUrl != "") {
+          tags = tags + [changeUrl: changeUrl]
         }
 
         String pipelineTags = new TerraformTagMap(tags).toString()
