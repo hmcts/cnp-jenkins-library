@@ -63,7 +63,6 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  def deprecationConfig = new DeprecationConfig(this).loadDeprecationConfig()
   String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
