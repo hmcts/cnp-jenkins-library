@@ -110,10 +110,10 @@ def call(Map<String, ?> params) {
         if (fmtExitCode != 0) {
           echo 'Terraform code is not formatted properly'
 
-      // Format the Terraform code recursively
+       // Format the Terraform code recursively
        sh 'terraform fmt -recursive'
 
-     // Commit the formatting changes
+       // Commit the formatting changes
        git fetch origin $BRANCH:$BRANCH
        git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
        git config --global user.name ${USER_NAME}
