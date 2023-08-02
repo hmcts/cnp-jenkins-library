@@ -101,10 +101,10 @@ def call(Map<String, ?> params) {
 
       //check tf version
         def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive' )
-        echo "Terraform fmt exit status was ${fmtTerraformcheck}"
+        echo "Terraform fmt exit status ${fmtTerraformcheck}"
         
         if (fmtExitCode != 0) {
-          echo 'Terraform code is not formatted properly. Formatting...'
+          echo 'Terraform code is not formatted properly'
 
       // Format the Terraform code recursively
        sh 'terraform fmt -recursive'
@@ -117,12 +117,11 @@ def call(Map<String, ?> params) {
 
       git add $(find . -type f -name "*.tf")
       git commit -m "Updating Terraform Formatting"
-      git push origin HEAD:$BRANCH
+    git push origin HEAD:$BRANCH
 
-      error("The Terraform code was not formatted properly. It has been automatically formatted and pushed back to the pull request.")
-       } else {
-            echo 'Terraform correctly formatted'
-       }
+    error("The Terraform code was not formatted properly, it has been formatted and pushed back to your pull request.")
+    }
+
 
 
         warnAboutOldTfAzureProvider()
