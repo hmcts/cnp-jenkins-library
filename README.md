@@ -264,21 +264,10 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-By default your helm resources are uninstalled to free up resources on the cluster, you can keep these resources by adding the **enable-helm** label on your PR.  
+By default your helm resources are uninstalled to free up resources on the cluster, you can keep these resources by adding the **enable_keep_helm** label on your PR.  
 
 Note that Pod logs as are saved as artefacts in Jenkins before the helm release is cleared.
 
-
-
-To clear the helm release on a failing build, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnFailure()
-    ...
-    }
-  ```
 ### Opinionated infrastructure pipeline
 
 For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.
