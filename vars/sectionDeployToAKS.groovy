@@ -23,7 +23,7 @@ def testEnv(String testUrl, block) {
 def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   if (config.clearHelmReleaseOnFailure || !enableHelmLabel) {
-      helmUninstall(dockerImage, params, pcr)
+      helmUninstall(dockerImage, params, pcr) 
   }
 
 }
