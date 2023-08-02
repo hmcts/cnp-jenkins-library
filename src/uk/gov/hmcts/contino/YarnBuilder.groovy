@@ -297,7 +297,7 @@ EOF
   private isNodeJSV18OrNewer() {
     boolean validVersion = true;
     if (steps.fileExists(NVMRC)) {
-      String nodeVersion = steps.readFile(NVMRC)
+      String nodeVersion = steps.readFile(NVMRC).replace("v", "")
       Float current_version = valueOf(nodeVersion
                                           .trim()
                                           .substring(0, nodeVersion.lastIndexOf(".")))
