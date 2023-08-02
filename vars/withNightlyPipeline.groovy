@@ -62,9 +62,7 @@ def call(type,product,component,Closure body) {
         notifyBuildFailure channel: slackChannel
 
         callbacksRunner.call('onFailure')
-        node {
-          metricsPublisher.publish('Pipeline Failed')
-        }
+        metricsPublisher.publish('Pipeline Failed')
         throw err
       } finally {
         notifyPipelineDeprecations(slackChannel, metricsPublisher)

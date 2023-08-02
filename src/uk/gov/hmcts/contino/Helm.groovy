@@ -36,11 +36,17 @@ class Helm {
 
   def setup() {
     configureAcr()
+    removeRepo()
     addRepo()
   }
 
   def configureAcr() {
     this.acr.az "configure --defaults acr=${registryName}"
+  }
+
+  def removeRepo() {
+    this.steps.echo "Clear out helm repo before re-adding"
+    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
   def addRepo() {
@@ -49,6 +55,7 @@ class Helm {
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
+    removeRepo()
     addRepo()
     dependencyUpdate()
     lint(values)
