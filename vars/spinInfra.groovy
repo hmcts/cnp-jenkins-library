@@ -115,12 +115,12 @@ def call(Map<String, ?> params) {
        git config --global user.name ${USER_NAME}
        git config --global user.email ${GIT_APP_EMAIL_ID}
 
-      git add $(find . -type f -name "*.tf")
-      git commit -m "Updating Terraform Formatting"
-    git push origin HEAD:$BRANCH
+       git add $(find . -type f -name "*.tf")
+       git commit -m "Updating Terraform Formatting"
+       git push origin HEAD:$BRANCH
 
-    error("The Terraform code was not formatted properly, it has been formatted and pushed back to your pull request.")
-    }
+       error("The Terraform code was not formatted properly, it has been formatted and pushed back to your pull request.")
+     }
 
 
 
