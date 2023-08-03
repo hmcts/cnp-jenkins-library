@@ -13,6 +13,7 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
   @Library('Infrastructure')
 ```
 
+
 ### Opinionated app pipeline
 
 This library contains a complete opinionated pipeline that can build, test and deploy Java
