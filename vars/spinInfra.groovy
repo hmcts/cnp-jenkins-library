@@ -123,7 +123,7 @@ def call(Map<String, ?> params) {
        git commit -m "Updating Terraform Formatting"
        git push origin HEAD:$BRANCH
 
-       error("The Terraform code was not formatted properly, it has been formatted and pushed back to your pull request.")
+       error("Terraform was not formatted properly, it has been reformatted and pushed back to your pull request.")
      }
 
 
