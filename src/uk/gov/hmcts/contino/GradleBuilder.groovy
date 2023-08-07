@@ -240,20 +240,18 @@ EOF
 
   @Override
   def setupToolVersion() {
-    try {
-      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
-      if (statusCode == 0) {
-        WarningCollector.addPipelineWarning("java_11_deprecated",
-          "Please upgrade to Java 17, upgrade to " +
-            "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
-            "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
-            "Make sure you use the latest version of the Application insights agent, see the configuration in " +
-            "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
-            "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
-        )
-      }
+  def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
+    if (statusCode == 0) {
+      WarningCollector.addPipelineWarning("java_11_deprecated",
+        "Please upgrade to Java 17, upgrade to " +
+          "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
+          "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
+          "Make sure you use the latest version of the Application insights agent, see the configuration in " +
+          "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
+          "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+      )
     }
-    
+
     steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
