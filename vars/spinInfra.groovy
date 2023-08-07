@@ -108,7 +108,7 @@ def call(Map<String, ?> params) {
         echo "Terraform fmt exit status ${fmtTerraformcheck}"
         
         if (fmtExitCode != 0) {
-          echo 'Terraform code is not formatted properly'
+          echo 'Terraform code is not formatted correctly'
 
        // Format the Terraform code recursively
        sh 'terraform fmt -recursive'
@@ -123,7 +123,7 @@ def call(Map<String, ?> params) {
        git commit -m "Updating Terraform Formatting"
        git push origin HEAD:$BRANCH
 
-       error("Terraform was not formatted properly, it has been reformatted and pushed back to your pull request.")
+       error("Terraform was not formatted correctly, it has been reformatted and pushed back to your PR.")
      }
 
 
