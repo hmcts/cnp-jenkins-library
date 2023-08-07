@@ -14,7 +14,7 @@ def call(Map<String, String> params) {
 
   writeFile file: 'check-helm-api-version.sh', text: libraryResource('uk/gov/hmcts/helm/check-helm-api-version.sh')
   writeFile file: 'check-deprecated-charts.sh', text: libraryResource('uk/gov/hmcts/helm/check-deprecated-charts.sh')
-  writeFile file: 'check-deprecated-gradle-dependency', text: libraryResource('uk/gov/hmcts/gradle/check-deprecated-gradle-dependency.sh')
+  writeFile file: 'check-deprecated-gradle-dependency.sh', text: libraryResource('uk/gov/hmcts/gradle/check-deprecated-gradle-dependency.sh')
 
 
   try {
