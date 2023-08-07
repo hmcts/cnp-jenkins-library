@@ -1,5 +1,7 @@
 package uk.gov.hmcts.ardoq
 
+import uk.gov.hmcts.contino.RepositoryUrl
+
 class ArdoqClient {
   String apiKey
   String apiUrl
@@ -11,7 +13,25 @@ class ArdoqClient {
     this.steps = steps
   }
 
-  void updateDependencies(String dependencies, String applicationId, String repositoryName, String parser, String language, String languageVersion) {
+  void updateDependencies(String dependencies, String parser) {
+    if (!this.steps.fileExists('Dockerfile')) {
+      this.steps.echo "No Dockerfile found, skipping tech stack maintenance"
+      return
+    }
+
+    def applicationId = this.steps.env.ARDOQ_APPLICATION_ID
+    if (!applicationId?.trim()) {
+      this.steps.echo "Ardoq Application Id is not configured for ${this.steps.env.GIT_URL}"
+      return
+    }
+
+    String repositoryName = new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
+    steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
+    steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}' > languageVersionProc"
+
+    String language = steps.readFile('languageProc')
+    String languageVersion = steps.readFile('languageVersionProc')
+
     String b64Dependencies = dependencies.bytes.encodeBase64().toString()
 
     String jsonPayload = """\
