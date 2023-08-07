@@ -57,7 +57,6 @@ def call(params) {
 
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
