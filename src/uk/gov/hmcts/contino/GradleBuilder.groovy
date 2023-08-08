@@ -240,7 +240,7 @@ EOF
 
   @Override
   def setupToolVersion() {
-  def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
+    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
     if (statusCode == 0) {
       WarningCollector.addPipelineWarning("java_11_deprecated",
         "Please upgrade to Java 17, upgrade to " +
