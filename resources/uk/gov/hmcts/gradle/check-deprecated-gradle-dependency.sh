@@ -4,7 +4,7 @@ set -x
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
 
-CURRENT_VERSION=$(gradle -q dependencyInsight --no-daemon --dependency ${DEPENDENCY} | grep "${DEPENDENCY}" | head -1 |  sed 's/ (selected by rule)//' | tail -c -6)
+CURRENT_VERSION=$(./gradlew --no-daemon --init-script init.gradle -q dependencyInsight --no-daemon --dependency ${DEPENDENCY} | grep "${DEPENDENCY}" | head -1 |  sed 's/ (selected by rule)//' | tail -c -6)
 
 function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 
