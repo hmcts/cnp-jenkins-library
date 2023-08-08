@@ -12,5 +12,6 @@ if [[ ! -z CURRENT_VERSION ]]; then
     echo "Found ${DEPENDENCY} dependency, version in use: ${CURRENT_VERSION}"
     if [ $(ver $CURRENT_VERSION) -lt $(ver ${REQUIRED_VERSION}) ]; then
         echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
+        exit 1
     fi
 fi
