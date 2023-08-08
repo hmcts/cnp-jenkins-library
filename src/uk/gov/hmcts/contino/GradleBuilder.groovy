@@ -252,6 +252,7 @@ EOF
       )
     }
 
+    // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
     steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
