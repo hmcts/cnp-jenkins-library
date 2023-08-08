@@ -264,9 +264,9 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-By default your helm resources are uninstalled to free up resources on the cluster, you can keep these resources by adding the **enable_keep_helm** label on your PR.  
+By default your Helm resources are uninstalled to free up resources on the cluster, you can keep these resources by adding the **enable_keep_helm** label on your PR.  
 
-Note that Pod logs as are saved as artefacts in Jenkins before the helm release is cleared.
+Please note that Pod logs as are saved as artefacts in Jenkins before the Helm release is cleared.
 
 ### Opinionated infrastructure pipeline
 
