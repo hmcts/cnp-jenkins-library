@@ -89,6 +89,25 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
+      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
+        stageWithAgent("Pact Consumer Can I Deploy", product) {
+          builder.runConsumerCanIDeploy()
+        }
+      }
+      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
+        stageWithAgent("Pact Provider Verification", product) {
+          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
+          pcr.callAround('pact-provider-verification') {
+            builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
+          }
+        }
+      }
       if (config.serviceApp) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
@@ -171,25 +190,7 @@ def call(params) {
               }
             }
           }
-          if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
-            stageWithAgent("Pact Consumer Can I Deploy", product) {
-              builder.runConsumerCanIDeploy()
-            }
-          }
-          if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
-            stageWithAgent("Pact Provider Verification", product) {
-              def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-              env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
-              env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-              env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
-              pcr.callAround('pact-provider-verification') {
-                builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
-              }
-            }
-          }
 
           onMaster {
             if (config.crossBrowserTest) {
