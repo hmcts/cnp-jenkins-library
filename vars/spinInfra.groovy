@@ -7,6 +7,12 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
 
+
+
+USER_NAME=${1}
+BEARER_TOKEN=${2}
+EMAIL_ID=${3}
+
 def call(product, environment, tfPlanOnly, subscription) {
   call(product, null, environment, tfPlanOnly, subscription)
 }
