@@ -9,8 +9,7 @@ CURRENT_VERSION=$(./gradlew --no-daemon --init-script init.gradle -q dependencyI
 function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 
 if [[ ! -z CURRENT_VERSION ]]; then
-    echo "Found ${DEPENDENCY} dependency, version in use: ${CURRENT_VERSION}"
-    if [ $(ver $CURRENT_VERSION) -lt $(ver ${REQUIRED_VERSION}) ]; then
+    if [[ -n $CURRENT_VERSION ]] && [ $(ver $CURRENT_VERSION) -lt $(ver ${REQUIRED_VERSION}) ]; then
         echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
         exit 1
     fi
