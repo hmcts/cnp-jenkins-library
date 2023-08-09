@@ -44,7 +44,7 @@ def call(type,product,component,Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  // def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector = agentType == "" ? "daily" : agentType + ' && daily'
 
