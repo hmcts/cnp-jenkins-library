@@ -9,7 +9,7 @@
 def call(String sauceid, Closure body) {
     sauce(sauceid) {
               sauceconnect(options: '--shared-tunnel --verbose --no-remove-colliding-tunnels --tunnel-identifier reformtunnel', useGeneratedTunnelIdentifier: false,
-                useLatestSauceConnect: true, verboseLogging: true) {
+                useLatestSauceConnect: false, verboseLogging: true) {
             body()
         }
     }
