@@ -79,7 +79,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableCleanupOfHelmReleaseOnSuccess() {
-    config.clearHelmReleaseOnSuccess = true;
 
         WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-deprecation", "`enableCleanupOfHelmReleaseOnSuccess` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 8, 31));
     
