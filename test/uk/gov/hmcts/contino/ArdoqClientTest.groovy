@@ -59,7 +59,7 @@ class ArdoqClientTest extends Specification {
 
   def "json"() {
     when:
-    String json = ardoqClient.getJson("appId", "repoName", "deps", "yarn", "java", "1.8")
+    String json = ArdoqClient.getJson("appId", "repoName", "deps", "yarn", "java", "1.8")
 
     then:
     assertThat(json).isEqualTo("""\

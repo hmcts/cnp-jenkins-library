@@ -17,6 +17,7 @@ class ArdoqClient {
     def applicationId = this.steps.env.ARDOQ_APPLICATION_ID
     if (!applicationId?.trim()) {
       this.steps.echo "Ardoq Application Id is not configured for ${this.steps.env.GIT_URL}"
+      return
     }
     return applicationId?.trim();
   }
@@ -43,7 +44,7 @@ class ArdoqClient {
     return steps.readFile('languageVersionProc')
   }
 
-  String getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion) {
+  static String getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion) {
     return """\
              {
              "vcsHost": "Github HMCTS",
@@ -67,7 +68,7 @@ class ArdoqClient {
 
     if (applicationId && repositoryName && b64Dependencies && parser && language && languageVersion) {
 
-      String jsonPayload = this.getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion)
+      String jsonPayload = getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion)
 
       this.steps.writeFile(file: 'payload.json', text: jsonPayload);
       // gzip the payload
