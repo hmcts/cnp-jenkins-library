@@ -13,50 +13,74 @@ class ArdoqClient {
     this.steps = steps
   }
 
-  void updateDependencies(String dependencies, String parser) {
+  String getApplicationId() {
+    def applicationId = this.steps.env.ARDOQ_APPLICATION_ID
+    if (!applicationId?.trim()) {
+      this.steps.echo "Ardoq Application Id is not configured for ${this.steps.env.GIT_URL}"
+    }
+    return applicationId?.trim();
+  }
+
+  String getRepositoryName() {
+    return new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
+  }
+
+  String getLanguage() {
     if (!this.steps.fileExists('Dockerfile')) {
       this.steps.echo "No Dockerfile found, skipping tech stack maintenance"
       return
     }
+    steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
+    return steps.readFile('languageProc')
+  }
 
-    def applicationId = this.steps.env.ARDOQ_APPLICATION_ID
-    if (!applicationId?.trim()) {
-      this.steps.echo "Ardoq Application Id is not configured for ${this.steps.env.GIT_URL}"
+  String getLanguageVersion() {
+    if (!this.steps.fileExists('Dockerfile')) {
+      this.steps.echo "No Dockerfile found, skipping tech stack maintenance"
       return
     }
-
-    String repositoryName = new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
-    steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
     steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}' > languageVersionProc"
+    return steps.readFile('languageVersionProc')
+  }
 
-    String language = steps.readFile('languageProc')
-    String languageVersion = steps.readFile('languageVersionProc')
+  String getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion) {
+    return """\
+             {
+             "vcsHost": "Github HMCTS",
+             "hmctsApplication": "${applicationId}",
+             "codeRepository": "${repositoryName}",
+             "encodedDependecyList": "${b64Dependencies}",
+             "parser": "${parser}",
+             "language": "${language}",
+             "languageVersion": "${languageVersion}"
+             }
+             """.stripIndent()
+  }
+
+  void updateDependencies(String dependencies, String parser) {
+    String applicationId = this.getApplicationId()
+    String repositoryName = this.getRepositoryName()
+    String language = this.getLanguage()
+    String languageVersion = this.getLanguageVersion()
 
     String b64Dependencies = dependencies.bytes.encodeBase64().toString()
 
-    String jsonPayload = """\
-                         {
-                         "vcsHost": "Github HMCTS",
-                         "hmctsApplication": "${applicationId}",
-                         "codeRepository": "${repositoryName}",
-                         "encodedDependecyList": "${b64Dependencies}",
-                         "parser": "${parser}",
-                         "language": "${language}",
-                         "languageVersion": "${languageVersion}"
-                         }
-                         """.stripIndent()
+    if (applicationId && repositoryName && b64Dependencies && parser && language && languageVersion) {
 
-    this.steps.echo("JSON Payload to send: ${jsonPayload}")
+      String jsonPayload = this.getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion)
 
-    this.steps.writeFile(file: 'payload.json', text: jsonPayload);
-    // gzip the payload
-    this.steps.sh "gzip payload.json"
+      this.steps.writeFile(file: 'payload.json', text: jsonPayload);
+      // gzip the payload
+      this.steps.sh "gzip payload.json"
 
-    this.steps.sh """curl -w "%{http_code}" --location --request POST '${this.apiUrl}/api/dependencies' \
-                --header 'Authorization: Bearer ${this.apiKey}' \
-                --header 'Content-Type: application/json' \
-                --header 'content-encoding: gzip' \
-                --data-binary '@payload.json.gz'
-                """
+      this.steps.sh """curl -w "%{http_code}" --location --request POST '${this.apiUrl}/api/dependencies' \
+                  --header 'Authorization: Bearer ${this.apiKey}' \
+                  --header 'Content-Type: application/json' \
+                  --header 'content-encoding: gzip' \
+                  --data-binary '@payload.json.gz'
+                  """
+    } else {
+      this.steps.echo "Missing required parameters for tech stack maintenance"
+    }
   }
 }
