@@ -83,7 +83,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableCleanupOfHelmReleaseOnFailure() {
-    config.clearHelmReleaseOnFailure = true;
+    WarningCollector.addPipelineWarning("Helm-ReleaseonFailure-deprecation", "`enableCleanupOfHelmReleaseOnFailure` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 8, 31));
   }
 
   void enableCleanupOfHelmReleaseAlways() {
