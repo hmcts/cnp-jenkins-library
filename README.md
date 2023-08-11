@@ -266,11 +266,11 @@ The API tests run after smoke tests.
 
 - By default your Helm resources are uninstalled to free up resources on the cluster.
 - You can keep these resources by adding the **enable_keep_helm** label on your PR.
-- If u want to keep the resources for master build, you can add below flag to Jenkinsfile_CNP
+- If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
   ```
   withPipeline(type, product, component) {
   ...
-  disableCleanupOfHelmReleaseAlways()
+    disableCleanupOfHelmReleaseOnFailure()
   ...
   }
   ```
