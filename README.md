@@ -275,7 +275,7 @@ The API tests run after smoke tests.
   }
   ```
 
-Please note that Pod logs as are saved as artefacts in Jenkins before the Helm release is cleared.
+Please note that Pod logs are saved as artefacts in Jenkins before the Helm release is cleared.
 
 ### Opinionated infrastructure pipeline
 
