@@ -106,9 +106,10 @@ class TeamConfig {
 
   def getArdoqApplicationId(String product) {
     def teamNames = getTeamNamesMap()
-    if (teamNames.containsKey(product) && !teamNames.get(product).get('ardoq') && !teamNames.get(product).get('ardoq').get('application_id')) {
+    if (teamNames?.get(product)?.get('ardoq')?.get('application_id')) {
       return teamNames.get(product).get('ardoq').get('application_id')
     }
+    steps.echo("Ardoq Application Id not set")
   }
 
   String getBuildAgentType(String product) {
