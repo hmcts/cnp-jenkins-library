@@ -45,7 +45,7 @@ def call(Map<String, String> params) {
       try {
         sh "./check-deprecated-gradle-dependency.sh $dependency $deprecation.version "
       } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_helmcharts", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to latest release https://github.com/hmcts/$dependency/releases", LocalDate.parse(deprecation.date_deadline))
+        WarningCollector.addPipelineWarning("deprecated_gradle_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
       }
     }
   }
