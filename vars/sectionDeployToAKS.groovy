@@ -7,7 +7,6 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector 
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -20,7 +19,7 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def clearHelmReleaseForFailure(Boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
     def projectBranch = new ProjectBranch(env.BRANCH_NAME)
     if (config.clearHelmReleaseOnFailure || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
@@ -57,7 +56,7 @@ def call(params) {
 
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+  boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {

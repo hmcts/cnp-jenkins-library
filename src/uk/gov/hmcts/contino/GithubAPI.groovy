@@ -181,4 +181,3 @@ class GithubAPI {
     return checkForLabel(branch_name, "dependencies")
   }
 }
-
