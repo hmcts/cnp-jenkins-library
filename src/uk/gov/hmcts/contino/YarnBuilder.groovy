@@ -294,6 +294,12 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private LocalDate node18ExpirationDate() {
+    def date = env.PRODUCT == 'xui' ? LocalDate.of(2023, 10, 31) : NODEJS_EXPIRATION
+    steps.echo "Node.Js upgrade deadline is: ${date}"
+    return date
+  }
+
   private isNodeJSV18OrNewer() {
     boolean validVersion = true;
     if (steps.fileExists(NVMRC)) {
@@ -303,7 +309,7 @@ EOF
                                           .substring(0, nodeVersion.lastIndexOf(".")))
       validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
-      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", node18ExpirationDate())
     }
 
     return validVersion
@@ -311,7 +317,7 @@ EOF
 
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", node18ExpirationDate())
     }
   }
 
