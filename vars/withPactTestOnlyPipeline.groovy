@@ -15,11 +15,6 @@ import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(type, String product, String component, Closure body) {
 
-  def branch = new ProjectBranch(env.BRANCH_NAME)
-
-  def deploymentNamespace = branch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
-
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),

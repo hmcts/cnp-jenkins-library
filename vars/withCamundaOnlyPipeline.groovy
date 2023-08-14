@@ -6,7 +6,6 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.pipeline.TeamConfig
-import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
@@ -15,10 +14,6 @@ import uk.gov.hmcts.contino.SpringBootPipelineType
 
 def call(type, String product, String component, String s2sServiceName, String tenantId, Closure body) {
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
-
-  def branch = new ProjectBranch(env.BRANCH_NAME)
-  def deploymentNamespace = branch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
