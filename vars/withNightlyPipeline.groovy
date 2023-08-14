@@ -47,15 +47,13 @@ def call(type,product,component,Closure body) {
   // def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
-  def nodeSelector {
-    if (agentType = "") {
-        def nodeSelector = "daily" 
-      } else if (agentType = "arm") {
-        def nodeSelector = "arm"
-      } else {
-        def nodeSelector = agentType + ' && daily'
-      }
-  }
+  if (agentType = "") {
+      def nodeSelector = "daily" 
+    } else if (agentType = "arm") {
+      def nodeSelector = "arm"
+    } else {
+      def nodeSelector = agentType + ' && daily'
+    }
 
   node(nodeSelector) {
     timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
