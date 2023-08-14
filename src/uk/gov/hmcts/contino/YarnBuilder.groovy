@@ -295,7 +295,7 @@ EOF
   }
 
   private LocalDate node18ExpirationDate() {
-    def date = env.PRODUCT == 'xui' ? LocalDate.of(2023, 10, 31) : NODEJS_EXPIRATION
+    def date = steps.env.PRODUCT == 'xui' ? LocalDate.of(2023, 10, 31) : NODEJS_EXPIRATION
     steps.echo "Node.Js upgrade deadline is: ${date}"
     return date
   }
