@@ -12,6 +12,8 @@ class SpringBootPipelineType implements PipelineType, Serializable {
     this.product = product
     this.app = app
 
+    this.steps.env.PRODUCT = product
+
     builder = new GradleBuilder(steps, product)
   }
 }
