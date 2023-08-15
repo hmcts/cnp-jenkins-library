@@ -9,9 +9,13 @@ def call(Map<String, String> params) {
   def component = params.component
 
   def helmChartDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().helm
+  def gradleDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().gradle
+
 
   writeFile file: 'check-helm-api-version.sh', text: libraryResource('uk/gov/hmcts/helm/check-helm-api-version.sh')
   writeFile file: 'check-deprecated-charts.sh', text: libraryResource('uk/gov/hmcts/helm/check-deprecated-charts.sh')
+  writeFile file: 'check-deprecated-gradle-dependency.sh', text: libraryResource('uk/gov/hmcts/gradle/check-deprecated-gradle-dependency.sh')
+
 
   try {
     sh """
@@ -35,4 +39,15 @@ def call(Map<String, String> params) {
   }
   sh 'rm -f check-deprecated-charts.sh'
 
+  sh 'chmod +x check-deprecated-gradle-dependency.sh'
+  gradleDeprecationConfig.each { dependency, deprecatedVersions ->
+    deprecatedVersions.each { deprecation ->
+      try {
+        sh "./check-deprecated-gradle-dependency.sh $dependency $deprecation.version "
+      } catch (ignored) {
+        WarningCollector.addPipelineWarning("deprecated_gradle_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
+      }
+    }
+  }
+  sh 'rm -f check-deprecated-gradle-dependency.sh'
 }

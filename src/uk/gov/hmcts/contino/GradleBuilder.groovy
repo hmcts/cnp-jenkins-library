@@ -246,27 +246,20 @@ EOF
 
   @Override
   def setupToolVersion() {
-    try {
-      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
-      if (statusCode == 0) {
-        steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
-        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-        // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
-        steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
-      } else {
-        WarningCollector.addPipelineWarning("java_11_deprecated",
-          "Please upgrade to Java 17, upgrade to " +
-            "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
-            "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
-            "Make sure you use the latest version of the Application insights agent, see the configuration in " +
-            "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
-            "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
-        )
-      }
-    } catch(err) {
-      steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
+    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
+    if (statusCode == 0) {
+      WarningCollector.addPipelineWarning("java_11_deprecated",
+        "Please upgrade to Java 17, upgrade to " +
+          "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
+          "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
+          "Make sure you use the latest version of the Application insights agent, see the configuration in " +
+          "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
+          "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+      )
     }
 
+    // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
+    steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
   }
@@ -297,6 +290,10 @@ EOF
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
     } else {
+      WarningCollector.addPipelineWarning("gatling_docker_deprecated",
+        "Please use the gatling plugin instead of the docker image " +
+          "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
+      )
       super.executeGatling()
     }
   }
