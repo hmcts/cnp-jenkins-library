@@ -190,4 +190,11 @@ class YarnBuilderTest extends Specification {
     then:
     result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
   }
+
+  def "techStackMaintenance"() {
+    when:
+      builder.techStackMaintenance()
+    then:
+      1 * steps.echo('Running Yarn Tech stack maintenance')
+  }
 }
