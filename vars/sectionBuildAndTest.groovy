@@ -83,6 +83,12 @@ def call(params) {
         builder.securityCheck()
       }
     }
+    branches["Tech Stack"] = {
+      pcr.callAround('techstack') {
+        builder.techStackMaintenance()
+      }
+    }
+    
     if (dockerFileExists) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {

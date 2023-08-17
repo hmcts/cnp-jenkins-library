@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -152,6 +153,11 @@ class GradleBuilder extends AbstractBuilder {
           .publishCVEReport('java', cveReport)
       }
     }
+  }
+
+  @Override
+  def techStackMaintenance() {
+    localSteps.echo "Support for Gradle coming soon..."
   }
 
   def prepareCVEReport(String owaspReportJSON) {

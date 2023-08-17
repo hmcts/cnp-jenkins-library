@@ -12,6 +12,8 @@ class RubyPipelineType implements PipelineType, Serializable {
     this.product = product
     this.app = app
 
+    this.steps.env.PRODUCT = product
+
     builder = new RubyBuilder(steps)
   }
 }
