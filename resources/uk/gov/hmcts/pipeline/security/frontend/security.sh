@@ -4,6 +4,11 @@ export LANG=C.UTF-8
 
 echo ${TEST_URL}
 
+if [[ -z ${TEST_URL} ]]; then
+  echo "TEST_URL is empty"
+  exit 1
+fi
+
 /opt/zap/zap.sh -config database.newsession=3 -config database.newsessionprompt=false -config api.disablekey=true \
 -config scanner.attackOnStart=true -config view.mode=attack -config globalexcludeurl.url_list.url.regex='^https?:\/\/.*\/(?:.*login.*)+$' \
 -config rules.cookie.ignorelist=_ga,_gid,_gat,dtCookie,dtLatC,dtPC,dtSa,rxVisitor,rxvt -config connection.dnsTtlSuccessfulQueries=-1 -config api.addrs.addr.name=.* \
