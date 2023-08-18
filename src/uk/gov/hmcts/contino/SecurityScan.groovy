@@ -18,7 +18,6 @@ class SecurityScan implements Serializable {
                 chmod +x security.sh
                 ./security.sh
                 '''
-            }
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
                     cd /glue
