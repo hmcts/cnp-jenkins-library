@@ -16,7 +16,7 @@ class SecurityScan implements Serializable {
         try {
             this.steps.sh '''
                 chmod +x security.sh
-                ./security.sh
+                sudo ./security.sh
                 '''
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
