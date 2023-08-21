@@ -16,5 +16,5 @@ sudo /opt/zap/zap.sh -config database.newsession=3 -config database.newsessionpr
 
 echo 'Changing owner from $(id -u):$(id -g) to $(id -u):$(id -u)'
 sudo chown -R $(id -u):$(id -u) ${WORKSPACE}/activescan.html
-curl --fail http://0.0.0.0:1001/OTHER/core/other/jsonreport/?formMethod=GET --output report.json
-cp *.html functional-output/
+# curl --fail http://0.0.0.0:1001/OTHER/core/other/jsonreport/?formMethod=GET --output report.json
+cp ${WORKSPACE}/*.html ${WORKSPACE}/functional-output/
