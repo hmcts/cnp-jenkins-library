@@ -15,6 +15,6 @@ sudo /opt/zap/zap.sh -config database.newsession=3 -config database.newsessionpr
 -config api.addrs.addr.regex=true -cmd -quickurl ${TEST_URL} -quickout ${WORKSPACE}/activescan.html
 
 echo 'Changing owner from $(id -u):$(id -g) to $(id -u):$(id -u)'
-chown -R $(id -u):$(id -u) ${WORKSPACE}/activescan.html
+sudo chown -R $(id -u):$(id -u) ${WORKSPACE}/activescan.html
 curl --fail http://0.0.0.0:1001/OTHER/core/other/jsonreport/?formMethod=GET --output report.json
 cp *.html functional-output/
