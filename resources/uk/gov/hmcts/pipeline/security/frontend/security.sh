@@ -2,11 +2,11 @@
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
-echo ${TEST_URL}
-
 if [[ -z ${TEST_URL} ]]; then
-  echo "TEST_URL is empty"
+  echo "TEST_URL environment variable is empty"
   exit 1
+else
+  echo ${TEST_URL}
 fi
 
 /opt/zap/zap.sh -config database.newsession=3 -config database.newsessionprompt=false -config api.disablekey=true \
