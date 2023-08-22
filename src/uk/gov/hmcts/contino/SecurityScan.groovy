@@ -23,9 +23,6 @@ class SecurityScan implements Serializable {
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
                     cd /glue
-                    ls /bin
-                    ls /glue
-                    ls /glue/bin
                     ls /tmp
                     ls /tmp/functional-output
                     ./run_glue.sh "/tmp/audit.json" "/tmp/functional-output/report.json"
