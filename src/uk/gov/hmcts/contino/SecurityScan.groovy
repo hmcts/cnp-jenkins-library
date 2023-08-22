@@ -24,8 +24,8 @@ class SecurityScan implements Serializable {
                 this.steps.sh '''
                     cd /glue
                     ls ${WORKSPACE}
-                    ls functional-output
-                    ./run_glue.sh "functional-output/audit.json" "${WORKSPACE}/functional-output/report.json"
+                    ls ${WORKSPACE}/functional-output
+                    ./run_glue.sh "${WORKSPACE}/functional-output/audit.json" "${WORKSPACE}/functional-output/report.json"
                     '''
             }
         } finally {
