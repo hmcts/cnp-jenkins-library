@@ -36,6 +36,7 @@ def call(params) {
     }
     builder.setupToolVersion()
   }
+  warnAboutRenovateConfig
   boolean dockerFileExists = fileExists('Dockerfile')
   onPathToLive {
     stageWithAgent("Build", product) {
@@ -88,7 +89,7 @@ def call(params) {
         builder.techStackMaintenance()
       }
     }
-    
+
     if (dockerFileExists) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
