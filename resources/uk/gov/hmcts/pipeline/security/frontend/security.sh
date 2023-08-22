@@ -22,4 +22,4 @@ while !(curl -s http://0.0.0.0:1001) > /dev/null
   mkdir -p /zap/wrk/functional-output
   chmod a+wx /zap/wrk/functional-output
   cp /zap/wrk/*.html /zap/wrk/functional-output/
-  cp /zap/wrk/*.json /zap/wrk/functional-output/
+  cp /zap/wrk/report.json /zap/wrk/functional-output/
