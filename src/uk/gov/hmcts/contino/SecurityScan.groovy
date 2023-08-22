@@ -5,7 +5,7 @@ class SecurityScan implements Serializable {
     public static final String OWASP_ZAP_IMAGE = 'owasp/zap2docker-stable:2.13.0'
     public static final String OWASP_ZAP_ARGS = '-u 0:0 --name zap -p 1001:1001 -v $WORKSPACE:/zap/wrk/:rw'
     public static final String GLUEIMAGE = 'hmctspublic.azurecr.io/zap-glue:fde9cdca-1692662631'
-    public static final String GLUE_ARGS = '-u 0:0 --name=Glue -w $(pwd):/tmp'
+    public static final String GLUE_ARGS = '-u 0:0 --name=Glue -w $WORKSPACE:/tmp'
     def steps
 
     SecurityScan(steps) {
@@ -23,7 +23,7 @@ class SecurityScan implements Serializable {
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
                     cd /glue
-                    ./run_glue.sh "${WORKSPACE}/audit.json" "${WORKSPACE}/functional-output/report.json"
+                    ./run_glue.sh "/tmp/audit.json" "/tmp/functional-output/report.json"
                     '''
             }
         } finally {
