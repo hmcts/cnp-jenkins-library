@@ -1,7 +1,7 @@
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.RepositoryUrl
 
-def call() {
+def call(String name = "") {
   String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
 
     def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
@@ -10,7 +10,7 @@ def call() {
       requestBody: """{
         "ref": "${env.CHANGE_BRANCH}",
         "description": "Deploying ${env.CHANGE_BRANCH}",
-        "environment": "preview",
+        "environment": "preview${name}",
         "required_contexts": [],
         "auto_merge": false,
         "transient_environment": true
