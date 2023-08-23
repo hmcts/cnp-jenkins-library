@@ -36,6 +36,7 @@ def call(params) {
     }
     builder.setupToolVersion()
   }
+  echo("test")
   warnAboutRenovateConfig
   boolean dockerFileExists = fileExists('Dockerfile')
   onPathToLive {
