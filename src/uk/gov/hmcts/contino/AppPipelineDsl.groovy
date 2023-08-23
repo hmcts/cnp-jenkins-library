@@ -79,16 +79,16 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableCleanupOfHelmReleaseOnSuccess() {
-    WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-deprecation", "`enableCleanupOfHelmReleaseOnSuccess` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 1));
+    WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-deprecation", "`enableCleanupOfHelmReleaseOnSuccess` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 11));
   }
 
   void enableCleanupOfHelmReleaseOnFailure() {
-    WarningCollector.addPipelineWarning("Helm-ReleaseonFailure-deprecation", "`enableCleanupOfHelmReleaseOnFailure` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 1));
+    WarningCollector.addPipelineWarning("Helm-ReleaseonFailure-deprecation", "`enableCleanupOfHelmReleaseOnFailure` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 11));
   }
 
   void enableCleanupOfHelmReleaseAlways() {
     config.clearHelmReleaseOnFailure = true;
-    WarningCollector.addPipelineWarning("Helm-ReleaseAlways-deprecation", "`enableCleanupOfHelmReleaseAlways` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 1));
+    WarningCollector.addPipelineWarning("Helm-ReleaseAlways-deprecation", "`enableCleanupOfHelmReleaseAlways` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 11));
   }
 
    void disableCleanupOfHelmReleaseOnFailure() {
