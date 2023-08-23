@@ -88,7 +88,7 @@ def call(params) {
         builder.techStackMaintenance()
       }
     }
-    
+
     if (dockerFileExists) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
