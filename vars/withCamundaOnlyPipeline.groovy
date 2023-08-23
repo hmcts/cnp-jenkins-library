@@ -64,7 +64,6 @@ def call(type, String product, String component, String s2sServiceName, String t
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
         builder.setupToolVersion()
       }
-      warnAboutRenovateConfig()
       parallel(
         'Unit tests and Sonar scan': {
           pcr.callAround('test') {

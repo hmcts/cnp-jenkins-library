@@ -69,7 +69,6 @@ def call(type, String product, String component, String environment, String subs
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
-      warnAboutRenovateConfig()
       stageWithAgent("Build", product) {
         builder.setupToolVersion()
 
