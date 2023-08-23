@@ -22,7 +22,7 @@ class SecurityScan implements Serializable {
             }
             this.steps.sh '''
                 wget https://raw.githubusercontent.com/hmcts/zap-glue/master/jq_pattern -O ${WORKSPACE}/jq_pattern
-                jq -f /tmp/jq_pattern ${WORKSPACE}/audit.json > ${WORKSPACE}/output.json
+                jq -f ${WORKSPACE}/jq_pattern ${WORKSPACE}/audit.json > ${WORKSPACE}/output.json
                 '''
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
