@@ -2,7 +2,7 @@
 set -x
 
 FILE_PATH=""
-if [[ -f .github1/renovate.json ]]; then
+if [[ -f .github/renovate.json ]]; then
     FILE_PATH=".github/renovate.json"
 elif [[ -f renovate.json ]]; then
     FILE_PATH="renovate.json"
