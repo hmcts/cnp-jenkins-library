@@ -1,19 +1,22 @@
 #!/bin/bash
 set -x
 
-if [[ ! -f .github/renovate.json ]]
-then
-    echo "Cannot find renovate.json in .github folder"
-    exit 1
+FILE_PATH=""
+if [[ -f .github1/renovate.json ]]; then
+    FILE_PATH=".github/renovate.json"
+elif [[ -f renovate.json ]]; then
+    FILE_PATH="renovate.json"
 else
-  if [ $(grep -ic "enabledManagers" .github/renovate.json) -ge 1 ]
-  then
+    echo "Cannot find renovate.json in .github or root folders"
+    exit 1
+fi
+
+if grep -iq "enabledManagers" "$FILE_PATH"; then
     echo "Usage of enabledManagers is deprecated"
     exit 1
-  fi
-  if [ $(grep -ic "local>hmcts/.github:renovate-config" .github/renovate.json) -eq  0 ]
-  then
-    echo "All Renovate config should extend local>hmcts/.github:renovate-config"
+fi
+
+if ! grep -iq "local>hmcts/.github:renovate-config" "$FILE_PATH"; then
+    echo "Renovate config should extend local>hmcts/.github:renovate-config"
     exit 1
-  fi
 fi
