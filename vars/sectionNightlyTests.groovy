@@ -15,7 +15,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     stageWithAgent('Checkout', product) {
       checkoutScm(pipelineCallbacksRunner: pcr)
     }
-    warnAboutRenovateConfig
+    warnAboutRenovateConfig()
     stageWithAgent("Build", product) {
       pcr.callAround('build') {
         timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {

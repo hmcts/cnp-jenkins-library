@@ -43,7 +43,7 @@ def call(String product, String environment, String subscription, Boolean planOn
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
-      warnAboutRenovateConfig
+      warnAboutRenovateConfig()
 
       sectionInfraBuild(
         pipelineConfig: pipelineConfig,

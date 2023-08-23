@@ -37,7 +37,7 @@ def call(params) {
     builder.setupToolVersion()
   }
   echo("test")
-  warnAboutRenovateConfig
+  warnAboutRenovateConfig()
   boolean dockerFileExists = fileExists('Dockerfile')
   onPathToLive {
     stageWithAgent("Build", product) {
