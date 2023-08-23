@@ -4,7 +4,7 @@ package uk.gov.hmcts.contino
 class SecurityScan implements Serializable {
     public static final String OWASP_ZAP_IMAGE = 'owasp/zap2docker-stable:2.13.0'
     public static final String OWASP_ZAP_ARGS = '-u 0:0 --name zap -p 1001:1001 -v $WORKSPACE:/zap/wrk/:rw'
-    public static final String GLUEIMAGE = 'hmctspublic.azurecr.io/zap-glue:0d6c50a2-1692715587'
+    public static final String GLUEIMAGE = 'hmctspublic.azurecr.io/zap-glue:c14eff2a-1692784552'
     public static final String GLUE_ARGS = '-u 0:0 --name=Glue -v ${WORKSPACE}:/tmp -w /tmp'
     def steps
 
@@ -20,10 +20,14 @@ class SecurityScan implements Serializable {
                     ./security.sh
                     '''
             }
+            this.steps.sh '''
+                wget https://raw.githubusercontent.com/hmcts/zap-glue/master/jq_pattern -O ${WORKSPACE}/jq_pattern
+                jq -f /tmp/jq_pattern ${WORKSPACE}/audit.json > ${WORKSPACE}/output.json
+                '''
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
                     cd /glue
-                    ./run_glue.sh "/tmp/audit.json" "/tmp/functional-output/report.json"
+                    ruby /glue/bin/glue -t Dynamic -T /tmp/output.json -f json --finding-file-path /tmp/audit.json --mapping-file /glue/zaproxy_mapping.json -z
                     '''
             }
         } finally {
