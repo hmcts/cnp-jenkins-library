@@ -37,6 +37,7 @@ def call(String product, String component = null, Closure body) {
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
+
       onMaster {
         sectionInfraBuild(
           subscription: subscription.nonProdName,

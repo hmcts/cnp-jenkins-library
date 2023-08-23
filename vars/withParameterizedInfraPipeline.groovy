@@ -44,6 +44,7 @@ def call(String product, String environment, String subscription, Boolean planOn
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
       }
 
+
       sectionInfraBuild(
         pipelineConfig: pipelineConfig,
         subscription: subscription,
