@@ -3,7 +3,7 @@ def call(String credentialsId, String source, String destination) {
       withSubscriptionLogin(subscription) {
         withEnv(["SOURCE=${source}", "DESTINATION=${destination}"]) {
           sh 'sudo chmod +x /usr/bin/azcopy && \
-          azcopy login --identity
+          azcopy login --identity && \
           azcopy cp ${SOURCE} \
             https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${DESTINATION} \
             --content-type --recursive'
