@@ -6,7 +6,7 @@ def call(String subscription, String credentialsId, String source, String destin
           azcopy login --identity && \
           azcopy cp ${SOURCE} \
             https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${DESTINATION} \
-            --content-type --recursive=true'
+            --recursive=true --content-type '
         }
       }
     }
