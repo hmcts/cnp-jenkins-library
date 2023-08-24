@@ -1,6 +1,6 @@
-def call(String credentialsId, String source, String destination) {
+def call(String environment, String credentialsId, String source, String destination) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'STORAGE_ACCOUNT_KEY', usernameVariable: 'STORAGE_ACCOUNT_NAME')]) {
-      withSubscriptionLogin(subscription) {
+      withSubscriptionLogin(environment) {
         withEnv(["SOURCE=${source}", "DESTINATION=${destination}"]) {
           sh 'sudo chmod +x /usr/bin/azcopy && \
           azcopy login --identity && \
