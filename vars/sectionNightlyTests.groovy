@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
 
-def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component String subscription) {
+def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
 
