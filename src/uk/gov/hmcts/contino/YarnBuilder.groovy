@@ -315,7 +315,7 @@ EOF
 
   private LocalDate node18ExpirationDate() {
     def date;
-    switch(steps.env.PRODUCT) {
+    switch (steps.env.PRODUCT) {
       case "xui":
         date = LocalDate.of(2023, 10, 31)
         break
