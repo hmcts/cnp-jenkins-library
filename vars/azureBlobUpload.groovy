@@ -1,11 +1,13 @@
 def call(String credentialsId, String source, String destination) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'STORAGE_ACCOUNT_KEY', usernameVariable: 'STORAGE_ACCOUNT_NAME')]) {
-      withEnv(["SOURCE=${source}", "DESTINATION=${destination}"]) {
-        sh 'sudo chmod +x /usr/bin/azcopy && \
-        azcopy --source ${SOURCE} \
-          --destination https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${DESTINATION} \
-          --dest-key ${STORAGE_ACCOUNT_KEY} \
-          --set-content-type --recursive'
+      withSubscriptionLogin(subscription) {
+        withEnv(["SOURCE=${source}", "DESTINATION=${destination}"]) {
+          sh 'sudo chmod +x /usr/bin/azcopy && \
+          azcopy login --identity
+          azcopy cp ${SOURCE} \
+            https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${DESTINATION} \
+            --content-type --recursive'
+        }
       }
     }
 }
