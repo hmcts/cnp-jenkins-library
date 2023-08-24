@@ -6,6 +6,8 @@ if [[ -z ${SecurityRules} ]]; then
   exit 1
 fi
 
+curl -k ${TEST_URL}
+
 zap-api-scan.py -t ${TEST_URL}/v2/api-docs -f openapi -S -d -u ${SecurityRules} -P 1001 -z "-config rules.cookie.ignorelist=_ga,_gid,_gat,dtCookie,dtLatC,dtPC,dtSa,rxVisitor,rxvt" -l FAIL -r /zap/wrk/api-report.html
 curl --fail http://0.0.0.0:1001/OTHER/core/other/jsonreport/?formMethod=GET --output report.json
 export LC_ALL=C.UTF-8
