@@ -118,3 +118,4 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dockerTestBuild = true
   }
 } 
+ 
