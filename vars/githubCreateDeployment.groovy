@@ -10,7 +10,7 @@ def call(String suffix = "") {
       requestBody: """{
         "ref": "${env.CHANGE_BRANCH}",
         "description": "Deploying ${env.CHANGE_BRANCH}",
-        "environment": "preview${name}",
+        "environment": "preview${suffix}",
         "required_contexts": [],
         "auto_merge": false,
         "transient_environment": true
