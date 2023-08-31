@@ -1,7 +1,7 @@
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.contino.RepositoryUrl
 
-def call(String name = "") {
+def call(String suffix = "") {
   String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
 
     def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON',
