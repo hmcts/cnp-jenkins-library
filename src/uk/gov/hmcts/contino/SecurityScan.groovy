@@ -20,14 +20,10 @@ class SecurityScan implements Serializable {
                     ./security.sh
                     '''
             }
-            this.steps.sh '''
-                cd /glue
-                ./run_glue.sh "$OLDPWD/audit.json" "$OLDPWD/report.json"
-                '''
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
                     cd /glue
-                    ruby /glue/bin/glue -t Dynamic -T /tmp/output.json -f json --finding-file-path /tmp/audit.json --mapping-file /glue/zaproxy_mapping.json -z
+                    ./run_glue.sh "$OLDPWD/audit.json" "$OLDPWD/report.json"
                     '''
             }
         } finally {
