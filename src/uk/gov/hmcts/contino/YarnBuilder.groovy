@@ -321,6 +321,7 @@ EOF
         date = LocalDate.of(2023, 10, 31)
         break
       case "bar":
+      case "fees-register":
       case "ccpay":
         date = LocalDate.of(2023, 9, 30)
         break
