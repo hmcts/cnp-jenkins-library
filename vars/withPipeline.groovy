@@ -24,10 +24,10 @@ def call(type, String product, String component, Closure body) {
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, deploymentProduct, component),
-    nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component),
-    ruby: new RubyPipelineType(this, deploymentProduct, component)
+    java  : new SpringBootPipelineType(this, product, component),
+    nodejs: new NodePipelineType(this, product, component),
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, product, component)
   ]
 
   Subscription subscription = new Subscription(env)
@@ -63,7 +63,6 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  def deprecationConfig = new DeprecationConfig(this).loadDeprecationConfig()
   String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {

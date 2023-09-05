@@ -46,15 +46,16 @@ def call(type,product,component,Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  String nodeSelector = agentType == "" ? "daily" : agentType + ' && daily'
 
-  node(agentType) {
+  node(nodeSelector) {
     timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component)
+          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
         }
         assert  pipelineType!= null
       } catch (err) {
@@ -62,9 +63,7 @@ def call(type,product,component,Closure body) {
         notifyBuildFailure channel: slackChannel
 
         callbacksRunner.call('onFailure')
-        node {
-          metricsPublisher.publish('Pipeline Failed')
-        }
+        metricsPublisher.publish('Pipeline Failed')
         throw err
       } finally {
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
