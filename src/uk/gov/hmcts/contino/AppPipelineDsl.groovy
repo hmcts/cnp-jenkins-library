@@ -1,5 +1,9 @@
 package uk.gov.hmcts.contino
 
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
+
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   final AppPipelineConfig config
   def final steps
@@ -75,16 +79,20 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableCleanupOfHelmReleaseOnSuccess() {
-    config.clearHelmReleaseOnSuccess = true;
+    WarningCollector.addPipelineWarning("Helm-ReleaseonSuccess-deprecation", "`enableCleanupOfHelmReleaseOnSuccess` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 15));
   }
 
   void enableCleanupOfHelmReleaseOnFailure() {
-    config.clearHelmReleaseOnFailure = true;
+    WarningCollector.addPipelineWarning("Helm-ReleaseonFailure-deprecation", "`enableCleanupOfHelmReleaseOnFailure` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 15));
   }
 
   void enableCleanupOfHelmReleaseAlways() {
-    config.clearHelmReleaseOnSuccess = true;
     config.clearHelmReleaseOnFailure = true;
+    WarningCollector.addPipelineWarning("Helm-ReleaseAlways-deprecation", "`enableCleanupOfHelmReleaseAlways` is now the default, please remove it from your `Jenkinsfile`.", LocalDate.of(2023, 9, 15));
+  }
+
+  void disableCleanupOfHelmReleaseOnFailure() {
+    config.clearHelmReleaseOnFailure = false;
   }
 
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
@@ -109,5 +117,4 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableDockerTestBuild() {
     config.dockerTestBuild = true
   }
-
 }
