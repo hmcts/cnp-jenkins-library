@@ -12,7 +12,7 @@ def call() {
     ./check-deprecated-postgres.sh
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to the flexible server postgres module https://github.com/hmcts/terraform-module-postgresql-flexible", LocalDate.of(2023, 11, 9))
+    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to the flexible server postgres module https://github.com/hmcts/terraform-module-postgresql-flexiblek con", LocalDate.of(2023, 8, 9))
   } finally {
     sh 'rm -f check-deprecated-postgres.sh'
   }

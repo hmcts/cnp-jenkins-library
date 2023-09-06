@@ -1,6 +1,6 @@
 #!/bin/bash
 
-grep -R --quiet "cnp-module-postgres" *
+grep -R --quiet "hmcts/cnp-module-postgres" *
 
 if [ $? -gt 0 ]; then
   echo "Not using cnp-module-postgres module, this is good"
