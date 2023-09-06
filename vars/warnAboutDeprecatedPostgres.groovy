@@ -12,7 +12,7 @@ def call() {
     ./check-deprecated-postgres.sh
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to using the flexible server postgres module", LocalDate.of(2023, 11, 09))
+    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to using the flexible server postgres module", LocalDate.of(2023, 11, 9))
   } finally {
     sh 'rm -f check-deprecated-postgres.sh'
   }
