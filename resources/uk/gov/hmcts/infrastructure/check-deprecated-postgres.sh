@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 
 grep -R --quiet "cnp-module-postgres" *
 
