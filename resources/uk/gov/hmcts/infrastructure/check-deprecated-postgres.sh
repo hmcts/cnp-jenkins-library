@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo $PWD
-ls $PWD
-
 if grep -R --quiet "hmcts/cnp-module-postgres *.tf"; then
   echo "====================================================================================================="
   echo "=== You appear to be using the cnp-module-postgres terraform module ==="
