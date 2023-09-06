@@ -1,8 +1,9 @@
 #!/bin/bash
 
-grep -R --quiet "hmcts/cnp-module-postgres" *
+echo $PWD
+ls $PWD
 
-if grep -R --quiet "hmcts/cnp-module-postgres"; then
+if grep -R --quiet "hmcts/cnp-module-postgres *.tf"; then
   echo "====================================================================================================="
   echo "=== You appear to be using the cnp-module-postgres terraform module ==="
   echo "=== This module has been deprecated as Postgres v11 is going end of life in November 2023 ===="
