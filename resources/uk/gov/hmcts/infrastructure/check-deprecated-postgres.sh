@@ -2,9 +2,7 @@
 
 grep -R --quiet "hmcts/cnp-module-postgres" *
 
-if [ $? -ge 0 ]; then
-  echo "Not using cnp-module-postgres module, this is good"
-else
+if grep -R --quiet "hmcts/cnp-module-postgres" *; then
   echo "====================================================================================================="
   echo "=== You appear to be using the cnp-module-postgres terraform module ==="
   echo "=== This module has been deprecated as Postgres v11 is going end of life in November 2023 ===="
@@ -16,4 +14,6 @@ else
   echo "=== Once you have migrated your data, remove the cnp-module-postgres module from your code ==="
   echo "=== This pipeline will start failing from 9th November 2023 ==="
   exit 1
+else
+  echo "Not using cnp-module-postgres module, this is good"
 fi
