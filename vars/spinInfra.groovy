@@ -65,7 +65,9 @@ def call(Map<String, ?> params) {
         if (Environment.toTagName(config.environment) == "sandbox") {
           tags = tags + [expiresAfter: config.expires]
         }
-
+        if (Environment.toTagName(config.environment) != "prod") {
+          tags = tags + [autoShutdown: config.autoshutdown]
+        }
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
           tags = tags + [changeUrl: changeUrl]
         }
