@@ -59,7 +59,4 @@ abstract class CommonPipelineDsl implements Serializable {
   void expires(String expiresAfter) {
     config.expiryDate = expiresAfter
   }
-  void autoShutdown(Boolean autoShutdown) {
-    config.autoShutdown = autoShutdown
-  }
 }
