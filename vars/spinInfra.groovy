@@ -108,6 +108,7 @@ def call(Map<String, ?> params) {
         """
 
         warnAboutOldTfAzureProvider()
+        warnAboutDeprecatedPostgres()
 
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
