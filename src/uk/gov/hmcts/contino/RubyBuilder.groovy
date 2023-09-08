@@ -98,11 +98,11 @@ class RubyBuilder extends AbstractBuilder {
   def bundle(String task) {
     steps.echo("here")
     steps.sh(script: """#!/bin/bash -l
-
+      set -x
       jenkins_user=\$(whoami)
-      echo "Jenkins user: $jenkins_user"
+      echo "Jenkins user: \$jenkins_user"
       jenkins_group=\$(id -gn)
-      echo "Jenkins group: $jenkins_group"
+      echo "Jenkins group: \$(jenkins_group)"
 
       source /usr/local/rvm/scripts/rvm
       rvm install \$(cat .ruby-version)
