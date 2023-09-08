@@ -6,5 +6,5 @@ class CommonPipelineConfig implements Serializable {
   Set<String> branchesToSyncWithMaster
 
   String expiryDate
-  Boolean autoShutdown
+
 }
