@@ -99,6 +99,7 @@ class RubyBuilder extends AbstractBuilder {
     steps.echo("here")
     steps.sh(script: """#!/bin/bash -l
       source /usr/local/rvm/scripts/rvm
+      rvm install
       rvm use
       """, label: "rvm use")
     steps.sh(script: """#!/bin/bash -l
