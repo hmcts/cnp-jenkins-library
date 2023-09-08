@@ -61,7 +61,7 @@ def call(Map<String, ?> params) {
         def builtFrom = env.GIT_URL ?: 'unknown'
 
         def tags = [environment: Environment.toTagName(config.environment), managedBy: teamName, builtFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
-        def shutdown = config.autoshutdown ?: true
+        def shutdown = config.autoShutdown ?: true
 
         if (Environment.toTagName(config.environment) == "sandbox") {
           tags = tags + [expiresAfter: config.expires]
