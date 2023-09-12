@@ -65,7 +65,7 @@ def call(Map<String, ?> params) {
           tags = tags + [expiresAfter: config.expires]
         }
         
-        if (Environment.toTagName(config.environment) != "prod") {
+        if (Environment.toTagName(config.environment) != "production") {
           tags = tags + [autoShutdown: "true"]
         }
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
