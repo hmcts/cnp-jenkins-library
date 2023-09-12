@@ -19,5 +19,6 @@ while !(curl -s http://0.0.0.0:1001) > /dev/null
   curl --fail http://0.0.0.0:1001/OTHER/core/other/jsonreport/?formMethod=GET --output /zap/wrk/report.json
   mkdir -p /zap/wrk/functional-output
   chmod a+wx /zap/wrk/functional-output
+  cp /home/zap/.ZAP/zap.log /zap/wrk/functional-output/
   cp /zap/wrk/*.html /zap/wrk/functional-output/
   cp /zap/wrk/report.json /zap/wrk/functional-output/
