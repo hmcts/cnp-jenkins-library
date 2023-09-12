@@ -1,0 +1,4 @@
+# zap-baseline rule configuration file
+# change FAIL to IGNORE to ignore rule or FAIL to fail if rule matches
+# only the rule identifiers are used - the names are just for info
+10099	IGNORE
