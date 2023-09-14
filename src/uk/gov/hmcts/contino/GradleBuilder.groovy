@@ -264,7 +264,11 @@ EOF
     } else if (localSteps.fileExists("security.sh")) {
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
     } else {
-      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
+      if (localSteps.env.IS_FRONTEND = "true") {
+        localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
+      } else {
+        localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
+      }
     }
     this.securitytest.execute()
   }
