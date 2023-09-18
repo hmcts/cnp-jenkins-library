@@ -418,6 +418,8 @@ TestName | How to enable | Example
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
+You can passthrough options to the frontend security scan script by using the URL_EXCLUSIONS variable in your Jenkinsfile. This allows you to customse zaproxy scans of your application.
+
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
 
 The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named `Jenkinsfile_nightly` must be included in the repository.
