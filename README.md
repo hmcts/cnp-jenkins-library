@@ -418,7 +418,7 @@ TestName | How to enable | Example
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
-You can passthrough options to the frontend security scan script by using the URL_EXCLUSIONS variable in your Jenkinsfile. This allows you to customse zaproxy scans of your application.
+You can passthrough options to the frontend security scan script by using the URL_EXCLUSIONS variable in your Jenkinsfile. This allows you to customise zap proxy scans of your application.
 
 If you use gradle for your frontend application, add variable called `IS_FRONTEND` to your Jenkinsfile and set its value to `true`.
 
