@@ -420,7 +420,7 @@ TestName | How to enable | Example
 
 You can passthrough options to the frontend security scan script by using the URL_EXCLUSIONS variable in your Jenkinsfile. This allows you to customise zap proxy scans of your application.
 
-You can find an example [here](https://github.com/hmcts/idam-web-public/commit/aa5a40019959641ea1f355a9b6b66b56c99d34e0)
+You can find an example [here](https://github.com/hmcts/idam-web-public/commit/8ffba3b26b0485c4a63679b6263b954e09c6909c#diff-539d7df7a08b69557a3bb00c6fc85d8dda08d43310f75214ddb2019124d41cfdR62)
 
 If you use gradle for your frontend application, add variable called `IS_FRONTEND` to your Jenkinsfile and set its value to `true`.
 
