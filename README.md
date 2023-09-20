@@ -424,7 +424,7 @@ You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-p
 
 If you use gradle for your frontend application, add variable called `IS_FRONTEND` to your Jenkinsfile and set its value to `true`.
 
-You can find an example [here](https://github.com/hmcts/idam-web-public/commit/f06fe5b0a3dd34326374c05ad0b90871ed0bb678#diff-539d7df7a08b69557a3bb00c6fc85d8dda08d43310f75214ddb2019124d41cfdR64)
+You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/commit/f06fe5b0a3dd34326374c05ad0b90871ed0bb678#diff-539d7df7a08b69557a3bb00c6fc85d8dda08d43310f75214ddb2019124d41cfdR64)
 
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
 
