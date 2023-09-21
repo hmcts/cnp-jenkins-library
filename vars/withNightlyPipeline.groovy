@@ -46,13 +46,14 @@ def call(type,product,component,Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  String nodeSelector
 
   if (agentType == "") {
-    String nodeSelector = "daily"
+    nodeSelector = "daily"
   } else if (agentType == "arm") {
-    String nodeSelector = "arm"
+    nodeSelector = "arm"
   } else {
-    String nodeSelector = agentType + ' && daily'
+    nodeSelector = agentType + ' && daily'
   }
   
   node(nodeSelector) {
