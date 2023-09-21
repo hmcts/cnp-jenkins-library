@@ -51,7 +51,7 @@ def call(type,product,component,Closure body) {
   if (agentType == "") {
     nodeSelector = "daily"
   } else if (agentType == "arm") {
-    nodeSelector = "arm"
+    nodeSelector = agentType + '&& arm-daily'
   } else {
     nodeSelector = agentType + ' && daily'
   }
