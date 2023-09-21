@@ -48,11 +48,11 @@ def call(type,product,component,Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
 
   if (agentType == "") {
-    def String nodeSelector == "daily"
+    def nodeSelector = "daily"
   } else if (agentType == "arm") {
-    def String nodeSelector == "arm"
+    def nodeSelector = "arm"
   } else {
-    def String nodeSelector == agentType + ' && daily'
+    def nodeSelector = agentType + ' && daily'
   }
   
   node(nodeSelector) {
