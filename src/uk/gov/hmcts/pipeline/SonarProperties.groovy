@@ -11,7 +11,8 @@ class SonarProperties implements Serializable {
       return """-Dsonar.pullrequest.key=${env.CHANGE_ID} \
       -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
       -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-      -Dsonar.pullrequest.provider=github"""
+      -Dsonar.pullrequest.provider=github \
+      -Dhttp.nonProxyHost='127.0.0.1|localhost|10.*'"""
     } else {
       return ""
     }

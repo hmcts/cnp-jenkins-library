@@ -45,7 +45,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
-    String properties = SonarProperties.get(localSteps)
+    String properties = SonarProperties.get(steps)
 
     steps.sh "sonar-scanner ${properties}"
   }
