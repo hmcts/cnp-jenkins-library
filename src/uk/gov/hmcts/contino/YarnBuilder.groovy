@@ -45,9 +45,9 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
-    String properties = SonarProperties.get(steps)
+    String properties = SonarProperties.get(localSteps)
 
-    steps.sh "npx sonar-scanner ${properties}"
+    steps.sh "sonar-scanner ${properties}"
   }
 
   def highLevelDataSetup(String dataSetupEnvironment) {
