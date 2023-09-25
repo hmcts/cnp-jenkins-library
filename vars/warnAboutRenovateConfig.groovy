@@ -6,6 +6,15 @@ def call() {
 
   writeFile file: 'renovate-config-check.sh', text: libraryResource('uk/gov/hmcts/renovate/renovate-config-check.sh')
 
+  switch (steps.env.PRODUCT) {
+    case "xui":
+      date = LocalDate.of(2023, 9, 30)
+      break
+    default:
+      date = LocalDate
+      break
+  }
+
   try {
     sh """
     chmod +x renovate-config-check.sh
