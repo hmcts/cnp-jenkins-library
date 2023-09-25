@@ -8,10 +8,10 @@ def call() {
 
   switch (steps.env.PRODUCT) {
     case "xui":
-      date = LocalDate.of(2023, 9, 30)
+      LocalDate = LocalDate.of(2023, 9, 30)
       break
     default:
-      date = LocalDate
+      LocalDate = LocalDate
       break
   }
 
