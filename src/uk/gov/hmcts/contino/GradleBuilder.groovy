@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -61,11 +62,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
     } finally {
-      try {
-        localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
     }
   }
 
@@ -75,11 +72,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
     } finally {
-      try {
-        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
     }
   }
 
@@ -89,11 +82,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks apiGateway")
     } finally {
-      try {
-        localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
     }
   }
 
@@ -152,6 +141,11 @@ class GradleBuilder extends AbstractBuilder {
           .publishCVEReport('java', cveReport)
       }
     }
+  }
+
+  @Override
+  def techStackMaintenance() {
+    localSteps.echo "Support for Gradle coming soon..."
   }
 
   def prepareCVEReport(String owaspReportJSON) {
@@ -240,27 +234,20 @@ EOF
 
   @Override
   def setupToolVersion() {
-    try {
-      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
-      if (statusCode == 0) {
-        steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
-        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-        // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
-        steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
-      } else {
-        WarningCollector.addPipelineWarning("java_11_deprecated",
-          "Please upgrade to Java 17, upgrade to " +
-            "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
-            "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
-            "Make sure you use the latest version of the Application insights agent, see the configuration in " +
-            "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
-            "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
-        )
-      }
-    } catch(err) {
-      steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
+    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
+    if (statusCode == 0) {
+      WarningCollector.addPipelineWarning("java_11_deprecated",
+        "Please upgrade to Java 17, upgrade to " +
+          "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
+          "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
+          "Make sure you use the latest version of the Application insights agent, see the configuration in " +
+          "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
+          "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+      )
     }
 
+    // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
+    steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
   }
@@ -291,6 +278,10 @@ EOF
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
     } else {
+      WarningCollector.addPipelineWarning("gatling_docker_deprecated",
+        "Please use the gatling plugin instead of the docker image " +
+          "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
+      )
       super.executeGatling()
     }
   }

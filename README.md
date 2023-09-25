@@ -264,39 +264,18 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-If your service never uses the deployed resources after the pipeline is successful or if you refer to them only for logs in case of failure, you can uninstall the helm release to free resources on the cluster. Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
-
-
-To clear the helm release regardless of success or failure, do the following:
-
+- By default your Helm resources are uninstalled to free up resources on the cluster.
+- You can keep these resources by adding the **enable_keep_helm** label on your PR.
+- If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
   ```
   withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseAlways()
-    ...
+  ...
+    disableCleanupOfHelmReleaseOnFailure()
+  ...
   }
   ```
 
-To clear the helm release on a successful build, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnSuccess()
-    ...
-  }
-  ```
-
-To clear the helm release on a failing build, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnFailure()
-    ...
-  }
-  ```
-
+Please note that Pod logs are saved as artefacts in Jenkins before the Helm release is cleared.
 
 ### Opinionated infrastructure pipeline
 
@@ -745,3 +724,4 @@ This file will point to the repository which defines, in json syntax, which infr
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
+
