@@ -318,6 +318,7 @@ EOF
     switch (steps.env.PRODUCT) {
       case "xui":
       case "ccd":
+      case "em":
         date = LocalDate.of(2023, 10, 31)
         break
       case "bar":

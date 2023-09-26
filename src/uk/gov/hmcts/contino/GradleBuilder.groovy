@@ -62,11 +62,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
     } finally {
-      try {
-        localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
     }
   }
 
@@ -76,11 +72,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
     } finally {
-      try {
-        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
     }
   }
 
@@ -90,11 +82,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks apiGateway")
     } finally {
-      try {
-        localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
     }
   }
 
