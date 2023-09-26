@@ -324,7 +324,7 @@ EOF
       case "bar":
       case "fees-register":
       case "ccpay":
-        date = LocalDate.of(2023, 9, 30)
+        date = LocalDate.of(2023, 10, 21)
         break
       default:
         date = NODEJS_EXPIRATION
