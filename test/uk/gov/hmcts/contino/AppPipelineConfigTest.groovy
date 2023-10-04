@@ -39,12 +39,15 @@ class AppPipelineConfigTest extends Specification {
   }
 
   def "ensure securityScan can be set in steps"() {
+    given:
+      def urlExclusions = ""
     when:
       dsl.enableSecurityScan()
 
     then:
       assertThat(pipelineConfig.securityScan).isTrue()
       assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
+      assertThat(pipelineConfig.urlExclusions).isEqualTo(urlExclusions)
   }
 
   def "load vault secrets"() {
