@@ -258,8 +258,13 @@ EOF
 
   @Override
   def securityScan(){
+    if (steps.fileExists("security.sh")) {
+      // hook to allow teams to override the default `security.sh` that we provide
+      steps.writeFile(file: 'security.sh', text: steps.readFile('security.sh'))
+    } else {
         localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
       }
+    }
     this.securitytest.execute()
   }
 
