@@ -7,6 +7,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean migrateDb = false
   String dbMigrationVaultName
   String urlExclusions
+  String securityRules = "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf"
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
