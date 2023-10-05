@@ -266,7 +266,6 @@ EOF
     } else {
         localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
       }
-    }
     this.securitytest.execute()
   }
 
