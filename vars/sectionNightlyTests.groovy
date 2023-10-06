@@ -11,8 +11,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
 
   withTeamSecrets(config, environment.nonProdName) {
 
-    SecurityRules securityRules = new SecurityRules(this)
-    def rules = securityRules.getSecurityRules
+    def rules = return new SecurityRules()
 
     Builder builder = pipelineType.builder
 
