@@ -43,7 +43,7 @@ def call(params) {
   def nonProdEnv = new Environment(env).nonProdName
 
   SecurityRules securityRules = new SecurityRules(this)
-  def securityRules = securityRules.getSecurityRules
+  def rules = securityRules.getSecurityRules
   
   Builder builder = pipelineType.builder
 
@@ -250,7 +250,7 @@ def call(params) {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
                         builder.securityScan()
                       }
-                      securityRules: securityRules
+                      securityRules: rules
                     }
                   }
                 }

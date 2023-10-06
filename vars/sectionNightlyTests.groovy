@@ -10,7 +10,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
   Environment environment = new Environment(env)
   
   SecurityRules securityRules = new SecurityRules(this)
-  def securityRules = securityRules.getSecurityRules
+  def rules = securityRules.getSecurityRules
 
   withTeamSecrets(config, environment.nonProdName) {
     Builder builder = pipelineType.builder
@@ -104,7 +104,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan()
             }
-            securityRules: securityRules
+            securityRules: rules
           }
         }
       }
