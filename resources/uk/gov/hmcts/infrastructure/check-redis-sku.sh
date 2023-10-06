@@ -3,7 +3,7 @@
 output=$(grep -R --include=*.tf "hmcts/cnp-module-redis" | wc -l)
 
 if [ $(echo $output | tr -d " ") = 0 ]; then
-  echo "Not using cnp-module-redis module, this is good"
+  echo "Not using cnp-module-redis module"
 else
   echo "====================================================================================================="
   echo "=== You appear to be using the cnp-module-redis terraform module ==="
