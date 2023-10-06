@@ -12,8 +12,6 @@ class SecurityRules {
   }
 
   String getSecurityRules() {
-    return steps.httpRequest(httpMode: 'GET',
-      acceptType: 'APPLICATION_JSON',
-      url: "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf")
+    return "this is a test"
   }
 }
