@@ -43,11 +43,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.parallelCrossBrowsers = browsers
   }
 
-  void enableSecurityScan(int timeout = 120, String urlExclusions = "", String securityRules) {
+  void enableSecurityScan(int timeout = 120, String urlExclusions = "") {
     config.securityScanTimeout = timeout
     config.securityScan = true
     config.urlExclusions = urlExclusions
-    config.securityRules =  steps.httpRequest url: "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
