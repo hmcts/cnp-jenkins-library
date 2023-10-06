@@ -9,9 +9,9 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
 
   Environment environment = new Environment(env)
 
-  withTeamSecrets(config, environment.nonProdName) {
+  def rules = new SecurityRules(this).getSecurityRules()
 
-    def rules = new SecurityRules().getSecurityRules
+  withTeamSecrets(config, environment.nonProdName) {
 
     Builder builder = pipelineType.builder
 
