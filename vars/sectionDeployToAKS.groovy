@@ -44,7 +44,7 @@ def call(params) {
   def nonProdEnv = new Environment(env).nonProdName
 
   SecurityRules securityRules = new SecurityRules(this)
-  def rules = securityRules.getSecurityRules
+  def rules = securityRules.getSecurityRules.response
   
   Builder builder = pipelineType.builder
 
