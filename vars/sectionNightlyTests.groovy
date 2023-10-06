@@ -8,11 +8,12 @@ import uk.gov.hmcts.contino.SecurityRules
 def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
-  
-  SecurityRules securityRules = new SecurityRules(this)
-  def rules = securityRules.getSecurityRules
 
   withTeamSecrets(config, environment.nonProdName) {
+
+    SecurityRules securityRules = new SecurityRules(this)
+    def rules = securityRules.getSecurityRules
+
     Builder builder = pipelineType.builder
 
     stageWithAgent('Checkout', product) {
