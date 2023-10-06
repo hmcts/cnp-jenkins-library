@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 echo ${TEST_URL}
+echo ${SecurityRules}
 
 if [[ -z ${SecurityRules} ]]; then
   echo "SecurityRules variable not set. Please set it as a parameter in your Jenkinsfile_nightly file."
