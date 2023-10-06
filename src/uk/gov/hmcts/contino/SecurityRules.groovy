@@ -11,7 +11,8 @@ class SecurityRules {
     this.steps = steps
   }
 
-  String getSecurityRules() {
+  def getSecurityRules() {
     def response = steps.httpRequest url: "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
+    return response
   }
 }
