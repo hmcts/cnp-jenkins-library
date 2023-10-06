@@ -9,7 +9,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
 
   Environment environment = new Environment(env)
 
-  def rules = new SecurityRules(this).getSecurityRules()
+  def rules = return SecurityRules.response
 
   withTeamSecrets(config, environment.nonProdName) {
 
