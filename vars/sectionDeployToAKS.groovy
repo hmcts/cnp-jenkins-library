@@ -43,8 +43,7 @@ def call(params) {
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
 
-  SecurityRules securityRules = new SecurityRules(this)
-  def rules = securityRules.getSecurityRules.response
+  def rules = new SecurityRules.getSecurityRules
   
   Builder builder = pipelineType.builder
 
