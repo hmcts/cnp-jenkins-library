@@ -8,8 +8,9 @@ import uk.gov.hmcts.contino.Environment
 def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
-
-  def securityRules = params.securityRules ?: httpRequest url: "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
+  
+  SecurityRules securityRules = new SecurityRules(this)
+  def securityRules = securityRules.getSecurityRules
 
   withTeamSecrets(config, environment.nonProdName) {
     Builder builder = pipelineType.builder
