@@ -422,11 +422,11 @@ You can passthrough options to the frontend security scan script by using the ZA
 
 You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/commit/8ffba3b26b0485c4a63679b6263b954e09c6909c#diff-539d7df7a08b69557a3bb00c6fc85d8dda08d43310f75214ddb2019124d41cfdR62)
 
-If you use gradle for your frontend application, add variable called `IS_FRONTEND` to your Jenkinsfile and set its value to `true`.
-
-You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/commit/f06fe5b0a3dd34326374c05ad0b90871ed0bb678#diff-539d7df7a08b69557a3bb00c6fc85d8dda08d43310f75214ddb2019124d41cfdR64)
-
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
+
+The pipeline will automatically detect whether you're application is node based or gradle based and run the appropriate security tests based on that.
+
+If you have a requirement to customise the script, you can place your own script in a folder called `ci` in your repo. Make sure to call the script `security.sh`.
 
 The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named `Jenkinsfile_nightly` must be included in the repository.
 
