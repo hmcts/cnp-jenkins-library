@@ -41,6 +41,7 @@ def call(params) {
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
+  def securityRules = params.securityRules ?: httpRequest url: "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
 
   Builder builder = pipelineType.builder
 
@@ -247,6 +248,7 @@ def call(params) {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
                         builder.securityScan()
                       }
+                      securityRules: securityRules
                     }
                   }
                 }
