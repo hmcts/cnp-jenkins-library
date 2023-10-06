@@ -47,7 +47,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.securityScanTimeout = timeout
     config.securityScan = true
     config.urlExclusions = urlExclusions
-    config.securityRules = securityRules
+    config.securityRules =  steps.httpRequest url: "https://raw.githubusercontent.com/hmcts/security-test-rules/master/conf/security-rules.conf", httpMode: 'GET', acceptType: 'APPLICATION_JSON'
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
