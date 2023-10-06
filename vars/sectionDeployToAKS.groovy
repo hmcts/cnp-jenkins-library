@@ -7,7 +7,6 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.contino.SecurityRules
 
 def testEnv(String testUrl, block) {
   def testEnv = new Environment(env).nonProdName
@@ -43,8 +42,6 @@ def call(params) {
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
 
-  def rules = return new SecurityRules()
-  
   Builder builder = pipelineType.builder
 
   withAcrClient(subscription) {
@@ -250,7 +247,6 @@ def call(params) {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
                         builder.securityScan()
                       }
-                      securityRules: rules
                     }
                   }
                 }

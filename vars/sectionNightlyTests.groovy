@@ -3,16 +3,13 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
-import uk.gov.hmcts.contino.SecurityRules
+
 
 def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
 
-  def rules = return SecurityRules.response
-
   withTeamSecrets(config, environment.nonProdName) {
-
     Builder builder = pipelineType.builder
 
     stageWithAgent('Checkout', product) {
@@ -104,7 +101,6 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan()
             }
-            securityRules: rules
           }
         }
       }
