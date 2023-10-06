@@ -8,6 +8,7 @@ if [ $? -gt 0 ]; then
   echo "Application has removed aad pod binding references."
 else
   echo "===================================================================================================================="
-  echo "========  Please migrate your application to use workload identity, app is still using aadIdentityName flag.  ======"
+  echo "========  Please fully migrate your application to use workload identity, app is still using aadIdentityName flag.  ======"
   echo "===================================================================================================================="
+  exit 1
 fi
