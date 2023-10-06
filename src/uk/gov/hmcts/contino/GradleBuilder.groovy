@@ -258,7 +258,8 @@ EOF
 
   @Override
   def securityScan(){
-    steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
+    if (steps.fileExists(".ci/security.sh")) {
+      steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
     } else if (localSteps.fileExists("security.sh")) {
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
     } else {
