@@ -11,7 +11,7 @@ class SecurityRules {
     this.steps = steps
   }
 
-  String getSecurityRules() {
+  def getSecurityRules() {
     return "this is a test"
   }
 }
