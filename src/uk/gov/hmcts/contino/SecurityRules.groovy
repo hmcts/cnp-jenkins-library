@@ -3,7 +3,7 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-class SecurityRules implements Serializable {
+class SecurityRules {
 
   def steps
 
