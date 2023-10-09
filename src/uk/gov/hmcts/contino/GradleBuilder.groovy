@@ -145,7 +145,16 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def techStackMaintenance() {
-    localSteps.echo "Support for Gradle coming soon..."
+    localSteps.echo "Running Gradle Tech stack maintenance"
+    def secrets = [
+      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) {
+      localSteps.sh "./gradlew -q dependencies > deps.log > depsProc"
+      def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+      client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
+    }
   }
 
   def prepareCVEReport(String owaspReportJSON) {

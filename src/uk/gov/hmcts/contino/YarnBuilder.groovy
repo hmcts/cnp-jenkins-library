@@ -4,7 +4,6 @@ import groovy.json.JsonSlurper
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
-import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 import static java.lang.Float.valueOf
