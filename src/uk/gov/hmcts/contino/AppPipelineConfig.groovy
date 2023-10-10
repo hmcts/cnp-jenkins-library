@@ -7,6 +7,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean migrateDb = false
   String dbMigrationVaultName
   String urlExclusions
+  boolean isFrontend = false
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
