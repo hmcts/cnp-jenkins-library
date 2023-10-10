@@ -94,7 +94,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    if (config.securityScan && config.isFrontend == false) {
+    if (config.securityScan && !config.isFrontend) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
@@ -106,7 +106,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    if (config.securityScan && config.isFrontend == true) {
+    if (config.securityScan && config.isFrontend) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
