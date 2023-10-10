@@ -43,10 +43,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.parallelCrossBrowsers = browsers
   }
 
-  void enableSecurityScan(int timeout = 120, String urlExclusions = "") {
+  void enableSecurityScan(String urlExclusions = "", int timeout = 120) {
+    config.urlExclusions = urlExclusions
     config.securityScanTimeout = timeout
     config.securityScan = true
-    config.urlExclusions = urlExclusions
   }
 
   void enableFullFunctionalTest(int timeout = 30) {

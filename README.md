@@ -418,9 +418,19 @@ TestName | How to enable | Example
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
-You can passthrough options to the frontend security scan script by using the ZAP_URL_EXCLUSIONS variable in your Jenkinsfile. This allows you to customise zap proxy scans of your application.
+You can passthrough options to the frontend security scan script by using the ZAP_URL_EXCLUSIONS parameter in your Jenkinsfile. This allows you to customise zap proxy scans of your application.
 
-You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/commit/8ffba3b26b0485c4a63679b6263b954e09c6909c#diff-539d7df7a08b69557a3bb00c6fc85d8dda08d43310f75214ddb2019124d41cfdR62)
+Pass this parameter to the `enableSecurityScan` block to customise the zap proxy scans.
+
+```
+withNightlyPipeline(type, product, component) {
+
+  // add this!
+  enableSecurityScan(params.ZAP_URL_EXCLUSIONS)
+}
+```
+
+You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/blob/2d040caeadbf4bb8918e621f588d429ab6968201/Jenkinsfile_nightly#L15)
 
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
 
