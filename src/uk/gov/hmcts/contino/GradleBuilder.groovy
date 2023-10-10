@@ -257,7 +257,7 @@ EOF
   }
 
   @Override
-  def securityScan(){
+  def securityScan(boolean isFrontend){
     if (steps.fileExists(".ci/security.sh")) {
       // hook to allow teams to override the default `security.sh` that we provide
       steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
