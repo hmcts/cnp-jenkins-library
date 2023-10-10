@@ -99,7 +99,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-              builder.securityScan()
+              builder.securityScan(urlExclusions, isFrontend)
             }
           }
         }
