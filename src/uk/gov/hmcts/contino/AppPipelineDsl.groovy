@@ -53,7 +53,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.urlExclusions = urlExclusions
     config.isFrontend = isFrontend
     config.securityScanTimeout = timeout
-    config.securityScan = true
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
