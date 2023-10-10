@@ -49,7 +49,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.securityScan = true
   }
 
-  void enableSecurityScan(boolean isFrontend = false, int timeout = 120) {
+  void enableSecurityScan(String urlExclusions = "", boolean isFrontend = false, int timeout = 120) {
     config.urlExclusions = urlExclusions
     config.isFrontend = isFrontend
     config.securityScanTimeout = timeout
