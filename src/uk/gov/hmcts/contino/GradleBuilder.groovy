@@ -256,7 +256,6 @@ EOF
     return gradleWithOutput("buildEnvironment").contains(pluginName)
   }
 
-  @Override
   def securityScan(boolean isFrontend){
     if (steps.fileExists(".ci/security.sh")) {
       // hook to allow teams to override the default `security.sh` that we provide
