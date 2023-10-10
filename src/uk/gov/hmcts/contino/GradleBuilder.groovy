@@ -151,9 +151,10 @@ class GradleBuilder extends AbstractBuilder {
       [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
     ]
     localSteps.withAzureKeyvault(secrets) {
-      localSteps.sh "./gradlew -q dependencies > deps.log > depsProc"
+      localSteps.sh "./gradlew -q dependencies > depsProc"
       def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
       client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
+      localSteps.sh "rm -f depsProc"
     }
   }
 
