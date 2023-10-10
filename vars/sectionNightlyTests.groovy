@@ -98,9 +98,8 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
-            timeout(time: config.securityScanTimeout, unit: 'MINUTES') 
-            isFrontend(config.isFrontend) {
-              builder.securityScan()
+            timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+              builder.securityScan(config.isFrontend)
             }
           }
         }
