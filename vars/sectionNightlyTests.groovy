@@ -106,7 +106,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    if (config.securityScan && config.isFronted == true) {
+    if (config.isFronted == true) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
