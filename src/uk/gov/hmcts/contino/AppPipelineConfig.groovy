@@ -16,7 +16,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   List<String> parallelCrossBrowsers = []
   boolean mutationTest = false
   boolean fullFunctionalTest = false
-  boolean securityScan
+  boolean securityScan = true
   boolean serviceApp = true
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
