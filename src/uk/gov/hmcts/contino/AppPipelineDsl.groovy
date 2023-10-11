@@ -50,6 +50,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
       isFrontend: false,
       timeout: 120
     ] << args
+
+    config.securityScan = args.securityScan
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
