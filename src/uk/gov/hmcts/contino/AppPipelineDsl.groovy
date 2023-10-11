@@ -49,9 +49,9 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
             isFrontend: false,
             timeout: 120
     ] << args
-    def urlExclusions = urlExclusions
-    def isFrontend = isFrontend
-    def securityScanTimeout = timeout
+    def urlExclusions = config.urlExclusions
+    def isFrontend = config.isFrontend
+    def securityScanTimeout = config.timeout
     def securityScan = true
   }
 
