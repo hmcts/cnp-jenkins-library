@@ -7,8 +7,8 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String vaultName
   boolean migrateDb = false
   String dbMigrationVaultName
-  String urlExclusions = ""
-  boolean isFrontend = false
+  String urlExclusions
+  boolean isFrontend
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
@@ -16,7 +16,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   List<String> parallelCrossBrowsers = []
   boolean mutationTest = false
   boolean fullFunctionalTest = false
-  boolean securityScan = true
+  boolean securityScan
   boolean serviceApp = true
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
