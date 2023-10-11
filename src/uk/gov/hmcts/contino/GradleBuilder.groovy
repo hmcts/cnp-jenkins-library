@@ -16,12 +16,14 @@ class GradleBuilder extends AbstractBuilder {
   def localSteps
 
   def securitytest
+  def isFrontend
 
-  GradleBuilder(steps, product) {
+  GradleBuilder(steps, product, isFrontend) {
     super(steps)
     this.product = product
     this.localSteps = steps
-    this.securitytest = new SecurityScan(this.steps)
+    this.isFrontend = isFrontend
+    this.securitytest = new SecurityScan(this.steps, isFrontend)
   }
 
   def build() {
@@ -271,13 +273,13 @@ EOF
   //   this.securitytest.execute()
   // }
 
-  def securityScan(String isFrontend){
+  def securityScan(boolean isFrontend){
     if (steps.fileExists(".ci/security.sh")) {
       // hook to allow teams to override the default `security.sh` that we provide
       steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
     } else if (localSteps.fileExists("security.sh")) {
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
-    } else if (isFrontend == "true") {
+    } else if (isFrontend == true) {
       localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
     } else {
       localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))

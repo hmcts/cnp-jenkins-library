@@ -4,6 +4,7 @@ class SpringBootPipelineType implements PipelineType, Serializable {
   def steps
   def product
   def app
+  def isFrontend
 
   Builder builder
 
@@ -11,9 +12,10 @@ class SpringBootPipelineType implements PipelineType, Serializable {
     this.steps = steps
     this.product = product
     this.app = app
+    this.isFrontend = isFrontend
 
     this.steps.env.PRODUCT = product
 
-    builder = new GradleBuilder(steps, product)
+    builder = new GradleBuilder(steps, product, isFrontend)
   }
 }
