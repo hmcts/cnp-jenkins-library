@@ -45,7 +45,7 @@ class TeamConfig {
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/team-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/DTSSE-3586/onboard-teams-to-ardoq/team-config.yml",
         validResponseCodes: '200'
       )
       teamConfigMap = steps.readYaml (text: response.content)
