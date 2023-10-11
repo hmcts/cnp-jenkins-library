@@ -2,7 +2,6 @@ package uk.gov.hmcts.contino
 
 class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
-  Map<String, Object> securityScanArgs = [:]
   Map<String, String> vaultEnvironmentOverrides = ['preview':'aat', 'dev':'stg']
   String vaultName
   boolean migrateDb = false
@@ -16,7 +15,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   List<String> parallelCrossBrowsers = []
   boolean mutationTest = false
   boolean fullFunctionalTest = false
-  boolean securityScan = false
   boolean serviceApp = true
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
