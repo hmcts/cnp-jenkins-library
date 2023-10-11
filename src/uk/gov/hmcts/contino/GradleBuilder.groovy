@@ -16,14 +16,12 @@ class GradleBuilder extends AbstractBuilder {
   def localSteps
 
   def securitytest
-  def isFrontend
 
-  GradleBuilder(steps, product, isFrontend) {
+  GradleBuilder(steps, product) {
     super(steps)
     this.product = product
     this.localSteps = steps
-    this.isFrontend = isFrontend
-    this.securitytest = new SecurityScan(this.steps, isFrontend)
+    this.securitytest = new SecurityScan(this.steps)
   }
 
   def build() {
