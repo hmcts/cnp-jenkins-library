@@ -94,7 +94,7 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    if (config.securityScan) {
+    if (!config.securityScan) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
