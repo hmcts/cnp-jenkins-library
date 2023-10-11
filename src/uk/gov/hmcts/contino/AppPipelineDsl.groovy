@@ -45,7 +45,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableSecurityScan(Map<String, Object> args = [:]) {
     def config = [
-      securityScan: false,
+      securityScan: true,
       urlExclusions: "",
       isFrontend: false,
       timeout: 120
