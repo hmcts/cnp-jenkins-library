@@ -44,16 +44,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableSecurityScan(Map<String, Object> args = [:]) {
-        def config = [
-            urlExclusions: "",
-            isFrontend: false,
-            timeout: 120
+    def config = [
+      securityScan: false,
+      urlExclusions: "",
+      isFrontend: false,
+      timeout: 120
     ] << args
-    
-    def urlExclusions = config.urlExclusions
-    def isFrontend = config.isFrontend
-    def securityScanTimeout = config.timeout
-    def securityScan = true
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
