@@ -94,24 +94,12 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    if (config.securityScan && config.isFrontend == false) {
+    if (config.securityScan) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan()
-            }
-          }
-        }
-      }
-    }
-
-    if (config.securityScan && config.isFrontend == true) {
-      stageWithAgent('Security scan', product) {
-        warnError('Failure in securityScan') {
-          pcr.callAround('securityScan') {
-            timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-              builder.securityScan(config.isFrontend)
             }
           }
         }
