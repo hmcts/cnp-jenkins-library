@@ -2,7 +2,6 @@ package uk.gov.hmcts.contino
 
 class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
-  Map<String, Object> securityScanArgs = [securityScan: false, urlExclusions: "", isFrontend: false, timeout: 120]
   Map<String, String> vaultEnvironmentOverrides = ['preview':'aat', 'dev':'stg']
   String vaultName
   boolean migrateDb = false
@@ -31,7 +30,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
-  boolean isFrontend
+  boolean isFrontend = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15
