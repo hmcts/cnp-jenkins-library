@@ -30,12 +30,6 @@ set -e
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
-# Temporary files cleanup function
-cleanup() {
-rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions
-
-}
-
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
 cat <<'EOF'
@@ -102,7 +96,6 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
     check_for_unneeded_suppressions
   fi
 
-  cleanup
   exit 0
 fi
 
@@ -110,7 +103,6 @@ fi
 if [ ! -f yarn-audit-known-issues ]; then
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
-  cleanup
   exit 1
 else
   # Test for old format of yarn-audit-known-issues
@@ -142,7 +134,6 @@ else
     echo "Unsuppressed vulnerabilities found:"
     source prettyPrintAudit.sh new_vulnerabilities
     print_guidance
-    cleanup
     exit 1
   else
     echo "Active suppressed vulnerabilities:"
@@ -153,7 +144,6 @@ else
     done < sorted-yarn-audit-known-issues
 
     source prettyPrintAudit.sh active_suppressions
-    cleanup
     exit 0
   fi
 fi
