@@ -436,7 +436,7 @@ The current state of the Nightly Pipeline is geared towards testing both fronten
 
 The pipeline will automatically detect whether your application is node based or gradle based and run the appropriate security tests based on that.
 
-Gradle based applications are more commonly used in the backend but if your frontend application is gradle based, you can pass a parameter to `withNightlyPipeline` to indicate this is the case and run the frontend specific security script instead of the default backed specific script.
+Gradle based applications are more commonly used in the backend but if your frontend application is gradle based, you can pass a parameter to `withNightlyPipeline` to indicate this is the case and run the frontend specific security script instead of the default backend specific script.
 
 ```
 def isFrontend = true
