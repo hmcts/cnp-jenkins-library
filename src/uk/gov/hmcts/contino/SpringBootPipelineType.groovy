@@ -8,7 +8,7 @@ class SpringBootPipelineType implements PipelineType, Serializable {
 
   Builder builder
 
-  SpringBootPipelineType(steps, product, app, isFrontend) {
+  SpringBootPipelineType(steps, product, app, isFrontend = null) {
     this.steps = steps
     this.product = product
     this.app = app
