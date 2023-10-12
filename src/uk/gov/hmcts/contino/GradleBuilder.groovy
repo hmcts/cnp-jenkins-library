@@ -268,7 +268,7 @@ EOF
   //   }
   //   this.securitytest.execute()
   // }
-
+  @Override
   def securityScan(isFrontend){
     if (steps.fileExists(".ci/security.sh")) {
       // hook to allow teams to override the default `security.sh` that we provide
