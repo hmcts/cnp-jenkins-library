@@ -372,6 +372,7 @@ EOF
     runYarn(task, prepend)
   }
 
+  @Override
   def securityScan(){
     if (steps.fileExists(".ci/security.sh")) {
       // hook to allow teams to override the default `security.sh` that we provide
