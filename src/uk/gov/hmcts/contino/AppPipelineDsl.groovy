@@ -45,7 +45,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableSecurityScan(Map<String, Object> securityScanArgs) {
     config.securityScan = securityScanArgs['securityScan']
-    config.isFrontend = securityScanArgs['isFrontend']
+    // config.isFrontend = securityScanArgs['isFrontend']
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
