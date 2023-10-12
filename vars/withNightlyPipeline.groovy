@@ -16,7 +16,7 @@ def call(type, product, component, Closure body) {
 
   def pipelineTypes = [
     nodejs : new NodePipelineType(this, product, component),
-    java   : new SpringBootPipelineType(this, product, component, isFrontend),
+    java   : new SpringBootPipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
     ruby: new RubyPipelineType(this, product, component)
   ]
