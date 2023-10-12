@@ -39,9 +39,12 @@ class AppPipelineConfigTest extends Specification {
   }
 
   def "ensure securityScan can be set in steps"() {
+    given:
+      def securityScanArgs = [securityScan: true, urlExclusions: "", isFrontend: false, timeout: 120]
     when:
-      dsl.enableSecurityScan()
+      dsl.enableSecurityScan(securityScanArgs)
     then:
+      assertThat(pipelineConfig.securityScan).isTrue()
       assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
       assertThat(pipelineConfig.urlExclusions).isEqualTo("")
       assertThat(pipelineConfig.isFrontend).isFalse()
