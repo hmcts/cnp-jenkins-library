@@ -38,14 +38,14 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
 
-  // def "ensure securityScan can be set in steps"() {
-  //   when:
-  //     dsl.enableSecurityScan()
-  //   then:
-  //     assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
-  //     assertThat(pipelineConfig.urlExclusions).isEqualTo("")
-  //     assertThat(pipelineConfig.isFrontend).isFalse()
-  // }
+  def "ensure securityScan can be set in steps"() {
+    when:
+      dsl.enableSecurityScan()
+    then:
+      assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
+      assertThat(pipelineConfig.urlExclusions).isEqualTo("")
+      assertThat(pipelineConfig.isFrontend).isFalse()
+  }
 
   def "load vault secrets"() {
     given:
