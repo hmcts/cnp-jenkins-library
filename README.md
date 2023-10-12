@@ -434,9 +434,17 @@ You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-p
 
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
 
-The pipeline will automatically detect whether you're application is node based or gradle based and run the appropriate security tests based on that.
+The pipeline will automatically detect whether your application is node based or gradle based and run the appropriate security tests based on that.
 
-If you have a requirement to customise the script, you can place your own script in a folder called `ci` in your repo. Make sure to call the script `security.sh`.
+Gradle based applications are more commonly used in the backend but if your frontend application is gradle based, you can pass a parameter to `withNightlyPipeline` to indicate this is the case and run the frontend specific security script instead of the default backed specific script.
+
+```
+def isFrontend = true
+
+withNightlyPipeline(type, product, component, isFrontend)
+```
+
+If you have a requirement to customise the security script, you can place your own script in a folder called `ci` in your repo. Make sure to call the script `security.sh`.
 
 The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named `Jenkinsfile_nightly` must be included in the repository.
 
