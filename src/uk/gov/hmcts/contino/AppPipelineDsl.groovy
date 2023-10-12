@@ -44,6 +44,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableSecurityScan(int timeout = 120) {
+    config.urlExclusions = urlExclusions
+    config.securityScanTimeout = timeout
     config.securityScan = true
   }
 
