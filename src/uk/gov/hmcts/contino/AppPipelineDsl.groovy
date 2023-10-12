@@ -43,14 +43,14 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.parallelCrossBrowsers = browsers
   }
 
-  void enableSecurityScan(Map<String, Object> securityScanArgs = [:]) {
-    config.securityScan = true
-    config.isFrontend = securityScanArgs['isFrontend']
-  }
-
-  void enableSecurityScan() {
+  void enableSecurityScan(int timeout = 120) {
     config.securityScan = true
     config.isFrontend = false
+  }
+
+  void enableSecurityScan(Map<String, Object> securityScanArgs) {
+    config.securityScan = true
+    config.isFrontend = securityScanArgs['isFrontend']
   }
 
   void enableFullFunctionalTest(int timeout = 30) {
