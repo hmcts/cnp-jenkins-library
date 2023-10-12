@@ -11,7 +11,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 
-def call(type,product,component,isFrontend,Closure body) {
+def call(type, product, component, isFrontend = null, Closure body) {
 
 
   def pipelineTypes = [
