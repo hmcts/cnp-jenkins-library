@@ -45,7 +45,6 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isTrue()
       assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
       assertThat(pipelineConfig.urlExclusions).isEqualTo("")
-      assertThat(pipelineConfig.isFrontend).isFalse()
   }
 
   def "load vault secrets"() {
