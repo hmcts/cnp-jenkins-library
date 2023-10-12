@@ -1,0 +1,64 @@
+def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
+
+def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactory.sandbox' : 'artifactory'
+def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
+
+allprojects {
+  repositories {
+    maven {
+      url mirrorUrl
+    }
+  }
+  buildscript {
+    repositories {
+      maven {
+        url mirrorUrl
+      }
+      mavenCentral()
+    }
+    dependencies {
+      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
+    }
+  }
+
+  task printVersionInit {
+    doLast { println project.version }
+  }
+}
+
+settingsEvaluated { settings ->
+  settings.pluginManagement {
+    repositories {
+      maven {
+        url mirrorUrl
+      }
+    }
+  }
+}
+
+allprojects {
+  afterEvaluate { project ->
+    if (project.hasProperty('dependencyCheck')) {
+      configure(project) {
+        dependencyCheck {
+          autoUpdate = false
+          hostedSuppressions.forceupdate = true
+          // Any CVE should fail the build.
+          failBuildOnCVSS = 0
+
+          // JSON dependency check reports are logged to cosmos for reporting.
+          formats += 'JSON'
+
+          // Scan only the dependencies used at application runtime.
+          // See https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
+          if (!('runtimeClasspath' in it.scanConfigurations)) {
+            scanConfigurations += 'runtimeClasspath'
+          }
+          // Scan and skip configurations are mutually exclusive,
+          // so we must clear any skipped configurations the build may have configured.
+          skipConfigurations = []
+        }
+      }
+    }
+  }
+}
