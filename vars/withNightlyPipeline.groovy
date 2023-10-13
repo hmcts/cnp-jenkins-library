@@ -46,8 +46,16 @@ def call(type,product,component,Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
-  String nodeSelector = agentType == "" ? "daily" : agentType + ' && daily'
+  String nodeSelector
 
+  if (agentType == "") {
+    nodeSelector = "daily"
+  } else if (agentType == "arm") {
+    nodeSelector = agentType + '&& arm-daily'
+  } else {
+    nodeSelector = agentType + ' && daily'
+  }
+  
   node(nodeSelector) {
     timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL

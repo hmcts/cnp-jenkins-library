@@ -4,7 +4,6 @@ import groovy.json.JsonSlurper
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
-import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 import static java.lang.Float.valueOf
@@ -317,6 +316,8 @@ EOF
     def date;
     switch (steps.env.PRODUCT) {
       case "xui":
+        date = LocalDate.of(2023, 11, 27)
+        break
       case "ccd":
       case "em":
         date = LocalDate.of(2023, 10, 31)
@@ -324,7 +325,7 @@ EOF
       case "bar":
       case "fees-register":
       case "ccpay":
-        date = LocalDate.of(2023, 9, 30)
+        date = LocalDate.of(2023, 10, 21)
         break
       default:
         date = NODEJS_EXPIRATION
