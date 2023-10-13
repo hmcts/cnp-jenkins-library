@@ -47,11 +47,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     def configuration = [
         urlExclusions: "",
         timeout: 120,
-        scanType: "auto"
+        scanType: ""
     ] << params
 
     config.securityScanUrlExclusions = configuration.urlExclusions
-    config.useFrontendSecurityScan = configuration.scanType == "frontend"
+    config.useFrontendSecurityScan = configuration.scanType
     config.securityScanTimeout = configuration.timeout
     config.securityScan = true
   }
