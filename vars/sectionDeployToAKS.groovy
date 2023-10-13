@@ -244,7 +244,7 @@ def call(params) {
                 stageWithAgent('Security scan', product) {
                   warnError('Failure in securityScan') {
                     env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
-                    env.SCAN_TYPE = config.useFrontendSecurityScan
+                    env.SCAN_TYPE = config.securityScanType
                     pcr.callAround('securityScan') {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
                         builder.securityScan()
