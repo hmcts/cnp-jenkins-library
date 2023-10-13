@@ -106,19 +106,6 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
-    if (config.useFrontendSecurityTests) {
-      stageWithAgent('Security scan', product) {
-        env.IS_FRONTEND = "true"
-        warnError('Failure in securityScan') {
-          pcr.callAround('securityScan') {
-            timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-              builder.securityScan()
-            }
-          }
-        }
-      }
-    }
-
     if (config.mutationTest) {
       stageWithAgent('Mutation tests', product) {
         warnError('Failure in mutationTest') {

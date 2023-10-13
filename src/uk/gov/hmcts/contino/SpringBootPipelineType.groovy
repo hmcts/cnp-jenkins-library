@@ -11,7 +11,6 @@ class SpringBootPipelineType implements PipelineType, Serializable {
     this.steps = steps
     this.product = product
     this.app = app
-    this.isFrontend = isFrontend
 
     this.steps.env.PRODUCT = product
 

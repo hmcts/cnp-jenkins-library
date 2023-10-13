@@ -15,7 +15,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean mutationTest = false
   boolean fullFunctionalTest = false
   boolean securityScan = false
-  boolean useFrontendSecurityTests = false
   boolean serviceApp = true
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
