@@ -4,6 +4,9 @@ export LANG=C.UTF-8
 
 echo ${TEST_URL}
 
+echo "scan type is ${SCAN_TYPE}"
+
+
 ZAP_URL_EXCLUSIONS="-config globalexcludeurl.url_list.url\(0\).regex='^https?:\/\/.*\/(?:.*login.*)+$' ${ZAP_URL_EXCLUSIONS}"
 echo ${ZAP_URL_EXCLUSIONS}
 
