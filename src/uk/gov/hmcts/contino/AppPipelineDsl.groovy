@@ -51,7 +51,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     ] << params
 
     config.securityScanUrlExclusions = configuration.urlExclusions
-    config.useFrontendSecurityScan = configuration.scanType
+    config.useFrontendSecurityScan = configuration.scanType ?: ""
     config.securityScanTimeout = configuration.timeout
     config.securityScan = true
   }
