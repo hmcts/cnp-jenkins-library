@@ -243,7 +243,7 @@ def call(params) {
               testEnv(aksUrl) {
                 stageWithAgent('Security scan', product) {
                   warnError('Failure in securityScan') {
-                    env.ZAP_URL_EXCLUSIONS = config.urlExclusions
+                    env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
                     env.IS_FRONTEND = config.useFrontendSecurityScan
                     pcr.callAround('securityScan') {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
