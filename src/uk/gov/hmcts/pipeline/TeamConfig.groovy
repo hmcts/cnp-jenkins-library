@@ -30,6 +30,7 @@ class TeamConfig {
     this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
     this.steps.env.TEAM_CONTAINER_REGISTRY = getContainerRegistry(product)
     this.steps.env.TEAM_APPLICATION_TAG = getApplicationTag(product)
+    this.steps.env.ARDOQ_APPLICATION_ID = getArdoqApplicationId(product)
 
     def buildAgentType = getBuildAgentType(product)
     this.steps.env.BUILD_AGENT_TYPE = buildAgentType
@@ -101,6 +102,14 @@ class TeamConfig {
 
   def getContactSlackChannel(String product) {
     return getDefaultTeamSlackChannel(getRawProductName(product),CONTACT_SLACK_CHANNEL_KEY)
+  }
+
+  def getArdoqApplicationId(String product) {
+    def teamNames = getTeamNamesMap()
+    if (teamNames?.get(product)?.get('ardoq')?.get('application_id')) {
+      return teamNames.get(product).get('ardoq').get('application_id')
+    }
+    steps.echo("Ardoq Application Id not set")
   }
 
   String getBuildAgentType(String product) {

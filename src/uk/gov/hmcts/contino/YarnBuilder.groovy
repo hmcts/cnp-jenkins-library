@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -17,8 +18,12 @@ class YarnBuilder extends AbstractBuilder {
 
   def securitytest
 
+  // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
+  def localSteps
+
   YarnBuilder(steps) {
     super(steps)
+    this.localSteps = steps
     this.securitytest = new SecurityScan(this.steps)
   }
 
@@ -151,6 +156,19 @@ class YarnBuilder extends AbstractBuilder {
       def cveReport = prepareCVEReport(issues, knownIssues)
       new CVEPublisher(steps)
         .publishCVEReport('node', cveReport)
+    }
+  }
+
+  @Override
+  def techStackMaintenance() {
+    this.steps.echo "Running Yarn Tech stack maintenance"
+    def secrets = [
+      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) {
+      def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+      client.updateDependencies(localSteps.readFile('yarn.lock'), 'yarn')
     }
   }
 
@@ -294,6 +312,29 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private LocalDate node18ExpirationDate() {
+    def date;
+    switch (steps.env.PRODUCT) {
+      case "xui":
+        date = LocalDate.of(2023, 11, 27)
+        break
+      case "ccd":
+      case "em":
+        date = LocalDate.of(2023, 10, 31)
+        break
+      case "bar":
+      case "fees-register":
+      case "ccpay":
+        date = LocalDate.of(2023, 10, 31)
+        break
+      default:
+        date = NODEJS_EXPIRATION
+        break
+    }
+    steps.echo "Node.Js upgrade deadline is: ${date}, product is: ${steps.env.PRODUCT}"
+    return date
+  }
+
   private isNodeJSV18OrNewer() {
     boolean validVersion = true;
     if (steps.fileExists(NVMRC)) {
@@ -303,7 +344,7 @@ EOF
                                           .substring(0, nodeVersion.lastIndexOf(".")))
       validVersion = current_version >= DESIRED_MIN_VERSION
     } else {
-      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", node18ExpirationDate())
     }
 
     return validVersion
@@ -311,7 +352,7 @@ EOF
 
   private nagAboutOldNodeJSVersions() {
     if (!isNodeJSV18OrNewer()) {
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", NODEJS_EXPIRATION)
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", node18ExpirationDate())
     }
   }
 

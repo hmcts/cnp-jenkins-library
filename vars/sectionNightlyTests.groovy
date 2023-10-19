@@ -5,7 +5,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
 
-def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component) {
+def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
 
@@ -85,7 +85,8 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
               publishPerformanceReports(
                 product: product,
                 component: component,
-                environment: environment.nonProdName
+                environment: environment.nonProdName,
+                subscription: subscription
               )
             }
           }
@@ -96,6 +97,8 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
     if (config.securityScan) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
+          env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+          env.SCAN_TYPE = config.securityScanType
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan()

@@ -19,11 +19,11 @@ def testEnv(String testUrl, block) {
   }
 }
 
-def clearHelmReleaseForFailure(AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-  if (config.clearHelmReleaseOnFailure) {
-    helmUninstall(dockerImage, params, pcr)
+def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
+    def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+    if ((projectBranch.isMaster() && config.clearHelmReleaseOnFailure) || (projectBranch.isPR() && !enableHelmLabel)) {
+        helmUninstall(dockerImage, params, pcr)
   }
-
 }
 
 def call(params) {
@@ -55,7 +55,7 @@ def call(params) {
 
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  def depLabel = gitHubAPI.checkForDependenciesLabel(env.BRANCH_NAME)
+  boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
@@ -89,6 +89,25 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
+      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
+        stageWithAgent("Pact Consumer Can I Deploy", product) {
+          builder.runConsumerCanIDeploy()
+        }
+      }
+      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
+        stageWithAgent("Pact Provider Verification", product) {
+          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+
+          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
+          pcr.callAround('pact-provider-verification') {
+            builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
+          }
+        }
+      }
       if (config.serviceApp) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
@@ -104,7 +123,7 @@ def call(params) {
                   } finally {
                     savePodsLogs(dockerImage, params, "smoke")
                     if (!success) {
-                      clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     }
                   }
                 }
@@ -128,7 +147,7 @@ def call(params) {
                         } finally {
                           savePodsLogs(dockerImage, params, "full-functional")
                           if (!success) {
-                            clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                            clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                           }
                         }
                       }
@@ -150,7 +169,7 @@ def call(params) {
                       } finally {
                         savePodsLogs(dockerImage, params, "functional")
                         if (!success) {
-                          clearHelmReleaseForFailure(config, dockerImage, params, pcr)
+                          clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                         }
                       }
                     }
@@ -171,25 +190,7 @@ def call(params) {
               }
             }
           }
-          if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
-            stageWithAgent("Pact Consumer Can I Deploy", product) {
-              builder.runConsumerCanIDeploy()
-            }
-          }
-          if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
-            stageWithAgent("Pact Provider Verification", product) {
-              def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-              def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-              env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-              env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
-              env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-              env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
-              pcr.callAround('pact-provider-verification') {
-                builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
-              }
-            }
-          }
 
           onMaster {
             if (config.crossBrowserTest) {
@@ -242,6 +243,8 @@ def call(params) {
               testEnv(aksUrl) {
                 stageWithAgent('Security scan', product) {
                   warnError('Failure in securityScan') {
+                    env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+                    env.SCAN_TYPE = config.securityScanType
                     pcr.callAround('securityScan') {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
                         builder.securityScan()
@@ -255,7 +258,7 @@ def call(params) {
         }
       }
       def triggerUninstall = environment == nonProdEnv
-      if (triggerUninstall || config.clearHelmReleaseOnSuccess || depLabel) {
+      if (triggerUninstall || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
     }
