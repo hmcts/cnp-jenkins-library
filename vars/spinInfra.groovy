@@ -123,7 +123,10 @@ def call(Map<String, ?> params) {
 
        // Commit the formatting changes
        git fetch origin $BRANCH:$BRANCH
-       git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+      sh '''
+          git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+       '''
+      
        git config --global user.name ${USER_NAME}
        git config --global user.email ${GIT_APP_EMAIL_ID}
 
@@ -134,7 +137,10 @@ def call(Map<String, ?> params) {
        error("Terraform was not formatted correctly, it has been reformatted and pushed back to your PR.")
      }
 
-
+sh '''
+                    set -e
+                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+                '''
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
