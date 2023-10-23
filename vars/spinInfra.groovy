@@ -104,11 +104,11 @@ def call(Map<String, ?> params) {
         sh "terraform --version"
 
         sh """
-          terraform init -reconfigure \
-            -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
-            -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
+              terraform init -reconfigure \
+              -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
+              -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+              -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
+              -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
       //check tf version
@@ -124,8 +124,8 @@ def call(Map<String, ?> params) {
        // Commit the formatting changes
        git fetch origin $BRANCH:$BRANCH
        sh '''
-          git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-         '''
+           git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+       '''
       
        git config --global user.name ${USER_NAME}
        git config --global user.email ${GIT_APP_EMAIL_ID}
@@ -137,10 +137,10 @@ def call(Map<String, ?> params) {
        error("Terraform was not formatted correctly, it has been reformatted and pushed back to your PR.")
      }
 
-sh '''
-                    set -e
-                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-                '''
+       sh '''
+           set -e
+           git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+          '''
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
@@ -170,7 +170,7 @@ sh '''
                 --pr ${env.CHANGE_ID} \
                 plan -patch -- \
                 terraform show tfplan
-            """
+               """
           }
         }
       }
