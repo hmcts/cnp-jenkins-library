@@ -33,7 +33,6 @@ class ArdoqClient {
     }
     steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
     def result = steps.readFile('languageProc')
-    steps.sh "rm -f languageProc"
     return result
   }
 
@@ -44,7 +43,6 @@ class ArdoqClient {
     }
     steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}' > languageVersionProc"
     def result = steps.readFile('languageVersionProc')
-    steps.sh "rm -f languageProc"
     return result
   }
 

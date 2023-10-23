@@ -155,7 +155,6 @@ class GradleBuilder extends AbstractBuilder {
         localSteps.sh "./gradlew -q dependencies > depsProc"
         def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
         client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
-        localSteps.sh "rm -f depsProc"
       }
     } catch(Exception e) {
       localSteps.echo "Error running Gradle tech stack maintenance {e.getMessage()}"
