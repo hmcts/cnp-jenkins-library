@@ -134,16 +134,16 @@ def call(Map<String, ?> params) {
         sh """
         git commit -m "Updating Terraform Formatting"
         """
-        
+
         sh "git push origin HEAD:$BRANCH"
         
         error("Terraform was not formatted correctly, it has been reformatted and pushed back to your PR.")
       }
 
-        sh "
+        sh """
             set -e
             git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-        "
+        """
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
