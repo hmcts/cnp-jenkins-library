@@ -129,7 +129,7 @@ def call(Map<String, ?> params) {
           
         sh "git config --global user.email ${GIT_APP_EMAIL_ID}"
       
-        sh "git add $(find . -type f -name "*.tf")"
+        sh 'git add $(find . -type f -name "*.tf")'
           
         sh "git commit -m "Updating Terraform Formatting"
         
