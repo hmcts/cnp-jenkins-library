@@ -141,8 +141,8 @@ def call(Map<String, ?> params) {
       }
 
         sh """
-            set -e
-            git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+        set -e
+        git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
         """
 
         warnAboutOldTfAzureProvider()
