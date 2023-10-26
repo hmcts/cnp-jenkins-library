@@ -131,7 +131,9 @@ def call(Map<String, ?> params) {
       
         sh 'git add $(find . -type f -name "*.tf")'
           
-        sh "git commit -m "Updating Terraform Formatting"
+        sh """
+        git commit -m "Updating Terraform Formatting"
+        """
         
         sh "git push origin HEAD:$BRANCH"
         
