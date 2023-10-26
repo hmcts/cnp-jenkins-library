@@ -112,39 +112,36 @@ def call(Map<String, ?> params) {
         """
 
         //check tf version
-          def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive' )
-          echo "Terraform fmt exit status ${fmtTerraformcheck}"
+        def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive')
+        echo "Terraform fmt exit status ${fmtTerraformcheck}"
           
-          if (fmtExitCode != 0) {
+        if (fmtExitCode != 0) {
             echo 'Terraform code is not formatted correctly'
 
         // Format the Terraform code recursively
-        sh "terraform fmt -recursive"
+        sh 'terraform fmt -recursive'
 
         // Commit the formatting changes
         git fetch origin $BRANCH:$BRANCH
-        sh '""
-          git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-        ""
+        sh "git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g") "
 
-        sh ""
-          git config --global user.name ${USER_NAME}
-          git config --global user.email ${GIT_APP_EMAIL_ID}
-        ""
+        sh "git config --global user.name ${USER_NAME}
+          
+        sh "git config --global user.email ${GIT_APP_EMAIL_ID}"
+      
+        sh "git add $(find . -type f -name "*.tf")"
+          
+        sh "git commit -m "Updating Terraform Formatting"
         
-        sh '''
-          git add $(find . -type f -name "*.tf")
-          git commit -m "Updating Terraform Formatting"
-          git push origin HEAD:$BRANCH
-        '''
-
+        sh "git push origin HEAD:$BRANCH"
+        
         error("Terraform was not formatted correctly, it has been reformatted and pushed back to your PR.")
       }
 
-        sh ""
+        sh "
             set -e
             git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-        ""
+        "
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
