@@ -123,7 +123,7 @@ def call(Map<String, ?> params) {
 
         // Commit the formatting changes
         git fetch origin $BRANCH:$BRANCH
-        sh "git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g") "
+        sh  'git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g ")'
 
         sh "git config --global user.name ${USER_NAME}:"
           
