@@ -43,7 +43,7 @@ class AzPrivateDnsTest extends Specification {
 
     when:
       azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, ENVIRONMENT, environmentDnsConfigEntry])
-      azPrivateDns.registerDns(recordName, ip)
+      azPrivateDns.registerDns(recordName, ip, cnameRecordSet)
 
     then:
     1 * steps.sh({it.containsKey('script') &&
@@ -63,7 +63,7 @@ class AzPrivateDnsTest extends Specification {
 
     when:
       azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, environment, new EnvironmentDnsConfig(steps).getEntry(environment, 'plum', 'recipes-service')])
-      azPrivateDns.registerDns(recordName, ip)
+      azPrivateDns.registerDns(recordName, ip, cnameRecordSet)
 
     then:
       thrown RuntimeException
@@ -74,7 +74,7 @@ class AzPrivateDnsTest extends Specification {
     def ip = "4.3.2.256"
 
     when:
-      azPrivateDns.registerDns(recordName, ip)
+      azPrivateDns.registerDns(recordName, ip, cnameRecordSet)
 
     then:
       thrown RuntimeException
