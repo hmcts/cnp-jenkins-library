@@ -46,7 +46,7 @@ class AzPrivateDns {
         def zone = this.environmentDnsConfigEntry.zone
         def aRecordSet
 
-        if (${cnameRecordSet} == "") {
+        if (cnameRecordSet == "") {
           this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
           try {
             aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
