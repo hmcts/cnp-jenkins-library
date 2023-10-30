@@ -8,7 +8,6 @@ class AzPrivateDns {
     def environment
     def az
     def environmentDnsConfigEntry
-    def cnameRecordSet
 
     AzPrivateDns(steps, environment, environmentDnsConfigEntry) {
         this.steps = steps
