@@ -9,7 +9,7 @@ class AzPublicDns {
     def az
     def environmentDnsConfigEntry
     
-    AzPublicDNS(steps,environment, environmentDnsConfigEntry) {
+    AzPublicDns(steps,environment, environmentDnsConfigEntry) {
       this.steps = steps
       this.environment = environment
       this.az = new Az(this.steps, "Reform-CFT-Mgmt")
