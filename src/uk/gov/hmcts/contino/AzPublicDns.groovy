@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Az
 
-class AzPrivateDns {
+class AzPublicDns {
 
     def steps
     def environment
