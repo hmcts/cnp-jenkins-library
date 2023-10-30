@@ -35,6 +35,7 @@ class AzPrivateDnsTest extends Specification {
   def "registerAzDns() should register the record name with the private dns zone for the environment"() {
     def recordName = "rn"
     def ip = "4.3.2.1"
+    def cnameRecordSet = ""
 
     def zone = "service.core-compute-${ENVIRONMENT}.internal"
     def resourceGroup = "core-infra-intsvc-rg"
@@ -60,6 +61,7 @@ class AzPrivateDnsTest extends Specification {
     def environment = "sbox"
     def recordName = "rn"
     def ip = "4.3.2.1"
+    def cnameRecordSet = ""
 
     when:
       azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, environment, new EnvironmentDnsConfig(steps).getEntry(environment, 'plum', 'recipes-service')])
