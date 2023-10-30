@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
+import uk.gov.hmcts.contino.AzPublicDns
 import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -28,12 +29,15 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
 
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
+  AzPublicDNS azPublicDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
   if (serviceFqdn.endsWith(".internal")) {
     WarningCollector.addPipelineWarning("internal_domain", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1675868743958669", LocalDate.of(2023, 04, 26))
   }
+
+  def cnameRecordSet = azPublicDns(registerDns.cnameRecordSet)
 
   def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
@@ -171,7 +175,7 @@ def call(DockerImage dockerImage, Map params) {
 
     if (config.serviceApp) {
       // Register service dns
-      azPrivateDns.registerDns(aksServiceName, ingressIP)
+      azPrivateDns.registerDns(aksServiceName, ingressIP, cnameRecordSet)
 
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"

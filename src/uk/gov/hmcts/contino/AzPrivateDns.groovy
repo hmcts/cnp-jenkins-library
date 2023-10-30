@@ -8,6 +8,7 @@ class AzPrivateDns {
     def environment
     def az
     def environmentDnsConfigEntry
+    def cnameRecordSet
 
     AzPrivateDns(steps, environment, environmentDnsConfigEntry) {
         this.steps = steps
@@ -22,7 +23,7 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
-    def registerDns(recordName, serviceIP) {
+    def registerDns(recordName, serviceIP, cnameRecordSet) {
         if (!IPV4Validator.validate(serviceIP)) {
             throw new RuntimeException("Invalid IP address [${serviceIP}].")
         }
@@ -44,18 +45,32 @@ class AzPrivateDns {
 
         def ttl = this.environmentDnsConfigEntry.ttl
         def zone = this.environmentDnsConfigEntry.zone
-
-        this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
         def aRecordSet
-        try {
-          aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-        } catch (e) {
-        } // do nothing, record not found
-        if (!aRecordSet) {
-          this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-          this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
+
+        if (${cnameRecordSet} == "") {
+          this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
+          try {
+            aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+          } catch (e) {
+          } // do nothing, record not found
+          if (!aRecordSet) {
+            this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+            this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
+          } else {
+            this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
+          }
         } else {
-          this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
+          this.steps.echo "Registering DNS for ${recordName} to ${cnameRecordSet} with ttl = ${ttl}"
+          try {
+            aRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+          } catch (e) {
+          } // do nothing, record not found
+          if (!aRecordSet) {
+            this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+            this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cnameRecordSet} --subscription ${subscription}"
+          } else {
+            this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=\"${cnameRecordSet}\"' --set 'ttl=${ttl}'"
+          }
         }
     }
 
