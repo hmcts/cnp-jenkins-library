@@ -62,11 +62,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
     } finally {
-      try {
-        localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
     }
   }
 
@@ -76,11 +72,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
     } finally {
-      try {
-        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
     }
   }
 
@@ -90,11 +82,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks apiGateway")
     } finally {
-      try {
-        localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
     }
   }
 
@@ -157,7 +145,17 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def techStackMaintenance() {
-    localSteps.echo "Support for Gradle coming soon..."
+    localSteps.echo "Running Gradle Tech stack maintenance"
+    def secrets = [
+      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) {
+      localSteps.sh "./gradlew -q dependencies > depsProc"
+      def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+      client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
+      localSteps.sh "rm -f depsProc"
+    }
   }
 
   def prepareCVEReport(String owaspReportJSON) {
@@ -275,6 +273,8 @@ EOF
       steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
     } else if (localSteps.fileExists("security.sh")) {
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
+    } else if (localSteps.env.SCAN_TYPE == "frontend") {
+      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
     } else {
       localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
     }
