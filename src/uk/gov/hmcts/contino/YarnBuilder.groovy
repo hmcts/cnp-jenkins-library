@@ -162,13 +162,17 @@ class YarnBuilder extends AbstractBuilder {
   @Override
   def techStackMaintenance() {
     this.steps.echo "Running Yarn Tech stack maintenance"
-    def secrets = [
-      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
-      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
-    ]
-    localSteps.withAzureKeyvault(secrets) {
-      def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
-      client.updateDependencies(localSteps.readFile('yarn.lock'), 'yarn')
+    try {
+      def secrets = [
+        [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+        [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+      ]
+      localSteps.withAzureKeyvault(secrets) {
+        def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+        client.updateDependencies(localSteps.readFile('yarn.lock'), 'yarn')
+      }
+    } catch(Exception e) {
+      localSteps.echo "Error running tech Yarn stack maintenance {e.getMessage()}"
     }
   }
 
