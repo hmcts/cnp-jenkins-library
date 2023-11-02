@@ -320,7 +320,7 @@ EOF
         break
       case "ccd":
       case "em":
-        date = LocalDate.of(2023, 10, 31)
+        date = LocalDate.of(2023, 12, 21)
         break
       case "bar":
       case "fees-register":
