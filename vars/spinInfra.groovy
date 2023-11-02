@@ -107,7 +107,6 @@ def call(Map<String, ?> params) {
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
-        warnAboutTerraformFormatting()
 
         steps.writeFile(file: 'check-terraform-format.sh', text: steps.libraryResource('uk/gov/hmcts/helm/check-terraform-format'))
         steps.sh(label: "Check Terraform Formatting, under pods-logs-${scope}", script: """
