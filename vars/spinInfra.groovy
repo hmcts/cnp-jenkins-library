@@ -107,6 +107,14 @@ def call(Map<String, ?> params) {
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
+        warnAboutTfFormatting()
+
+        steps.writeFile(file: 'check-terraform-format.sh', text: steps.libraryResource('uk/gov/hmcts/helm/check-terraform-format'))
+        steps.sh(label: "Check Terraform Formatting, under pods-logs-${scope}", script: """
+        chmod +x check-terraform-format.sh
+        ./check-terraform-format.sh ${releaseName} ${namespace} pods-logs-${scope}
+        rm -f check-terraform-format.sh
+        """)
 
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
