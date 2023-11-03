@@ -54,7 +54,7 @@ class AzPublicDns {
         if (!cnameRecordSet) {
           def cname = ""
         } else {
-          def cname = cnameRecordSet
+          def cname = this.cnameRecordSet
         }
 
         return "${cname}"
