@@ -48,7 +48,7 @@ class AzPublicDns {
         this.steps.echo "Checking public DNS for ${recordName}"
         def cnameRecordSet
         try {
-          cnameRecordSet = this.az.az "network dns record-set cname show -g reformmgmtrg -z ${zone} -n ${recordName} -o tsv --query 'CNAMERecord'"
+          cnameRecordSet = this.az.az "network dns record-set cname show -g reformmgmtrg -z ${zone} -n ${recordName} --subscription Reform-CFT-Mgmt -o tsv --query 'CNAMERecord'"
         } catch (e) {
         } // do nothing, record not found
         if (!cnameRecordSet) {
