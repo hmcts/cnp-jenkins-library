@@ -37,12 +37,12 @@ def call(DockerImage dockerImage, Map params) {
     WarningCollector.addPipelineWarning("internal_domain", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1675868743958669", LocalDate.of(2023, 04, 26))
   }
 
-  String cnameRecordSet = azPublicDns.registerDns(aksServiceName, ingressIP)
-
   def kubectl = new Kubectl(this, subscription, namespace, params.aksSubscription.name)
   kubectl.login()
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
+
+  def cnameRecordSet = azPublicDns.registerDns(aksServiceName, ingressIP)
 
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
