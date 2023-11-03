@@ -3,7 +3,10 @@ set -x
 
 USER_NAME=${1}
 BEARER_TOKEN=${2}
-EMAIL_ID=${3}
+PODS_LOGS_DIR=${3}
+GIT_APP_EMAIL_ID=${3}
+
+mkdir ${PODS_TFFMT_DIR}
 
 def fmtTerraformcheck = sh(returnStatus:true, script: 'terraform fmt -check=true -recursive')
     echo "Terraform fmt exit status ${fmtTerraformcheck}"
