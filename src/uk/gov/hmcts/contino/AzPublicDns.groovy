@@ -50,8 +50,8 @@ class AzPublicDns {
           def cnameRecordSet = this.az.az "network dns record-set cname show -g reformmgmtrg -z ${zone} -n ${recordName} --subscription Reform-CFT-Mgmt -o tsv --query 'CNAMERecord'"
           return cnameRecordSet
         } catch (e) {
+          return ""
         } // do nothing, record not found
-        return ""
     }
 
 }
