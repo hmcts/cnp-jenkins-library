@@ -52,12 +52,12 @@ class AzPublicDns {
         } catch (e) {
         } // do nothing, record not found
         if (!cnameRecordSet) {
-          this.cnameRecordSet = ""
+          def cnameRecordSet = ""
         } else {
-          this.cnameRecordSet = cnameRecordSet
+          def cnameRecordSet = cnameRecordSet
         }
 
-        return this.cnameRecordSet
+        return cnameRecordSet
     }
 
 }
