@@ -57,7 +57,7 @@ class AzPublicDns {
           def cname = cnameRecordSet
         }
 
-        return ${cname}
+        return "${cname}"
     }
 
 }
