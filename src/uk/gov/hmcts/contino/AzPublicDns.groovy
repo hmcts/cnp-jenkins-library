@@ -12,7 +12,7 @@ class AzPublicDns {
     AzPublicDns(steps,environment, environmentDnsConfigEntry) {
       this.steps = steps
       this.environment = environment
-      this.az = new Az(this.steps, "Reform-CFT-Mgmt")
+      this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
       this.environmentDnsConfigEntry = environmentDnsConfigEntry
     }
 
