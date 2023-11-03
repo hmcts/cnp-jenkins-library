@@ -42,7 +42,7 @@ def call(DockerImage dockerImage, Map params) {
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
 
-  def cnameRecordSet = azPublicDns.registerDns(aksServiceName, ingressIP)
+  String cnameRecordSet = azPublicDns.registerDns(aksServiceName, ingressIP)
 
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
