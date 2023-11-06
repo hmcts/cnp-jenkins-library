@@ -84,6 +84,7 @@ def call(type, String product, String component, String environment, String subs
         pipelineType: pipelineType,
         subscription: subscription,
         aksSubscription: aksSubscriptions.aat,
+        autoStartSubscription: aksSubscriptions.sandbox,
         environment: environment,
         product: product,
         component: component,
