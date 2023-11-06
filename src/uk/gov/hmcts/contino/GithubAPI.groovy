@@ -207,7 +207,7 @@ class GithubAPI {
     if (response.status == 204) {
       this.steps.echo "Called workflow successfully"
     } else {
-      this.steps.echo "Issue calling workflow ${response}"
+      this.steps.echo "Issue calling workflow ${response.status}"
     }
   }
 }
