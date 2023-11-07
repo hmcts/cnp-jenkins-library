@@ -61,12 +61,12 @@ class AzPrivateDns {
         if (!cnameRecordSet) {
           // if a CNAME record doesn't exist, create an A record, otherwise, do nothing
           if (!aRecordSet) {
-          } else {
             this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
             this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
           } else {
           this.steps.echo "Updating existing A record for ${recordName}"
           this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
+          }
         }
       }
     }
