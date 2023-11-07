@@ -193,8 +193,16 @@ class GithubAPI {
    *   Environment to start
   */
   def startAksEnvironmentWorkflow(String workflowName, String businessArea, String cluster, String environment){
-    def body = """{"ref":"master","inputs":{"PROJECT":"${businessArea}", 
-    "SELECTED_ENV":"${environment}","AKS-INSTANCES":"${cluster}"}}"""
+    def body = """
+      { 
+        "ref":"master", 
+        "inputs":{
+           "PROJECT": "${businessArea}", 
+           "SELECTED_ENV": "${environment}",
+           "AKS-INSTANCES": "${cluster}"
+         }
+       }
+    """
     def response = this.steps.httpRequest(httpMode: 'POST',
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
