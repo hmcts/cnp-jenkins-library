@@ -146,15 +146,18 @@ class GradleBuilder extends AbstractBuilder {
   @Override
   def techStackMaintenance() {
     localSteps.echo "Running Gradle Tech stack maintenance"
-    def secrets = [
-      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
-      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
-    ]
-    localSteps.withAzureKeyvault(secrets) {
-      localSteps.sh "./gradlew -q dependencies > depsProc"
-      def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
-      client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
-      localSteps.sh "rm -f depsProc"
+    try {
+      def secrets = [
+        [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+        [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+      ]
+      localSteps.withAzureKeyvault(secrets) {
+        localSteps.sh "./gradlew -q dependencies > depsProc"
+        def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+        client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
+      }
+    } catch(Exception e) {
+      localSteps.echo "Error running Gradle tech stack maintenance {e.getMessage()}"
     }
   }
 
@@ -254,6 +257,13 @@ EOF
           "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
           "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
       )
+    }
+
+    def statusCodeJava21 = steps.sh script: 'grep -F "JavaLanguageVersion.of(21)" build.gradle', returnStatus: true
+    if (statusCodeJava21 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
 
     // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
