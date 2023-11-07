@@ -42,8 +42,6 @@ def call(DockerImage dockerImage, Map params) {
   // Get the IP of the Traefik Ingress Controller
   def ingressIP = kubectl.getServiceLoadbalancerIP("traefik", "admin")
 
-  String cname = azPublicDns.checkDns(aksServiceName, ingressIP)
-
   def templateEnvVars = [
     "NAMESPACE=${namespace}",
     "SERVICE_NAME=${aksServiceName}",
@@ -175,7 +173,7 @@ def call(DockerImage dockerImage, Map params) {
 
     if (config.serviceApp) {
       // Register service dns
-      azPrivateDns.registerDns(aksServiceName, ingressIP, cname)
+      azPrivateDns.registerDns(aksServiceName, ingressIP)
 
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"

@@ -47,62 +47,26 @@ class AzPrivateDns {
         def aRecordSet
         def cnameRecordSet
 
-        if (cname == "") {
-          // if no cname exists in public dns create A record
-          this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
-          // check for existing record
-          try {
-            aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-          } catch (e) {
-          } // do nothing, record not found
-          try {
-            cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-          } catch (e) {
-          } // do nothing, record not found
+        // if no cname exists in public dns create A record
+        this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
+        // check for existing record
+        try {
+          aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+        } catch (e) {
+        } // do nothing, record not found
+        try {
+          cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+        } catch (e) {
+        } // do nothing, record not found
+        if (!cnameRecordSet) {
+          // if a CNAME record doesn't exist, create an A record, otherwise, do nothing
           if (!aRecordSet) {
-            // if private cname record exists, delete it - only one record can exist at a time
-            if (!cnameRecordSet) {
-              this.steps.echo "No existing A record found for ${recordName}. Creating a new one"
-              this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
-            } else {
-              this.steps.echo "An existing CNAME record was found. Deleting existing CNAME record for ${recordName} and creating A record"
-              this.az.az "network private-dns record-set cname delete -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --yes"
-              this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
-            }
           } else {
-            this.steps.echo "Updating existing A record for ${recordName}"
-            this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
-          }
-        } else {
-          // if a cname exists in public dns, copy it to private dns
-          this.steps.echo "Registering DNS for ${recordName} to ${cname} with ttl = ${ttl}"
-          // check for existing record
-          try {
-            cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-          } catch (e) {
-          } // do nothing, record not found
-          if (!cnameRecordSet) {
-            try {
-              aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-            } catch (e) {
-            } // do nothing, record not found
-            if (!aRecordSet) {
-              // if private A record exists, delete it - only one record can exist at a time
-              this.steps.echo "No existing CNAME record found for ${recordName}. Creating a new one"
-              this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=${cname}' --set 'ttl=${ttl}'"
-            } else {
-              this.steps.echo "An existing A record was found. Deleting existing A record for ${recordName} and creating CNAME record"
-              this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --yes"
-              this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=${cname}' --set 'ttl=${ttl}'"
-            }
+            this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+            this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
           } else {
-            this.steps.echo "Updating existing CNAME record for ${recordName}"
-            this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=${cname}' --set 'ttl=${ttl}'"
-          }
-          }
+          this.steps.echo "Updating existing A record for ${recordName}"
+          this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
         }
+      }
     }
