@@ -16,7 +16,7 @@ def call(params) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox 
-           if ( environment == "sandbox" && params.aksSubscription ){
+           if ( environment == "sandbox" && params.autoStartSubscription ){
             withAksClient(subscription, environment, product) {
               checkAKSClusterStarted params
             }

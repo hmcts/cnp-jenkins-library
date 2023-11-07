@@ -11,7 +11,7 @@ def call(params) {
   PipelineType pipelineType = params.pipelineType
   def subscription = params.subscription
   def environment = params.environment
-  def aksSubscription = params.autoStartSubscription
+  def autoStartSubscription = params.autoStartSubscription
   def product = params.product
   def component = params.component
   def tfPlanOnly = params.tfPlanOnly
@@ -38,7 +38,7 @@ def call(params) {
                 sectionInfraBuild(
                   subscription: subscription,
                   environment: environment,
-                  aksSubscription: aksSubscription,
+                  autoStartSubscription: autoStartSubscription,
                   product: product,
                   component: component,
                   pipelineCallbacksRunner: pcr,
