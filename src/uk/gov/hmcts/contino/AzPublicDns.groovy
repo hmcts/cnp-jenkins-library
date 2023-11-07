@@ -22,7 +22,7 @@ class AzPublicDns {
      return "${recordName}.${zone}"
    }
 
-    def registerDns(recordName, serviceIP) {
+    def checkDns(recordName, serviceIP) {
         if (!IPV4Validator.validate(serviceIP)) {
             throw new RuntimeException("Invalid IP address [${serviceIP}].")
         }
