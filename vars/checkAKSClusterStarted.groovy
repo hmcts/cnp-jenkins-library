@@ -26,12 +26,12 @@ def call(Map params) {
 
   if( clusterStatus == "Running" ){
     println "Cluster is running, continue pipeline"
-  } else {
-    println "AKS Cluster in stopped state - starting environment"
     GithubAPI gitHubAPI = new GithubAPI(this)
     gitHubAPI.startAksEnvironmentWorkflow("manual-start.yaml", "${businessArea}", "${clusterNumber}", "${environment}")
     // Wait 5 minutes env to start up
-    log.info("Waiting 5 minutes for AKS environment to be started...")
-    sleep(5 * 60000)
+    // log.info("Waiting 5 minutes for AKS environment to be started...")
+    // sleep(5 * 60000)
+  } else {
+    println "AKS Cluster in stopped state - starting environment"
   }
 }
