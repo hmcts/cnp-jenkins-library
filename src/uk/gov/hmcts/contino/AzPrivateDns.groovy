@@ -74,7 +74,7 @@ class AzPrivateDns {
               this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
               this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cname} --subscription ${subscription}"
             } else {
-              this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+              this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription}"
             }
           } else {
             this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=\"${cname}\"' --set 'ttl=${ttl}'"
