@@ -53,7 +53,7 @@ def call(String product, String component = null, Closure body) {
         sectionInfraBuild(
           subscription: subscription.prodName,
           environment: environment.prodName,
-          aksSubscription: aksSubscriptions.sandbox,
+          // aksSubscription: aksSubscriptions.sandbox,
           product: product,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
@@ -66,7 +66,6 @@ def call(String product, String component = null, Closure body) {
       }
 
       onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-        println "In here"
         sectionInfraBuild(
           subscription: subscriptionName,
           environment: environmentName,
@@ -77,7 +76,6 @@ def call(String product, String component = null, Closure body) {
       }
 
       onPR {
-        println "In PR bit"
         sectionInfraBuild(
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
