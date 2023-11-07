@@ -27,6 +27,7 @@ def call(String product, String component = null, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
@@ -42,6 +43,7 @@ def call(String product, String component = null, Closure body) {
         sectionInfraBuild(
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
+          aksSubscription: aksSubscriptions.sandbox,
           product: product,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
