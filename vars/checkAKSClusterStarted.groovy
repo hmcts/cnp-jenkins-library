@@ -31,12 +31,14 @@ def call(Map params) {
     println "AKS Cluster in stopped state - starting environment"
     GithubAPI gitHubAPI = new GithubAPI(this)
     gitHubAPI.startAksEnvironmentWorkflow("manual-start.yaml", "${businessArea}", "${clusterNumber}", "${environment}")
-    // Wait 5 minutes env to start up
-    log.info("Waiting 5 minutes for AKS environment to be started...")
+    def timeoutInSeconds = 30
+    def retries = 20
+    // Check over 10 minutes that this has started
+    def waitingTimeMinutes = (timeoutInSeconds*retries)/60
+    log.info("Waiting ${waitingTimeMinutes} minutes for AKS environment to be started...")
     def healthCheckUrl = "https://plum.sandbox.hmcts.net"
     def url = "${healthCheckUrl}/health"
     def healthChecker = new HealthChecker(this)
-    // Check over 10 minutes that this has started
-    healthChecker.check(url, 30, 20)
+    healthChecker.check(url, timeoutInSeconds, retries)
   }
 }
