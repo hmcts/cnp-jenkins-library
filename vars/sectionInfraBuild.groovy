@@ -9,6 +9,7 @@ def call(params) {
   def component = params.component ?: null
   def expires = params.expires ?: LocalDate.now().plusDays(30)
   def pcr = params.pipelineCallbacksRunner
+  def businessArea = env.BUSINESS_AREA_TAG
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
@@ -16,7 +17,7 @@ def call(params) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox 
-           if ( environment == "sandbox" && params.autoStartSubscription ){
+           if ( environment == "sandbox" && params.autoStartSubscription && businessArea == "CFT" ){
             withAksClient(subscription, environment, product) {
               checkAKSClusterStarted params
             }
