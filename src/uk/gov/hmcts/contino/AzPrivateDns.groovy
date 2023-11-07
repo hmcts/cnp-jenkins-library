@@ -84,7 +84,7 @@ class AzPrivateDns {
             }
           } else {
             this.steps.echo "Updating existing CNAME record for ${recordName}"
-            this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=\"${cname}\"' --set 'ttl=${ttl}'"
+            this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=${cname}' --set 'ttl=${ttl}'"
           }
           }
         }
