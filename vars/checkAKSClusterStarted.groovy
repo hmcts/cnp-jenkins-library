@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.HealthChecker
 import groovy.json.JsonSlurper
 
 def call(Map params) {
@@ -26,12 +27,16 @@ def call(Map params) {
 
   if( clusterStatus == "Running" ){
     println "Cluster is running, continue pipeline"
+  } else {
+    println "AKS Cluster in stopped state - starting environment"
     GithubAPI gitHubAPI = new GithubAPI(this)
     gitHubAPI.startAksEnvironmentWorkflow("manual-start.yaml", "${businessArea}", "${clusterNumber}", "${environment}")
     // Wait 5 minutes env to start up
-    // log.info("Waiting 5 minutes for AKS environment to be started...")
-    // sleep(5 * 60000)
-  } else {
-    println "AKS Cluster in stopped state - starting environment"
+    log.info("Waiting 5 minutes for AKS environment to be started...")
+    def healthCheckUrl = "https://plum.sandbox.hmcts.net"
+    def url = "${healthCheckUrl}/health"
+    def healthChecker = new HealthChecker(this)
+    // Check over 10 minutes that this has started
+    healthChecker.check(url, 30, 20)
   }
 }
