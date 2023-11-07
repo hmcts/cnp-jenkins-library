@@ -22,7 +22,7 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
-    def registerDns(recordName, serviceIP, cnameRecordSet) {
+    def registerDns(recordName, serviceIP, cname) {
         if (!IPV4Validator.validate(serviceIP)) {
             throw new RuntimeException("Invalid IP address [${serviceIP}].")
         }
@@ -46,7 +46,7 @@ class AzPrivateDns {
         def zone = this.environmentDnsConfigEntry.zone
         def aRecordSet
 
-        if (cnameRecordSet == "") {
+        if (cname == "") {
           this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
           try {
             aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
@@ -59,18 +59,25 @@ class AzPrivateDns {
             this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
           }
         } else {
-          this.steps.echo "Registering DNS for ${recordName} to ${cnameRecordSet} with ttl = ${ttl}"
+          this.steps.echo "Registering DNS for ${recordName} to ${cname} with ttl = ${ttl}"
           try {
-            aRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+            cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
           } catch (e) {
           } // do nothing, record not found
-          if (!aRecordSet) {
-            this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-            this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cnameRecordSet} --subscription ${subscription}"
+          if (!cnameRecordSet) {
+            try {
+              aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+            } catch (e) {
+            } // do nothing, record not found
+            if (!aRecordSet) {
+              this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+              this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cname} --subscription ${subscription}"
+            } else {
+              this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+            }
           } else {
-            this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=\"${cnameRecordSet}\"' --set 'ttl=${ttl}'"
+            this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=\"${cname}\"' --set 'ttl=${ttl}'"
+          }
           }
         }
     }
-
-}
