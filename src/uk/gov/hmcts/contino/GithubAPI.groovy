@@ -207,7 +207,7 @@ class GithubAPI {
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: API_URL + "/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
+      url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
       requestBody: "${body}",
       consoleLogResponseBody: true,
       validResponseCodes: '204')
