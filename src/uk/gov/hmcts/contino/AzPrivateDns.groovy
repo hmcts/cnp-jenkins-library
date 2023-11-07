@@ -54,9 +54,11 @@ class AzPrivateDns {
           } catch (e) {
           } // do nothing, record not found
           if (!aRecordSet) {
+            this.steps.echo "No existing A record found for ${recordName}. Creating a new one"
             this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
             this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
           } else {
+            this.steps.echo "Updating existing A record for ${recordName}"
             this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
           }
         } else {
@@ -71,12 +73,15 @@ class AzPrivateDns {
             } catch (e) {
             } // do nothing, record not found
             if (!aRecordSet) {
+              this.steps.echo "No existing CNAME record found for ${recordName}. Creating a new one"
               this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
               this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cname} --subscription ${subscription}"
             } else {
-              this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription}"
+              this.steps.echo "An existing A record was found. Deleting existing A record for ${recordName}"
+              this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --yes"
             }
           } else {
+            this.steps.echo "Updating existing CNAME record for ${recordName}"
             this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=\"${cname}\"' --set 'ttl=${ttl}'"
           }
           }
