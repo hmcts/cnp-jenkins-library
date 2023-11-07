@@ -75,12 +75,12 @@ class AzPrivateDns {
             if (!aRecordSet) {
               this.steps.echo "No existing CNAME record found for ${recordName}. Creating a new one"
               this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cname} --subscription ${subscription}"
+              this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=${cname}' --set 'ttl=${ttl}'"
             } else {
               this.steps.echo "An existing A record was found. Deleting existing A record for ${recordName} and creating CNAME record"
               this.az.az "network private-dns record-set a delete -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --yes"
               this.az.az "network private-dns record-set cname create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set cname set-record -g ${resourceGroup} -z ${zone} -n ${recordName} -c ${cname} --subscription ${subscription}"
+              this.az.az "network private-dns record-set cname update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'CNAMERecord.cname=${cname}' --set 'ttl=${ttl}'"
             }
           } else {
             this.steps.echo "Updating existing CNAME record for ${recordName}"
