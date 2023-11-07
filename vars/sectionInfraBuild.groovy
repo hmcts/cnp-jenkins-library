@@ -15,13 +15,13 @@ def call(params) {
     withSubscription(subscription) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
-          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox
-           if ( environment == "sandbox" ){
+          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox 
+           if ( environment == "sandbox" && params.aksSubscription ){
             withAksClient(subscription, environment, product) {
               checkAKSClusterStarted params
             }
            }
-           
+
           // build environment infrastructure once
            return spinInfra(
               product: product,

@@ -31,7 +31,7 @@ def call(Map params) {
     GithubAPI gitHubAPI = new GithubAPI(this)
     gitHubAPI.startAksEnvironmentWorkflow("manual-start.yaml", "${business_area}", "${cluster_number}", "${environment}")
     // Wait 5 minutes env to start up
-    sleep(5 * 60000)
     log.info("Waiting 5 minutes for AKS environment to be started...")
+    sleep(5 * 60000)
   }
 }
