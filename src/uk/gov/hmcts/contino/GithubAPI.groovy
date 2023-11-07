@@ -152,8 +152,8 @@ class GithubAPI {
   /**
    * Get all labels from an issue or pull request
    */
-  def getLabels(String branch_name) {
-    if (new ProjectBranch(branch_name).isPR()) {
+  def getLabels(String branchName) {
+    if (new ProjectBranch(branchName).isPR()) {
       return this.getLabelsFromCache()
     } else {
       return []
@@ -163,22 +163,22 @@ class GithubAPI {
   /**
    * Check Pull Request for label by a pattern in name.
    */
-  def getLabelsbyPattern(String branch_name, String key) {
-    return getLabels(branch_name).findAll{it.contains(key)}
+  def getLabelsbyPattern(String branchName, String key) {
+    return getLabels(branchName).findAll{it.contains(key)}
   }
 
   /**
    * Check Pull Request for specified label.
    */
-  def checkForLabel(String branch_name, String key) {
-    return getLabels(branch_name).contains(key)
+  def checkForLabel(String branchName, String key) {
+    return getLabels(branchName).contains(key)
   }
 
   /**
    * Check Pull Request for dependencies label.
    */
-  def checkForDependenciesLabel(branch_name) {
-    return checkForLabel(branch_name, "dependencies")
+  def checkForDependenciesLabel(branchName) {
+    return checkForLabel(branchName, "dependencies")
   }
 
   /**
