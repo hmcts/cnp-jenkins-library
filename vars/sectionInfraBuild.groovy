@@ -19,7 +19,7 @@ def call(params) {
           // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox 
            if ( environment == "sandbox" && params.autoStartSubscription && businessArea == "CFT" ){
             withAksClient(subscription, environment, product) {
-              checkAKSClusterStarted params
+              startEnvironmentIfRequired params
             }
            }
 

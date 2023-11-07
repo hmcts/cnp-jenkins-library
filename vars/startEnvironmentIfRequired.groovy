@@ -16,16 +16,13 @@ def call(Map params) {
   azCommand 'login --identity > /dev/null'
   azCommand "account set -s $subscriptionName"
 
-  // Initial check to see if env is up by checking cluster status
   def clusterData = azCommand "aks show -n ${clusterName} -g ${clusterResourceGroup} -o json"
   def clusterStatus = new JsonSlurper().parseText(clusterData).powerState.code
-
-  // Extract cluster number 
   def clusterNumber = clusterName[-6..-5]
   // Workflow only accepts sbox as a parameter
   environment = environment.replace("sandbox", "sbox")    
 
-  if( clusterStatus == "Running" ){
+  if(clusterStatus == "Running"){
     println "Cluster is running, continue pipeline"
   } else {
     println "AKS Cluster in stopped state - starting environment"
@@ -33,7 +30,6 @@ def call(Map params) {
     gitHubAPI.startAksEnvironmentWorkflow("manual-start.yaml", "${businessArea}", "${clusterNumber}", "${environment}")
     def sleepDuration = 30
     def maxAttempts = 20
-    // Check over 10 minutes that this has started
     def waitingTimeMinutes = (sleepDuration*maxAttempts)/60
     log.info("Waiting ${waitingTimeMinutes} minutes for AKS environment to be started...")
     def healthCheckUrl = "https://plum.sandbox.hmcts.net/health"
