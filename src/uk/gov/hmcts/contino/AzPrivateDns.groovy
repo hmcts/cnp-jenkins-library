@@ -45,6 +45,7 @@ class AzPrivateDns {
         def ttl = this.environmentDnsConfigEntry.ttl
         def zone = this.environmentDnsConfigEntry.zone
         def aRecordSet
+        def cnameRecordSet
 
         if (cname == "") {
           this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
