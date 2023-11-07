@@ -4,7 +4,7 @@ import groovy.json.JsonSlurper
 def call(Map params) {
   def environment = params.environment
   def subscription = params.subscription  
-  def subscription_name = params.aksSubscription.name
+  def subscription_name = params.autoStartSubscription.name
   def business_area = env.BUSINESS_AREA_TAG
   def cluster_rg = env.AKS_RESOURCE_GROUP
   def cluster_name = env.AKS_CLUSTER_NAME
