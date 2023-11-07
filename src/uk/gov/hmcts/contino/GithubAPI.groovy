@@ -208,7 +208,7 @@ class GithubAPI {
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
-      requestBody: "${body}",
+      requestBody: body,
       consoleLogResponseBody: true,
       validResponseCodes: '204')
 
