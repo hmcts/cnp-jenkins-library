@@ -13,7 +13,6 @@ def call(Map params) {
   if(subscriptionName.toLowerCase().contains("sbox")){
     log.info("Checking AKS Environment: $environment, Subscription is $subscriptionName, in business area: $businessArea")
     def azCommand = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
-    azCommand 'login --identity > /dev/null'
     azCommand "account set -s $subscriptionName"
 
     def clusterData = azCommand "aks show -n ${clusterName} -g ${clusterResourceGroup} -o json"

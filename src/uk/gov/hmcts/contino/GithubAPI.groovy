@@ -211,9 +211,5 @@ class GithubAPI {
       requestBody: body,
       consoleLogResponseBody: true,
       validResponseCodes: '204')
-
-    if (response.status == 204) {
-      this.steps.echo "Called environment start-up workflow successfully"
-    }
   }
 }
