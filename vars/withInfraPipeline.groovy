@@ -44,7 +44,7 @@ def call(String product, String component = null, Closure body) {
         sectionInfraBuild(
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
-          autoStartSubscription: aksSubscriptions.sandbox,
+          aksSubscription: aksSubscriptions.sandbox,
           product: product,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
