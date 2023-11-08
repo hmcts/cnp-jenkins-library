@@ -6,7 +6,6 @@ import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AzPrivateDns
-import uk.gov.hmcts.contino.AzPublicDns
 import uk.gov.hmcts.contino.EnvironmentDnsConfig
 import uk.gov.hmcts.contino.EnvironmentDnsConfigEntry
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -29,7 +28,6 @@ def call(DockerImage dockerImage, Map params) {
   def aksServiceName = dockerImage.getAksServiceName()
 
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
-  AzPublicDns azPublicDns = new AzPublicDns(this, params.environment, dnsConfigEntry)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
 
