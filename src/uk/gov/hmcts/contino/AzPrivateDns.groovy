@@ -48,7 +48,7 @@ class AzPrivateDns {
         def cnameRecordSet
 
         // if no cname exists in public dns create A record
-        this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
+        
         // check for existing record
         try {
           aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
@@ -59,15 +59,18 @@ class AzPrivateDns {
         } catch (e) {
         } // do nothing, record not found
         
-          // if a CNAME record doesn't exist, create an A record, otherwise, do nothing
-          if (!aRecordSet) {
-            if (!cnameRecordSet) {
-              this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
-              this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
-            }
+        // if no A record or CNAME already exists, create an A record pointing to the private IP
+        if (!aRecordSet) {
+          if (!cnameRecordSet) {
+            this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
+            this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+            this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
           } else {
-          this.steps.echo "Updating existing A record for ${recordName}"
-          this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
+            this.steps.echo "CNAME already exists for ${recordName}"
           }
+        } else {
+        this.steps.echo "Updating existing A record for ${recordName}"
+        this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
+        }
       }
     }
