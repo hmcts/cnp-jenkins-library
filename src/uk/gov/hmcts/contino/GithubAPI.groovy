@@ -180,4 +180,36 @@ class GithubAPI {
   def checkForDependenciesLabel(branchName) {
     return checkForLabel(branchName, "dependencies")
   }
+
+  /**
+   * Calls workflow to manually startup environment
+   * @param workflowName
+   *   The file name of the workflow to run 'manual-start.yaml'
+   * @param businessArea
+   *   I.e CFT
+   * @param cluster
+   *   AKS Cluster number, i.e 00
+   * @param environment
+   *   Environment to start
+  */
+  def startAksEnvironmentWorkflow(String workflowName, String businessArea, String cluster, String environment){
+    def body = """
+      { 
+        "ref":"master", 
+        "inputs":{
+           "PROJECT": "${businessArea}", 
+           "SELECTED_ENV": "${environment}",
+           "AKS-INSTANCES": "${cluster}"
+         }
+       }
+    """
+    def response = this.steps.httpRequest(httpMode: 'POST',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
+      requestBody: body,
+      consoleLogResponseBody: true,
+      validResponseCodes: '204')
+  }
 }
