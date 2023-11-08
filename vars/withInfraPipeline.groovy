@@ -5,7 +5,6 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
-import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(String product, String component = null, Closure body) {
@@ -28,7 +27,6 @@ def call(String product, String component = null, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
-  AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
@@ -44,7 +42,6 @@ def call(String product, String component = null, Closure body) {
         sectionInfraBuild(
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
-          // aksSubscription: aksSubscriptions.sandbox,
           product: product,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
