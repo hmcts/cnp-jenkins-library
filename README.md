@@ -67,6 +67,14 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `preview`
 
+#### Running tests through Azure Front Door
+
+If you want tests in AAT / Stg environments to run via Azure Front Door, you must add configuration for your application to front door. Have a look at the [HMCTS Way](https://hmcts.github.io/cloud-native-platform/path-to-live/front-door.html#front-door-configuration).
+
+Add a CNAME for your application that points to front door to [azure-private-dns](https://github.com/hmcts/azure-private-dns) and ensure it ends with `-staging`. See [example](https://github.com/hmcts/azure-private-dns/commit/8a2c978d5a07d17b2b138f62c488f89bdce70e51).
+
+If a CNAME is not created in private DNS, Jenkins will create an A record and connect to your application on it's private IP instead.
+
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
