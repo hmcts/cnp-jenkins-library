@@ -54,13 +54,13 @@ class AzPrivateDns {
           aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
         } catch (e) {
         } // do nothing, record not found
-        try {
-          cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-        } catch (e) {
-        } // do nothing, record not found
         
         // if no A record or CNAME already exists, create an A record pointing to the private IP
         if (!aRecordSet) {
+          try {
+            cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+          } catch (e) {
+          } // do nothing, record not found
           if (!cnameRecordSet) {
             this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
             this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
