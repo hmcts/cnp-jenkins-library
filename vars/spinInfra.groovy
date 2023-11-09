@@ -68,6 +68,9 @@ def call(Map<String, ?> params) {
         if (Environment.toTagName(config.environment) != "production") {
           tags = tags + [autoShutdown: "true"]
         }
+        if (Environment.toTagName(config.environment) != "production") {
+          tags = tags + [startupMode: "always"]
+        }
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
           tags = tags + [changeUrl: changeUrl]
         }
