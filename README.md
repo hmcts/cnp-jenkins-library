@@ -75,6 +75,14 @@ Add a CNAME for your application that points to front door to [azure-private-dns
 
 If a CNAME is not created in private DNS, Jenkins will create an A record and connect to your application on it's private IP instead.
 
+For the Dev and Preview environments, you will also need to prevent External DNS from creating an A record in their respective DNS zones. To do this, update your helm values to add an annotation telling external-dns to ignore your ingress:
+
+```
+java:
+  ingressAnnotations:
+    external-dns.alpha.kubernetes.io/exclude: "true"
+```
+
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
