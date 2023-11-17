@@ -32,7 +32,8 @@ class ArdoqClient {
       return
     }
     steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$1)}' | tr '/' '\\n' | tail -1 > languageProc"
-    return steps.readFile('languageProc')
+    def result = steps.readFile('languageProc')
+    return result
   }
 
   String getLanguageVersion() {
@@ -41,7 +42,8 @@ class ArdoqClient {
       return
     }
     steps.sh "grep -E '^FROM' Dockerfile | awk '{print \$2}' | awk -F ':' '{printf(\"%s\", \$2)}' > languageVersionProc"
-    return steps.readFile('languageVersionProc')
+    def result = steps.readFile('languageVersionProc')
+    return result
   }
 
   static String getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion) {

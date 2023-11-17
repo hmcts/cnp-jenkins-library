@@ -4,7 +4,6 @@ import groovy.json.JsonSlurper
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
-import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 import static java.lang.Float.valueOf
@@ -163,13 +162,17 @@ class YarnBuilder extends AbstractBuilder {
   @Override
   def techStackMaintenance() {
     this.steps.echo "Running Yarn Tech stack maintenance"
-    def secrets = [
-      [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
-      [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
-    ]
-    localSteps.withAzureKeyvault(secrets) {
-      def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
-      client.updateDependencies(localSteps.readFile('yarn.lock'), 'yarn')
+    try {
+      def secrets = [
+        [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+        [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+      ]
+      localSteps.withAzureKeyvault(secrets) {
+        def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+        client.updateDependencies(localSteps.readFile('yarn.lock'), 'yarn')
+      }
+    } catch(Exception e) {
+      localSteps.echo "Error running tech Yarn stack maintenance {e.getMessage()}"
     }
   }
 
@@ -314,7 +317,24 @@ EOF
   }
 
   private LocalDate node18ExpirationDate() {
-    def date = steps.env.PRODUCT == 'xui' ? LocalDate.of(2023, 10, 31) : NODEJS_EXPIRATION
+    def date;
+    switch (steps.env.PRODUCT) {
+      case "xui":
+        date = LocalDate.of(2023, 12, 21)
+        break
+      case "ccd":
+      case "em":
+        date = LocalDate.of(2023, 12, 21)
+        break
+      case "bar":
+      case "fees-register":
+      case "ccpay":
+        date = LocalDate.of(2023, 11, 18)
+        break
+      default:
+        date = NODEJS_EXPIRATION
+        break
+    }
     steps.echo "Node.Js upgrade deadline is: ${date}, product is: ${steps.env.PRODUCT}"
     return date
   }

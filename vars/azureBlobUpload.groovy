@@ -1,12 +1,12 @@
-def call(String credentialsId, String source, String destination) {
-  withDocker('hmcts/moj-azcopy-image:7.2.0-netcore-1.0', '-u root') {
+def call(String subscription, String credentialsId, String source, String destination) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'STORAGE_ACCOUNT_KEY', usernameVariable: 'STORAGE_ACCOUNT_NAME')]) {
-      withEnv(["SOURCE=${source}", "DESTINATION=${destination}"]) {
-        sh 'azcopy --source ${SOURCE} \
-          --destination https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${DESTINATION} \
-          --dest-key ${STORAGE_ACCOUNT_KEY} \
-          --set-content-type --recursive'
+      withSubscriptionLogin(subscription) {
+        withEnv(["SOURCE=${source}", "DESTINATION=${destination}"]) {
+          sh 'export AZCOPY_AUTO_LOGIN_TYPE=MSI && \
+          azcopy cp ${SOURCE} \
+            https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${DESTINATION} \
+            --recursive=true'
+        }
       }
     }
-  }
 }

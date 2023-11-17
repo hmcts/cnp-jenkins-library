@@ -11,7 +11,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 
-def call(type,product,component,Closure body) {
+def call(type, product, component, Closure body) {
 
 
   def pipelineTypes = [
@@ -46,8 +46,16 @@ def call(type,product,component,Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
-  String nodeSelector = agentType == "" ? "daily" : agentType + ' && daily'
+  String nodeSelector
 
+  if (agentType == "") {
+    nodeSelector = "daily"
+  } else if (agentType == "arm") {
+    nodeSelector = agentType + '&& arm-daily'
+  } else {
+    nodeSelector = agentType + ' && daily'
+  }
+  
   node(nodeSelector) {
     timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
@@ -55,7 +63,7 @@ def call(type,product,component,Closure body) {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component)
+          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
         }
         assert  pipelineType!= null
       } catch (err) {

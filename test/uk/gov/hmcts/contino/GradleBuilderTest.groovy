@@ -161,4 +161,11 @@ class GradleBuilderTest extends Specification {
       it.vulnerabilities || it.suppressedVulnerabilities
     }
   }
+
+  def "techStackMaintenance"() {
+    when:
+    builder.techStackMaintenance()
+    then:
+    1 * steps.echo('Running Gradle Tech stack maintenance')
+  }
 }

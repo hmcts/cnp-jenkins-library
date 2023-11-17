@@ -88,7 +88,7 @@ def call(params) {
         builder.techStackMaintenance()
       }
     }
-    
+
     if (dockerFileExists) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
@@ -159,6 +159,12 @@ def call(params) {
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         parallel branches
+
+        // files related to dependency checking that are not needed for the rest of the pipeline
+        // they can't be safely deleted in the parallel branches as docker build context will collect files
+        // and then upload them, if any are missing it will error:
+        // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
+        sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
       }
     }
 
