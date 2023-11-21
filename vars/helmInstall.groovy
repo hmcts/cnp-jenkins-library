@@ -107,7 +107,7 @@ def call(DockerImage dockerImage, Map params) {
     
     def disableTraefikTls
 
-    if(azPrivateDns.cnameExists() == true) {
+    if(azPrivateDns.hasCname() == true) {
       disableTraefikTls = true
     } else disableTraefikTls = false
     
