@@ -108,7 +108,7 @@ def call(DockerImage dockerImage, Map params) {
     
     def disableTraefikTls
 
-    if(hasCname() == true) {
+    if(${hasCname} == true) {
       disableTraefikTls = true
     } else disableTraefikTls = false
     
