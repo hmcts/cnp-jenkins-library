@@ -104,6 +104,14 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def environmentTag = Environment.toTagName(environment)
+    
+    def disableTraefikTls
+
+    if(azPrivateDns.cnameExists() == true) {
+      disableTraefikTls = true
+    } else disableTraefikTls = false
+    
+    
     def options = [
       "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
@@ -114,7 +122,7 @@ def call(DockerImage dockerImage, Map params) {
       "--set global.tags.builtFrom=${this.env.GIT_URL}",
       "--set global.tags.businessArea=${this.env.BUSINESS_AREA_TAG}",
       "--set global.tags.environment=${environmentTag}",
-      "--set global.disableTraefikTls=false",
+      "--set global.disableTraefikTls=${disableTraefikTls}",
       "--namespace ${namespace}"
     ]
 

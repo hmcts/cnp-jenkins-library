@@ -67,6 +67,9 @@ class AzPrivateDns {
             this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
           } else {
             this.steps.echo "CNAME already exists for ${recordName}"
+            def cnameExists() {
+                return true
+            }
           }
         } else {
         this.steps.echo "Updating existing A record for ${recordName}"
