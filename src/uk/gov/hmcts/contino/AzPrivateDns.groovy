@@ -70,6 +70,7 @@ class AzPrivateDns {
           } else {
             this.steps.echo "CNAME already exists for ${recordName}"
             def cnameExists = true
+          }
         } else {
         this.steps.echo "Updating existing A record for ${recordName}"
         this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
