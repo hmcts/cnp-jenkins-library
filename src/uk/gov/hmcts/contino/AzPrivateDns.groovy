@@ -46,6 +46,7 @@ class AzPrivateDns {
         def zone = this.environmentDnsConfigEntry.zone
         def aRecordSet
         def cnameRecordSet
+        def cnameExists
 
         // if no cname exists in public dns create A record
         
@@ -65,15 +66,18 @@ class AzPrivateDns {
             this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
             this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
             this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
+            def cnameExists = true
           } else {
             this.steps.echo "CNAME already exists for ${recordName}"
-            def cnameExists() {
-                return true
-            }
-          }
+            def cnameExists = true
         } else {
         this.steps.echo "Updating existing A record for ${recordName}"
         this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
+        def cnameExists = false
         }
       }
+    }
+
+    def cnameExists() {
+      return ${cnameExists}
     }
