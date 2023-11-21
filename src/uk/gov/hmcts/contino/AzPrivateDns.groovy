@@ -78,7 +78,7 @@ class AzPrivateDns {
         }
       }
 
-    def hasCname() {
+    def checkForCname() {
       return ${cnameExists}
     }
 }
