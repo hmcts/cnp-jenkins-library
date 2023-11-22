@@ -8,7 +8,7 @@ class AzPrivateDns {
     def environment
     def az
     def environmentDnsConfigEntry
-    def cnameExists = false
+    def cnameExists
     def cnameRecordSet
 
     AzPrivateDns(steps, environment, environmentDnsConfigEntry) {
@@ -46,10 +46,11 @@ class AzPrivateDns {
       cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
     
     if (!cnameRecordSet) {
-      return "noCname"
+      cnameExists = false
     } else {
-      return 'cnameExists'
+      cnameExists = true
     }
+    return cnameExists
    }
 
    def registerDns(recordName, serviceIP) {
@@ -69,7 +70,7 @@ class AzPrivateDns {
       
       // if no A record or CNAME already exists, create an A record pointing to the private IP
       if (!aRecordSet) {
-        if (cnameExists == "false") {
+        if (cnameExists == false) {
           this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
           this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
           this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
