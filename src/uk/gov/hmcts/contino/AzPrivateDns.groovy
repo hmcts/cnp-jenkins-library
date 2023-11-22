@@ -24,7 +24,7 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
-   def checkForCname() {
+   def checkForCname(recordName) {
         def active = this.environmentDnsConfigEntry.active
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
@@ -42,7 +42,7 @@ class AzPrivateDns {
 
     def ttl = this.environmentDnsConfigEntry.ttl
     def zone = this.environmentDnsConfigEntry.zone
-    
+
       cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
     
     if (!cnameRecordSet) {
