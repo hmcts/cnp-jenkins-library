@@ -25,9 +25,7 @@ class AzPrivateDns {
    }
 
    def checkForCname() {
-    try {
-        cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
-        }
+      cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
     
     if (!cnameRecordSet) {
       return "noCname"
