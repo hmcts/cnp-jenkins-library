@@ -8,7 +8,6 @@ class AzPrivateDns {
     def environment
     def az
     def environmentDnsConfigEntry
-    def cnameExists
     def cnameRecordSet
 
     AzPrivateDns(steps, environment, environmentDnsConfigEntry) {
@@ -30,9 +29,9 @@ class AzPrivateDns {
         } catch (e) {
         }
     if (cnameRecordSet) {
-      cnameExists = true
+      def cnameExists = true
     } else {
-      cnameExists = false
+      def cnameExists = false
     }
     return "${cnameExists}"
    }
