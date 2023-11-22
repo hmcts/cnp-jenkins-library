@@ -31,9 +31,9 @@ class AzPrivateDns {
         }
     
     if (!cnameRecordSet) {
-      return false
+      return "noCname"
     } else {
-      return true
+      return 'cnameExists'
     }
    }
 
