@@ -34,7 +34,7 @@ class AzPrivateDns {
     } else {
       cnameExists = false
     }
-    return cnameExists
+    return "${cnameExists}"
    }
 
    def registerDns(recordName, serviceIP) {
