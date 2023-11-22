@@ -31,11 +31,10 @@ class AzPrivateDns {
         }
     
     if (!cnameRecordSet) {
-      cnameExists = false
+      return false
     } else {
-      cnameExists = true
+      return true
     }
-    return cnameExists
    }
 
    def registerDns(recordName, serviceIP) {
