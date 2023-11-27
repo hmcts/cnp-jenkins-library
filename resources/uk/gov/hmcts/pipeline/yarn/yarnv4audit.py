@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, asdict
 import subprocess
 import os
-import typing
+from typing import List
 
 @dataclass
 class Vulnerability:
