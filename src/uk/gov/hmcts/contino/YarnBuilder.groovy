@@ -160,7 +160,7 @@ class YarnBuilder extends AbstractBuilder {
     catch(Exception e) {
       steps.echo e.getMessage()
     }
-    return "didn't get through if block"
+    return major.toString()
 
   }
 
