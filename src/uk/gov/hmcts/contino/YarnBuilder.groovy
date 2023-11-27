@@ -159,7 +159,7 @@ class YarnBuilder extends AbstractBuilder {
       }
 
     catch(Exception e) {
-      steps.echo "Error running version check {e.getMessage()}"
+      steps.echo e.getMessage()
     }
     return "didn't get through if block"
 
