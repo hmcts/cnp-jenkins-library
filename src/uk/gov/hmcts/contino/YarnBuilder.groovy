@@ -124,45 +124,47 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def yarnVersionCheck() {
+    def major = 0
+    def minor = 0
+    def patch = 0
+
     try {
       steps.sh """
-    jq -r '.packageManager' package.json | sed 's/yarn@//' > yarn_version
-      """
+            jq -r '.packageManager' package.json | sed 's/yarn@//' > yarn_version
+        """
 
-      def versionString = steps.readFile('yarn_version')
+      def versionString = steps.readFile('yarn_version').trim()
       steps.println(versionString)
+
       def parts = versionString.split("\\.")
-      def major = parts.size() > 0 ? parts[0].toInteger() : 0
-      def minor = parts.size() > 1 ? parts[1].toInteger() : 0
-      def patch = parts.size() > 2 ? parts[2].toInteger() : 0
+      major = parts.size() > 0 ? parts[0].toInteger() : major
+      minor = parts.size() > 1 ? parts[1].toInteger() : minor
+      patch = parts.size() > 2 ? parts[2].toInteger() : patch
+
       if (major < 3) {
         steps.println("Version is less than 3.0.0. This needs updating as we only support 3.0.x upwards.")
         return "<3"
+      } else if (major == 3) {
+        steps.println("v3 detected - continuing")
+        return "v3"
+      } else if (major == 4) {
+        if (minor == 0 && patch == 0) {
+          steps.println("v4.0.0 detected. You will need to upgrade yarn to at least v4.0.1, as 4.0.0 has an unsupported audit format.")
+          return "v4.0.0"
+        } else {
+          steps.println("Version is v4.0.1 or higher.")
+          return "v4.0.1+"
+        }
+      } else {
+        steps.println("Version is greater than 4.0.0. Using the updated configuration for yarn npm audit.")
+        return "v4+"
       }
-
-      if (major == 3) {
-          steps.println("v3 detected - continuing")
-          return "v3"
-        }
-      if (major == 4) {
-          if (minor == 0 && patch == 0) {
-            steps.println("v4.0.0 detected. You will need to upgrade yarn to at least v4.0.1, as 4.0.0 has an unsupported audit format.")
-            return "v4.0.0"
-//        todo - handle exit code here
-          }
-        }
-      else {
-          steps.println("Version is greater than 4.0.0. Using the updated configuration for yarn npm audit.")
-          return "v4+"
-        }
-      }
-
-    catch(Exception e) {
+    } catch (Exception e) {
       steps.echo e.getMessage()
+      return "error"
     }
-    return major.toString()
-
   }
+
 
   def securityCheck() {
 
