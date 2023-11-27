@@ -157,7 +157,7 @@ class YarnBuilder extends AbstractBuilder {
           return "v4+"
         }
       }
-    }
+
     catch(Exception e) {
       steps.echo "Error running version check {e.getMessage()}"
     }
