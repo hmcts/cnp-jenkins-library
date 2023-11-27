@@ -131,6 +131,7 @@ class YarnBuilder extends AbstractBuilder {
 
 
     def versionString = steps.readFile('yarn_version')
+    steps.println(versionString)
     def parts = versionString.split("\\.")
     def major = parts.size() > 0 ? parts[0].toInteger() : 0
     def minor = parts.size() > 1 ? parts[1].toInteger() : 0
