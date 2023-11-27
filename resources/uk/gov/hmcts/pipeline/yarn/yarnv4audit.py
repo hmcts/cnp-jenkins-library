@@ -151,7 +151,7 @@ def build_parent_json_for_cosmosDB(vulnerabilities, suppressions):
   parent_block = {"suppressed_vulnerabilities": [s.to_json() for s in suppressions],
                   "unsuppressed_vulnerabilities": [v.to_json() for v in vulnerabilities]}
   with open("audit-v4-cosmosdb-output", "w") as file:
-    file.write(json.dumps(parent_block, indent=2))import json
+    file.write(json.dumps(parent_block, indent=2))
 from dataclasses import dataclass, asdict
 import subprocess
 import os
