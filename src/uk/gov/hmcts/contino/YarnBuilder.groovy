@@ -135,9 +135,6 @@ class YarnBuilder extends AbstractBuilder {
       def major = parts.size() > 0 ? parts[0].toInteger() : 0
       def minor = parts.size() > 1 ? parts[1].toInteger() : 0
       def patch = parts.size() > 2 ? parts[2].toInteger() : 0
-      steps.println(major)
-      steps.println(minor)
-      steps.println(patch)
       if (major < 3) {
         steps.println("Version is less than 3.0.0. This needs updating as we only support 3.0.x upwards.")
         return '<3'
@@ -156,8 +153,9 @@ class YarnBuilder extends AbstractBuilder {
       }
     }
     catch(Exception e) {
-      localSteps.echo "Error running version check {e.getMessage()}"
+      steps.echo "Error running version check {e.getMessage()}"
     }
+    return "didn't get through if block"
 
   }
 
