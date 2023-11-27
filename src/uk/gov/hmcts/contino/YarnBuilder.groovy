@@ -138,19 +138,22 @@ class YarnBuilder extends AbstractBuilder {
       steps.println(major.getClass())
       if (major < 3) {
         steps.println("Version is less than 3.0.0. This needs updating as we only support 3.0.x upwards.")
-        return '<3'
-      } else if (major == 3) {
-        steps.println("v3 detected - continuing")
-        return 'v3'
-      } else if (major == 4) {
-        if (minor == 0 && patch == 0) {
-          steps.println("v4.0.0 detected. You will need to upgrade yarn to at least v4.0.1, as 4.0.0 has an unsupported audit format.")
-          return 'v4.0.0'
-//        todo - handle exit code here
-        }
+        return "<3"
       } else {
-        steps.println("Version is greater than 4.0.0. Using the updated configuration for yarn npm audit.")
-        return 'v4+'
+        if (major == 3) {
+          steps.println("v3 detected - continuing")
+          return "v3"
+        }
+        if (major == 4) {
+          if (minor == 0 && patch == 0) {
+            steps.println("v4.0.0 detected. You will need to upgrade yarn to at least v4.0.1, as 4.0.0 has an unsupported audit format.")
+            return "v4.0.0"
+//        todo - handle exit code here
+          }
+        } else {
+          steps.println("Version is greater than 4.0.0. Using the updated configuration for yarn npm audit.")
+          return "v4+"
+        }
       }
     }
     catch(Exception e) {
