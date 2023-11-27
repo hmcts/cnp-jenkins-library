@@ -125,10 +125,12 @@ class YarnBuilder extends AbstractBuilder {
 
   def yarnVersionCheck() {
     steps.sh """
-      grep '"packageManager":' package.json | cut -d '"' -f 4 > yarn_version
+    jq -r '.packageManager' package.json | sed 's/yarn@//' > yarn_version
       """
 
-    def versionString = steps.readFile(yarn_version)
+
+
+    def versionString = steps.readFile('yarn_version')
     def parts = versionString.split("\\.")
     def major = parts.size() > 0 ? parts[0].toInteger() : 0
     def minor = parts.size() > 1 ? parts[1].toInteger() : 0
