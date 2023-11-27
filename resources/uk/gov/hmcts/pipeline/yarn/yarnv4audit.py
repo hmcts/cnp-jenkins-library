@@ -7,7 +7,7 @@ from typing import List
 @dataclass
 class Vulnerability:
   name: str
-  id: st
+  id: str
   severity: str
   vulnerable_versions: str
   issue: str
