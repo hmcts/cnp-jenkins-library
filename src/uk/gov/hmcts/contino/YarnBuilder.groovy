@@ -163,7 +163,7 @@ class YarnBuilder extends AbstractBuilder {
 
   def securityCheck() {
 
-    version = yarnVersionCheck()
+    def version = yarnVersionCheck()
     steps.println("escaped version check")
     steps.println(version)
     if (version == 'v3') {
