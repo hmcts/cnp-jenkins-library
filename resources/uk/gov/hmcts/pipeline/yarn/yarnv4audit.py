@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass, asdict
 import subprocess
 import os
+import typing
 
 @dataclass
 class Vulnerability:
@@ -11,8 +12,8 @@ class Vulnerability:
   vulnerable_versions: str
   issue: str
   url: str
-  tree_versions: list[str]
-  dependents: list[str]
+  tree_versions: List[str]
+  dependents: List[str]
 
   def to_json(self):
     return asdict(self)
