@@ -123,9 +123,41 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def yarnVersionCheck() {
+    steps.sh """
+      grep '"packageManager":' package.json | cut -d '"' -f 4 > yarn_version
+      """
+
+    def versionString = steps.readFile(yarn_version)
+    def parts = versionString.split("\\.")
+    def major = parts.size() > 0 ? parts[0].toInteger() : 0
+    def minor = parts.size() > 1 ? parts[1].toInteger() : 0
+    def patch = parts.size() > 2 ? parts[2].toInteger() : 0
+
+    if (major < 3) {
+      println "Version is less than 3.0.0. This needs updating as we only support 3.0.x upwards."
+      return '<3'
+    } else if (major == 3) {
+      println "v3 detected - continuing"
+      return 'v3'
+    } else if (major == 4) {
+      if (minor == 0 && patch == 0) {
+        println "v4.0.0 detected. You will need to upgrade yarn to at least v4.0.1, as 4.0.0 has an unsupported audit format."
+        return 'v4.0.0'
+//        todo - handle exit code here
+      }
+    } else {
+      println "Version is greater than 4.0.0. Using the updated configuration for yarn npm audit."
+      return 'v4+'
+    }
+  }
+
   def securityCheck() {
-    try {
-      steps.sh """
+
+    version = yarnVersionCheck()
+    if (version == 'v3') {
+      try {
+        steps.sh """
         set +ex
         export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
         . /opt/nvm/nvm.sh || true
@@ -133,30 +165,56 @@ class YarnBuilder extends AbstractBuilder {
         set -ex
       """
 
-      corepackEnable()
-      steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
-      steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
+        corepackEnable()
+        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+        steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
 
-      steps.sh """
+        steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
-    } finally {
-      steps.sh """
+      } finally {
+        steps.sh """
         cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
         cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
         cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
       """
-      String issues = steps.readFile('yarn-audit-issues-result')
-      String knownIssues = null
-      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
-        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+        String issues = steps.readFile('yarn-audit-issues-result')
+        String knownIssues = null
+        if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+          knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+        }
+        def cveReport = prepareCVEReport(issues, knownIssues)
+        new CVEPublisher(steps)
+          .publishCVEReport('node', cveReport)
       }
-      def cveReport = prepareCVEReport(issues, knownIssues)
-      new CVEPublisher(steps)
-        .publishCVEReport('node', cveReport)
     }
+    else if (version == 'v4.0.0') {
+      steps.println("Unsupported version, please upgrade to 4.0.1 or higher")
+//      todo : handle
+    }
+    else if (version == '<3') {
+      steps.println("Version too low")
+//      todo : handle
+
+    }
+    else if (version == 'v4+') {
+      securityCheckYarnV4()
+    }
+  }
+
+  def securityCheckYarnV4() {
+    steps.writeFile(file: 'yarnv4audit.py', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnv4audit.py'))
+
+    steps.sh """
+        export PATH=\$HOME/.local/bin:\$PATH
+        chmod +x yarnv4audit.py
+        ./yarnv4audit.py
+        """
+    steps.sh """
+    cat audit-v4-cosmosdb-output
+    """
   }
 
   @Override
