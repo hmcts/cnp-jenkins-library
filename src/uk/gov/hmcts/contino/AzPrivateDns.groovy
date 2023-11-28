@@ -24,45 +24,28 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
-    def checkDnsIsActive() {
+   def checkForCname(recordName) {
     def active = this.environmentDnsConfigEntry.active
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
       return
     }
-    }
-    
-    def subscriptionIsFound() {
     def subscription = this.environmentDnsConfigEntry.subscription
     if (!subscription) {
       throw new RuntimeException("No Subscription found for Environment [${environment}].")
-    } else {
-      return subscription
-    }
     }
 
-    def resourceGroupIsFound() {
     def resourceGroup = this.environmentDnsConfigEntry.resourceGroup
     if (!resourceGroup) {
       throw new RuntimeException("No Resource Group found for Environment [${environment}].")
-    } else {
-      return resourceGroup
-    }
     }
 
-    def ttlIsSet() { 
-      def ttl = this.environmentDnsConfigEntry.ttl
-      return ttl
-    }
+    def ttl = this.environmentDnsConfigEntry.ttl
+    def zone = this.environmentDnsConfigEntry.zone
 
-    def zoneIsSet() {
-      def zone = this.environmentDnsConfigEntry.zone
-      return zone
-    }
-
-  def ttl = ttlIsSet.ttl
-
-   def checkForCname(recordName) {
+    return subscription
+    return ttl
+    return zone
 
     try {
     cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
