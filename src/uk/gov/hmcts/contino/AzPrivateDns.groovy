@@ -18,18 +18,18 @@ class AzPrivateDns {
         this.environmentDnsConfigEntry = environmentDnsConfigEntry
     }
 
-   def getHostName(recordName) {
-     def zone = this.environmentDnsConfigEntry.zone
+    def getHostName(recordName) {
+      def zone = this.environmentDnsConfigEntry.zone
 
-     return "${recordName}.${zone}"
-   }
+      return "${recordName}.${zone}"
+    }
 
-   def checkForCname(recordName) {
-        def active = this.environmentDnsConfigEntry.active
+    def active = this.environmentDnsConfigEntry.active
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
       return
     }
+    
     def subscription = this.environmentDnsConfigEntry.subscription
     if (!subscription) {
       throw new RuntimeException("No Subscription found for Environment [${environment}].")
@@ -43,19 +43,21 @@ class AzPrivateDns {
     def ttl = this.environmentDnsConfigEntry.ttl
     def zone = this.environmentDnsConfigEntry.zone
 
+    def checkForCname(recordName) {
+
     try {
     cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
     } catch (e) {}
-    
+
     if (!cnameRecordSet) {
       cnameExists = false
     } else {
       cnameExists = true
     }
     return cnameExists
-   }
+    }
 
-   def registerDns(recordName, serviceIP) {
+    def registerDns(recordName, serviceIP) {
       if (!IPV4Validator.validate(serviceIP)) {
           throw new RuntimeException("Invalid IP address [${serviceIP}].")
       }
@@ -84,4 +86,4 @@ class AzPrivateDns {
       this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
       }
     }
-}
+    }
