@@ -91,7 +91,7 @@ class AzPrivateDns {
       
       // if no A record or CNAME already exists, create an A record pointing to the private IP
       if (!aRecordSet) {
-        if (cnameExists == false) {
+        if (cnameExists == false || !cnameExists) {
           this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
           this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
           this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
