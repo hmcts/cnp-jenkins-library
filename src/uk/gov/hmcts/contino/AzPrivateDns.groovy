@@ -50,8 +50,15 @@ class AzPrivateDns {
     }
     }
 
-    def ttl = this.environmentDnsConfigEntry.ttl
-    def zone = this.environmentDnsConfigEntry.zone
+    def ttlIsSet() { 
+      def ttl = this.environmentDnsConfigEntry.ttl
+      return ttl
+    }
+
+    def zoneIsSet() {
+      def zone = this.environmentDnsConfigEntry.zone
+      return zone
+    }
 
    def checkForCname(recordName) {
 
