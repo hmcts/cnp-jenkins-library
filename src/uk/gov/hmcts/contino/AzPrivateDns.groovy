@@ -24,7 +24,7 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
-   def settings {
+   def settings() {
     def active = this.environmentDnsConfigEntry.active
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
