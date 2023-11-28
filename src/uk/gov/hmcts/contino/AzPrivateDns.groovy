@@ -30,22 +30,18 @@ class AzPrivateDns {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
       return
     }
-    def subscription = this.environmentDnsConfigEntry.subscription
+    assert subscription = this.environmentDnsConfigEntry.subscription
     if (!subscription) {
       throw new RuntimeException("No Subscription found for Environment [${environment}].")
     }
 
-    def resourceGroup = this.environmentDnsConfigEntry.resourceGroup
+    assert resourceGroup = this.environmentDnsConfigEntry.resourceGroup
     if (!resourceGroup) {
       throw new RuntimeException("No Resource Group found for Environment [${environment}].")
     }
 
-    def ttl = this.environmentDnsConfigEntry.ttl
-    def zone = this.environmentDnsConfigEntry.zone
-
-    return subscription
-    return ttl
-    return zone
+    assert ttl = this.environmentDnsConfigEntry.ttl
+    assert zone = this.environmentDnsConfigEntry.zone
 
     try {
     cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
