@@ -24,12 +24,13 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
-   def checkForCname(recordName) {
+   def settings {
     def active = this.environmentDnsConfigEntry.active
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
       return
     }
+
     def subscription = this.environmentDnsConfigEntry.subscription
     if (!subscription) {
       throw new RuntimeException("No Subscription found for Environment [${environment}].")
@@ -40,7 +41,15 @@ class AzPrivateDns {
       throw new RuntimeException("No Resource Group found for Environment [${environment}].")
     }
 
+    def ttl = this.environmentDnsConfigEntry.ttl
     def zone = this.environmentDnsConfigEntry.zone
+   }
+
+   def ttl = settings(ttl)
+   def resourceGroup = settings(resourceGroup)
+   def subscription = settings(subscription)
+
+   def checkForCname(recordName) {
 
     try {
     cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
@@ -60,8 +69,6 @@ class AzPrivateDns {
       }
 
       def aRecordSet
-      def ttl = this.environmentDnsConfigEntry.ttl
-
 
       // if no cname exists in public dns create A record
       
