@@ -31,6 +31,7 @@ class AzPrivateDns {
       return
     } else {
       this.steps.echo "active"
+      return
     }
    }
 
