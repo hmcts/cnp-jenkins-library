@@ -40,6 +40,9 @@ class AzPrivateDns {
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
       return
+    } else {
+      this.steps.echo "active"
+      return
     }
 
     def subscription = this.environmentDnsConfigEntry.subscription
