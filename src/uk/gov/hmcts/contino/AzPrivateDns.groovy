@@ -8,7 +8,6 @@ class AzPrivateDns {
     def environment
     def az
     def environmentDnsConfigEntry
-    def cnameExists
     def cnameRecordSet
 
     AzPrivateDns(steps, environment, environmentDnsConfigEntry) {
