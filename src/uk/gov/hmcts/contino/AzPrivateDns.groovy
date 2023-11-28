@@ -24,12 +24,23 @@ class AzPrivateDns {
      return "${recordName}.${zone}"
    }
 
+   def checkActive() {
+    def active = this.environmentDnsConfigEntry.active
+    if (!active) {
+      this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
+      return
+    } else {
+      this.steps.echo "active"
+    }
+   }
+
    def checkForCname(recordName) {
     def active = this.environmentDnsConfigEntry.active
     if (!active) {
       this.steps.echo "Azure Private DNS registration not active for environment ${environment}"
       return
     }
+
     def subscription = this.environmentDnsConfigEntry.subscription
     if (!subscription) {
       throw new RuntimeException("No Subscription found for Environment [${environment}].")
