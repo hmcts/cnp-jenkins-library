@@ -30,7 +30,7 @@ def call(DockerImage dockerImage, Map params) {
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
   AzPrivateDns azPrivateDns = new AzPrivateDns(this, params.environment, dnsConfigEntry)
   String serviceFqdn = azPrivateDns.getHostName(aksServiceName)
-  def hasCname = azPrivateDns.checkForCname(aksServiceName)
+  def cnameExists = azPrivateDns.checkForCname(aksServiceName)
 
   if (serviceFqdn.endsWith(".internal")) {
     WarningCollector.addPipelineWarning("internal_domain", "Usage of `.internal` URLs for preview and AAT Staging is deprecated, please see https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1675868743958669", LocalDate.of(2023, 04, 26))
@@ -106,15 +106,6 @@ def call(DockerImage dockerImage, Map params) {
 
     def environmentTag = Environment.toTagName(environment)
     
-    def disableTraefikTls
-
-    if (hasCname == true) {
-      disableTraefikTls = true
-    } else disableTraefikTls = false
-
-    echo "hasCname is set to ${hasCname} and disableTraefikTls is set to ${disableTraefikTls}"
-    
-    
     def options = [
       "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
@@ -125,7 +116,7 @@ def call(DockerImage dockerImage, Map params) {
       "--set global.tags.builtFrom=${this.env.GIT_URL}",
       "--set global.tags.businessArea=${this.env.BUSINESS_AREA_TAG}",
       "--set global.tags.environment=${environmentTag}",
-      "--set global.disableTraefikTls=${disableTraefikTls}",
+      "--set global.disableTraefikTls=${cnameExists}",
       "--namespace ${namespace}"
     ]
 
@@ -181,8 +172,10 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     if (config.serviceApp) {
-      // Register service dns
-      azPrivateDns.registerDns(aksServiceName, ingressIP)
+      if (!cnameExists) {
+        // Register service dns
+        azPrivateDns.registerDns(aksServiceName, ingressIP)
+      }
 
       env.AKS_TEST_URL = "https://${env.SERVICE_FQDN}"
       echo "Your AKS service can be reached at: ${env.AKS_TEST_URL}"
