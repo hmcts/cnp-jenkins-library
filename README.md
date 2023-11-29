@@ -67,6 +67,22 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `preview`
 
+#### Running tests through Azure Front Door
+
+If you want tests in AAT / Stg environments to run via Azure Front Door, you must add configuration for your application to front door. Have a look at the [HMCTS Way](https://hmcts.github.io/cloud-native-platform/path-to-live/front-door.html#front-door-configuration).
+
+Add a CNAME for your application that points to front door to [azure-private-dns](https://github.com/hmcts/azure-private-dns) and ensure it ends with `-staging`. See [example](https://github.com/hmcts/azure-private-dns/commit/8a2c978d5a07d17b2b138f62c488f89bdce70e51).
+
+If a CNAME is not created in private DNS, Jenkins will create an A record and connect to your application on it's private IP instead.
+
+For the Dev and Preview environments, you will also need to prevent External DNS from creating an A record in their respective DNS zones. To do this, update your helm values to add an annotation telling external-dns to ignore your ingress:
+
+```
+java:
+  ingressAnnotations:
+    external-dns.alpha.kubernetes.io/exclude: "true"
+```
+
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
@@ -418,25 +434,45 @@ TestName | How to enable | Example
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
-You can passthrough options to the frontend security scan script by using the ZAP_URL_EXCLUSIONS parameter in your Jenkinsfile. This allows you to customise zap proxy scans of your application.
+You can customise the zap proxy scans of your application by passing through options to the security scanning scripts using the `urlExclusions` parameter in your Jenkinsfile.
 
 Pass this parameter to the `enableSecurityScan` block to customise the zap proxy scans.
 
 ```
+properties([
+    parameters([
+        string(name: 'ZAP_URL_EXCLUSIONS', defaultValue: "-config globalexcludeurl.url_list.url\\(1\\).regex=\\'.*jquery-3.5.1.min.js${'$'}\\' -config globalexcludeurl.url_list.url\\(2\\).regex=\\'.*/assets/images.*\\' -config globalexcludeurl.url_list.url\\(3\\).regex=\\'.*/assets/stylesheets.*\\' -config globalexcludeurl.url_list.url\\(4\\).regex=\\'.*/assets/javascripts.*\\' -config globalexcludeurl.url_list.url\\(5\\).regex=\\'.*/ruxitagentjs_.*\\' -config globalexcludeurl.url_list.url\\(6\\).regex=\\'.*/terms-and-conditions.*\\' -config globalexcludeurl.url_list.url\\(7\\).regex=\\'.*/privacy-policy.*\\' -config globalexcludeurl.url_list.url\\(8\\).regex=\\'.*/contact-us.*\\' -config globalexcludeurl.url_list.url\\(9\\).regex=\\'.*/login.*\\' -config globalexcludeurl.url_list.url\\(10\\).regex=\\'.*/cookies.*\\' -config globalexcludeurl.url_list.url\\(11\\).regex=\\'.*/cookie-preferences.*\\' -config globalexcludeurl.url_list.url\\(12\\).regex=\\'.*jquery-3.4.1.min.js${'$'}\\'")
+    ])
+])
+
+def urlExclusions = params.ZAP_URL_EXCLUSIONS
+
 withNightlyPipeline(type, product, component) {
 
   // add this!
-  enableSecurityScan(params.ZAP_URL_EXCLUSIONS)
+  enableSecurityScan(
+    urlExclusions: urlExclusions
+  )
 }
 ```
 
-You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/blob/2d040caeadbf4bb8918e621f588d429ab6968201/Jenkinsfile_nightly#L15)
+You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/blob/717c9755f33780f91f5006337c57fca4e0acf897/Jenkinsfile_nightly)
 
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
 
-The pipeline will automatically detect whether you're application is node based or gradle based and run the appropriate security tests based on that.
+The pipeline will automatically detect whether your application is node based or gradle based and run the appropriate security tests based on that.
 
-If you have a requirement to customise the script, you can place your own script in a folder called `ci` in your repo. Make sure to call the script `security.sh`.
+Gradle based applications are more commonly used in the backend but if your frontend application is gradle based, you can pass `scanType: "frontend"` to indicate this is the case and run the frontend specific security script instead of the default backend specific script.
+
+```
+withNightlyPipeline(type, product, component) {
+  enableSecurityScan(                
+    scanType: "frontend"
+  )
+}
+```
+
+If you have a requirement to customise the security script, you can place your own script in a folder called `ci` in your repo. Make sure to call the script `security.sh`.
 
 The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named `Jenkinsfile_nightly` must be included in the repository.
 
