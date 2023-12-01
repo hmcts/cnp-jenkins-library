@@ -159,3 +159,5 @@ suppressions = check_yarn_audit_known_issues()
 unsuppressed_vulnerabilities, unneeded_suppressions, suppressed_active_vulnerabilities = combine_suppressions_and_vulnerabilities(suppressions, vulnerabilities)
 decide_what_to_print(unsuppressed_vulnerabilities, unneeded_suppressions)
 build_parent_json_for_cosmosDB(unsuppressed_vulnerabilities, suppressed_active_vulnerabilities)
+if len(unsuppressed_vulnerabilities) > 0:
+  exit(1)
