@@ -27,8 +27,8 @@
 set -ex
 
 # Check for dependencies
-command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 0; }
-command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 0; }
+command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
 yarn --version
 
@@ -105,12 +105,12 @@ fi
 if [ ! -f yarn-audit-known-issues ]; then
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
-  exit 0
+  exit 1
 else
   # Test for old format of yarn-audit-known-issues
   if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues | grep -q true; then
     print_borked_known_issues
-    exit 0
+    exit 1
   fi
 
   # Handle edge case for when audit returns in different orders for the two files
@@ -136,7 +136,7 @@ else
     echo "Unsuppressed vulnerabilities found:"
     source prettyPrintAudit.sh new_vulnerabilities
     print_guidance
-    exit 0
+    exit 1
   else
     echo "Active suppressed vulnerabilities:"
     while IFS= read -r line; do
