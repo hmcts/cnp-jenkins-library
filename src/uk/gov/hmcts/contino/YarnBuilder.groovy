@@ -145,7 +145,7 @@ class YarnBuilder extends AbstractBuilder {
     } finally {
       steps.sh """
         cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-        cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+        cat yarn-audit-result | jq -cr '.advisories| try to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
         cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
       """
       String issues = steps.readFile('yarn-audit-issues-result')
