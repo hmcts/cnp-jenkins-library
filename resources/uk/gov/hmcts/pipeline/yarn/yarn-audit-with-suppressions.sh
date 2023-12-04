@@ -30,6 +30,8 @@ set -ex
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
+yarn --version
+
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
 cat <<'EOF'
