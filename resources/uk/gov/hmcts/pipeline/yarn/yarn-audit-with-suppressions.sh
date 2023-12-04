@@ -80,7 +80,7 @@ check_for_unneeded_suppressions() {
 
 # Perform yarn audit and process the results
 yarn npm audit --recursive --environment production --json > yarn-audit-result
-jq -cr '.advisories | to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
+jq -cr '.advisories | try to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
 if [[ ! -s sorted-yarn-audit-issues ]];  then
@@ -89,7 +89,7 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
-    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
+    jq -cr '.advisories | try to_entries[].value' yarn-audit-known-issues \
     | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
@@ -113,11 +113,11 @@ else
 
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
-  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
+  jq -cr '.advisories | try to_entries[].value' yarn-audit-known-issues \
   | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
-  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues > yarn-audit-known-issues-result
+  jq -cr '.advisories| try to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues > yarn-audit-known-issues-result
 
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do
