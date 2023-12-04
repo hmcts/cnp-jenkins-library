@@ -7,7 +7,7 @@ if [ $(echo $output | tr -d " ") = 0 ]; then
 else
   echo "====================================================================================================="
   echo "=== You appear to be using the cnp-module-postgres terraform module ==="
-  echo "=== This module has been deprecated as Postgres v11 is beyond end of life ===="
+  echo "=== This module has been deprecated as Postgres v11 went beyond end of life in Nov 2023 ===="
   echo "=== Please use the hmcts/terraform-module-postgresql-flexible module to create a flexible postgres server on v14 ==="
   echo "=== You will need to perform a migration of your data from the single server to the flexible server ==="
   echo "=== Follow the guidance on how to do this ==="
