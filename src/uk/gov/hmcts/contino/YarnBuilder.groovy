@@ -169,8 +169,6 @@ class YarnBuilder extends AbstractBuilder {
   def securityCheck() {
 
     def version = yarnVersionCheck()
-    steps.println("escaped version check")
-    steps.println(version)
     if (version == 'v3') {
       try {
         steps.sh """
@@ -221,16 +219,20 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheckYarnV4() {
-    steps.writeFile(file: 'yarnv4audit.py', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnv4audit.py'))
+    try {
+      steps.writeFile(file: 'yarnv4audit.py', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnv4audit.py'))
       steps.sh """
         export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarnv4audit.py
         python3.10 --version
         python3.10 yarnv4audit.py
         """
-    LinkedHashMap<String, Object> CVEReport = prepareCVEReportYarn4('audit-v4-cosmosdb-output')
-    this.steps.echo CVEReport.toString()
     }
+    finally {
+      LinkedHashMap<String, Object> CVEReport = prepareCVEReportYarn4('audit-v4-cosmosdb-output')
+      this.steps.echo CVEReport.toString()
+    }
+  }
 
   @Override
   def techStackMaintenance() {
