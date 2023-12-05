@@ -228,9 +228,8 @@ class YarnBuilder extends AbstractBuilder {
         python3.10 --version
         python3.10 yarnv4audit.py
         """
-      steps.sh """
-    cat audit-v4-cosmosdb-output
-    """
+    LinkedHashMap<String, Object> CVEReport = prepareCVEReportYarn4('audit-v4-cosmosdb-output')
+    this.steps.echo CVEReport.toString()
     }
 
   @Override
@@ -249,6 +248,14 @@ class YarnBuilder extends AbstractBuilder {
       localSteps.echo "Error running tech Yarn stack maintenance {e.getMessage()}"
     }
   }
+
+  def prepareCVEReportYarn4(String inputFilePath) {
+    String jsonString = new File(inputFilePath)
+    JsonSlurper slurper = new JsonSlurper()
+    LinkedHashMap<String, Object> parsedData = slurper.parseText(jsonString)
+    return parsedData
+  }
+
 
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
