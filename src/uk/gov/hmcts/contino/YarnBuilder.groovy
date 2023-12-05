@@ -226,8 +226,8 @@ class YarnBuilder extends AbstractBuilder {
       steps.sh """
         export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarnv4audit.py
-        python3.10 --version
-        python3.10 yarnv4audit.py
+        python3 --version
+        python3 yarnv4audit.py
         """
       steps.sh """
     cat audit-v4-cosmosdb-output
