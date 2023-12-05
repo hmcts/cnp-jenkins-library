@@ -139,9 +139,6 @@ class GradleBuilder extends AbstractBuilder {
           WarningCollector.addPipelineWarning("deprecate_owasp_8", "Older versions of Owasp dependency check  plugin are not supported, please move to latest 9.x.", new Date().parse("dd.MM.yyyy", "15.12.2023"))
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
         }
-      } catch (Throwable t) {
-        println("Caught throwable:")
-        t.printStackTrace()
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
@@ -233,7 +230,7 @@ EOF
 
   private String gradleWithOutput(String task) {
     addInitScript()
-    localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+    localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
   }
 
   def fullFunctionalTest() {
