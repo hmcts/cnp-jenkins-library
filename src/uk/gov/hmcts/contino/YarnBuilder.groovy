@@ -222,7 +222,6 @@ class YarnBuilder extends AbstractBuilder {
 
   def securityCheckYarnV4() {
     steps.writeFile(file: 'yarnv4audit.py', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnv4audit.py'))
-    try {
       steps.sh """
         export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarnv4audit.py
@@ -233,10 +232,6 @@ class YarnBuilder extends AbstractBuilder {
     cat audit-v4-cosmosdb-output
     """
     }
-    catch(Exception e) {
-      steps.println(e)
-    }
-  }
 
   @Override
   def techStackMaintenance() {
