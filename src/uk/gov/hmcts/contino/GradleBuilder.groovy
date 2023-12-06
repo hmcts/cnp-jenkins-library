@@ -123,9 +123,9 @@ class GradleBuilder extends AbstractBuilder {
 
   def securityCheck() {
     def secrets = [
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V14_CONNECTION_STRING' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Connection-String', version: '', envVariable: 'OWASPDB_V14_CONNECTION_STRING' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V15_CONNECTION_STRING' ]
