@@ -121,21 +121,6 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
-  private String gradleWithOutput(String task) {
-    try {
-      addInitScript()
-      return localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
-    } catch (Exception e) {
-      localSteps.echo "Exception in gradleWithOutput: ${e}"
-      throw e
-    }
-  }
-
-  def hasPlugin(String pluginName) {
-    localSteps.echo "try to print buildenv"
-    return gradleWithOutput("buildEnvironment").contains(pluginName)
-  }
-
   def securityCheck() {
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
@@ -151,11 +136,9 @@ class GradleBuilder extends AbstractBuilder {
         if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:9")) {
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
         } else {
-          WarningCollector.addPipelineWarning("deprecated_owasp_8", "Versions of owasp dependency check below v9 are deprecated, please upgrade to latest release.", LocalDate.of(2023, 12, 15))
+          WarningCollector.addPipelineWarning("deprecated_owasp_v8", "Versions of owasp dependency check below v9 are deprecated, please upgrade to latest release.", LocalDate.of(2023, 12, 15))
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
         }
-      } catch(Exception e) {
-        localSteps.echo "Exception is: ${e}"
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
@@ -245,6 +228,11 @@ EOF
     localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
+  private String gradleWithOutput(String task) {
+    addInitScript()
+    return localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
+  }
+  
   def fullFunctionalTest() {
       functionalTest()
   }
@@ -292,6 +280,9 @@ EOF
     localSteps.sh "java -version"
   }
 
+  def hasPlugin(String pluginName) {
+    return gradleWithOutput("buildEnvironment").contains(pluginName)
+  }
 
   @Override
   def securityScan(){
