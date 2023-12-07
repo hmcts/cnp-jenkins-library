@@ -134,6 +134,7 @@ class GradleBuilder extends AbstractBuilder {
     localSteps.withAzureKeyvault(secrets) {
       try {
         if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:9")) {
+          localSteps.echo "Running against latest OWASP DB"
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
         } else {
           WarningCollector.addPipelineWarning("deprecated_owasp_v8", "Versions of owasp dependency check below v9 are deprecated, please upgrade to latest release.", LocalDate.of(2023, 12, 15))
