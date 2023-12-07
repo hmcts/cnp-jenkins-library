@@ -132,8 +132,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def hasPlugin(String pluginName) {
-    println "print buildenv"
-    println gradleWithOutput("buildEnvironment").contains(pluginName)
+    this.steps.echo "try to print buildenv"
     return gradleWithOutput("buildEnvironment").contains(pluginName)
   }
 
@@ -148,13 +147,6 @@ class GradleBuilder extends AbstractBuilder {
     ]
 
     localSteps.withAzureKeyvault(secrets) {
-      try{
-        boolean hasPlugin = hasPlugin("org.owasp.dependencycheck.gradle.plugin:9")
-        println("After hasPlugin")
-      } catch (Exception e) {
-        println("Exception: ${e}")
-      }
-
       try {
         if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:9")) {
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
