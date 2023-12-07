@@ -134,6 +134,7 @@ class GradleBuilder extends AbstractBuilder {
     localSteps.withAzureKeyvault(secrets) {
       try{
         boolean hasPlugin = hasPlugin("org.owasp.dependencycheck.gradle.plugin:9")
+        println("After hasPlugin")
       } catch (Exception e) {
         println("Exception: ${e}")
       }
