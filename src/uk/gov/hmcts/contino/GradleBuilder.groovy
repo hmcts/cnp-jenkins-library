@@ -132,8 +132,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def hasPlugin(String pluginName) {
-    println("print buildenv")
-    println(gradleWithOutput("buildEnvironment").contains(pluginName))
+    println "print buildenv"
+    println gradleWithOutput("buildEnvironment").contains(pluginName)
     return gradleWithOutput("buildEnvironment").contains(pluginName)
   }
 
