@@ -122,8 +122,13 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   private String gradleWithOutput(String task) {
-    addInitScript()
-    localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
+    try {
+      addInitScript()
+      return localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
+    } catch (Exception e) {
+      println("Exception in gradleWithOutput: ${e}")
+      throw e
+    }
   }
 
   def hasPlugin(String pluginName) {
