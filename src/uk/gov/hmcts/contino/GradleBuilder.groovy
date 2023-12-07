@@ -230,9 +230,9 @@ EOF
 
   private String gradleWithOutput(String task) {
     addInitScript()
-    return localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
+    localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
   }
-  
+
   def fullFunctionalTest() {
       functionalTest()
   }
