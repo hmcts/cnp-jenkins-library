@@ -121,6 +121,15 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
+  private String gradleWithOutput(String task) {
+    addInitScript()
+    localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
+  }
+
+  def hasPlugin(String pluginName) {
+    return gradleWithOutput("buildEnvironment").contains(pluginName)
+  }
+
   def securityCheck() {
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
@@ -235,11 +244,6 @@ EOF
     localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
   }
 
-  private String gradleWithOutput(String task) {
-    addInitScript()
-    localSteps.sh(script: "./gradlew --no-daemon --stacktrace --init-script init.gradle ${task}", returnStdout: true).trim()
-  }
-
   def fullFunctionalTest() {
       functionalTest()
   }
@@ -287,9 +291,6 @@ EOF
     localSteps.sh "java -version"
   }
 
-  def hasPlugin(String pluginName) {
-    return gradleWithOutput("buildEnvironment").contains(pluginName)
-  }
 
   @Override
   def securityScan(){
