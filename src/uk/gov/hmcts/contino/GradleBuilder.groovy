@@ -151,7 +151,7 @@ class GradleBuilder extends AbstractBuilder {
         if (hasPlugin("org.owasp.dependencycheck.gradle.plugin:9")) {
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
         } else {
-          WarningCollector.addPipelineWarning("deprecate_owasp_8", "Older versions of Owasp dependency check  plugin are not supported, please move to latest 9.x.", new Date().parse("dd.MM.yyyy", "15.12.2023"))
+          WarningCollector.addPipelineWarning("deprecated_owasp_8", "Versions of owasp dependency check below v9 are deprecated, please upgrade to latest release.", LocalDate.of(2023, 12, 15))
           gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
         }
       } catch(Exception e) {
