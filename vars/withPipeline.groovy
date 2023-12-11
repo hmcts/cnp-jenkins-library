@@ -63,8 +63,7 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  // String agentType = env.BUILD_AGENT_TYPE
-  String agentType = "arm"
+  String agentType = env.BUILD_AGENT_TYPE
 
   node(agentType) {
     timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
