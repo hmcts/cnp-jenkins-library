@@ -159,11 +159,6 @@ class YarnBuilder extends AbstractBuilder {
       new CVEPublisher(steps)
         .publishCVEReport('node', cveReport)
     }
-
-    steps.sh("""
-      unset YARN_GLOBAL_FOLDER
-      unset YARN_ENABLE_GLOBAL_CACHE
-    """)
   }
 
   @Override
@@ -308,11 +303,6 @@ EOF
         fi
       """)
     }
-
-    steps.sh("""
-      unset YARN_GLOBAL_FOLDER
-      unset YARN_ENABLE_GLOBAL_CACHE
-    """)
   }
 
   private runYarnQuiet(String task, String prepend = "") {
@@ -332,11 +322,6 @@ EOF
     """, returnStatus: true)
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
-
-    steps.sh("""
-      unset YARN_GLOBAL_FOLDER
-      unset YARN_ENABLE_GLOBAL_CACHE
-    """)
   }
 
   private LocalDate node18ExpirationDate() {
