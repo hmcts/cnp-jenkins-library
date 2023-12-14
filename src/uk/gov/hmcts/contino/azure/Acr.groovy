@@ -29,7 +29,7 @@ class Acr extends Az {
 
   def unsetYarnVariables() {
     steps.sh(
-      script: "unset YARN_GLOBALFOLDER && unset YARN_ENABLE_GLOBAL_CACHE",
+      script: "unset YARN_GLOBAL_FOLDER && unset YARN_ENABLE_GLOBAL_CACHE",
       returnStdout: true
     )
     this.run()
