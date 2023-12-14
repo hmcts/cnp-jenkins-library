@@ -128,7 +128,7 @@ class YarnBuilder extends AbstractBuilder {
       steps.sh """
         set +ex
         export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
-        export YARN_GLOBAL_FOLDER=/opt/.yarn/app
+        export YARN_GLOBAL_FOLDER=/opt/.yarn
         export YARN_ENABLE_GLOBAL_CACHE=true
         . /opt/nvm/nvm.sh || true
         nvm install
@@ -281,32 +281,24 @@ EOF
         set -ex
 
         export PATH=\$HOME/.local/bin:\$PATH
+        export YARN_GLOBAL_FOLDER=/opt/.yarn
+        export YARN_ENABLE_GLOBAL_CACHE=true
 
         if ${prepend.toBoolean()}; then
-          ${prepend}yarn config set globalFolder /opt/.yarn
-          ${prepend}yarn config set enableGlobalCache true
-          npx prettier .yarnrc.yml
           ${prepend}yarn ${task}
         else
-          yarn config set globalFolder /opt/.yarn
-          yarn config set enableGlobalCache true
-          npx prettier .yarnrc.yml
           yarn ${task}
         fi
       """
     } else {
       steps.sh("""
         export PATH=\$HOME/.local/bin:\$PATH
+        export YARN_GLOBAL_FOLDER=/opt/.yarn
+        export YARN_ENABLE_GLOBAL_CACHE=true
 
         if ${prepend.toBoolean()}; then
-          ${prepend}yarn config set globalFolder /opt/.yarn
-          ${prepend}yarn config set enableGlobalCache true
-          npx prettier .yarnrc.yml
           ${prepend}yarn ${task}
         else
-          yarn config set globalFolder /opt/.yarn
-          yarn config set enableGlobalCache true
-          npx prettier .yarnrc.yml
           yarn ${task}
         fi
       """)
@@ -319,16 +311,12 @@ EOF
     }
     def status = steps.sh(script: """
       export PATH=\$HOME/.local/bin:\$PATH
+      export YARN_GLOBAL_FOLDER=/opt/.yarn
+      export YARN_ENABLE_GLOBAL_CACHE=true
 
       if ${prepend.toBoolean()}; then
-        ${prepend}yarn config set globalFolder /opt/.yarn 1> /dev/null 2> /dev/null
-        ${prepend}yarn config set enableGlobalCache true 1> /dev/null 2> /dev/null
-        ${prepend} npx prettier .yarnrc.yml  1> /dev/null 2> /dev/null
         ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
       else
-        yarn config set globalFolder /opt/.yarn
-        yarn config set enableGlobalCache true
-        npx prettier .yarnrc.yml  1> /dev/null 2> /dev/null
         yarn ${task} 1> /dev/null 2> /dev/null
       fi
     """, returnStatus: true)
