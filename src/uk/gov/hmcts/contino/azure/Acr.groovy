@@ -27,14 +27,6 @@ class Acr extends Az {
     this.registrySubscription = registrySubscription
   }
 
-  def unsetYarnVariables() {
-    steps.sh(
-      script: "unset YARN_GLOBAL_FOLDER && unset YARN_ENABLE_GLOBAL_CACHE",
-      returnStdout: true
-    )
-    this.run()
-  }
-
   /**
    * Log into ACR.  Can be used instead of 'docker login'.  You need to be logged into a subscription first.
    *
