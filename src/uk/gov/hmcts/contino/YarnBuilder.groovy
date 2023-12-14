@@ -281,24 +281,28 @@ EOF
         set -ex
 
         export PATH=\$HOME/.local/bin:\$PATH
-        export YARN_GLOBAL_FOLDER=/opt/.yarn/app
-        export YARN_ENABLE_GLOBAL_CACHE=true
 
         if ${prepend.toBoolean()}; then
+          ${prepend}yarn config set globalFolder /opt/.yarn
+          ${prepend}yarn config set enableGlobalCache true
           ${prepend}yarn ${task}
         else
+          yarn config set globalFolder /opt/.yarn
+          yarn config set enableGlobalCache true
           yarn ${task}
         fi
       """
     } else {
       steps.sh("""
         export PATH=\$HOME/.local/bin:\$PATH
-        export YARN_GLOBAL_FOLDER=/opt/.yarn/app
-        export YARN_ENABLE_GLOBAL_CACHE=true
 
         if ${prepend.toBoolean()}; then
+          ${prepend}yarn config set globalFolder /opt/.yarn
+          ${prepend}yarn config set enableGlobalCache true
           ${prepend}yarn ${task}
         else
+          yarn config set globalFolder /opt/.yarn
+          yarn config set enableGlobalCache true
           yarn ${task}
         fi
       """)
@@ -311,12 +315,14 @@ EOF
     }
     def status = steps.sh(script: """
       export PATH=\$HOME/.local/bin:\$PATH
-      export YARN_GLOBAL_FOLDER=/opt/.yarn/app
-      export YARN_ENABLE_GLOBAL_CACHE=true
 
       if ${prepend.toBoolean()}; then
+        ${prepend}yarn config set globalFolder /opt/.yarn 1> /dev/null 2> /dev/null
+        ${prepend}yarn config set enableGlobalCache true 1> /dev/null 2> /dev/null
         ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
       else
+        yarn config set globalFolder /opt/.yarn
+        yarn config set enableGlobalCache true
         yarn ${task} 1> /dev/null 2> /dev/null
       fi
     """, returnStatus: true)
