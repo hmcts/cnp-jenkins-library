@@ -87,6 +87,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def run() {
+    steps.sh(script: "echo $YARN_GLOBAL_FOLDER")
     this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
   }
 
