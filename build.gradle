@@ -32,11 +32,11 @@ dependencies {
   implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.409'
   implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '625.vd896b_f445a_f8', ext: 'jar'
   implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2131.vb_9788088fdb_5', ext: 'jar'
-  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.81.1'
+  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.87'
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '616.ve67136f6c77d', ext: 'jar'
 
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
-  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.15.2'
+  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.0'
 
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.17'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
