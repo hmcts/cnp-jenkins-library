@@ -126,7 +126,7 @@ class GradleBuilderTest extends Specification {
       builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
-                    it.contains("-Ppact.broker.url=${PACT_BROKER_URL} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publishResults} runProviderPactVerification")})
+                    it.contains("-Ppact.broker.url=${PACT_BROKER_URL} -Ppactbroker.url=${PACT_BROKER_URL} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publishResults} runProviderPactVerification")})
   }
 
   def "runConsumerTests triggers a gradlew hook"() {
@@ -136,7 +136,7 @@ class GradleBuilderTest extends Specification {
       builder.runConsumerTests(PACT_BROKER_URL, version)
     then:
       1 * steps.sh({it.startsWith(GRADLE_CMD) &&
-                    it.contains("-Ppact.broker.url=${PACT_BROKER_URL} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")})
+                    it.contains("-Ppact.broker.url=${PACT_BROKER_URL} -Ppactbroker.url=${PACT_BROKER_URL} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")})
   }
 
   def "runConsumerCanIDeploy triggers a gradlew hook"() {
