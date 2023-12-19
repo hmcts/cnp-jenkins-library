@@ -198,7 +198,7 @@ EOF
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
     try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
@@ -206,7 +206,7 @@ EOF
 
   def runConsumerTests(pactBrokerUrl, version) {
    try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
    } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
