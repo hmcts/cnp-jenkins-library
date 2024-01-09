@@ -32,7 +32,7 @@ class TeamConfig {
     this.steps.env.TEAM_APPLICATION_TAG = getApplicationTag(product)
     this.steps.env.ARDOQ_APPLICATION_ID = getArdoqApplicationId(product)
 
-    def buildAgentType = getBuildAgentType(product)
+    def buildAgentType = "ubuntu"
     this.steps.env.BUILD_AGENT_TYPE = buildAgentType
     this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(buildAgentType)
     this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(buildAgentType)
