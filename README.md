@@ -466,7 +466,7 @@ Gradle based applications are more commonly used in the backend but if your fron
 
 ```
 withNightlyPipeline(type, product, component) {
-  enableSecurityScan(                
+  enableSecurityScan(
     scanType: "frontend"
   )
 }
@@ -697,7 +697,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `PACT_BROKER_URL`
   - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
 - `gradlew`:
-  - `-Ppact.broker.url`
+  - `-Ppactbroker.url`
   - `-Ppact.consumer.version`/`-Ppact.provider.version`
   - `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
 
