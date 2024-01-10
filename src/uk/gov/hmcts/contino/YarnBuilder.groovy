@@ -128,8 +128,7 @@ class YarnBuilder extends AbstractBuilder {
       steps.sh """
         set +ex
         export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
-        export YARN_GLOBAL_FOLDER=/opt/.yarn
-        export YARN_ENABLE_GLOBAL_CACHE=true
+        export YARN_GLOBAL_FOLDER=/opt/app/.yarn
         . /opt/nvm/nvm.sh || true
         nvm install
         set -ex
@@ -281,8 +280,7 @@ EOF
         set -ex
 
         export PATH=\$HOME/.local/bin:\$PATH
-        export YARN_GLOBAL_FOLDER=/opt/.yarn
-        export YARN_ENABLE_GLOBAL_CACHE=true
+        export YARN_GLOBAL_FOLDER=/opt/app/.yarn
 
         if ${prepend.toBoolean()}; then
           ${prepend}yarn ${task}
@@ -293,8 +291,7 @@ EOF
     } else {
       steps.sh("""
         export PATH=\$HOME/.local/bin:\$PATH
-        export YARN_GLOBAL_FOLDER=/opt/.yarn
-        export YARN_ENABLE_GLOBAL_CACHE=true
+        export YARN_GLOBAL_FOLDER=/opt/app/.yarn
 
         if ${prepend.toBoolean()}; then
           ${prepend}yarn ${task}
@@ -311,8 +308,7 @@ EOF
     }
     def status = steps.sh(script: """
       export PATH=\$HOME/.local/bin:\$PATH
-      export YARN_GLOBAL_FOLDER=/opt/.yarn
-      export YARN_ENABLE_GLOBAL_CACHE=true
+      export YARN_GLOBAL_FOLDER=/opt/app/.yarn
 
       if ${prepend.toBoolean()}; then
         ${prepend}yarn ${task} 1> /dev/null 2> /dev/null
