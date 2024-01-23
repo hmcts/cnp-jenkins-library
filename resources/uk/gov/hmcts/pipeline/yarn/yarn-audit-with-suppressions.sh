@@ -79,7 +79,7 @@ check_for_unneeded_suppressions() {
 }
 
 # Perform yarn audit and process the results
-yarn npm audit --recursive --environment production --json > yarn-audit-result
+yarn npm audit --recursive --environment production --json > yarn-audit-result || true
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
@@ -147,4 +147,3 @@ else
     exit 0
   fi
 fi
-
