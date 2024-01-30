@@ -4,6 +4,15 @@ import java.time.LocalDate
 
 def call() {
 
+  switch (steps.env.PRODUCT) {
+      case "ccd":
+        date = LocalDate.of(2024, 03, 22)
+        break
+      default:
+        date = NODEJS_EXPIRATION
+        break
+    }
+
   writeFile file: 'check-deprecated-postgres.sh', text: libraryResource('uk/gov/hmcts/infrastructure/check-deprecated-postgres.sh')
 
   try {
@@ -12,7 +21,7 @@ def call() {
     ./check-deprecated-postgres.sh
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to the flexible server postgres module. See this Slack announcement for more info https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1692714862133249", LocalDate.of(2024, 03, 31))
+    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to the flexible server postgres module. See this Slack announcement for more info https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1692714862133249", date)
   } finally {
     sh 'rm -f check-deprecated-postgres.sh'
   }
