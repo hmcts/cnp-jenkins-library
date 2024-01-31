@@ -3,6 +3,7 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 
 def call() {
+  def expiryDate;
   switch (env.GIT_URL) {
       case "https://github.com/HMCTS/am-org-role-mapping-service.git":
       case "https://github.com/hmcts/am-role-assignment-service.git":
