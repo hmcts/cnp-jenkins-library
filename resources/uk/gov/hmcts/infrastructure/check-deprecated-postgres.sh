@@ -14,6 +14,6 @@ else
   echo "=== https://hmcts.github.io/cloud-native-platform/guides/postgresql-singleserver-to-flexibleserver-migration-portal.html ==="
   echo "=== https://hmcts.github.io/cloud-native-platform/guides/postgresql-singleserver-to-flexibleserver-migration-dms.html ==="
   echo "=== Once you have migrated your data, remove the cnp-module-postgres module from your code ==="
-  echo "=== This pipeline will start failing from 31st January 2024 ==="
+  echo "=== This pipeline will start failing from 31st January 2024 unless you have an approved exemption in https://github.com/hmcts/cnp-jenkins-library/blob/master/vars/warnAboutDeprecatedPostgres.groovy==="
   exit 1
 fi
