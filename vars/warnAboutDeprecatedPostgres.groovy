@@ -11,7 +11,7 @@ def call() {
         expiryDate = LocalDate.of(2024, 03, 31)
         break
       case "https://github.com/hmcts/wa-case-event-handler.git":
-        expiryDate = LocalDate.of(2024, 02, 9)
+        expiryDate = LocalDate.of(2024, 02, 12)
         break
       default:
         expiryDate = LocalDate.of(2024, 01, 31)
