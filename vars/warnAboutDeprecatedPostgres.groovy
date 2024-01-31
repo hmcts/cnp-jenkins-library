@@ -7,11 +7,11 @@ def call() {
   String repositoryShortUrl = new RepositoryUrl().getShort(env.CHANGE_URL)
   switch (steps.env.PRODUCT) {
       case "ccd":
-        date = LocalDate.of(2024, 03, 31)
+        def date = LocalDate.of(2024, 03, 31)
         break
       default:
-        date = LocalDate.of(2024, 01, 31)
-        test = steps.env.PRODUCT
+        def date = LocalDate.of(2024, 01, 31)
+        def test = steps.env.PRODUCT
         break
     }
 
