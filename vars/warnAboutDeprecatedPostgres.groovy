@@ -6,10 +6,10 @@ import java.time.LocalDate
 def call() {
   switch (env.GIT_URL) {
       case "https://github.com/HMCTS/am-org-role-mapping-service.git":
-        def newdate = LocalDate.of(2024, 03, 31)
+        newdate = LocalDate.of(2024, 03, 31)
         break
       default:
-        def newdate = LocalDate.of(2024, 01, 31)
+        newdate = LocalDate.of(2024, 01, 31)
         break
     }
 
