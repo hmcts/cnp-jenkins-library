@@ -25,7 +25,7 @@ def call() {
     ./check-deprecated-postgres.sh
     """
   } catch(ignored) {
-    WarningCollector.addPipelineWarning("deprecated_postgres", "Please migrate to the flexible server postgres module. See this Slack announcement for more info https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1692714862133249", expiryDate)
+    WarningCollector.addPipelineWarning("deprecated_postgres", "${env.GIT_URL} :Please migrate to the flexible server postgres module. See this Slack announcement for more info https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1692714862133249", expiryDate)
   } finally {
     sh 'rm -f check-deprecated-postgres.sh'
   }
