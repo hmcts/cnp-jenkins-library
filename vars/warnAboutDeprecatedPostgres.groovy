@@ -6,13 +6,13 @@ def call() {
 String gitUrl = env.GIT_URL;
 LocalDate expiryDate;
  
-switch (gitUrl) {
-    case "https://github.com/HMCTS/am-org-role-mapping-service.git":
+switch (gitUrl.toLowercase()) {
+    case "https://github.com/hmcts/am-org-role-mapping-service.git":
     case "https://github.com/hmcts/am-role-assignment-service.git":
     case "https://github.com/hmcts/am-judicial-booking-service.git":
         expiryDate = LocalDate.of(2024, 3, 31);
         break;
-    case "https://github.com/HMCTS/wa-case-event-handler.git":
+    case "https://github.com/hmcts/wa-case-event-handler.git":
         expiryDate = LocalDate.of(2024, 2, 12);
         break;
     default:
