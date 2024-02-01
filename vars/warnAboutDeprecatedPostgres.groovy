@@ -6,7 +6,7 @@ def call() {
 String gitUrl = env.GIT_URL;
 LocalDate expiryDate;
  
-switch (gitUrl.toLowercase()) {
+switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/am-org-role-mapping-service.git":
     case "https://github.com/hmcts/am-role-assignment-service.git":
     case "https://github.com/hmcts/am-judicial-booking-service.git":
