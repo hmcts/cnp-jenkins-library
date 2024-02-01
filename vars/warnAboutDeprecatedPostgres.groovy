@@ -3,20 +3,22 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 
 def call() {
-  def expiryDate;
-  switch (env.GIT_URL) {
-      case "https://github.com/HMCTS/am-org-role-mapping-service.git":
-      case "https://github.com/hmcts/am-role-assignment-service.git":
-      case "https://github.com/hmcts/am-judicial-booking-service.git":
-        expiryDate = LocalDate.of(2024, 03, 31);
-        break
-      case "https://github.com/hmcts/wa-case-event-handler.git":
-        expiryDate = LocalDate.of(2024, 02, 12);
-        break
-      default:
-        expiryDate = LocalDate.of(2024, 01, 31);
-        break
-    }
+String gitUrl = env.GIT_URL;
+LocalDate expiryDate;
+ 
+switch (gitUrl) {
+    case "https://github.com/HMCTS/am-org-role-mapping-service.git":
+    case "https://github.com/hmcts/am-role-assignment-service.git":
+    case "https://github.com/hmcts/am-judicial-booking-service.git":
+        expiryDate = LocalDate.of(2024, 3, 31);
+        break;
+    case "https://github.com/hmcts/wa-case-event-handler.git":
+        expiryDate = LocalDate.of(2024, 2, 12);
+        break;
+    default:
+        expiryDate = LocalDate.of(2024, 1, 31);
+        break;
+}
 
   writeFile file: 'check-deprecated-postgres.sh', text: libraryResource('uk/gov/hmcts/infrastructure/check-deprecated-postgres.sh')
 
