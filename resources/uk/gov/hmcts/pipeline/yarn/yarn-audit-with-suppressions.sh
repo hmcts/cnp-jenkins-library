@@ -24,7 +24,7 @@
 
 
 # Exit script on error
-set -e
+set -x
 
 # Check for dependencies
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
