@@ -126,6 +126,10 @@ else
     fi
   done < sorted-yarn-audit-issues
 
+  mv new_vulnerabilities new_vulnerabilities_with_references
+  jq -c 'del(.references)' new_vulnerabilities_with_references > new_vulnerabilities
+  rm new_vulnerabilities_with_references
+
   # Check for unneeded suppressions
   check_for_unneeded_suppressions
 
