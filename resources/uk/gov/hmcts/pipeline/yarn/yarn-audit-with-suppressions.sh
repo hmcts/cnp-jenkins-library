@@ -79,7 +79,7 @@ check_for_unneeded_suppressions() {
 }
 
 # Perform yarn audit and process the results
-today=$(gdate +"%Y-%m-%d")
+today=$(date +"%Y-%m-%d")
 exclude_until=2024-02-21
 
 if [ "$today" > "$exclude_until" ]; then
