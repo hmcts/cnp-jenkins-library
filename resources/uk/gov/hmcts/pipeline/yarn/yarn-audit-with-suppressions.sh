@@ -80,6 +80,7 @@ check_for_unneeded_suppressions() {
 
 # Perform yarn audit and process the results
 today=$(date +"%s")
+# 2024-02-21
 exclude_until="1708502400"
 
 if [ "$today" -gt "$exclude_until" ]; then
