@@ -79,11 +79,14 @@ check_for_unneeded_suppressions() {
 }
 
 # Perform yarn audit and process the results
-yarn npm audit --recursive --environment production --json > yarn-audit-result
+today=$(gdate +"%Y-%m-%d")
+exclude_until=2024-02-21
 
-mv yarn-audit-result yarn-audit-result-2
-jq -c 'del(.advisories[].references)' yarn-audit-result-2 >  yarn-audit-result
-rm yarn-audit-result-2
+if [ "$today" > "$exclude_until" ]; then
+  yarn npm audit --recursive --environment production --json > yarn-audit-result
+else
+  yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result
+fi
 
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
 
@@ -118,8 +121,8 @@ else
 
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
-  # jq -cr '.advisories | to_entries[].value | del(.advisories[].references)' yarn-audit-known-issues \
-  # | sort > sorted-yarn-audit-known-issues
+  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
+  | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
   jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues > yarn-audit-known-issues-result
@@ -130,10 +133,6 @@ else
       echo "$line" >> new_vulnerabilities
     fi
   done < sorted-yarn-audit-issues
-
-  mv new_vulnerabilities new_vulnerabilities_with_references
-  jq -c 'del(.references)' new_vulnerabilities_with_references > new_vulnerabilities
-  rm new_vulnerabilities_with_references
 
   # Check for unneeded suppressions
   check_for_unneeded_suppressions
