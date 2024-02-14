@@ -80,7 +80,7 @@ check_for_unneeded_suppressions() {
 
 # Perform yarn audit and process the results
 today=$(date +"%Y-%m-%d")
-exclude_until=2024-02-21
+exclude_until=$(date -d 2024-02-21 +"%Y-%m-%d")
 
 if [ "$today" > "$exclude_until" ]; then
   yarn npm audit --recursive --environment production --json > yarn-audit-result
