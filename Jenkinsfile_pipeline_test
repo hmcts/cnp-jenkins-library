@@ -46,7 +46,8 @@ try {
         build job: 'Pipeline_Test_Sandbox/cnp-plum-frontend/master',
           parameters: [string(name: 'LIB_VERSION', value: testBranch)]
       }
-    }
+    },
+    failFast: true
   )
 
 } catch (err) {
