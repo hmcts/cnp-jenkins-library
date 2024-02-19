@@ -84,9 +84,9 @@ today=$(date +"%s")
 exclude_until="1708502400"
 
 if [ "$today" -gt "$exclude_until" ]; then
-  yarn npm audit --recursive --environment production --json > yarn-audit-result
+  yarn npm audit --recursive --environment production --json > yarn-audit-result || true
 else
-  yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result
+  yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
