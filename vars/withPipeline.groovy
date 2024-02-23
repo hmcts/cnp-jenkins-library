@@ -118,6 +118,19 @@ def call(type, String product, String component, Closure body) {
               component: component,
               tfPlanOnly: true
             )
+            if (githubApi.getTopicsbyPattern(${project}, "plan-on-prod")) {
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.prodName,
+                aksSubscription: aksSubscriptions.prod,
+                environment: environment.prodName,
+                product: product,
+                component: component,
+                tfPlanOnly: true
+              )
+            }
           }
 
           sectionDeployToAKS(

@@ -83,6 +83,18 @@ class GithubAPI {
     return getCache()
   }
 
+  def getTopics() {
+    this.steps.echo "Get Repo Topics"
+    def project = currentProject()
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/topics",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+  }
+
   /**
    * Add labels to an issue or pull request
    * If the API call is successful, valid cache will be directly updated whilst Invalid cache will be refreshed.
@@ -165,6 +177,10 @@ class GithubAPI {
    */
   def getLabelsbyPattern(String branchName, String key) {
     return getLabels(branchName).findAll{it.contains(key)}
+  }
+
+  def getTopicsbyPattern(String branchName, String key) {
+    return getTopics(branchName).findAll{it.contains(key)}
   }
 
   /**
