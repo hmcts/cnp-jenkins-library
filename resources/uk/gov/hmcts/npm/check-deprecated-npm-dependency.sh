@@ -4,12 +4,7 @@ set -x
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
 
-# Fetches first package.json file and trims version of angular/core to get the major version value 
-# find . -type f -name "package.json" | head -1 | xargs cat
-
-# CURRENT_VERSION=$(find . -type f -name "package.json" | head -1 | xargs cat | grep $DEPENDENCY | sed 's/.*"\^\(.*\)".*/\1/' | cut -d '.' -f 1)
-
-
+# Attempt to find angular version in a package.json file and trims version of angular/core to get the major version value 
 CURRENT_VERSION=""
 for file in $(find . -type f -name "package.json"); do
     version=$(cat "$file" | grep "$DEPENDENCY" | sed 's/.*"\^\(.*\)".*/\1/' | cut -d '.' -f 1)
