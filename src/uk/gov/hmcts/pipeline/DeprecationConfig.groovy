@@ -14,7 +14,7 @@ class DeprecationConfig {
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/DTSPO-15800-Angular-nagger/deprecation-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/deprecation-config.yml",
         validResponseCodes: '200'
       )
       deprecationConfigInternal = steps.readYaml(text: response.content)
