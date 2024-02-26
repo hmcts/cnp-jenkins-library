@@ -15,11 +15,11 @@ for file in $(find . -type f -name "package.json"); do
     version=$(cat "$file" | grep "$DEPENDENCY" | sed 's/.*"\^\(.*\)".*/\1/' | cut -d '.' -f 1)
     if [[ -n "$version" ]]; then
         CURRENT_VERSION="$version"
+        echo "Current version: $CURRENT_VERSION"
         break
     fi
 done
 
-echo "Current version: $CURRENT_VERSION"
 # Only exit with 1 if there is a deprecation spotted
 if [[ -n $CURRENT_VERSION ]] && [ ${CURRENT_VERSION} -lt ${REQUIRED_VERSION} ]; then
     echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
