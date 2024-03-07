@@ -118,6 +118,7 @@ def call(type, String product, String component, Closure body) {
               component: component,
               tfPlanOnly: true
             )
+            def githubApi = new GithubAPI(this)
             if (githubApi.getTopicsbyPattern(${project}, "plan-on-prod")) {
               sectionDeployToEnvironment(
                 appPipelineConfig: pipelineConfig,
