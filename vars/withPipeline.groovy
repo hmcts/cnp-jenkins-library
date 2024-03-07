@@ -121,18 +121,17 @@ def call(type, String product, String component, Closure body) {
 
             def githubApi = new GithubAPI(this)
             // if (githubApi.getTopicsbyPattern(${project}, "plan-on-prod")) {
-              sectionDeployToEnvironment(
-                appPipelineConfig: pipelineConfig,
-                pipelineCallbacksRunner: callbacksRunner,
-                pipelineType: pipelineType,
-                subscription: subscription.prodName,
-                aksSubscription: aksSubscriptions.prod,
-                environment: environment.prodName,
-                product: product,
-                component: component,
-                tfPlanOnly: true
-              )
-            // }
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.prodName,
+              environment: environment.prodName,
+              product: product,
+              component: component,
+              aksSubscription: aksSubscriptions.prod,
+              tfPlanOnly: false
+            )
           }
 
           sectionDeployToAKS(
