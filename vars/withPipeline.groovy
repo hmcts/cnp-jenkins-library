@@ -80,6 +80,14 @@ def call(type, String product, String component, Closure body) {
           environment: environment.nonProdName,
           product: product,
           component: component,
+          appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              subscription: subscription.prodName,
+              environment: environment.prodName,
+              product: product,
+              component: component,
+              aksSubscription: aksSubscriptions.prod,
+              tfPlanOnly: false
         )
 
         if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
@@ -111,28 +119,25 @@ def call(type, String product, String component, Closure body) {
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              aksSubscription: aksSubscriptions.aat,
+              environment: environment.nonProdName,
+              product: product,
+              component: component,
+              tfPlanOnly: true
+            )
+
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
               subscription: subscription.prodName,
               environment: environment.prodName,
               product: product,
               component: component,
               aksSubscription: aksSubscriptions.prod,
-              tfPlanOnly: false
+              tfPlanOnly: true
             )
-            
-
-          //   def githubApi = new GithubAPI(this)
-          //   // if (githubApi.getTopicsbyPattern(${project}, "plan-on-prod")) {
-          //   sectionDeployToEnvironment(
-          //     appPipelineConfig: pipelineConfig,
-          //     pipelineCallbacksRunner: callbacksRunner,
-          //     pipelineType: pipelineType,
-          //     subscription: subscription.prodName,
-          //     environment: environment.prodName,
-          //     product: product,
-          //     component: component,
-          //     aksSubscription: aksSubscriptions.prod,
-          //     tfPlanOnly: false
-          //   )
           }
 
           sectionDeployToAKS(
