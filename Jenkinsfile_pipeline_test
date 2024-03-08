@@ -28,10 +28,10 @@ try {
     }
   }
 
-  stage('Run shared infra pipeline') {
-    build job: 'Pipeline_Test_Sandbox/cnp-plum-shared-infrastructure/master',
-      parameters: [string(name: 'LIB_VERSION', value: testBranch)]
-  }
+  // stage('Run shared infra pipeline') {
+  //   build job: 'Pipeline_Test_Sandbox/cnp-plum-shared-infrastructure/master',
+  //     parameters: [string(name: 'LIB_VERSION', value: testBranch)]
+  // }
 
   parallel (
     backend: {
