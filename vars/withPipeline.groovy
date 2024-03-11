@@ -24,8 +24,6 @@ def call(type, String product, String component, Closure body) {
   def deploymentNamespace = branch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
-  def project = currentProject()
-
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
@@ -122,7 +120,7 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
           def githubApi = new GithubAPI(this)
-          if (githubApi.getTopics("${project}", "plan-on-prod")) {
+          if (githubApi.getTopics("plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
