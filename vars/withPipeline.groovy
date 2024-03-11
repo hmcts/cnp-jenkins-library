@@ -120,7 +120,7 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
           def githubApi = new GithubAPI(this)
-            // if (githubApi.getTopicsbyPattern(${project}, "plan-on-prod")) {
+          if (githubApi.getTopicsbyPattern(${project}, "plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
@@ -132,6 +132,7 @@ def call(type, String product, String component, Closure body) {
               aksSubscription: aksSubscriptions.prod,
               tfPlanOnly: true
             )
+          }
           }
 
           sectionDeployToAKS(
