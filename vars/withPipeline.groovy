@@ -120,7 +120,7 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
           def githubApi = new GithubAPI(this)
-          if (githubApi.getTopics(${project}, "plan-on-prod")) {
+          if (githubApi.getTopics("${project}", "plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
