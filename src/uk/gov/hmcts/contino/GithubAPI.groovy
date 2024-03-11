@@ -18,6 +18,11 @@ class GithubAPI {
     'cache': []
   ]
 
+    private static cachedTopicList = [
+    'isValid': false,
+    'cache': []
+  ]
+
   def currentProject() {
     return new RepositoryUrl().getShort(this.steps.env.CHANGE_URL)
   }
