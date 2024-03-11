@@ -24,6 +24,8 @@ def call(type, String product, String component, Closure body) {
   def deploymentNamespace = branch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
+  def project = currentProject()
+
   def pipelineTypes = [
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
