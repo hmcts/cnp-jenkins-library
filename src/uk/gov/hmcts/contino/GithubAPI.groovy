@@ -47,6 +47,10 @@ class GithubAPI {
     return cachedLabelList.cache
   }
 
+  def static getTopicCache() {
+    return cachedTopicList.cache
+  }
+
   /**
    * Clears this.cachedLabelList
    */
@@ -93,6 +97,15 @@ class GithubAPI {
       url: API_URL + "/repos/${project}/topics",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
+
+      if (response.status == 200) {
+      def json_response = new JsonSlurper().parseText(response.content)
+      cachedTopicList.cache = json_response.collect({ topic -> topic['name'] })
+      cachedTopicList.isValid = true
+      this.steps.echo "Updated cache contents: ${getTopicCache()}"
+    } else {
+      this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
+    }
   }
 
   /**
