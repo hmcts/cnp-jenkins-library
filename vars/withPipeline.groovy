@@ -79,15 +79,7 @@ def call(type, String product, String component, Closure body) {
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
-          component: component,
-          appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              subscription: subscription.prodName,
-              environment: environment.prodName,
-              product: product,
-              component: component,
-              aksSubscription: aksSubscriptions.prod,
-              tfPlanOnly: false
+          component: component
         )
 
         if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
