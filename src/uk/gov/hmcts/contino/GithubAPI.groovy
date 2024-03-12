@@ -221,7 +221,7 @@ class GithubAPI {
     }
   }
 
-  def getTopics(String branchName) {
+  def getTopics() {
     if (new ProjectBranch(branchName).isPR()) {
       return this.getTopicsFromCache()
     } else {
