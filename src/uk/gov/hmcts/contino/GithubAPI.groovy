@@ -122,7 +122,7 @@ class GithubAPI {
 
       if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
-      cachedTopicList.cache = json_response.collect({ topic -> topic['names'] })
+      cachedTopicList.cache = json_response.collect({ names })
       cachedTopicList.isValid = true
       this.steps.echo "Updated cache contents: ${getTopicCache()}"
     } else {
