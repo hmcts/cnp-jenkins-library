@@ -41,6 +41,17 @@ class GithubAPI {
   /**
    * Return whether the cache is empty
    */
+  def static isTopicCacheEmpty() {
+    return cachedTopicList.cache.isEmpty()
+  }
+
+  def static isTopicCacheValid() {
+    return cachedTopicList.isValid
+  }
+
+  /**
+   * Return whether the cache is empty
+   */
   def static isCacheEmpty() {
     return cachedLabelList.cache.isEmpty()
   }
@@ -188,15 +199,15 @@ class GithubAPI {
   }
 
     private getTopicsFromCache() {
-    if (!isCacheValid()) {
+    if (!isTopicCacheValid()) {
       return refreshTopicCache()
     }
 
-    if (isCacheEmpty() && isCacheValid()) {
+    if (isTopicCacheEmpty() && isTopicCacheValid()) {
       return []
     }
 
-    return getCache()
+    return getTopicCache()
   }
 
   /**
