@@ -195,8 +195,15 @@ def addGithubLabels(String product) {
   def namespaceLabel = 'ns:' + env.NAMESPACE
   def releaseLabel = 'rel:' + env.SERVICE_NAME
   def productLabel = 'prd:' + product
-  def labels = [namespaceLabel, releaseLabel, productLabel]
+
 
   def githubApi = new GithubAPI(this)
+
+  if (githubApi.checkForTopic("plan-on-prod")) {
+    def planOnProdLabel = 'plan-on-prod'
+  }
+
+  def labels = [namespaceLabel, releaseLabel, productLabel, planOnProdLabel]
+
   githubApi.addLabelsToCurrentPR(labels)
 }

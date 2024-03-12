@@ -65,6 +65,12 @@ class GithubAPI {
     this.steps.echo "Cleared and invalidated label cache."
   }
 
+    void clearTopicCache() {
+    cachedTopicList.cache = []
+    cachedTopicList.isValid = false
+    this.steps.echo "Cleared and invalidated label cache."
+  }
+
   /**
    * Refreshes this.cachedLabelList
    */
@@ -92,8 +98,8 @@ class GithubAPI {
     return getCache()
   }
 
-  def getTopics() {
-    this.steps.echo "Get Repo Topics"
+  def refreshTopicCache() {
+    this.steps.echo "Get topic cache"
     def project = currentProject()
     def response = this.steps.httpRequest(httpMode: 'GET',
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
@@ -111,6 +117,8 @@ class GithubAPI {
     } else {
       this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
     }
+
+    return getTopicCache()
   }
 
   /**
@@ -179,12 +187,32 @@ class GithubAPI {
     return getCache()
   }
 
+    private getTopicsFromCache() {
+    if (!isCacheValid()) {
+      return refreshTopicCache()
+    }
+
+    if (isCacheEmpty() && isCacheValid()) {
+      return []
+    }
+
+    return getCache()
+  }
+
   /**
    * Get all labels from an issue or pull request
    */
   def getLabels(String branchName) {
     if (new ProjectBranch(branchName).isPR()) {
       return this.getLabelsFromCache()
+    } else {
+      return []
+    }
+  }
+
+  def getTopics(String branchName) {
+    if (new ProjectBranch(branchName).isPR()) {
+      return this.getTopicsFromCache()
     } else {
       return []
     }
@@ -197,15 +225,15 @@ class GithubAPI {
     return getLabels(branchName).findAll{it.contains(key)}
   }
 
-  def getTopicsbyPattern(String branchName, String key) {
-    return getTopics(branchName).findAll{it.contains(key)}
-  }
-
   /**
    * Check Pull Request for specified label.
    */
   def checkForLabel(String branchName, String key) {
     return getLabels(branchName).contains(key)
+  }
+
+  def checkForTopic(String key) {
+    return getTopics.contains(key)
   }
 
   /**
