@@ -244,7 +244,7 @@ class GithubAPI {
   }
 
   def checkForTopic(String key) {
-    return getTopics.contains(key)
+    return getTopics().contains(key)
   }
 
   /**
