@@ -243,8 +243,8 @@ class GithubAPI {
     return getLabels(branchName).contains(key)
   }
 
-  def checkForTopic(String key) {
-    return Arrays.asList(getTopicsFromCache()).anyMatch(key)
+  def checkForTopic() {
+    return getTopicsFromCache()
   }
 
   /**
