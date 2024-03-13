@@ -201,12 +201,10 @@ def addGithubLabels(String product) {
 
   if (githubApi.checkForTopic("plan-on-prod")) {
     def planOnProdLabel = 'plan-on-prod'
-    echo "I found the plan-on-prod topic"
+    def labels = [namespaceLabel, releaseLabel, productLabel, planOnProdLabel]
   } else {
-    echo "I did not find it"
-  }
-
   def labels = [namespaceLabel, releaseLabel, productLabel]
+  }
 
   githubApi.addLabelsToCurrentPR(labels)
 }
