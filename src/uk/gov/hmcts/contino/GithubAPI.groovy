@@ -121,7 +121,7 @@ class GithubAPI {
       validResponseCodes: '200')
 
       if (response.status == 200) {
-      def json_response = new JsonSlurper().parseText(response.content(names))
+      def json_response = new JsonSlurper().parseText(response.content)
       cachedTopicList.cache = json_response
       cachedTopicList.isValid = true
       this.steps.echo "Updated cache contents: ${getTopicCache()}"
