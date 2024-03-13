@@ -171,6 +171,34 @@ class GithubAPI {
     return getCache()
   }
 
+    def deleteLabels(project, issueNumber, labels) {
+    this.steps.echo "Adding the following labels: ${labels}"
+    def body = JsonOutput.toJson(labels)
+    def response = this.steps.httpRequest(httpMode: 'POST',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/issues/${issueNumber}/labels",
+      requestBody: "${body}",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+    if (response.status == 200) {
+      if (isCacheValid()) {
+        cachedLabelList.cache.deleteAll(deleteLabels)
+        cachedLabelList.cache.unique()
+        this.steps.echo "Cache is valid. Updated cache contents: ${getCache()}"
+      } else {
+        this.steps.echo "Cache is invalid. Calling refresh."
+        return this.refreshLabelCache()
+      }
+    } else {
+      this.steps.echo "Failed to add labels. Server returned status: ${response.status}"
+    }
+
+    return getCache()
+  }
+
   /**
    * Add labels to the current pull request.  MUST be run with an onPR() closure.
    *
