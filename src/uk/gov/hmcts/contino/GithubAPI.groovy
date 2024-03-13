@@ -64,7 +64,7 @@ class GithubAPI {
   }
 
   def static getTopicCache() {
-    return cachedTopicList.cache
+    return toString(cachedTopicList.cache)
   }
 
   /**
@@ -244,7 +244,7 @@ class GithubAPI {
   }
 
   def checkForTopic(String key) {
-    return toString(getTopicsFromCache()).contains(key)
+    return getTopicsFromCache()).contains(key)
   }
 
   /**
