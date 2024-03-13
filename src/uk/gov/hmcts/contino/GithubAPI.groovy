@@ -120,16 +120,16 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-    //   if (response.status == 200) {
-    //   def json_response = new JsonSlurper().parseText(response.content)
-    //   cachedTopicList.cache = json_response
-    //   cachedTopicList.isValid = true
-    //   this.steps.echo "Updated cache contents: ${getTopicCache()}"
-    // } else {
-    //   this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
-    // }
+      if (response.status == 200) {
+      def json_response = new JsonSlurper().parseText(response.content)
+      cachedTopicList.cache = json_response
+      cachedTopicList.isValid = true
+      this.steps.echo "Updated cache contents: ${getTopicCache()}"
+    } else {
+      this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
+    }
 
-    // return getTopicCache()
+    return getTopicCache()
   }
 
   /**
