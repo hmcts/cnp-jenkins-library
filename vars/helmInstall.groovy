@@ -199,7 +199,7 @@ def addGithubLabels(String product) {
 
   def githubApi = new GithubAPI(this)
 
-  if (githubApi.checkForTopic("[plan-on-prod]")) {
+  if (githubApi.checkForTopic("plan-on-prod")) {
     def planOnProdLabel = 'plan-on-prod'
   }
 

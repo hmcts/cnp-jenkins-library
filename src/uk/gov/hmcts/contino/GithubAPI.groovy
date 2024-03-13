@@ -244,7 +244,7 @@ class GithubAPI {
   }
 
   def checkForTopic(String key) {
-    return getTopicsFromCache().contains(key)
+    return Arrays.asList(getTopicsFromCache()).anyMatch(key)
   }
 
   /**
