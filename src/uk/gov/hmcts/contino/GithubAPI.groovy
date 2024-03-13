@@ -64,7 +64,7 @@ class GithubAPI {
   }
 
   def static getTopicCache() {
-    return toString(cachedTopicList.cache)
+    return cachedTopicList.cache.toString()
   }
 
   /**
