@@ -204,7 +204,7 @@ def addGithubLabels(String product) {
   def githubApi = new GithubAPI(this)
 
   if (githubApi.checkForTopic("plan-on-prod")) {
-    def labels += [planOnProdLabel]
+    labels += [planOnProdLabel]
 
   } else if (!githubApi.checkForTopic("plan-on-prod") && githubApi.checkForLabel('plan-on-prod')) {
     def deleteLabels = [planOnProdLabel]
