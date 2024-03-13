@@ -60,7 +60,7 @@ class GithubAPI {
    * Return cache contents as list
    */
   def static getCache() {
-    return cachedLabelList.cache.toString()
+    return cachedLabelList.cache
   }
 
   def static getTopicCache() {
