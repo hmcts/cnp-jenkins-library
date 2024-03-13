@@ -221,19 +221,22 @@ class GithubAPI {
     }
   }
 
-  // def getTopics() {
-  //   if (new ProjectBranch(branchName).isPR()) {
-  //     return this.getTopicsFromCache()
-  //   } else {
-  //     return []
-  //   }
-  // }
+  def getTopics() {
+    return this.getTopicsFromCache()
+  } 
 
   /**
    * Check Pull Request for label by a pattern in name.
    */
   def getLabelsbyPattern(String branchName, String key) {
     return getLabels(branchName).findAll{it.contains(key)}
+  }
+
+  
+  
+  
+  def getTopicsbyPattern(String key) {
+    return getTopics().findAll{it.contains(key)}
   }
 
   /**
@@ -243,7 +246,7 @@ class GithubAPI {
     return getLabels(branchName).contains(key)
   }
 
-  def checkForTopic() {
+  def checkForTopic(String key) {
     return getTopicsFromCache()
   }
 
