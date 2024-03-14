@@ -199,17 +199,11 @@ def addGithubLabels(String product) {
 
   def labels = [namespaceLabel, releaseLabel, productLabel]
 
-  def planOnProdLabel = 'plan-on-prod'
 
   def githubApi = new GithubAPI(this)
 
   if (githubApi.checkForTopic("plan-on-prod")) {
-    labels += [planOnProdLabel]
 
-  } else if (!githubApi.checkForTopic("plan-on-prod") && githubApi.checkForLabel("PR-123",'plan-on-prod')) {
-    def deleteLabels = [planOnProdLabel]
-  }
-     githubApi.addLabelsToCurrentPR(labels)
-
- 
+    def labels += ['plan-on-prod']
 }
+   githubApi.addLabelsToCurrentPR(labels)
