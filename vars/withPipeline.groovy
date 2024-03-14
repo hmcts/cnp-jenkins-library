@@ -119,8 +119,8 @@ def call(type, String product, String component, Closure body) {
               component: component,
               tfPlanOnly: true
             )
-          def githubApi = new GithubAPI(this)
-          if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+
+          if (githubApi.checkForTopic("plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
