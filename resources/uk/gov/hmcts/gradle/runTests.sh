@@ -27,7 +27,7 @@ do
   [ -z "${i##*=*}" ] && _secret=$(echo "$i"| cut -d '=' -f 2) && export $(echo "$i"| cut -d '=' -f 1)=$(cat "${_secret}")
 done
 
-export GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx1024m -Dfile.encoding=UTF-8"
+export GRADLE_OPTS="-XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx2048m -Dfile.encoding=UTF-8"
 sh gradlew --info --rerun-tasks "$_task"
 
 [ "$?" == "0" ] && _success="true" || _success="false"
