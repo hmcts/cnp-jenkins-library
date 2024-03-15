@@ -44,13 +44,6 @@ def call(type, String product, String component, Closure body) {
 
   assert pipelineType != null
 
-  def githubApi = new GithubAPI(this)
-    if (githubApi.checkForTopic("plan-on-prod")) {
-      if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-        githubApi.addLabelsToCurrentPR("plan-on-prod")
-      }
-    }
-
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
@@ -126,7 +119,14 @@ def call(type, String product, String component, Closure body) {
               component: component,
               tfPlanOnly: true
             )
-
+            
+            def githubApi = new GithubAPI(this)
+            if (githubApi.checkForTopic("plan-on-prod")) {
+              if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+                githubApi.addLabelsToCurrentPR("plan-on-prod")
+              }
+            }
+            
             if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
