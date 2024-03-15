@@ -140,7 +140,7 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
             }
-          }
+          
           }
 
           sectionDeployToAKS(
@@ -296,4 +296,3 @@ def call(type, String product, String component, Closure body) {
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
-
