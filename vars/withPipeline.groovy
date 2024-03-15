@@ -296,4 +296,4 @@ def call(type, String product, String component, Closure body) {
       metricsPublisher.publish('Pipeline Succeeded')
     }
   }
-}
+
