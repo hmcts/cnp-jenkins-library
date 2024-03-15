@@ -123,10 +123,10 @@ def call(type, String product, String component, Closure body) {
             def githubApi = new GithubAPI(this)
             if (githubApi.checkForTopic("plan-on-prod")) {
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-                githubApi.addLabelsToCurrentPR("plan-on-prod")
+                githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
             }
-            
+
             if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
