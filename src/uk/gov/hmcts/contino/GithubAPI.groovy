@@ -155,7 +155,7 @@ class GithubAPI {
 
       if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
-      cachedPR.cache = json_response.collect({ base -> base['ref'] })
+      cachedPR.cache = json_response
       cachedPR.isValid = true
       this.steps.echo "Updated cache contents: ${getPRCache()}"
     } else {
@@ -244,6 +244,18 @@ class GithubAPI {
     return getTopicCache()
   }
 
+    private getPRsFromCache() {
+    if (!isPRCacheValid()) {
+      return refreshPRCache()
+    }
+
+    if (isPRCacheEmpty() && isPRCacheValid()) {
+      return []
+    }
+
+    return getPRCache()
+  }
+
   /**
    * Get all labels from an issue or pull request
    */
@@ -255,8 +267,8 @@ class GithubAPI {
     }
   }
 
-  def getPRs(String branchName) {
-    return this.refreshPRCache()
+  def getPRs(String key) {
+    return getTopicsFromCache().contains(key)
   }
 
   // def getTopics() {
