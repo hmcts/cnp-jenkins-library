@@ -144,11 +144,12 @@ class GithubAPI {
   def refreshPRCache() {
     this.steps.echo "Get pull request"
     def project = currentProject()
+    def issueNumber = currentPullRequestNumber()
     def response = this.steps.httpRequest(httpMode: 'GET',
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: API_URL + "/${project}/pulls/${branchName}",
+      url: API_URL + "/${project}/pulls/${issueNumber}",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
