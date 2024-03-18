@@ -23,6 +23,11 @@ class GithubAPI {
     'cache': []
   ]
 
+  private static cachedPR = [
+    'isValid': false,
+    'cache': []
+  ]
+
   def currentProject() {
     return new RepositoryUrl().getShort(this.steps.env.CHANGE_URL)
   }
@@ -65,6 +70,10 @@ class GithubAPI {
 
   def static getTopicCache() {
     return cachedTopicList.cache.toString()
+  }
+
+  def static getPRCache() {
+    return cachedPR.cache()
   }
 
   /**
@@ -131,6 +140,30 @@ class GithubAPI {
 
     return getTopicCache()
   }
+
+  def refreshPRCache() {
+    this.steps.echo "Get pull request"
+    def project = currentProject()
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/pulls/"PR-123",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+      if (response.status == 200) {
+      def json_response = new JsonSlurper().parseText(response.content)
+      cachedPR.cache = json_response.collect({ base -> base['ref'] })
+      cachedPR.isValid = true
+      this.steps.echo "Updated cache contents: ${getPRCache()}"
+    } else {
+      this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
+    }
+
+    return getPRCache()
+  }
+
 
   /**
    * Add labels to an issue or pull request
@@ -221,6 +254,10 @@ class GithubAPI {
     }
   }
 
+  def getPRs(String branchName) {
+    return this.refreshPRCache()
+  }
+
   // def getTopics() {
   //   if (new ProjectBranch(branchName).isPR()) {
   //     return this.getTopicsFromCache()
@@ -246,6 +283,8 @@ class GithubAPI {
   def checkForTopic(String key) {
     return getTopicsFromCache().contains(key)
   }
+
+
 
   /**
    * Check Pull Request for dependencies label.
@@ -285,4 +324,4 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '204')
   }
-}
+

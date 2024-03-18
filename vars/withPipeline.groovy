@@ -119,8 +119,11 @@ def call(type, String product, String component, Closure body) {
               component: component,
               tfPlanOnly: true
             )
-            
+
             def githubApi = new GithubAPI(this)
+
+            getPRs("PR-123")
+
             if (githubApi.checkForTopic("plan-on-prod")) {
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
