@@ -324,4 +324,4 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '204')
   }
-
+}
