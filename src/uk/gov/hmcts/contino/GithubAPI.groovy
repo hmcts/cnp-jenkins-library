@@ -148,7 +148,7 @@ class GithubAPI {
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: API_URL + "/${project}/pulls/"PR-123",
+      url: API_URL + "/${project}/pulls/${branchName},
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
