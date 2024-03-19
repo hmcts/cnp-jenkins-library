@@ -123,7 +123,7 @@ def call(type, String product, String component, Closure body) {
             def githubApi = new GithubAPI(this)
 
             if (githubApi.checkForTopic("plan-on-prod")) {
-              getPRs("base")
+              getPRs("demo")
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
@@ -142,7 +142,6 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
             }
-          
           }
 
           sectionDeployToAKS(
