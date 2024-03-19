@@ -122,7 +122,19 @@ def call(type, String product, String component, Closure body) {
 
             def githubApi = new GithubAPI(this)
 
-            echo githubApi.getPRs("demo")
+            if (githubApi.getPRs("demo")) {
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.demoName,
+                environment: environment.demoName,
+                product: product,
+                component: component,
+                aksSubscription: aksSubscriptions.demo,
+                tfPlanOnly: true
+            )
+            }
 
             if (githubApi.checkForTopic("plan-on-prod")) {
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
