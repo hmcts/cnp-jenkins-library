@@ -134,11 +134,11 @@ def call(type, String product, String component, Closure body) {
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
-              subscription: subscription.${base}Name,
-              environment: environment.${base}Name,
+              subscription: subscription."${base}"Name,
+              environment: environment."${base}"Name,
               product: product,
               component: component,
-              aksSubscription: aksSubscriptions.${base},
+              aksSubscription: aksSubscriptions."${base}",
               tfPlanOnly: true
             )
             }
