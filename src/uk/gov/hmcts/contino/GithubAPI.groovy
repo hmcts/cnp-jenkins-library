@@ -54,6 +54,14 @@ class GithubAPI {
     return cachedTopicList.isValid
   }
 
+  def static isPRCacheEmpty() {
+    return cachedTopicList.cache.isEmpty()
+  }
+
+  def static isPRCacheValid() {
+    return cachedTopicList.isValid
+  }
+
   /**
    * Return whether the cache is empty
    */
