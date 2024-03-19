@@ -268,7 +268,7 @@ class GithubAPI {
   }
 
   def getPRs(String key) {
-    return getTopicsFromCache().contains(key)
+    return getPRsFromCache().contains(key)
   }
 
   // def getTopics() {
