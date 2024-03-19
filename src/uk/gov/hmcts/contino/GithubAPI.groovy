@@ -81,7 +81,7 @@ class GithubAPI {
   }
 
   def static getPRCache() {
-    return cachedPR.cache
+    return cachedPR.cache.toString()
   }
 
   /**
