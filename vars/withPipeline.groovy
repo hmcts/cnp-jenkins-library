@@ -126,7 +126,7 @@ def call(type, String product, String component, Closure body) {
 
             if (githubApi.checkForTopic("plan-on-prod")) {
               for(item in base_envs) {
-                if (item == githubApi.getPRs("base")) {
+                if (githubApi.getPRs(item)) {
                   def base = item
                 }
               }
