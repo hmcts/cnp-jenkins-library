@@ -144,7 +144,7 @@ def call(type, String product, String component, Closure body) {
               environment: environment.demoName,
               product: product,
               component: component,
-              aksSubscription: aksSubscriptions.$base,
+              aksSubscription: aksSubscriptions.${base},
               tfPlanOnly: true
             )
             }
