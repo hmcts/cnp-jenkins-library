@@ -134,7 +134,7 @@ def call(type, String product, String component, Closure body) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
             }
-            
+
             if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
@@ -144,7 +144,7 @@ def call(type, String product, String component, Closure body) {
               environment: environment.demoName,
               product: product,
               component: component,
-              aksSubscription: aksSubscriptions.demo,
+              aksSubscription: aksSubscriptions.$base,
               tfPlanOnly: true
             )
             }
