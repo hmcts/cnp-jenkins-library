@@ -122,12 +122,12 @@ def call(type, String product, String component, Closure body) {
 
             def githubApi = new GithubAPI(this)
 
-            def base_envs = ["master", "demo", "perftest", "ithc"]
-
+            def base_envs = ["demo", "perftest", "ithc"]
+            def base_env_name = "prod"
             if (githubApi.checkForTopic("plan-on-prod")) {
               for(item in base_envs) {
                 if (githubApi.getPRs(item)) {
-                  def base = item
+                  base_env_name = item
                 }
               }
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
@@ -140,11 +140,11 @@ def call(type, String product, String component, Closure body) {
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
-              subscription: subscription.demoName,
-              environment: environment.demoName,
+              subscription: subscription."${base_env_name}"Name,
+              environment: environment."${base_env_name}"Name,
               product: product,
               component: component,
-              aksSubscription: aksSubscriptions."${base}",
+              aksSubscription: aksSubscriptions."${base_env_name}",
               tfPlanOnly: true
             )
             }
