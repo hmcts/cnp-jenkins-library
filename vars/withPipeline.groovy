@@ -122,13 +122,19 @@ def call(type, String product, String component, Closure body) {
 
             def githubApi = new GithubAPI(this)
 
+            def base_envs = ["master", "demo", "perftest", "ithc"]
+
             if (githubApi.checkForTopic("plan-on-prod")) {
-              githubApi.getPRs("base")
+              for(item in base_envs) {
+                if (item == githubApi.getPRs("base")) {
+                  def base = item
+                }
+              }
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
             }
-
+            
             if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
@@ -138,7 +144,7 @@ def call(type, String product, String component, Closure body) {
               environment: environment.demoName,
               product: product,
               component: component,
-              aksSubscription: aksSubscriptions."${base}",
+              aksSubscription: aksSubscriptions.demo,
               tfPlanOnly: true
             )
             }
