@@ -125,12 +125,13 @@ def call(type, String product, String component, Closure body) {
             def base_envs = ["demo", "perftest", "ithc"]
             def base_env_name
             if (githubApi.checkForTopic("plan-on-prod")) {
+              base_env_name = githubApi.getPRs()
               // for(item in base_envs) {
-                if (githubApi.getPRs("demo")) {
-                  base_env_name = "demo"
-                } else {
-                  base_env_name = "prod"
-                }
+                // if (githubApi.getPRs("demo")) {
+                //   base_env_name = "demo"
+                // } else {
+                //   base_env_name = "prod"
+                // }
               //}
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
