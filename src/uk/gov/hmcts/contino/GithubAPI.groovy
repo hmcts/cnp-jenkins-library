@@ -157,13 +157,13 @@ class GithubAPI {
       authentication: this.steps.env.GIT_CREDENTIALS_ID,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
-      url: API_URL + "/${project}/pulls/${issueNumber}/base",
+      url: API_URL + "/${project}/pulls/${issueNumber}",
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
       if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
-      cachedPR.cache = json_response.collect({ base -> base })
+      cachedPR.cache = json_response.collect({ ${issueNumber} -> ${issuenumber} })
       cachedPR.isValid = true
       this.steps.echo "Updated cache contents: ${getPRCache()}"
     } else {
