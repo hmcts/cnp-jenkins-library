@@ -275,9 +275,7 @@ class GithubAPI {
     }
   }
 
-  def getPRs(String key) {
-    getPRsFromCache()
-  }
+
 
   // def getTopics() {
   //   if (new ProjectBranch(branchName).isPR()) {
