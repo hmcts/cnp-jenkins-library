@@ -163,7 +163,7 @@ class GithubAPI {
 
       if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
-      cachedPR.cache = json_response.collect({ pull -> pull['base'] })
+      cachedPR.cache = json_response
       cachedPR.isValid = true
       this.steps.echo "Updated cache contents: ${getPRCache()}"
     } else {
@@ -304,8 +304,8 @@ class GithubAPI {
     return getTopicsFromCache().contains(key)
   }
 
-  def checkForBase(String key) {
-    return getPRsFromCache().contains(key)
+  def checkForBase(String value) {
+    return getPRsFromCache().contains(value)
   }
 
 
