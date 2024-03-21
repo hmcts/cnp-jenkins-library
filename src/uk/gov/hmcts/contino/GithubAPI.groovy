@@ -303,6 +303,9 @@ class GithubAPI {
     return getTopicsFromCache().contains(key)
   }
 
+  def checkForBase(String key) {
+    return getPRsFromCache().contains(key)
+  }
 
 
   /**
