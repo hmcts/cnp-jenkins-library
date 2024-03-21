@@ -163,7 +163,7 @@ class GithubAPI {
 
       if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
-      cachedPR.cache = json_response.collect({ base -> base['ref'] })
+      cachedPR.cache = json_response.collect({ pull -> pull['base'] })
       cachedPR.isValid = true
       this.steps.echo "Updated cache contents: ${getPRCache()}"
     } else {
@@ -291,6 +291,7 @@ class GithubAPI {
   def getLabelsbyPattern(String branchName, String key) {
     return getLabels(branchName).findAll{it.contains(key)}
   }
+
 
   /**
    * Check Pull Request for specified label.
