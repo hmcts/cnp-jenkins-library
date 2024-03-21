@@ -125,8 +125,7 @@ def call(type, String product, String component, Closure body) {
             def base_envs = ["demo", "perftest", "ithc"]
             def base_env_name
             if (githubApi.checkForTopic("plan-on-prod")) {
-              base_env_name = githubApi.checkForBase("ref:demo")
-              println githubApi.refreshPRCache()
+              base_env_name = githubApi.checkForBase("ref=demo,")
               println base_env_name
               // for(item in base_envs) {
                 // if (githubApi.getPRs("demo")) {
