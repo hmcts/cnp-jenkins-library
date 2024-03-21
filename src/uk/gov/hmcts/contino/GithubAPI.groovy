@@ -163,7 +163,7 @@ class GithubAPI {
 
       if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
-      cachedPR.cache = json_response
+      cachedPR.cache = json_response.collect({ base -> base['ref'] })
       cachedPR.isValid = true
       this.steps.echo "Updated cache contents: ${getPRCache()}"
     } else {
