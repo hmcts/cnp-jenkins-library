@@ -131,6 +131,7 @@ def call(type, String product, String component, Closure body) {
               for(item in base_envs) {
                 if (githubApi.refreshPRCache() == item) {
                   base_env_name = item
+                  break
                 } else {
                   base_env_name = "prod"
                 }
