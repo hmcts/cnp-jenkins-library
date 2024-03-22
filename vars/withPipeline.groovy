@@ -140,19 +140,19 @@ def call(type, String product, String component, Closure body) {
               }
             }
 
-            // if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-            // sectionDeployToEnvironment(
-            //   appPipelineConfig: pipelineConfig,
-            //   pipelineCallbacksRunner: callbacksRunner,
-            //   pipelineType: pipelineType,
-            //   subscription: subscription."${base_env_name}Name",
-            //   environment: environment."${base_env_name}Name",
-            //   product: product,
-            //   component: component,
-            //   aksSubscription: aksSubscriptions."${base_env_name}",
-            //   tfPlanOnly: true
-            // )
-            // }
+            if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription."${base_env_name}Name",
+              environment: environment."${base_env_name}Name",
+              product: product,
+              component: component,
+              aksSubscription: aksSubscriptions."${base_env_name}",
+              tfPlanOnly: true
+            )
+            }
           }
 
           sectionDeployToAKS(
