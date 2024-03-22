@@ -305,7 +305,7 @@ class GithubAPI {
   }
 
   def checkForBase(String value) {
-    return getPRsFromCache().contains(value)
+    return getPRsFromCache().get(value)
   }
 
 
