@@ -11,7 +11,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 
-def call(type, product, component, Closure body) {
+def call(type, product, component, timeout = 300, Closure body) {
 
 
   def pipelineTypes = [
@@ -57,7 +57,7 @@ def call(type, product, component, Closure body) {
   }
   
   node(nodeSelector) {
-    timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
+    timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
         dockerAgentSetup()
