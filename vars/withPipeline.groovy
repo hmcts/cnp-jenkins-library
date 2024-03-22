@@ -128,31 +128,31 @@ def call(type, String product, String component, Closure body) {
 
               println githubApi.refreshPRCache()
 
-              // for(item in base_envs) {
-                // if (githubApi.getPRs("demo")) {
-                //   base_env_name = "demo"
-                // } else {
-                //   base_env_name = "prod"
-                // }
-              //}
+              for(item in base_envs) {
+                if (githubApi.refreshPRCache(item)) {
+                  base_env_name = item
+                } else {
+                  base_env_name = "prod"
+                }
+              }
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
             }
 
-            // if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-            // sectionDeployToEnvironment(
-            //   appPipelineConfig: pipelineConfig,
-            //   pipelineCallbacksRunner: callbacksRunner,
-            //   pipelineType: pipelineType,
-            //   subscription: subscription."${base_env_name}Name",
-            //   environment: environment."${base_env_name}Name",
-            //   product: product,
-            //   component: component,
-            //   aksSubscription: aksSubscriptions."${base_env_name}",
-            //   tfPlanOnly: true
-            // )
-            // }
+            if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription."${base_env_name}Name",
+              environment: environment."${base_env_name}Name",
+              product: product,
+              component: component,
+              aksSubscription: aksSubscriptions."${base_env_name}",
+              tfPlanOnly: true
+            )
+            }
           }
 
           sectionDeployToAKS(
