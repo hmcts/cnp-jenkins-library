@@ -81,7 +81,7 @@ class GithubAPI {
   }
 
   def static getPRCache() {
-    return cachedPR.cache
+    return cachedPR.cache.toString()
   }
 
   /**
@@ -304,8 +304,8 @@ class GithubAPI {
     return getTopicsFromCache().contains(key)
   }
 
-  def checkForBase(String value) {
-    return getPRsFromCache().get(value)
+  def checkForBase(String key) {
+    return getPRsFromCache().contains(key)
   }
 
 
