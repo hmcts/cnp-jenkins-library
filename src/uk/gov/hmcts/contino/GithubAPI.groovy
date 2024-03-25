@@ -275,16 +275,6 @@ class GithubAPI {
     }
   }
 
-
-
-  // def getTopics() {
-  //   if (new ProjectBranch(branchName).isPR()) {
-  //     return this.getTopicsFromCache()
-  //   } else {
-  //     return []
-  //   }
-  // }
-
   /**
    * Check Pull Request for label by a pattern in name.
    */
@@ -302,10 +292,6 @@ class GithubAPI {
 
   def checkForTopic(String key) {
     return getTopicsFromCache().contains(key)
-  }
-
-  def checkForBase(String key) {
-    return getPRsFromCache().contains(key)
   }
 
 
