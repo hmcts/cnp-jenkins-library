@@ -15,6 +15,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.contino.GithubAPI
 
 def call(type, String product, String component, Closure body) {
 
@@ -79,7 +80,7 @@ def call(type, String product, String component, Closure body) {
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
-          component: component,
+          component: component
         )
 
         if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
@@ -118,6 +119,41 @@ def call(type, String product, String component, Closure body) {
               component: component,
               tfPlanOnly: true
             )
+
+            def githubApi = new GithubAPI(this)
+
+            def base_envs = ["demo", "perftest", "ithc"]
+            def base_env_name
+            if (githubApi.checkForTopic("plan-on-prod")) {
+
+              println githubApi.refreshPRCache()
+
+              for(item in base_envs) {
+                if (githubApi.refreshPRCache() == item) {
+                  base_env_name = item
+                  break
+                } else {
+                  base_env_name = "prod"
+                }
+              }
+              if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+                githubApi.addLabelsToCurrentPR(["plan-on-prod"])
+              }
+            }
+
+            if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription."${base_env_name}Name",
+              environment: environment."${base_env_name}Name",
+              product: product,
+              component: component,
+              aksSubscription: aksSubscriptions."${base_env_name}",
+              tfPlanOnly: true
+            )
+            }
           }
 
           sectionDeployToAKS(
