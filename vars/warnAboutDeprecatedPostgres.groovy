@@ -37,7 +37,6 @@ switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/ccd-user-profile-api.git":
     case "https://github.com/hmcts/hmc-cft-hearing-service.git":
     case "https://github.com/hmcts/cpo-case-payment-orders-api.git":
-    case "https://github.com/hmcts/ts-translation-service.git":
         expiryDate = LocalDate.of(2024, 5, 22);
         break;
     default:
