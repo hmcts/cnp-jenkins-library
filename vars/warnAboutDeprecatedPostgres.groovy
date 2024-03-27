@@ -10,12 +10,6 @@ switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/am-org-role-mapping-service.git":
     case "https://github.com/hmcts/am-role-assignment-service.git":
     case "https://github.com/hmcts/am-judicial-booking-service.git":
-    case "https://github.com/hmcts/ccd-data-store-api.git":
-    case "https://github.com/hmcts/ccd-definition-store-api.git":
-    case "https://github.com/hmcts/ccd-user-profile-api.git":
-    case "https://github.com/hmcts/hmc-cft-hearing-service.git":
-    case "https://github.com/hmcts/cpo-case-payment-orders-api.git":
-    case "https://github.com/hmcts/ts-translation-service.git":
     case "https://github.com/hmcts/rd-commondata-api.git":
     case "https://github.com/hmcts/rd-professional-api.git":
     case "https://github.com/hmcts/rd-location-ref-api.git":
@@ -37,6 +31,13 @@ switch (gitUrl.toLowerCase()) {
         break;
     case "https://github.com/hmcts/wa-case-event-handler.git":
         expiryDate = LocalDate.of(2024, 2, 12);
+        break;
+    case "https://github.com/hmcts/ccd-data-store-api.git":
+    case "https://github.com/hmcts/ccd-definition-store-api.git":
+    case "https://github.com/hmcts/ccd-user-profile-api.git":
+    case "https://github.com/hmcts/hmc-cft-hearing-service.git":
+    case "https://github.com/hmcts/cpo-case-payment-orders-api.git":
+        expiryDate = LocalDate.of(2024, 5, 22);
         break;
     default:
         expiryDate = LocalDate.of(2024, 1, 31);
