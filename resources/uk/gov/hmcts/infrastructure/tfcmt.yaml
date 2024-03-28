@@ -11,10 +11,6 @@ terraform:
       {{template "result" .}}
       {{template "updated_resources" .}}
 
-
-      {{ if or (eq .Vars.sensitive "False") (eq .Vars.sensitive "false") }}
-      {{template "changed_result" .}}
-      {{ end }}
       {{template "change_outside_terraform" .}}
       {{template "warning" .}}
       {{template "error_messages" .}}
