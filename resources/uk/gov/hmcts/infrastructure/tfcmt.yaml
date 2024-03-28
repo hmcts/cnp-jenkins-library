@@ -2,7 +2,7 @@ terraform:
   plan:
     disable_label: false
     template: |
-      {{template "plan_title" - {{.Vars.environment}} .}}
+      {{template "plan_title" .}} {{.Vars.environment}}
 
       {{if .Link}}[CI link]({{.Link}}){{end}}
 
