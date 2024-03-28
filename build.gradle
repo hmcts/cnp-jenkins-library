@@ -40,7 +40,7 @@ dependencies {
 
   testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.17'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
-  testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.36.0'
+  testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '3.2.2'
 
   testRuntimeOnly 'org.objenesis:objenesis:3.3'
 }
