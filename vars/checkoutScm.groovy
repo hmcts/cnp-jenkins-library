@@ -31,5 +31,6 @@ def call(params) {
     } catch (err) {
       echo "Unable to find git email Id for the user' ${err}'"
     }
+    warnAboutRenovateConfig()
   }
 }

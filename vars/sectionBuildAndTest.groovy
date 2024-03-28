@@ -83,6 +83,12 @@ def call(params) {
         builder.securityCheck()
       }
     }
+    branches["Tech Stack"] = {
+      pcr.callAround('techstack') {
+        builder.techStackMaintenance()
+      }
+    }
+
     if (dockerFileExists) {
       branches["Docker Build"] = {
         withAcrClient(subscription) {
@@ -96,7 +102,7 @@ def call(params) {
                 writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
                 sh script: """
                         # in case anyone doesn't have a trailing new line in their file
-                        echo -e '\n' >> .dockerignore
+                        printf '\r\n' >> .dockerignore
                         cat .dockerignore_build >> .dockerignore
                       """
               }
@@ -153,6 +159,12 @@ def call(params) {
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         parallel branches
+
+        // files related to dependency checking that are not needed for the rest of the pipeline
+        // they can't be safely deleted in the parallel branches as docker build context will collect files
+        // and then upload them, if any are missing it will error:
+        // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
+        sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
       }
     }
 
@@ -182,7 +194,7 @@ def call(params) {
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
           env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
           env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 

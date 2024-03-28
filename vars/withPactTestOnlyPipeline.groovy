@@ -15,16 +15,11 @@ import uk.gov.hmcts.pipeline.TeamConfig
 
 def call(type, String product, String component, Closure body) {
 
-  def branch = new ProjectBranch(env.BRANCH_NAME)
-
-  def deploymentNamespace = branch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
-
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, deploymentProduct, component),
-    nodejs: new NodePipelineType(this, deploymentProduct, component),
-    angular: new AngularPipelineType(this, deploymentProduct, component),
-    ruby: new RubyPipelineType(this, deploymentProduct, component)
+    java  : new SpringBootPipelineType(this, product, component),
+    nodejs: new NodePipelineType(this, product, component),
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
@@ -101,7 +96,7 @@ def call(type, String product, String component, Closure body) {
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
           env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
           env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 

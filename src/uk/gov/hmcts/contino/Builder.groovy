@@ -16,6 +16,7 @@ interface Builder {
   def mutationTest()
   def fullFunctionalTest()
   def securityScan()
+  def techStackMaintenance()
   def runProviderVerification()
   def runConsumerTests()
   def runConsumerCanIDeploy()

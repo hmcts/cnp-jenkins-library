@@ -60,10 +60,19 @@ def call(Map<String, ?> params) {
 
         def builtFrom = env.GIT_URL ?: 'unknown'
 
-        def tags = [environment: Environment.toTagName(config.environment), changeUrl: changeUrl, managedBy: teamName, BuiltFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
-
+        def tags = [environment: Environment.toTagName(config.environment), managedBy: teamName, builtFrom: builtFrom, contactSlackChannel: contactSlackChannel, application: env.TEAM_APPLICATION_TAG, businessArea: env.BUSINESS_AREA_TAG]
         if (Environment.toTagName(config.environment) == "sandbox") {
           tags = tags + [expiresAfter: config.expires]
+        }
+        
+        if (Environment.toTagName(config.environment) != "production") {
+          tags = tags + [autoShutdown: "true"]
+        }
+        if (Environment.toTagName(config.environment) == "sandbox") {
+          tags = tags + [startupMode: "onDemand"]
+        }
+        if (changeUrl && changeUrl != "null" && changeUrl != "") {
+          tags = tags + [changeUrl: changeUrl]
         }
 
         String pipelineTags = new TerraformTagMap(tags).toString()
@@ -100,6 +109,7 @@ def call(Map<String, ?> params) {
         """
 
         warnAboutOldTfAzureProvider()
+        warnAboutDeprecatedPostgres()
 
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component

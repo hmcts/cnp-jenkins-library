@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
+import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -61,11 +62,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks smoke")
     } finally {
-      try {
-        localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_smoke_test_archiving", "No smoke  test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/smoke/*.xml,**/test-results/smokeTest/*.xml'
     }
   }
 
@@ -75,11 +72,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--info --rerun-tasks functional")
     } finally {
-      try {
-        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_functional_test_archiving", "No functional test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
     }
   }
 
@@ -89,11 +82,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks apiGateway")
     } finally {
-      try {
-        localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_apiGateway_test_archiving", "No API gateway test results found, make sure you have at least one created.", LocalDate.of(2022, 6, 30))
-      }
+      localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
     }
   }
 
@@ -134,14 +123,14 @@ class GradleBuilder extends AbstractBuilder {
 
   def securityCheck() {
     def secrets = [
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Connection-String', version: '', envVariable: 'OWASPDB_V14_CONNECTION_STRING' ]
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V15_CONNECTION_STRING' ]
     ]
 
     localSteps.withAzureKeyvault(secrets) {
       try {
-          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+        gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
@@ -151,6 +140,24 @@ class GradleBuilder extends AbstractBuilder {
         new CVEPublisher(localSteps)
           .publishCVEReport('java', cveReport)
       }
+    }
+  }
+
+  @Override
+  def techStackMaintenance() {
+    localSteps.echo "Running Gradle Tech stack maintenance"
+    try {
+      def secrets = [
+        [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
+        [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
+      ]
+      localSteps.withAzureKeyvault(secrets) {
+        localSteps.sh "./gradlew -q dependencies > depsProc"
+        def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
+        client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
+      }
+    } catch(Exception e) {
+      localSteps.echo "Error running Gradle tech stack maintenance {e.getMessage()}"
     }
   }
 
@@ -182,7 +189,7 @@ EOF
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
     try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
@@ -190,7 +197,7 @@ EOF
 
   def runConsumerTests(pactBrokerUrl, version) {
    try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
    } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
@@ -240,27 +247,27 @@ EOF
 
   @Override
   def setupToolVersion() {
-    try {
-      def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
-      if (statusCode == 0) {
-        steps.env.JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
-        steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
-        // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
-        steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
-      } else {
-        WarningCollector.addPipelineWarning("java_11_deprecated",
-          "Please upgrade to Java 17, upgrade to " +
-            "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
-            "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
-            "Make sure you use the latest version of the Application insights agent, see the configuration in " +
-            "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
-            "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
-        )
-      }
-    } catch(err) {
-      steps.echo "Failed to detect java version, ensure the root project has the correct Java requirements set"
+    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
+    if (statusCode == 0) {
+      WarningCollector.addPipelineWarning("java_11_deprecated",
+        "Please upgrade to Java 17, upgrade to " +
+          "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
+          "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
+          "Make sure you use the latest version of the Application insights agent, see the configuration in " +
+          "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
+          "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+      )
     }
 
+    def statusCodeJava21 = steps.sh script: 'grep -F "JavaLanguageVersion.of(21)" build.gradle', returnStatus: true
+    if (statusCodeJava21 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
+    // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
+    steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
   }
@@ -276,6 +283,8 @@ EOF
       steps.writeFile(file: 'security.sh', text: steps.readFile('.ci/security.sh'))
     } else if (localSteps.fileExists("security.sh")) {
       WarningCollector.addPipelineWarning("security.sh_moved", "Please remove security.sh from root of repository, no longer needed as it has been moved to the Jenkins library", LocalDate.of(2023, 04, 17))
+    } else if (localSteps.env.SCAN_TYPE == "frontend") {
+      localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/frontend/security.sh'))
     } else {
       localSteps.writeFile(file: 'security.sh', text: localSteps.libraryResource('uk/gov/hmcts/pipeline/security/backend/security.sh'))
     }
@@ -291,6 +300,10 @@ EOF
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
     } else {
+      WarningCollector.addPipelineWarning("gatling_docker_deprecated",
+        "Please use the gatling plugin instead of the docker image " +
+          "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
+      )
       super.executeGatling()
     }
   }

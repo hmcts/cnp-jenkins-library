@@ -92,7 +92,7 @@ class Kubectl {
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a ", returnStdout: true)
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a --overwrite-existing ", returnStdout: true)
   }
 
   private String getILBIP(String serviceName, String namespace) {

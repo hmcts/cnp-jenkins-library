@@ -6,6 +6,8 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String vaultName
   boolean migrateDb = false
   String dbMigrationVaultName
+  String securityScanUrlExclusions
+  String securityScanType
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
@@ -24,8 +26,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
   boolean fortifyScan = false
-  boolean clearHelmReleaseOnSuccess = false
-  boolean clearHelmReleaseOnFailure = false
+  boolean clearHelmReleaseOnFailure = true 
   String fortifyVaultName
   String s2sServiceName
   String highLevelDataSetupKeyVaultName

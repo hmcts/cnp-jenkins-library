@@ -49,8 +49,7 @@ class YarnBuilderTest extends Specification {
     when:
       builder.build()
     then:
-      1 * steps.sh({ it.toString().contains('yarn check 1> /dev/null 2> /dev/null') })
-      1 * steps.sh({ it.contains('--mutex network install --frozen-lockfile') })
+      1 * steps.sh({ it.contains('yarn install') })
       1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
       1 * steps.sh({ it.contains('lint') })
   }
@@ -123,7 +122,7 @@ class YarnBuilderTest extends Specification {
     when:
       builder.securityCheck()
     then:
-      1 * steps.sh({ it.contains('audit') })
+      1 * steps.sh({ it.contains('./yarn-audit-with-suppressions.sh') })
   }
 
   def "full functional tests calls 'yarn test:fullfunctional'"() {
@@ -190,5 +189,12 @@ class YarnBuilderTest extends Specification {
     def result = builder.prepareCVEReport(sampleCVEReport, sampleCVESuppressionsReport)
     then:
     result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
+  }
+
+  def "techStackMaintenance"() {
+    when:
+      builder.techStackMaintenance()
+    then:
+      1 * steps.echo('Running Yarn Tech stack maintenance')
   }
 }

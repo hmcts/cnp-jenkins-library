@@ -27,6 +27,9 @@ abstract class AbstractBuilder implements Builder, Serializable {
   }
 
   @Override
+  def techStackMaintenance() {}
+
+  @Override
   def runProviderVerification() {}
 
   @Override

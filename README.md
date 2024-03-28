@@ -67,6 +67,36 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `preview`
 
+#### Run Terraform plans against Production
+Teams can run terraform plans against production.
+
+This can be enabled by either:
+1. Manually adding a plan-on-prod topic to the repo. This will automatically add a plan-on-prod label to every new PR within the repo and run terraform plans against the production environment.
+2. Manually adding a plan-on-prod label to a PR. This will run a terraform plan against the production environment for that PR only.
+
+If the base branch is named after one of the following environments, it will plan against that environment NOT production:
+- demo
+- perftest
+- ithc
+
+Plans will only run against production on the Production Jenkins. It will NOT work on the Sandbox Jenkins as its “production” environment is sandbox.
+
+#### Running tests through Azure Front Door
+
+If you want tests in AAT / Stg environments to run via Azure Front Door, you must add configuration for your application to front door. Have a look at the [HMCTS Way](https://hmcts.github.io/cloud-native-platform/path-to-live/front-door.html#front-door-configuration).
+
+Add a CNAME for your application that points to front door to [azure-private-dns](https://github.com/hmcts/azure-private-dns) and ensure it ends with `-staging`. See [example](https://github.com/hmcts/azure-private-dns/commit/8a2c978d5a07d17b2b138f62c488f89bdce70e51).
+
+If a CNAME is not created in private DNS, Jenkins will create an A record and connect to your application on it's private IP instead.
+
+For the Dev and Preview environments, you will also need to prevent External DNS from creating an A record in their respective DNS zones. To do this, update your helm values to add an annotation telling external-dns to ignore your ingress:
+
+```
+java:
+  ingressAnnotations:
+    external-dns.alpha.kubernetes.io/exclude: "true"
+```
+
 #### Secrets for functional / smoke testing
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
@@ -264,39 +294,18 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-If your service never uses the deployed resources after the pipeline is successful or if you refer to them only for logs in case of failure, you can uninstall the helm release to free resources on the cluster. Note that clearing the helm release won't deny you access to the pods logs, as they are saved as artefacts in Jenkins before the helm release is cleared.
-
-
-To clear the helm release regardless of success or failure, do the following:
-
+- By default your Helm resources are uninstalled to free up resources on the cluster.
+- You can keep these resources by adding the **enable_keep_helm** label on your PR.
+- If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
   ```
   withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseAlways()
-    ...
+  ...
+    disableCleanupOfHelmReleaseOnFailure()
+  ...
   }
   ```
 
-To clear the helm release on a successful build, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnSuccess()
-    ...
-  }
-  ```
-
-To clear the helm release on a failing build, do the following:
-
-  ```
-  withPipeline(type, product, component) {
-    ...
-    enableCleanupOfHelmReleaseOnFailure()
-    ...
-  }
-  ```
-
+Please note that Pod logs are saved as artefacts in Jenkins before the Helm release is cleared.
 
 ### Opinionated infrastructure pipeline
 
@@ -439,7 +448,45 @@ TestName | How to enable | Example
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
+You can customise the zap proxy scans of your application by passing through options to the security scanning scripts using the `urlExclusions` parameter in your Jenkinsfile.
+
+Pass this parameter to the `enableSecurityScan` block to customise the zap proxy scans.
+
+```
+properties([
+    parameters([
+        string(name: 'ZAP_URL_EXCLUSIONS', defaultValue: "-config globalexcludeurl.url_list.url\\(1\\).regex=\\'.*jquery-3.5.1.min.js${'$'}\\' -config globalexcludeurl.url_list.url\\(2\\).regex=\\'.*/assets/images.*\\' -config globalexcludeurl.url_list.url\\(3\\).regex=\\'.*/assets/stylesheets.*\\' -config globalexcludeurl.url_list.url\\(4\\).regex=\\'.*/assets/javascripts.*\\' -config globalexcludeurl.url_list.url\\(5\\).regex=\\'.*/ruxitagentjs_.*\\' -config globalexcludeurl.url_list.url\\(6\\).regex=\\'.*/terms-and-conditions.*\\' -config globalexcludeurl.url_list.url\\(7\\).regex=\\'.*/privacy-policy.*\\' -config globalexcludeurl.url_list.url\\(8\\).regex=\\'.*/contact-us.*\\' -config globalexcludeurl.url_list.url\\(9\\).regex=\\'.*/login.*\\' -config globalexcludeurl.url_list.url\\(10\\).regex=\\'.*/cookies.*\\' -config globalexcludeurl.url_list.url\\(11\\).regex=\\'.*/cookie-preferences.*\\' -config globalexcludeurl.url_list.url\\(12\\).regex=\\'.*jquery-3.4.1.min.js${'$'}\\'")
+    ])
+])
+
+def urlExclusions = params.ZAP_URL_EXCLUSIONS
+
+withNightlyPipeline(type, product, component) {
+
+  // add this!
+  enableSecurityScan(
+    urlExclusions: urlExclusions
+  )
+}
+```
+
+You can find an example in [idam-web-public](https://github.com/hmcts/idam-web-public/blob/717c9755f33780f91f5006337c57fca4e0acf897/Jenkinsfile_nightly)
+
 The current state of the Nightly Pipeline is geared towards testing both frontend and backend applications served by NodeJS, AngularJS and Java APIs.
+
+The pipeline will automatically detect whether your application is node based or gradle based and run the appropriate security tests based on that.
+
+Gradle based applications are more commonly used in the backend but if your frontend application is gradle based, you can pass `scanType: "frontend"` to indicate this is the case and run the frontend specific security script instead of the default backend specific script.
+
+```
+withNightlyPipeline(type, product, component) {
+  enableSecurityScan(
+    scanType: "frontend"
+  )
+}
+```
+
+If you have a requirement to customise the security script, you can place your own script in a folder called `ci` in your repo. Make sure to call the script `security.sh`.
 
 The pipeline contains stages for application checkout, build and list of testing types. Jenkins triggers the build based on the Jenkins file configuration. In order to enable the Jenkins Nightly Pipeline, a file named `Jenkinsfile_nightly` must be included in the repository.
 
@@ -664,7 +711,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `PACT_BROKER_URL`
   - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
 - `gradlew`:
-  - `-Ppact.broker.url`
+  - `-Ppactbroker.url`
   - `-Ppact.consumer.version`/`-Ppact.provider.version`
   - `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
 
@@ -745,3 +792,4 @@ This file will point to the repository which defines, in json syntax, which infr
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
+
