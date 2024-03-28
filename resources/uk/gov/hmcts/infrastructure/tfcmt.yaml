@@ -3,7 +3,7 @@ terraform:
     disable_label: false
     update: 'Comment.HasMeta && (Comment.Meta.Vars.environment == Vars.environment)'
     template: |
-      {{template "plan_title" .}} - {{.Vars.environment}}
+      {{template "plan_title" .}}
 
       {{if .Link}}[CI link]({{.Link}}){{end}}
 
