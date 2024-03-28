@@ -1,6 +1,0 @@
-post:
-  plan:
-    embedded_var_names:
-      - environment
-vars:
-  environment: ""

@@ -129,13 +129,13 @@ def call(Map<String, ?> params) {
         onPR {
           String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
           def credentialsId = env.GIT_CREDENTIALS_ID
-          writeFile file: 'tfcmt-config.yaml', text: libraryResource('uk/gov/hmcts/infrastructure/tfcmt-config.yaml')
+          writeFile file: 'tfcmt.yaml', text: libraryResource('uk/gov/hmcts/infrastructure/tfcmt.yaml')
           withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'APP_ID')]) {
             sh """
               tfcmt --owner hmcts \
                 --repo ${repositoryShortUrl} \
                 --pr ${env.CHANGE_ID} \
-                --config tfcmt-config.yaml \
+                --config tfcmt.yaml \
                 --var environment:${config.environment} \
                 plan -patch -- \
                 terraform show tfplan

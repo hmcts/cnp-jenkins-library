@@ -1,0 +1,26 @@
+terraform:
+  plan:
+    disable_label: false
+    template: |
+      {{template "plan_title" .}}
+
+      {{if .Link}}[CI link]({{.Link}}){{end}}
+
+      {{template "deletion_warning" .}}
+      {{template "result" .}}
+      {{template "updated_resources" .}}
+
+
+      {{ if or (eq .Vars.sensitive "False") (eq .Vars.sensitive "false") }}
+      {{template "changed_result" .}}
+      {{ else}}
+      [See plan in Jenkins]({{ .Vars.jenkins_url }})
+      {{ end }}
+      {{template "change_outside_terraform" .}}
+      {{template "warning" .}}
+      {{template "error_messages" .}}
+    vars:
+      environment: ""
+embedded_var_names:
+  - environment
+  
