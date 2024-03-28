@@ -123,9 +123,55 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
-  def securityCheck() {
+  def yarnVersionCheck() {
+    def major = 0
+    def minor = 0
+    def patch = 0
+
     try {
       steps.sh """
+            jq -r '.packageManager' package.json | sed 's/yarn@//' > yarn_version
+        """
+
+      def versionString = steps.readFile('yarn_version').trim()
+      steps.println(versionString)
+
+      def parts = versionString.split("\\.")
+      major = parts.size() > 0 ? parts[0].toInteger() : major
+      minor = parts.size() > 1 ? parts[1].toInteger() : minor
+      patch = parts.size() > 2 ? parts[2].toInteger() : patch
+
+      if (major < 3) {
+        steps.println("Version is less than 3.0.0. This needs updating as we only support 3.0.x upwards.")
+        return "<3"
+      } else if (major == 3) {
+        steps.println("v3 detected - continuing")
+        return "v3"
+      } else if (major == 4) {
+        if (minor == 0 && patch == 0) {
+          steps.println("v4.0.0 detected. You will need to upgrade yarn to at least v4.0.1, as 4.0.0 has an unsupported audit format.")
+          return "v4.0.0"
+        } else {
+          steps.println("Version is v4.0.1 or higher.")
+          return "v4.0.1+"
+        }
+      } else {
+        steps.println("Version is greater than 4.0.0. Using the updated configuration for yarn npm audit.")
+        return "v4+"
+      }
+    } catch (Exception e) {
+      steps.echo e.getMessage()
+      return "error"
+    }
+  }
+
+
+  def securityCheck() {
+
+    def version = yarnVersionCheck()
+    if (version == 'v3') {
+      try {
+        steps.sh """
         set +ex
         export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
         . /opt/nvm/nvm.sh || true
@@ -133,29 +179,58 @@ class YarnBuilder extends AbstractBuilder {
         set -ex
       """
 
-      corepackEnable()
-      steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
-      steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
+        corepackEnable()
+        steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
+        steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
 
-      steps.sh """
+        steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
         chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
-    } finally {
-      steps.sh """
+      } finally {
+        steps.sh """
         cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
         cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
         cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
       """
-      String issues = steps.readFile('yarn-audit-issues-result')
-      String knownIssues = null
-      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
-        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+        String issues = steps.readFile('yarn-audit-issues-result')
+        String knownIssues = null
+        if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+          knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+        }
+        def cveReport = prepareCVEReport(issues, knownIssues)
+        new CVEPublisher(steps)
+          .publishCVEReport('node', cveReport)
       }
-      def cveReport = prepareCVEReport(issues, knownIssues)
-      new CVEPublisher(steps)
-        .publishCVEReport('node', cveReport)
+    }
+    else if (version == 'v4.0.0') {
+      steps.println("Unsupported version, please upgrade to 4.0.1 or higher")
+//      todo : handle
+    }
+    else if (version == '<3') {
+      steps.println("Version too low")
+//      todo : handle
+
+    }
+    else if (version == 'v4.0.1+') {
+      securityCheckYarnV4()
+    }
+  }
+
+  def securityCheckYarnV4() {
+    try {
+      steps.writeFile(file: 'yarnv4audit.py', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarnv4audit.py'))
+      steps.sh """
+        export PATH=\$HOME/.local/bin:\$PATH
+        chmod +x yarnv4audit.py
+        python3.10 --version
+        python3.10 yarnv4audit.py
+        """
+    }
+    finally {
+      LinkedHashMap<String, Object> CVEReport = prepareCVEReportYarn4('audit-v4-cosmosdb-output')
+      this.steps.echo CVEReport.toString()
     }
   }
 
@@ -175,6 +250,14 @@ class YarnBuilder extends AbstractBuilder {
       localSteps.echo "Error running tech Yarn stack maintenance {e.getMessage()}"
     }
   }
+
+  def prepareCVEReportYarn4(String inputFilePath) {
+    String jsonString = new File(inputFilePath)
+    JsonSlurper slurper = new JsonSlurper()
+    LinkedHashMap<String, Object> parsedData = slurper.parseText(jsonString)
+    return parsedData
+  }
+
 
   def prepareCVEReport(String issues, String knownIssues) {
     def jsonSlurper = new JsonSlurper()
