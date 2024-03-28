@@ -14,8 +14,4 @@ terraform:
       {{template "change_outside_terraform" .}}
       {{template "warning" .}}
       {{template "error_messages" .}}
-    vars:
-      environment: ""
-embedded_var_names:
-  - environment
   

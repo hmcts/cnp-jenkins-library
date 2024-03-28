@@ -136,7 +136,6 @@ def call(Map<String, ?> params) {
                 --repo ${repositoryShortUrl} \
                 --pr ${env.CHANGE_ID} \
                 --config tfcmt.yaml \
-                --var environment:${config.environment} \
                 --var target:${config.environment} \
                 plan -patch -- \
                 terraform show tfplan
