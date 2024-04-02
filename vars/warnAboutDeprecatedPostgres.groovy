@@ -31,7 +31,7 @@ switch (gitUrl.toLowerCase()) {
         expiryDate = LocalDate.of(2024, 2, 12);
         break;
     case "https://github.com/hmcts/ecm-shared-infrastructure.git":
-        expiryDate = LocalDate.of(2024, 4, 12);
+        expiryDate = LocalDate.of(2024, 4, 19);
         break;
     case "https://github.com/hmcts/ccd-data-store-api.git":
     case "https://github.com/hmcts/ccd-definition-store-api.git":
