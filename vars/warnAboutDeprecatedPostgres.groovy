@@ -30,11 +30,8 @@ switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/wa-case-event-handler.git":
         expiryDate = LocalDate.of(2024, 2, 12);
         break;
-    case "https://github.com/hmcts/ethos-repl-docmosis-service.git":
     case "https://github.com/hmcts/ecm-shared-infrastructure.git":
-    case "https://github.com/hmcts/et-ccd-callbacks.git":
-    case "https://github.com/hmcts/et-message-handler.git":
-        expiryDate = LocalDate.of(2024, 4, 5);
+        expiryDate = LocalDate.of(2024, 4, 12);
         break;
     case "https://github.com/hmcts/ccd-data-store-api.git":
     case "https://github.com/hmcts/ccd-definition-store-api.git":
