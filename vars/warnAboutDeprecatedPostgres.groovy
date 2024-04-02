@@ -10,15 +10,15 @@ switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/am-org-role-mapping-service.git":
     case "https://github.com/hmcts/am-role-assignment-service.git":
     case "https://github.com/hmcts/am-judicial-booking-service.git":
-    case "https://github.com/hmcts/rd-user-profile-api.git":
-    case "https://github.com/hmcts/rd-profile-sync.git":
-        expiryDate = LocalDate.of(2024, 4, 22);
-        break;
     case "https://github.com/hmcts/rd-commondata-api.git":
     case "https://github.com/hmcts/rd-professional-api.git":
     case "https://github.com/hmcts/rd-location-ref-api.git":
     case "https://github.com/hmcts/rd-judicial-api.git":
     case "https://github.com/hmcts/rd-caseworker-ref-api.git":
+    case "https://github.com/hmcts/rd-user-profile-api.git":
+    case "https://github.com/hmcts/rd-profile-sync.git":
+        expiryDate = LocalDate.of(2024, 4, 29);
+        break;
     case "https://github.com/hmcts/bulk-scan-processor.git":
     case "https://github.com/hmcts/bulk-scan-orchestrator.git":
     case "https://github.com/hmcts/bulk-scan-payment-processor.git":
