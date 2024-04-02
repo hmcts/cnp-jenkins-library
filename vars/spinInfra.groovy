@@ -134,6 +134,7 @@ def call(Map<String, ?> params) {
               tfcmt --owner hmcts \
                 --repo ${repositoryShortUrl} \
                 --pr ${env.CHANGE_ID} \
+                --var target:${config.environment} \
                 plan -patch -- \
                 terraform show tfplan
             """
