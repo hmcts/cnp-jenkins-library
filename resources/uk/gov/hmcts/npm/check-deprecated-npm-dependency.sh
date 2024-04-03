@@ -6,7 +6,7 @@ REQUIRED_VERSION=${2}
 
 # Attempt to find angular version in a package.json file and trims version of angular/core to get the major version value 
 CURRENT_VERSION=""
-for file in $(find . -type f -name "package.json" -not -path "./node_modules/*"); do
+for file in $(find . -type f -name "package.json" -not -path "*/node_modules/*" -not -path "*/dist/*"); do
     version=$(cat "$file" |  grep "$DEPENDENCY" | sed 's/.*"\(.*\)".*/\1/' | tr -d '^' | cut -d '.' -f 1 )
     if [[ -n "$version" ]]; then
         CURRENT_VERSION="$version"
