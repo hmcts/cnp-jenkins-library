@@ -139,6 +139,10 @@ def call(type, String product, String component, Closure body) {
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
+            } else {
+              if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+                base_env_name = "prod"
+              }
             }
 
             if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
