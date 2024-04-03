@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.contino.GithubAPI
 
 def call(String product, String component = null, Closure body) {
 
