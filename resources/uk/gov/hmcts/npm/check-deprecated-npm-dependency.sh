@@ -6,7 +6,7 @@ REQUIRED_VERSION=${2}
 
 # Attempt to find angular version in a package.json file and trims version of angular/core to get the major version value 
 CURRENT_VERSION=""
-version=$(yarn info "@angular/core" --json | jq '.children.Version' | tr -d '"' | cut -d '.' -f 1 )
+version=$(yarn info "@angular/core" --json | jq -r '.children.Version' | cut -d '.' -f 1 )
 if [[ -n "$version" ]]; then
     CURRENT_VERSION="$version"
     echo "Current version: $CURRENT_VERSION"
