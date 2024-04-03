@@ -10,11 +10,9 @@ version=$(yarn info "@angular/core" --json | jq -r '.children.Version' | cut -d 
 if [[ -n "$version" ]]; then
     CURRENT_VERSION="$version"
     echo "Current version: $CURRENT_VERSION"
-    break
-fi
-
-# Only exit with 1 if there is a deprecation spotted
-if [[ -n $CURRENT_VERSION ]] && [ ${CURRENT_VERSION} -lt ${REQUIRED_VERSION} ]; then
-    echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
-    exit 1
+    # Only exit with 1 if there is a deprecation spotted
+    if [ ${CURRENT_VERSION} -lt ${REQUIRED_VERSION} ]; then
+        echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
+        exit 1
+    fi
 fi
