@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.contino.GithubAPI
 
 def call(String product, String component = null, Closure body) {
 
@@ -81,6 +82,52 @@ def call(String product, String component = null, Closure body) {
           expires: pipelineConfig.expiryDate,
           pipelineCallbacksRunner: callbacksRunner,
         )
+
+        def githubApi = new GithubAPI(this)
+
+        def base_envs = ["demo", "perftest", "ithc"]
+        def base_env_name
+        if (githubApi.checkForTopic("plan-on-prod")) {
+
+          println githubApi.refreshPRCache()
+
+          for(item in base_envs) {
+            if (githubApi.refreshPRCache() == item) {
+              base_env_name = item
+              break
+            } else {
+              base_env_name = "prod"
+            }
+          }
+          if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+            githubApi.addLabelsToCurrentPR(["plan-on-prod"])
+          }
+        } else {
+          if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+            println githubApi.refreshPRCache()
+
+          for(item in base_envs) {
+            if (githubApi.refreshPRCache() == item) {
+              base_env_name = item
+              break
+            } else {
+              base_env_name = "prod"
+            }
+          }
+          }
+        }
+
+        if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+        sectionInfraBuild(
+          subscription: subscription."${base_env_name}Name",
+          environment: environment."${base_env_name}Name",
+          product: product,
+          planOnly: true,
+          component: component,
+          expires: pipelineConfig.expiryDate,
+          pipelineCallbacksRunner: callbacksRunner,
+        )
+        }
       }
     } catch (err) {
       currentBuild.result = "FAILURE"

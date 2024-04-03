@@ -139,6 +139,19 @@ def call(type, String product, String component, Closure body) {
               if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
                 githubApi.addLabelsToCurrentPR(["plan-on-prod"])
               }
+            } else {
+              if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
+                println githubApi.refreshPRCache()
+
+              for(item in base_envs) {
+                if (githubApi.refreshPRCache() == item) {
+                  base_env_name = item
+                  break
+                } else {
+                  base_env_name = "prod"
+                }
+              }
+              }
             }
 
             if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
