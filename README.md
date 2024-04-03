@@ -320,7 +320,8 @@ Branch | Environment
 `master` | `aat` then `prod`
 `demo` | `demo`
 `perftest` | `perftest`
-PR branch| `aat` (plan only)
+`preview` | `preview`
+PR branch| `preview`, `aat` (plan only)
 
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
