@@ -21,10 +21,8 @@ class SecurityScan implements Serializable {
                 '''
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
-                    docker ps -a
                     chmod +x security.sh
                     ./security.sh
-                    docker ps -a
                     '''
             }
             this.steps.sh '''
@@ -38,6 +36,7 @@ class SecurityScan implements Serializable {
                     '''
             }
         } finally {
+            steps.sh 'docker ps -a'
             steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**.*'
         }
     }
