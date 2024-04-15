@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 
 class SecurityScan implements Serializable {
-    public static final String OWASP_ZAP_IMAGE = 'owasp/zap2docker-stable:2.14.0'
+    public static final String OWASP_ZAP_IMAGE = 'owasp/zap2docker-stable:2.13.0'
     public static final String OWASP_ZAP_ARGS = '-u 0:0 --name zap2 -p 1001:1001 -v $WORKSPACE:/zap/wrk/:rw --rm'
     public static final String GLUEIMAGE = 'hmctspublic.azurecr.io/zap-glue:c14eff2a-1692784552'
     public static final String GLUE_ARGS = '-u 0:0 --name=Glue -v ${WORKSPACE}:/tmp -w /tmp'
