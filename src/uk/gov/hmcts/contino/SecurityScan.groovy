@@ -21,6 +21,7 @@ class SecurityScan implements Serializable {
                     ./security.sh
                     '''
             }
+            this.steps.sh 'docker ps -a'
             this.steps.sh '''
                 wget https://raw.githubusercontent.com/hmcts/zap-glue/master/jq_pattern -O ${WORKSPACE}/jq_pattern
                 jq -f ${WORKSPACE}/jq_pattern ${WORKSPACE}/report.json > ${WORKSPACE}/output.json
