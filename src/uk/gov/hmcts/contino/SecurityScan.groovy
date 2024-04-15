@@ -36,10 +36,6 @@ class SecurityScan implements Serializable {
                     '''
             }
         } finally {
-            steps.sh '''
-            docker ps -a
-            docker logs --tail=20 zap
-            '''
             steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**.*'
         }
     }
