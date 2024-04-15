@@ -16,7 +16,7 @@ class SecurityScan implements Serializable {
         try {
             this.steps.sh '''
                 docker ps -a
-                docker rm zap
+                if docker ps -a | grep zap | grep Exit; docker rm zap; fi
                 docker ps -a
                 '''
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
