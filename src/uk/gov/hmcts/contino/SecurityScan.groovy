@@ -14,6 +14,7 @@ class SecurityScan implements Serializable {
 
     def execute() {
         try {
+            this.steps.sh 'docker ps -a'
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
                     chmod +x security.sh
