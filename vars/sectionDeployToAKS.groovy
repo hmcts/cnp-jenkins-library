@@ -116,6 +116,7 @@ def call(params) {
                 timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                   def success = true
                   try {
+                    log.info("Starting Smoke Tests")
                     builder.smokeTest()
                     log.info("Smoke Test Result: ${success}")
                   } catch (err) {
