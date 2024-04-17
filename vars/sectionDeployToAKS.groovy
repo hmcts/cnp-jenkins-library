@@ -121,7 +121,7 @@ def call(params) {
                     success = false
                     throw err
                   } finally {
-                    println "SMOKE TEST RESULT: ${success}"
+                    log.info("Smoke Test Result: ${success}")
                     savePodsLogs(dockerImage, params, "smoke")
                     if (!success) {
                       clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
