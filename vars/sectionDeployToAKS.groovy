@@ -117,8 +117,10 @@ def call(params) {
                   def success = true
                   try {
                     builder.smokeTest()
+                    log.info("Smoke Test Result: ${success}")
                   } catch (err) {
                     success = false
+                    log.info("Smoke Test Result: ${success}")
                     throw err
                   } finally {
                     log.info("Smoke Test Result: ${success}")
