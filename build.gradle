@@ -13,6 +13,9 @@ repositories {
 test {
   systemProperty 'groovy.grape.enable', 'false'
   useJUnitPlatform()
+  testLogging {
+    events "passed", "skipped", "failed", "standardOut", "standardError"
+  }
 }
 
 compileGroovy {
@@ -61,10 +64,11 @@ sourceSets {
   }
   test {
     groovy {
-      srcDirs = ['test']
+      srcDirs = ['test','test/withPipeline']
     }
     resources {
       srcDirs = ['testResources']
     }
+
   }
 }
