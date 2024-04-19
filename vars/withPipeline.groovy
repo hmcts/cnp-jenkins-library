@@ -107,6 +107,19 @@ def call(type, String product, String component, Closure body) {
 
         onPR {
           onTerraformChangeInPR {
+            // we always need a tf plan of aat (i.e. staging)
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              aksSubscription: aksSubscriptions.aat,
+              environment: environment.nonProdName,
+              product: product,
+              component: component,
+              tfPlanOnly: true
+            )
+
             def githubApi = new GithubAPI(this)
             def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, etc
             def branchName = branch.branchName.toLowerCase() // could be PR-123, #58, or feature/branch-name
@@ -126,7 +139,7 @@ def call(type, String product, String component, Closure body) {
               base_env_name = "prod"
             }
 
-            println "being merged to: "+ targetBranch + " current branch: " + branchName + " base_env_name: " + base_env_name
+            println "being merged into: "+ targetBranch + " current branch: " + branchName + " base_env_name: " + base_env_name
 
 
             // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
