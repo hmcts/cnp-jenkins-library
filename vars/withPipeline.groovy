@@ -108,26 +108,29 @@ def call(type, String product, String component, Closure body) {
         onPR {
           onTerraformChangeInPR {
             def githubApi = new GithubAPI(this)
-            def prCache = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, etc
-            def branchName = branch.branchName.toLowerCase() // could be PR-123 or #58
+            def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, etc
+            def branchName = branch.branchName.toLowerCase() // could be PR-123, #58, or feature/branch-name
             def LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
             def base_envs = ["demo", "perftest", "ithc"]
             // check if the PR has the label not-plan-on-prod
-            def noTFPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
-            // check if the PR has the topic 'not-plan-on-prod' if it has no label not-plan-on-prod set
-            if (!noTFPlanOnProdFound) {
-              noTFPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
+            def optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
+            // check if the PR has the topic 'not-plan-on-prod' if it can not find label not-plan-on-prod set
+            if (!optOutTfPlanOnProdFound) {
+              optOutTfPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
             }
-            def base_env_name = prCache
-            if (!base_envs.contains(prCache)) {
+
+            // set the base environment to prod if the target branch is not in the list of base_envs
+            // todo: need to find out if we need to deal with branches 'preview' and 'aat' for AksSubscriptions
+            def base_env_name = targetBranch
+            if (!base_envs.contains(targetBranch)) {
               base_env_name = "prod"
             }
 
-            println "prCache: "+ prCache + "current branch: " + branchName + " base_env_name: " + base_env_name
+            println "being merged to: "+ targetBranch + " current branch: " + branchName + " base_env_name: " + base_env_name
 
 
             // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
-            if (noTFPlanOnProdFound) {
+            if (!optOutTfPlanOnProdFound) {
               println "Apply Terraform Plan against ${base_env_name}"
               sectionDeployToEnvironment(
                 appPipelineConfig: pipelineConfig,
