@@ -106,65 +106,42 @@ def call(type, String product, String component, Closure body) {
         }
 
         onPR {
-          onTerraformChangeInPR{
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              aksSubscription: aksSubscriptions.aat,
-              environment: environment.nonProdName,
-              product: product,
-              component: component,
-              tfPlanOnly: true
-            )
-
+          onTerraformChangeInPR {
             def githubApi = new GithubAPI(this)
-
+            def prCache = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, etc
+            def branchName = branch.branchName.toLowerCase() // could be PR-123 or #58
+            def LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
             def base_envs = ["demo", "perftest", "ithc"]
-            def base_env_name
-            if (githubApi.checkForTopic("plan-on-prod")) {
-
-              println githubApi.refreshPRCache()
-
-              for(item in base_envs) {
-                if (githubApi.refreshPRCache() == item) {
-                  base_env_name = item
-                  break
-                } else {
-                  base_env_name = "prod"
-                }
-              }
-              if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-                githubApi.addLabelsToCurrentPR(["plan-on-prod"])
-              }
-            } else {
-              if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-                println githubApi.refreshPRCache()
-
-              for(item in base_envs) {
-                if (githubApi.refreshPRCache() == item) {
-                  base_env_name = item
-                  break
-                } else {
-                  base_env_name = "prod"
-                }
-              }
-              }
+            // check if the PR has the label not-plan-on-prod
+            def noTFPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
+            // check if the PR has the topic 'not-plan-on-prod' if it has no label not-plan-on-prod set
+            if (!noTFPlanOnProdFound) {
+              noTFPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
+            }
+            def base_env_name = prCache
+            if (!base_envs.contains(prCache)) {
+              base_env_name = "prod"
             }
 
-            if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription."${base_env_name}Name",
-              environment: environment."${base_env_name}Name",
-              product: product,
-              component: component,
-              aksSubscription: aksSubscriptions."${base_env_name}",
-              tfPlanOnly: true
-            )
+            println "prCache: "+ prCache + "current branch: " + branchName + " base_env_name: " + base_env_name
+
+
+            // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
+            if (noTFPlanOnProdFound) {
+              println "Apply Terraform Plan against ${base_env_name}"
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription."${base_env_name}Name",
+                aksSubscription: aksSubscriptions."${base_env_name}",
+                environment: environment."${base_env_name}Name",
+                product: product,
+                component: component,
+                tfPlanOnly: true
+              )
+            } else {
+              println "Skipping Terraform Plan against ${base_env_name} ... "
             }
           }
 
