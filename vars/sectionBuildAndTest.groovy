@@ -36,6 +36,7 @@ def call(params) {
     }
     builder.setupToolVersion()
   }
+  noSkipImgBuild = false
   boolean dockerFileExists = fileExists('Dockerfile')
   onPathToLive {
     stageWithAgent("Build", product) {
