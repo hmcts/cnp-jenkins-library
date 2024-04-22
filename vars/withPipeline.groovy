@@ -15,6 +15,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.pipeline.DeprecationConfig
 
 def call(type, String product, String component, Closure body) {
 
@@ -121,16 +122,17 @@ def call(type, String product, String component, Closure body) {
             )
 
             def githubApi = new GithubAPI(this)
-            def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, etc
+            def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, master, or non-standards
             def branchName = branch.branchName.toLowerCase() // could be PR-123, #58, or feature/branch-name
             def LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
             def base_envs = ["demo", "perftest", "ithc"]
             // check if the PR has the label not-plan-on-prod
             def optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
-            // check if the PR has the topic 'not-plan-on-prod' if it can not find label not-plan-on-prod set
+            // check if the PR has the topic 'not-plan-on-prod' if it can not find the label `not-plan-on-prod`
             if (!optOutTfPlanOnProdFound) {
               optOutTfPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
             }
+            println "optOutTfPlanOnProdFound: " + optOutTfPlanOnProdFound.toString()
 
             // set the base environment to prod if the target branch is not in the list of base_envs
             // todo: need to find out if we need to deal with branches 'preview' and 'aat' for AksSubscriptions
@@ -139,7 +141,7 @@ def call(type, String product, String component, Closure body) {
               base_env_name = "prod"
             }
 
-            println "being merged into: "+ targetBranch + " current branch: " + branchName + " base_env_name: " + base_env_name
+            println "${branchName} being merged into: ${targetBranch}" + " base_env_name: " + base_env_name
 
 
             // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
