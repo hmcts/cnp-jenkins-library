@@ -121,13 +121,17 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
 
+            final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
             def githubApi = new GithubAPI(this)
             def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, master, or non-standards
+            def labelCache = githubApi.refreshLabelCache()
+            def topicCache = githubApi.refreshTopicCache()
             def branchName = branch.branchName.toLowerCase() // could be PR-123, #58, or feature/branch-name
-            def LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
             def base_envs = ["demo", "perftest", "ithc"]
+
+            println "labelCache: ${labelCache} \ntopicCache: ${topicCache}"
             // check if the PR has the label not-plan-on-prod
-            def optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
+            boolean optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
             // check if the PR has the topic 'not-plan-on-prod' if it can not find the label `not-plan-on-prod`
             if (!optOutTfPlanOnProdFound) {
               optOutTfPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)

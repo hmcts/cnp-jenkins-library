@@ -161,7 +161,7 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '200')
 
-      if (response.status == 200) {
+    if (response.status == 200) {
       def json_response = new JsonSlurper().parseText(response.content)
       cachedPR.cache = json_response.base.ref
       cachedPR.isValid = true
@@ -315,10 +315,10 @@ class GithubAPI {
   */
   def startAksEnvironmentWorkflow(String workflowName, String businessArea, String cluster, String environment){
     def body = """
-      { 
-        "ref":"master", 
+      {
+        "ref":"master",
         "inputs":{
-           "PROJECT": "${businessArea}", 
+           "PROJECT": "${businessArea}",
            "SELECTED_ENV": "${environment}",
            "AKS-INSTANCES": "${cluster}"
          }
