@@ -126,7 +126,7 @@ def call(type, String product, String component, Closure body) {
             def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, master, or non-standards
             def labelCache = githubApi.refreshLabelCache()
             def topicCache = githubApi.refreshTopicCache()
-            def branchName = branch.branchName.toLowerCase() // could be PR-123, #58, or feature/branch-name
+            def branchName = branch.branchName // could be PR-123, #58, or feature/branch-name
             def base_envs = ["demo", "perftest", "ithc"]
 
             println "labelCache: ${labelCache} \ntopicCache: ${topicCache}"
