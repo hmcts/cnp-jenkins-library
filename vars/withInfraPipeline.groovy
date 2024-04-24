@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.ProjectBranch
 
 def call(String product, String component = null, Closure body) {
 
