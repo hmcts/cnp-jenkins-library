@@ -17,6 +17,7 @@ def call(String product, String component = null, Closure body) {
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
+  def ProjectBranch branch = new ProjectBranch(env.BRANCH_NAME)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
