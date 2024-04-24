@@ -114,16 +114,14 @@ def call(String product, String component = null, Closure body) {
         // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
         if (!optOutTfPlanOnProdFound) {
           println "Apply Terraform Plan against ${base_env_name}"
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
+          sectionInfraBuild(
             subscription: subscription."${base_env_name}Name",
-            aksSubscription: aksSubscriptions."${base_env_name}",
             environment: environment."${base_env_name}Name",
             product: product,
+            planOnly: true,
             component: component,
-            tfPlanOnly: true
+            expires: pipelineConfig.expiryDate,
+            pipelineCallbacksRunner: callbacksRunner,
           )
         } else {
           println "Skipping Terraform Plan against ${base_env_name} ... "
