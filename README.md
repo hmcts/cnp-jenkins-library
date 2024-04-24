@@ -68,10 +68,10 @@ Branch | Environment
 PR branch| `preview`
 
 #### Run Terraform plans against Production
-By default terraform plans against production are executed on Pull Requests that have terraform change. Application teams
+By default terraform plans against production are executed on Pull Requests that have any terraform changes. Application teams
 can opt out of this by:
-1. Manually adding a topic `not-plan-on-prod` to the repo. This will automatically add a `not-plan-on-prod` label to every new PR within the repo.
-2. Manually adding a label `not-plan-on-prod` to a PR.
+1. For all PRs. Manually adding a topic `not-plan-on-prod` to the repo.
+2. For a specific PR. Manually adding a label `not-plan-on-prod` to that PR.
 
 If the base branch is named after one of the following environments, it will plan against that environment NOT production:
 - demo
