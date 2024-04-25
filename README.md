@@ -73,10 +73,7 @@ can opt out of this by:
 1. For all PRs. Manually adding a topic `not-plan-on-prod` to the repo.
 2. For a specific PR. Manually adding a label `not-plan-on-prod` to that PR.
 
-If the base branch is named after one of the following environments, it will plan against that environment NOT production:
-- demo
-- perftest
-- ithc
+If the Pull Request is being merged into these branches `demo`, `perftest`, and `ithc`. Terraform Plan will run against the corresponding environment NOT production.
 
 Plans will only run against production on the Production Jenkins. It will NOT work on the Sandbox Jenkins as its “production” environment is sandbox.
 
