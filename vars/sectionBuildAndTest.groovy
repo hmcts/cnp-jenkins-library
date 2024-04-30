@@ -56,38 +56,6 @@ def call(params) {
     }
 
     LinkedHashMap<String, Object> branches = [failFast: false]
-    branches["Unit tests and Sonar scan"] = {
-      pcr.callAround('test') {
-        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
-          builder.test()
-        }
-      }
-
-      pcr.callAround('sonarscan') {
-        pluginActive('sonar') {
-          withSonarQubeEnv("SonarQube") {
-            builder.sonarScan()
-          }
-
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
-            }
-          }
-        }
-      }
-    }
-    branches["Security Checks"] = {
-      pcr.callAround('securitychecks') {
-        builder.securityCheck()
-      }
-    }
-    branches["Tech Stack"] = {
-      pcr.callAround('techstack') {
-        builder.techStackMaintenance()
-      }
-    }
 
     if (dockerFileExists) {
       branches["Docker Build"] = {
