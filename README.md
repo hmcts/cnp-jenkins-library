@@ -68,16 +68,12 @@ Branch | Environment
 PR branch| `preview`
 
 #### Run Terraform plans against Production
-Teams can run terraform plans against production.
+By default terraform plans against production are executed on Pull Requests that have any terraform changes. Application teams
+can opt out of this by:
+1. For all PRs. Manually adding a topic `not-plan-on-prod` to the repo.
+2. For a specific PR. Manually adding a label `not-plan-on-prod` to that PR.
 
-This can be enabled by either:
-1. Manually adding a plan-on-prod topic to the repo. This will automatically add a plan-on-prod label to every new PR within the repo and run terraform plans against the production environment.
-2. Manually adding a plan-on-prod label to a PR. This will run a terraform plan against the production environment for that PR only.
-
-If the base branch is named after one of the following environments, it will plan against that environment NOT production:
-- demo
-- perftest
-- ithc
+If the Pull Request is being merged into these branches `demo`, `perftest`, and `ithc`. Terraform Plan will run against the corresponding environment NOT production.
 
 Plans will only run against production on the Production Jenkins. It will NOT work on the Sandbox Jenkins as its “production” environment is sandbox.
 

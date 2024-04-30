@@ -14,8 +14,8 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
-import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.pipeline.DeprecationConfig
 
 def call(type, String product, String component, Closure body) {
 
@@ -107,7 +107,8 @@ def call(type, String product, String component, Closure body) {
         }
 
         onPR {
-          onTerraformChangeInPR{
+          onTerraformChangeInPR {
+            // we always need a tf plan of aat (i.e. staging)
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
@@ -120,52 +121,49 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: true
             )
 
+            final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
             def githubApi = new GithubAPI(this)
-
+            def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, master, or non-standards
+            def labelsCache = githubApi.refreshLabelCache()
+            def topicsCache = githubApi.refreshTopicCache()
+            def branchName = branch.branchName // e.g. PR-123
             def base_envs = ["demo", "perftest", "ithc"]
-            def base_env_name
-            if (githubApi.checkForTopic("plan-on-prod")) {
 
-              println githubApi.refreshPRCache()
+            println "labelsCache: ${labelsCache} \ntopicsCache: ${topicsCache}"
+            // check if the PR has the label not-plan-on-prod
+            boolean optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
+            // check if the PR has the topic 'not-plan-on-prod' if it can not find the label `not-plan-on-prod`
+            if (!optOutTfPlanOnProdFound) {
+              optOutTfPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
+            }
+            println "optOutTfPlanOnProdFound: " + optOutTfPlanOnProdFound.toString()
 
-              for(item in base_envs) {
-                if (githubApi.refreshPRCache() == item) {
-                  base_env_name = item
-                  break
-                } else {
-                  base_env_name = "prod"
-                }
-              }
-              if (!githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-                githubApi.addLabelsToCurrentPR(["plan-on-prod"])
-              }
-            } else {
-              if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-                println githubApi.refreshPRCache()
-
-              for(item in base_envs) {
-                if (githubApi.refreshPRCache() == item) {
-                  base_env_name = item
-                  break
-                } else {
-                  base_env_name = "prod"
-                }
-              }
-              }
+            // set the base environment to prod if the target branch is not in the list of base_envs
+            // todo: need to find out if we need to deal with branches 'preview' and 'aat' for AksSubscriptions
+            def base_env_name = targetBranch
+            if (!base_envs.contains(targetBranch)) {
+              base_env_name = "prod"
             }
 
-            if (githubApi.checkForLabel("PR-123", "plan-on-prod")) {
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription."${base_env_name}Name",
-              environment: environment."${base_env_name}Name",
-              product: product,
-              component: component,
-              aksSubscription: aksSubscriptions."${base_env_name}",
-              tfPlanOnly: true
-            )
+            println "${branchName} being merged into: ${targetBranch}" + " base_env_name: " + base_env_name
+
+
+            // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
+            if (!optOutTfPlanOnProdFound) {
+              println "Apply Terraform Plan against ${base_env_name}"
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription."${base_env_name}Name",
+                aksSubscription: aksSubscriptions."${base_env_name}",
+                environment: environment."${base_env_name}Name",
+                product: product,
+                component: component,
+                tfPlanOnly: true
+              )
+            } else {
+              println "Skipping Terraform Plan against ${base_env_name} ... "
             }
           }
 
