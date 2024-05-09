@@ -8,7 +8,7 @@ azurerm_version="$(echo "$version_output" | grep "azurerm" | cut -d'v' -f 3)"
 terraform_major="$(echo "$terraform_version" | cut -d'.' -f 1)"
 azurerm_major="$(echo "$azurerm_version" | cut -d'.' -f 1)"
 
-if [[ "$azurerm_major" -ne "3" ]] && [[ "$terraform_major" -ne "1" ]] ; then
+if [[ "$azurerm_major" -ne "3" ]] && [[ "$terraform_major" -eq "1" ]] ; then
   echo "Terraform is at version - v${terraform_version}"
   echo "The Azurerm provider is at version v${azurerm_version}"
 else
