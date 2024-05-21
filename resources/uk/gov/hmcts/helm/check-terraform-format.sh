@@ -5,7 +5,7 @@ def checkTerraformFormatting() {
         echo 'Terraform code is not formatted correctly'
         // Format the Terraform code recursively
         sh 'terraform fmt -recursive'
-        // Commit the formatting changes
+        // Committing the formatting changes
         gitFetch()
         updateGitRemoteUrl()
         configureGitUser()
