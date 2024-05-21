@@ -2,7 +2,7 @@ def checkTerraformFormatting() {
     def fmtExitCode = sh(returnStatus: true, script: 'terraform fmt -check=true -recursive')
     echo "Terraform fmt exit status: ${fmtExitCode}"
     if (fmtExitCode != 0) {
-        echo 'Terraform code is not formatted correctly'
+        echo 'Terraform is not formatted correctly'
         // Format the Terraform code recursively
         sh 'terraform fmt -recursive'
         // Committing the formatting changes
