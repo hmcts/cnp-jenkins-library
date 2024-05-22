@@ -44,6 +44,7 @@ def call(String product, String component = null, Closure body) {
           environment: environment.nonProdName,
           product: product,
           component: component,
+          expires: pipelineConfig.expiryDate,
           pipelineCallbacksRunner: callbacksRunner,
         )
 
