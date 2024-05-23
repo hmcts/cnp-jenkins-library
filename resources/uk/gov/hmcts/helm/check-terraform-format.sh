@@ -1,19 +1,37 @@
 def checkTerraformFormatting() {
     def fmtExitCode = sh(returnStatus: true, script: 'terraform fmt -check=true -recursive')
+    def fmtOutput = sh(returnStdout: true, script: 'terraform fmt -check=true -recursive')
+    echo "Terraform fmt exit status: ${fmtExitCode}"
+    echo "Terraform fmt output:\n${fmtOutput}"
     echo "Terraform fmt exit status: ${fmtExitCode}"
     if (fmtExitCode != 0) {
         echo 'Terraform is not formatted correctly'
+
+        echo 'Current working directory:'
+        sh 'pwd'
+
+        echo 'Files in the current directory:'
+        sh 'ls -la'
+
+        echo 'Terraform version:'
+        sh 'terraform version'
+
         // Format the Terraform code recursively
         sh 'terraform fmt -recursive'
+
         // Committing the formatting changes
         gitFetch()
         updateGitRemoteUrl()
         configureGitUser()
         commitFormattingChanges()
         pushChangesToBranch()
+
         error("Terraform was not formatted correctly, it has been reformatted and pushed back to your Pull Request.")
+    } else {
+        echo 'Terraform code is formatted correctly'
     }
 }
+
 def gitFetch() {
     sh "git fetch origin ${env.BRANCH_NAME}:${env.BRANCH_NAME}"
 }
