@@ -50,4 +50,4 @@ def commitFormattingChanges() {
 }
 def pushChangesToBranch() {
     sh "git push origin HEAD:${env.BRANCH_NAME}"
-}
+} 
