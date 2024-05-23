@@ -136,6 +136,7 @@ class GradleBuilder extends AbstractBuilder {
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
 
         def cveReport = prepareCVEReport(dependencyReport)
+        localSteps.echo "CVE Report {cveReport}"
 
         new CVEPublisher(localSteps)
           .publishCVEReport('java', cveReport)
