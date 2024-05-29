@@ -138,6 +138,8 @@ def call(Map<String, ?> params) {
                 plan -patch -- \
                 terraform show tfplan
             """
+          checkTerraformFormatting()
+          
           }
         }
       }

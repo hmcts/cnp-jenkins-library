@@ -1,4 +1,8 @@
 def checkTerraformFormatting() {
+def call() {   
+
+    writeFile file: 'check-terraform-format.sh', text: libraryResource('uk/gov/hmcts/helm/check-terraform-format.sh')
+    
     def fmtExitCode = sh(returnStatus: true, script: 'terraform fmt -check=true -recursive')
     def fmtOutput = sh(returnStdout: true, script: 'terraform fmt -check=true -recursive')
     echo "Terraform fmt exit status: ${fmtExitCode}"
@@ -51,3 +55,4 @@ def commitFormattingChanges() {
 def pushChangesToBranch() {
     sh "git push origin HEAD:${env.BRANCH_NAME}"
 } 
+}  
