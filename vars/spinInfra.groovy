@@ -139,7 +139,7 @@ def call(Map<String, ?> params) {
                 terraform show tfplan
             """
  
-        checkTerraformFormatting()
+            checkTerraformFormatting()
 
           }
         }
