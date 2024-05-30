@@ -119,8 +119,6 @@ def call(Map<String, ?> params) {
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
         }
-
-        checkTerraformFormatting()
         
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
@@ -141,6 +139,8 @@ def call(Map<String, ?> params) {
                 terraform show tfplan
             """
  
+        checkTerraformFormatting()
+
           }
         }
       }
