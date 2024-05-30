@@ -120,6 +120,8 @@ def call(Map<String, ?> params) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
         }
 
+        checkTerraformFormatting()
+        
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
         sh "terraform get -update=true"
@@ -138,8 +140,7 @@ def call(Map<String, ?> params) {
                 plan -patch -- \
                 terraform show tfplan
             """
-          checkTerraformFormatting()
-          
+ 
           }
         }
       }
