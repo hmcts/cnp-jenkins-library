@@ -19,8 +19,7 @@ def call() {
       // maybe script needs output here to make a useful slack message?
     } catch(ignored) {
       WarningCollector.addPipelineWarning("updated_terraform_versions", "Please do some T.B.D.", LocalDate.parse(deprecation.date_deadline))
-    } finally {
-      sh 'rm -f warn-about-old-tf-azure-provider.sh'
-    }
+    } 
   }
+  sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }
