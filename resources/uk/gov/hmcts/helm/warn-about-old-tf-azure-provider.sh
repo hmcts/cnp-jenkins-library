@@ -27,6 +27,7 @@ DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
 
 terraform_version=$(terraform --version --json | jq -r '.terraform_version')
+terraform_providers=$(terraform --version --json | jq -r '.provider_selections')
 echo "terraform version is: $terraform_version"
 
 
@@ -54,31 +55,11 @@ if [[ "$DEPENDENCY" == "terraform" ]] ; then
     echo "====================================================================================================="
     exit 1
   fi
+elif [[ "$DEPENDENCY" == "providers" ]] ; then
+  echo "Terraform provider configuration detected: $terraform_providers"
+
+  echo "Terraform provider name: $DEPENDENCY"
+  echo "Testing output: $REQUIRED_VERSION"
+else
+  echo "Dependency value not recognised, terraform versions not checked"
 fi
-
-
-#     fi
-# elif [[ "$DEPENDENCY" == "providers" ]] ; then
-#   echo
-  # if [[ "$terraform_major" -ge "$REQUIRED_VERSION" ]] ; then
-  #   echo "Terraform is at acceptable version - v${terraform_version}"
-  # else
-  #     echo "====================================================================================================="
-  #     echo "=====  Please update your major terraform version to the latest stable release                 ======"
-  #     echo "=====  The contents of this file will just be a Terraform version number, eg.                  ======"
-  #     echo "=====                                                                                          ======"
-  #     echo "=====  1.3.7                                                                                   ======"
-  #     echo "=====                                                                                          ======"
-  #     echo "=====  Enable terraform in your renovate config, either by extending config:base or enabling   ======"
-  #     echo "=====  the terraform manager.                                                                  ======"
-  #     echo "=====                                                                                          ======"
-  #     echo "=====  See:                                                                                    ======"
-  #     echo "=====   - https://github.com/hmcts/spring-boot-template/pull/412                               ======"
-  #     echo "=====   - https://github.com/hmcts/draft-store/pull/1168                                       ======"
-  #     echo "=====   - https://github.com/hmcts/spring-boot-template/blob/master/.github/renovate.json      ======"
-  #     echo "====================================================================================================="
-  #     exit 1
-  #   fi
-# else
-#   echo "Dependency value not recognised, terraform versions not checked"
-# fi
