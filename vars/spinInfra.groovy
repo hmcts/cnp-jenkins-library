@@ -108,7 +108,6 @@ def call(Map<String, ?> params) {
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
-        checkTerraformFormat()
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
 
@@ -141,6 +140,8 @@ def call(Map<String, ?> params) {
                 plan -patch -- \
                 terraform show tfplan
             """
+            
+            checkTerraformFormat()
 
           }
         }
