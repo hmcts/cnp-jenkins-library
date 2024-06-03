@@ -1,10 +1,12 @@
-def checkTerraformFormat() {
-def call() {   
+#!/bin/bash
+
+checkTerraformFormat() {
+call() {   
 
     writeFile file: 'check-terraform-format.sh', text: libraryResource('uk/gov/hmcts/helm/check-terraform-format.sh')
     
-    def fmtExitCode = sh(returnStatus: true, script: 'terraform fmt -check=true -recursive')
-    def fmtOutput = sh(returnStdout: true, script: 'terraform fmt -check=true -recursive')
+    fmtExitCode = sh(returnStatus: true, script: 'terraform fmt -check=true -recursive')
+    fmtOutput = sh(returnStdout: true, script: 'terraform fmt -check=true -recursive')
     echo "Terraform fmt exit status: ${fmtExitCode}"
     echo "Terraform fmt output:\n${fmtOutput}"
     echo "Terraform fmt exit status: ${fmtExitCode}"
