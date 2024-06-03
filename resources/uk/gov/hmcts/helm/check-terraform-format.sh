@@ -1,4 +1,4 @@
-def checkTerraformFormatting() {
+def checkTerraformFormat() {
 def call() {   
 
     writeFile file: 'check-terraform-format.sh', text: libraryResource('uk/gov/hmcts/helm/check-terraform-format.sh')
