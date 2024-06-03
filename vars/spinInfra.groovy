@@ -108,6 +108,7 @@ def call(Map<String, ?> params) {
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
+        checkTerraformFormat()
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
 
@@ -126,7 +127,9 @@ def call(Map<String, ?> params) {
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
 
+
         onPR {
+          
           String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
           def credentialsId = env.GIT_CREDENTIALS_ID
           withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'APP_ID')]) {
@@ -138,8 +141,6 @@ def call(Map<String, ?> params) {
                 plan -patch -- \
                 terraform show tfplan
             """
- 
-            checkTerraformFormat()
 
           }
         }
