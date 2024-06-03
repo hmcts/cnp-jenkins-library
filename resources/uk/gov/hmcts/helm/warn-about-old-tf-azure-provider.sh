@@ -25,6 +25,7 @@ compare_versions() {
 
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
+DEPRECATION_OBJECT=${3}
 
 terraform_version=$(terraform --version --json | jq -r '.terraform_version')
 terraform_providers=$(terraform --version --json | jq -r '.provider_selections')
@@ -60,6 +61,7 @@ elif [[ "$DEPENDENCY" == "providers" ]] ; then
 
   echo "Terraform provider name: $DEPENDENCY"
   echo "Testing output: $REQUIRED_VERSION"
+  echo "Testing object: $DEPRECATION_OBJECT"
 else
   echo "Dependency value not recognised, terraform versions not checked"
 fi
