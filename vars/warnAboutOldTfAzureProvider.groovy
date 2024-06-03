@@ -13,7 +13,7 @@ def call() {
     try {
       sh """
       chmod +x warn-about-old-tf-azure-provider.sh
-      ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version $deprecation
+      ./warn-about-old-tf-azure-provider.sh $dependency $deprecation
       """
 
       // maybe script needs output here to make a useful slack message?
