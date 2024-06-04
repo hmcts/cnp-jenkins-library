@@ -68,13 +68,13 @@ else
     compare_versions "$provider_version" "$REQUIRED_VERSION"
     result=$?
 
-      if [[ $result != 1 ]] ; then
-        echo "Terraform provider $DEPENDENCY is at acceptable version: $provider_version"
-      else
-        echo "====================================================================================================="
-        echo "=====  Please update your version for provider for $DEPENDENCY to $REQUIRED_VERSION            ======"
-        echo "====================================================================================================="
-        exit 1
-      fi
+    if [[ $result != 1 ]] ; then
+      echo "Terraform provider $DEPENDENCY is at acceptable version: $provider_version"
+    else
+      echo "====================================================================================================="
+      echo "=====  Please update your version for provider for $DEPENDENCY to $REQUIRED_VERSION            ======"
+      echo "====================================================================================================="
+      exit 1
+    fi
   fi  
 fi
