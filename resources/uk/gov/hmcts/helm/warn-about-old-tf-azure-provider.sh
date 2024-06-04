@@ -60,7 +60,7 @@ else
 
   echo "Terraform provider name: $DEPENDENCY"
   echo "Required version of provider: $REQUIRED_VERSION ..."
-  provider_version=$(echo $terraform_providers | jq --arg p "${provider_name}" '.[$p]')
+  provider_version=$(echo $terraform_providers | jq --arg p "${DEPENDENCY}" '.[$p]')
 
   # Returns "null" ... if provider not found in nagger map
   if [[ "$provider_version" != "null" ]]; then
