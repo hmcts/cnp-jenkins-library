@@ -1,36 +1,34 @@
 #!/bin/bash
 
 checkTerraformFormat() {
-call() {   
-    
-    fmtExitCode = sh(returnStatus: true, script: 'terraform fmt -check=true -recursive')
-    fmtOutput = sh(returnStdout: true, script: 'terraform fmt -check=true -recursive')
-    echo "Terraform fmt exit status: ${fmtExitCode}"
-    echo "Terraform fmt output:\n${fmtOutput}"
-    echo "Terraform fmt exit status: ${fmtExitCode}"
-    if (fmtExitCode != 0) {
-        echo 'Terraform is not formatted correctly'
+  fmtExitCode=$(terraform fmt -check=true -recursive 2>&1)
+  fmtOutput=$(terraform fmt -check=true -recursive)
+  echo "Terraform fmt exit status: ${fmtExitCode}"
+  echo "Terraform fmt output:\n${fmtOutput}"
+  echo "Terraform fmt exit status: ${fmtExitCode}"
+  if [[ $fmtExitCode -ne 0 ]]; then
+    echo 'Terraform is not formatted correctly'
 
-        echo 'Current working directory:'
-        sh 'pwd'
+    echo 'Current working directory:'
+    pwd
 
-        echo 'Files in the current directory:'
-        sh 'ls -la'
+    echo 'Files in the current directory:'
+    ls -la
 
-        // Format the Terraform code recursively
-        sh 'terraform fmt -recursive'
+    # Format the Terraform code recursively
+    terraform fmt -recursive
 
-        // Committing the formatting changes
-        gitFetch()
-        updateGitRemoteUrl()
-        configureGitUser()
-        commitFormattingChanges()
-        pushChangesToBranch()
+    # Committing the formatting changes
+    gitFetch
+    updateGitRemoteUrl
+    configureGitUser
+    commitFormattingChanges
+    pushChangesToBranch
 
-        error("Terraform was not formatted correctly, it has been reformatted and pushed back to your Pull Request.")
-    } else {
-        echo 'Terraform code is formatted correctly'
-    }
+    echo "Terraform was not formatted correctly, it has been reformatted and pushed back to your Pull Request."
+  else
+    echo 'Terraform code is formatted correctly'
+  fi
 }
 
 gitFetch() {
@@ -55,4 +53,3 @@ commitFormattingChanges() {
 pushChangesToBranch() {
     sh "git push origin HEAD:${env.BRANCH_NAME}"
 } 
-}  
