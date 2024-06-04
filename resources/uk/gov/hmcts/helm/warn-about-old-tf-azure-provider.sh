@@ -12,14 +12,9 @@ compare_versions() {
   if [[ "$1" == "$2" ]]; then
       return 0
   fi
-  echo $1
-  echo $2
   local sorted_version_list=$(printf "%s\n%s" "$1" "$2" | sort -V)
   local first_version=$(echo "$sorted_version_list" | head -n 1)
 
-  echo $sorted_version_list
-  echo $first_version
-  
   if [[ "$first_version" == "$1" ]]; then
       return 1 # below required version
   else
@@ -76,7 +71,7 @@ else
       echo "Terraform provider $DEPENDENCY is at acceptable version: $provider_version"
     else
       echo "====================================================================================================="
-      echo "=====  Please update your version for provider for $DEPENDENCY to $REQUIRED_VERSION            ======"
+      echo "=====  Please update your version for provider $DEPENDENCY to latest                           ======"
       echo "====================================================================================================="
       exit 1
     fi
