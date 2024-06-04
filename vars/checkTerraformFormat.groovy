@@ -2,6 +2,8 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call() {
 
+  writeFile file: 'check-terraform-format.sh', text: libraryResource('uk/gov/hmcts/helm/check-terraform-format.sh')
+  
   try {
     sh """
     chmod +x check-terraform-format.sh
