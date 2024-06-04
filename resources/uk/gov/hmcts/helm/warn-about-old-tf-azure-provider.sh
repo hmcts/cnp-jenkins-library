@@ -12,10 +12,14 @@ compare_versions() {
   if [[ "$1" == "$2" ]]; then
       return 0
   fi
-
+  echo $1
+  echo $2
   local sorted_version_list=$(printf "%s\n%s" "$1" "$2" | sort -V)
   local first_version=$(echo "$sorted_version_list" | head -n 1)
 
+  echo $sorted_version_list
+  echo $first_version
+  
   if [[ "$first_version" == "$1" ]]; then
       return 1 # below required version
   else
@@ -60,7 +64,7 @@ else
 
   echo "Terraform provider name: $DEPENDENCY"
   echo "Required version of provider: $REQUIRED_VERSION ..."
-  provider_version=$(echo $terraform_providers | jq --arg p "${DEPENDENCY}" '.[$p]')
+  provider_version=$(echo $terraform_providers | jq -r --arg p "${DEPENDENCY}" '.[$p]')
 
   # Returns "null" ... if provider not found in nagger map
   if [[ "$provider_version" != "null" ]]; then
