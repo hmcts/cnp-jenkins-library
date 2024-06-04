@@ -59,5 +59,22 @@ else
   echo "Terraform provider configuration detected: $terraform_providers"
 
   echo "Terraform provider name: $DEPENDENCY"
-  echo "Testing object: $REQUIRED_VERSION ..."
+  echo "Required version of provider: $REQUIRED_VERSION ..."
+  provider_version=$(echo $terraform_providers | jq --arg p "${provider_name}" '.[$p]')
+
+  # Returns "null" ... if provider not found in nagger map
+  if [[ "$provider_version" != "null" ]]; then
+    echo "Found matching provider in map for $DEPENDENCY, checking:"
+    compare_versions "$provider_version" "$REQUIRED_VERSION"
+    result=$?
+
+      if [[ $result != 1 ]] ; then
+        echo "Terraform provider $DEPENDENCY is at acceptable version: $provider_version"
+      else
+        echo "====================================================================================================="
+        echo "=====  Please update your version for provider for $DEPENDENCY to $REQUIRED_VERSION            ======"
+        echo "====================================================================================================="
+        exit 1
+      fi
+  fi  
 fi
