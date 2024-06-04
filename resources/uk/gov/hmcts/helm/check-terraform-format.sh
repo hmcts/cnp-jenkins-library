@@ -19,9 +19,6 @@ call() {
         echo 'Files in the current directory:'
         sh 'ls -la'
 
-        echo 'Terraform version:'
-        sh 'terraform version'
-
         // Format the Terraform code recursively
         sh 'terraform fmt -recursive'
 
@@ -38,23 +35,26 @@ call() {
     }
 }
 
-    gitFetch() {
+gitFetch() {
     sh "git fetch origin ${env.BRANCH_NAME}:${env.BRANCH_NAME}"
 }
-    updateGitRemoteUrl() {
+
+updateGitRemoteUrl() {
     withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
         sh "git remote set-url origin $(git config remote.origin.url | sed 's/github.com/${env.GIT_USERNAME}:${GITHUB_TOKEN}@github.com/g')"
     }
 }
-    configureGitUser() {
+configureGitUser() {
     sh "git config --global user.name ${env.GIT_USERNAME}"
     sh "git config --global user.email ${env.GIT_EMAIL}"
 }
-   commitFormattingChanges() {
+
+commitFormattingChanges() {
     sh "git add \$(find . -type f -name '*.tf')"
     sh "git commit -m 'Updating Terraform Formatting'"
 }
-   pushChangesToBranch() {
+
+pushChangesToBranch() {
     sh "git push origin HEAD:${env.BRANCH_NAME}"
 } 
 }  
