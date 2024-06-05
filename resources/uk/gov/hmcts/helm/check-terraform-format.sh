@@ -35,11 +35,10 @@ gitFetch() {
     sh "git fetch origin ${env.BRANCH_NAME}:${env.BRANCH_NAME}"
 }
 
-updateGitRemoteUrl() {
-    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-        sh "git remote set-url origin $(git config remote.origin.url | sed 's/github.com/${env.GIT_USERNAME}:${GITHUB_TOKEN}@github.com/g')"
-    }
+updateGitRemoteUrl() {   
+    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
 }
+
 configureGitUser() {
     sh "git config --global user.name ${env.GIT_USERNAME}"
     sh "git config --global user.email ${env.GIT_EMAIL}"
