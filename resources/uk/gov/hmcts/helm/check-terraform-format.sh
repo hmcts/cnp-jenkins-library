@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 BRANCH=${1}
 USER_NAME=${2}
@@ -24,11 +25,11 @@ checkTerraformFormat() {
     terraform fmt -recursive
 
     # Committing the formatting changes
-    gitFetch
-    updateGitRemoteUrl
-    configureGitUser
-    commitFormattingChanges
-    pushChangesToBranch
+    # gitFetch
+    # updateGitRemoteUrl
+    # configureGitUser
+    # commitFormattingChanges
+    # pushChangesToBranch
 
     echo "Terraform was not formatted correctly, it has been reformatted and pushed back to your Pull Request."
   else
@@ -37,19 +38,19 @@ checkTerraformFormat() {
 }
 
 git fetch origin $BRANCH:$BRANCH
- 
 git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
 
-configureGitUser() {
-    sh "git config --global user.name ${env.GIT_USERNAME}"
-    sh "git config --global user.email ${env.GIT_EMAIL}"
-}
+# configureGitUser
+git config --global user.name ${USER_NAME} 
+git config --global user.email ${GIT_APP_EMAIL_ID}
 
-commitFormattingChanges() {
-    sh "git add \$(find . -type f -name '*.tf')"
-    sh "git commit -m 'Updating Terraform Formatting'"
-}
 
-pushChangesToBranch() {
-    sh "git push origin HEAD:${env.BRANCH_NAME}"
-} 
+# commitFormattingChanges
+ git add \$(find . -type f -name '*.tf')"
+ git commit -m 'Updating Terraform Formatting'"
+
+
+# PushChangesToBranch
+    
+git push origin HEAD:BRANCH
+
