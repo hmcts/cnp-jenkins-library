@@ -1,5 +1,10 @@
 #!/bin/bash
 
+BRANCH=${1}
+USER_NAME=${2}
+BEARER_TOKEN=${3}
+EMAIL_ID=${4}
+
 checkTerraformFormat() {
   fmtExitCode=$(terraform fmt -check=true -recursive 2>&1)
   fmtOutput=$(terraform fmt -check=true -recursive)
@@ -31,13 +36,9 @@ checkTerraformFormat() {
   fi
 }
 
-gitFetch() {
-    sh "git fetch origin ${env.BRANCH_NAME}:${env.BRANCH_NAME}"
-}
-
-updateGitRemoteUrl() {   
-    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
-}
+git fetch origin $BRANCH:$BRANCH
+ 
+git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
 
 configureGitUser() {
     sh "git config --global user.name ${env.GIT_USERNAME}"
