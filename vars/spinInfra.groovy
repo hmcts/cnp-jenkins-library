@@ -110,8 +110,7 @@ def call(Map<String, ?> params) {
 
         warnAboutOldTfAzureProvider()
         warnAboutDeprecatedPostgres()
-        checkTerraformFormat()
-
+        
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
@@ -141,7 +140,8 @@ def call(Map<String, ?> params) {
                 plan -patch -- \
                 terraform show tfplan
             """
-            
+        checkTerraformFormat() 
+
           }
         }
       }
