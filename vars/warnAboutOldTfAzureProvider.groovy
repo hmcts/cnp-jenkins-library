@@ -15,11 +15,8 @@ def call() {
       chmod +x warn-about-old-tf-azure-provider.sh
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
-
-      // maybe script needs output here to make a useful slack message?
-      // How to handle deprecation dates for the providers?
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("updated_terraform_versions", "Please do some T.B.D.", LocalDate.parse(deprecation.date_deadline))
+      WarningCollector.addPipelineWarning("updated_terraform_versions", "Please update your terraform ${dependency} to the latest acceptable version ${deprecation.version}", LocalDate.parse(deprecation.date_deadline))
     } 
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
