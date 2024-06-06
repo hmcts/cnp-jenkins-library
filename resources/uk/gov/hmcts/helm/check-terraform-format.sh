@@ -51,6 +51,4 @@ git commit -m "Updating Terraform Formatting"
 
 
 # PushChangesToBranch    
-# git push origin HEAD:BRANCH
-
-git push --force origin HEAD:refs/heads/$BRANCH
+git push origin HEAD:BRANCH
