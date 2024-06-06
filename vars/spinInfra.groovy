@@ -99,6 +99,8 @@ def call(Map<String, ?> params) {
         }
 
         sh "terraform --version"
+        
+        checkTerraformFormat() 
 
         sh """
           terraform init -reconfigure \
@@ -140,7 +142,6 @@ def call(Map<String, ?> params) {
                 plan -patch -- \
                 terraform show tfplan
             """
-        checkTerraformFormat() 
 
           }
         }
