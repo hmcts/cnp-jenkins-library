@@ -17,6 +17,7 @@ def call(Map<String, String> params) {
     ./check-terraform-format.sh $branch $userName $bearerToken $gitEmailId
     """
   } catch(ignored) {
+      echo "WARNING: Terraform was not formatted correctly. It has been reformatted and pushed back to your Pull Request.
     WarningCollector.addPipelineWarning("Terraform was not formatted correctly", "it has been reformatted and pushed back to your Pull Request")
   } finally {
     sh 'rm -f check-terraform-format.sh'
