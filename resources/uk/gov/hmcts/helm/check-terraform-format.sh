@@ -46,8 +46,8 @@ git config --global user.email ${GIT_APP_EMAIL_ID}
 
 
 # commitFormattingChanges
- git add "$(find . -type f -name '*.tf')"
- git commit -m "Updating Terraform Formatting"
+git add "$(find . -type f -name '*.tf')"
+git commit -m "Updating Terraform Formatting"
 
 
 # PushChangesToBranch    

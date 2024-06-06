@@ -22,3 +22,4 @@ def call(Map<String, String> params) {
     sh 'rm -f check-terraform-format.sh'
   }
 }
+}
