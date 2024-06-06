@@ -50,7 +50,6 @@ git config --global user.email ${GIT_APP_EMAIL_ID}
  git commit -m "Updating Terraform Formatting"
 
 
-# PushChangesToBranch
-    
+# PushChangesToBranch    
 git push origin HEAD:BRANCH
 
