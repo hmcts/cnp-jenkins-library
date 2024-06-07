@@ -23,19 +23,17 @@ checkTerraformFormat() {
 
     # Format the Terraform code recursively
     terraform fmt -recursive
-
-    # Committing the formatting changes
-    # gitFetch
-    # updateGitRemoteUrl
-    # configureGitUser
-    # commitFormattingChanges
-    # pushChangesToBranch
+   
+    terraformCorrect=false   
 
     echo "Terraform was not formatted correctly, it has been reformatted and pushed back to your Pull Request."
   else
     echo 'Terraform code is formatted correctly'
+    terraformCorrect=true   
   fi
 }
+
+if [ ${terraformCorrect} = 'false' ] ; then
 
 git fetch origin $BRANCH:$BRANCH
 git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
@@ -53,3 +51,4 @@ git commit -m "Updating Terraform Formatting"
 
 # PushChangesToBranch    
 git push origin HEAD:BRANCH
+fi
