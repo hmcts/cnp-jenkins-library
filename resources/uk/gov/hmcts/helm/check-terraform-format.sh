@@ -7,12 +7,11 @@ BEARER_TOKEN=${3}
 EMAIL_ID=${4}
 
 checkTerraformFormat() {
-  fmtExitCode=$(terraform fmt -check=true -recursive 2>&1)
   fmtOutput=$(terraform fmt -check=true -recursive)
-  echo "Terraform fmt exit status: ${fmtExitCode}"
+
   echo "Terraform fmt output:\n${fmtOutput}"
-  echo "Terraform fmt exit status: ${fmtExitCode}"
-  if [[ $fmtExitCode -ne 0 ]]; then
+
+  if [ -n $fmtOutput ]; then
     echo 'Terraform is not formatted correctly'
 
     echo 'Current working directory:'
@@ -23,17 +22,14 @@ checkTerraformFormat() {
 
     # Format the Terraform code recursively
     terraform fmt -recursive
-   
-    terraformCorrect=false   
 
     echo "Terraform was not formatted correctly, it has been reformatted and pushed back to your Pull Request."
   else
     echo 'Terraform code is formatted correctly'
-    terraformCorrect=true   
   fi
 }
 
-if [ ${terraformCorrect} = 'false' ] ; then
+  if [ -n $fmtOutput ]; then
 
 git fetch origin $BRANCH:$BRANCH
 git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
