@@ -38,13 +38,17 @@ git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${U
 git config --global user.name ${USER_NAME} 
 git config --global user.email ${GIT_APP_EMAIL_ID}
 
-checkTerraformFormat
 
 # commitFormattingChanges
-git add .
+files=$(git ls-files -m) 
+for file in $files; do 
+git add $file
+done 
 git commit -m "Updating Terraform Formatting"
 
 
 # PushChangesToBranch    
 git push origin HEAD:$BRANCH
 fi
+
+checkTerraformFormat
