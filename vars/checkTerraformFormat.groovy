@@ -14,7 +14,7 @@ def call(Map<String, String> params) {
   try {
     sh """
     chmod +x check-terraform-format.sh
-    ./check-terraform-format.sh '${branch}' '${userName}' '${bearerToken}' '${gitEmailId}'
+    ./check-terraform-format.sh $branch $userName $bearerToken $gitEmailId
     """
   } catch(ignored) {
       echo "WARNING: Terraform was not formatted correctly. It has been reformatted and pushed back to your Pull Request."
