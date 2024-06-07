@@ -29,7 +29,7 @@ checkTerraformFormat() {
   fi
 }
 
-  if [[ -n $fmtOutput ]]; then
+  if [ -n $fmtOutput ]; then
 
 git fetch origin $BRANCH:$BRANCH
 git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
