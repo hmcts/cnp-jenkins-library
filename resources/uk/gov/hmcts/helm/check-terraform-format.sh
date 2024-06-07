@@ -44,6 +44,7 @@ git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${U
 git config --global user.name ${USER_NAME} 
 git config --global user.email ${GIT_APP_EMAIL_ID}
 
+checkTerraformFormat
 
 # commitFormattingChanges
 git add "$(find . -type f -name '*.tf')"
