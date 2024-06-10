@@ -14,7 +14,7 @@ def call(String environment) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("updated_terraform_versions", "Please update your terraform ${dependency} to the latest acceptable version ${deprecation.version} in ${environment}", LocalDate.parse(deprecation.date_deadline))
+      WarningCollector.addPipelineWarning("updated_terraform_versions", "Environment -- ${environment}: Please update your terraform ${dependency} to the latest acceptable version ${deprecation.version}.", LocalDate.parse(deprecation.date_deadline))
     } 
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
