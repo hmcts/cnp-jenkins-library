@@ -34,7 +34,8 @@ def call() {
     def jsonMessage = JsonOutput.toJson(slackDeprecationMessage)
     WarningCollector.addPipelineWarning(
       "updated_terraform_versions",
-      "Please update your terraform dependencies as per the following details: ${jsonMessage}"
+      "Please update your terraform dependencies as per the following details: ${jsonMessage}",
+      LocalDate.now()
     )
   }
 }
