@@ -32,7 +32,8 @@ def call(String environment) {
 
     WarningCollector.addPipelineWarning(
       "updated_terraform_versions",
-      "Please update your terraform dependencies in ${environment} as per the following: \n\n${formattedMessage}"
+      "Please update your terraform dependencies in ${environment} as per the following: \n\n${formattedMessage}",
+      LocalDate.now()
     )
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
