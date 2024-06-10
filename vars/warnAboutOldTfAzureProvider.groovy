@@ -18,7 +18,7 @@ def call() {
       """
     } catch(ignored) {
       // Only add to slack message new messages
-      if !(processedDependencies.containsKey(dependency)) {
+      if (!processedDependencies.containsKey(dependency)) {
         slackDeprecationMessage << [
           dependency: dependency,
           message: "Please update your terraform ${dependency} to the latest acceptable version ${deprecation.version}",
