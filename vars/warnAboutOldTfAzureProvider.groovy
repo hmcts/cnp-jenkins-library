@@ -28,14 +28,14 @@ def call(String environment) {
   if (slackDeprecationMessage) {
     def formattedMessage = slackDeprecationMessage.collect { deprecation ->
       """- Dependency: ${deprecation.dependency}
-      Message: ${deprecation.message}
-      Deadline: ${deprecation.deadline}"""
+    Message: ${deprecation.message}
+    Deadline: ${deprecation.deadline}"""
     }.join("\n\n")
 
     def earliestDeadline = deprecationDeadlines.min()
     WarningCollector.addPipelineWarning(
       "updated_terraform_versions",
-      "\n\nPlease update your terraform dependencies in ${environment} as per the following: \n\n${formattedMessage}\n\n",
+      "\n\nPlease update the following terraform dependencies in ${environment}: \n\n${formattedMessage}\n\n",
       LocalDate.parse(earliestDeadline)
     )
   }
