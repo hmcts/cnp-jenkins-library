@@ -6,7 +6,6 @@ def call(String environment) {
    
   def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
-  def 
 
   tfDeprecationConfig.each { dependency, deprecation ->
     try {
