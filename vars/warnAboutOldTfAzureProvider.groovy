@@ -7,6 +7,8 @@ def call(String environment) {
   def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
 
+  def slackDeprecationMessage = []
+
   tfDeprecationConfig.each { dependency, deprecation ->
     try {
       sh """
@@ -14,8 +16,24 @@ def call(String environment) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("updated_terraform_versions", "Environment -- ${environment}: Please update your terraform ${dependency} to the latest acceptable version ${deprecation.version}.", LocalDate.parse(deprecation.date_deadline))
+      slackDeprecationMessage << [
+          dependency: dependency,
+          message: "Please update ${dependency} to the latest acceptable version ${deprecation.version}",
+          deadline: deprecation.date_deadline
+      ]
     } 
+  }
+  if (slackDeprecationMessage) {
+    def formattedMessage = slackDeprecationMessage.collect { deprecation ->
+      """- Dependency: ${deprecation.dependency}
+        Message: ${deprecation.message}
+        Deadline: ${deprecation.deadline}"""
+    }.join("\n\n")
+
+    WarningCollector.addPipelineWarning(
+      "updated_terraform_versions",
+      "Please update your terraform dependencies in ${environment} as per the following: \n\n${formattedMessage}"
+    )
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }
