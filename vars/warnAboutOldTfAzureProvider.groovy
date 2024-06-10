@@ -27,9 +27,10 @@ def call(String environment) {
   }
   if (slackDeprecationMessage) {
     def formattedMessage = slackDeprecationMessage.collect { deprecation ->
-      """- Dependency: ${deprecation.dependency}
-    Message: ${deprecation.message}
-    Deadline: ${deprecation.deadline}"""
+      """\
+      - Dependency: ${deprecation.dependency}
+        Message: ${deprecation.message}
+        Deadline: ${deprecation.deadline}""".stripIndent()
     }.join("\n\n")
 
     def earliestDeadline = deprecationDeadlines.min()
