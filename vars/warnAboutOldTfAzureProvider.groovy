@@ -19,7 +19,7 @@ def call(String environment, String product) {
     } catch(ignored) {
       slackDeprecationMessage << [
           dependency: dependency,
-          message: "minimum required is ${deprecation.version},",
+          message: "minimum required is ${deprecation.version}",
           deadline: deprecation.date_deadline
       ]
       deprecationDeadlines << deprecation.date_deadline
@@ -27,7 +27,7 @@ def call(String environment, String product) {
   }
   if (slackDeprecationMessage) {
     def formattedMessage = slackDeprecationMessage.collect { deprecation ->
-      "${deprecation.dependency} - ${deprecation.message}, update by ${deprecation.deadline}"
+      "* `${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}"
     }.join("\n\n")
 
     def earliestDeadline = deprecationDeadlines.min()
