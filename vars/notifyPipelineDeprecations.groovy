@@ -69,14 +69,13 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
             ]
         ])
     }
-    def blocksJson = JsonOutput.toJson(blocks)
 
     try {
       slackSend(
         failOnError: true,
         channel: channel,
         color: 'warning',
-        message: blocksJson)
+        message: blocks)
     } 
     catch (Exception ex) {
       if(channel!='@iamabotuser') {
