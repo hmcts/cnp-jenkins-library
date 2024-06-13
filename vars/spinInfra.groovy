@@ -108,7 +108,7 @@ def call(Map<String, ?> params) {
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
-        warnAboutOldTfAzureProvider()
+        warnAboutOldTfAzureProvider(config.environment, config.product)
         warnAboutDeprecatedPostgres()
 
         env.TF_VAR_subscription = config.subscription
