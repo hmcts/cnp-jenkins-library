@@ -30,37 +30,31 @@ def call(Map<String, String> params) {
 
   sh 'chmod +x check-deprecated-charts.sh'
 
-  helmChartDeprecationConfig.each { chart, deprecatedVersions ->
-    deprecatedVersions.each { deprecation ->
-      try {
-        sh "./check-deprecated-charts.sh $product $component $chart $deprecation.version "
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_helmcharts", "Version of $chart helm chart below $deprecation.version is deprecated, please upgrade to latest release https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecation.date_deadline))
-      }
+  helmChartDeprecationConfig.each { chart, deprecation ->
+    try {
+      sh "./check-deprecated-charts.sh $product $component $chart $deprecation.version"
+    } catch (ignored) {
+      WarningCollector.addPipelineWarning("deprecated_helmcharts", "Version of $chart helm chart below $deprecation.version is deprecated, please upgrade to latest release https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecation.date_deadline))
     }
   }
   sh 'rm -f check-deprecated-charts.sh'
 
   sh 'chmod +x check-deprecated-gradle-dependency.sh'
-  gradleDeprecationConfig.each { dependency, deprecatedVersions ->
-    deprecatedVersions.each { deprecation ->
-      try {
-        sh "./check-deprecated-gradle-dependency.sh $dependency $deprecation.version "
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_gradle_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
-      }
+  gradleDeprecationConfig.each { dependency, deprecation ->
+    try {
+      sh "./check-deprecated-gradle-dependency.sh $dependency $deprecation.version "
+    } catch (ignored) {
+      WarningCollector.addPipelineWarning("deprecated_gradle_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
     }
   }
   sh 'rm -f check-deprecated-gradle-dependency.sh'
 
   sh 'chmod +x check-deprecated-npm-dependency.sh'
-  npmDeprecationConfig.each { dependency, deprecatedVersions ->
-    deprecatedVersions.each { deprecation ->
-      try {
-        sh "./check-deprecated-npm-dependency.sh $dependency $deprecation.version "
-      } catch (ignored) {
-        WarningCollector.addPipelineWarning("deprecated_npm_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
-      }
+  npmDeprecationConfig.each { dependency, deprecation ->
+    try {
+      sh "./check-deprecated-npm-dependency.sh $dependency $deprecation.version "
+    } catch (ignored) {
+      WarningCollector.addPipelineWarning("deprecated_npm_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
     }
   }
   sh 'rm -f check-deprecated-npm-dependency.sh'
