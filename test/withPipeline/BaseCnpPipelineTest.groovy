@@ -57,6 +57,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
+    helper.registerAllowedMethod("junit", [LinkedHashMap.class])
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
     helper.registerAllowedMethod("warnError", [String.class, Closure.class], null)
     helper.registerAllowedMethod("registerDns", [LinkedHashMap.class], {})

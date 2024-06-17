@@ -2,7 +2,7 @@ package withPipeline.onMaster
 
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
+import uk.gov.hmcts.contino.RubyBuilder
 import withPipeline.BaseCnpPipelineTest
 
 class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
@@ -14,7 +14,7 @@ class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
-    def stubBuilder = new StubFor(GradleBuilder)
+    def stubBuilder = new StubFor(RubyBuilder)
     stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
@@ -37,7 +37,7 @@ class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
   void PipelineExecutesExpectedStepsInExpectedOrderWithSkips() {
     helper.registerAllowedMethod("when", [boolean, Closure.class], {})
 
-    def stubBuilder = new StubFor(GradleBuilder)
+    def stubBuilder = new StubFor(RubyBuilder)
     stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(0) {}
