@@ -64,10 +64,10 @@ compileTestGroovy {
 }
 
 dependencies {
-  implementation ('org.codehaus.groovy:groovy-all:2.5.23') {
+  implementation ('org.codehaus.groovy:groovy-all:2.4.21') {
     exclude group: 'org.codehaus.groovy', module: 'groovy-ant'
   }
-  implementation 'org.codehaus.groovy:groovy-dateutil:2.5.23'
+//  implementation 'org.codehaus.groovy:groovy-dateutil:2.4.21'
 
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3773.v505e0052522c'
   testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
@@ -81,7 +81,7 @@ dependencies {
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '616.ve67136f6c77d', ext: 'jar'
 
   testImplementation 'junit:junit:4.13.2'
-  testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
+  testImplementation group: 'org.spockframework', name: 'spock-core', version: '1.3-groovy-2.4'
   testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.0'
 
   testImplementation 'org.junit.vintage:junit-vintage-engine:5.10.2'
