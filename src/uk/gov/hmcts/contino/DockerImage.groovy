@@ -119,7 +119,7 @@ class DockerImage {
     return getTag(stage.label)
   }
 
-  def getTag(String imageTag) {
+  def getTag(imageTag) {
     return (imageTag ==  'latest' ? imageTag : "${imageTag}-${this.commit}-${this.lastCommitTime}")
   }
 
@@ -137,7 +137,7 @@ class DockerImage {
     return shortName(this.imageTag)
   }
 
-  def getShortName(DeploymentStage stage) {
+  def getShortName(stage) {
     // if it's a PR use the full imageTag (e.g. pr-42)
     if (stage == DeploymentStage.PR) {
       return shortName(this.imageTag)
@@ -145,7 +145,7 @@ class DockerImage {
     return shortName(stage.label)
   }
 
-  private def shortName(String imageTag) {
+  private def shortName(imageTag) {
     return repositoryName().concat(':')
       .concat(getTag(imageTag))
   }

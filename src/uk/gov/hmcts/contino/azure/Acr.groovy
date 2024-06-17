@@ -124,7 +124,7 @@ class Acr extends Az {
    * @return
    *   stdout of the step
    */
-  def retagForStage(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
+  def retagForStage(stage, dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
@@ -138,7 +138,7 @@ class Acr extends Az {
     }
   }
 
-  def hasTag(DockerImage dockerImage) {
+  def hasTag(dockerImage) {
       return hasRepoTag(dockerImage.getTag(), dockerImage.getRepositoryName())
   }
 
@@ -164,7 +164,7 @@ class Acr extends Az {
     return tagFound
   }
 
-  private def purgeOldTags(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
+  private def purgeOldTags(stage, dockerImage) {
     String purgeTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getImageTag() : stage.getLabel()
     String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
     this.az "acr run --registry ${registryName} --subscription ${registrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"

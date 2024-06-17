@@ -55,7 +55,7 @@ def call(params) {
       }
     }
 
-    LinkedHashMap<String, Object> branches = [failFast: false]
+    def branches = [failFast: false]
     branches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {

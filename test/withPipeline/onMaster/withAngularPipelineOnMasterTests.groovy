@@ -21,6 +21,7 @@ class withAngularPipelineOnMasterTests extends BaseCnpPipelineTest {
       build(1) {}
       test(1) {}
       securityCheck(1) {}
+      techStackMaintenance(1) {}
       sonarScan(1) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
