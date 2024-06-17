@@ -19,6 +19,7 @@ class DeprecationConfig {
       )
       deprecationConfigInternal = steps.readYaml(text: response.content)
     }
+    println deprecationConfigInternal
     return deprecationConfigInternal
   }
 
