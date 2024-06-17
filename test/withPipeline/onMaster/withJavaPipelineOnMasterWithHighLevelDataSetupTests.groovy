@@ -21,6 +21,7 @@ class withJavaPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnpPipelin
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
+      techStackMaintenance(1) {}
       highLevelDataSetup(2) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}

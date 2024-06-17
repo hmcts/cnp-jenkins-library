@@ -1,6 +1,5 @@
 package withPipeline.onDemo
 
-import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
@@ -18,7 +17,7 @@ class withAngularPipelineOnDemoTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
+      setupToolVersion(1) {}
       build(0) {}
     }
 

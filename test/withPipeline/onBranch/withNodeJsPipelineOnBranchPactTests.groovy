@@ -18,7 +18,7 @@ class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
     def stubPactBroker = new StubFor(PactBroker)
 
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
+      setupToolVersion(1) {}
       build(0) {}
     }
 

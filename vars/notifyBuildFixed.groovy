@@ -30,7 +30,10 @@ def call(Map args = [:]) {
   }
 
   try {
-    if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
+    def previousBuild = currentBuild.previousBuild
+    // Added to confirm this still works after refactoring to make it work with JenkinsPipelineUnit
+    echo "Previous build result is ${previousBuild.result}"
+    if (previousBuild != null && previousBuild.result == 'FAILURE') {
       slackSend(
         failOnError: true,
         channel: channel,

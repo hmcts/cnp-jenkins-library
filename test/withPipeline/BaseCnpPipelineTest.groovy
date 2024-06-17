@@ -41,6 +41,13 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       .build()
     helper.registerSharedLibrary(library)
     helper.registerAllowedMethod("deleteDir",  [Integer, Closure.class], {})
+    helper.registerAllowedMethod("dir",  [String], { body ->
+      body.call()
+    })
+    helper.registerAllowedMethod("findFiles",  [LinkedHashMap], {
+      return []
+    })
+
     helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
@@ -95,12 +102,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
     helper.registerAllowedMethod("readYaml", [Map.class], { c ->
-
-      def text = c.get('text')
-      if (text instanceof String && text.contains('registry.terraform.io/hashicorp/azurerm')) {
-        return [terraform: []]
-      }
-      return text
+      return c.get('text')
     })
+    binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
   }
 }
