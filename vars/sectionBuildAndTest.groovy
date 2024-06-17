@@ -11,7 +11,7 @@ def call(params) {
 
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
-  Builder builder = params.builder
+  def builder = params.builder
 
   def subscription = params.subscription
   def product = params.product

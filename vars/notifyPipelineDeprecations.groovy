@@ -15,7 +15,7 @@ import uk.gov.hmcts.contino.MetricsPublisher
  *      <li>channel - (string; required) name of the slack channel for team notifications</li>
  *  </ul>
  */
-def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
+def call(teamSlackChannel, metricsPublisher) {
   String slackWarningMessage = ""
   String warningMessage = WarningCollector.getSlackWarningMessage()
   String changeAuthor = env.CHANGE_AUTHOR
@@ -45,7 +45,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
         channel: channel,
         color: 'warning',
         message: slackWarningMessage)
-    } 
+    }
     catch (Exception ex) {
       if(channel!='@iamabotuser') {
         throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
@@ -54,7 +54,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   }
 }
 
-void publishWarningMetrics(MetricsPublisher metricsPublisher) {
+void publishWarningMetrics(metricsPublisher) {
   for (pipelineWarning in WarningCollector.pipelineWarnings) {
     metricsPublisher.publish(pipelineWarning.warningKey)
   }

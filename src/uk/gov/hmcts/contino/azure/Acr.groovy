@@ -147,7 +147,7 @@ class Acr extends Az {
     return hasRepoTag(tag, dockerImage.getRepositoryName())
   }
 
-  private def hasRepoTag(String tag, String repository) {
+  private boolean hasRepoTag(String tag, String repository) {
     // staging and latest are not really tags for our purposes, it just marks the most recent master build before and after tests are run in AAT.
     if (tag in ['staging' , 'latest'] ) {
       steps.echo "Warning: matching '${tag}' tag for ${repository}"

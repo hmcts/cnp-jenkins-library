@@ -5,10 +5,10 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
-  final AppPipelineConfig config
+  def final config
   def final steps
 
-  AppPipelineDsl(Object steps, PipelineCallbacksConfig callbacks, CommonPipelineConfig config) {
+  AppPipelineDsl(steps, callbacks, config) {
     super(steps, callbacks, config)
     this.config = config
     this.steps = steps
