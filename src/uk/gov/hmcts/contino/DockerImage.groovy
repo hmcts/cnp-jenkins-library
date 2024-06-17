@@ -28,7 +28,7 @@ class DockerImage {
   def product
   def component
   def imageTag  // image tag, based on the current build branch name e.g. 'latest', 'pr-77'
-  Acr acr
+  def acr
   def commit
   def registryHost
   def lastCommitTime

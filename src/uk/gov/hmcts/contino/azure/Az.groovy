@@ -9,10 +9,10 @@ class Az {
   Az(steps, subscription) {
     this.steps = steps
     this.subscription = subscription
+  }
 
-    this.az = { cmd ->
+  def az(cmd) {
       return steps.sh(label: "az ${cmd}", script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az ${cmd}", returnStdout: true)?.trim()
-    }
   }
 
 }

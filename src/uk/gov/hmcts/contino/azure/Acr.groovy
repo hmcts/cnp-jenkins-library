@@ -60,7 +60,7 @@ class Acr extends Az {
    * @return
    *   stdout of the step
    */
-  def build(DockerImage dockerImage) {
+  def build(dockerImage) {
     build(dockerImage, "")
   }
 
@@ -75,8 +75,8 @@ class Acr extends Az {
    * @return
    *   stdout of the step
    */
-  def build(DockerImage dockerImage, String additionalArgs) {
-    this.az "acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
+  def build(dockerImage, additionalArgs) {
+    this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
   }
 
   /**

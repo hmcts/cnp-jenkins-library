@@ -18,7 +18,7 @@ def call(params) {
   def expires = params.expires
   Long deploymentNumber
 
-  Builder builder = pipelineType.builder
+  def builder = pipelineType.builder
   def tfOutput
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   approvedEnvironmentRepository(environment, metricsPublisher) {
@@ -49,7 +49,7 @@ def call(params) {
           }
         }
       }
-      
+
       if(!tfPlanOnly){
 
         if (config.migrateDb) {

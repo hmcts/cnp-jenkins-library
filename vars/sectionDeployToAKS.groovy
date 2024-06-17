@@ -27,9 +27,9 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
 }
 
 def call(params) {
-  PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
-  AppPipelineConfig config = params.appPipelineConfig
-  PipelineType pipelineType = params.pipelineType
+  def pcr = params.pipelineCallbacksRunner
+  def config = params.appPipelineConfig
+  def pipelineType = params.pipelineType
 
   def subscription = params.subscription
   def product = params.product
@@ -42,7 +42,7 @@ def call(params) {
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
 
-  Builder builder = pipelineType.builder
+  def builder = pipelineType.builder
 
   withAcrClient(subscription) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
