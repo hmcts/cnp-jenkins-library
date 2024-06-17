@@ -15,7 +15,7 @@ class withNodeJsPipelineOnBranchTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(YarnBuilder)
-    stubBuilder.demand.setupToolVersion(0) {}
+    stubBuilder.demand.setupToolVersion(1) {}
     stubBuilder.demand.build(0) {}
 
     stubBuilder.use {

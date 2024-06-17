@@ -18,7 +18,7 @@ class withNodeJsPipelineOnDemoTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(YarnBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
+      setupToolVersion(1) {}
       build(0) {}
     }
 

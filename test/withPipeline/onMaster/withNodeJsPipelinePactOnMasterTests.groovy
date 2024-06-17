@@ -25,6 +25,7 @@ class withNodeJsPipelinePactOnMaster extends BaseCnpPipelineTest {
       test(1) {}
       sonarScan(1) {}
       securityCheck(1) {}
+      techStackMaintenance(1) {}
       runConsumerTests(1) { url, version -> return null }
       runConsumerCanIDeploy(1) {}
       runProviderVerification(1) { url, version, publish -> return null }
