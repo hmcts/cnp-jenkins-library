@@ -4,6 +4,6 @@
 
 def product = "product"
 
-withInfraPipeline(product,"test",{}) {
+withInfraPipeline(product,"test") {
 
 }
