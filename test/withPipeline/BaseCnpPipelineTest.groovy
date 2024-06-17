@@ -39,7 +39,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       .implicit(false)
       .build()
     helper.registerSharedLibrary(library)
-    helper.registerAllowedMethod("deleteDir", null)
+    helper.registerAllowedMethod("deleteDir",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
@@ -91,7 +91,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
            '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }
     })
-    helper.registerAllowedMethod("milestone", null)
+    helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
     helper.registerAllowedMethod("readYaml", [Map.class], { c ->
       return c.get('text')

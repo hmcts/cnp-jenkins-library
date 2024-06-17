@@ -3,6 +3,7 @@ package withInfraPipeline.onDemo
 import org.junit.Test
 import withPipeline.BaseCnpPipelineTest
 
+
 class withInfraPipelineOnDemoTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleInfraPipeline.jenkins"
 
