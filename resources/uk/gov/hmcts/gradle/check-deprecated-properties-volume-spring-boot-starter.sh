@@ -8,7 +8,7 @@ DEPRECATED_IN="org.springframework.boot:spring-boot"
 DEPRECATED_IN_VERSION="2.4.0"
 DEPRECATED_LINK="https://github.com/hmcts/properties-volume-spring-boot-starter?tab=readme-ov-file#hmcts-properties-volume-library-deprecated"
 
-DEPENDENCY_IN_USE=$(./gradlew --no-daemon --init-script init.gradle -q dependencyInsight --no-daemon --dependency ${DEPENDENCY} | grep "${DEPENDENCY}")
+DEPENDENCY_IN_USE=$(./gradlew --no-daemon --init-script init.gradle -q dependencyInsight --no-daemon --dependency ${DEPENDENCY} | grep "${DEPENDENCY}" | head -1 | sed 's/ (selected by rule)//')
 
 if [[ -n $DEPENDENCY_IN_USE ]]; then
 	# CURRENT_VERSION=$(./gradlew --no-daemon --init-script init.gradle -q dependencyInsight --no-daemon --dependency ${DEPRECATED_IN} | grep "${DEPRECATED_IN}" | head -1 | sed 's/ (selected by rule)//' | awk -F':' '{print $NF}')
