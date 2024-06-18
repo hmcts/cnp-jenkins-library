@@ -54,7 +54,7 @@ def call(Map<String, String> params) {
   try {
     sh './check-deprecated-properties-volume-spring-boot-starter.sh'
   } catch (ignored) {
-    WarningCollector.addPipelineWarning("deprecated_gradle_library", "The properties-volume-spring-boot-starter is deprecated since spring-boot: 2.4.0, please follow steps to", LocalDate.of(2024, 6, 16))
+    WarningCollector.addPipelineWarning("deprecated_gradle_library", "The properties-volume-spring-boot-starter is deprecated since spring-boot: 2.4.0, please follow steps to resolve", LocalDate.of(2024, 6, 16))
   }
   sh 'rm -f check-deprecated-properties-volume-spring-boot-starter.sh'
 
