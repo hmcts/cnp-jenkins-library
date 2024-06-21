@@ -8,6 +8,7 @@ GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 
 try {
+  agent "cnp-jenkins-buildersb6a500"
   node {
     stage('Checkout') {
       deleteDir()
@@ -25,6 +26,15 @@ try {
       } finally {
         steps.junit '**/test-results/**/*.xml'
         deleteDir()
+      }
+    }
+    post {
+      always {
+        cleanWs(
+          deleteDirs: true,
+          disableDeferredWipeout: true,
+          patterns: [[pattern: '*cnp-jenkins-library_PR*', type: 'EXCLUDE']]
+        )
       }
     }
   }
