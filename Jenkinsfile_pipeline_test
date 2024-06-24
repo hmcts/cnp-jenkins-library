@@ -8,7 +8,7 @@ GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 
 try {
-  agent "cnp-jenkins-buildersb6a500"
+  agent "dtspo-17456"
   node {
     stage('Checkout') {
       deleteDir()
@@ -25,7 +25,7 @@ try {
         builder.gradle('test')
       } finally {
         steps.junit '**/test-results/**/*.xml'
-        deleteDir()
+//        deleteDir()
       }
     }
     post {
