@@ -8,7 +8,7 @@ GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 
 try {
-  node ("dtspo-17456") {
+  node ("cnp-jenkins-builders8942f0") {
     stage('Checkout') {
       deleteDir()
       checkout scm
