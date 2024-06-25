@@ -8,6 +8,7 @@ GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 
 try {
+  agent "dtspo-17456"
   node {
     stage('Checkout') {
       deleteDir()
