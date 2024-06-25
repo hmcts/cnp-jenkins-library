@@ -6,7 +6,7 @@ import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("groovy.json.internal.Exceptions$JsonInternalException: unexpected character .")
+@Ignore("JsonInternalException: unexpected character .")
 class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleAngularNightlyPipeline.jenkins"
 
