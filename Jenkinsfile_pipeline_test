@@ -27,15 +27,6 @@ try {
         deleteDir()
       }
     }
-    post {
-      always {
-        cleanWs(
-          deleteDirs: true,
-          disableDeferredWipeout: true,
-          patterns: [[pattern: '*cnp-jenkins-library_PR*', type: 'EXCLUDE']]
-        )
-      }
-    }
   }
 
   stage('Run shared infra pipeline') {
