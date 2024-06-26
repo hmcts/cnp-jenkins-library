@@ -110,7 +110,7 @@ def call(Map<String, ?> params) {
 
         warnAboutOldTfAzureProvider(config.environment, config.product)
         warnAboutDeprecatedPostgres()
-
+        warnAboutRedisDefaultSkuChange()
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
