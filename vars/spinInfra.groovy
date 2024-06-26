@@ -101,15 +101,22 @@ def call(Map<String, ?> params) {
         sh "terraform --version"
 
         sh """
-          terraform init -reconfigure \
-            -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
-            -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
+              terraform init -reconfigure \
+              -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
+              -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+              -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
+              -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
         warnAboutOldTfAzureProvider(config.environment, config.product)
         warnAboutDeprecatedPostgres()
+
+        steps.writeFile(file: 'check-terraform-format.sh', text: steps.libraryResource('uk/gov/hmcts/helm/check-terraform-format.sh'))
+        steps.sh(label: "Check Terraform Formatting, under pods-logs-${scope}", script: """
+        chmod +x check-terraform-format.sh
+        ./check-terraform-format.sh ${releaseName} ${namespace} pods-logs-${scope}
+        rm -f check-terraform-format.sh
+        """)
 
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
