@@ -46,24 +46,23 @@ def call(params) {
                   expires: config.expiryDate
                 )
             }
-
-            if(!tfPlanOnly){
-
-              if (config.migrateDb) {
-                stageWithAgent("DB Migration - ${environment}", product) {
-                  pcr.callAround("dbmigrate:${environment}") {
-                    builder.dbMigrate(
-                      tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
-                      component
-                    )
-                  }
-                }
-              }
-
-            }
-
           }
         }
+      }
+      
+      if(!tfPlanOnly){
+
+        if (config.migrateDb) {
+          stageWithAgent("DB Migration - ${environment}", product) {
+            pcr.callAround("dbmigrate:${environment}") {
+              builder.dbMigrate(
+                tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
+                component
+              )
+            }
+          }
+        }
+
       }
     }
   }

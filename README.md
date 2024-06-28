@@ -67,6 +67,16 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `preview`
 
+#### Run Terraform plans against Production
+By default terraform plans against production are executed on Pull Requests that have any terraform changes. Application teams
+can opt out of this by:
+1. For all PRs. Manually adding a topic `not-plan-on-prod` to the repo.
+2. For a specific PR. Manually adding a label `not-plan-on-prod` to that PR.
+
+If the Pull Request is being merged into these branches `demo`, `perftest`, and `ithc`. Terraform Plan will run against the corresponding environment NOT production.
+
+Plans will only run against production on the Production Jenkins. It will NOT work on the Sandbox Jenkins as its “production” environment is sandbox.
+
 #### Running tests through Azure Front Door
 
 If you want tests in AAT / Stg environments to run via Azure Front Door, you must add configuration for your application to front door. Have a look at the [HMCTS Way](https://hmcts.github.io/cloud-native-platform/path-to-live/front-door.html#front-door-configuration).
@@ -356,9 +366,9 @@ withInfraPipeline(product, component) {
 
 The expiresAfter parameter is used in the **Sandbox environment** to tag resources with an end date after which they are no longer needed. They will then be automatically deleted after this date.
 
-By default the tag value will be `now() + 30 days`.
+By default the tag value will be `now() + 14 days`.
 
-If you want your resources to remain for longer than 30 days, you can override the parameter manually in your Jenkinsfile by specifying the `expiresAfter` parameter as a date in the format shown above.
+If you want your resources to remain for longer than 14 days, you can override the parameter manually in your Jenkinsfile by specifying the `expiresAfter` parameter as a date in the format shown above.
 
 For resources that must remain permanently, specify a value of `"3000-01-01"`
 
@@ -466,7 +476,7 @@ Gradle based applications are more commonly used in the backend but if your fron
 
 ```
 withNightlyPipeline(type, product, component) {
-  enableSecurityScan(                
+  enableSecurityScan(
     scanType: "frontend"
   )
 }
@@ -697,7 +707,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `PACT_BROKER_URL`
   - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
 - `gradlew`:
-  - `-Ppact.broker.url`
+  - `-Ppactbroker.url`
   - `-Ppact.consumer.version`/`-Ppact.provider.version`
   - `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
 
