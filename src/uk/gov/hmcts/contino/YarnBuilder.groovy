@@ -136,10 +136,12 @@ class YarnBuilder extends AbstractBuilder {
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
+      steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.js'))
 
       steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
-        chmod +x yarn-audit-with-suppressions.sh
+         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | echo \"\${v%%.*}\" )
+         chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
     } finally {
