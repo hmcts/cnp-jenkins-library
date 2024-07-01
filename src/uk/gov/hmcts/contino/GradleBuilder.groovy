@@ -205,7 +205,7 @@ EOF
 
   def runConsumerCanIDeploy() {
     try {
-      gradle("--stacktrace --debug canideploy")
+      gradle("canideploy")
      } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
