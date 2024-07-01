@@ -88,7 +88,6 @@ if [ "$today" -gt "$exclude_until" ]; then
 else
   yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
-echo "Yarn audit completed."
 
 if [ "$YARN_VERSION" == "v4" ]; then
   cat yarn-audit-result | node format-v4-audit.js > yarn-audit-result-formatted
@@ -133,6 +132,8 @@ else
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
+
+  cat yarn-audit-known-issues-formatted
 
   if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
