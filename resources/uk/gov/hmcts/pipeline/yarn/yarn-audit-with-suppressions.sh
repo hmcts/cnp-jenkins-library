@@ -133,8 +133,6 @@ else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
 
-  cat yarn-audit-known-issues-formatted
-
   if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
     exit 1
