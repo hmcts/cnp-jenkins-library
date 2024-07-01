@@ -89,7 +89,7 @@ else
   yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-if [ "$YARN_VERSION" == "v4" ]; then
+if [ "$YARN_VERSION" == "4" ]; then
   cat yarn-audit-result | node format-v4-audit.js > yarn-audit-result-formatted
 else
   cp yarn-audit-result yarn-audit-result-formatted
@@ -104,7 +104,7 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
-    if [ "$YARN_VERSION" == "v4" ]; then
+    if [ "$YARN_VERSION" == "4" ]; then
       cat yarn-audit-known-issues | node format-v4-audit.js > yarn-audit-known-issues-formatted
     else
       cp yarn-audit-known-issues yarn-audit-known-issues-formatted
@@ -127,7 +127,7 @@ if [ ! -f yarn-audit-known-issues ]; then
   exit 1
 else
   # Test for old format of yarn-audit-known-issues
-  if [ "$YARN_VERSION" == "v4" ]; then
+  if [ "$YARN_VERSION" == "4" ]; then
     cat yarn-audit-known-issues | node format-v4-audit.js > yarn-audit-known-issues-formatted
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted

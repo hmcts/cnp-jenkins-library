@@ -140,7 +140,7 @@ class YarnBuilder extends AbstractBuilder {
 
       steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
-         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | echo \"\${v%%.*}\" )
+         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
          chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
