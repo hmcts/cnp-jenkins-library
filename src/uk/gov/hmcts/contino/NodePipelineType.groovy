@@ -5,7 +5,7 @@ public class NodePipelineType implements PipelineType, Serializable {
   def product
   def app
 
-  Builder builder
+  YarnBuilder builder
 
   NodePipelineType(steps, product, app) {
     this.steps = steps

@@ -6,7 +6,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
-  Builder builder = params.builder
+  def builder = params.builder
 
   def environment = params.environment
   def product = params.product

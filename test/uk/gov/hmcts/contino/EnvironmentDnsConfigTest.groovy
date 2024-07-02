@@ -12,7 +12,7 @@ class EnvironmentDnsConfigTest extends Specification {
       [
         [
           "name"         : "DTS-CFTSBOX-INTSVC",
-          "zoneTemplate" : 'service.core-compute-${environment}.internal',
+          "zoneTemplate" : '${environment}.platform.hmcts.net',
           "ttl"          : 300, "active": true, "consulActive": true,
           "environments" : [
             ["name": "sandbox", "ttl": 3600],
@@ -21,7 +21,7 @@ class EnvironmentDnsConfigTest extends Specification {
           "resourceGroup": "core-infra-intsvc-rg"],
         [
           "name"         : "DTS-CFTPTL-INTSVC",
-          "zoneTemplate" : 'service.core-compute-${environment}.internal',
+          "zoneTemplate" : '${environment}.platform.hmcts.net',
           "ttl"          : 3600, "active": false, "consulActive": true,
           "environments" : [
             ["name": "prod", "ttl": 2400],
@@ -54,7 +54,7 @@ class EnvironmentDnsConfigTest extends Specification {
     assertThat(idamSandbox.subscription).isEqualTo("DTS-CFTSBOX-INTSVC")
     assertThat(idamSandbox.resourceGroup).isEqualTo("core-infra-intsvc-rg")
     assertThat(idamSandbox.ttl).isEqualTo(300)
-    assertThat(idamSandbox.zone).isEqualTo("service.core-compute-idam-sandbox.internal")
+    assertThat(idamSandbox.zone).isEqualTo("idam-sandbox.platform.hmcts.net")
   }
 
   def "getEntry() should return null for an unknown environment"() {

@@ -5,7 +5,7 @@ class SpringBootPipelineType implements PipelineType, Serializable {
   def product
   def app
 
-  Builder builder
+  GradleBuilder builder
 
   SpringBootPipelineType(steps, product, app) {
     this.steps = steps

@@ -3,7 +3,7 @@ import uk.gov.hmcts.pipeline.DeprecationConfig
 import java.time.LocalDate
 
 def call(String environment, String product) {
-   
+
   def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
 
@@ -23,7 +23,7 @@ def call(String environment, String product) {
           deadline: deprecation.date_deadline
       ]
       deprecationDeadlines << deprecation.date_deadline
-    } 
+    }
   }
   if (slackDeprecationMessage) {
     def formattedMessage = slackDeprecationMessage.collect { deprecation ->
