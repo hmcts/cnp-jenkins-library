@@ -82,6 +82,11 @@ def call(type, product, component, timeout = 300, Closure body) {
 
       callbacksRunner.call('onSuccess')
       metricsPublisher.publish('Pipeline Succeeded')
+
+      sectionSyncBranchesWithMaster(
+        branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+        product: product
+      )
     }
   }
 }
