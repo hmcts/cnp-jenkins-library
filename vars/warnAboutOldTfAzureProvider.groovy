@@ -1,19 +1,41 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import java.time.LocalDate
 
-def call() {
-
+def call(String environment, String product) {
+   
+  def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
 
-  try {
-    sh """
-    chmod +x warn-about-old-tf-azure-provider.sh
-    ./warn-about-old-tf-azure-provider.sh
-    """
-  } catch(ignored) {
-    WarningCollector.addPipelineWarning("updated_azurerm_provider", "Please upgrade azurerm to the latest 3.x version, and terraform to 1.x For examples see: https://github.com/hmcts/spring-boot-template/pull/412 and https://github.com/hmcts/draft-store/pull/1168", LocalDate.of(2023, 02, 28))
-  } finally {
-    sh 'rm -f warn-about-old-tf-azure-provider.sh'
+  def slackDeprecationMessage = []
+  def deprecationDeadlines = []
+
+  tfDeprecationConfig.each { dependency, deprecation ->
+    try {
+      sh """
+      chmod +x warn-about-old-tf-azure-provider.sh
+      ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
+      """
+    } catch(ignored) {
+      slackDeprecationMessage << [
+          dependency: dependency,
+          message: "minimum required is *${deprecation.version}*",
+          deadline: deprecation.date_deadline
+      ]
+      deprecationDeadlines << deprecation.date_deadline
+    } 
   }
+  if (slackDeprecationMessage) {
+    def formattedMessage = slackDeprecationMessage.collect { deprecation ->
+      "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}"
+    }.join("\n\n")
+
+    def earliestDeadline = deprecationDeadlines.min()
+    WarningCollector.addPipelineWarning(
+      "updated_terraform_versions",
+      "\n\nOutdated terraform configuration in ${environment} for ${product}: \n\n${formattedMessage}\n\n",
+      LocalDate.parse(earliestDeadline)
+    )
+  }
+  sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }

@@ -27,6 +27,10 @@ def call(Map args = [:]) {
       message = "@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings \n\n ".concat(message)
       channel = args.channel
     }
+    if (channel == "@iamabotuser") {
+       echo "Skipping notification on PRs from bot user"
+       return
+     }
   }
 
   try {

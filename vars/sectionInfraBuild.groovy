@@ -7,7 +7,7 @@ def call(params) {
   def product = params.product
   def planOnly = params.planOnly ?: false
   def component = params.component ?: null
-  def expires = params.expires ?: LocalDate.now().plusDays(30)
+  def expires = params.expires ?: LocalDate.now().plusDays(14)
   def pcr = params.pipelineCallbacksRunner
   def businessArea = env.BUSINESS_AREA_TAG
 

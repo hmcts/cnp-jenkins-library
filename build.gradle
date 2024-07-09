@@ -66,5 +66,6 @@ sourceSets {
     resources {
       srcDirs = ['testResources']
     }
+
   }
 }
