@@ -49,7 +49,7 @@ class HelmTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --wait --timeout 1000s") &&
+      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --wait --timeout 1200s") &&
       it.get('script').contains("|| ./aks-debug-info.sh ${CHART}-pr-1 cnp")
     })
   }
