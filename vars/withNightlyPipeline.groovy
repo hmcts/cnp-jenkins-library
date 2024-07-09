@@ -64,6 +64,12 @@ def call(type, product, component, timeout = 300, Closure body) {
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
           sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
+          onMaster {  
+            sectionSyncBranchesWithMaster(
+              branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+              product: product
+            )
+          }
         }
         assert  pipelineType!= null
       } catch (err) {
@@ -82,11 +88,6 @@ def call(type, product, component, timeout = 300, Closure body) {
 
       callbacksRunner.call('onSuccess')
       metricsPublisher.publish('Pipeline Succeeded')
-
-      sectionSyncBranchesWithMaster(
-        branchestoSync: pipelineConfig.branchesToSyncWithMaster,
-        product: product
-      )
     }
   }
 }
