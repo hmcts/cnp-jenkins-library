@@ -39,7 +39,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
     if (channel == "@iamabotuser") {
        echo "Skipping notification on PRs from bot user"
        return
-     }
+    }
     slackWarningMessage = slackWarningMessage.concat("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> \n\n ")
       .concat(warningMessage)
 
