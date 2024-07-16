@@ -18,7 +18,7 @@ def call(Map args = [:]) {
   validate(args)
 
   String changeAuthor = env.CHANGE_AUTHOR
-  def message = "${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> is Fixed"
+  def message = "TESTING: ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> is Fixed"
   String channel
   if (new ProjectBranch(env.BRANCH_NAME).isMaster()) {
     channel = args.channel
