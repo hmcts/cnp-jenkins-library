@@ -40,7 +40,7 @@ def call(Map args = [:]) {
         failOnError: true,
         channel: channel,
         color: 'good',
-        message: slackMessage)
+        message: slackMessage.toJson())
     // if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
     //   def slackMessage = new slackBlockMessage(message)
     //   slackSend(
