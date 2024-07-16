@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
-import slackBlockMessage
+import SlackBlockMessage
 /**
  * Send build failure notification
  * <p>
