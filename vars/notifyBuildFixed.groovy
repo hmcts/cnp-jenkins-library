@@ -35,14 +35,19 @@ def call(Map args = [:]) {
   }
 
   try {
-    if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
-      def slackMessage = new slackBlockMessage(message)
-      slackSend(
+    slackSend(
         failOnError: true,
         channel: channel,
         color: 'good',
         message: slackMessage)
-    }
+    // if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
+    //   def slackMessage = new slackBlockMessage(message)
+    //   slackSend(
+    //     failOnError: true,
+    //     channel: channel,
+    //     color: 'good',
+    //     message: slackMessage)
+    // }
   } catch (Exception ex) {
     if(channel!='@iamabotuser')
       throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
