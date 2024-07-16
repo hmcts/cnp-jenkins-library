@@ -41,7 +41,7 @@ def call(Map args = [:]) {
       failOnError: true,
       channel: channel,
       color: 'danger',
-      message: slackMessage.toJson())
+      message: slackMessage.asObject())
   } 
   catch (Exception ex) {
     if(channel!='@iamabotuser') {
