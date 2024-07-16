@@ -1,31 +1,58 @@
 import groovy.json.JsonBuilder
 
-class slackBlockMessage {
-    private Map message
+class SlackBlockMessage {
+    private List<Map> blocks
 
-    slackBlockMessage(String initialText) {
-        this.message = [
-            blocks: [
-                [
-                    type: "section",
-                    text: [
-                        type: "mrkdwn",
-                        text: initialText
-                    ]
-                ]
+    SlackBlockMessage() {
+        this.blocks = []
+    }
+
+    void addSection(String text) {
+        this.blocks.add([
+            type: "section",
+            text: [
+                type: "mrkdwn",
+                text: text
             ]
-        ]
+        ])
     }
 
-    void setMessage(String message) {
-        this.message.blocks[0].text.text = message
+    void addHeader(String text) {
+        this.blocks.add([
+            type: "header",
+            text: [
+                type: "plain_text",
+                text: text,
+                emoji: true
+            ]
+        ])
     }
 
-    String getMessage(){
-        return this.message.blocks[0].text.text
+    void addDivider() {
+        this.blocks.add([
+            type: "divider"
+        ])
     }
 
-    String toJson() {
-        return new JsonBuilder(this.message).toPrettyString()
+    void addField(String text) {
+        def lastBlock = this.blocks.last()
+        if (lastBlock.type == "section" && lastBlock.containsKey("fields")) {
+            lastBlock.fields.add([
+                type: "mrkdwn",
+                text: text
+            ])
+        } else {
+            this.blocks.add([
+                type: "section",
+                fields: [[
+                    type: "mrkdwn",
+                    text: text
+                ]]
+            ])
+        }
+    }
+
+    String asObject() {
+        return this.blocks
     }
 }
