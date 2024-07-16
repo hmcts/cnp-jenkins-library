@@ -66,7 +66,7 @@ def call(type, product, component, timeout = 300, Closure body) {
           sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
           onMaster {  
             sectionSyncBranchesWithMaster(
-              branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+              branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
               product: product
             )
           }
