@@ -18,7 +18,7 @@ def call(params) {
     if (scmVars) {
       env.GIT_COMMIT = scmVars.GIT_COMMIT
       env.GIT_URL = scmVars.GIT_URL
-      env.LAST_COMMIT_TIMESTAMP = steps.sh(script: "git log -1 --pretty='%cd' --date=iso | tr -d '+[:space:]:-' | head -c 14", returnStdout: true)
+      env.LAST_COMMIT_TIMESTAMP = steps.sh(script: "git log -1 --pretty='%cd' --date=iso | TZ=UTC date '+%Y%m%d%H%M%S' -f -", returnStdout: true)
     }
     try {
       def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
