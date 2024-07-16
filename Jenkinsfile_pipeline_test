@@ -1,5 +1,5 @@
 #!groovy
-@Library('Infrastructure') _
+@Library('Infrastructure@DTSPO-18118-jenkins-block-messages') _
 import uk.gov.hmcts.contino.GradleBuilder
 
 def channel = '#platops-build-notices'
