@@ -59,10 +59,12 @@ class SlackBlockMessage {
         this.color = color
     }
 
-    Map<String, Object>  asObject() {
+    List<Map<String, Object>> asObject() {
         return [
-            color: this.color,
-            blocks: this.blocks
+            [
+                color: this.color,
+                blocks: this.blocks
+            ]
         ]
     }
 }
