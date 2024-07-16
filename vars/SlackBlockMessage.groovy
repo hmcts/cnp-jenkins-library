@@ -2,9 +2,12 @@ import groovy.json.JsonBuilder
 
 class SlackBlockMessage {
     private List<Map> blocks
+    private String color
 
     SlackBlockMessage() {
         this.blocks = []
+        // Default to green
+        this.color = '#6aa84f'
     }
 
     void addSection(String text) {
@@ -52,7 +55,14 @@ class SlackBlockMessage {
         }
     }
 
-    String asObject() {
-        return this.blocks
+    void setColor(String color){
+        this.color = color
+    }
+
+    Map<String, Object>  asObject() {
+        return [
+            color: this.color,
+            blocks: this.blocks
+        ]
     }
 }

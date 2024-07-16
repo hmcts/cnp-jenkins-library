@@ -41,7 +41,8 @@ def call(Map args = [:]) {
       failOnError: true,
       channel: channel,
       color: 'danger',
-      blocks: slackMessage.asObject())
+      attachments: slackMessage.asObject())
+      // blocks: slackMessage.asObject())
   } 
   catch (Exception ex) {
     if(channel!='@iamabotuser') {
