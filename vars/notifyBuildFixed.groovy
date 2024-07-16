@@ -35,6 +35,7 @@ def call(Map args = [:]) {
   }
 
   try {
+    def slackMessage = new slackBlockMessage(message)
     slackSend(
         failOnError: true,
         channel: channel,

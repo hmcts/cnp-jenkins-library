@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
+import slackBlockMessage
 /**
  * Send build failure notification
  * <p>
@@ -33,11 +34,12 @@ def call(Map args = [:]) {
   }
 
   try {
+    def slackMessage = new slackBlockMessage(message)
     slackSend(
       failOnError: true,
       channel: channel,
       color: 'danger',
-      message: message)
+      message: slackMessage)
   } 
   catch (Exception ex) {
     if(channel!='@iamabotuser') {
