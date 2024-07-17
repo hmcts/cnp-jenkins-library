@@ -69,12 +69,6 @@ def call(type, String product, String component, Closure body) {
   node(agentType) {
     timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-      //  For testing funcs that don't need different functionality aka deprecations
-      notifyBuildFixed channel: slackChannel
-      // notifyBuildFailed channel: slackChannel
-      // notifyBuildEvent channel: slackChannel
-
-
       try {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
