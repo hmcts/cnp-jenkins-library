@@ -58,7 +58,7 @@ class SlackBlockMessage {
         ]
     }
 
-    List<Map> getBlocks() {
-        return this.blocks
+    String getBlockText() {
+        return this.blocks[0].text.text
     }
 }
