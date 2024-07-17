@@ -3,6 +3,7 @@ package uk.gov.hmcts.pipeline.deprecation
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 class WarningCollector implements Serializable {
 

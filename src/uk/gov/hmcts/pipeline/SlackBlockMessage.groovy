@@ -1,3 +1,4 @@
+package uk.gov.hmcts.pipeline
 import groovy.json.JsonBuilder
 
 class SlackBlockMessage {
@@ -54,9 +55,9 @@ class SlackBlockMessage {
             ])
         }
     }
-
-    void setColor(String color){
-        this.color = color
+    
+    void setColorRed(){
+        this.color = '#ef333f'
     }
 
     List<Map<String, Object>> asObject() {
