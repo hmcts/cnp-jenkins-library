@@ -10,7 +10,7 @@ class WarningCollector implements Serializable {
   static List<DeprecationWarning> pipelineWarnings = new ArrayList<>()
   static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
     .ofPattern("dd/MM/yyyy");
-  private slackMessage = new SlackBlockMessage()
+  static slackMessage = new SlackBlockMessage()
 
   static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate) {
     if (deprecationDate.isBefore(LocalDate.now())){
