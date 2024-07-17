@@ -7,7 +7,7 @@ class SlackBlockMessage {
 
     SlackBlockMessage() {
         this.blocks = []
-        // Default to green
+        // Default to green color
         this.color = '#6aa84f'
     }
 
@@ -30,6 +30,7 @@ class SlackBlockMessage {
                 emoji: true
             ]
         ])
+        addDivider()
     }
 
     void addDivider() {
@@ -38,26 +39,14 @@ class SlackBlockMessage {
         ])
     }
 
-    void addField(String text) {
-        def lastBlock = this.blocks.last()
-        if (lastBlock.type == "section" && lastBlock.containsKey("fields")) {
-            lastBlock.fields.add([
-                type: "mrkdwn",
-                text: text
-            ])
-        } else {
-            this.blocks.add([
-                type: "section",
-                fields: [[
-                    type: "mrkdwn",
-                    text: text
-                ]]
-            ])
-        }
-    }
-    
-    void setColorRed(){
+    void setDangerColor(){
+        // Sets color to red
         this.color = '#ef333f'
+    }
+
+    void setWarningColor(){
+        // Sets color to orange
+        this.color = '#ff781f'
     }
 
     List<Map<String, Object>> asObject() {
@@ -67,5 +56,9 @@ class SlackBlockMessage {
                 blocks: this.blocks
             ]
         ]
+    }
+
+    List<Map> getBlocks() {
+        return this.blocks
     }
 }

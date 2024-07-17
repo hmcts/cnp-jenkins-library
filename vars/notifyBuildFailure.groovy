@@ -37,7 +37,7 @@ def call(Map args = [:]) {
   try {
     def slackMessage = new SlackBlockMessage()
     slackMessage.addSection(message)
-    slackMessage.setColorRed()
+    slackMessage.setDangerColor()
     slackSend(
       failOnError: true,
       channel: channel,
