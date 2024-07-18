@@ -18,11 +18,15 @@ def call(String environment, String product) {
       """
     } catch(ignored) {
       if (deprecation.dependency && deprecation.message && deprecation.deadline) {
+        println("Added deprecation to WarningCollector")
         WarningCollector.addPipelineWarning(
             "updated_terraform_versions",
             "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
             LocalDate.parse(deprecation.deadline)
         )
+      }
+      else {
+        println("Failed to add deprecation to WarningCollector")
       }
     } 
   }

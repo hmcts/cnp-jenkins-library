@@ -19,7 +19,6 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
 def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   SlackBlockMessage warningMessage = WarningCollector.getSlackWarningMessage()
   String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
-  // println("Warnings here so far: " + warnings)
 
   String changeAuthor = env.CHANGE_AUTHOR
 
@@ -27,11 +26,12 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
 
   // Only send if there are blocks in the warning message meaning there is something to send
   if (!warnings.isEmpty()) {
+    println("About to send slack warning message for deprecations...")
     String channel
     if (! new ProjectBranch(env.BRANCH_NAME).isMaster()) {
       channel = new SlackChannelRetriever(this).retrieve(teamSlackChannel, changeAuthor)
       if(channel == null ){
-        // warningMessage.addSection("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings")
+        warningMessage.addSection("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings")
       }
     }
     if(channel == null ) {
