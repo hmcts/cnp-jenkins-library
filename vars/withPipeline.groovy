@@ -17,28 +17,6 @@ import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
 
-def retryWithAgentCheck(int maxRetries, Closure closure) {
-    int attempt = 0
-    while (attempt < maxRetries) {
-        try {
-            closure.call()
-            return // Exit if successful
-        } catch (Exception e) {
-            attempt++
-            if (e.message?.contains("hudson.remoting.ChannelClosedException")) {
-                echo "Attempt ${attempt} of ${maxRetries}: Agent eviction or connection issue detected. Retrying..."
-                sleep(time: 10, unit: 'SECONDS') // Optional: Sleep between retries
-                if (attempt >= maxRetries) {
-                    echo "Max retry attempts reached. Failing the pipeline."
-                    throw e // Re-throw the exception if max retries exceeded
-                }
-            } else {
-                throw e
-            }
-        }
-    }
-}
-
 def call(type, String product, String component, Closure body) {
 
     def branch = new ProjectBranch(env.BRANCH_NAME)
@@ -87,7 +65,7 @@ def call(type, String product, String component, Closure body) {
     def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
     String agentType = env.BUILD_AGENT_TYPE
 
-    retryWithAgentCheck(3) {
+    retry(count: 2, conditions: [agent(), nonresumable()]) {
         node(agentType) {
             timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
                 def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
