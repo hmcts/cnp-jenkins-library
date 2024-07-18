@@ -26,16 +26,22 @@ def call(String environment, String product) {
     } 
   }
   if (slackDeprecationMessage) {
-    def formattedMessage = slackDeprecationMessage.collect { deprecation ->
-      "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}"
-    }.join("\n\n")
+    // def formattedMessage = slackDeprecationMessage.collect { deprecation ->
+    //   "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}"
+    // }.join("\n\n")
 
-    def earliestDeadline = deprecationDeadlines.min()
     WarningCollector.addPipelineWarning(
       "updated_terraform_versions",
-      "\n\nOutdated terraform configuration in ${environment} for ${product}: \n\n${formattedMessage}\n\n",
-      LocalDate.parse(earliestDeadline)
+      "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
+      LocalDate.parse(${deprecation.deadline})
     )
+
+    // def earliestDeadline = deprecationDeadlines.min()
+    // WarningCollector.addPipelineWarning(
+    //   "updated_terraform_versions",
+    //   "\n\nOutdated terraform configuration in ${environment} for ${product}: \n\n${formattedMessage}\n\n",
+    //   LocalDate.parse(earliestDeadline)
+    // )
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }
