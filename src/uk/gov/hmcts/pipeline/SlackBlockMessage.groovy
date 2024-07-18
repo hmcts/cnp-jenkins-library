@@ -59,11 +59,4 @@ class SlackBlockMessage {
             ]
         ]
     }
-
-    boolean getBlockText() {
-        if (this.blocks && this.blocks[0]) {
-            return true
-        }
-        return false
-    }
 }
