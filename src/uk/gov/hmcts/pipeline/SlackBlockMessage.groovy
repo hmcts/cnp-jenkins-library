@@ -20,7 +20,6 @@ class SlackBlockMessage {
                     text: text
                 ]
             ])
-            addDivider()
         }
     }
 
