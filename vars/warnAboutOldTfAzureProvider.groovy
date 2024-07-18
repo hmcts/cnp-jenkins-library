@@ -22,22 +22,7 @@ def call(String environment, String product) {
           "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
           LocalDate.parse(deprecation.deadline)
       )
-      // slackDeprecationMessage << [
-      //     dependency: dependency,
-      //     message: "minimum required is *${deprecation.version}*",
-      //     deadline: deprecation.date_deadline
-      // ]
-      // deprecationDeadlines << deprecation.date_deadline
     } 
   }
-  // if (slackDeprecationMessage) {
-  //   slackDeprecationMessage.each { deprecation ->
-  //     WarningCollector.addPipelineWarning(
-  //         "updated_terraform_versions",
-  //         "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
-  //         LocalDate.parse(deprecation.deadline)
-  //     )
-  //   }
-  // }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }
