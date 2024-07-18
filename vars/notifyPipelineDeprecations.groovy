@@ -41,10 +41,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
        echo "Skipping notification on PRs from bot user"
        return
     }
-
-    // warningMessage.addHeader("Deprecations in <${env.RUN_DISPLAY_URL}|Run ${env.BUILD_DISPLAY_NAME}>")
     warningMessage.setWarningColor()
-    warningMessage.addSection("${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Run ${env.BUILD_DISPLAY_NAME}>")
 
     println("Message blocks to be sent: " + warningMessage.blocks)
     
