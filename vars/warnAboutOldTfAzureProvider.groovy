@@ -17,31 +17,27 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      slackDeprecationMessage << [
-          dependency: dependency,
-          message: "minimum required is *${deprecation.version}*",
-          deadline: deprecation.date_deadline
-      ]
-      deprecationDeadlines << deprecation.date_deadline
+      WarningCollector.addPipelineWarning(
+          "updated_terraform_versions",
+          "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
+          LocalDate.parse(deprecation.deadline)
+      )
+      // slackDeprecationMessage << [
+      //     dependency: dependency,
+      //     message: "minimum required is *${deprecation.version}*",
+      //     deadline: deprecation.date_deadline
+      // ]
+      // deprecationDeadlines << deprecation.date_deadline
     } 
   }
-  if (slackDeprecationMessage) {
-    // def formattedMessage = slackDeprecationMessage.collect { deprecation ->
-    //   "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}"
-    // }.join("\n\n")
-
-    WarningCollector.addPipelineWarning(
-      "updated_terraform_versions",
-      "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
-      LocalDate.parse(${deprecation.deadline})
-    )
-
-    // def earliestDeadline = deprecationDeadlines.min()
-    // WarningCollector.addPipelineWarning(
-    //   "updated_terraform_versions",
-    //   "\n\nOutdated terraform configuration in ${environment} for ${product}: \n\n${formattedMessage}\n\n",
-    //   LocalDate.parse(earliestDeadline)
-    // )
-  }
+  // if (slackDeprecationMessage) {
+  //   slackDeprecationMessage.each { deprecation ->
+  //     WarningCollector.addPipelineWarning(
+  //         "updated_terraform_versions",
+  //         "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
+  //         LocalDate.parse(deprecation.deadline)
+  //     )
+  //   }
+  // }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }
