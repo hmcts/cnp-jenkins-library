@@ -24,11 +24,13 @@ def call(String environment, String product) {
           deadline: deprecation.date_deadline
       ]
       deprecationDeadlines << deprecation.date_deadline
+      WarningCollector.addPipelineWarning("updated_tf_versions" ,"TESTING IT WORKS",  LocalDate.parse(deprecation.date_deadline))
       // WarningCollector.addPipelineWarning(
       //     "updated_terraform_versions",
       //     "For " + dependency + " - minimum required is *" + deprecation.version +"*, update by " + deprecation.deadline + ".",
       //     LocalDate.parse(deprecation.deadline)
       // )
+
       println("Added deprecation to WarningCollector")
     } 
   }
