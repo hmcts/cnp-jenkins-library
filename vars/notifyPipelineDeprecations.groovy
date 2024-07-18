@@ -43,12 +43,11 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
     }
 
     warningMessage.addHeader("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}>")
-    
+    warningMessage.setWarningColor()    
     try {
       slackSend(
         failOnError: true,
         channel: channel,
-        warningMessage.setWarningColor(),
         attachments: warningMessage.asObject())
     } 
     catch (Exception ex) {
