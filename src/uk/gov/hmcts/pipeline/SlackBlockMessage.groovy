@@ -24,12 +24,13 @@ class SlackBlockMessage {
     }
 
     void addHeader(String text) {
+        def length = text.length()
+        println("Character count of header is: ${length}")
         this.blocks.add([
             type: "header",
             text: [
                 type: "plain_text",
                 text: text,
-                emoji: true
             ]
         ])
         addDivider()
