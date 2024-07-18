@@ -17,11 +17,13 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning(
-          "updated_terraform_versions",
-          "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
-          LocalDate.parse(deprecation.deadline)
-      )
+      if (deprecation.dependency && deprecation.message && deprecation.deadline) {
+        WarningCollector.addPipelineWarning(
+            "updated_terraform_versions",
+            "`${deprecation.dependency}` - ${deprecation.message}, update by ${deprecation.deadline}",
+            LocalDate.parse(deprecation.deadline)
+        )
+      }
     } 
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'

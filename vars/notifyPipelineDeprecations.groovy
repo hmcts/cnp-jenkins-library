@@ -18,7 +18,7 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
  */
 def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   SlackBlockMessage warningMessage = WarningCollector.getSlackWarningMessage()
-  // String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
+  String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
   // println("Warnings here so far: " + warnings)
 
   String changeAuthor = env.CHANGE_AUTHOR
@@ -26,37 +26,37 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   publishWarningMetrics(metricsPublisher)
 
   // Only send if there are blocks in the warning message meaning there is something to send
-  // if (!warnings.isEmpty()) {
-  //   String channel
-  //   if (! new ProjectBranch(env.BRANCH_NAME).isMaster()) {
-  //     channel = new SlackChannelRetriever(this).retrieve(teamSlackChannel, changeAuthor)
-  //     if(channel == null ){
-  //       warningMessage.addSection("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings")
-  //     }
-  //   }
-  //   if(channel == null ) {
-  //     channel = teamSlackChannel
-  //   }
-  //   if (channel == "@iamabotuser") {
-  //      echo "Skipping notification on PRs from bot user"
-  //      return
-  //   }
+  if (!warnings.isEmpty()) {
+    String channel
+    if (! new ProjectBranch(env.BRANCH_NAME).isMaster()) {
+      channel = new SlackChannelRetriever(this).retrieve(teamSlackChannel, changeAuthor)
+      if(channel == null ){
+        // warningMessage.addSection("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings")
+      }
+    }
+    if(channel == null ) {
+      channel = teamSlackChannel
+    }
+    if (channel == "@iamabotuser") {
+       echo "Skipping notification on PRs from bot user"
+       return
+    }
 
-  //   // warningMessage.addHeader("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}>")
+    // warningMessage.addHeader("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}>")
     
-  //   try {
-  //     slackSend(
-  //       failOnError: true,
-  //       channel: channel,
-  //       warningMessage.setWarningColor(),
-  //       attachments: warningMessage.asObject())
-  //   } 
-  //   catch (Exception ex) {
-  //     if(channel!='@iamabotuser') {
-  //       throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
-  //     }
-  //   }
-  // }
+    try {
+      slackSend(
+        failOnError: true,
+        channel: channel,
+        warningMessage.setWarningColor(),
+        attachments: warningMessage.asObject())
+    } 
+    catch (Exception ex) {
+      if(channel!='@iamabotuser') {
+        throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
+      }
+    }
+  }
 }
 
 void publishWarningMetrics(MetricsPublisher metricsPublisher) {
