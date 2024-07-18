@@ -17,7 +17,7 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}* in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Run ${env.BUILD_DISPLAY_NAME}>.",  LocalDate.parse(deprecation.date_deadline))
+      WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.",  LocalDate.parse(deprecation.date_deadline))
     } 
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
