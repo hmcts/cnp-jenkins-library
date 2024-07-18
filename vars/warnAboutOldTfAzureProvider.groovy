@@ -17,9 +17,10 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
+      println("Trying to add deprecation to WarningCollector")
       WarningCollector.addPipelineWarning(
           "updated_terraform_versions",
-          "`${dependency}` - minimum required is *${deprecation.version}*, update by ${deprecation.deadline}",
+          "For " + dependency + " - minimum required is *" + deprecation.version +"*, update by " + deprecation.deadline + ".",
           LocalDate.parse(deprecation.deadline)
       )
       println("Added deprecation to WarningCollector")

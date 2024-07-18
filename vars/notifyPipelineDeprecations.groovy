@@ -42,7 +42,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
        return
     }
 
-    // warningMessage.addHeader("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}>")
+    warningMessage.addHeader("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}>")
     
     try {
       slackSend(

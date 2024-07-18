@@ -12,13 +12,15 @@ class SlackBlockMessage {
     }
 
     void addSection(String text) {
-        this.blocks.add([
-            type: "section",
-            text: [
-                type: "mrkdwn",
-                text: text
-            ]
-        ])
+        if(!text.isEmpty()){
+            this.blocks.add([
+                type: "section",
+                text: [
+                    type: "mrkdwn",
+                    text: text
+                ]
+            ])
+        }
     }
 
     void addHeader(String text) {
