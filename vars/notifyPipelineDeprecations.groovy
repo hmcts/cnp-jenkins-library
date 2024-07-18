@@ -42,7 +42,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
        return
     }
 
-    warningMessage.addHeader("Deprecations in <${env.RUN_DISPLAY_URL}|Run ${env.BUILD_DISPLAY_NAME}>")
+    // warningMessage.addHeader("Deprecations in <${env.RUN_DISPLAY_URL}|Run ${env.BUILD_DISPLAY_NAME}>")
     warningMessage.setWarningColor()
     println("Message blocks to be sent: " + warningMessage.blocks)
     
