@@ -58,10 +58,10 @@ class SlackBlockMessage {
         ]
     }
 
-    String getBlockText() {
-        if (this.blocks[0].text.text){
-            return this.blocks[0].text.text
+    boolean getBlockText() {
+        if (this.blocks[0].text.text) {
+            return true
         }
-        return ""
+        return false
     }
 }

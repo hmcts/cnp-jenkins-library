@@ -24,7 +24,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   publishWarningMetrics(metricsPublisher)
 
   // Only send if there are blocks in the warning message meaning there is something to send
-  if (!warningMessage.getBlockText().trim().isEmpty()) {
+  if (warningMessage.getBlockText()) {
     String channel
     if (! new ProjectBranch(env.BRANCH_NAME).isMaster()) {
       channel = new SlackChannelRetriever(this).retrieve(teamSlackChannel, changeAuthor)
