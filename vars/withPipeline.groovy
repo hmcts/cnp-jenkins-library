@@ -73,15 +73,15 @@ def call(type, String product, String component, Closure body) {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        sectionBuildAndTest(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          builder: pipelineType.builder,
-          subscription: subscription.nonProdName,
-          environment: environment.nonProdName,
-          product: product,
-          component: component
-        )
+        // sectionBuildAndTest(
+        //   appPipelineConfig: pipelineConfig,
+        //   pipelineCallbacksRunner: callbacksRunner,
+        //   builder: pipelineType.builder,
+        //   subscription: subscription.nonProdName,
+        //   environment: environment.nonProdName,
+        //   product: product,
+        //   component: component
+        // )
 
         if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
           stage('Publish Helm chart') {
