@@ -10,7 +10,8 @@ class SlackBlockMessage {
         // Default to green color
         this.color = '#6aa84f'
     }
-
+    
+     // Adds a section block with markdown text if text is not empty
     void addSection(String text) {
         if(!text.isEmpty()){
             this.blocks.add([
@@ -23,9 +24,8 @@ class SlackBlockMessage {
         }
     }
 
+    // Adds a header block with plain text - adds at position where it is called
     void addHeader(String text) {
-        def length = text.length()
-        println("Character count of header is: ${length}")
         this.blocks.add([
             type: "header",
             text: [
@@ -33,13 +33,10 @@ class SlackBlockMessage {
                 text: text,
             ]
         ])
-        addDivider()
     }
 
-
+    // Adds a header block with plain text, guaranteed at first position of message
     void addFirstHeader(String text) {
-        def length = text.length()
-        println("Character count of header is: ${length}")
         this.blocks.add(0, [
             type: "header",
             text: [
@@ -47,9 +44,7 @@ class SlackBlockMessage {
                 text: text,
             ]
         ])
-        this.blocks.add(1, [
-            type: "divider"
-        ])
+        addDivider()
     }
 
     void addDivider() {
@@ -68,6 +63,7 @@ class SlackBlockMessage {
         this.color = '#ff781f'
     }
 
+    // Returns the message as a list of maps to meet attachment criteria of slack send function, including the color and blocks
     List<Map<String, Object>> asObject() {
         return [
             [

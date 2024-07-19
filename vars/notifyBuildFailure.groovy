@@ -17,8 +17,7 @@ def call(Map args = [:]) {
   validate(args)
 
   String changeAuthor = env.CHANGE_AUTHOR
-  echo "Running in correct place"
-  def message = "TESTING: ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> has FAILED. See the <https://hmcts.github.io/cloud-native-platform/troubleshooting/#jenkins|troubleshooting guide> to help debug the failure"
+  def message = "${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> has FAILED. See the <https://hmcts.github.io/cloud-native-platform/troubleshooting/#jenkins|troubleshooting guide> to help debug the failure"
   String channel
   if (new ProjectBranch(env.BRANCH_NAME).isMaster()) {
     channel = args.channel
@@ -35,9 +34,11 @@ def call(Map args = [:]) {
   }
 
   try {
+    // Create block message and add our built message to it as a new section
     def slackMessage = new SlackBlockMessage()
     slackMessage.addSection(message)
     slackMessage.setDangerColor()
+    
     slackSend(
       failOnError: true,
       channel: channel,

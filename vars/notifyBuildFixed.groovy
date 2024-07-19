@@ -18,7 +18,7 @@ def call(Map args = [:]) {
   validate(args)
 
   String changeAuthor = env.CHANGE_AUTHOR
-  def message = "TESTING: ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> is Fixed"
+  def message = "${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> is Fixed"
   String channel
   if (new ProjectBranch(env.BRANCH_NAME).isMaster()) {
     channel = args.channel
@@ -36,8 +36,10 @@ def call(Map args = [:]) {
 
   try {
     if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
+      // Create block message and add our built message to it as a new section
       def slackMessage = new SlackBlockMessage()
       slackMessage.addSection(message)
+      
       slackSend(
         failOnError: true,
         channel: channel,

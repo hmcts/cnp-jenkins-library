@@ -37,7 +37,11 @@ class WarningCollector implements Serializable {
     }
   }
 
-  // Returns the SlackBlockMessage object, but also adds all pipelineWarnings collected to the object as new sections before passing back
+  /**
+   * Constructs and returns a SlackBlockMessage object by adding all collected pipeline warnings as new sections.
+   * Each warning includes a warning message and a deprecation date message.
+   * Returns the complete SlackBlockMessage object will all pipeline warnings as sections.
+   */
   static SlackBlockMessage getSlackWarningMessage() {
     for (pipelineWarning in pipelineWarnings) {
       slackMessage.addSection(pipelineWarning.warningMessage.concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate)))
