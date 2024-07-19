@@ -42,8 +42,8 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
        return
     }
     warningMessage.setWarningColor()
-    warningMessage.addFirstHeader("We have noticed the following deprecated configuration")
-    warningMessage.addSection("We have noticed deprecated configuration in ${env?.JOB_NAME}: <${env?.RUN_DISPLAY_URL}|Build ${env?.BUILD_DISPLAY_NAME}>")
+    warningMessage.addFirstHeader("We have noticed the following deprecated configuration:")
+    warningMessage.addSection("In ${env?.JOB_NAME}: <${env?.RUN_DISPLAY_URL}|Build ${env?.BUILD_DISPLAY_NAME}>")
     println("Message blocks to be sent: " + warningMessage.blocks)
     
     try {
