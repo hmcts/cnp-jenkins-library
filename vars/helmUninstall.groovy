@@ -1,10 +1,7 @@
-import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
-import uk.gov.hmcts.contino.PipelineCallbacksRunner
 
-def call(DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-
+def call(dockerImage, Map params, pcr) {
   try {
     stageWithAgent("Uninstall Helm Release - ${params.environment}", params.product) {
       pcr.callAround("helmReleaseUninstall:${params.environment}") {
@@ -18,8 +15,8 @@ def call(DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
   }
 }
 
-def uninstallRelease(DockerImage dockerImage, Map params) {
-  
+def uninstallRelease(dockerImage, Map params) {
+
   def subscription = params.subscription
 
   def aksServiceName = dockerImage.getAksServiceName()

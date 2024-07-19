@@ -22,6 +22,7 @@ class withJavaPipelineOnPreviewWithHighLevelDataSetupTests extends BaseCnpPipeli
       test(1) {}
       securityCheck(1) {}
       sonarScan(1) {}
+      techStackMaintenance(1) {}
       highLevelDataSetup(1) {}
       smokeTest(1) {} //preview-staging
       functionalTest(1) {}

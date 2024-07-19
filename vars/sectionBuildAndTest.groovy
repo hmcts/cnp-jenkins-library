@@ -11,7 +11,7 @@ def call(params) {
 
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
-  Builder builder = params.builder
+  def builder = params.builder
 
   def subscription = params.subscription
   def product = params.product
@@ -55,7 +55,7 @@ def call(params) {
       }
     }
 
-    LinkedHashMap<String, Object> branches = [failFast: false]
+    def branches = [failFast: false]
     branches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {

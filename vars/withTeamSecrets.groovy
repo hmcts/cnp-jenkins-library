@@ -1,6 +1,6 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 
-def call(AppPipelineConfig config, String environment, Closure body) {
+def call(config, String environment, Closure body) {
   Map<String, List<Map<String, Object>>> secrets = config.vaultSecrets
   Map<String, String> vaultOverrides = config.vaultEnvironmentOverrides
 

@@ -21,7 +21,7 @@ def call(type, product, component, timeout = 300, Closure body) {
     ruby: new RubyPipelineType(this, product, component)
   ]
 
-  PipelineType pipelineType = pipelineTypes.get(type)
+  def pipelineType = pipelineTypes.get(type)
 
   assert pipelineType != null
 
@@ -55,7 +55,7 @@ def call(type, product, component, timeout = 300, Closure body) {
   } else {
     nodeSelector = agentType + ' && daily'
   }
-  
+
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL

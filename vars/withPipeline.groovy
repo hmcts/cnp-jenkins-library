@@ -34,7 +34,7 @@ def call(type, String product, String component, Closure body) {
   Subscription subscription = new Subscription(env)
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
-  PipelineType pipelineType
+  def pipelineType
 
   if (type instanceof PipelineType) {
     pipelineType = type
