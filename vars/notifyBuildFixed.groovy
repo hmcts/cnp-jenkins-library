@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 /**
  * Send build fixed notification
@@ -35,11 +36,14 @@ def call(Map args = [:]) {
 
   try {
     if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
+      // Create block message and add our built message to it as a new section
+      def slackMessage = new SlackBlockMessage()
+      slackMessage.addSection(message)
+      
       slackSend(
         failOnError: true,
         channel: channel,
-        color: 'good',
-        message: message)
+        attachments: slackMessage.asObject())
     }
   } catch (Exception ex) {
     if(channel!='@iamabotuser')

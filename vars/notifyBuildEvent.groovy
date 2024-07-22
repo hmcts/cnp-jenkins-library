@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 /**
  * Send build notification
@@ -41,11 +42,15 @@ def call(Map args = [:]) {
   }
 
   try {
+        // Create block message and add our built message to it as a new section
+    def slackMessage = new SlackBlockMessage()
+    slackMessage.addSection(message)
+    slackMessage.setDangerColor()
+
     slackSend(
       failOnError: true,
       channel: channel,
-      color: config.color,
-      message: message )
+      attachments: slackMessage.asObject())
   } 
   catch (Exception ex) {
     if(channel!='@iamabotuser') {

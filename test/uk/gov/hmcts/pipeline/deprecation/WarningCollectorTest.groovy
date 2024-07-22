@@ -5,6 +5,7 @@ import spock.lang.Specification
 import java.time.LocalDate
 
 import static org.assertj.core.api.Assertions.assertThat
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 class WarningCollectorTest extends Specification {
 
@@ -74,12 +75,15 @@ class WarningCollectorTest extends Specification {
     WarningCollector.pipelineWarnings.clear()
     WarningCollector.addPipelineWarning("test_key","Test deprecation.", nextDay )
     WarningCollector.addPipelineWarning("test_key_2","Another test deprecation.", nextWeek )
-    String message = WarningCollector.getSlackWarningMessage()
+    SlackBlockMessage message = WarningCollector.getSlackWarningMessage()
 
     String expectedMessage = "Test deprecation. This configuration will stop working by ${nextDayFormattedDate} ( tomorrow )\n\n" +
-      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )\n\n"
+      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )"
+    // Collect all messages from SlackBlockMessage object for testing
+    String actualMessage = message.blocks.collect { it.text.text }.join("\n\n")
+
     then:
-    assertThat(message).isEqualTo(expectedMessage)
+    assertThat(actualMessage).isEqualTo(expectedMessage)
   }
 
 }
