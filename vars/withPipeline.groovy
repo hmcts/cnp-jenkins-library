@@ -66,7 +66,7 @@ def call(type, String product, String component, Closure body) {
     def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
     String agentType = env.BUILD_AGENT_TYPE
 
-    retry(count: 2, conditions: [agent()]) {
+    retry(count: 2) {
         node(agentType) {
             timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
                 def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
