@@ -25,10 +25,10 @@ def call(type, String product, String component, Closure body) {
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   def pipelineTypes = [
-      java  : new SpringBootPipelineType(this, product, component),
-      nodejs: new NodePipelineType(this, product, component),
-      angular: new AngularPipelineType(this, product, component),
-      ruby: new RubyPipelineType(this, product, component)
+    java  : new SpringBootPipelineType(this, product, component),
+    nodejs: new NodePipelineType(this, product, component),
+    angular: new AngularPipelineType(this, product, component),
+    ruby: new RubyPipelineType(this, product, component)
   ]
 
   Subscription subscription = new Subscription(env)
@@ -37,9 +37,9 @@ def call(type, String product, String component, Closure body) {
   PipelineType pipelineType
 
   if (type instanceof PipelineType) {
-      pipelineType = type
+    pipelineType = type
   } else {
-      pipelineType = pipelineTypes.get(type)
+    pipelineType = pipelineTypes.get(type)
   }
 
   assert pipelineType != null
@@ -50,7 +50,7 @@ def call(type, String product, String component, Closure body) {
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
   callbacks.registerAfterAll { stage ->
-      metricsPublisher.publish(stage)
+    metricsPublisher.publish(stage)
   }
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
@@ -58,7 +58,7 @@ def call(type, String product, String component, Closure body) {
   body.call() // register pipeline config
 
   dsl.onStageFailure() {
-      currentBuild.result = "FAILURE"
+    currentBuild.result = "FAILURE"
   }
 
   Environment environment = new Environment(env)
