@@ -13,7 +13,7 @@ def call(Closure block) {
     } else if (infraFolderHasChanges == 0) {
       println "Infrastructure folder has no changes"
     } else {
-      println "unexpected return code: ${infraFolderHasChanges}"
+      println "[WARN] Unexpected return code: ${infraFolderHasChanges}"
     }
 
     if (infraFolderHasChanges == 1) {
