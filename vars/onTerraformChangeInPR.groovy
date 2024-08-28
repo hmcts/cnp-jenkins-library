@@ -8,16 +8,14 @@ def call(Closure block) {
       returnStatus: true
     )
     sh 'rm check-infrastructure-files-changed.sh'
+
     if (infraFolderHasChanges == 1) {
       println "Infrastructure folder has changes"
+      return block.call()
     } else if (infraFolderHasChanges == 0) {
       println "Infrastructure folder has no changes"
     } else {
       println "[WARN] Unexpected return code: ${infraFolderHasChanges}"
-    }
-
-    if (infraFolderHasChanges == 1) {
-      return block.call()
     }
   }
 }
