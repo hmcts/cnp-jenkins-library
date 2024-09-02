@@ -18,6 +18,16 @@ class GithubAPI {
     'cache': []
   ]
 
+    private static cachedTopicList = [
+    'isValid': false,
+    'cache': []
+  ]
+
+  private static cachedPR = [
+    'isValid': false,
+    'cache': []
+  ]
+
   def currentProject() {
     return new RepositoryUrl().getShort(this.steps.env.CHANGE_URL)
   }
@@ -36,6 +46,25 @@ class GithubAPI {
   /**
    * Return whether the cache is empty
    */
+  def static isTopicCacheEmpty() {
+    return cachedTopicList.cache.isEmpty()
+  }
+
+  def static isTopicCacheValid() {
+    return cachedTopicList.isValid
+  }
+
+  def static isPRCacheEmpty() {
+    return cachedTopicList.cache.isEmpty()
+  }
+
+  def static isPRCacheValid() {
+    return cachedTopicList.isValid
+  }
+
+  /**
+   * Return whether the cache is empty
+   */
   def static isCacheEmpty() {
     return cachedLabelList.cache.isEmpty()
   }
@@ -47,12 +76,26 @@ class GithubAPI {
     return cachedLabelList.cache
   }
 
+  def static getTopicCache() {
+    return cachedTopicList.cache.toString()
+  }
+
+  def static getPRCache() {
+    return cachedPR.cache
+  }
+
   /**
    * Clears this.cachedLabelList
    */
   void clearLabelCache() {
     cachedLabelList.cache = []
     cachedLabelList.isValid = false
+    this.steps.echo "Cleared and invalidated label cache."
+  }
+
+    void clearTopicCache() {
+    cachedTopicList.cache = []
+    cachedTopicList.isValid = false
     this.steps.echo "Cleared and invalidated label cache."
   }
 
@@ -82,6 +125,54 @@ class GithubAPI {
 
     return getCache()
   }
+
+  def refreshTopicCache() {
+    this.steps.echo "Get topic cache"
+    def project = currentProject()
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/topics",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+      if (response.status == 200) {
+      def json_response = new JsonSlurper().parseText(response.content)
+      cachedTopicList.cache = json_response
+      cachedTopicList.isValid = true
+      this.steps.echo "Updated cache contents: ${getTopicCache()}"
+    } else {
+      this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
+    }
+
+    return getTopicCache()
+  }
+
+  def refreshPRCache() {
+    this.steps.echo "Get pull request"
+    def project = currentProject()
+    def issueNumber = currentPullRequestNumber()
+    def response = this.steps.httpRequest(httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/pulls/${issueNumber}",
+      consoleLogResponseBody: true,
+      validResponseCodes: '200')
+
+    if (response.status == 200) {
+      def json_response = new JsonSlurper().parseText(response.content)
+      cachedPR.cache = json_response.base.ref
+      cachedPR.isValid = true
+      this.steps.echo "Updated cache contents: ${getPRCache()}"
+    } else {
+      this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
+    }
+
+    return getPRCache()
+  }
+
 
   /**
    * Add labels to an issue or pull request
@@ -149,11 +240,35 @@ class GithubAPI {
     return getCache()
   }
 
+    private getTopicsFromCache() {
+    if (!isTopicCacheValid()) {
+      return refreshTopicCache()
+    }
+
+    if (isTopicCacheEmpty() && isTopicCacheValid()) {
+      return []
+    }
+
+    return getTopicCache()
+  }
+
+    private getPRsFromCache() {
+    if (!isPRCacheValid()) {
+      return refreshPRCache()
+    }
+
+    if (isPRCacheEmpty() && isPRCacheValid()) {
+      return []
+    }
+
+    return getPRCache()
+  }
+
   /**
    * Get all labels from an issue or pull request
    */
-  def getLabels(String branch_name) {
-    if (new ProjectBranch(branch_name).isPR()) {
+  def getLabels(String branchName) {
+    if (new ProjectBranch(branchName).isPR()) {
       return this.getLabelsFromCache()
     } else {
       return []
@@ -163,21 +278,59 @@ class GithubAPI {
   /**
    * Check Pull Request for label by a pattern in name.
    */
-  def getLabelsbyPattern(String branch_name, String key) {
-    return getLabels(branch_name).findAll{it.contains(key)}
+  def getLabelsbyPattern(String branchName, String key) {
+    return getLabels(branchName).findAll{it.contains(key)}
   }
+
 
   /**
    * Check Pull Request for specified label.
    */
-  def checkForLabel(String branch_name, String key) {
-    return getLabels(branch_name).contains(key)
+  def checkForLabel(String branchName, String key) {
+    return getLabels(branchName).contains(key)
   }
+
+  def checkForTopic(String key) {
+    return getTopicsFromCache().contains(key)
+  }
+
 
   /**
    * Check Pull Request for dependencies label.
    */
-  def checkForDependenciesLabel(branch_name) {
-    return checkForLabel(branch_name, "dependencies")
+  def checkForDependenciesLabel(branchName) {
+    return checkForLabel(branchName, "dependencies")
+  }
+
+  /**
+   * Calls workflow to manually startup environment
+   * @param workflowName
+   *   The file name of the workflow to run 'manual-start.yaml'
+   * @param businessArea
+   *   I.e CFT
+   * @param cluster
+   *   AKS Cluster number, i.e 00
+   * @param environment
+   *   Environment to start
+  */
+  def startAksEnvironmentWorkflow(String workflowName, String businessArea, String cluster, String environment){
+    def body = """
+      {
+        "ref":"master",
+        "inputs":{
+           "PROJECT": "${businessArea}",
+           "SELECTED_ENV": "${environment}",
+           "AKS-INSTANCES": "${cluster}"
+         }
+       }
+    """
+    def response = this.steps.httpRequest(httpMode: 'POST',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
+      requestBody: body,
+      consoleLogResponseBody: true,
+      validResponseCodes: '204')
   }
 }

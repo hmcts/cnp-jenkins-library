@@ -36,11 +36,17 @@ class Helm {
 
   def setup() {
     configureAcr()
+    removeRepo()
     addRepo()
   }
 
   def configureAcr() {
     this.acr.az "configure --defaults acr=${registryName}"
+  }
+
+  def removeRepo() {
+    this.steps.echo "Clear out helm repo before re-adding"
+    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
   def addRepo() {
@@ -49,6 +55,7 @@ class Helm {
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
+    removeRepo()
     addRepo()
     dependencyUpdate()
     lint(values)
@@ -112,7 +119,7 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh ("chmod +x aks-debug-info.sh")
-    def optionsStr = (options + ["--install", "--wait", "--timeout 500s"]).join(' ')
+    def optionsStr = (options + ["--install", "--wait", "--timeout 1250s"]).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
     steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
     this.steps.sh 'rm aks-debug-info.sh'

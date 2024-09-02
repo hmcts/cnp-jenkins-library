@@ -12,6 +12,8 @@ public class AngularPipelineType implements PipelineType, Serializable {
     this.product = product
     this.app = app
 
+    this.steps.env.PRODUCT = product
+
     builder = new AngularBuilder(steps)
   }
 }

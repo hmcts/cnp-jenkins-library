@@ -18,7 +18,8 @@ def call(params) {
     if (scmVars) {
       env.GIT_COMMIT = scmVars.GIT_COMMIT
       env.GIT_URL = scmVars.GIT_URL
-      env.LAST_COMMIT_TIMESTAMP = steps.sh(script: "git log -1 --pretty='%cd' --date=iso | tr -d '+[:space:]:-' | head -c 14", returnStdout: true)
+      env.LAST_COMMIT_TIMESTAMP = steps.sh(script: "git log -1 --pretty='%cd' --date=iso | TZ=UTC date '+%Y%m%d%H%M%S' -f -", returnStdout: true)
+      env.ORIGINAL_REMOTE_URL = steps.sh(script: "git config remote.origin.url", returnStdout: true).trim()
     }
     try {
       def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
@@ -31,5 +32,6 @@ def call(params) {
     } catch (err) {
       echo "Unable to find git email Id for the user' ${err}'"
     }
+    warnAboutRenovateConfig()
   }
 }

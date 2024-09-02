@@ -3,23 +3,23 @@ package uk.gov.hmcts.pipeline
 class DeprecationConfig {
 
   def steps
-  static def deprecationConfig
+  static def deprecationConfigInternal
 
   DeprecationConfig(steps){
     this.steps = steps
   }
 
-  def loadDeprecationConfig(){
-    if (deprecationConfig ==null ){
+  def getDeprecationConfig() {
+    if (deprecationConfigInternal == null) {
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/deprecation-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml",
         validResponseCodes: '200'
       )
-      deprecationConfig = steps.readYaml(text: response.content)
+      deprecationConfigInternal = steps.readYaml(text: response.content)
     }
-    return deprecationConfig
+    return deprecationConfigInternal
   }
 
 }

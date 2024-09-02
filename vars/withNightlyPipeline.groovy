@@ -11,7 +11,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 
-def call(type,product,component,Closure body) {
+def call(type, product, component, timeout = 300, Closure body) {
 
 
   def pipelineTypes = [
@@ -46,15 +46,30 @@ def call(type,product,component,Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  String nodeSelector
 
-  node(agentType) {
-    timeoutWithMsg(time: 300, unit: 'MINUTES', action: 'pipeline') {
+  if (agentType == "") {
+    nodeSelector = "daily"
+  } else if (agentType == "arm") {
+    nodeSelector = agentType + '&& arm-daily'
+  } else {
+    nodeSelector = agentType + ' && daily'
+  }
+  
+  node(nodeSelector) {
+    timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component)
+          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
+          onMaster {  
+            sectionSyncBranchesWithMaster(
+              branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
+              product: product
+            )
+          }
         }
         assert  pipelineType!= null
       } catch (err) {
@@ -62,9 +77,7 @@ def call(type,product,component,Closure body) {
         notifyBuildFailure channel: slackChannel
 
         callbacksRunner.call('onFailure')
-        node {
-          metricsPublisher.publish('Pipeline Failed')
-        }
+        metricsPublisher.publish('Pipeline Failed')
         throw err
       } finally {
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
