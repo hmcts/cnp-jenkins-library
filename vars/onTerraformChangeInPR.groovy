@@ -1,4 +1,5 @@
 def call(Closure block) {
+  def credentialsId = env.GIT_CREDENTIALS_ID
   folderExists('infrastructure') {
     writeFile file: 'check-infrastructure-files-changed.sh', text: libraryResource('uk/gov/hmcts/infrastructure/check-infrastructure-files-changed.sh')
 
