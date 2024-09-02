@@ -4,8 +4,8 @@ def call(Closure block) {
     writeFile file: 'check-infrastructure-files-changed.sh', text: libraryResource('uk/gov/hmcts/infrastructure/check-infrastructure-files-changed.sh')
 
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+      def bearerToken = env.BEARER_TOKEN
       def infraFolderHasChanges = sh(
-        def bearerToken = env.BEARER_TOKEN
         script: "chmod +x check-infrastructure-files-changed.sh\n" +
           "    ./check-infrastructure-files-changed.sh $credentialsId $bearerToken",
         returnStatus: true
