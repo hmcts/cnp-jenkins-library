@@ -12,10 +12,7 @@ def call(Closure block) {
       )
       sh 'rm check-infrastructure-files-changed.sh'
       if (infraFolderHasChanges == 1) {
-        println "Infrastructure folder has changes"
         return block.call()
-      } else {
-        println "Infrastructure folder no changes"
       }
     }
   }
