@@ -5,13 +5,17 @@ def call(Closure block) {
 
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
       def infraFolderHasChanges = sh(
+        def bearerToken = env.BEARER_TOKEN
         script: "chmod +x check-infrastructure-files-changed.sh\n" +
-          "    ./check-infrastructure-files-changed.sh",
+          "    ./check-infrastructure-files-changed.sh $credentialsId $bearerToken",
         returnStatus: true
       )
       sh 'rm check-infrastructure-files-changed.sh'
       if (infraFolderHasChanges == 1) {
+        println "Infrastructure folder has changes"
         return block.call()
+      } else {
+        println "Infrastructure folder no changes"
       }
     }
   }
