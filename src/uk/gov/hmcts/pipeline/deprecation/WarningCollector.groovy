@@ -3,12 +3,14 @@ package uk.gov.hmcts.pipeline.deprecation
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 class WarningCollector implements Serializable {
 
   static List<DeprecationWarning> pipelineWarnings = new ArrayList<>()
   static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
     .ofPattern("dd/MM/yyyy");
+  static slackMessage = new SlackBlockMessage()
 
   static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate) {
     if (deprecationDate.isBefore(LocalDate.now())){
@@ -35,12 +37,15 @@ class WarningCollector implements Serializable {
     }
   }
 
-  static String getSlackWarningMessage() {
-    String slackWarningMessage = ""
+  /**
+   * Constructs and returns a SlackBlockMessage object by adding all collected pipeline warnings as new sections.
+   * Each warning includes a warning message and a deprecation date message.
+   * Returns the complete SlackBlockMessage object will all pipeline warnings as sections.
+   */
+  static SlackBlockMessage getSlackWarningMessage() {
     for (pipelineWarning in pipelineWarnings) {
-      slackWarningMessage = slackWarningMessage.concat(pipelineWarning.warningMessage).concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate)).concat("\n\n")
+      slackMessage.addSection(pipelineWarning.warningMessage.concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate)))
     }
-    return slackWarningMessage
+    return slackMessage
   }
-
 }
