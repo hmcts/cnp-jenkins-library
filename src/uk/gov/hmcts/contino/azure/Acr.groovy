@@ -156,7 +156,7 @@ class Acr extends Az {
     def tagFound = false
     try {
       def tags = this.az "acr repository show-tags -n ${registryName} --subscription ${registrySubscription} --repository ${repository}"
-      tagFound = tags.contains("pr-5455-76f9dad-20240925152044")
+      tagFound = tags.contains(tag)
       steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
     } catch (noTagsError) {
     } // Do nothing -> return false
