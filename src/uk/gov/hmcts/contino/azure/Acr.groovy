@@ -155,7 +155,7 @@ class Acr extends Az {
 
     def tagFound = false
     try {
-      echo "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} --query \"[?contains(@, '${tag}')]\" --output tsv"
+      steps.echo "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} --query \"[?contains(@, '${tag}')]\" --output tsv"
       def tags = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} --query \"[?contains(@, '${tag}')]\" --output tsv"
       if(tags != null && !tags.isEmpty()) {
         tagFound = true
