@@ -156,8 +156,10 @@ class Acr extends Az {
     def tagFound = false
     try {
       def tags = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} --query \"[?contains(@, '${tag}')]\" --output tsv"
-      if( tags?.hasValues() ){
+      if(tags) {
         tagFound = "true"
+      } else {
+        tagFound = "false"
       }
       steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
     } catch (noTagsError) {
