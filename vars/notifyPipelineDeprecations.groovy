@@ -1,7 +1,8 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 /**
  * Send build failure notification
@@ -16,35 +17,41 @@ import uk.gov.hmcts.contino.MetricsPublisher
  *  </ul>
  */
 def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
-  String slackWarningMessage = ""
-  String warningMessage = WarningCollector.getSlackWarningMessage()
+  SlackBlockMessage warningMessage = WarningCollector.getSlackWarningMessage()
+  // Fetch all block sections from the warnings mesage to see if anything has been added
+  String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
+
   String changeAuthor = env.CHANGE_AUTHOR
 
   publishWarningMetrics(metricsPublisher)
 
-  if(!warningMessage.trim().isEmpty()){
-
-    echo warningMessage
-
+  // Only send if there are blocks in the warning message meaning there is something to send
+  if (!warnings.isEmpty()) {
     String channel
     if (! new ProjectBranch(env.BRANCH_NAME).isMaster()) {
       channel = new SlackChannelRetriever(this).retrieve(teamSlackChannel, changeAuthor)
       if(channel == null ){
-        slackWarningMessage = slackWarningMessage.concat("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings \n\n ")
+        warningMessage.addSection("@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings")
       }
     }
     if(channel == null ) {
       channel = teamSlackChannel
     }
-    slackWarningMessage = slackWarningMessage.concat("We have noticed deprecated configuration in ${env.JOB_NAME}: <${env.RUN_DISPLAY_URL}|Build ${env.BUILD_DISPLAY_NAME}> \n\n ")
-      .concat(warningMessage)
+    if (channel == "@iamabotuser") {
+       echo "Skipping notification on PRs from bot user"
+       return
+    }
 
+    // Build our slack message for pipeline deprecations
+    warningMessage.setWarningColor()
+    warningMessage.addFirstHeader("We have noticed the following deprecated configuration:")
+    warningMessage.addSection("In ${env?.JOB_NAME}: <${env?.RUN_DISPLAY_URL}|Build ${env?.BUILD_DISPLAY_NAME}>")
+    
     try {
       slackSend(
         failOnError: true,
         channel: channel,
-        color: 'warning',
-        message: slackWarningMessage)
+        attachments: warningMessage.asObject())
     } 
     catch (Exception ex) {
       if(channel!='@iamabotuser') {
@@ -58,5 +65,4 @@ void publishWarningMetrics(MetricsPublisher metricsPublisher) {
   for (pipelineWarning in WarningCollector.pipelineWarnings) {
     metricsPublisher.publish(pipelineWarning.warningKey)
   }
-
 }

@@ -89,7 +89,13 @@ else
   yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-jq -cr '.advisories | to_entries[].value' < yarn-audit-result | sort > sorted-yarn-audit-issues
+if [ "$YARN_VERSION" == "4" ]; then
+  cat yarn-audit-result | node format-v4-audit.js > yarn-audit-result-formatted
+else
+  cp yarn-audit-result yarn-audit-result-formatted
+fi
+
+jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
 if [[ ! -s sorted-yarn-audit-issues ]];  then
@@ -98,7 +104,13 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
-    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
+    if [ "$YARN_VERSION" == "4" ]; then
+      cat yarn-audit-known-issues | node format-v4-audit.js > yarn-audit-known-issues-formatted
+    else
+      cp yarn-audit-known-issues yarn-audit-known-issues-formatted
+    fi
+
+    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
     | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
@@ -115,18 +127,24 @@ if [ ! -f yarn-audit-known-issues ]; then
   exit 1
 else
   # Test for old format of yarn-audit-known-issues
-  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues | grep -q true; then
+  if [ "$YARN_VERSION" == "4" ]; then
+    cat yarn-audit-known-issues | node format-v4-audit.js > yarn-audit-known-issues-formatted
+  else
+    cp yarn-audit-known-issues yarn-audit-known-issues-formatted
+  fi
+
+  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
     exit 1
   fi
 
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
-  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues \
+  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
   | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
-  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues > yarn-audit-known-issues-result
+  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues-formatted > yarn-audit-known-issues-result
 
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do

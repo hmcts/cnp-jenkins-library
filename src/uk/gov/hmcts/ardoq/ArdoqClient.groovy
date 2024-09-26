@@ -52,7 +52,7 @@ class ArdoqClient {
              "vcsHost": "Github HMCTS",
              "hmctsApplication": "${applicationId}",
              "codeRepository": "${repositoryName}",
-             "encodedDependecyList": "${b64Dependencies}",
+             "encodedDependencyList": "${b64Dependencies}",
              "parser": "${parser}",
              "language": "${language}",
              "languageVersion": "${languageVersion}"
