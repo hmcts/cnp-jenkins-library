@@ -69,7 +69,7 @@ def call(Map<String, ?> params) {
           tags = tags + [autoShutdown: "true"]
         }
         if (Environment.toTagName(config.environment) == "sandbox" &&
-          builtFrom != "https://github.com/HMCTS/cnp-plum-recipes-service.git") {
+          (builtFrom.toLowerCase().contains("cnp-plum") || builtFrom.toLowerCase().contains("sds-toffee"))) {
           tags = tags + [startupMode: "onDemand"]
         }
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
