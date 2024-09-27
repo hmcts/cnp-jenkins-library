@@ -162,7 +162,6 @@ class Acr extends Az {
     } // Do nothing -> return false
 
     return tagFound
-    steps.echo 
   }
 
   private def purgeOldTags(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
