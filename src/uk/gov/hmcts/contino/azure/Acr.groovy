@@ -153,7 +153,7 @@ class Acr extends Az {
       steps.echo "Warning: matching '${tag}' tag for ${repository}"
     }
 
-    def tagFound = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} | jq -e '.[] | select(test(\"${tag}\"))' > /dev/null && echo true || echo false"
+    def tagFound = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} | jq -e \'.[] | select(test(\"${tag}\"))\' > /dev/null && echo true || echo false"
     try {
       def tags = this.az "acr repository show-tags -n ${registryName} --subscription ${registrySubscription} --repository ${repository}"
       // if(tags != null && !tags.isEmpty()) {
