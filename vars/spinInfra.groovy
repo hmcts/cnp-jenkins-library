@@ -72,8 +72,6 @@ def call(Map<String, ?> params) {
             (!builtFrom.toLowerCase().contains("cnp-plum") || !builtFrom.toLowerCase().contains("sds-toffee"))) {
             tags = tags + [startupMode: "onDemand"]
           }
-          tags = tags + [startupMode: "onDemand"]
-        }
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
           tags = tags + [changeUrl: changeUrl]
         }
