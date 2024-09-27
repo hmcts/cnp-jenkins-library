@@ -69,7 +69,9 @@ def call(Map<String, ?> params) {
           tags = tags + [autoShutdown: "true"]
         }
         if (Environment.toTagName(config.environment) == "sandbox" &&
-          !builtFrom.toLowerCase().contains("cnp-plum")) {
+            (!builtFrom.toLowerCase().contains("cnp-plum") || !builtFrom.toLowerCase().contains("sds-toffee"))) {
+            tags = tags + [startupMode: "onDemand"]
+          }
           tags = tags + [startupMode: "onDemand"]
         }
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
