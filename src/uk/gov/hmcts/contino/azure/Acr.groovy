@@ -155,14 +155,16 @@ class Acr extends Az {
 
     def tagFound = false
     try {
-      def tags = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} | jq -r '.[] | select(test(\"${tag}\"))'"
-      if(tags != null && !tags.isEmpty()) {
-        tagFound = true
-        steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
-      } else {
-        tagFound = false
-        steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
-      }
+      def tags = this.az "acr repository show-tags -n ${registryName} --subscription ${registrySubscription} --repository ${repository}"
+      def tagFound = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} | jq -e '.[] | select(test(\"${tag}\"))' > /dev/null && echo true || echo false"
+      // if(tags != null && !tags.isEmpty()) {
+      //   tagFound = true
+      //   steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
+      // } else {
+      //   tagFound = false
+      //   steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
+      // }
+      steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
     } catch (noTagsError) {
     } // Do nothing -> return false
 
