@@ -155,8 +155,7 @@ class Acr extends Az {
 
     def tagFound = false
     try {
-      steps.echo "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} --query \"[?contains(@, '${tag}')]\" --output tsv"
-      def tags = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} --query \"[?contains(@, '${tag}')]\" --output tsv"
+      def tags = this.az "acr repository show-tags --name ${registryName} --subscription ${registrySubscription} --repository ${repository} | jq -r '.[] | select(test(\"${tag}\"))'"
       if(tags != null && !tags.isEmpty()) {
         tagFound = true
         steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
@@ -168,6 +167,7 @@ class Acr extends Az {
     } // Do nothing -> return false
 
     return tagFound
+    steps.echo "tagFound: ${tagFound}"
   }
 
   private def purgeOldTags(DockerImage.DeploymentStage stage, DockerImage dockerImage) {
