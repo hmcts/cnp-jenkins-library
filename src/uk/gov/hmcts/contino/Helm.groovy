@@ -49,9 +49,9 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
-def addRepo() {
-    this.steps.sh "helm repo add ${registryName} https://${registryName}.azurecr.io/helm/v1/repo --username ${acrUsername} --password ${acrPassword}"
-}
+// def addRepo() {
+//     this.steps.sh "helm repo add ${registryName} https://${registryName}.azurecr.io/helm/v1/repo --username ${acrUsername} --password ${acrPassword}"
+// }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
@@ -64,9 +64,10 @@ def addRepo() {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-      resultOfSearch = this.steps.sh(script: "helm search repo ${registryName}/${this.chartName} --version ${version} -o json | jq -r '..version'", returnStdout: true).trim()
-    } catch(ignored) {
-      resultOfSearch = notFoundMessage
+        def chartInfo = this.steps.sh(script: "helm show chart oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version}", returnStdout: true).trim()
+        resultOfSearch = new groovy.yaml.YamlSlurper().parseText(chartInfo).version
+    } catch (ignored) {
+        resultOfSearch = notFoundMessage
     }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
@@ -74,11 +75,11 @@ def addRepo() {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
-      this.steps.sh "helm push ${this.chartName}-${version}.tgz ${registryName}"
+      this.steps.sh "helm push ${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm"
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
-      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+        this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
   }
 
