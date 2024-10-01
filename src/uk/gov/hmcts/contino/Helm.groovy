@@ -49,10 +49,9 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
-
   def addRepo() {
-    this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm --username ${acrUsername} --password ${acrPassword}")
-}
+    this.acr.az "helm repo add --subscription ${registrySubscription} --name ${registryName}"
+  }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
@@ -76,7 +75,7 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation} --debug"
-      this.steps.sh "helm push ${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm --debug"
+      this.steps.sh "helm push oci://${registryName}.azurecr.io/helm/${this.chartName}:${version} --debug"
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
