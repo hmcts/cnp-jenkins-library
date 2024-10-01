@@ -58,12 +58,11 @@ class Helm {
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
-    def resultOfSearch
+    def resultOfSearch = notFoundMessage
     try {
         def chartInfo = this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
         resultOfSearch = version
-    } catch (ignored) {
-        resultOfSearch = notFoundMessage
+    } catch (Exception e) {
     }
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
