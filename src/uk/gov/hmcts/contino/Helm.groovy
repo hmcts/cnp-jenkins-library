@@ -64,8 +64,8 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-        def chartInfo = this.steps.sh(script: "helm show chart oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version}", returnStdout: true).trim()
-        resultOfSearch = new groovy.yaml.YamlSlurper().parseText(chartInfo).version
+        def chartInfo = this.steps.sh(script: "helm show chart oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -o json | jq -r '.version'", returnStdout: true).trim()
+        resultOfSearch = chartInfo
     } catch (ignored) {
         resultOfSearch = notFoundMessage
     }
