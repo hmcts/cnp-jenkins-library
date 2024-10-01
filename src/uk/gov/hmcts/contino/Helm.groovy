@@ -50,7 +50,7 @@ class Helm {
   }
 
 
-def addRepo() {
+  def addRepo() {
     this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm --username ${acrUsername} --password ${acrPassword}")
 }
 
