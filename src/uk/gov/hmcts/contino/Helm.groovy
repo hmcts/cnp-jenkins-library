@@ -50,6 +50,10 @@ class Helm {
   }
 
 
+def addRepo() {
+    this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm --username ${acrUsername} --password ${acrPassword}")
+}
+
   def publishIfNotExists(List<String> values) {
     configureAcr()
     removeRepo()
