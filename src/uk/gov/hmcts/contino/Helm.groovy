@@ -49,10 +49,6 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
-def addRepo() {
-    this.steps.sh "helm repo add ${registryName} https://${registryName}.azurecr.io/helm/v1/repo --username ${acrUsername} --password ${acrPassword}"
-}
-
   def publishIfNotExists(List<String> values) {
     configureAcr()
     removeRepo()
@@ -64,8 +60,8 @@ def addRepo() {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-        def chartInfo = this.steps.sh(script: "helm show chart oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -o json | jq -r '.version'", returnStdout: true).trim()
-        resultOfSearch = chartInfo
+        def chartInfo = this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+        resultOfSearch = version
     } catch (ignored) {
         resultOfSearch = notFoundMessage
     }
