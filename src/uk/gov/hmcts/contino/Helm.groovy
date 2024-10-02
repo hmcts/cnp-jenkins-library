@@ -44,19 +44,18 @@ class Helm {
     this.acr.az "configure --defaults acr=${registryName}"
   }
 
-def removeRepo() {
-    this.steps.echo "Clear out helm repo before re-adding"
-    this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-        this.steps.sh(label: "helm repo rm ${REGISTRY_NAME}", script: "helm repo rm ${REGISTRY_NAME} || echo 'Helm repo may not exist on disk, skipping remove'")
-    }
-}
+  def removeRepo() {
+      this.steps.echo "Clear out helm repo before re-adding"
+      this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
+          this.steps.sh(label: "helm repo rm ${REGISTRY_NAME}", script: "helm repo rm ${REGISTRY_NAME} || echo 'Helm repo may not exist on disk, skipping remove'")
+      }
+  }
 
-def addRepo() {
-    this.steps.sh(script: "az acr login --name ${registryName}")
-    this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-        this.steps.sh(script: "helm repo add ${REGISTRY_NAME} https://${REGISTRY_NAME}.azurecr.io/helm")
-    }
-}
+  def addRepo() {
+      this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
+          this.steps.sh(script: "helm repo add ${REGISTRY_NAME} https://${REGISTRY_NAME}.azurecr.io/helm")
+      }
+  }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
