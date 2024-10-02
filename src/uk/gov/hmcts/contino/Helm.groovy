@@ -50,7 +50,7 @@ class Helm {
   }
 
   def addRepo() {
-    this.acr.az "helm repo add --subscription ${registrySubscription} --name ${registryName}"
+    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
   }
 
   def publishIfNotExists(List<String> values) {
@@ -74,14 +74,15 @@ class Helm {
     if (resultOfSearch == notFoundMessage) {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
-      this.steps.sh "helm package ${this.chartLocation} --debug"
-      this.steps.sh "helm push oci://${registryName}.azurecr.io/helm/${this.chartName}:${version} --debug"
+      this.steps.sh "helm package ${this.chartLocation}"
+      this.steps.sh "helm push oci://${registryName}.azurecr.io/helm/${this.chartName}:${version}"
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
         this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
   }
+
 
   def publishToGitIfNotExists(List<String> values) {
     addRepo()
