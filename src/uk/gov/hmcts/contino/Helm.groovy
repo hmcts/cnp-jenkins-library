@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino
 import uk.gov.hmcts.contino.azure.Acr
 import groovy.json.JsonSlurper
 
-
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = "charts"
@@ -50,7 +49,10 @@ class Helm {
   }
 
   def addRepo() {
-    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+    withCredentials([azureServicePrincipal(credentialsId: 'azure-sp-credentials')]) {
+      this.steps.sh(script: "az acr login --name ${registryName}")
+      this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm")
+    }
   }
 
   def publishIfNotExists(List<String> values) {
@@ -60,7 +62,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -83,28 +85,26 @@ class Helm {
     }
   }
 
-
   def publishToGitIfNotExists(List<String> values) {
     addRepo()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
 
     this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
       this.steps.sh (
-        """
+        script: """
         chmod +x push-helm-charts-to-git.sh
         ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $version
         """
       )
+    }
 
     this.steps.sh 'rm push-helm-charts-to-git.sh'
-    }
   }
-
 
   def lint(List<String> values) {
     this.execute("lint", this.chartLocation, values, null)
