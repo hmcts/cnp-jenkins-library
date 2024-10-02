@@ -49,12 +49,9 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
-def addRepo() {
-    withCredentials([azureServicePrincipal(credentialsId: 'azure-sp-credentials')]) {
-        this.steps.sh(script: "az acr login --name ${registryName}")
-        this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm")
-    }
-}
+  def addRepo() {
+    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+  }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
