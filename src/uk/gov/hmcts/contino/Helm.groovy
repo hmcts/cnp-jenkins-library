@@ -62,7 +62,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -96,7 +96,7 @@ class Helm {
 
     this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
       this.steps.sh (
-        script: """
+        """
         chmod +x push-helm-charts-to-git.sh
         ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $version
         """
