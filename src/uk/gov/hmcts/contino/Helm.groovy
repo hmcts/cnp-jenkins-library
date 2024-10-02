@@ -89,7 +89,7 @@ class Helm {
     addRepo()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
@@ -101,7 +101,6 @@ class Helm {
         ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $version
         """
       )
-    }
 
     this.steps.sh 'rm push-helm-charts-to-git.sh'
   }
