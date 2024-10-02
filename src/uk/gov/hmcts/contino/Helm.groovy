@@ -45,17 +45,17 @@ class Helm {
   }
 
   def removeRepo() {
-      this.steps.echo "Clear out helm repo before re-adding"
-      this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-          this.steps.sh(label: "helm repo rm ${REGISTRY_NAME}", script: "helm repo rm ${REGISTRY_NAME} || echo 'Helm repo may not exist on disk, skipping remove'")
-      }
+    this.steps.echo "Clear out helm repo before re-adding"
+    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
-  def addRepo() {
-      this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-          this.steps.sh(script: "helm repo add ${REGISTRY_NAME} https://${REGISTRY_NAME}.azurecr.io/helm")
-      }
-  }
+def addRepo() {
+    this.steps.sh(script: "az login --identity")
+    this.steps.sh(script: "az acr login --name ${registryName}")
+    this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
+        this.steps.sh(script: "helm repo add ${REGISTRY_NAME} https://${REGISTRY_NAME}.azurecr.io/helm")
+    }
+}
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
@@ -79,15 +79,13 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
-        this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-        this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
-        }
+      this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
-      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+        this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
-}
+  }
 
 
   def publishToGitIfNotExists(List<String> values) {
