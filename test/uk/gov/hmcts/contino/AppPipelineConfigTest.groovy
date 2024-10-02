@@ -165,6 +165,13 @@ class AppPipelineConfigTest extends Specification {
         assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo("")
     }
 
+    def "ensure disable high level data setup"() {
+        when:
+        dsl.disableHighLevelDataSetup()
+        then:
+        assertThat(pipelineConfig.highLevelDataSetup).isFalse()
+    }
+
     def "ensure enable high level data setup with highLevelDataSetupKeyVaultName"() {
         when:
         dsl.enableHighLevelDataSetup("highLevelDataSetupKeyVaultName")
