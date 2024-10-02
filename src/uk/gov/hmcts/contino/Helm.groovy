@@ -75,8 +75,7 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
-      this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-        this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
+      this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
