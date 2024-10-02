@@ -64,7 +64,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -76,16 +76,18 @@ class Helm {
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
-      this.steps.echo "Publishing new version of ${this.chartName}"
+        this.steps.echo "Publishing new version of ${this.chartName}"
 
-      this.steps.sh "helm package ${this.chartLocation}"
-      this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
+        this.steps.sh(script: "helm package ${this.chartLocation}")
+        this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
+            this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
+        }
 
-      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
+        this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
         this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
-  }
+}
 
 
   def publishToGitIfNotExists(List<String> values) {
