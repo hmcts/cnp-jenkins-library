@@ -76,16 +76,16 @@ class Helm {
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
-        this.steps.echo "Publishing new version of ${this.chartName}"
+      this.steps.echo "Publishing new version of ${this.chartName}"
 
-        this.steps.sh(script: "helm package ${this.chartLocation}")
+      this.steps.sh "helm package ${this.chartLocation}"
         this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-            this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
+        this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
         }
 
-        this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
+      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
-        this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
 }
 
