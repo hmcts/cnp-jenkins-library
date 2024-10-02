@@ -52,8 +52,7 @@ class Helm {
 def addRepo() {
     this.steps.sh(script: "az login --identity")
     this.steps.sh(script: "az acr login --name ${registryName}")
-    this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
-        this.steps.sh(script: "helm repo add ${REGISTRY_NAME} https://${REGISTRY_NAME}.azurecr.io/helm")
+        this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm")
     }
 }
 
