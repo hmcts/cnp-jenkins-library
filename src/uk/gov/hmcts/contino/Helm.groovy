@@ -44,10 +44,12 @@ class Helm {
     this.acr.az "configure --defaults acr=${registryName}"
   }
 
-  def removeRepo() {
+def removeRepo() {
     this.steps.echo "Clear out helm repo before re-adding"
-    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
-  }
+    this.steps.withEnv(["REGISTRY_NAME=${registryName}"]) {
+        this.steps.sh(label: "helm repo rm ${REGISTRY_NAME}", script: "helm repo rm ${REGISTRY_NAME} || echo 'Helm repo may not exist on disk, skipping remove'")
+    }
+}
 
 def addRepo() {
     this.steps.sh(script: "az acr login --name ${registryName}")
