@@ -40,19 +40,18 @@ class Helm {
     addRepo()
   }
 
-def configureAcr() {
-    this.steps.sh(script: "az login --identity --username jenkins-cftptl-intsvc-mi")
+  def configureAcr() {
     this.acr.az "configure --defaults acr=${registryName}"
-}
+  }
 
-def removeRepo() {
+  def removeRepo() {
     this.steps.echo "Clear out helm repo before re-adding"
     this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
-}
+  }
 
-def addRepo() {
+  def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
-}
+  }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
