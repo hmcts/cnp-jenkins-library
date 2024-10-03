@@ -55,7 +55,7 @@ class Helm {
   }
 
   def authenticateAcr() {
-    configureAcr()
+    this.az "acr login"
     this.steps.sh(script: "az acr login --name ${registryName}")
 }
 
