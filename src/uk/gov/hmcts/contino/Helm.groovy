@@ -41,7 +41,7 @@ class Helm {
   }
 
 def configureAcr() {
-    this.steps.sh(script: "az login --identity")
+    this.steps.sh(script: "az login --identity -u jenkins-cftptl-intsvc-mi")
     this.acr.az "configure --defaults acr=${registryName}"
 }
 
@@ -52,7 +52,6 @@ def removeRepo() {
 
 def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
-} this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
 }
 
   def publishIfNotExists(List<String> values) {
