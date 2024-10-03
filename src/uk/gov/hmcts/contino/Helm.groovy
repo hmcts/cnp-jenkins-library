@@ -168,5 +168,3 @@ def addRepo() {
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
   }
-
-}
