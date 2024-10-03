@@ -55,9 +55,14 @@ class Helm {
   }
 
   def authenticateAcr() {
-    // this.steps.sh(script: "az login --identity")
+    try {
+        this.steps.sh(script: "az login --identity")
+    } catch (Exception e) {
+        this.steps.echo "az login --identity failed, falling back to this.acr.az"
+        this.acr.az "login"
+    }
     this.steps.sh(script: "az acr login --name ${registryName}")
-  }
+}
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
