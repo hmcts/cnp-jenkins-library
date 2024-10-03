@@ -53,11 +53,11 @@ class Helm {
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
   }
- 
- def authenticateAcr() {
-      this.acr.az login
-      this.steps.echo "acr login failed"
-    }
+
+  def authenticateAcr() {
+    configureAcr()
+    this.steps.sh(script: "az acr login --name ${registryName}")
+}
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
