@@ -37,6 +37,7 @@ class Helm {
   def setup() {
     configureAcr()
     removeRepo()
+    authenticateAcr()
   }
 
   def configureAcr() {
@@ -85,7 +86,7 @@ class Helm {
 
 
   def publishToGitIfNotExists(List<String> values) {
-    addRepo()
+    authenticateAcr()
     lint(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
