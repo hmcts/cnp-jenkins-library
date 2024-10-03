@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 import uk.gov.hmcts.contino.azure.Acr
 import groovy.json.JsonSlurper
 
+
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = "charts"
@@ -104,6 +105,7 @@ class Helm {
     this.steps.sh 'rm push-helm-charts-to-git.sh'
     }
   }
+
 
   def lint(List<String> values) {
     this.execute("lint", this.chartLocation, values, null)
