@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino
 import uk.gov.hmcts.contino.azure.Acr
 import groovy.json.JsonSlurper
 
-
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = "charts"
@@ -47,7 +46,7 @@ class Helm {
 
   def removeRepo() {
     this.steps.echo "Clear out helm repo before re-adding"
-    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
+    this.steps.sh(label: "helm repo rm ${registryName}", script: 'helm repo rm $REGISTRY_NAME || echo "Helm repo may not exist on disk, skipping remove"', env: [REGISTRY_NAME: registryName])
   }
   
   def addRepo() {
@@ -55,8 +54,8 @@ class Helm {
   }
 
   def authenticateAcr() {
-    this.az "acr login --name ${registryName}"
-}
+    this.acr.az "acr login --name ${registryName}"
+  }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
@@ -89,7 +88,6 @@ class Helm {
     }
   }
 
-
   def publishToGitIfNotExists(List<String> values) {
     authenticateAcr()
     addRepo()
@@ -111,7 +109,6 @@ class Helm {
     this.steps.sh 'rm push-helm-charts-to-git.sh'
     }
   }
-
 
   def lint(List<String> values) {
     this.execute("lint", this.chartLocation, values, null)
