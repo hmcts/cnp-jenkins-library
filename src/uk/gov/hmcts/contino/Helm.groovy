@@ -55,10 +55,8 @@ class Helm {
   }
  
  def authenticateAcr() {
-    try {
-        this.acr.az "login"
-    } catch (Exception e) {
-        this.steps.echo "acr login failed"
+      this.acr.az login
+      this.steps.echo "acr login failed"
     }
   }
 
