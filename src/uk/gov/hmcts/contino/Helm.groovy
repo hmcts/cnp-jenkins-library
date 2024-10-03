@@ -55,8 +55,7 @@ class Helm {
   }
 
   def authenticateAcr() {
-    this.az "acr login"
-    this.steps.sh(script: "az acr login --name ${registryName}")
+    this.az "acr login --name ${registryName}"
 }
 
   def publishIfNotExists(List<String> values) {
