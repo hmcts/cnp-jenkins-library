@@ -58,7 +58,6 @@ class Helm {
       this.acr.az login
       this.steps.echo "acr login failed"
     }
-  }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
