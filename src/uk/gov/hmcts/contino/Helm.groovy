@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 import uk.gov.hmcts.contino.azure.Acr
 import groovy.json.JsonSlurper
 
+
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = "charts"
@@ -169,5 +170,4 @@ class Helm {
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
   }
-
 }
