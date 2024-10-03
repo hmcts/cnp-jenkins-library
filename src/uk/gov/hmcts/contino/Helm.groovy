@@ -49,11 +49,12 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
   }
 
-  def addRepo() {
+def addRepo() {
     this.steps.sh(script: "az login --identity")
     this.steps.sh(script: "az acr login --name ${registryName}")
-    this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm")
-  }
+        this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm")
+    }
+}
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
@@ -62,7 +63,7 @@ class Helm {
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
@@ -77,7 +78,7 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation}"
-      this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm")
+      this.steps.sh(script: "helm push ${this.chartName}-${version}.tgz oci://${REGISTRY_NAME}.azurecr.io/helm")
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
@@ -85,11 +86,12 @@ class Helm {
     }
   }
 
+
   def publishToGitIfNotExists(List<String> values) {
     addRepo()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
@@ -124,7 +126,7 @@ class Helm {
     this.steps.sh ("chmod +x aks-debug-info.sh")
     def optionsStr = (options + ["--install", "--wait", "--timeout 1250s"]).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
-    steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName} ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
+    steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
     this.steps.sh 'rm aks-debug-info.sh'
   }
 
