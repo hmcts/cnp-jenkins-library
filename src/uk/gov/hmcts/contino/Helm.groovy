@@ -64,7 +64,7 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-        this.steps.sh(script: "az login --identity")
+        this.steps.sh(script: "az acr login --name ${registryName}")
         this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
         resultOfSearch = version
     } catch(ignored) {
