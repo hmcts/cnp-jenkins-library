@@ -41,7 +41,7 @@ class Helm {
   }
 
 def configureAcr() {
-    this.steps.sh(script: "az login --identity -u jenkins-cftptl-intsvc-mi")
+    this.steps.sh(script: "az login --identity --client-id 53c88823-b0ec-4b7d-ad10-814df21d880f")
     this.acr.az "configure --defaults acr=${registryName}"
 }
 
