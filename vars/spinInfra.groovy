@@ -70,7 +70,7 @@ def call(Map<String, ?> params) {
         }
 
         if (Environment.toTagName(config.environment) == "sandbox" &&
-            !builtFrom.toLowerCase().contains("cnp-plum")) {
+            !config.Product == "plum") {
             tags = tags + [startupMode: "onDemand"]
           // } else if (Environment.toTagName(config.environment) == "sandbox" &&
           //   !builtFrom.toLowerCase().contains("sds-toffee")) {
