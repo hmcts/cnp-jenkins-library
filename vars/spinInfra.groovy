@@ -72,9 +72,9 @@ def call(Map<String, ?> params) {
         if (Environment.toTagName(config.environment) == "sandbox" &&
             !builtFrom.toLowerCase().contains("cnp-plum")) {
             tags = tags + [startupMode: "onDemand"]
-          } else if (Environment.toTagName(config.environment) == "sandbox" &&
-            !builtFrom.toLowerCase().contains("sds-toffee")) {
-            tags = tags + [startupMode: "onDemand"]
+          // } else if (Environment.toTagName(config.environment) == "sandbox" &&
+          //   !builtFrom.toLowerCase().contains("sds-toffee")) {
+          //   tags = tags + [startupMode: "onDemand"]
         }
 
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
