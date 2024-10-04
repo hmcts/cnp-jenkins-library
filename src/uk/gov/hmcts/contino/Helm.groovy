@@ -35,9 +35,9 @@ class Helm {
   }
 
   def setup() {
+    authenticateAcr()
     configureAcr()
     removeRepo()
-    authenticateAcr()
     addRepo()
   }
 
