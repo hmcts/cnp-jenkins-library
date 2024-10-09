@@ -68,9 +68,12 @@ def call(Map<String, ?> params) {
         if (Environment.toTagName(config.environment) != "production") {
           tags = tags + [autoShutdown: "true"]
         }
-        if (Environment.toTagName(config.environment) == "sandbox") {
-          tags = tags + [startupMode: "onDemand"]
+
+        if (Environment.toTagName(config.environment) == "sandbox" &&
+            (!config.product == "plum" || !config.product == "toffee")) {
+            tags = tags + [startupMode: "onDemand"]
         }
+
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
           tags = tags + [changeUrl: changeUrl]
         }
