@@ -70,7 +70,7 @@ def call(Map<String, ?> params) {
         }
 
         if (Environment.toTagName(config.environment) == "sandbox" &&
-            (!config.product == "plum" || !config.product == "toffee")) {
+            (config.product != "plum" && config.product != "toffee")) {
             tags = tags + [startupMode: "onDemand"]
         }
 
