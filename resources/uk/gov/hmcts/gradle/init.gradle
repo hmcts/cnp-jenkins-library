@@ -1,7 +1,7 @@
 def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
 
 def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactory.sandbox' : 'artifactory'
-def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-virtual"
+def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/ek-remotes"
 
 allprojects {
   repositories {
