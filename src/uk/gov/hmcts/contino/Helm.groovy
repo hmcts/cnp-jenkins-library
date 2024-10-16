@@ -80,7 +80,7 @@ class Helm {
     if (resultOfSearch == notFoundMessage) {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
-      this.steps.sh "helm package --destination ${this.chartLocation}"
+      this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
       this.steps.sh(script: "helm push ${this.chartLocation}-${version}.tgz oci://${registryName}.azurecr.io/helm/${this.chartName}")
 
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
