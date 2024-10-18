@@ -49,7 +49,7 @@ class Helm {
     this.steps.echo "Clear out helm repo before re-adding"
     this.steps.sh(label: "helm repo rm ${registryName}", script: 'helm repo rm $REGISTRY_NAME || echo "Helm repo may not exist on disk, skipping remove"', env: [REGISTRY_NAME: registryName])
   }
-  
+
   def addRepo() {
     this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
   }
@@ -82,7 +82,7 @@ class Helm {
 
       this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
       this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/${this.chartName}")
-
+      this.steps.sh 'rm ${this.chartLocation}/${this.chartName}-${version}.tgz'
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
         this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
