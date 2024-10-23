@@ -150,6 +150,7 @@ def call(params) {
                       savePodsLogs(dockerImage, params, "full-functional")
                       if (!success) {
                         clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        error('Functional test failed')
                       }
                     }
                   }
@@ -172,6 +173,7 @@ def call(params) {
                     savePodsLogs(dockerImage, params, "functional")
                     if (!success) {
                       clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('Functional test failed')
                     }
                   }
                 }
