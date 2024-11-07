@@ -19,7 +19,8 @@ def call(params) {
             withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
                 sh '''
                     set -e
-                    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+                    git remote set-url origin $(echo $ORIGINAL_REMOTE_URL | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+                    git config --global user.name "${GIT_CREDENTIALS_ID}"
                 '''
 
                 for (branch in branchesToSync) {
