@@ -395,6 +395,7 @@ EOF
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
+    localSteps.sh "java -version"
     nagAboutOldNodeJSVersions()
   }
 
