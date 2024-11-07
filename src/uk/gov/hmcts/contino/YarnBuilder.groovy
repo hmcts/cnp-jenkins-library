@@ -396,7 +396,9 @@ EOF
   def setupToolVersion() {
     super.setupToolVersion()
     // Java required on nodejs pipeline, if data import only available as java job, but project itself is nodejs
-    def statusCodeJava21 = steps.sh script: 'grep -F "JavaLanguageVersion.of(21)" aat/build.gradle', returnStatus: true
+    def statusCodeJava21 = steps.sh(script: """
+      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(21)" {} + > /dev/null
+      """, returnStatus: true)    
     if (statusCodeJava21 == 0) {
       def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
       steps.env.JAVA_HOME = javaHomeLocation
