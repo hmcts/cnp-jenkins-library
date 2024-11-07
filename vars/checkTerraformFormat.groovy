@@ -1,7 +1,7 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(Map<String, String> params) {
-  def branch = env.CHANGE_BRANCH
+  def branch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
   def credentialsId = env.GIT_CREDENTIALS_ID
   def gitEmailId = env.GIT_APP_EMAIL_ID
 
