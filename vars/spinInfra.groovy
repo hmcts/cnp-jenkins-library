@@ -103,7 +103,9 @@ def call(Map<String, ?> params) {
 
         sh "terraform --version"
         
-        checkTerraformFormat() 
+        onPR {
+          checkTerraformFormat()
+        }
 
         sh """
           terraform init -reconfigure \
