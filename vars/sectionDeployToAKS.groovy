@@ -150,6 +150,7 @@ def call(params) {
                       savePodsLogs(dockerImage, params, "full-functional")
                       if (!success) {
                         clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        error('Functional test failed')
                       }
                     }
                   }
@@ -172,6 +173,7 @@ def call(params) {
                     savePodsLogs(dockerImage, params, "functional")
                     if (!success) {
                       clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('Functional test failed')
                     }
                   }
                 }
@@ -257,8 +259,8 @@ def call(params) {
           }
         }
       }
-      def triggerUninstall = environment == nonProdEnv
-      if (triggerUninstall || !enableHelmLabel) {
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      if (isOnMaster || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
     }

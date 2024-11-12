@@ -67,7 +67,7 @@ class ArdoqClientTest extends Specification {
               "vcsHost": "Github HMCTS",
               "hmctsApplication": "appId",
               "codeRepository": "repoName",
-              "encodedDependecyList": "deps",
+              "encodedDependencyList": "deps",
               "parser": "yarn",
               "language": "java",
               "languageVersion": "1.8"
