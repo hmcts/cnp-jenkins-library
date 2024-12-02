@@ -51,7 +51,7 @@ class Helm {
   }
 
   def addRepo() {
-    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+    this.steps.sh(script: "helm repo add --subscription ${registrySubscription} --name ${registryName}", returnStdout: true).trim()
   }
 
   def authenticateAcr() {
