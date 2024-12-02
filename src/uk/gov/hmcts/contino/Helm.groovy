@@ -51,7 +51,8 @@ class Helm {
   }
 
   def addRepo() {
-    this.steps.sh(script: "helm repo add --subscription ${registrySubscription} --name ${registryName}", returnStdout: true).trim()
+    this.steps.sh(script: "helm repo add ${registryName} https://${registryName}.azurecr.io/helm/v1/repo", returnStdout: true).trim()
+    this.steps.sh(script: "helm repo add ${registryName}-oci oci://${registryName}.azurecr.io/helm", returnStdout: true).trim()
   }
 
   def authenticateAcr() {
