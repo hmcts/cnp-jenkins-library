@@ -38,7 +38,7 @@ class Helm {
     authenticateAcr()
     configureAcr()
     removeRepo()
-    addRepo()
+    // addRepo()
   }
 
   def configureAcr() {
@@ -70,7 +70,7 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-        addRepo()
+        // addRepo()
         this.steps.sh(script: "helm pull ${registryName}/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
         resultOfSearch = version
     } catch(ignored) {
@@ -92,7 +92,7 @@ class Helm {
 
   def publishToGitIfNotExists(List<String> values) {
     authenticateAcr()
-    addRepo()
+    // addRepo()
     lint(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
