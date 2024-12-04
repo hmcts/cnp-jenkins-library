@@ -64,13 +64,9 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-      this.steps.sh(script: "helm pull https://${registryName}.azurecr.io/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
-      resultOfSearch = version
-    } catch(Exception e) {
-      try {
         this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
         resultOfSearch = version
-      } catch(Exception ignored) {
+      } catch(ignored) {
         resultOfSearch = notFoundMessage
       }
     }
