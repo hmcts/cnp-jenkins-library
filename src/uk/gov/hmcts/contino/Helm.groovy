@@ -75,7 +75,7 @@ class Helm {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
       this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
-      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/${this.chartName}")
+      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/")
       this.steps.sh (script: "rm ${this.chartLocation}/${this.chartName}-${version}.tgz")
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
