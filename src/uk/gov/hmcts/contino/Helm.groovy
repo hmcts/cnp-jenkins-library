@@ -64,11 +64,17 @@ class Helm {
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-        this.steps.sh(script: "helm pull ${registryName}/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+      this.steps.sh(script: "helm pull ${registryName}/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+      resultOfSearch = version
+    } catch(Exception e) {
+      try {
+        this.steps.sh(script: "helm pull ${registryName}/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
         resultOfSearch = version
-    } catch(ignored) {
+      } catch(Exception ignored) {
         resultOfSearch = notFoundMessage
+      }
     }
+    
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
