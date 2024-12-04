@@ -66,9 +66,8 @@ class Helm {
     try {
         this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
         resultOfSearch = version
-      } catch(ignored) {
+    } catch(ignored) {
         resultOfSearch = notFoundMessage
-      }
     }
     
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
