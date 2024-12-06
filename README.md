@@ -549,12 +549,13 @@ withPipeline(type, product, component) {
 ```
 
 ## Building and Testing
-This is a Groovy project, and gradle is used to build and test.
+This is a Groovy project, and gradle is used to build and test. The project is built
+using gradle v8.6, groovy 2.5.23, junit 4.13.2, jenkins-pipeline-unit 1.17, and spock-core 2.3-groovy-2.5
 
 Run
 ```bash
 $ ./gradlew build
-$ ./gradlew test
+$ ./gradlew test --info
 ```
 
 Alternatively, you can use the gradle tasks from within a container using the following script:
