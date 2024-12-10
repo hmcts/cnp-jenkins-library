@@ -1,14 +1,9 @@
 package withPipeline.onBranch
 
-import com.lesfurets.jenkins.unit.BasePipelineTest
-import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.*
 import withPipeline.BaseCnpPipelineTest
-
-import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
-import static uk.gov.hmcts.contino.ProjectSource.projectSource
 
 class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipelineForPact.jenkins"
