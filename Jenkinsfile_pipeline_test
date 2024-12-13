@@ -1,5 +1,5 @@
 #!groovy
-@Library('Infrastructure') _
+@Library('Infrastructure@DTSPO-17456-runAllUnitTests') _
 import uk.gov.hmcts.contino.GradleBuilder
 
 def channel = '#platops-build-notices'
