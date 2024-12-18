@@ -6,7 +6,7 @@ repositories {
 
   mavenCentral()
   maven {
-    url 'https://repo.jenkins-ci.org/public/'
+    url 'https://repo.jenkins-ci.org/releases/'
   }
 }
 
@@ -80,7 +80,6 @@ dependencies {
   implementation 'org.jenkins-ci.plugins:job-dsl-core:1.87'
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '616.ve67136f6c77d', ext: 'jar'
 
-  testImplementation 'junit:junit:4.13.2'
   testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
   testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.0'
 
