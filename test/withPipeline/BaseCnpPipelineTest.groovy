@@ -18,14 +18,16 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
 
   BaseCnpPipelineTest(String branchName, String jenkinsFile) {
     super.setUp()
+    logDebug("BaseCnpPipelineTest constructor")
+    commonPipelineSetup(branchName, jenkinsFile)
+  }
 
-    // get the 'project' directory
+  void commonPipelineSetup(String branchName, String jenkinsFile) {
     def projectDir = (new File(this.getClass().getClassLoader().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
-
+    logInfo("projectDir: ${projectDir}")
     binding.setVariable("scm", null)
     binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true)] as MockJenkinsPlugin[]))])
-    binding.setVariable("env", [
-      BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
+    binding.setVariable("env", [BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
       ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
       CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:'', GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'])
     binding.setVariable("docker", new MockDocker())
@@ -88,7 +90,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       }
       else {
         return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
-           '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
+          '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }
     })
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
@@ -96,5 +98,21 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("readYaml", [Map.class], { c ->
       return c.get('text')
     })
+  }
+  static void logInfo(String message) {
+    println("[Info] " + message)
+  }
+
+  static logDebug(String message) {
+    println("[Debug] " + message)
+  }
+
+  static logError(String message, Throwable throwable = null) {
+    if (throwable) {
+      println("[Error] " + message)
+      println(throwable)
+    } else {
+      println("[Error] " + message)
+    }
   }
 }

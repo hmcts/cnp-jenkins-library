@@ -15,7 +15,6 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.pipeline.DeprecationConfig
 
 def call(type, String product, String component, Closure body) {
 

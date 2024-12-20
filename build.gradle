@@ -104,15 +104,16 @@ sourceSets {
 
   main {
     groovy {
-      srcDirs = ["$project.rootDir/src", "$project.rootDir/vars"]
+      srcDirs = ["src", "vars"]
     }
   }
   test {
     groovy {
-      srcDirs = ["$project.rootDir/test"]
+      // todo: add test source directories withPipeline.*; withInfraPipeline.*; withNightlyPipeline.*
+      srcDirs = ["test/uk/gov/hmcts/"]
     }
     resources {
-      srcDirs = ["$project.rootDir/testResources"]
+      srcDirs = ["testResources"]
     }
   }
 }

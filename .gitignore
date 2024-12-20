@@ -9,3 +9,5 @@ bin
 .settings
 .DS_Store
 .java/**
+.ash_history
+.bash_history
