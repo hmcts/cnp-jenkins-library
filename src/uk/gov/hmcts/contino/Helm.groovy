@@ -35,9 +35,9 @@ class Helm {
   }
 
   def setup() {
+    authenticateAcr()
     configureAcr()
     removeRepo()
-    addRepo()
   }
 
   def configureAcr() {
@@ -46,44 +46,46 @@ class Helm {
 
   def removeRepo() {
     this.steps.echo "Clear out helm repo before re-adding"
-    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
+    this.steps.sh(label: "helm repo rm ${registryName}", script: 'helm repo rm $REGISTRY_NAME || echo "Helm repo may not exist on disk, skipping remove"', env: [REGISTRY_NAME: registryName])
   }
 
-  def addRepo() {
-    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+  def authenticateAcr() {
+    this.acr.az "acr login --name ${registryName}"
   }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
     removeRepo()
-    addRepo()
+    authenticateAcr()
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-      resultOfSearch = this.acr.az "acr helm show --subscription ${registrySubscription} --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
+        this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+        resultOfSearch = version
     } catch(ignored) {
-      resultOfSearch = notFoundMessage
+        resultOfSearch = notFoundMessage
     }
+    
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
-      this.steps.sh "helm package ${this.chartLocation}"
-      this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
-
+      this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
+      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/")
+      this.steps.sh (script: "rm ${this.chartLocation}/${this.chartName}-${version}.tgz")
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
-      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+        this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
     }
   }
 
   def publishToGitIfNotExists(List<String> values) {
-    addRepo()
+    authenticateAcr()
     lint(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
@@ -103,7 +105,6 @@ class Helm {
     }
   }
 
-
   def lint(List<String> values) {
     this.execute("lint", this.chartLocation, values, null)
   }
@@ -119,7 +120,7 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh ("chmod +x aks-debug-info.sh")
-    def optionsStr = (options + ["--install", "--wait", "--timeout 500s"]).join(' ')
+    def optionsStr = (options + ["--install", "--wait", "--timeout 1250s"]).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
     steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
     this.steps.sh 'rm aks-debug-info.sh'
@@ -163,5 +164,4 @@ class Helm {
     def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
   }
-
 }

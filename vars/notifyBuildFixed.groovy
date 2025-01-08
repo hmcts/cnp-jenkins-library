@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 /**
  * Send build fixed notification
@@ -27,18 +28,22 @@ def call(Map args = [:]) {
       message = "@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings \n\n ".concat(message)
       channel = args.channel
     }
+    if (channel == "@iamabotuser") {
+       echo "Skipping notification on PRs from bot user"
+       return
+     }
   }
 
   try {
-    def previousBuild = currentBuild.previousBuild
-    // Added to confirm this still works after refactoring to make it work with JenkinsPipelineUnit
-    echo "Previous build result is ${previousBuild.result}"
-    if (previousBuild != null && previousBuild.result == 'FAILURE') {
+    if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
+      // Create block message and add our built message to it as a new section
+      def slackMessage = new SlackBlockMessage()
+      slackMessage.addSection(message)
+
       slackSend(
         failOnError: true,
         channel: channel,
-        color: 'good',
-        message: message)
+        attachments: slackMessage.asObject())
     }
   } catch (Exception ex) {
     if(channel!='@iamabotuser')

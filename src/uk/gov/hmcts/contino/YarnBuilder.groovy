@@ -136,16 +136,18 @@ class YarnBuilder extends AbstractBuilder {
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
+      steps.writeFile(file: 'format-v4-audit.js', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.js'))
 
       steps.sh """
          export PATH=\$HOME/.local/bin:\$PATH
-        chmod +x yarn-audit-with-suppressions.sh
+         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
+         chmod +x yarn-audit-with-suppressions.sh
         ./yarn-audit-with-suppressions.sh
       """
     } finally {
       steps.sh """
-        cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-        cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+        cat yarn-audit-result-formatted | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+        cat yarn-audit-result-formatted | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
         cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
       """
       String issues = steps.readFile('yarn-audit-issues-result')
@@ -393,6 +395,17 @@ EOF
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
+    // Java required on nodejs pipeline, if data import only available as java job, but project itself is nodejs
+    def statusCodeJava21 = steps.sh(script: """
+      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(21)" {} + > /dev/null
+      """, returnStatus: true)    
+    if (statusCodeJava21 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
+    localSteps.sh "java -version"
     nagAboutOldNodeJSVersions()
   }
 
