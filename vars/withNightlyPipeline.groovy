@@ -27,7 +27,7 @@ def call(type, product, component, timeout = 300, Closure body) {
 
   Subscription subscription = new Subscription(env)
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  def metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
@@ -64,7 +64,7 @@ def call(type, product, component, timeout = 300, Closure body) {
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
           sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
-          onMaster {  
+          onMaster {
             sectionSyncBranchesWithMaster(
               branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
               product: product

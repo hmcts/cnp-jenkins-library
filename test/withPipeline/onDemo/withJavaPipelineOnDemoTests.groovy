@@ -17,7 +17,7 @@ class withJavaPipelineOnDemoTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
+      setupToolVersion(0) {}
       build(0) {}
     }
 

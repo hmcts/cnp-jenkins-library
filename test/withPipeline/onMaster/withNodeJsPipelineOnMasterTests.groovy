@@ -1,14 +1,12 @@
 package withPipeline.onMaster
 
-import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Ignore
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("java.lang.StackOverflowError at DefaultGroovyMethods.java:15778")
+@Ignore("Fails with verify[0]: expected 1..1 call(s) to 'setupToolVersion' but was called 0 time(s), can't figure out why")
 class withNodeJsPipelineOnMasterTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
 

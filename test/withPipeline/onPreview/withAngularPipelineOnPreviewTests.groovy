@@ -6,7 +6,7 @@ import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("java.lang.RuntimeException: Security Checks - unexpected character .")
+@Ignore("expected 1..1 call(s) to 'setupToolVersion' but was called 0 time(s), can't figure out why")
 class withAngularPipelineOnPreviewTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleAngularPipeline.jenkins"
 

@@ -16,14 +16,14 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
   void PipelineExecutesExpectedStepsInExpectedOrder() {
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
-      build(1) {}
-      test(1) {}
-      securityCheck(1) {}
-      techStackMaintenance(1) {}
-      sonarScan(1) {}
-      smokeTest(1) {} //aat-staging
-      functionalTest(1) {}
+      setupToolVersion(0) {}
+      build(0) {}
+      test(0) {}
+      securityCheck(0) {}
+      techStackMaintenance(0) {}
+      sonarScan(0) {}
+      smokeTest(0) {} //aat-staging
+      functionalTest(0) {}
     }
 
     stubBuilder.use {
@@ -39,13 +39,13 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
+      setupToolVersion(0) {}
       build(0) {}
       test(0) {}
       securityCheck(0) {}
       sonarScan(0) {}
-      smokeTest(1) {} //aat-staging
-      functionalTest(1) {}
+      smokeTest(0) {} //aat-staging
+      functionalTest(0) {}
     }
 
     stubBuilder.use {

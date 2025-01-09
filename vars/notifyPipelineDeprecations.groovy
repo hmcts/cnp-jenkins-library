@@ -16,7 +16,7 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
  *      <li>channel - (string; required) name of the slack channel for team notifications</li>
  *  </ul>
  */
-def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
+def call(teamSlackChannel, metricsPublisher ) {
   SlackBlockMessage warningMessage = WarningCollector.getSlackWarningMessage()
   // Fetch all block sections from the warnings mesage to see if anything has been added
   String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
@@ -61,7 +61,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   }
 }
 
-void publishWarningMetrics(MetricsPublisher metricsPublisher) {
+static void publishWarningMetrics(metricsPublisher) {
   for (pipelineWarning in WarningCollector.pipelineWarnings) {
     metricsPublisher.publish(pipelineWarning.warningKey)
   }
