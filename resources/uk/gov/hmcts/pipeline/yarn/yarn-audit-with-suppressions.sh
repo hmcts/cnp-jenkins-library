@@ -90,7 +90,7 @@ else
 fi
 
 if [ "$YARN_VERSION" == "4" ]; then
-  cat yarn-audit-result | node format-v4-audit.js > yarn-audit-result-formatted
+  cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 else
   cp yarn-audit-result yarn-audit-result-formatted
 fi
@@ -105,7 +105,7 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
     if [ "$YARN_VERSION" == "4" ]; then
-      cat yarn-audit-known-issues | node format-v4-audit.js > yarn-audit-known-issues-formatted
+      cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
     else
       cp yarn-audit-known-issues yarn-audit-known-issues-formatted
     fi
@@ -128,7 +128,7 @@ if [ ! -f yarn-audit-known-issues ]; then
 else
   # Test for old format of yarn-audit-known-issues
   if [ "$YARN_VERSION" == "4" ]; then
-    cat yarn-audit-known-issues | node format-v4-audit.js > yarn-audit-known-issues-formatted
+    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
