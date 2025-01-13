@@ -23,8 +23,8 @@ compileTestGroovy {
 }
 
 dependencies {
-  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.22'
-  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.22'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.23'
+  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.23'
 
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3773.v505e0052522c'
   testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
