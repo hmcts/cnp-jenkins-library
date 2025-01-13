@@ -9,6 +9,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String securityScanUrlExclusions
   String securityScanType
   String securityScanAlertFilters
+  String securityScanCookieIgnoreList
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
