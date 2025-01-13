@@ -42,6 +42,7 @@ class AppPipelineConfigTest extends Specification {
     when:
       dsl.enableSecurityScan()
     then:
+      assertThat(pipelineConfig.securityScanAlertFilters).isEqualTo("")
       assertThat(pipelineConfig.securityScanUrlExclusions).isEqualTo("")
       assertThat(pipelineConfig.securityScanType).isEqualTo("auto")
       assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)

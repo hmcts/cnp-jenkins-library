@@ -8,6 +8,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String dbMigrationVaultName
   String securityScanUrlExclusions
   String securityScanType
+  String securityScanAlertFilters
 
   boolean performanceTest = false
   boolean apiGatewayTest = false

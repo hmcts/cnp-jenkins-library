@@ -7,7 +7,15 @@ echo ${TEST_URL}
 ZAP_URL_EXCLUSIONS="-config globalexcludeurl.url_list.url\(0\).regex='^https?:\/\/.*\/(?:.*login.*)+$' ${ZAP_URL_EXCLUSIONS}"
 echo ${ZAP_URL_EXCLUSIONS}
 
-zap-full-scan.py -t ${TEST_URL} -P 1001 -l FAIL -r /zap/wrk/activescan.html -d -z "-config database.newsession=3 -config database.newsessionprompt=false -config api.disablekey=true -config scanner.attackOnStart=true -config view.mode=attack -config rules.cookie.ignorelist=_ga,_gid,_gat,dtCookie,dtLatC,dtPC,dtSa,rxVisitor,rxvt -config connection.dnsTtlSuccessfulQueries=-1 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true ${ZAP_URL_EXCLUSIONS}"
+ALERT_FILTERS="${ALERT_FILTERS}"
+echo ${ALERT_FILTERS}
+
+DEFAULT_COOKIES="_ga,_gid,_gat,dtCookie,dtLatC,dtPC,dtSa,rxVisitor,rxvt"
+
+COOKIE_IGNORE_LIST="${DEFAULT_COOKIES},${CUSTOM_COOKIES}"
+echo ${COOKIE_IGNORE_LIST}
+
+zap-full-scan.py -t ${TEST_URL} -P 1001 -l FAIL -r /zap/wrk/activescan.html -d -z "-addoninstall alertfilter -config database.newsession=3 -config database.newsessionprompt=false -config api.disablekey=true -config scanner.attackOnStart=true -config view.mode=attack -config rules.cookie.ignorelist=${COOKIE_IGNORE_LIST} -config connection.dnsTtlSuccessfulQueries=-1 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true ${ZAP_URL_EXCLUSIONS} ${ALERT_FILTERS}"
 
 echo 'Changing owner from $(id -u):$(id -g) to $(id -u):$(id -u)'
 chown -R $(id -u):$(id -u) /zap/wrk/activescan.html
