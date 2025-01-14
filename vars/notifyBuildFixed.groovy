@@ -39,7 +39,7 @@ def call(Map args = [:]) {
       // Create block message and add our built message to it as a new section
       def slackMessage = new SlackBlockMessage()
       slackMessage.addSection(message)
-      
+
       slackSend(
         failOnError: true,
         channel: channel,

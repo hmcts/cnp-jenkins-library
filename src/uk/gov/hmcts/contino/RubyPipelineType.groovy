@@ -5,7 +5,7 @@ class RubyPipelineType implements PipelineType, Serializable {
   def product
   def app
 
-  Builder builder
+  RubyBuilder builder
 
   RubyPipelineType(steps, product, app) {
     this.steps = steps

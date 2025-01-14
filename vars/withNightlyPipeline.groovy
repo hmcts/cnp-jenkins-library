@@ -21,13 +21,13 @@ def call(type, product, component, timeout = 300, Closure body) {
     ruby: new RubyPipelineType(this, product, component)
   ]
 
-  PipelineType pipelineType = pipelineTypes.get(type)
+  def pipelineType = pipelineTypes.get(type)
 
   assert pipelineType != null
 
   Subscription subscription = new Subscription(env)
 
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
+  def metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
@@ -55,7 +55,7 @@ def call(type, product, component, timeout = 300, Closure body) {
   } else {
     nodeSelector = agentType + ' && daily'
   }
-  
+
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
@@ -64,7 +64,7 @@ def call(type, product, component, timeout = 300, Closure body) {
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
           sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
-          onMaster {  
+          onMaster {
             sectionSyncBranchesWithMaster(
               branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
               product: product
