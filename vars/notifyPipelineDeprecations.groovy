@@ -16,7 +16,7 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
  *      <li>channel - (string; required) name of the slack channel for team notifications</li>
  *  </ul>
  */
-def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
+def call(teamSlackChannel, metricsPublisher ) {
   SlackBlockMessage warningMessage = WarningCollector.getSlackWarningMessage()
   // Fetch all block sections from the warnings mesage to see if anything has been added
   String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
@@ -46,13 +46,13 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
     warningMessage.setWarningColor()
     warningMessage.addFirstHeader("We have noticed the following deprecated configuration:")
     warningMessage.addSection("In ${env?.JOB_NAME}: <${env?.RUN_DISPLAY_URL}|Build ${env?.BUILD_DISPLAY_NAME}>")
-    
+
     try {
       slackSend(
         failOnError: true,
         channel: channel,
         attachments: warningMessage.asObject())
-    } 
+    }
     catch (Exception ex) {
       if(channel!='@iamabotuser') {
         throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
@@ -61,7 +61,7 @@ def call(String teamSlackChannel, MetricsPublisher metricsPublisher ) {
   }
 }
 
-void publishWarningMetrics(MetricsPublisher metricsPublisher) {
+static void publishWarningMetrics(metricsPublisher) {
   for (pipelineWarning in WarningCollector.pipelineWarnings) {
     metricsPublisher.publish(pipelineWarning.warningKey)
   }

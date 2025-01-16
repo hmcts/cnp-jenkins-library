@@ -1,7 +1,6 @@
 #!groovy
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
@@ -29,7 +28,6 @@ def call(params) {
   if(fileExists('Dockerfile')) {
     PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
     AppPipelineConfig config = params.appPipelineConfig
-    PipelineType pipelineType = params.pipelineType
 
     def subscription = params.subscription
     def product = params.product

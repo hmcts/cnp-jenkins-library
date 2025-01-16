@@ -3,7 +3,7 @@ import uk.gov.hmcts.pipeline.DeprecationConfig
 import java.time.LocalDate
 
 def call(String environment, String product) {
-   
+
   def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
 
@@ -18,7 +18,7 @@ def call(String environment, String product) {
       """
     } catch(ignored) {
       WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.",  LocalDate.parse(deprecation.date_deadline))
-    } 
+    }
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
 }

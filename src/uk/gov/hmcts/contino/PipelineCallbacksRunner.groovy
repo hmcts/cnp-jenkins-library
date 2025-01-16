@@ -5,9 +5,9 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 
 class PipelineCallbacksRunner implements Serializable {
-  final PipelineCallbacksConfig config
+  def final config
 
-  PipelineCallbacksRunner(PipelineCallbacksConfig config) {
+  PipelineCallbacksRunner(config) {
     this.config = config
   }
 

@@ -1,6 +1,5 @@
 package withPipeline.onDemo
 
-import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
