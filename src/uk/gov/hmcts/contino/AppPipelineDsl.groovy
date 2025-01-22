@@ -45,11 +45,15 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableSecurityScan(Map<String, Object> params = [:]) {
     def configuration = [
+        cookieIgnoreList: "",
+        alertFilters: "",
         urlExclusions: "",
         timeout: 120,
         scanType: "auto"
     ] << params
 
+    config.securityScanCookieIgnoreList = configuration.cookieIgnoreList
+    config.securityScanAlertFilters = configuration.alertFilters
     config.securityScanUrlExclusions = configuration.urlExclusions
     config.securityScanType = configuration.scanType
     config.securityScanTimeout = configuration.timeout
