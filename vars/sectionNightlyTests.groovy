@@ -1,16 +1,13 @@
 import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.AppPipelineConfig
-import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
 
-def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
+def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
 
   withTeamSecrets(config, environment.nonProdName) {
-    Builder builder = pipelineType.builder
+    def builder = pipelineType.builder
 
     stageWithAgent('Checkout', product) {
       checkoutScm(pipelineCallbacksRunner: pcr)

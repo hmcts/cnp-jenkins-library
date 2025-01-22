@@ -15,13 +15,10 @@ class GradleBuilder extends AbstractBuilder {
   // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
   def localSteps
 
-  def securitytest
-
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
     this.localSteps = steps
-    this.securitytest = new SecurityScan(this.steps)
   }
 
   def build() {
