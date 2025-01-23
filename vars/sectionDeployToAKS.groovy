@@ -131,6 +131,30 @@ def call(params) {
             }
           }
 
+          if (config.apiGatewayTest) {
+            withTeamSecrets(config, environment) {
+              stageWithAgent("API Gateway Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  def success = true
+                  try {
+                    pcr.callAround("apigatewaytest:${environment}") {
+                      timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'API Gateway Test - AKS') {
+                        builder.apiGatewayTest()
+                      }
+                    }
+                  } catch (err) {
+                    success = false
+                    throw err
+                  } finally {
+                    savePodsLogs(dockerImage, params, "apiGateway")
+                    if (!success) {
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    }
+                  }
+                }
+              }
+            }
+          }
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
