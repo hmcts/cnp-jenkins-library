@@ -79,7 +79,7 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks apiGateway")
     } finally {
-      localSteps.junit '**/test-results/api/*.xml,**/test-results/apiTest/*.xml'
+      localSteps.junit '**/test-results/apiGateway/*.xml,**/test-results/apiGatewayTest/*.xml'
     }
   }
 
