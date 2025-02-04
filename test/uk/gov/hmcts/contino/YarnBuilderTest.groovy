@@ -128,24 +128,24 @@ def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
         1 * steps.sh({ it instanceof Map && it.script.contains('test:mutation') && it.returnStatus == true })
 }
 
-  def "securityCheck calls 'yarn audit'"() {
-      when:
-          builder.securityCheck()
-      then:
-          1 * steps.sh('''
-          set +ex
-          export NVM_DIR='/home/jenkinsssh/.nvm'
-          . /opt/nvm/nvm.sh || true
-          nvm install
-          set -ex
-        ''')
-          1 * steps.sh('''
-           export PATH=$HOME/.local/bin:$PATH
-           export YARN_VERSION=$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
-           chmod +x yarn-audit-with-suppressions.sh
-          ./yarn-audit-with-suppressions.sh
-        ''')
-  }
+def "securityCheck calls 'yarn audit'"() {
+    when:
+        builder.securityCheck()
+    then:
+        1 * steps.sh("""
+        set +ex
+        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
+        . /opt/nvm/nvm.sh || true
+        nvm install
+        set -ex
+      """)
+        1 * steps.sh("""
+         export PATH=\$HOME/.local/bin:\$PATH
+         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
+         chmod +x yarn-audit-with-suppressions.sh
+        ./yarn-audit-with-suppressions.sh
+      """)
+}
     
   def "full functional tests calls 'yarn test:fullfunctional'"() {
       when:
