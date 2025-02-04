@@ -132,9 +132,21 @@ def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
       when:
           builder.securityCheck()
       then:
-          1 * steps.sh({ it instanceof Map && it.script.contains('./yarn-audit-with-suppressions.sh') && it.returnStatus == true })
+          1 * steps.sh('''
+          set +ex
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh || true
+          nvm install
+          set -ex
+        ''')
+          1 * steps.sh('''
+           export PATH=$HOME/.local/bin:$PATH
+           export YARN_VERSION=$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
+           chmod +x yarn-audit-with-suppressions.sh
+          ./yarn-audit-with-suppressions.sh
+        ''')
   }
-  
+    
   def "full functional tests calls 'yarn test:fullfunctional'"() {
       when:
           builder.fullFunctionalTest()
