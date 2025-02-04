@@ -45,30 +45,30 @@ class YarnBuilderTest extends Specification {
     builder = new YarnBuilder(steps)
   }
 
-def "build calls 'yarn install' and 'yarn lint'"() {
-    when:
-        builder.build()
-    then:
-        1 * steps.sh({
-            it instanceof Map &&
-            it.script.contains('yarn install') &&
-            it.returnStatus == true
-        })
-        1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-        1 * steps.sh({
-            it instanceof Map &&
-            it.script.contains('yarn lint') &&
-            it.returnStatus == true
-        })
-}
+  def "build calls 'yarn install' and 'yarn lint'"() {
+      when:
+          builder.build()
+      then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn install') &&
+              it.returnStatus == true
+          })
+          1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn lint') &&
+              it.returnStatus == true
+          })
+  }
 
   def "test calls 'yarn test' and 'yarn test:coverage' and 'yarn test:a11y'"() {
-    when:
-    builder.test()
-    then:
-    1 * steps.sh({ it.contains('test') })
-    1 * steps.sh({ it.contains('test:coverage') })
-    1 * steps.sh({ it.contains('test:a11y') })
+      when:
+          builder.test()
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains('yarn test') && it.returnStatus == true })
+          1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:coverage') && it.returnStatus == true })
+          1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:a11y') && it.returnStatus == true })
   }
 
   def "sonarScan calls 'yarn sonar-scan'"() {
@@ -79,24 +79,24 @@ def "build calls 'yarn install' and 'yarn lint'"() {
   }
 
   def "smokeTest calls 'yarn test:smoke'"() {
-    when:
-      builder.smokeTest()
-    then:
-      1 * steps.sh({ it.contains('test:smoke') })
+      when:
+          builder.smokeTest()
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:smoke') && it.returnStatus == true })
   }
 
   def "functionalTest calls 'yarn test:functional'"() {
     when:
       builder.functionalTest()
     then:
-      1 * steps.sh({ it.contains('test:functional') })
+      1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:functional') && it.returnStatus == true })
   }
 
   def "apiGatewayTest calls 'yarn test:apiGateway'"() {
     when:
       builder.apiGatewayTest()
     then:
-      1 * steps.sh({ it.contains('test:apiGateway') })
+      1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:apigateway') && it.returnStatus == true })
   }
 
   def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
