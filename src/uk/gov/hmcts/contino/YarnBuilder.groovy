@@ -267,25 +267,17 @@ EOF
     yarn("test:can-i-deploy:consumer")
   }
 
-  private runYarn(String task, String prepend = "") {
+private runYarn(String task, String prepend = "") {
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
+
     if (steps.fileExists(NVMRC)) {
-      steps.sh """
+      def status = steps.sh(script: """
         set +ex
         export NVM_DIR='/home/jenkinsssh/.nvm'
         . /opt/nvm/nvm.sh || true
         nvm install
-        export PATH=\$HOME/.local/bin:\$PATH
-        if ${prepend.toBoolean()}; then
-          ${prepend}yarn ${task} || exit 0  # Allow yarn to exit with warnings
-        else
-          yarn ${task} || exit 0
-        fi
-      """
-    } else {
-      steps.sh("""
         export PATH=\$HOME/.local/bin:\$PATH
 
         if ${prepend.toBoolean()}; then
@@ -293,9 +285,27 @@ EOF
         else
           yarn ${task}
         fi
-      """)
+      """, returnStatus: true)
+
+      if (status != 0 && !task.contains('install')) {
+        steps.error("Yarn task '${task}' failed with status ${status}")
+      }
+    } else {
+      def status = steps.sh(script: """
+        export PATH=\$HOME/.local/bin:\$PATH
+
+        if ${prepend.toBoolean()}; then
+          ${prepend}yarn ${task}
+        else
+          yarn ${task}
+        fi
+      """, returnStatus: true)
+
+      if (status != 0 && !task.contains('install')) {
+        steps.error("Yarn task '${task}' failed with status ${status}")
+      }
     }
-  }
+}
 
   private runYarnQuiet(String task, String prepend = "") {
     if (prepend && !prepend.endsWith(' ')) {
