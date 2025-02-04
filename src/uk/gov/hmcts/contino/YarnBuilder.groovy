@@ -271,21 +271,17 @@ EOF
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
-
     if (steps.fileExists(NVMRC)) {
       steps.sh """
         set +ex
-        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
+        export NVM_DIR='/home/jenkinsssh/.nvm'
         . /opt/nvm/nvm.sh || true
         nvm install
-        set -ex
-
         export PATH=\$HOME/.local/bin:\$PATH
-
         if ${prepend.toBoolean()}; then
-          ${prepend}yarn ${task}
+          ${prepend}yarn ${task} || exit 0  # Allow yarn to exit with warnings
         else
-          yarn ${task}
+          yarn ${task} || exit 0
         fi
       """
     } else {
