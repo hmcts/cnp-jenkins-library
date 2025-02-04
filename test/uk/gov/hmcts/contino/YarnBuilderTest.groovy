@@ -45,14 +45,22 @@ class YarnBuilderTest extends Specification {
     builder = new YarnBuilder(steps)
   }
 
-  def "build calls 'yarn install' and 'yarn lint'"() {
+def "build calls 'yarn install' and 'yarn lint'"() {
     when:
-      builder.build()
+        builder.build()
     then:
-      1 * steps.sh({ it.contains('yarn install') })
-      1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
-      1 * steps.sh({ it.contains('lint') })
-  }
+        1 * steps.sh({
+            it instanceof Map &&
+            it.script.contains('yarn install') &&
+            it.returnStatus == true
+        })
+        1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
+        1 * steps.sh({
+            it instanceof Map &&
+            it.script.contains('yarn lint') &&
+            it.returnStatus == true
+        })
+}
 
   def "test calls 'yarn test' and 'yarn test:coverage' and 'yarn test:a11y'"() {
     when:
