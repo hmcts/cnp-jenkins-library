@@ -92,12 +92,14 @@ class YarnBuilderTest extends Specification {
       1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:functional') && it.returnStatus == true })
   }
 
-  def "apiGatewayTest calls 'yarn test:apiGateway'"() {
+def "apiGatewayTest calls 'yarn test:apiGateway'"() {
     when:
-      builder.apiGatewayTest()
+        builder.apiGatewayTest()
     then:
-      1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:apigateway') && it.returnStatus == true })
-  }
+        1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:apiGateway') && it.returnStatus == true })
+        1 * steps.junit(['allowEmptyResults':true, 'testResults':'api-output/*result.xml'])
+        1 * steps.archiveArtifacts(['allowEmptyArchive':true, 'artifacts':'api-output/*'])
+}
 
   def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
       when:
