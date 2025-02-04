@@ -100,109 +100,109 @@ class YarnBuilderTest extends Specification {
   }
 
   def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
-    when:
-    builder.crossBrowserTest()
-    then:
-    1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
-    when:
-    builder.yarn("test:crossbrowser")
-    then:
-    1 * steps.sh({ it.contains('test:crossbrowser') })
+      when:
+          builder.crossBrowserTest()
+      then:
+          1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
+      when:
+          builder.yarn("test:crossbrowser")
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains('test:crossbrowser') && it.returnStatus == true })
   }
 
-  def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
+
+def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
     when:
-    builder.crossBrowserTest('chrome')
+        builder.crossBrowserTest('chrome')
     then:
-    1 * steps.sh({ it.contains('BROWSER_GROUP=chrome yarn test:crossbrowser') })
-    1 * steps.archiveArtifacts(['allowEmptyArchive':true, artifacts: "functional-output/chrome*/*"])
-    1 * steps.saucePublisher()
-  }
+        1 * steps.sh({ it instanceof Map && it.script.contains('BROWSER_GROUP=chrome yarn test:crossbrowser') && it.returnStatus == true })
+        1 * steps.archiveArtifacts(['allowEmptyArchive':true, artifacts: "functional-output/chrome*/*"])
+        1 * steps.saucePublisher()
+}
+
 
   def "mutationTest calls 'yarn test:mutation'"() {
     when:
         builder.mutationTest()
     then:
-        1 * steps.sh({ it.contains('test:mutation') })
-  }
+        1 * steps.sh({ it instanceof Map && it.script.contains('test:mutation') && it.returnStatus == true })
+}
 
   def "securityCheck calls 'yarn audit'"() {
-    when:
-      builder.securityCheck()
-    then:
-      1 * steps.sh({ it.contains('./yarn-audit-with-suppressions.sh') })
+      when:
+          builder.securityCheck()
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains('./yarn-audit-with-suppressions.sh') && it.returnStatus == true })
   }
-
+  
   def "full functional tests calls 'yarn test:fullfunctional'"() {
-    when:
-        builder.fullFunctionalTest()
-    then:
-        1*steps.sh({ it.contains('test:fullfunctional') })
+      when:
+          builder.fullFunctionalTest()
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains('test:fullfunctional') && it.returnStatus == true })
   }
-
+  
   def "runProviderVerification triggers a yarn hook with publish"() {
-    setup:
-      def version = "v3r510n"
-      def publishResults = true
-    when:
-      builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
-    then:
-      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish") })
+      setup:
+          def version = "v3r510n"
+          def publishResults = true
+      when:
+          builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish") && it.returnStatus == true })
   }
-
+  
   def "runProviderVerification triggers a yarn hook without publish"() {
-    setup:
-      def version = "v3r510n"
-      def publishResults = false
-    when:
-      builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
-    then:
-      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify") })
+      setup:
+          def version = "v3r510n"
+          def publishResults = false
+      when:
+          builder.runProviderVerification(PACT_BROKER_URL, version, publishResults)
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify") && it.returnStatus == true })
   }
-
+  
   def "runConsumerTests triggers a yarn hook"() {
-    setup:
-      def version = "v3r510n"
-    when:
-      builder.runConsumerTests(PACT_BROKER_URL, version)
-    then:
-      1 * steps.sh({ it.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish") })
+      setup:
+          def version = "v3r510n"
+      when:
+          builder.runConsumerTests(PACT_BROKER_URL, version)
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish") && it.returnStatus == true })
   }
-
+  
   def "runConsumerCanIDeploy triggers a yarn hook"() {
-    setup:
-    def version = "v3r510n"
-    when:
-    builder.runConsumerCanIDeploy()
-    then:
-    1 * steps.sh({ it.contains("yarn test:can-i-deploy:consumer") })
+      when:
+          builder.runConsumerCanIDeploy()
+      then:
+          1 * steps.sh({ it instanceof Map && it.script.contains("yarn test:can-i-deploy:consumer") && it.returnStatus == true })
   }
-
-  def "prepareCVEReport converts json lines report to groovy object"() {
-    given:
+  
+    def "prepareCVEReport converts json lines report to groovy object"() {
+      given:
+        def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
+      when:
+        def result = builder.prepareCVEReport(sampleCVEReport, null)
+      then:
+      result == NODE_JS_CVE_REPORT
+    }
+  
+    def "prepareCVEReport converts json lines report to groovy object with suppressions"() {
+      given:
       def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
-    when:
-      def result = builder.prepareCVEReport(sampleCVEReport, null)
-    then:
-    result == NODE_JS_CVE_REPORT
+      def sampleCVESuppressionsReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-suppressed.txt').toURI()).text
+      def suppressed = NODE_JS_CVE_REPORT.vulnerabilities
+  
+      when:
+      def result = builder.prepareCVEReport(sampleCVEReport, sampleCVESuppressionsReport)
+      then:
+      result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
+    }
+  
+    def "techStackMaintenance"() {
+      when:
+        builder.techStackMaintenance()
+      then:
+        1 * steps.echo('Running Yarn Tech stack maintenance')
+    }
   }
-
-  def "prepareCVEReport converts json lines report to groovy object with suppressions"() {
-    given:
-    def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
-    def sampleCVESuppressionsReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-suppressed.txt').toURI()).text
-    def suppressed = NODE_JS_CVE_REPORT.vulnerabilities
-
-    when:
-    def result = builder.prepareCVEReport(sampleCVEReport, sampleCVESuppressionsReport)
-    then:
-    result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
-  }
-
-  def "techStackMaintenance"() {
-    when:
-      builder.techStackMaintenance()
-    then:
-      1 * steps.echo('Running Yarn Tech stack maintenance')
-  }
-}
