@@ -4,19 +4,16 @@ import java.time.LocalDate
 
 def call(String environment, String product) {
   String gitUrl = env.GIT_URL
-  LocalDate defaultExpiryDate = LocalDate.parse(deprecation.date_deadline)
+  def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
+  LocalDate defaultExpiryDate = null
 
   // Repository specific expiry dates
   switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/am-org-role-mapping-service.git":
-        defaultExpiryDate = LocalDate.of(2025, 4, 10)
-        break
-    default:
-        // Will use the date from deprecation config
+        defaultExpiryDate = LocalDate.of(2024, 5, 29)
         break
   }
 
-  def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
 
   def slackDeprecationMessage = []
@@ -29,7 +26,9 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.", defaultExpiryDate)
+      // If no specific date was set in the switch statement, use the date from deprecation config
+      def expiryDate = defaultExpiryDate ?: LocalDate.parse(deprecation.date_deadline)
+      WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.", expiryDate)
     }
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
