@@ -12,9 +12,10 @@ def call(String environment, String product) {
 
   tfDeprecationConfig.each { dependency, deprecation ->
     try {
+      def version = (dependency == "registry.terraform.io/hashicorp/azurerm") ? "5.0.0" : deprecation.version
       sh """
       chmod +x warn-about-old-tf-azure-provider.sh
-      ./warn-about-old-tf-azure-provider.sh $dependency 5.0.0
+      ./warn-about-old-tf-azure-provider.sh $dependency $version
       """
     } catch(ignored) {
       LocalDate deadlineDate
