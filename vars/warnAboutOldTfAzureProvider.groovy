@@ -13,6 +13,7 @@ def call(String environment, String product) {
   tfDeprecationConfig.each { dependency, deprecation ->
     try {
       sh """
+      echo "GitURL is $gitUrl"
       chmod +x warn-about-old-tf-azure-provider.sh
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
