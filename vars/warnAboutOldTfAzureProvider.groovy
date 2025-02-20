@@ -17,7 +17,7 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency 5.0.0
       """
     } catch(ignored) {
-      WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *5.0.0*.",  LocalDate.of(2024, 2, 1))
+      WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *5.0.0*.",  LocalDate.of(2027, 2, 1))
     }
   }
   sh 'rm -f warn-about-old-tf-azure-provider.sh'
