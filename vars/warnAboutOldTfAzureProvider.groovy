@@ -14,7 +14,7 @@ def call(String environment, String product) {
     try {
       sh """
       chmod +x warn-about-old-tf-azure-provider.sh
-      ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
+      ./warn-about-old-tf-azure-provider.sh $dependency 5.0.0
       """
     } catch(ignored) {
       WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *5.0.0*.",  LocalDate.of(2024, 2, 1))
