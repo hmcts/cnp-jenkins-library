@@ -2,15 +2,15 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import uk.gov.hmcts.pipeline.DeprecationConfig
 import java.time.LocalDate
 
-def call(String environment, String product) {
+def call() {
   String gitUrl = env.GIT_URL
   def tfDeprecationConfig = new DeprecationConfig(this).getDeprecationConfig().terraform
   LocalDate defaultExpiryDate = null
 
   // Repository specific expiry dates
   switch (gitUrl.toLowerCase()) {
-    case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git":
-    case "https://github.com/HMCTS/cnp-jenkins-library.git":
+    case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git".toLowerCase():
+    case "https://github.com/hmcts/cnp-jenkins-library.git".toLowerCase():
       defaultExpiryDate = LocalDate.of(2024, 2, 19)
       break
   }
@@ -24,6 +24,7 @@ def call(String environment, String product) {
     try {
       sh """
       chmod +x warn-about-old-tf-azure-provider.sh
+      echo "Thomas Test"
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
