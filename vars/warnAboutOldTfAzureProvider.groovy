@@ -12,10 +12,9 @@ def call(String environment, String product) {
 
   tfDeprecationConfig.each { dependency, deprecation ->
     try {
-      def version = (dependency == "registry.terraform.io/hashicorp/azurerm") ? "5.0.0" : deprecation.version
       sh """
       chmod +x warn-about-old-tf-azure-provider.sh
-      ./warn-about-old-tf-azure-provider.sh $dependency $version
+      ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
       LocalDate deadlineDate
@@ -23,7 +22,7 @@ def call(String environment, String product) {
       if (dependency == "registry.terraform.io/hashicorp/azurerm") {
         switch (gitUrl?.toLowerCase()) {
           case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git":
-            deadlineDate = LocalDate.of(2024, 7, 2)
+            deadlineDate = LocalDate.of(2024, 4, 10)
             break
           default:
             deadlineDate = LocalDate.parse(deprecation.date_deadline)
