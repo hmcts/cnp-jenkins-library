@@ -4,9 +4,9 @@ set -x
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
 
-# Attempt to find angular version in a package.json file and trims version of angular/core to get the major version value 
+# Attempt to find dependency version in a package.json file and trims version to get the major version value 
 CURRENT_VERSION=""
-version=$(yarn info "@angular/core" --json | jq -r '.children.Version' | cut -d '.' -f 1 )
+version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version' | cut -d '.' -f 1 )
 if [[ -n "$version" ]]; then
     CURRENT_VERSION="$version"
     echo "Current version: $CURRENT_VERSION"
