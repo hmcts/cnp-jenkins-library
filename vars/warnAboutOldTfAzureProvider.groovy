@@ -11,6 +11,14 @@ def call(String environment, String product) {
   def deprecationDeadlines = []
 
   tfDeprecationConfig.each { dependency, deprecation ->
+    LocalDate deadlineDate = gitUrl?.toLowerCase() == "https://github.com/hmcts/cnp-plum-shared-infrastructure.git" 
+      ? LocalDate.of(2024, 7, 2)
+      : LocalDate.parse(deprecation.date_deadline)
+    
+    if (LocalDate.now().isAfter(deadlineDate)) {
+      error "Dependency ${dependency} has expired on ${deadlineDate}. Please upgrade to version ${deprecation.version} or higher."
+    }
+    
     try {
       sh """
       echo "GitURL is $gitUrl"
@@ -18,10 +26,6 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      LocalDate deadlineDate = gitUrl?.toLowerCase() == "https://github.com/hmcts/cnp-plum-shared-infrastructure.git" 
-        ? LocalDate.of(2024, 7, 2)
-        : LocalDate.parse(deprecation.date_deadline)
-      
       WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.", deadlineDate)
     }
   }
