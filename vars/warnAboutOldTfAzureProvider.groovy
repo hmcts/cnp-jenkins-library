@@ -9,8 +9,8 @@ def call(String environment, String product) {
 
   // Repository specific expiry dates
   switch (gitUrl.toLowerCase()) {
-    case "https://github.com/hmcts/am-org-role-mapping-service.git":
-        defaultExpiryDate = LocalDate.of(2024, 5, 29)
+    case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git":
+        defaultExpiryDate = LocalDate.of(2025, 4, 10)
         break
   }
 
@@ -26,8 +26,8 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      // If no specific date was set in the switch statement, use the date from deprecation config
       def expiryDate = defaultExpiryDate ?: LocalDate.parse(deprecation.date_deadline)
+      echo "Using expiry date: ${expiryDate} for dependency: ${dependency}"
       WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.", expiryDate)
     }
   }
