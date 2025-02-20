@@ -10,8 +10,9 @@ def call(String environment, String product) {
   // Repository specific expiry dates
   switch (gitUrl.toLowerCase()) {
     case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git":
-        defaultExpiryDate = LocalDate.of(2025, 2, 19)
-        break
+    case "https://github.com/HMCTS/cnp-jenkins-library.git":
+      defaultExpiryDate = LocalDate.of(2024, 2, 19)
+      break
   }
 
   writeFile file: 'warn-about-old-tf-azure-provider.sh', text: libraryResource('uk/gov/hmcts/helm/warn-about-old-tf-azure-provider.sh')
@@ -26,7 +27,7 @@ def call(String environment, String product) {
       ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
       """
     } catch(ignored) {
-      def expiryDate = defaultExpiryDate ?: LocalDate.parse(deprecation.date_deadline)
+      def expiryDate = dependency == 'registry.terraform.io/hashicorp/azurerm' ? defaultExpiryDate : LocalDate.parse(deprecation.date_deadline)
       echo "Using expiry date: ${expiryDate} for dependency: ${dependency}"
       WarningCollector.addPipelineWarning("updated_tf_versions" ,"`${dependency}` - minimum required: *${deprecation.version}*.", expiryDate)
     }
