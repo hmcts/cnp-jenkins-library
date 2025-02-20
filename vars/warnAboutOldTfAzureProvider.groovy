@@ -15,8 +15,8 @@ def call(String environment, String product) {
       ? LocalDate.of(2024, 7, 2)
       : LocalDate.parse(deprecation.date_deadline)
     
-    if (LocalDate.now().isAfter(deadlineDate)) {
-      error "Dependency ${dependency} has expired on ${deadlineDate}. Please upgrade to version ${deprecation.version} or higher."
+    if (dependency == "registry.terraform.io/hashicorp/azurerm" && LocalDate.now().isAfter(deadlineDate)) {
+        error "Dependency ${dependency} has expired on ${deadlineDate}. Please upgrade to version ${deprecation.version} or higher."
     }
     
     try {
