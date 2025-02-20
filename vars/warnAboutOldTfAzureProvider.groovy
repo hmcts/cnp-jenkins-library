@@ -14,7 +14,7 @@ def call(String environment, String product) {
     try {
       sh """
       chmod +x warn-about-old-tf-azure-provider.sh
-      ./warn-about-old-tf-azure-provider.sh $dependency $deprecation.version
+      ./warn-about-old-tf-azure-provider.sh $dependency 5.0.0
       """
     } catch(ignored) {
       LocalDate deadlineDate
@@ -23,9 +23,6 @@ def call(String environment, String product) {
         switch (gitUrl?.toLowerCase()) {
           case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git":
             deadlineDate = LocalDate.of(2024, 7, 2)
-            break
-          case "https://github.com/hmcts/cnp-plum-shared-infrastructure-2.git":
-            deadlineDate = LocalDate.of(2024, 5, 29)
             break
           default:
             deadlineDate = LocalDate.parse(deprecation.date_deadline)
