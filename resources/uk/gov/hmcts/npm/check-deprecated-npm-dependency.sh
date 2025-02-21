@@ -6,7 +6,7 @@ function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
 
-# Attempt to find dependency version in a package.json file and trims version to get the major version value 
+# Attempt to find dependency version in a package.json file
 CURRENT_VERSION=""
 version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
 if [[ -n "$version" ]]; then
