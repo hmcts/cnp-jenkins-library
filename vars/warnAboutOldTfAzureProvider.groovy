@@ -21,7 +21,11 @@ def call(String environment, String product) {
       
       if (dependency == "registry.terraform.io/hashicorp/azurerm") {
         switch (gitUrl?.toLowerCase()) {
-          case "https://github.com/hmcts/cnp-plum-shared-infrastructure.git":
+          case "https://github.com/hmcts/hmc-shared-infrastructure.git":
+          case "https://github.com/hmcts/hmc-operational-reports-runner.git":
+          case "https://github.com/hmcts/hmc-hmi-inbound-adapter.git":
+          case "https://github.com/hmcts/hmc-hmi-outbound-adapter.git":
+          case "https://github.com/hmcts/hmc-cft-hearing-service.git":
             deadlineDate = LocalDate.of(2024, 4, 10)
             break
           default:
