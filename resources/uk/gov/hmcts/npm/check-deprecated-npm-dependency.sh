@@ -14,9 +14,9 @@ if [[ "$DEPENDENCY" == *"/"* ]]; then
     DEPENDENCY="@$DEPENDENCY"
 fi
 
-version=$(yarn info "$DEPENDENCY" --json)
+version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
 if [[ $? -eq 0 && -n "$version" ]]; then
-    CURRENT_VERSION=$(echo "$version" | jq -r '.children.Version')
+    CURRENT_VERSION=$version
     echo "Current version: $CURRENT_VERSION"
     # Only exit with 1 if there is a deprecation spotted
     if [ $(ver $CURRENT_VERSION) -lt $(ver $REQUIRED_VERSION) ]; then
