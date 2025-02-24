@@ -8,9 +8,9 @@ REQUIRED_VERSION=${2}
 
 # Attempt to find dependency version in a package.json file
 CURRENT_VERSION=""
-version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
+version=$(yarn info "$DEPENDENCY" --json)
 if [[ -n "$version" ]]; then
-    CURRENT_VERSION="$version"
+    CURRENT_VERSION=$(echo "$version" | jq -r '.children.Version')
     echo "Current version: $CURRENT_VERSION"
     # Only exit with 1 if there is a deprecation spotted
     if [ $(ver $CURRENT_VERSION) -lt $(ver $REQUIRED_VERSION) ]; then
