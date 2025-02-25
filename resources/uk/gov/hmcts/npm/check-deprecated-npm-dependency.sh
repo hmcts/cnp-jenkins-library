@@ -15,7 +15,7 @@ if [[ $DEPENDENCY == *"/"* ]]; then
 fi
 
 version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
-if [[ -n "$version" ]]; then
+if [[ -n "$version" && $version != "null" ]]; then
     CURRENT_VERSION="$version"
     echo "Current version: $CURRENT_VERSION"
     # Only exit with 1 if there is a deprecation spotted
