@@ -26,6 +26,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.performanceTest).isFalse()
       assertThat(pipelineConfig.apiGatewayTest).isFalse()
       assertThat(pipelineConfig.crossBrowserTest).isFalse()
+      assertThat(pipelineConfig.sauceLabsEnabled).isTrue()
       assertThat(pipelineConfig.parallelCrossBrowsers).isEqualTo([])
       assertThat(pipelineConfig.mutationTest).isFalse()
       assertThat(pipelineConfig.fullFunctionalTest).isFalse()
@@ -75,11 +76,21 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.apiGatewayTestTimeout).isEqualTo(15)
   }
 
-  def "ensure enable cross browser test"() {
+  def "ensure enable cross browser test with sauce labs enabled"() {
     when:
       dsl.enableCrossBrowserTest()
     then:
       assertThat(pipelineConfig.crossBrowserTest).isTrue()
+      assertThat(pipelineConfig.sauceLabsEnabled).isTrue()
+      assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
+  }
+
+  def "ensure enable cross browser test with sauce labs disabled"() {
+    when:
+      dsl.enableCrossBrowserTest(120, false)
+    then:
+      assertThat(pipelineConfig.crossBrowserTest).isTrue()
+      assertThat(pipelineConfig.sauceLabsEnabled).isFalse()
       assertThat(pipelineConfig.crossBrowserTestTimeout).isEqualTo(120)
   }
 

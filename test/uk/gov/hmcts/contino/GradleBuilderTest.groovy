@@ -103,6 +103,24 @@ class GradleBuilderTest extends Specification {
     1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
   }
 
+  def "crossBrowserTest calls 'gradle crossbrowser' with browser but without Sauce Labs"() {
+    setup:
+      String browser = 'firefox'
+      String browserGroup = "BROWSER_GROUP=${browser}"
+    when:
+      builder.crossBrowserTest(false, browser)
+    then:
+      1 * steps.archiveArtifacts(['allowEmptyArchive': true, 'artifacts': 'functional-output/**/*'])
+      0 * steps.saucePublisher()
+      0 * steps.withSauceConnect(_, _)
+    when:
+      builder.gradle('--rerun-tasks crossbrowser', browserGroup)
+    then:
+      1 * steps.sh({ it.startsWith("${browserGroup} ${GRADLE_CMD}") && it.contains('--rerun-tasks crossbrowser') })
+      1 * steps.writeFile(['file':'init.gradle', 'text':null])
+      1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
+  }
+
   def "securityCheck calls 'gradle dependencyCheckAggregate'"() {
     setup:
       def closure

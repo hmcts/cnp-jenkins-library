@@ -33,14 +33,16 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.apiGatewayTest = true
   }
 
-  void enableCrossBrowserTest(int timeout = 120) {
+  void enableCrossBrowserTest(int timeout = 120, boolean sauceLabsEnabled = true) {
     config.crossBrowserTestTimeout = timeout
     config.crossBrowserTest = true
+    config.sauceLabsEnabled = sauceLabsEnabled
   }
 
-  void enableCrossBrowserTest(List<String> browsers, int timeout = 120) {
+  void enableCrossBrowserTest(List<String> browsers, int timeout = 120, boolean sauceLabsEnabled = true) {
     config.crossBrowserTestTimeout = timeout
     config.parallelCrossBrowsers = browsers
+    config.sauceLabsEnabled = sauceLabsEnabled
   }
 
   void enableSecurityScan(Map<String, Object> params = [:]) {

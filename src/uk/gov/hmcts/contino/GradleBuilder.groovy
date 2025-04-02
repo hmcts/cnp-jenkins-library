@@ -83,29 +83,41 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
-  def crossBrowserTest() {
+  def crossBrowserTest(boolean sauceLabsEnabled = true) {
+    // By default Gradle will skip task execution if it's already been run (is 'up to date').
+    // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
     try {
-      // By default Gradle will skip task execution if it's already been run (is 'up to date').
-      // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      localSteps.withSauceConnect("reform_tunnel") {
+      if (sauceLabsEnabled) {
+        localSteps.withSauceConnect("reform_tunnel") {
+          gradle("--rerun-tasks crossbrowser")
+        }
+      } else {
         gradle("--rerun-tasks crossbrowser")
       }
     } finally {
       localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
-      localSteps.saucePublisher()
+      if (sauceLabsEnabled) {
+        localSteps.saucePublisher()
+      }
     }
   }
 
-  def crossBrowserTest(String browser) {
+  def crossBrowserTest(boolean sauceLabsEnabled = true, String browser) {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
-      localSteps.withSauceConnect("reform_tunnel") {
+      if (sauceLabsEnabled) {
+        localSteps.withSauceConnect("reform_tunnel") {
+          gradle("--rerun-tasks crossbrowser", "BROWSER_GROUP=$browser")
+        }
+      } else {
         gradle("--rerun-tasks crossbrowser", "BROWSER_GROUP=$browser")
       }
     } finally {
       localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**/*'
-      localSteps.saucePublisher()
+      if (sauceLabsEnabled) {
+        localSteps.saucePublisher()
+      }
     }
   }
 

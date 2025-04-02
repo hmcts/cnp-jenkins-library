@@ -14,6 +14,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean performanceTest = false
   boolean apiGatewayTest = false
   boolean crossBrowserTest = false
+  boolean sauceLabsEnabled = true
   List<String> parallelCrossBrowsers = []
   boolean mutationTest = false
   boolean fullFunctionalTest = false
@@ -28,7 +29,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
   boolean fortifyScan = false
-  boolean clearHelmReleaseOnFailure = true 
+  boolean clearHelmReleaseOnFailure = true
   String fortifyVaultName
   String s2sServiceName
   String highLevelDataSetupKeyVaultName

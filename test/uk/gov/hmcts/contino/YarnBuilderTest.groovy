@@ -101,16 +101,16 @@ def "apiGatewayTest calls 'yarn test:apiGateway'"() {
         1 * steps.archiveArtifacts(['allowEmptyArchive':true, 'artifacts':'api-output/*'])
 }
 
-  def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
-      when:
-          builder.crossBrowserTest()
-      then:
-          1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
-      when:
-          builder.yarn("test:crossbrowser")
-      then:
-          1 * steps.sh({ it instanceof Map && it.script.contains('test:crossbrowser') && it.returnStatus == true })
-  }
+def "crossBrowserTest calls 'yarn test:crossbrowser'"() {
+    when:
+        builder.crossBrowserTest()
+    then:
+        1 * steps.withSauceConnect({ it.startsWith('reform_tunnel') }, _ as Closure)
+    when:
+        builder.yarn("test:crossbrowser")
+    then:
+        1 * steps.sh({ it instanceof Map && it.script.contains('test:crossbrowser') && it.returnStatus == true })
+}
 
 
 def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
@@ -122,12 +122,33 @@ def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
         1 * steps.saucePublisher()
 }
 
+def "crossBrowserTest calls 'yarn test:crossbrowser' without Sauce Labs"() {
+  when:
+    builder.crossBrowserTest(false)
+  then:
+    1 * steps.sh({ it instanceof Map && it.script.contains('test:crossbrowser') && it.returnStatus == true })
+    1 * steps.archiveArtifacts(['allowEmptyArchive': true, 'artifacts': 'functional-output/crossbrowser/reports/**/*'])
+    0 * steps.withSauceConnect(_, _)
+    0 * steps.saucePublisher()
+}
 
-  def "mutationTest calls 'yarn test:mutation'"() {
-    when:
-        builder.mutationTest()
-    then:
-        1 * steps.sh({ it instanceof Map && it.script.contains('test:mutation') && it.returnStatus == true })
+def "crossBrowserTest calls 'BROWSER_GROUP=firefox yarn test:crossbrowser' without Sauce Labs"() {
+  setup:
+    String browser = 'firefox'
+  when:
+    builder.crossBrowserTest(false, browser)
+  then:
+    1 * steps.sh({ it instanceof Map && it.script.contains('BROWSER_GROUP=firefox yarn test:crossbrowser') && it.returnStatus == true })
+    1 * steps.archiveArtifacts(['allowEmptyArchive': true, 'artifacts': "functional-output/${browser}*/*"])
+    0 * steps.withSauceConnect(_, _)
+    0 * steps.saucePublisher()
+}
+
+def "mutationTest calls 'yarn test:mutation'"() {
+  when:
+      builder.mutationTest()
+  then:
+      1 * steps.sh({ it instanceof Map && it.script.contains('test:mutation') && it.returnStatus == true })
 }
 
 def "securityCheck calls 'yarn audit'"() {
@@ -148,14 +169,14 @@ def "securityCheck calls 'yarn audit'"() {
         ./yarn-audit-with-suppressions.sh
       """)
 }
-    
+
   def "full functional tests calls 'yarn test:fullfunctional'"() {
       when:
           builder.fullFunctionalTest()
       then:
           1 * steps.sh({ it instanceof Map && it.script.contains('test:fullfunctional') && it.returnStatus == true })
   }
-  
+
   def "runProviderVerification triggers a yarn hook with publish"() {
       setup:
           def version = "v3r510n"
@@ -165,7 +186,7 @@ def "securityCheck calls 'yarn audit'"() {
       then:
           1 * steps.sh({ it instanceof Map && it.script.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify-and-publish") && it.returnStatus == true })
   }
-  
+
   def "runProviderVerification triggers a yarn hook without publish"() {
       setup:
           def version = "v3r510n"
@@ -175,7 +196,7 @@ def "securityCheck calls 'yarn audit'"() {
       then:
           1 * steps.sh({ it instanceof Map && it.script.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_PROVIDER_VERSION=${version} yarn test:pact:verify") && it.returnStatus == true })
   }
-  
+
   def "runConsumerTests triggers a yarn hook"() {
       setup:
           def version = "v3r510n"
@@ -184,14 +205,14 @@ def "securityCheck calls 'yarn audit'"() {
       then:
           1 * steps.sh({ it instanceof Map && it.script.contains("PACT_BROKER_URL=${PACT_BROKER_URL} PACT_CONSUMER_VERSION=${version} yarn test:pact:run-and-publish") && it.returnStatus == true })
   }
-  
+
   def "runConsumerCanIDeploy triggers a yarn hook"() {
       when:
           builder.runConsumerCanIDeploy()
       then:
           1 * steps.sh({ it instanceof Map && it.script.contains("yarn test:can-i-deploy:consumer") && it.returnStatus == true })
   }
-  
+
     def "prepareCVEReport converts json lines report to groovy object"() {
       given:
         def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
@@ -200,19 +221,19 @@ def "securityCheck calls 'yarn audit'"() {
       then:
       result == NODE_JS_CVE_REPORT
     }
-  
+
     def "prepareCVEReport converts json lines report to groovy object with suppressions"() {
       given:
       def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
       def sampleCVESuppressionsReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-suppressed.txt').toURI()).text
       def suppressed = NODE_JS_CVE_REPORT.vulnerabilities
-  
+
       when:
       def result = builder.prepareCVEReport(sampleCVEReport, sampleCVESuppressionsReport)
       then:
       result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
     }
-  
+
     def "techStackMaintenance"() {
       when:
         builder.techStackMaintenance()

@@ -80,27 +80,37 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
-  def crossBrowserTest() {
+  def crossBrowserTest(boolean sauceLabsEnabled = true) {
     try {
-      steps.withSauceConnect("reform_tunnel") {
+      if (sauceLabsEnabled) {
+        steps.withSauceConnect("reform_tunnel") {
+          yarn("test:crossbrowser")
+        }
+      } else {
         yarn("test:crossbrowser")
       }
-    }
-    finally {
+    } finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
-      steps.saucePublisher()
+      if (sauceLabsEnabled) {
+        steps.saucePublisher()
+      }
     }
   }
 
-  def crossBrowserTest(String browser) {
+  def crossBrowserTest(boolean sauceLabsEnabled = true, String browser) {
     try {
-      steps.withSauceConnect("reform_tunnel") {
+      if (sauceLabsEnabled) {
+        steps.withSauceConnect("reform_tunnel") {
+          yarn("test:crossbrowser", "BROWSER_GROUP=$browser")
+        }
+      } else {
         yarn("test:crossbrowser", "BROWSER_GROUP=$browser")
       }
-    }
-    finally {
+    } finally {
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: "functional-output/$browser*/*"
-      steps.saucePublisher()
+      if (sauceLabsEnabled) {
+        steps.saucePublisher()
+      }
     }
   }
 
@@ -271,7 +281,7 @@ EOF
       if (prepend && !prepend.endsWith(' ')) {
         prepend += ' '
       }
-  
+
       if (steps.fileExists(NVMRC)) {
         def status = steps.sh(script: """
           set +ex
@@ -279,28 +289,28 @@ EOF
           . /opt/nvm/nvm.sh || true
           nvm install
           export PATH=\$HOME/.local/bin:\$PATH
-  
+
           if ${prepend.toBoolean()}; then
             ${prepend}yarn ${task}
           else
             yarn ${task}
           fi
         """, returnStatus: true)
-  
+
         if (status != 0 && !task.contains('install')) {
           steps.error("Yarn task '${task}' failed with status ${status}")
         }
       } else {
         def status = steps.sh(script: """
           export PATH=\$HOME/.local/bin:\$PATH
-  
+
           if ${prepend.toBoolean()}; then
             ${prepend}yarn ${task}
           else
             yarn ${task}
           fi
         """, returnStatus: true)
-  
+
         if (status != 0 && !task.contains('install')) {
           steps.error("Yarn task '${task}' failed with status ${status}")
         }
@@ -404,7 +414,7 @@ EOF
     // Java required on nodejs pipeline, if data import only available as java job, but project itself is nodejs
     def statusCodeJava21 = steps.sh(script: """
       find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(21)" {} + > /dev/null
-      """, returnStatus: true)    
+      """, returnStatus: true)
     if (statusCodeJava21 == 0) {
       def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
       steps.env.JAVA_HOME = javaHomeLocation
