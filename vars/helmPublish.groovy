@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.Helm
 def call(Map params) {
   withAksClient(params.subscription, params.environment, params.product) {
 
-    String chartName = "${params.product}-${params.component}"
+    String chartName = "civil-citizen-ui"
 
     Helm helm = new Helm(this, chartName)
 

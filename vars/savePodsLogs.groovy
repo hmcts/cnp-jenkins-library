@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.Kubectl
 
 def call(DockerImage dockerImage, Map params, String scope) {
   try {
-    def chartName = "${params.product}-${params.component}"
+    def chartName = "civil-citizen-ui"
     def imageTag = dockerImage.getImageTag()
     def releaseName = "${chartName}-${imageTag}"
     def namespace = env.TEAM_NAMESPACE

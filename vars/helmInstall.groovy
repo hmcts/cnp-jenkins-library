@@ -56,7 +56,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def values = []
-    def chartName = "${product}-${component}"
+    def chartName = "civil-citizen-ui"
 
     def helm = new Helm(this, chartName)
     helm.setup()

@@ -23,7 +23,7 @@ def uninstallRelease(dockerImage, Map params) {
 
   def namespace = env.TEAM_NAMESPACE
 
-  def chartName = "${params.product}-${params.component}"
+  def chartName = "civil-citizen-ui"
 
   def kubectl = new Kubectl(this, subscription, aksServiceName, params.aksSubscription.name)
   kubectl.login()
