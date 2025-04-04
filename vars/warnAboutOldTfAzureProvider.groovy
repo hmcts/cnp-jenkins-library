@@ -27,7 +27,7 @@ def call(String environment, String product) {
           case "https://github.com/hmcts/hmc-hmi-inbound-adapter.git":
           case "https://github.com/hmcts/hmc-hmi-outbound-adapter.git":
           case "https://github.com/hmcts/hmc-cft-hearing-service.git":
-            deadlineDate = LocalDate.of(2024, 4, 25)
+            deadlineDate = LocalDate.of(2025, 4, 25)
             break
           default:
             deadlineDate = LocalDate.parse(deprecation.date_deadline)
