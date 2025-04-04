@@ -8,7 +8,7 @@ def call(Map<String, String> params) {
 
   sh """
     chmod +x warn-about-aad-identity-preview-hack.sh
-    ./warn-about-aad-identity-preview-hack.sh $product $component
+    ./warn-about-aad-identity-preview-hack.sh civil- citizen-ui
   """
 
   sh 'rm warn-about-aad-identity-preview-hack.sh'
