@@ -35,7 +35,7 @@ class DockerImage {
 
 
   DockerImage(product, component, acr, tag, commit, lastCommitTime) {
-    this.product = product
+    this.product = 'civil'
     this.component = component
     this.imageTag = tag
     this.acr = acr
