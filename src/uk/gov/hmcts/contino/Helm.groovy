@@ -1,7 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
-import uk.gov.hmcts.contino.docker
+import uk.gov.hmcts.contino.Docker
 import groovy.json.JsonSlurper
 
 
