@@ -95,6 +95,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+          env.ALERT_FILTERS = config.securityScanAlertFilters
           env.SCAN_TYPE = config.securityScanType
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
