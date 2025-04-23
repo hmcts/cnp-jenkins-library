@@ -68,7 +68,7 @@ def call(params) {
               }
               params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
               log.info("Using AKS environment: ${params.environment}")
-              warnAboutDeprecatedChartConfig product: product, component: component
+              warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
               aksUrl = helmInstall(dockerImage, params)
               log.info("deployed component URL: ${aksUrl}")
               onPR {
@@ -246,6 +246,7 @@ def call(params) {
                 stageWithAgent('Security scan', product) {
                   warnError('Failure in securityScan') {
                     env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+                    env.ALERT_FILTERS = config.securityScanAlertFilters
                     env.SCAN_TYPE = config.securityScanType
                     pcr.callAround('securityScan') {
                       timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
