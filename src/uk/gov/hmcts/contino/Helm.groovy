@@ -62,8 +62,9 @@ class Helm {
   }
 
   def authenticateDockerHub() {
-    // this.docker.loginDockerHub("${dockerHubUsername}", "${dockerHubPassword}")
-    this.steps.sh(label: "docker login", script: 'echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin', env: [DOCKER_HUB_USERNAME: dockerHubUsername, DOCKER_HUB_PASSWORD: dockerHubPassword])
+    // this.docker.loginDockerHub "${dockerHubUsername} ${dockerHubPassword}"
+    this.steps.echo "Log into Docker Hub"
+    this.steps.sh(label: "docker login", script: 'echo "$DOCKER_HUB_PASSWORD" | docker login --username $DOCKER_HUB_USERNAME --password-stdin', env: [DOCKER_HUB_USERNAME: dockerHubUsername, DOCKER_HUB_PASSWORD: dockerHubPassword])
   }
 
   def publishIfNotExists(List<String> values) {
