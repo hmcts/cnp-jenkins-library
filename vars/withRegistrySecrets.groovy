@@ -3,8 +3,8 @@ def call(Closure block) {
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'public-registry-name', version: '', envVariable: 'REGISTRY_NAME'],
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'public-registry-rg', version: '', envVariable: 'REGISTRY_RESOURCE_GROUP'],
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'public-registry-sub', version: '', envVariable: 'REGISTRY_SUBSCRIPTION'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'docker-hub-username', version: '', envVariable: 'DOCKER_HUB_USERNAME'],
-    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'docker-hub-flux-token', version: '', envVariable: 'DOCKER_HUB_PASSWORD'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'docker-hub-acr-cache-user', version: '', envVariable: 'DOCKER_HUB_USERNAME'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'docker-hub-acr-cache-token', version: '', envVariable: 'DOCKER_HUB_PASSWORD'],
   ]
 
   withAzureKeyvault(registrySecrets) {
