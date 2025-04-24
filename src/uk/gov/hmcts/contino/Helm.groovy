@@ -32,8 +32,8 @@ class Helm {
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
-    this.dockerHubUsername = this.steps.env.DOCKER_HUB_USERNAME
-    this.dockerHubPassword = this.steps.env.DOCKER_HUB_PASSWORD
+    this.dockerHubUsername = env.DOCKER_HUB_USERNAME
+    this.dockerHubPassword = env.DOCKER_HUB_PASSWORD
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.docker = new Docker(this.steps)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
