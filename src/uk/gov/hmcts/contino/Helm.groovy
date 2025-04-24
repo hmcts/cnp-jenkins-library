@@ -33,8 +33,8 @@ class Helm {
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
     this.docker = new Docker(this.steps)
-    this.dockerHubUsername = "dockerUser"
-    this.dockerHubPassword = "dockerPass"
+    this.dockerHubUsername = this.steps.env.DOCKER_HUB_USERNAME
+    this.dockerHubPassword = this.steps.env.DOCKER_HUB_PASSWORD
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
@@ -66,7 +66,7 @@ class Helm {
     this.steps.echo "Log into Docker Hub"
     this.steps.echo "Docker User: ${dockerHubUsername}"
     this.steps.sh(label: "docker version", script: "docker --version")
-    this.steps.sh(label: "docker login", script: "echo ${registryName} | docker login --username ${registryName} --password-stdin")
+    this.steps.sh(label: "docker login", script: "echo ${dockerHubUsername} | docker login --username ${dockerHubPassword} --password-stdin")
   }
 
   def publishIfNotExists(List<String> values) {
