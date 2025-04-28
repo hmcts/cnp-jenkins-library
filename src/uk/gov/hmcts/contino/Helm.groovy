@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.Docker
 import groovy.json.JsonSlurper
 
 
@@ -9,12 +10,15 @@ class Helm {
   public static final String HELM_RESOURCES_DIR = "charts"
   def steps
   def acr
+  def docker
   def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true)}
 
   def subscription
   def subscriptionId
   def resourceGroup
   def registryName
+  def dockerHubUsername
+  def dockerHubPassword
   String chartLocation
   def chartName
   def notFoundMessage = "Not found"
@@ -28,6 +32,9 @@ class Helm {
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
+    this.docker = new Docker(this.steps)
+    this.dockerHubUsername = this.steps.env.DOCKER_HUB_USERNAME
+    this.dockerHubPassword = this.steps.env.DOCKER_HUB_PASSWORD
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
@@ -37,6 +44,7 @@ class Helm {
   def setup() {
     authenticateAcr()
     configureAcr()
+    authenticateDockerHub()
     removeRepo()
   }
 
@@ -51,6 +59,11 @@ class Helm {
 
   def authenticateAcr() {
     this.acr.az "acr login --name ${registryName}"
+  }
+
+  def authenticateDockerHub() {
+    this.steps.echo "Log into Docker Hub"
+    this.docker.loginDockerHub("${dockerHubUsername}", "${dockerHubPassword}")
   }
 
   def publishIfNotExists(List<String> values) {
@@ -69,7 +82,7 @@ class Helm {
     } catch(ignored) {
         resultOfSearch = notFoundMessage
     }
-    
+
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
