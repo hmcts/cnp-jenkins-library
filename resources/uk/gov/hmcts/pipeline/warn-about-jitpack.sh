@@ -2,6 +2,4 @@
 if [[ -n $(grep -r --include="*.gradle" 'jitpack.io' .) ]]; then
     echo "Jitpack use detected"
     exit 1
-else
-    echo "Project is fine"
 fi
