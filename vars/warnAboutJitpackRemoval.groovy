@@ -9,7 +9,7 @@ def call(Map<String, String> params) {
   writeFile file: 'warn-about-jitpack.sh', text: libraryResource('uk/gov/hmcts/pipeline/warn-about-jitpack.sh')
 
   try {
-    chmod +x check-helm-api-version.sh
+    chmod +x warn-about-jitpack.sh
     sh "./warn-about-jitpack.sh"
   } catch (ignored) {
     WarningCollector.addPipelineWarning("deprecated_jitpack", "Jitpack is no longer supported on the project. Please update to use Azure DevOps Artifacts following the guide at https://hmcts.github.io/cloud-native-platform/common-pipeline/publishing-libraries/java.html", LocalDate.of(2025, 6, 30))
