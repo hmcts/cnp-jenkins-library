@@ -37,6 +37,7 @@ def call(params) {
     builder.setupToolVersion()
   }
   boolean dockerFileExists = fileExists('Dockerfile')
+  warnAboutJitpackRemoval(product: product, component: component)
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
