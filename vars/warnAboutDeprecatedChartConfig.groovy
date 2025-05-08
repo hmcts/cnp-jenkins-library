@@ -64,13 +64,13 @@ def call(Map<String, String> params) {
   }
   sh 'rm -f check-deprecated-properties-volume-spring-boot-starter.sh'
 
-  // sh 'chmod +x check-deprecated-npm-dependency.sh'
-  // npmDeprecationConfig.each { dependency, deprecation ->
-  //   try {
-  //     sh "./check-deprecated-npm-dependency.sh $dependency $deprecation.version "
-  //   } catch (ignored) {
-  //     WarningCollector.addPipelineWarning("deprecated_npm_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
-  //   }
-  // }
-  // sh 'rm -f check-deprecated-npm-dependency.sh'
+  sh 'chmod +x check-deprecated-npm-dependency.sh'
+  npmDeprecationConfig.each { dependency, deprecation ->
+    try {
+      sh "./check-deprecated-npm-dependency.sh $dependency $deprecation.version "
+    } catch (ignored) {
+      WarningCollector.addPipelineWarning("deprecated_npm_library", "Versions below $dependency: $deprecation.version are deprecated, please upgrade to the latest release", LocalDate.parse(deprecation.date_deadline))
+    }
+  }
+  sh 'rm -f check-deprecated-npm-dependency.sh'
 }
