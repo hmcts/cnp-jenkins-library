@@ -14,7 +14,7 @@ if [[ $DEPENDENCY == *"/"* ]]; then
     DEPENDENCY="@${DEPENDENCY}"
 fi
 
-version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
+version=$(yarn info "$DEPENDENCY" version --json 2>/dev/null | jq -r '.data')
 if [[ -n "$version" && $version != "null" ]]; then
     CURRENT_VERSION="$version"
     echo "Current version: $CURRENT_VERSION"
