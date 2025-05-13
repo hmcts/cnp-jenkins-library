@@ -48,10 +48,10 @@ def call(teamSlackChannel, metricsPublisher ) {
     warningMessage.addSection("In ${env?.JOB_NAME}: <${env?.RUN_DISPLAY_URL}|Build ${env?.BUILD_DISPLAY_NAME}>")
 
     try {
-      slackSend(
-        failOnError: true,
-        channel: channel,
-        attachments: warningMessage.asObject())
+      // slackSend(
+        // failOnError: true,
+        // channel: channel,
+        // attachments: warningMessage.asObject())
     }
     catch (Exception ex) {
       if(channel!='@iamabotuser') {
