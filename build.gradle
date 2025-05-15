@@ -12,33 +12,53 @@ repositories {
 
 test {
   systemProperty 'groovy.grape.enable', 'false'
-  useJUnitPlatform()
+
+  reports {
+    html.required = true
+    html.outputLocation = file("$project.buildDir/reports/html")
+  }
+  ignoreFailures = true
+
+  // show test results
+  def results = []
+  afterSuite { desc, result ->
+    if (desc.className) { results << result }
+  }
+
+  // show summary
+  doLast {
+    println "Tests: ${results.sum { it.testCount }}" +
+      ", Failures: ${results.sum { it.failedTestCount }}" +
+      ", Errors: ${results.sum { it.exceptions.size() }}" +
+      ", Skipped: ${results.sum { it.skippedTestCount }}"
+  }
 }
 
 compileGroovy {
   groovyOptions.forkOptions.jvmArgs = [ '-Dgroovy.grape.enable=false' ]
+  // @CNP annotation comes from the Jenkins Runtime instance
+  exclude '**/pluginActive.groovy'
 }
+
 compileTestGroovy {
   groovyOptions.forkOptions.jvmArgs = [ '-Dgroovy.grape.enable=false' ]
 }
 
 dependencies {
-  implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.22'
-  implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: '2.5.22'
-
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3773.v505e0052522c'
   testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.409'
-  implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '625.vd896b_f445a_f8', ext: 'jar'
-  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2169.vee7cd0efc13e', ext: 'jar'
-  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.87'
+  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.460'
+  implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '657.v03b_e8115821b_', ext: 'jar'
+  implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2221.vc657003fb_d93', ext: 'jar'
+  implementation 'org.jenkins-ci.plugins:job-dsl-core:1.90'
   implementation group: 'org.jenkins-ci.plugins', name: 'scm-api', version: '616.ve67136f6c77d', ext: 'jar'
 
-  testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-2.5'
+  testImplementation 'junit:junit:4.13.2'
+  testImplementation group: 'org.spockframework', name: 'spock-core', version: '1.3-groovy-2.4'
   testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.0'
 
-  testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.17'
+  testImplementation (group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.17')
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.36.0'
 
@@ -56,16 +76,15 @@ sourceSets {
 
   main {
     groovy {
-      srcDirs = ['src']
+      srcDirs = ["$project.rootDir/src", "$project.rootDir/vars"]
     }
   }
   test {
     groovy {
-      srcDirs = ['test']
+      srcDirs = ["$project.rootDir/test"]
     }
     resources {
-      srcDirs = ['testResources']
+      srcDirs = ["$project.rootDir/testResources"]
     }
-
   }
 }

@@ -8,6 +8,10 @@ class Docker {
     this.steps = steps
   }
 
+  def loginDockerHub(username, password) {
+    this.steps.sh(returnStdout: true, script: "echo ${password} | docker login --username ${username} --password-stdin")
+  }
+
   def login(hostUrl, username, password) {
     this.steps.sh(returnStdout: true, script: "docker login ${hostUrl} -u ${username} -p ${password}")
   }

@@ -24,7 +24,7 @@ class YarnBuilder extends AbstractBuilder {
   YarnBuilder(steps) {
     super(steps)
     this.localSteps = steps
-    this.securitytest = new SecurityScan(this.steps)
+    this.securitytest = new SecurityScan(steps)
   }
 
   def build() {
@@ -268,37 +268,43 @@ EOF
   }
 
   private runYarn(String task, String prepend = "") {
-    if (prepend && !prepend.endsWith(' ')) {
-      prepend += ' '
-    }
-
-    if (steps.fileExists(NVMRC)) {
-      steps.sh """
-        set +ex
-        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
-        . /opt/nvm/nvm.sh || true
-        nvm install
-        set -ex
-
-        export PATH=\$HOME/.local/bin:\$PATH
-
-        if ${prepend.toBoolean()}; then
-          ${prepend}yarn ${task}
-        else
-          yarn ${task}
-        fi
-      """
-    } else {
-      steps.sh("""
-        export PATH=\$HOME/.local/bin:\$PATH
-
-        if ${prepend.toBoolean()}; then
-          ${prepend}yarn ${task}
-        else
-          yarn ${task}
-        fi
-      """)
-    }
+      if (prepend && !prepend.endsWith(' ')) {
+        prepend += ' '
+      }
+  
+      if (steps.fileExists(NVMRC)) {
+        def status = steps.sh(script: """
+          set +ex
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh || true
+          nvm install
+          export PATH=\$HOME/.local/bin:\$PATH
+  
+          if ${prepend.toBoolean()}; then
+            ${prepend}yarn ${task}
+          else
+            yarn ${task}
+          fi
+        """, returnStatus: true)
+  
+        if (status != 0 && !task.contains('install')) {
+          steps.error("Yarn task '${task}' failed with status ${status}")
+        }
+      } else {
+        def status = steps.sh(script: """
+          export PATH=\$HOME/.local/bin:\$PATH
+  
+          if ${prepend.toBoolean()}; then
+            ${prepend}yarn ${task}
+          else
+            yarn ${task}
+          fi
+        """, returnStatus: true)
+  
+        if (status != 0 && !task.contains('install')) {
+          steps.error("Yarn task '${task}' failed with status ${status}")
+        }
+      }
   }
 
   private runYarnQuiet(String task, String prepend = "") {

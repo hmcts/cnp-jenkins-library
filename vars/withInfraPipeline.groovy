@@ -13,12 +13,12 @@ def call(String product, String component = null, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
-  MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
+  def metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
 
   def pipelineConfig = new InfraPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
-  def ProjectBranch branch = new ProjectBranch(env.BRANCH_NAME)
+  def branch = new ProjectBranch(env.BRANCH_NAME)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)

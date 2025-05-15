@@ -4,14 +4,22 @@ set -x
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
 
-# Attempt to find angular version in a package.json file and trims version of angular/core to get the major version value 
+# Attempt to find dependency version in a package.json file
 CURRENT_VERSION=""
-version=$(yarn info "@angular/core" --json | jq -r '.children.Version' | cut -d '.' -f 1 )
-if [[ -n "$version" ]]; then
+
+function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
+
+# Check if the dependency is a scoped package and add the @ symbol if it is
+if [[ $DEPENDENCY == *"/"* ]]; then
+    DEPENDENCY="@${DEPENDENCY}"
+fi
+
+version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
+if [[ -n "$version" && $version != "null" ]]; then
     CURRENT_VERSION="$version"
     echo "Current version: $CURRENT_VERSION"
     # Only exit with 1 if there is a deprecation spotted
-    if [ ${CURRENT_VERSION} -lt ${REQUIRED_VERSION} ]; then
+    if [ $(ver $CURRENT_VERSION) -lt $(ver ${REQUIRED_VERSION}) ]; then
         echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
         exit 1
     fi

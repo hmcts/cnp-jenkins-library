@@ -13,7 +13,7 @@ import java.time.LocalDate
  *   ...
  * }
  */
-def call(String environment, String product, MetricsPublisher metricsPublisher, Closure block) {
+def call(String environment, String product, metricsPublisher, Closure block) {
   withDockerAgent(product) {
     TerraformInfraApprovals approvals = new TerraformInfraApprovals(this)
     if (!approvals.isApproved(".")) {

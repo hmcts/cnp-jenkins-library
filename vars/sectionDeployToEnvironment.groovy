@@ -8,17 +8,16 @@ import uk.gov.hmcts.contino.MetricsPublisher
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
-  PipelineType pipelineType = params.pipelineType
+  def pipelineType = params.pipelineType
   def subscription = params.subscription
   def environment = params.environment
   def aksSubscription = params.aksSubscription
   def product = params.product
   def component = params.component
   def tfPlanOnly = params.tfPlanOnly
-  def expires = params.expires
   Long deploymentNumber
 
-  Builder builder = pipelineType.builder
+  def builder = pipelineType.builder
   def tfOutput
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   approvedEnvironmentRepository(environment, metricsPublisher) {
@@ -49,7 +48,7 @@ def call(params) {
           }
         }
       }
-      
+
       if(!tfPlanOnly){
 
         if (config.migrateDb) {

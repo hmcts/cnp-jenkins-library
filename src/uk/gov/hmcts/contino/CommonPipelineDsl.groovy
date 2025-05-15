@@ -1,11 +1,11 @@
 package uk.gov.hmcts.contino
 
 abstract class CommonPipelineDsl implements Serializable {
-  final PipelineCallbacksConfig callbacks
-  final CommonPipelineConfig config
+  def final callbacks
+  def final config
   def final steps
 
-  CommonPipelineDsl(Object steps, PipelineCallbacksConfig callbacks, CommonPipelineConfig config) {
+  CommonPipelineDsl(steps, callbacks, config) {
     this.callbacks = callbacks
     this.config = config
     this.steps = steps
