@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 
 DEPENDENCY=${1}
 REQUIRED_VERSION=${2}
@@ -13,14 +13,17 @@ function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 if [[ $DEPENDENCY == *"/"* ]]; then
     DEPENDENCY="@${DEPENDENCY}"
 fi
+versionOutput=$(yarn info ${DEPENDENCY} version --json 2>/dev/null)
 
-version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
-if [[ -n "$version" && $version != "null" ]]; then
-    CURRENT_VERSION="$version"
-    echo "Current version: $CURRENT_VERSION"
-    # Only exit with 1 if there is a deprecation spotted
-    if [ $(ver $CURRENT_VERSION) -lt $(ver ${REQUIRED_VERSION}) ]; then
-        echo "${DEPENDENCY} version ${CURRENT_VERSION} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
-        exit 1
+if echo "$versionOutput" | jq -e .children.Version >/dev/null 2>&1; then
+    version=$(yarn info "$DEPENDENCY" --json | jq -r '.children.Version')
+    if [[ -n "$version" && $version != "null" ]]; then
+        echo "Current version: $version"
+        if [ $(ver $version) -lt $(ver ${REQUIRED_VERSION}) ]; then
+            echo "${DEPENDENCY} version ${version} is deprecated... Please upgrade to ${REQUIRED_VERSION}"
+            exit 1
     fi
+fi
+else
+    echo "Failed to find ${DEPENDENCY} use in project."
 fi
