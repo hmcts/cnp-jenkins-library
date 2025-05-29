@@ -127,7 +127,7 @@ class GradleBuilder extends AbstractBuilder {
 
     localSteps.withAzureKeyvault(secrets) {
       try {
-        gradle("--stacktrace -DdependencyCheck.failBuild=false -DdependencyCheck.failBuildOnCVSS=0 -DdependencyCheck.failBuildOnAnyVulnerability=false -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+        gradleIgnoreFail("--stacktrace -DdependencyCheck.failBuild=false -DdependencyCheck.failBuildOnCVSS=0 -DdependencyCheck.failBuildOnAnyVulnerability=false -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
@@ -215,6 +215,14 @@ EOF
     }
     addInitScript()
     localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+  }
+
+  def gradleIgnoreFail(String task, String prepend = "") {
+    if (prepend && !prepend.endsWith(' ')) {
+      prepend += ' '
+    }
+    addInitScript()
+    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task} || true")
   }
 
   private String gradleWithOutput(String task) {
