@@ -4,16 +4,18 @@ def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactor
 def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
 
 allprojects {
+  /*
   repositories {
     maven {
       url mirrorUrl
     }
-  }
+  }*/
   buildscript {
     repositories {
+      /*
       maven {
         url mirrorUrl
-      }
+      }*/
       mavenCentral()
     }
     dependencies {
@@ -25,7 +27,7 @@ allprojects {
     doLast { println project.version }
   }
 }
-
+/*
 settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
@@ -34,7 +36,7 @@ settingsEvaluated { settings ->
       }
     }
   }
-}
+}*/
 
 allprojects {
   afterEvaluate { project ->
