@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.Gatling
+import groovy.json.JsonSlurper
 
 def call(params)  {
   try {
@@ -14,8 +15,14 @@ def call(params)  {
     publishToCosmosDb(params, Gatling.COSMOSDB_CONTAINER, reportsPath, '**/*.json')
   }
   catch (Exception ex) {
-    // Check if the exception message contains HTTP 408 or timeout information
-    if (ex.getMessage()?.contains('408') || ex.getMessage()?.toLowerCase()?.contains('timeout')) {
+
+    // Get error code from exception
+    def jsonSlurper = new JsonSlurper()
+    def errorJson = jsonSlurper.parseText(ex.getMessage())
+    def errorCode = errorJson.code ?: "Uknown error code"
+
+    // Check if the error code is 408
+    if (errorCode == 408) {
       echo "ERROR: Request timeout (408) when publishing to CosmosDB: ${ex}"
       // Retry up to 9 times with exponential backoff
       def maxRetries = 9
