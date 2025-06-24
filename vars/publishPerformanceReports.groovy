@@ -9,5 +9,38 @@ def call(params)  {
       "due to the following error: ${ex}"
   }
   def reportsPath = env.GATLING_REPORTS_PATH
-  publishToCosmosDb(params, Gatling.COSMOSDB_CONTAINER, reportsPath, '**/*.json')
+
+  try {
+    publishToCosmosDb(params, Gatling.COSMOSDB_CONTAINER, reportsPath, '**/*.json')
+  }
+  catch (Exception ex) {
+    // Check if the exception message contains HTTP 408 or timeout information
+    if (ex.getMessage()?.contains('408') || ex.getMessage()?.toLowerCase()?.contains('timeout')) {
+      echo "ERROR: Request timeout (408) when publishing to CosmosDB: ${ex}"
+      // Retry up to 9 times with exponential backoff
+      def maxRetries = 9
+      def retryCount = 0
+      def success = false
+      
+      while (retryCount < maxRetries && !success) {
+      retryCount++
+      def waitTime = Math.pow(2, retryCount) * 1000 // Exponential backoff in milliseconds
+      echo "Retry attempt ${retryCount}/${maxRetries} after ${waitTime}ms delay"
+      sleep(waitTime)
+      
+      try {
+        publishToCosmosDb(params, Gatling.COSMOSDB_CONTAINER, reportsPath, '**/*.json')
+        success = true
+        echo "Successfully published to CosmosDB on retry ${retryCount}"
+      } catch (Exception retryEx) {
+        echo "Retry ${retryCount} failed: ${retryEx}"
+        if (retryCount == maxRetries) {
+        echo "All ${maxRetries} retries exhausted. Final failure: ${retryEx}"
+        }
+      }
+      }
+    } else {
+      echo "ERROR: Failed to publish to CosmosDB: ${ex}"
+    }
+  }
 }
