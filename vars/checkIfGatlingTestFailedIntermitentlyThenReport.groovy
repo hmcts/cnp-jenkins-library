@@ -19,10 +19,9 @@ def call (String user, Integer max) {
 
   def body=
     """-----------------------------
-       The following test has failed ${failureCount} times in ${max} executions.
-       Please fix within 3 days.
+       ${env.JOB_NAME}
        -----------------------------
-       * Job name: ${env.JOB_NAME}
+       The following test has failed ${failureCount} times in ${max} executions.
        -----------------------------"""
 
   if (failureCount > 5) {

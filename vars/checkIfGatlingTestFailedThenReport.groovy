@@ -7,13 +7,13 @@
 def call(String user) {
   def body=
     """-----------------------------
-       The following test has failed twice today.
-       Please fix within 3 days.
-       -----------------------------
-       * Job name: ${env.JOB_NAME}
-       * Build Number: ${env.BUILD_NUMBER}
-       * Build URL: ${env.BUILD_URL}
-       -----------------------------"""
+    ${env.JOB_NAME}
+    -----------------------------
+    This test has failed twice today.
+    -----------------------------
+    * Build Number: ${env.BUILD_NUMBER}
+    * Build URL: ${env.BUILD_URL}
+    -----------------------------"""
 
   if (currentBuild.result == 'FAILURE') {
     slackMessage("${user}", "warning", "${body}")
