@@ -19,11 +19,11 @@ def call (String user, Integer max) {
 
   def body=
     """-----------------------------
-            The following test has failed ${failureCount} times in ${max} executions.
-            Please fix within 3 days.
-            -----------------------------
-            * Job name: ${env.JOB_NAME}
-            -----------------------------"""
+       The following test has failed ${failureCount} times in ${max} executions.
+       Please fix within 3 days.
+       -----------------------------
+       * Job name: ${env.JOB_NAME}
+       -----------------------------"""
 
   if (failureCount > 5) {
     slackMessage("${user}", "warning", "${body}")
