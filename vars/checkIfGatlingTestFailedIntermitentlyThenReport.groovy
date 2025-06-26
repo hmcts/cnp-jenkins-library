@@ -18,10 +18,10 @@ def call (String user, Integer max) {
   }
 
   def body=
-    """-----------------------------
+    """  -----------------------------
        ${env.JOB_NAME}
        -----------------------------
-       The following test has failed ${failureCount} times in ${max} executions.
+       ALERT: The following test has failed ${failureCount} times in ${max} executions.
        -----------------------------"""
 
   if (failureCount > 5) {

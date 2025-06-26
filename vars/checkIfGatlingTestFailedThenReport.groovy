@@ -6,10 +6,10 @@
  */
 def call(String user) {
   def body=
-    """-----------------------------
+    """   -----------------------------
     ${env.JOB_NAME}
     -----------------------------
-    This test has failed twice today.
+    ALERT: This test has failed twice today.
     -----------------------------
     * Build Number: ${env.BUILD_NUMBER}
     * Build URL: ${env.BUILD_URL}
