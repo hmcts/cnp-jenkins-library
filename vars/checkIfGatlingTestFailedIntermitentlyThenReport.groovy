@@ -26,7 +26,7 @@ def call (String user, Integer max) {
             -----------------------------"""
 
   if (failureCount > 5) {
-    slack_message("${user}", "warning", "${body}")
+    slackMessage("${user}", "warning", "${body}")
     return true
   }
   else {
