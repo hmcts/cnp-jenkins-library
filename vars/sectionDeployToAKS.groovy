@@ -185,7 +185,7 @@ def call(params) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
-                    builder.performanceTest()
+                    builder.performanceTest(config.gatlingAlerts, config.slackUserID, config.reRunOnFail)
                     publishPerformanceReports(params)
                   }
                 }

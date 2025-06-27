@@ -297,9 +297,10 @@ EOF
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
       if (config.gatlingAlerts == true) {
-        def testFailed = checkIfGatlingTestFailedThenReport("${config.slackUserID}")
+        echo "YR: STARTING NEW FUNCTION"
+        def testFailed = checkIfGatlingTestFailedThenReport(config.slackUserID)
         if (testFailed == false) {
-          checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
+          checkIfGatlingTestFailedIntermitentlyThenReport(config.slackUserID, 10)
         }
       }
     } else {
