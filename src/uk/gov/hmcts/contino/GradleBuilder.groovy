@@ -296,6 +296,12 @@ EOF
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
+      if (config.gatlingAlerts == true) {
+        def testFailed = checkIfGatlingTestFailedThenReport("${config.slackUserID}")
+        if (testFailed == false) {
+          checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
+        }
+      }
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +

@@ -23,9 +23,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dbMigrationVaultName = dbMigrationVaultName
   }
 
-  void enablePerformanceTest(int timeout = 15) {
+  void enablePerformanceTest(int timeout = 15, boolean gatlingAlerts = false, boolean reRunOnFail = false) {
     config.perfTestTimeout = timeout
     config.performanceTest = true
+    config.gatlingAlerts = true
+    config.reRunOnFail = true
   }
 
   void enableApiGatewayTest(int timeout = 15) {
