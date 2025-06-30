@@ -298,6 +298,9 @@ EOF
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
+      echo "Yogesh outputting values:"
+      echo localSteps.config.slackUserID
+      echo localSteps.currentBuild.result
       if (localSteps.config.gatlingAlerts == true) {
         def testFailed = SlackAlerts.check_if_test_failed_then_report(localSteps)
         if (testFailed == false) {
