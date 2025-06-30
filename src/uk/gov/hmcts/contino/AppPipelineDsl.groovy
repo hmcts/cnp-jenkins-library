@@ -1,7 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-
+import uk.gov.hmcts.contino.SlackAlerts
 import java.time.LocalDate
 
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
@@ -28,7 +28,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
     config.reRunOnFail = reRunOnFail
-    SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in enable")
+    slackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in enable")
   }
 
   void enableApiGatewayTest(int timeout = 15) {

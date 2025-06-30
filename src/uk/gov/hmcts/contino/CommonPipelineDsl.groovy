@@ -4,6 +4,7 @@ abstract class CommonPipelineDsl implements Serializable {
   def final callbacks
   def final config
   def final steps
+  SlackAlerts slackAlerts
 
   CommonPipelineDsl(steps, callbacks, config) {
     this.callbacks = callbacks
