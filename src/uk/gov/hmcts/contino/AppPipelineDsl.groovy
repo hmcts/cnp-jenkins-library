@@ -28,8 +28,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
     config.reRunOnFail = reRunOnFail
-    config.publisher.currentBuild = currentBuild
-    config.publisher.env = env
+    if (currentBuild != "") {
+      config.publisher.currentBuild = currentBuild
+    }
+    if (env != "") {
+      config.publisher.env = env
+    }
   }
 
   void enableApiGatewayTest(int timeout = 15) {
