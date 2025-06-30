@@ -290,7 +290,7 @@ EOF
   }
 
   @Override
-  def performanceTest(config) {
+  def performanceTest() {
     //support for the new and old (deprecated) gatling gradle plugins
 
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
@@ -298,7 +298,8 @@ EOF
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
-      this.localSteps.
+      echo "YR"
+      echo localSteps.currentBuild.result
       if (config.gatlingAlerts == true) {
         echo "YR: STARTING NEW FUNCTION"
         SlackAlerts.C

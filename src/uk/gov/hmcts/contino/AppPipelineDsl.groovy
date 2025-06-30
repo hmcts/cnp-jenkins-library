@@ -23,19 +23,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dbMigrationVaultName = dbMigrationVaultName
   }
 
-  void enablePerformanceTest(int timeout = 15, currentBuild="", boolean gatlingAlerts = false, boolean reRunOnFail = false, env="") {
+  void enablePerformanceTest(int timeout = 15, boolean gatlingAlerts = false, boolean reRunOnFail = false) {
     config.perfTestTimeout = timeout
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
     config.reRunOnFail = reRunOnFail
-    echo "YR"
-    echo currentBuild.result
-    if (currentBuild != "") {
-      config.publisher.currentBuild = currentBuild
-    }
-    if (env != "") {
-      config.publisher.env = env
-    }
   }
 
   void enableApiGatewayTest(int timeout = 15) {
