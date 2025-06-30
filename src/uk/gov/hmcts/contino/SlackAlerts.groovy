@@ -23,7 +23,7 @@ class SlackAlerts {
               -----------------------------"""
 
     if (config.currentBuild.result == 'FAILURE') {
-      slack_message("${config.}", "warning", "${body}")
+      slack_message("${user}", "warning", "${body}")
       return true
     } else {
       return false
