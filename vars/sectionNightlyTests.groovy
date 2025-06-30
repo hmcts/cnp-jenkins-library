@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Environment
+import uk.gov.hmcts.contino.SlackAlerts
 
 
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
@@ -79,6 +80,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
+              SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in sectionnightlytests")
               publishPerformanceReports(
                 product: product,
                 component: component,

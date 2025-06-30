@@ -15,12 +15,10 @@ abstract class AbstractBuilder implements Builder, Serializable {
   @Override
   def performanceTest() {
     executeGatling()
-    SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "1 Yogesh outputting values: ${this.steps.currentBuild.result}")
   }
 
   def executeGatling() {
     this.gatling.execute()
-    SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "2 Yogesh outputting values: ${currentBuild.result}")
 
   }
 

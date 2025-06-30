@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.SlackAlerts
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.GithubAPI
@@ -186,6 +187,7 @@ def call(params) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                     builder.performanceTest(config.gatlingAlerts, config.slackUserID, config.reRunOnFail)
+                    SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in sectiondeploytoaks")
                     publishPerformanceReports(params)
                   }
                 }
