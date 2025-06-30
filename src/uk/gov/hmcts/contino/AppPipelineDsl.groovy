@@ -28,6 +28,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
     config.reRunOnFail = reRunOnFail
+    SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in enable")
   }
 
   void enableApiGatewayTest(int timeout = 15) {
