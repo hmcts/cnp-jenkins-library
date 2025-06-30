@@ -292,14 +292,12 @@ EOF
   @Override
   def performanceTest() {
     //support for the new and old (deprecated) gatling gradle plugins
-
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
-      println "Yogesh outputting values:"
-      println "${localSteps.config.slackUserID}"
-      println "${localSteps.currentBuild.result}"
+      script.echo "[MyLib] ${message}"
+      SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "Yogesh outputting values: ${localSteps.currentBuild.result}")
       this.localSteps.gatlingArchive()
       println "Finished Archive"
 
