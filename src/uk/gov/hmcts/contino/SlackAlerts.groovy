@@ -11,7 +11,7 @@ class SlackAlerts {
       )
     }
 
-  static Boolean check_if_test_failed_then_report(String user, config) {
+  static Boolean check_if_test_failed_then_report(localSteps) {
     def body =
       """-----------------------------
               The following test has failed twice today.
@@ -22,19 +22,19 @@ class SlackAlerts {
               * Build URL: ${config.env.BUILD_URL}
               -----------------------------"""
 
-    if (config.currentBuild.result == 'FAILURE') {
-      slack_message("${user}", "warning", "${body}")
+    if (localSteps.currentBuild.result == 'FAILURE') {
+      slack_message("${localSteps.config.slackUserID}", "warning", "${body}")
       return true
     } else {
       return false
     }
   }
 
-    static Boolean check_if_test_failed_intermitently_then_report(String user, config) {
+    static Boolean check_if_test_failed_intermitently_then_report(localSteps, max) {
       def loopMax = 20
       def LoopCount = 1
       def failureCount = 0
-      def previousBuild = config.currentBuild
+      def previousBuild = localSteps.currentBuild
       while (LoopCount < loopMax + 1) {
         if ((previousBuild.result == 'FAILURE')) {
           failureCount = failureCount + 1
@@ -52,7 +52,7 @@ class SlackAlerts {
               -----------------------------"""
 
       if (failureCount > 5) {
-        slack_message("${user}", "warning", "${body}")
+        slack_message("${localSteps.config.slackUserID}", "warning", "${body}")
         return true
       } else {
         return false
