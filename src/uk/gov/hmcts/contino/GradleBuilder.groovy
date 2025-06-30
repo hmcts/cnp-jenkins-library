@@ -298,11 +298,9 @@ EOF
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
-      echo "YR"
+      echo "YR: STARTING NEW FUNCTION"
       echo localSteps.currentBuild.result
       if (config.gatlingAlerts == true) {
-        echo "YR: STARTING NEW FUNCTION"
-        SlackAlerts.C
         def testFailed = SlackAlerts.check_if_test_failed_then_report(config.slackUserID)
         if (testFailed == false) {
           SlackAlerts.check_if_test_failed_intermitently_then_report(config.slackUserID, 10)
