@@ -13,7 +13,7 @@ abstract class AbstractBuilder implements Builder, Serializable {
   }
 
   @Override
-  def performanceTest(config) {
+  def performanceTest() {
     executeGatling()
   }
 
