@@ -46,7 +46,7 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
-  def performanceTest(config) {
+  def performanceTest() {
     builder.performanceTest(config)
   }
 
