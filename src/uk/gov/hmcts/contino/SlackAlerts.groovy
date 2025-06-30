@@ -17,9 +17,9 @@ class SlackAlerts {
               The following test has failed twice today.
               Please fix within 3 days.
               -----------------------------
-              * Job name: ${config.env.JOB_NAME}
-              * Build Number: ${config.env.BUILD_NUMBER}
-              * Build URL: ${config.env.BUILD_URL}
+              * Job name: ${localSteps.config.env.JOB_NAME}
+              * Build Number: ${localSteps.config.env.BUILD_NUMBER}
+              * Build URL: ${localSteps.config.env.BUILD_URL}
               -----------------------------"""
 
     if (localSteps.currentBuild.result == 'FAILURE') {
@@ -48,7 +48,7 @@ class SlackAlerts {
               The following test has failed ${failureCount} times in 20 executions.
               Please fix within 3 days.
               -----------------------------
-              * Job name: ${config.env.JOB_NAME}
+              * Job name: ${localSteps.config.env.JOB_NAME}
               -----------------------------"""
 
       if (failureCount > 5) {
