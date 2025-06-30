@@ -8,7 +8,7 @@ interface Builder {
   def highLevelDataSetup(String dataSetupEnvironment)
   def smokeTest()
   def functionalTest()
-  def performanceTest()
+  def performanceTest(config)
   def apiGatewayTest()
   def crossBrowserTest()
   def securityCheck()

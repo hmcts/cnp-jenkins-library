@@ -5,6 +5,7 @@ import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+import uk.gov.hmcts.contino.SlackAlerts
 
 import java.time.LocalDate
 
@@ -289,18 +290,21 @@ EOF
   }
 
   @Override
-  def performanceTest() {
+  def performanceTest(config) {
     //support for the new and old (deprecated) gatling gradle plugins
+
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
       this.localSteps.gatlingArchive()
+      this.localSteps.
       if (config.gatlingAlerts == true) {
         echo "YR: STARTING NEW FUNCTION"
-        def testFailed = checkIfGatlingTestFailedThenReport(config.slackUserID)
+        SlackAlerts.C
+        def testFailed = SlackAlerts.check_if_test_failed_then_report(config.slackUserID)
         if (testFailed == false) {
-          checkIfGatlingTestFailedIntermitentlyThenReport(config.slackUserID, 10)
+          SlackAlerts.check_if_test_failed_intermitently_then_report(config.slackUserID, 10)
         }
       }
     } else {
