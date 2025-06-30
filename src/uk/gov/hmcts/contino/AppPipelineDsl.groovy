@@ -28,6 +28,11 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
     config.reRunOnFail = reRunOnFail
+    echo "YR"
+    echo timeout
+    echo timeout
+    echo currentBuild
+    echo env
     if (currentBuild != "") {
       config.publisher.currentBuild = currentBuild
     }
