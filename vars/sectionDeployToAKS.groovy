@@ -182,12 +182,12 @@ def call(params) {
             }
           }
           if (config.performanceTest) {
+            script.echo "sectiondeploytoaks"
             stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                     builder.performanceTest(config.gatlingAlerts, config.slackUserID, config.reRunOnFail)
-                    SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in sectiondeploytoaks")
                     publishPerformanceReports(params)
                   }
                 }

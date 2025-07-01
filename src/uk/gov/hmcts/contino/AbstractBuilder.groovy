@@ -16,12 +16,13 @@ abstract class AbstractBuilder implements Builder, Serializable {
 
   @Override
   def performanceTest(Script script) {
+    script.echo "YR - inside abstract performancetests"
     executeGatling(script)
   }
 
   def executeGatling(Script script) {
     this.gatling.execute()
-    slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in abstract and execute gatlin function")
+    script.echo "YR - inside abstract executeGatling"
   }
 
   @Override
