@@ -82,8 +82,6 @@ def call(pcr, config, pipelineType, String product, String component, String sub
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               echo "YR: Starting test"
               builder.performanceTest()
-              echo "After builder.performanceTest"
-              echo currentBuild.result
               publishPerformanceReports(
                 product: product,
                 component: component,
@@ -93,6 +91,8 @@ def call(pcr, config, pipelineType, String product, String component, String sub
             }
           }
         }
+        echo "YR: Ending test"
+        echo "YR: ${currentBuild.result}"
       }
     }
 
