@@ -292,13 +292,13 @@ EOF
   }
 
   @Override
-  def performanceTest(Script script = null) {
+  def performanceTest(Script script) {
     //support for the new and old (deprecated) gatling gradle plugins
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR = '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
-      slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in enable")
+      slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in gradlebuilder")
       this.localSteps.gatlingArchive()
       //if (localSteps.config.gatlingAlerts == true) {
       //  def testFailed = SlackAlerts.check_if_test_failed_then_report(localSteps)
