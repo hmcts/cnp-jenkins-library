@@ -294,6 +294,7 @@ EOF
   @Override
   def performanceTest(Script script) {
     //support for the new and old (deprecated) gatling gradle plugins
+    script.echo "YR - inside perftest"
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR = '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
