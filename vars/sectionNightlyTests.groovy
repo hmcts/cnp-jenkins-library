@@ -75,11 +75,12 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
-      echo "YR starting sectionNightlyTests"
+      echo "YR: starting sectionNightlyTests"
       stageWithAgent("Performance test", product) {
         warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+              echo "YR: Starting test"
               builder.performanceTest()
               echo "After builder.performanceTest"
               echo currentBuild.result
