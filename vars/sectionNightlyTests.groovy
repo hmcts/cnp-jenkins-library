@@ -92,7 +92,14 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
         echo "YR: Ending test"
-        echo "YR: ${currentBuild.result}"
+        if (config.gatlingAlerts == true) {
+          echo "YR: Inside gatlingAlerts"
+          def testFailed = checkIfGatlingTestFailedThenReport("${config.slackUserID}")
+          echo "YR: After function 1"
+          if (testFailed == false) {
+            checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
+          }
+        }
       }
     }
 
