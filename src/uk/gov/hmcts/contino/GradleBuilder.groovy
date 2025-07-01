@@ -12,6 +12,7 @@ import java.time.LocalDate
 class GradleBuilder extends AbstractBuilder {
 
   def product
+  def slackAlerts
 
   // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
   def localSteps
@@ -20,6 +21,7 @@ class GradleBuilder extends AbstractBuilder {
     super(steps)
     this.product = product
     this.localSteps = steps
+    this.slackAlerts = SlackAlerts
   }
 
   def build() {
@@ -290,23 +292,20 @@ EOF
   }
 
   @Override
-  def performanceTest() {
+  def performanceTest(Script script = null) {
     //support for the new and old (deprecated) gatling gradle plugins
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
-      localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
+      localSteps.env.GATLING_REPORTS_DIR = '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
-      script.echo "[MyLib] ${message}"
-      SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "Yogesh outputting values: ${localSteps.currentBuild.result}")
+      slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in enable")
       this.localSteps.gatlingArchive()
-      println "Finished Archive"
-
-      if (localSteps.config.gatlingAlerts == true) {
-        def testFailed = SlackAlerts.check_if_test_failed_then_report(localSteps)
-        if (testFailed == false) {
-          SlackAlerts.check_if_test_failed_intermitently_then_report(localSteps, 10)
-        }
-      }
+      //if (localSteps.config.gatlingAlerts == true) {
+      //  def testFailed = SlackAlerts.check_if_test_failed_then_report(localSteps)
+        //if (testFailed == false) {
+        //  SlackAlerts.check_if_test_failed_intermitently_then_report(localSteps, 10)
+        //}
+    //}
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +

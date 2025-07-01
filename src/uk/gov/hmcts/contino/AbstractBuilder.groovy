@@ -13,7 +13,7 @@ abstract class AbstractBuilder implements Builder, Serializable {
   }
 
   @Override
-  def performanceTest() {
+  def performanceTest(Script script = null) {
     executeGatling()
   }
 
