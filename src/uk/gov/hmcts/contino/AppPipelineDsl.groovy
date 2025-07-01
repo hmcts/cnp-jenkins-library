@@ -8,14 +8,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   def final config
   def final steps
   def slackAlerts
-  def script
 
   AppPipelineDsl(steps, callbacks, config) {
     super(steps, callbacks, config)
     this.config = config
     this.steps = steps
     this.slackAlerts = SlackAlerts
-    this.script = Script
   }
 
   void loadVaultSecrets(Map<String, List<Map<String, Object>>> vaultSecrets) {
@@ -28,7 +26,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enablePerformanceTest(int timeout = 15) {
-    slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in enable")
+    slackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in enable")
     config.perfTestTimeout = timeout
     config.performanceTest = true
     //config.gatlingAlerts = gatlingAlerts
