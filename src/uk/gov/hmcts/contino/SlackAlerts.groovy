@@ -3,15 +3,15 @@ import uk.gov.hmcts.contino.MetricsPublisher
 
 class SlackAlerts {
 
-  void slack_message(String user, String colour, String message) {
-      slackSend(
+  static void slack_message(Script script, String user, String colour, String message) {
+      script.slackSend(
         channel: "${user}",
         color: "${colour}",
         message: "${message}"
       )
     }
 
-  boolean check_if_test_failed_then_report(localSteps) {
+  static boolean check_if_test_failed_then_report(localSteps) {
     def body =
       """-----------------------------
               The following test has failed twice today.
@@ -30,7 +30,7 @@ class SlackAlerts {
     }
   }
 
-    boolean check_if_test_failed_intermitently_then_report(localSteps, max) {
+    static boolean check_if_test_failed_intermitently_then_report(localSteps, max) {
       def loopMax = 20
       def LoopCount = 1
       def failureCount = 0
