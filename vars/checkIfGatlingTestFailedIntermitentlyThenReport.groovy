@@ -9,6 +9,7 @@ def call (String user, Integer max) {
   def LoopCount = 1
   def failureCount = 0
   def previousBuild = currentBuild
+  def threshold = 3
   while (LoopCount < loopMax+1) {
     if ((previousBuild.result == 'FAILURE')) {
       failureCount = failureCount + 1
@@ -24,7 +25,7 @@ def call (String user, Integer max) {
        ALERT: The following test has failed ${failureCount} times in ${max} executions.
        -----------------------------"""
 
-  if (failureCount > 5) {
+  if (failureCount > threshold) {
     slackMessage("${user}", "warning", "${body}")
     return true
   }
