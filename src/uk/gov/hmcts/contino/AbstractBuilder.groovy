@@ -5,13 +5,11 @@ abstract class AbstractBuilder implements Builder, Serializable {
   public steps
   def gatling
   def securitytest
-  def slackAlerts
 
   AbstractBuilder(steps) {
     this.steps = steps
     this.gatling = new Gatling(this.steps)
     this.securitytest = new SecurityScan(this.steps)
-    this.slackAlerts = SlackAlerts
   }
 
   @Override

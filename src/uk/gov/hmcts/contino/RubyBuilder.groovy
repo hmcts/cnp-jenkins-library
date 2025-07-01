@@ -126,7 +126,7 @@ class RubyBuilder extends AbstractBuilder {
   }
 
   @Override
-  def performanceTest(Script script) {
+  def performanceTest() {
     bundle("exec rake test:performance")
   }
 
