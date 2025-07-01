@@ -80,6 +80,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
+              script.echo "YR - inside sectionnightlytests"
               SlackAlerts.slack_message("U08Q19ZJS8G", "warning", "I am here in sectionnightlytests")
               publishPerformanceReports(
                 product: product,
