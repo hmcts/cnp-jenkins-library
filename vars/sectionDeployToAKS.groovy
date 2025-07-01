@@ -182,7 +182,6 @@ def call(params) {
             }
           }
           if (config.performanceTest) {
-            script.echo "sectiondeploytoaks"
             stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
