@@ -7,13 +7,11 @@ import java.time.LocalDate
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   def final config
   def final steps
-  def slackAlerts
 
   AppPipelineDsl(steps, callbacks, config) {
     super(steps, callbacks, config)
     this.config = config
     this.steps = steps
-    this.slackAlerts = SlackAlerts
   }
 
   void loadVaultSecrets(Map<String, List<Map<String, Object>>> vaultSecrets) {
@@ -26,8 +24,6 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enablePerformanceTest(int timeout = 15, gatlingAlerts=false, reRunOnFail=false) {
-    slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in enable")
-    script.echo "YR - inside enable"
     config.perfTestTimeout = timeout
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
