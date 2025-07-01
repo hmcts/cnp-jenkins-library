@@ -25,7 +25,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dbMigrationVaultName = dbMigrationVaultName
   }
 
-  void enablePerformanceTest(int timeout = 15, Script script = null, gatlingAlerts, reRunOnFail) {
+  void enablePerformanceTest(int timeout = 15, Script script = null, gatlingAlerts=false, reRunOnFail=false) {
     slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in enable")
     config.perfTestTimeout = timeout
     config.performanceTest = true
