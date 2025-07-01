@@ -5,14 +5,12 @@ import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-import uk.gov.hmcts.contino.SlackAlerts
 
 import java.time.LocalDate
 
 class GradleBuilder extends AbstractBuilder {
 
   def product
-  def slackAlerts
 
   // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
   def localSteps
@@ -21,7 +19,6 @@ class GradleBuilder extends AbstractBuilder {
     super(steps)
     this.product = product
     this.localSteps = steps
-    this.slackAlerts = SlackAlerts
   }
 
   def build() {
@@ -292,14 +289,12 @@ EOF
   }
 
   @Override
-  def performanceTest(Script script) {
+  def performanceTest() {
     //support for the new and old (deprecated) gatling gradle plugins
-    script.echo "YR - inside perftest"
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR = '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
-      slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in gradlebuilder")
       this.localSteps.gatlingArchive()
 
       //if (localSteps.config.gatlingAlerts == true) {
@@ -313,7 +308,7 @@ EOF
         "Please use the gatling plugin instead of the docker image " +
           "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
       )
-      super.executeGatling(script)
+      super.executeGatling()
     }
   }
 }

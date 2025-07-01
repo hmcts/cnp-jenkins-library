@@ -46,9 +46,8 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
-  def performanceTest(Script script) {
-    script.echo "anguler builder"
-    builder.performanceTest(script)
+  def performanceTest() {
+    builder.performanceTest()
   }
 
   @Override

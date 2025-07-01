@@ -15,14 +15,12 @@ abstract class AbstractBuilder implements Builder, Serializable {
   }
 
   @Override
-  def performanceTest(Script script) {
-    script.echo "YR - inside abstract performancetests"
-    executeGatling(script)
+  def performanceTest() {
+    executeGatling()
   }
 
-  def executeGatling(Script script) {
+  def executeGatling() {
     this.gatling.execute()
-    script.echo "YR - inside abstract executeGatling"
   }
 
   @Override
