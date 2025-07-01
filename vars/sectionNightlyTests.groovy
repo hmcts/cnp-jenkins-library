@@ -98,6 +98,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           echo "YR: After function 1"
           if (testFailed == false) {
             checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
+            echo "YR: After function 2"
           }
         }
       }
