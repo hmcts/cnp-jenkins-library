@@ -8,6 +8,7 @@ class AbstractBuilderTest extends Specification {
   def mockSteps
   def mockGatling
   def mockSecurity
+  def slackAlerts = SlackAlerts
 
   def setup() {
     mockSteps = Mock(JenkinsStepMock.class)
@@ -24,6 +25,7 @@ class AbstractBuilderTest extends Specification {
       builder.performanceTest()
     then:
       1 * mockGatling.execute()
+
   }
 
   def "security calls 'securitytest.execute()'"() {
