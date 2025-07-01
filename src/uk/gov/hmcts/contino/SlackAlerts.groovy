@@ -3,8 +3,8 @@ import uk.gov.hmcts.contino.MetricsPublisher
 
 class SlackAlerts {
 
-  static void slack_message(String user, String colour, String message) {
-      slackSend(
+  static void slack_message(Script script, String user, String colour, String message) {
+      script.slackSend(
         channel: "${user}",
         color: "${colour}",
         message: "${message}"
