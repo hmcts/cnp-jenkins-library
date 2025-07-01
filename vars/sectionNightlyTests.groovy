@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.SlackAlerts
 
 
-def call(pcr, config, pipelineType, String product, String component, String subscription, Script script = null) {
+def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
 
@@ -75,17 +75,13 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
-      if (script == null) {
-        script.echo "section"
-      }
+      log.info("YR starting sectionNightlyTests")
+      log.info(currentBuild.result)
       stageWithAgent("Performance test", product) {
         warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
               builder.performanceTest()
-              if (script == null) {
-                script.echo "YR - inside sectionnightlytests"
-              }
               publishPerformanceReports(
                 product: product,
                 component: component,
