@@ -27,6 +27,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enablePerformanceTest(int timeout = 15, Script script = null, gatlingAlerts=false, reRunOnFail=false) {
     slackAlerts.slack_message(script, "U08Q19ZJS8G", "warning", "I am here in enable")
+    script.echo "YR - inside enable"
     config.perfTestTimeout = timeout
     config.performanceTest = true
     config.gatlingAlerts = gatlingAlerts
