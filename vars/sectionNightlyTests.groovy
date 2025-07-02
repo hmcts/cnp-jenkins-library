@@ -73,10 +73,8 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
-      //The rerun stage will only become active if config.reRunOnFail is true
       def stages = ['Performance test', 'Test Rerun']
-      def amountOfReruns = (reRunOnFail== true) ? 2 : 1
-      for (int i = 0; i < amountOfReruns; i++) {
+      for (int i = 0; i < 2; i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
@@ -92,9 +90,11 @@ def call(pcr, config, pipelineType, String product, String component, String sub
             }
           }
         }
+        //Rerun if test failed and if config.reRunOnFail is true
+        if ((reRunOnFail== false) or ((reRunOnFail== true) and (currentBuild.result != "FAILURE")))
+          break
       }
-      //Gatling alerts will only become active if config.gatlingAlerts is set to true
-      if (config.gatlingAlerts == true) and (checkIfGatlingTestFailedThenReport("${config.slackUserID}") == false)
+      if ((config.gatlingAlerts == true) and (checkIfGatlingTestFailedThenReport("${config.slackUserID}") == false))
         checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
     }
 
