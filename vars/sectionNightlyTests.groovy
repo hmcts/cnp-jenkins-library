@@ -91,7 +91,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
         //Rerun if test failed and if config.reRunOnFail is true
-        if ((reRunOnFail== false) || ((reRunOnFail== true) && (currentBuild.result != "FAILURE")))
+        if ((config.reRunOnFail== false) || ((config.reRunOnFail== true) && (currentBuild.result != "FAILURE")))
           break
       }
       if ((config.gatlingAlerts == true) && (checkIfGatlingTestFailedThenReport("${config.slackUserID}") == false))
