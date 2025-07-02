@@ -1,10 +1,8 @@
-import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
-import uk.gov.hmcts.contino.SlackAlerts
+import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.GithubAPI

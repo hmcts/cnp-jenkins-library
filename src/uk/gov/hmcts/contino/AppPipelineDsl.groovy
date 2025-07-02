@@ -1,7 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-import uk.gov.hmcts.contino.SlackAlerts
+
 import java.time.LocalDate
 
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {

@@ -45,7 +45,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean gatlingAlerts = false
   boolean reRunOnFail = false
   String slackUserID = "U08Q19ZJS8G"
-  MetricsPublisher publisher
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)

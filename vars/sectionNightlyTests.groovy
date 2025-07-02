@@ -1,6 +1,4 @@
-import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Environment
-import uk.gov.hmcts.contino.SlackAlerts
 
 
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
@@ -75,13 +73,14 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
+      //The rerun stage will only become active if config.reRunOnFail is true
       def stages = ['Performance test', 'Test Rerun']
-      for (int i = 0; i < 2; i++) {
+      def amountOfReruns = (reRunOnFail== true) ? 2 : 1
+      for (int i = 0; i < amountOfReruns; i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                echo "YR: Starting test"
                 builder.performanceTest()
                 publishPerformanceReports(
                   product: product,
@@ -94,54 +93,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
       }
-
-
-      /*stageWithAgent("Performance test", product) {
-        warnError('Failure in performanceTest') {
-          pcr.callAround('PerformanceTest') {
-            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-              echo "YR: Starting test"
-              builder.performanceTest()
-              publishPerformanceReports(
-                product: product,
-                component: component,
-                environment: environment.nonProdName,
-                subscription: subscription
-              )
-            }
-          }
-        }
-
-        echo "YR: Ending test 1"
-
-        if (config.reRunOnFail == true) {
-          echo "YR: Inside reRunOnFail"
-          stageWithAgent("Test Rerun", product) {
-            warnError('Failure in performanceTest') {
-              pcr.callAround('PerformanceTest') {
-                timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                  echo "YR: Starting test 2"
-                  builder.performanceTest()
-                  publishPerformanceReports(
-                    product: product,
-                    component: component,
-                    environment: environment.nonProdName,
-                    subscription: subscription
-                  )
-                }
-              }
-            }
-          }
-        }
-        echo "YR: Ending test 2"*/
-      if (config.gatlingAlerts == true) {
-        def testFailed = checkIfGatlingTestFailedThenReport("${config.slackUserID}")
-        echo "YR: After function 1"
-        if (testFailed == false) {
-          checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
-          echo "YR: After function 2"
-        }
-      }
+      //Gatling alerts will only become active if config.gatlingAlerts is set to true
+      if (config.gatlingAlerts == true) and (checkIfGatlingTestFailedThenReport("${config.slackUserID}") == false)
+        checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
     }
 
     if (config.securityScan) {
