@@ -75,8 +75,28 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
-      echo "YR: starting sectionNightlyTests"
-      stageWithAgent("Performance test", product) {
+      def stages = ['Performance test', 'Test Rerun']
+      for (int i = 0; i < 2; i++) {
+        stageWithAgent(stages[i], product) {
+          warnError('Failure in performanceTest') {
+            pcr.callAround('PerformanceTest') {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                echo "YR: Starting test"
+                builder.performanceTest()
+                publishPerformanceReports(
+                  product: product,
+                  component: component,
+                  environment: environment.nonProdName,
+                  subscription: subscription
+                )
+              }
+            }
+          }
+        }
+      }
+
+
+      /*stageWithAgent("Performance test", product) {
         warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
             timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
@@ -113,18 +133,17 @@ def call(pcr, config, pipelineType, String product, String component, String sub
             }
           }
         }
-        echo "YR: Ending test 2"
-        if (config.gatlingAlerts == true) {
-          echo "YR: Inside gatlingAlerts"
-          def testFailed = checkIfGatlingTestFailedThenReport("${config.slackUserID}")
-          echo "YR: After function 1"
-          if (testFailed == false) {
-            checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
-            echo "YR: After function 2"
-          }
+        echo "YR: Ending test 2"*/
+      if (config.gatlingAlerts == true) {
+        def testFailed = checkIfGatlingTestFailedThenReport("${config.slackUserID}")
+        echo "YR: After function 1"
+        if (testFailed == false) {
+          checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
+          echo "YR: After function 2"
         }
       }
     }
+
     if (config.securityScan) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
