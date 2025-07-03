@@ -100,6 +100,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
       //Alerts wil become active if config.gatlingAlerts is set to true
       if (config.perfGatlingAlerts == true)
+        echo "start alert"
         performanceCheckIfTestFailed("${config.perfSlackChannel}")
     }
 
