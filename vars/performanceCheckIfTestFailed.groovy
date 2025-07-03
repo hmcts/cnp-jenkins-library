@@ -37,14 +37,16 @@ def call(String user) {
     def constantFailure = 1
     previousBuild = currentBuild
     while (previousBuild == "FAILURE") {
-      previousBuild = previousBuild?.previousBuild
+      echo "yr: inside while - constant fail is ${constantFailure}"
       if (previousBuild != null) {
+        echo "yr: inside if - constant fail is ${constantFailure}"
         buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
         def lastEntry = prev.changeSets[-1]?.items?.last()
         if (lastEntry)
           lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
         constantFailure++
       }
+      previousBuild = previousBuild?.previousBuild
     }
     echo "yr: constant fail is ${constantFailure}"
     def colour = (constantFailure <= threshold2) ? "danger" : "warning"
