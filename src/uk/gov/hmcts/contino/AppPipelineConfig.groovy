@@ -41,10 +41,10 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int fullFunctionalTestTimeout = 30
   int securityScanTimeout = 120
 
-  //For Gatling
-  boolean gatlingAlerts = false
-  boolean reRunOnFail = false
-  String slackUserID = "U08Q19ZJS8G"
+  //For Performance Test Pipelines
+  boolean perfGatlingAlerts = false
+  boolean perfRerunOnFail = false
+  String perfSlackChannel = "#performance-alerts"
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)

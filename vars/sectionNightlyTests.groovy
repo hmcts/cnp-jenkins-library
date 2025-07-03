@@ -1,6 +1,5 @@
 import uk.gov.hmcts.contino.Environment
 
-
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
@@ -73,7 +72,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
-      def stages = ['Performance test', 'Test Rerun']
+      def stages = ['Performance test', 'Failed Test Rerun']
       for (int i = 0; i < 2; i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
@@ -91,11 +90,17 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
         //Rerun if test failed and if config.reRunOnFail is true
-        if ((config.reRunOnFail== false) || ((config.reRunOnFail== true) && (currentBuild.result != "FAILURE")))
+        def causes = currentBuild.rawBuild.getCauses()
+        def triggeredByTimer = causes.any { cause ->
+          cause.getClass().getSimpleName() == "TimerTriggerCause"
+        }
+
+        if ((triggeredByTimer==true) && ((config.perfRerunOnFail== false) || ((config.perfRerunOnFail== true) && (currentBuild.result != "FAILURE"))))
           break
       }
-      if ((config.gatlingAlerts == true) && (checkIfGatlingTestFailedThenReport("${config.slackUserID}") == false))
-        checkIfGatlingTestFailedIntermitentlyThenReport("${config.slackUserID}", 10)
+      //Alerts wil become active if config.gatlingAlerts is set to true
+      if (config.perfGatlingAlerts == true)
+        performanceCheckIfTestFailed("${config.perfSlackChannel}")
     }
 
     if (config.securityScan) {

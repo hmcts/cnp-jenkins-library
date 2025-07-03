@@ -1,8 +1,11 @@
-//slackMessage.groovy
+//sendSlackMessage.groovy
 /*
  * Use this to send a specific slack message to a user or channel
  *
- * slackMessage('slack user id', 'warning', 'Hello World')
+ * sendSlackMessage('slack user id', 'warning', 'Hello World')
+ * colour key:
+ * warning=yellow
+ * danger=red
  */
 
 def call(String user, String colour, String message) {
