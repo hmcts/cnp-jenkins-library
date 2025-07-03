@@ -41,9 +41,11 @@ def call(String user) {
       if (previousBuild != null) {
         echo "yr: inside if - constant fail is ${constantFailure}"
         buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+        echo "yr: inside if - after builddate - build date is ${buildDate}"
         def lastEntry = prev.changeSets[-1]?.items?.last()
         if (lastEntry)
           lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+        echo "yr: inside if - after lastCommitDate - build date is ${lastCommitDate}"
         constantFailure++
       }
       previousBuild = previousBuild?.previousBuild
