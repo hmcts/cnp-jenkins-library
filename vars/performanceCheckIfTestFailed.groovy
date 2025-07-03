@@ -36,7 +36,7 @@ def call(String user) {
     def lastCommitDate
     def constantFailure = 1
     previousBuild = currentBuild
-    while (previousBuild == "FAILURE") {
+    while (previousBuild.result == "FAILURE") {
       echo "yr: inside while - constant fail is ${constantFailure}"
       if (previousBuild != null) {
         echo "yr: inside if - constant fail is ${constantFailure}"
