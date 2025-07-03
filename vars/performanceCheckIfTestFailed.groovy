@@ -42,10 +42,10 @@ def call(String user) {
         echo "yr: inside if - constant fail is ${constantFailure}"
         buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
         echo "yr: inside if - after builddate - build date is ${buildDate}"
-        def lastEntry = prev.changeSets[-1]?.items?.last()
-        if (lastEntry)
-          lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-        echo "yr: inside if - after lastCommitDate - build date is ${lastCommitDate}"
+        //def lastEntry = prev.changeSets[-1]?.items?.last()
+        //if (lastEntry)
+        //  lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+        //echo "yr: inside if - after lastCommitDate - build date is ${lastCommitDate}"
         constantFailure++
       }
       previousBuild = previousBuild?.previousBuild
@@ -66,8 +66,6 @@ def call(String user) {
         -----------------------------
         The below list shows the last ${previousRunsLimit} runs.
         ${resultList}
-        -----------------------------
-        ${commitMessage}
         -----------------------------
         Last test details:
         > *Job Name:* ${env.JOB_NAME}
