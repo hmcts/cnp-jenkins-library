@@ -11,7 +11,7 @@ def call(String user) {
   def previousRunsLimit = 10
   def threshold1 = 3
   def threshold2 = 5
-
+  echo "start alert"
   if (currentBuild.result == 'FAILURE') {
     def loopCount = 1
     def failureCount = 1
@@ -46,7 +46,7 @@ def call(String user) {
         constantFailure++
       }
     }
-
+    echo "yr: constant fail is ${constantFailure}"
     def colour = (constantFailure <= threshold2) ? "danger" : "warning"
     def commitMessage
 
@@ -70,7 +70,7 @@ def call(String user) {
         > *Build Number:* ${env.BUILD_NUMBER}
         > *Build URL:* ${env.BUILD_URL}
         -----------------------------"""
-
+      echo "before send"
       slackMessage("${user}", colour, "${body}")
     }
   }
