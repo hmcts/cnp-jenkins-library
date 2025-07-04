@@ -34,7 +34,7 @@ def call(String user) {
       constantFailure++
       buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
       if (previousBuild && previousBuild.changeSets) {
-        def lastChangeSet = prev.changeSets[-1]
+        def lastChangeSet = previousBuild.changeSets[-1]
         def lastCommit = lastChangeSet.items?.last()
 
         if (lastCommit) {
@@ -65,7 +65,7 @@ def call(String user) {
 
     //Create slack message body
     if (constantFailure > threshold1) {
-      commitMessage = (buildDate > lastCommitDate) ? "There has been no commit to the repo since the date this test started failing."
+      commitMessage = (buildDate > lastCommitDate) ? "There has been no commit to the repo since ${lastCommitDate} the date this test started failing."
         : "There was a commit on ${lastCommitDate} and test is still failing."
 
       def body =
