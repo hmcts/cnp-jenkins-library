@@ -73,7 +73,7 @@ def call(String user) {
         > *Build URL:* ${env.BUILD_URL}
         -----------------------------"""
       echo "before send"
-      slackMessage("${user}", colour, "${body}")
+      sendSlackMessage("${user}", colour, "${body}")
     }
   }
 }
