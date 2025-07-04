@@ -11,10 +11,10 @@ def call(String user) {
   def threshold1 = 3
   def threshold2 = 5
   def previousBuild = currentBuild
-  def previousRunsLimit = 1
+  def previousRunsLimit = 0
   def loopCount = 1
   def failureCount = 1
-  def resultList = ['Fail']
+  def resultList = []
   def constantFailure = 0
   def buildDate
   def commitMessage
@@ -25,7 +25,6 @@ def call(String user) {
     previousRunsLimit++
     previousBuild = previousBuild?.previousBuild
   }
-  previousRunsLimit = previousRunsLimit -1
 
   //Find number of fails in a row
   if (currentBuild.result == 'FAILURE') {
