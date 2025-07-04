@@ -42,7 +42,7 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while (loopCount < previousRunsLimit) {
+    while (loopCount < previousRunsLimit+1) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
@@ -60,6 +60,7 @@ def call(String user) {
     if (constantFailure > threshold1) {
       commitMessage = (buildDate > lastCommitDate) ? "There has been no commit to the repo since the date this test started failing."
         : "There was a commit on ${lastCommitDate} and test is still failing."
+
       def body =
         """-----------------------------
         *ALERT*
