@@ -8,15 +8,40 @@
 
 def call(String user) {
 
-  def previousRunsLimit = 10
   def threshold1 = 3
   def threshold2 = 5
-  echo "start alert"
+  def previousBuild = currentBuild
+  def previousRunsLimit = 1
+  def loopCount = 1
+  def failureCount = 1
+  def resultList = ['Fail']
+  def constantFailure = 0
+  def buildDate
+  def commitMessage
+  def lastCommitDate
+
+  //Check how many runs this repo has
+  while (previousBuild != null) {
+    previousRunsLimit++
+    previousBuild = previousBuild?.previousBuild
+  }
+  previousRunsLimit = previousRunsLimit -1
+
+  //Find number of fails in a row
   if (currentBuild.result == 'FAILURE') {
-    def loopCount = 1
-    def failureCount = 1
-    def previousBuild = currentBuild
-    def resultList = ['Fail']
+    previousBuild = currentBuild
+    while (previousBuild.result == "FAILURE") {
+      constantFailure++
+      buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+      //def lastEntry = prev.changeSets[-1]?.items?.last()
+      //if (lastEntry)
+      //  lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+      //echo "yr: inside if - after lastCommitDate - build date is ${lastCommitDate}"
+      previousBuild = previousBuild?.previousBuild
+    }
+
+    //Create fail list
+    previousBuild = currentBuild
     while (loopCount < previousRunsLimit + 1) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
@@ -25,35 +50,13 @@ def call(String user) {
         resultList.add('Pass')
       }
       previousBuild = previousBuild?.previousBuild
-      if (previousBuild == null) {
-        previousRunsLimit = loopCount
-        break
-      }
       loopCount++
     }
 
-    def buildDate
-    def lastCommitDate
-    def constantFailure = 1
-    previousBuild = currentBuild
-    while (previousBuild.result == "FAILURE") {
-      echo "yr: inside while - constant fail is ${constantFailure}"
-      if (previousBuild != null) {
-        echo "yr: inside if - constant fail is ${constantFailure}"
-        buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-        echo "yr: inside if - after builddate - build date is ${buildDate}"
-        //def lastEntry = prev.changeSets[-1]?.items?.last()
-        //if (lastEntry)
-        //  lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-        //echo "yr: inside if - after lastCommitDate - build date is ${lastCommitDate}"
-        constantFailure++
-      }
-      previousBuild = previousBuild?.previousBuild
-    }
-    echo "yr: constant fail is ${constantFailure}"
-    def colour = (constantFailure <= threshold2) ? "danger" : "warning"
-    def commitMessage
+    //Set colour for slack message
+    def colour = (constantFailure >= threshold2) ? "danger" : "warning"
 
+    //Create slack message body
     if (constantFailure > threshold1) {
       commitMessage = (buildDate > lastCommitDate) ? "There has been no commit to the repo since the date this test started failing."
         : "There was a commit on ${lastCommitDate} and test is still failing."
@@ -72,7 +75,8 @@ def call(String user) {
         > *Build Number:* ${env.BUILD_NUMBER}
         > *Build URL:* ${env.BUILD_URL}
         -----------------------------"""
-      echo "yr: sending slack message"
+
+      //Send slack message to channel or user
       sendSlackMessage("${user}", colour, "${body}")
     }
   }
