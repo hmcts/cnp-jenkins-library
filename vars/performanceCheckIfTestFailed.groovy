@@ -33,10 +33,17 @@ def call(String user) {
     while (previousBuild.result == "FAILURE") {
       constantFailure++
       buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-      //def lastEntry = prev.changeSets[-1]?.items?.last()
-      //if (lastEntry)
-      //  lastCommitDate = new Date("${lastEntry.timestamp}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-      //echo "yr: inside if - after lastCommitDate - build date is ${lastCommitDate}"
+      if (previousBuild && previousBuild.changeSets) {
+        def lastChangeSet = prev.changeSets[-1]
+        def lastCommit = lastChangeSet.items?.last()
+
+        if (lastCommit) {
+          lastCommitDateMessage =  "${lastCommit.msg}"
+          lastCommitDateAuthor = "$lastCommit.author}"
+          lastCommitDate = new Date(lastCommit.timestamp).format('yyyy-MM-dd HH:mm:ss')}
+          echo lastCommitDate
+        }
+
       previousBuild = previousBuild?.previousBuild
     }
 
@@ -70,6 +77,9 @@ def call(String user) {
         -----------------------------
         The below list shows the last ${previousRunsLimit} runs.
         ${resultList}
+        -----------------------------
+        Last commit on this repo:
+        ${commitMessage}
         -----------------------------
         Last test details:
         > *Job Name:* ${env.JOB_NAME}
