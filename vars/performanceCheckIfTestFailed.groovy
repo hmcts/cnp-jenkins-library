@@ -25,6 +25,7 @@ def call(String user) {
     previousRunsLimit++
     previousBuild = previousBuild?.previousBuild
   }
+  previousRunsLimit = previousRunsLimit-1
 
   //Find number of fails in a row
   if (currentBuild.result == 'FAILURE') {
