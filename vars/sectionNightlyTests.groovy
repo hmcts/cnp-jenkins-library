@@ -94,12 +94,8 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         def triggeredByTimer = causes.any { cause ->
           cause.getClass().getSimpleName() == "TimerTriggerCause"
         }
-        echo "trigger by timer ${triggeredByTimer}"
-        echo "${triggeredByTimer}"
-        echo "${perfRerunOnFail}"
-        echo "${currentBuild.result}"
-        if ((triggeredByTimer==false) && (config.perfRerunOnFail== false) && (currentBuild.result != "FAILURE"))
-          echo "yr: hitting break"
+
+        if ((triggeredByTimer==false) && ((config.perfRerunOnFail== false) || ((config.perfRerunOnFail== true) && (currentBuild.result != "FAILURE"))))
           break
       }
       //Alerts wil become active if config.gatlingAlerts is set to true
