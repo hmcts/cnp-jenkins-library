@@ -12,8 +12,8 @@ def call(String user) {
   def threshold2 = 5
   def previousBuild = currentBuild
   def previousRunsLimit = 0
-  def loopCount = 1
-  def failureCount = 1
+  def loopCount = 0
+  def failureCount = 0
   def resultList = []
   def constantFailure = 0
   def buildDate
@@ -25,7 +25,7 @@ def call(String user) {
     previousRunsLimit++
     previousBuild = previousBuild?.previousBuild
   }
-  previousRunsLimit = previousRunsLimit-1
+  //previousRunsLimit = previousRunsLimit
 
   //Find number of fails in a row
   if (currentBuild.result == 'FAILURE') {
@@ -49,7 +49,7 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while (loopCount < previousRunsLimit+1) {
+    while (loopCount < previousRunsLimit) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
