@@ -50,13 +50,14 @@ def call(String user) {
     //Create fail list
     previousBuild = currentBuild
     while (loopCount < previousRunsLimit+1) {
-      echo loopCount + previousBuild.result
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
       } else {
+        echo "inside pass"
         resultList.add('Pass')
       }
+      echo loopCount + previousBuild.result
       previousBuild = previousBuild?.previousBuild
       loopCount++
     }
@@ -76,7 +77,7 @@ def call(String user) {
         -----------------------------
         This test has failed ${constantFailure} times in a row since ${buildDate}
         -----------------------------
-        The below list shows the last ${previousRunsLimit} runs.
+        The below list shows the last ${previousRunsLimit-1} runs.
         ${resultList}
         -----------------------------
         Last commit on this repo:
