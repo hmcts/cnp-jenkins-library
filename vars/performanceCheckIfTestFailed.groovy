@@ -33,6 +33,7 @@ def call(String user) {
     while (previousBuild.result == "FAILURE") {
       constantFailure++
       buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+      echo constantFailure + " " + buildDate
       if (previousBuild && previousBuild.changeSets) {
         def lastChangeSet = previousBuild.changeSets[-1]
         def lastCommit = lastChangeSet.items?.last()
