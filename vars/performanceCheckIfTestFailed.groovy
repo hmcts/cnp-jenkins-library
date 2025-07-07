@@ -35,7 +35,7 @@ def call(String user) {
       constantFailure++
       buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
       id = previousBuild.id
-      echo "YR: " + previousBuild.changeSets
+      echo "YR: " + env.GIT_COMMIT
       if (previousBuild && previousBuild.changeSets) {
         def lastChangeSet = previousBuild.changeSets[-1]
         def lastCommit = lastChangeSet.items?.last()
