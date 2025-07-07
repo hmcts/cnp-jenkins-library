@@ -16,10 +16,10 @@ def call(String user) {
   def failureCount = 0
   def resultList = []
   def constantFailure = 0
-  def buildDate
+  def buildDate = []
   def commitMessage
   def lastCommitDate
-  def id
+  def id = []
 
   //Check how many runs this repo has
   while (previousBuild != null) {
@@ -33,8 +33,8 @@ def call(String user) {
     previousBuild = currentBuild
     while (previousBuild.result == "FAILURE") {
       constantFailure++
-      buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-      id = previousBuild.id
+      buildDate.add(new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss"))
+      id.add(previousBuild.id)
       echo constantFailure + " " + buildDate
       if (previousBuild && previousBuild.changeSets) {
         def lastChangeSet = previousBuild.changeSets[-1]
@@ -78,7 +78,7 @@ def call(String user) {
         *ALERT*
         ${env.JOB_NAME}
         -----------------------------
-        This test has failed ${constantFailure} times in a row since ${buildDate} and build id was ${id}
+        This test has failed ${constantFailure} times in a row since ${buildDate[previousRunsLimit-1]} and build id was ${id[previousRunsLimit-1]}
         -----------------------------
         The below list shows the last ${previousRunsLimit} runs.
         ${resultList[0..previousRunsLimit-1]}
