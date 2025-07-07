@@ -78,7 +78,7 @@ def call(String user) {
         *ALERT*
         ${env.JOB_NAME}
         -----------------------------
-        This test has failed ${constantFailure} times in a row since ${buildDate[previousRunsLimit-1]} and build id was ${id[previousRunsLimit-1]}
+        This test has failed ${constantFailure} times in a row since ${buildDate[previousRunsLimit]} and build id was ${id[previousRunsLimit]}
         -----------------------------
         The below list shows the last ${previousRunsLimit} runs.
         ${resultList[0..previousRunsLimit-1]}
