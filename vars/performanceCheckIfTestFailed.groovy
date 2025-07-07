@@ -38,7 +38,7 @@ def call(String user) {
       if (previousBuild && previousBuild.changeSets) {
         def lastChangeSet = previousBuild.changeSets[-1]
         def lastCommit = lastChangeSet.items?.last()
-
+        echo "YR: " + lastCommit
         if (lastCommit) {
           lastCommitDateMessage =  "${lastCommit.msg}"
           lastCommitDateAuthor = "$lastCommit.author}"
