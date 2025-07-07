@@ -49,7 +49,8 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while (loopCount <= previousRunsLimit) {
+    while (loopCount < previousRunsLimit) {
+      echo previousBuild.result
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
