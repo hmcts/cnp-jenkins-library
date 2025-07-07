@@ -12,7 +12,7 @@ def call(String user) {
   def threshold2 = 5
   def previousBuild = currentBuild
   def previousRunsLimit = 0
-  def loopCount = 2
+  def loopCount = 1
   def failureCount = 0
   def resultList = []
   def constantFailure = 0
