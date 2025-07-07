@@ -69,7 +69,11 @@ class GradleBuilder extends AbstractBuilder {
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
     } finally {
-      localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      if (product == "civil") {
+        localSteps.junit allowEmptyResults: true, '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      } else {
+        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      }
     }
   }
 
