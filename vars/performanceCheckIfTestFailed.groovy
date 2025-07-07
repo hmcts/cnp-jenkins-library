@@ -25,7 +25,7 @@ def call(String user) {
     previousRunsLimit++
     previousBuild = previousBuild?.previousBuild
   }
-  previousRunsLimit = previousRunsLimit - 1
+  //previousRunsLimit = previousRunsLimit - 1
 
   //Find number of fails in a row
   if (currentBuild.result == 'FAILURE') {
@@ -49,7 +49,7 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while (loopCount < previousRunsLimit) {
+    while (loopCount <= previousRunsLimit) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
