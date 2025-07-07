@@ -16,10 +16,10 @@ def call(String user) {
   def failureCount = 0
   def resultList = []
   def constantFailure = 0
-  def buildDate = []
+  def buildDate
   def commitMessage
   def lastCommitDate
-  def id = []
+  def id
 
   //Check how many runs this repo has
   while (previousBuild != null) {
@@ -33,8 +33,8 @@ def call(String user) {
     previousBuild = currentBuild
     while (previousBuild.result == "FAILURE") {
       constantFailure++
-      buildDate.add(new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss"))
-      id.add(previousBuild.id)
+      buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
+      id = previousBuild.id
       echo constantFailure + " " + buildDate
       if (previousBuild && previousBuild.changeSets) {
         def lastChangeSet = previousBuild.changeSets[-1]
