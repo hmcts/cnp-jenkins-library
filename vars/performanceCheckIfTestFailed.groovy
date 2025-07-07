@@ -27,7 +27,7 @@ def call(String user) {
     previousBuild = previousBuild?.previousBuild
   }
   //previousRunsLimit = previousRunsLimit - 1
-
+  echo currentBuild.changeSets
   //Find number of fails in a row
   if (currentBuild.result == 'FAILURE') {
     previousBuild = currentBuild
