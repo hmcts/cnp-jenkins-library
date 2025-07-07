@@ -12,7 +12,7 @@ def call(String user) {
   def threshold2 = 5
   def previousBuild = currentBuild
   def previousRunsLimit = 0
-  def loopCount = 1
+  def loopCount = 0
   def failureCount = 0
   def resultList = []
   def constantFailure = 0
@@ -49,8 +49,8 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while (loopCount < previousRunsLimit) {
-      echo previousBuild.result
+    while (loopCount < previousRunsLimit+1) {
+      echo loopCount + previousBuild.result
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
