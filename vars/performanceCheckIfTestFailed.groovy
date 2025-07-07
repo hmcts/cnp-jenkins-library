@@ -76,10 +76,10 @@ def call(String user) {
         *ALERT*
         ${env.JOB_NAME}
         -----------------------------
-        This test has failed ${constantFailure-1} times in a row since ${buildDate}
+        This test has failed ${constantFailure} times in a row since ${buildDate}
         -----------------------------
-        The below list shows the last ${previousRunsLimit-1} runs.
-        ${resultList[2..21]}
+        The below list shows the last ${previousRunsLimit} runs.
+        ${resultList[0..previousRunsLimit]}
         -----------------------------
         Last commit on this repo:
         ${commitMessage}
