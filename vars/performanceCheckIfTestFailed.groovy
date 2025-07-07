@@ -35,7 +35,6 @@ def call(String user) {
       constantFailure++
       buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
       id = previousBuild.id
-      echo constantFailure + " " + buildDate
       if (previousBuild && previousBuild.changeSets) {
         def lastChangeSet = previousBuild.changeSets[-1]
         def lastCommit = lastChangeSet.items?.last()
@@ -44,7 +43,6 @@ def call(String user) {
           lastCommitDateMessage =  "${lastCommit.msg}"
           lastCommitDateAuthor = "$lastCommit.author}"
           lastCommitDate = new Date(lastCommit.timestamp).format('yyyy-MM-dd HH:mm:ss')}
-          echo lastCommitDate
         }
 
       previousBuild = previousBuild?.previousBuild
@@ -57,16 +55,15 @@ def call(String user) {
         resultList.add('Fail')
         failureCount++
       } else {
-        echo "inside pass"
         resultList.add('Pass')
       }
-      echo loopCount + previousBuild.result
       previousBuild = previousBuild?.previousBuild
       loopCount++
     }
 
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
+    echo "yr: commit date - ${lastCommitDate}"
 
     //Create slack message body
     if (constantFailure > threshold1) {
