@@ -89,24 +89,24 @@ def call(pcr, config, pipelineType, String product, String component, String sub
             }
           }
         }
-        //Rerun if test failed and if config.reRunOnFail is true
+
+        //Rerun test if not started by chron job and if first run failed
         def causes = currentBuild.rawBuild.getCauses()
         def triggeredByTimer = causes.any { cause ->
           cause.getClass().getSimpleName() == "TimerTriggerCause"
         }
-
-        if (triggeredByTimer==false) {
-          if (config.perfRerunOnFail == false) {
-            break
-          } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {
-            break
-          }
+        if (triggeredByTimer == false) {
+          break
+        } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {
+          break
         }
+
       }
+
       //Alerts wil become active if config.gatlingAlerts is set to true
       if (config.perfGatlingAlerts == true)
-        echo "start alert"
         performanceCheckIfTestFailed("${config.perfSlackChannel}")
+
     }
 
     if (config.securityScan) {
