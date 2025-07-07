@@ -49,7 +49,7 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while (loopCount < previousRunsLimit+1) {
+    while ((loopCount < previousRunsLimit+1) && (previousBuild.result != null)) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
