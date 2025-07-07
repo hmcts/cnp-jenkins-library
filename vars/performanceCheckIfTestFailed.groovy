@@ -12,7 +12,7 @@ def call(String user) {
   def threshold2 = 5
   def previousBuild = currentBuild
   def previousRunsLimit = 0
-  def loopCount = 1
+  def loopCount = 0
   def failureCount = 0
   def resultList = []
   def constantFailure = 0
@@ -49,7 +49,7 @@ def call(String user) {
 
     //Create fail list
     previousBuild = currentBuild
-    while ((loopCount < previousRunsLimit+1) && (previousBuild != null)) {
+    while ((loopCount < previousRunsLimit) && (previousBuild != null)) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
         failureCount++
@@ -77,7 +77,7 @@ def call(String user) {
         -----------------------------
         This test has failed ${constantFailure} times in a row since ${buildDate}
         -----------------------------
-        The below list shows the last ${previousRunsLimit-1} runs.
+        The below list shows the last ${previousRunsLimit} runs.
         ${resultList}
         -----------------------------
         Last commit on this repo:
