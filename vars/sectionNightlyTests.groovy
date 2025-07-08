@@ -102,7 +102,6 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {
           break
         }
-
       }
 
       //Alerts wil become active if config.gatlingAlerts is set to true

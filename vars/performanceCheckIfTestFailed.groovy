@@ -26,14 +26,15 @@ def call(String user) {
   }
 
   //Find number of fails in a row
-  def buildDate, id
+  def buildDate = []
+  def id = []
   def constantFailure = 0
   if (currentBuild.result == 'FAILURE') {
     previousBuild = currentBuild
     while (previousBuild.result == "FAILURE") {
       constantFailure++
-      buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
-      id = previousBuild.id
+      buildDate.add(new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss"))
+      id.add(previousBuild.id)
       previousBuild = previousBuild?.previousBuild
     }
 
@@ -61,7 +62,7 @@ def call(String user) {
       *ALERT*
       ${env.JOB_NAME}
       -----------------------------
-      This test has failed ${constantFailure} times in a row since ${buildDate} and build id was ${id}
+      This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]} and build id was ${id[-2]}
       -----------------------------
       The below list shows the last ${previousRunsLimit} runs.
       ${resultList[0..previousRunsLimit - 1]}
