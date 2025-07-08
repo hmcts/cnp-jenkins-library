@@ -14,7 +14,7 @@ def call(String user) {
 
   //Get recent commits
   def commits = sh(
-    script: "git log -n 3 --pretty=format:'%an | %ad | %s' --date=short",
+    script: "git log -n 3 --pretty=format:'%an, %ad, %s' --date=short",
     returnStdout: true
   ).trim()
 
