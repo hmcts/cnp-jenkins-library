@@ -54,6 +54,7 @@ def call(String user) {
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
 
+    //Build the body text
     def body =
       """  -----------------------------
       *ALERT*
@@ -74,7 +75,7 @@ def call(String user) {
       -----------------------------"""
 
     //Send slack message to channel or user
-    if (threshold1 >= constantFailure)
+    if (constantFailure >= threshold1)
       sendSlackMessage("${user}", colour, "${body}")
   }
 }
