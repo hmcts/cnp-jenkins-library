@@ -56,23 +56,23 @@ def call(String user) {
 
     //Build the body text
     def body =
-      """  -----------------------------
-      *ALERT*
-      ${env.JOB_NAME}
-      -----------------------------
-      This test has failed ${constantFailure} times in a row since ${buildDate} and build id was ${id}
-      -----------------------------
-      The below list shows the last ${previousRunsLimit} runs.
-      ${resultList[0..previousRunsLimit - 1]}
-      -----------------------------
-      Last commit on this repo:
-      ${commits}
-      -----------------------------
-      Last test details:
-      > *Job Name:* ${env.JOB_NAME}
-      > *Build Number:* ${env.BUILD_NUMBER}
-      > *Build URL:* ${env.BUILD_URL}
-      -----------------------------"""
+      """-----------------------------
+    *ALERT*
+    ${env.JOB_NAME}
+    -----------------------------
+    This test has failed ${constantFailure} times in a row since ${buildDate} and build id was ${id}
+    -----------------------------
+    The below list shows the last ${previousRunsLimit} runs.
+    ${resultList[0..previousRunsLimit - 1]}
+    -----------------------------
+    Last commit on this repo:
+    ${commits}
+    -----------------------------
+    Last test details:
+    > *Job Name:* ${env.JOB_NAME}
+    > *Build Number:* ${env.BUILD_NUMBER}
+    > *Build URL:* ${env.BUILD_URL}
+    -----------------------------"""
 
     //Send slack message to channel or user
     if (constantFailure >= threshold1)
