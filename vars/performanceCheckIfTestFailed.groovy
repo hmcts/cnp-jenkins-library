@@ -71,7 +71,6 @@ def call(String user) {
       ${commits}
       -----------------------------
       Last test details:
-      > *Job Name:* ${env.JOB_NAME}
       > *Build Number:* ${env.BUILD_NUMBER}
       > *Build URL:* ${env.BUILD_URL}
       -----------------------------
