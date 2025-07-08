@@ -27,7 +27,7 @@ def call(String user) {
     previousBuild = previousBuild?.previousBuild
   }
   def commits = sh(
-    script: "git log -n 5 --pretty=format:'%h | %an | %ad | %s' --date=short",
+    script: "git log -n 1 --pretty=format:'%h | %an | %ad | %s' --date=short",
     returnStdout: true
   ).trim()
 
@@ -88,7 +88,7 @@ def call(String user) {
         ${resultList[0..previousRunsLimit-1]}
         -----------------------------
         Last commit on this repo:
-        ${commitMessage}
+        ${commits}
         -----------------------------
         Last test details:
         > *Job Name:* ${env.JOB_NAME}
