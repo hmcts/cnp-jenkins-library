@@ -27,12 +27,12 @@ def call(String user) {
     previousBuild = previousBuild?.previousBuild
   }
   def commits = sh(
-    script: "git log -n 1 --pretty=format:'%h | %an | %ad | %s' --date=short",
+    script: "git log -n 1 --pretty=format:'%an | %ad | %s' --date=short",
     returnStdout: true
   ).trim()
 
   echo "Recent commits:\n${commits}"
-
+  //'%h |
   //previousRunsLimit = previousRunsLimit - 1
   //echo "${currentBuild.changeSets}"
   //Find number of fails in a row
