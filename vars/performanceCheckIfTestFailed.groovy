@@ -56,7 +56,8 @@ def call(String user) {
 
     //Build the body text
     def body =
-    """-----------------------------
+      """
+      -----------------------------
       *ALERT*
       ${env.JOB_NAME}
       -----------------------------
@@ -72,7 +73,8 @@ def call(String user) {
       > *Job Name:* ${env.JOB_NAME}
       > *Build Number:* ${env.BUILD_NUMBER}
       > *Build URL:* ${env.BUILD_URL}
-      -----------------------------"""
+      -----------------------------
+      """
 
     //Send slack message to channel or user
     if (constantFailure >= threshold1)
