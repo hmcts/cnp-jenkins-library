@@ -90,11 +90,13 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
 
-        //Rerun test if not started by chron job and if first run failed
+        //Check if build started by chron job
         def causes = currentBuild.rawBuild.getCauses()
         def triggeredByTimer = causes.any { cause ->
           cause.getClass().getSimpleName() == "TimerTriggerCause"
         }
+
+        //Rerun failed test if started by chron job
         if (triggeredByTimer == false) {
           break
         } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {

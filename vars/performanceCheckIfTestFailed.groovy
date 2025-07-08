@@ -11,56 +11,39 @@ def call(String user) {
   def threshold1 = 3
   def threshold2 = 5
   def previousBuild = currentBuild
-  def previousRunsLimit = 0
-  def loopCount = 0
-  def failureCount = 0
-  def resultList = []
-  def constantFailure = 0
-  def buildDate
-  def commitMessage
-  def lastCommitDate
-  def id
+
+  //Get recent commits
+  def commits = sh(
+    script: "git log -n 3 --pretty=format:'%an | %ad | %s' --date=short",
+    returnStdout: true
+  ).trim()
 
   //Check how many runs this repo has
+  def previousRunsLimit = 0
   while (previousBuild != null) {
     previousRunsLimit++
     previousBuild = previousBuild?.previousBuild
   }
-  def commits = sh(
-    script: "git log -n 1 --pretty=format:'%an | %ad | %s' --date=short",
-    returnStdout: true
-  ).trim()
 
-  echo "Recent commits:\n${commits}"
-  //'%h |
-  //previousRunsLimit = previousRunsLimit - 1
-  //echo "${currentBuild.changeSets}"
   //Find number of fails in a row
+  def buildDate, id
+  def constantFailure = 0
   if (currentBuild.result == 'FAILURE') {
     previousBuild = currentBuild
     while (previousBuild.result == "FAILURE") {
       constantFailure++
       buildDate = new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss")
       id = previousBuild.id
-      echo "YR: " + env.GIT_COMMIT
-      if (previousBuild && previousBuild.changeSets) {
-        def lastChangeSet = previousBuild.changeSets[-1]
-        def lastCommit = lastChangeSet.items?.last()
-        if (lastCommit) {
-          lastCommitDateMessage =  "${lastCommit.msg}"
-          lastCommitDateAuthor = "$lastCommit.author}"
-          lastCommitDate = new Date(lastCommit.timestamp).format('yyyy-MM-dd HH:mm:ss')}
-        }
-
       previousBuild = previousBuild?.previousBuild
     }
 
     //Create fail list
+    def loopCount = 0
+    def resultList = []
     previousBuild = currentBuild
     while ((loopCount < previousRunsLimit) && (previousBuild != null)) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
-        failureCount++
       } else {
         resultList.add('Pass')
       }
@@ -70,37 +53,32 @@ def call(String user) {
 
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
-    echo "yr: commit date - ${lastCommitDate}"
 
-    //Create slack message body
-    if (constantFailure > threshold1) {
-      commitMessage = (buildDate > lastCommitDate) ? "There has been no commit to the repo since ${lastCommitDate} the date this test started failing."
-        : "There was a commit on ${lastCommitDate} and test is still failing."
+    def body =
+      """  -----------------------------
+      *ALERT*
+      ${env.JOB_NAME}
+      -----------------------------
+      This test has failed ${constantFailure} times in a row since ${buildDate} and build id was ${id}
+      -----------------------------
+      The below list shows the last ${previousRunsLimit} runs.
+      ${resultList[0..previousRunsLimit - 1]}
+      -----------------------------
+      Last commit on this repo:
+      ${commits}
+      -----------------------------
+      Last test details:
+      > *Job Name:* ${env.JOB_NAME}
+      > *Build Number:* ${env.BUILD_NUMBER}
+      > *Build URL:* ${env.BUILD_URL}
+      -----------------------------"""
 
-      def body =
-        """-----------------------------
-        *ALERT*
-        ${env.JOB_NAME}
-        -----------------------------
-        This test has failed ${constantFailure} times in a row since ${buildDate} and build id was ${id}
-        -----------------------------
-        The below list shows the last ${previousRunsLimit} runs.
-        ${resultList[0..previousRunsLimit-1]}
-        -----------------------------
-        Last commit on this repo:
-        ${commits}
-        -----------------------------
-        Last test details:
-        > *Job Name:* ${env.JOB_NAME}
-        > *Build Number:* ${env.BUILD_NUMBER}
-        > *Build URL:* ${env.BUILD_URL}
-        -----------------------------"""
-
-      //Send slack message to channel or user
+    //Send slack message to channel or user
+    if (threshold1 >= constantFailure)
       sendSlackMessage("${user}", colour, "${body}")
-    }
   }
 }
+
 
 
 
