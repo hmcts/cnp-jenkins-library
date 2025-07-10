@@ -62,7 +62,7 @@ def call(String user) {
     def body =
 """
 ---------------------------------------------
-*ALERT:* ${testName[1]} (<"${env.BUILD_URL}"|"Build ${env.BUILD_ID}">)
+*ALERT:* ${testName[1]} ("<${env.BUILD_URL}|Build ${env.BUILD_NUMBER}>")
 ---------------------------------------------
 This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}. Last ${previousRunsLimit} runs:
 > New -> Old ${resultList[0..previousRunsLimit - 1]}
