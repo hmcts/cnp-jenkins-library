@@ -88,8 +88,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                   )
                 }
               }
-              currentBuild.result = "SUCCESS"
+
             }
+            currentBuild.result = "SUCCESS"
         }
 
         //Check if build started by chron job
