@@ -70,10 +70,10 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         parallel(crossBrowserStages)
       }
     }
-
+    int i
     if (config.performanceTest) {
       def stages = ['Performance test', 'Failed Test Rerun']
-      for (int i = 0; i < 2; i++) {
+      for (i = 0; i < 2; i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
@@ -102,6 +102,10 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {
           break
         }
+
+        if (i == 1)
+          echo "hi"
+
       }
 
       //Alerts wil become active if config.gatlingAlerts is set to true

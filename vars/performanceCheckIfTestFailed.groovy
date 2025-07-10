@@ -56,8 +56,9 @@ def call(String user) {
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
     def matches = ("${env.JOB_NAME}" =~ /job\/.*\/(.*)\/job\/master/)
-    def testName = matches.find() ? matches.group(1)
-
+    //def testName = matches.find() ? matches.group(1) : "nothing found"
+    if (matches.find())
+      matches.group(1)
     //Build the body text
     def body =
 """
