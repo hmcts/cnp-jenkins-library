@@ -41,7 +41,9 @@ def call(String user) {
     //Create fail list
     def loopCount = 0
     def resultList = []
-    previousRunsLimit = 5
+    if (previousRunsLimit >= 5)
+      previousRunsLimit = 5
+
     previousBuild = currentBuild
     while ((loopCount < previousRunsLimit) && (previousBuild != null)) {
       if ((previousBuild.result == 'FAILURE')) {
