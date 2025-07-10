@@ -107,7 +107,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
 
 
       }
-      currentBuild.result = "SUCCESS"
+      currentBuild.previousBuild.result = "SUCCESS"
       //Alerts wil become active if config.gatlingAlerts is set to true
       if (config.perfGatlingAlerts == true)
         performanceCheckIfTestFailed("${config.perfSlackChannel}")
