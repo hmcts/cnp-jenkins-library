@@ -74,7 +74,6 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     if (config.performanceTest) {
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
-        try {
           stageWithAgent(stages[i], product) {
             warnError('Failure in performanceTest') {
               pcr.callAround('PerformanceTest') {
@@ -89,9 +88,6 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                 }
               }
             }
-          }
-        } catch (e) {
-          echo "second stage failed"
         }
 
         //Check if build started by chron job
@@ -106,9 +102,6 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {
           break
         }
-
-        if (i == 1)
-          echo "hi"
 
       }
 

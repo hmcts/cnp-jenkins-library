@@ -66,8 +66,7 @@ def call(String user) {
 *ALERT:* ${testName[1]}
 * Build URL: ${env.BUILD_URL}
 ---------------------------------------------
-This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}.
-Last ${previousRunsLimit} runs:
+This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}. Last ${previousRunsLimit} runs:
 * New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
