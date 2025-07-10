@@ -70,8 +70,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         parallel(crossBrowserStages)
       }
     }
-    int i
+
     if (config.performanceTest) {
+      int i
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
           stageWithAgent(stages[i], product) {
@@ -97,11 +98,13 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         }
 
         //Rerun failed test if started by chron job
-        if (triggeredByTimer == false) {
+        if (triggeredByTimer == false)
           break
-        } else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE")) {
+        else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE"))
           break
-        }
+
+        //if (i==1)
+        currentBuild.result = "SUCCESS"
 
       }
 

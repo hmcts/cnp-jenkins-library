@@ -45,11 +45,10 @@ def call(String user) {
       previousRunsLimit = 5
     previousBuild = currentBuild
     while ((loopCount < previousRunsLimit) && (previousBuild != null)) {
-      if ((previousBuild.result == 'FAILURE')) {
+      if ((previousBuild.result == 'FAILURE'))
         resultList.add('Fail')
-      } else {
+      else
         resultList.add('Pass')
-      }
       previousBuild = previousBuild?.previousBuild
       loopCount++
     }
@@ -75,6 +74,7 @@ Last commit on this repo:
     //Send slack message to channel or user
     if (constantFailure >= threshold1)
       sendSlackMessage("${user}", colour, "${body}")
+
   }
 }
 
