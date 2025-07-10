@@ -14,7 +14,7 @@ def call(String user) {
 
   //Get recent commits
   def commits = sh(
-    script: "git log -n 3 --pretty=format:'%an, %ad, %s' --date=short",
+    script: "git log -n 1 --pretty=format:'%an, %ad, %s' --date=short",
     returnStdout: true
   ).trim()
 
@@ -41,6 +41,7 @@ def call(String user) {
     //Create fail list
     def loopCount = 0
     def resultList = []
+    previousRunsLimit = 5
     previousBuild = currentBuild
     while ((loopCount < previousRunsLimit) && (previousBuild != null)) {
       if ((previousBuild.result == 'FAILURE')) {
@@ -54,27 +55,25 @@ def call(String user) {
 
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
+    def matches = ("${env.JOB_NAME}" =~ /job\/.*\/(.*)\/job\/master/)
+    def testName = matches.find() ? matches.group(1)
 
     //Build the body text
     def body =
-      """
-      -----------------------------
-      *ALERT*
-      ${env.JOB_NAME}
-      -----------------------------
-      This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]} and build id was ${id[-2]}
-      -----------------------------
-      The below list shows the last ${previousRunsLimit} runs.
-      ${resultList[0..previousRunsLimit - 1]}
-      -----------------------------
-      Last commit on this repo:
-      ${commits}
-      -----------------------------
-      Last test details:
-      > *Build Number:* ${env.BUILD_NUMBER}
-      > *Build URL:* ${env.BUILD_URL}
-      -----------------------------
-      """
+"""
+-----------------------------
+*ALERT:* ${testName}
+> *Build URL:* ${env.BUILD_URL}
+-----------------------------
+This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]} and build id was ${id[-2]}
+-----------------------------
+The below list shows the last ${previousRunsLimit} runs.
+New -> Old ${resultList[0..previousRunsLimit - 1]}
+-----------------------------
+Last commit on this repo:
+${commits}
+-----------------------------
+"""
 
     //Send slack message to channel or user
     if (constantFailure >= threshold1)
