@@ -43,7 +43,6 @@ def call(String user) {
     def resultList = []
     if (previousRunsLimit >= 5)
       previousRunsLimit = 5
-
     previousBuild = currentBuild
     while ((loopCount < previousRunsLimit) && (previousBuild != null)) {
       if ((previousBuild.result == 'FAILURE')) {
@@ -63,14 +62,13 @@ def call(String user) {
     def body =
 """
 ---------------------------------------------
-*ALERT:* ${testName[1]}
-* Build URL: ${env.BUILD_URL}
+*ALERT:* ${testName[1]} (<"${env.BUILD_URL}"|"Build ${env.BUILD_ID}">)
 ---------------------------------------------
 This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}. Last ${previousRunsLimit} runs:
-* New -> Old ${resultList[0..previousRunsLimit - 1]}
+> New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
-* ${commits}
+> ${commits}
 ---------------------------------------------
 """
 
