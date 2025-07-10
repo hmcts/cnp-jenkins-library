@@ -74,20 +74,24 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     if (config.performanceTest) {
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
-        stageWithAgent(stages[i], product) {
-          warnError('Failure in performanceTest') {
-            pcr.callAround('PerformanceTest') {
-              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                builder.performanceTest()
-                publishPerformanceReports(
-                  product: product,
-                  component: component,
-                  environment: environment.nonProdName,
-                  subscription: subscription
-                )
+        try {
+          stageWithAgent(stages[i], product) {
+            warnError('Failure in performanceTest') {
+              pcr.callAround('PerformanceTest') {
+                timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                  builder.performanceTest()
+                  publishPerformanceReports(
+                    product: product,
+                    component: component,
+                    environment: environment.nonProdName,
+                    subscription: subscription
+                  )
+                }
               }
             }
           }
+        } catch (e) {
+          echo "second stage failed"
         }
 
         //Check if build started by chron job
