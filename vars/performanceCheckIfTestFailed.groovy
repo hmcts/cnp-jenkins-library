@@ -57,22 +57,22 @@ def call(String user) {
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
     def matches = ("${env.JOB_NAME}" =~ /(.*)/)
     def testName
-    if (matches.find())
-      testName = matches.group(1)
+    testName = matches.group(1)
+
     //Build the body text
     def body =
 """
 ---------------------------------------------
 *ALERT:* ${testName}
-> Build URL: ${env.BUILD_URL}
+>Build URL: ${env.BUILD_URL}
 ---------------------------------------------
-This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]} and build id was ${id[-2]}
+This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}
 ---------------------------------------------
 The below list shows the last ${previousRunsLimit} runs.
 New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
-> ${commits}
+>${commits}
 ---------------------------------------------
 """
 
