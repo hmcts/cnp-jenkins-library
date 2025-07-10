@@ -57,7 +57,7 @@ def call(String user) {
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
     def matches = ("${env.JOB_NAME}" =~ /(.*)/)
     def testName
-    testName = matches.group(1)
+    testName = matches.find() ? matches.group(1) : "no name"
 
     //Build the body text
     def body =
