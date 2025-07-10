@@ -14,7 +14,7 @@ def call(String user) {
 
   //Get recent commits
   def commits = sh(
-    script: "git log -n 1 --pretty=format:'%an, %ad, %s' --date=format:'%Y-%m-%d %H:%M:%S'",
+    script: "git log -n 1 --pretty=format:'%an | %ad | %s' --date=format:'%Y-%m-%d %H:%M:%S'",
     returnStdout: true
   ).trim()
 
@@ -66,8 +66,9 @@ def call(String user) {
 *ALERT:* ${testName[1]}
 * Build URL: ${env.BUILD_URL}
 ---------------------------------------------
-This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}
-Last ${previousRunsLimit} runs: New -> Old ${resultList[0..previousRunsLimit - 1]}
+This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}.
+Last ${previousRunsLimit} runs:
+* New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
 * ${commits}
