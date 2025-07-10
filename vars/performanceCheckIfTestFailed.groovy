@@ -64,15 +64,15 @@ def call(String user) {
 """
 ---------------------------------------------
 *ALERT:* ${testName}
->Build URL: ${env.BUILD_URL}
+* Build URL: ${env.BUILD_URL}
 ---------------------------------------------
 This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}
 ---------------------------------------------
-The below list shows the last ${previousRunsLimit} runs.
-New -> Old ${resultList[0..previousRunsLimit - 1]}
+The below list shows the last ${previousRunsLimit} runs:
+* New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
->${commits}
+* ${commits}
 ---------------------------------------------
 """
 
