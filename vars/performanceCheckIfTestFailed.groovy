@@ -57,21 +57,17 @@ def call(String user) {
 
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
-    def matches = ("${env.JOB_NAME}" =~ /(.*)/)
-    def testName
-    testName = matches.find() ? matches.group(1) : "no name"
+    def testName = "${env.JOB_NAME}".split("\\/")
 
     //Build the body text
     def body =
 """
 ---------------------------------------------
-*ALERT:* ${testName}
+*ALERT:* ${testName[1]}
 * Build URL: ${env.BUILD_URL}
 ---------------------------------------------
 This test has failed ${constantFailure-1} times in a row since ${buildDate[-2]}
----------------------------------------------
-The below list shows the last ${previousRunsLimit} runs:
-* New -> Old ${resultList[0..previousRunsLimit - 1]}
+Last ${previousRunsLimit} runs: New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
 * ${commits}
