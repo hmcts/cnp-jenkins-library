@@ -82,7 +82,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
 
                 pcr.callAround('PerformanceTest') {
                   timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    //catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                       builder.performanceTest()
                       publishPerformanceReports(
                         product: product,
@@ -91,7 +91,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                         subscription: subscription
                       )
                     }
-                  }
+                  //}
                 }
               }
             }
