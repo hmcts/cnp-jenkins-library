@@ -72,6 +72,13 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.performanceTest) {
+
+      //Check if build started by chron job
+      def causes = currentBuild.rawBuild.getCauses()
+      def triggeredByTimer = causes.any { cause ->
+        cause.getClass().getSimpleName() == "TimerTriggerCause"
+      }
+
       int i
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
@@ -82,6 +89,8 @@ def call(pcr, config, pipelineType, String product, String component, String sub
 
                 pcr.callAround('PerformanceTest') {
                   timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                    echo "yogi - ${currentBuild.result}"
+                    //if (i == 0) && (triggeredByTimer == false)
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                       builder.performanceTest()
                       publishPerformanceReports(
@@ -95,14 +104,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                 }
               }
             }
-            currentBuild.result = "SUCCESS"
         }
 
-        //Check if build started by chron job
-        def causes = currentBuild.rawBuild.getCauses()
-        def triggeredByTimer = causes.any { cause ->
-          cause.getClass().getSimpleName() == "TimerTriggerCause"
-        }
+
 
         //Rerun failed test if started by chron job
         if (triggeredByTimer == false)
