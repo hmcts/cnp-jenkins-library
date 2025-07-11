@@ -89,22 +89,26 @@ def call(pcr, config, pipelineType, String product, String component, String sub
 
                 pcr.callAround('PerformanceTest') {
                   timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                    echo "yogi - ${currentBuild.result}"
-                    //if (i == 0) && (triggeredByTimer == false)
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    if (i == 0) {
+                      catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        builder.performanceTest()
+                      }
+                    }
+                    else {
                       builder.performanceTest()
-                      publishPerformanceReports(
-                        product: product,
-                        component: component,
-                        environment: environment.nonProdName,
-                        subscription: subscription
-                      )
+                    }
+                    publishPerformanceReports(
+                      product: product,
+                      component: component,
+                      environment: environment.nonProdName,
+                      subscription: subscription
+                    )
                     }
                   //}
                 }
               }
             }
-        }
+
 
 
 
