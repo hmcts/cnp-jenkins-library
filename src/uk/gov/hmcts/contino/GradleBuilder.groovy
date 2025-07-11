@@ -70,7 +70,7 @@ class GradleBuilder extends AbstractBuilder {
       gradle("--rerun-tasks functional")
     } finally {
       if (product == "civil") {
-        localSteps.junit allowEmptyResults: true, '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+        localSteps.junit allowEmptyResults: true, testResults: '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       } else {
         localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       }
