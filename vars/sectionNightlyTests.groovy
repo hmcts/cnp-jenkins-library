@@ -76,8 +76,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
           stageWithAgent(stages[i], product) {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+
               warnError('Failure in performanceTest') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                 pcr.callAround('PerformanceTest') {
                   timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
                     builder.performanceTest()
