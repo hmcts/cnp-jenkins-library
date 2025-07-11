@@ -91,10 +91,6 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                 }
               }
             }
-
-              sh 'exit 1'  // Simulate failure
-              firstStagePassed = true
-            }
             currentBuild.result = "SUCCESS"
         }
 
