@@ -55,6 +55,8 @@ def call(String user) {
 
     //Set colour for slack message
     def colour = (constantFailure >= threshold2) ? "danger" : "warning"
+
+    //Extract actual test name from job name
     def testName = "${env.JOB_NAME}".split("\\/")
 
     //Build the body text

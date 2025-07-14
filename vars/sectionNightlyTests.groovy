@@ -82,35 +82,27 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       int i
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
-        //catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-          stageWithAgent(stages[i], product) {
-
-              warnError('Failure in performanceTest') {
-
-                pcr.callAround('PerformanceTest') {
-                  timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                    if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)){
-                      catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        builder.performanceTest()
-                      }
-                    }
-                    else {
-                      builder.performanceTest()
-                    }
-                    publishPerformanceReports(
-                      product: product,
-                      component: component,
-                      environment: environment.nonProdName,
-                      subscription: subscription
-                    )
-                    }
-                  //}
+        stageWithAgent(stages[i], product) {
+          warnError('Failure in performanceTest') {
+            pcr.callAround('PerformanceTest') {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
+                  catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    builder.performanceTest()
+                  }
+                } else {
+                  builder.performanceTest()
                 }
+                publishPerformanceReports(
+                  product: product,
+                  component: component,
+                  environment: environment.nonProdName,
+                  subscription: subscription
+                )
               }
             }
-
-
-
+          }
+        }
 
         //Rerun failed test if started by chron job
         if (triggeredByTimer == false)
@@ -118,10 +110,8 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE"))
           break
 
-        //if (i==1)
-
-
       }
+
       //Alerts wil become active if config.gatlingAlerts is set to true
       if (config.perfGatlingAlerts == true)
         performanceCheckIfTestFailed("${config.perfSlackChannel}")
