@@ -89,7 +89,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
                 if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    doSecondRun = true
+                    //doSecondRun = true
                     builder.performanceTest()
                   }
                 } else {
