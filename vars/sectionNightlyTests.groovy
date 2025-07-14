@@ -80,6 +80,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
 
       int i
+      boolean doSecondRun = false
       def stages = ['Performance test', 'Failed Test Rerun']
       for (i = 0; i < 2; i++) {
         stageWithAgent(stages[i], product) {
@@ -88,6 +89,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
                 if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    doSecondRun = true
                     builder.performanceTest()
                   }
                 } else {
@@ -107,7 +109,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         //Rerun failed test if started by chron job
         if (triggeredByTimer == false)
           break
-        else if ((config.perfRerunOnFail == true) && (currentBuild.result != "FAILURE"))
+        else if ((config.perfRerunOnFail == true) && (doSecondRun = false))
           break
 
       }
