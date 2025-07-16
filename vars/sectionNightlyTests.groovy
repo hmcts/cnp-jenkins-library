@@ -98,7 +98,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                     }
                   }
                 } else {
-                  builder.performanceTest()
+                  catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    builder.performanceTest()
+                  }
                 }
 
                 publishPerformanceReports(
