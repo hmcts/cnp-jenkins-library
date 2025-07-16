@@ -94,6 +94,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                     }
                     catch (e) {
                       doSecondRun = true
+                      throw e
                     }
                   }
                 } else {
