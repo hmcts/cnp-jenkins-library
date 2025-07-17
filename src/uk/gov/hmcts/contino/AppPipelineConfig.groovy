@@ -41,7 +41,9 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int fullFunctionalTestTimeout = 30
   int securityScanTimeout = 120
 
-  //perftest vars wip
+  // Performance test stages configuration
+  boolean performanceTestStages = false
+  int performanceTestStagesTimeout = 30
   String dynatraceApiHost = "Test"
   String dynatraceEventIngestEndpoint
     Map<String, Object> eventIngestDetails = [:]

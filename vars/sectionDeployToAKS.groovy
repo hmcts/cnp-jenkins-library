@@ -192,6 +192,28 @@ def call(params) {
               }
             }
           }
+          // Performance Test Stages - empty placeholder for now
+          if (config.performanceTestStages) {
+            stageWithAgent("Performance Test Stages - ${environment}", product) {
+              testEnv(aksUrl) {
+                def success = true
+                try {
+                  pcr.callAround("performanceTestStages:${environment}") {
+                    timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Performance Test Stages - ${environment}") {
+                      echo "Performance Test Stages - ${environment} stage is enabled but not implemented yet"
+                      echo "Environment: ${environment}"
+                      echo "Test URL: ${env.TEST_URL}"
+                      echo "Environment Name: ${env.ENVIRONMENT_NAME}"
+                      // Teams will implement their API calls here
+                    }
+                  }
+                } catch (err) {
+                  success = false
+                  throw err
+                }
+              }
+            }
+          }
 
 
           onMaster {
