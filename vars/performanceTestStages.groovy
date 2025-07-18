@@ -14,12 +14,16 @@ performanceTestStages
    - environment: String environment name (required)
    - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
    - testUrl: String test URL for the environment (optional, uses env.TEST_URL if not provided)
-   - secrets: Map of vault secrets to load (optional)
+   - secrets: Map of vault secrets configuration (optional, used for documentation only - secrets should be loaded in main pipeline)
    - syntheticTestId: String Dynatrace synthetic test ID (optional, overrides config)
    - dashboardId: String Dynatrace dashboard ID (optional, overrides config)
    - entitySelector: String Dynatrace entity selector (optional, overrides config)
    - maxStatusChecks: Integer maximum number of status checks (optional, defaults to 16)
    - statusCheckInterval: Integer seconds between status checks (optional, defaults to 20)
+   
+ Prerequisites:
+   - Vault secrets must be loaded in the main pipeline using loadVaultSecrets()
+   - Required environment variables: PERF_SYNTHETIC_MONITOR_TOKEN, PERF_METRICS_TOKEN, PERF_EVENT_TOKEN, PERF_SYNTHETIC_UPDATE_TOKEN
 
  Global defaults provided by DynatraceClient:
    - dynatraceApiHost: "https://yrk32651.live.dynatrace.com/"
@@ -89,7 +93,9 @@ def call(Map params) {
   }
 
   if (params.secrets) {
-    loadVaultSecrets(params.secrets)
+    echo "Vault secrets will be loaded by the calling pipeline"
+    // Note: loadVaultSecrets should be called in the main pipeline before this function
+    // The secrets are already available as environment variables at this point
   }
 
   echo "Starting performance test execution..."
