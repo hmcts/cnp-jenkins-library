@@ -192,7 +192,6 @@ def call(params) {
               }
             }
           }
-          // Performance Test Stages - empty placeholder for now
           if (config.performanceTestStages) {
             stageWithAgent("Performance Test Stages - ${environment}", product) {
               testEnv(aksUrl) {
@@ -200,16 +199,23 @@ def call(params) {
                 try {
                   pcr.callAround("performanceTestStages:${environment}") {
                     timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Performance Test Stages - ${environment}") {
-                      echo "Performance Test Stages - ${environment} stage is enabled but not implemented yet"
-                      echo "Environment: ${environment}"
-                      echo "Test URL: ${env.TEST_URL}"
-                      echo "Environment Name: ${env.ENVIRONMENT_NAME}"
-                      // Teams will implement their API calls here
+                      performanceTestStages([
+                        product: product,
+                        component: component,
+                        environment: environment,
+                        testUrl: env.TEST_URL,
+                        secrets: config.vaultSecrets
+                      ])
                     }
                   }
                 } catch (err) {
                   success = false
                   throw err
+                } finally {
+                  savePodsLogs(dockerImage, params, "performance-stages")
+                  if (!success) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                  }
                 }
               }
             }
