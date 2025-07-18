@@ -195,33 +195,30 @@ class DynatraceClient implements Serializable {
     return response
   }
 
-  static Map<String, Object> setEnvironmentConfig(Map config, String envName) {
-    def updatedConfig = [:]
-    updatedConfig.putAll(config)
-    
+  static def setEnvironmentConfig(def config, String envName) {
     switch (envName) {
       case "preview":
-        updatedConfig.dynatraceSyntheticTest = config.dynatraceSyntheticTestPreview
-        updatedConfig.dynatraceDashboardId = config.dynatraceDashboardIdPreview
-        updatedConfig.dynatraceDashboardURL = config.dynatraceDashboardURLPreview
-        updatedConfig.dynatraceEntitySelector = config.dynatraceEntitySelectorPreview
+        config.dynatraceSyntheticTest = config.dynatraceSyntheticTestPreview
+        config.dynatraceDashboardId = config.dynatraceDashboardIdPreview
+        config.dynatraceDashboardURL = config.dynatraceDashboardURLPreview
+        config.dynatraceEntitySelector = config.dynatraceEntitySelectorPreview
         break
       case "aat":
-        updatedConfig.dynatraceSyntheticTest = config.dynatraceSyntheticTestAAT
-        updatedConfig.dynatraceDashboardId = config.dynatraceDashboardIdAAT
-        updatedConfig.dynatraceDashboardURL = config.dynatraceDashboardURLAAT
-        updatedConfig.dynatraceEntitySelector = config.dynatraceEntitySelectorAAT
+        config.dynatraceSyntheticTest = config.dynatraceSyntheticTestAAT
+        config.dynatraceDashboardId = config.dynatraceDashboardIdAAT
+        config.dynatraceDashboardURL = config.dynatraceDashboardURLAAT
+        config.dynatraceEntitySelector = config.dynatraceEntitySelectorAAT
         break
       case "perftest":
-        updatedConfig.dynatraceSyntheticTest = config.dynatraceSyntheticTest
-        updatedConfig.dynatraceDashboardId = config.dynatraceDashboardIdPerfTest
-        updatedConfig.dynatraceDashboardURL = config.dynatraceDashboardURLPerfTest
-        updatedConfig.dynatraceEntitySelector = config.dynatraceEntitySelectorPerfTest
+        config.dynatraceSyntheticTest = config.dynatraceSyntheticTest
+        config.dynatraceDashboardId = config.dynatraceDashboardIdPerfTest
+        config.dynatraceDashboardURL = config.dynatraceDashboardURLPerfTest
+        config.dynatraceEntitySelector = config.dynatraceEntitySelectorPerfTest
         break
       default:
         throw new IllegalArgumentException("Unknown environment: ${envName}")
     }
     
-    return updatedConfig
+    return config
   }
 }
