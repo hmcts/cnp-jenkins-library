@@ -223,6 +223,23 @@ def call(Map params) {
       }
     }
 
+    //Disable the synthetic once triggered for preview env
+    if (testUrl && environment == 'preview') {
+    echo "Disabling Dynatrace Synthetic Test for preview environment..."
+    echo "Custom URL: ${testUrl}"
+    try {
+      def updateResult = dynatraceClient.updateSyntheticTest(
+        config.dynatraceApiHost,
+        config.dynatraceUpdateSyntheticEndpoint,
+        syntheticTestId,
+        false,
+        testUrl
+      )
+    } catch (Exception e) {
+      echo "Warning: Failed to update Dynatrace synthetic test: ${e.message}"
+    }
+  }
+
   } catch (Exception e) {
     echo "Error in performance test execution: ${e.message}"
     currentBuild.result = 'UNSTABLE'
