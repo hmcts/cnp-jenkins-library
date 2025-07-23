@@ -92,12 +92,6 @@ def call(Map params) {
     return
   }
 
-  if (params.secrets) {
-    echo "Vault secrets will be loaded by the calling pipeline"
-    // Note: loadVaultSecrets should be called in the main pipeline before this function
-    // The secrets are already available as environment variables at this point
-  }
-
   echo "Starting performance test execution..."
   echo "Product: ${params.product}"
   echo "Component: ${params.component}"
