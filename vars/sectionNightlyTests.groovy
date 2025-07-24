@@ -75,14 +75,15 @@ def call(pcr, config, pipelineType, String product, String component, String sub
 
       //Check if build started by chron job
       def causes = currentBuild.rawBuild.getCauses()
-      def triggeredByTimer = causes.any { cause ->
-        cause.getClass().getSimpleName() == "TimerTriggerCause"
-      }
+      //def triggeredByTimer = causes.any { cause ->
+      //  cause.getClass().getSimpleName() == "TimerTriggerCause"
+      //}
+      def triggeredByTimer = true
 
-      int i
+
       boolean doSecondRun = false
       def stages = ['Performance test', 'Failed Test Rerun']
-      for (i = 0; i < 2; i++) {
+      for (int i = 0; i < 2; i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {

@@ -9,7 +9,7 @@
 def call(String user) {
 
   def threshold1 = 3
-  def threshold2 = 5
+  def threshold2 = 6
   def previousBuild = currentBuild
 
   //Get recent commits
