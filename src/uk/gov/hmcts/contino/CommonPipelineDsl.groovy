@@ -5,7 +5,6 @@ abstract class CommonPipelineDsl implements Serializable {
   def final config
   def final steps
 
-
   CommonPipelineDsl(steps, callbacks, config) {
     this.callbacks = callbacks
     this.config = config

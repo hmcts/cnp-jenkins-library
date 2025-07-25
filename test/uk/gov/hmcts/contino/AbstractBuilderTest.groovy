@@ -24,7 +24,6 @@ class AbstractBuilderTest extends Specification {
       builder.performanceTest()
     then:
       1 * mockGatling.execute()
-
   }
 
   def "security calls 'securitytest.execute()'"() {
