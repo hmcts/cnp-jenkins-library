@@ -11,14 +11,15 @@ class DynatraceClient implements Serializable {
   public static final String DEFAULT_METRIC_INGEST_ENDPOINT = "api/v2/metrics/ingest"
   public static final String DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT = "api/v2/synthetic/executions/batch"
   public static final String DEFAULT_UPDATE_SYNTHETIC_ENDPOINT = "api/v1/synthetic/monitors/"
-  
+  public static final String DEFAULT_GET_SYNTHETICS_EXECUTIONS_ENDPOINT = "api/v2/synthetic/executions/"
+
   def steps
 
   DynatraceClient(steps) {
     this.steps = steps
   }
 
-  def postEvent(String dynatraceApiHost, String syntheticTest, String dashboardId, String entitySelector, String product, String component) {
+  def postEvent(String syntheticTest, String dashboardId, String entitySelector, String product, String component) {
     def response = null
     try {
       response = steps.httpRequest(
@@ -29,7 +30,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_EVENT_TOKEN}"]
         ],
-        url: "${dynatraceApiHost}api/v2/events/ingest",
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_EVENT_INGEST_ENDPOINT}",
         requestBody: """{
           "entitySelector": "${entitySelector}",
           "eventType": "CUSTOM_INFO",
@@ -41,7 +42,7 @@ class DynatraceClient implements Serializable {
             "Commit ID": "${steps.env.GIT_COMMIT}",
             "Build URL": "${steps.env.BUILD_URL}", 
             "Synthetic Performance Test": "${syntheticTest}",
-            "Performance Dashboard": "${dynatraceApiHost}#dashboard;id=${dashboardId};applyDashboardDefaults=true"
+            "Performance Dashboard": "${DEFAULT_DYNATRACE_API_HOST}#dashboard;id=${dashboardId};applyDashboardDefaults=true"
           },
           "timeout": 1,
           "title": "${product.toUpperCase()}-${component.toUpperCase()} Performance Event"
@@ -54,7 +55,7 @@ class DynatraceClient implements Serializable {
     return response
   }
 
-  def postMetric(String dynatraceApiHost, String metricIngestEndpoint, String metricType, String metricTag, String environment) {
+  def postMetric(String metricType, String metricTag, String environment) {
     def response = null
     try {
       response = steps.httpRequest(
@@ -65,7 +66,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_METRICS_TOKEN}"]
         ],
-        url: "${dynatraceApiHost}${metricIngestEndpoint}",
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_METRIC_INGEST_ENDPOINT}",
         requestBody: "env.release.value,type=${metricType},tag=${metricTag},env=${environment} 3"
       ) 
       steps.echo "Dynatrace metric posted successfully. Response ${response}"
@@ -75,7 +76,7 @@ class DynatraceClient implements Serializable {
     return response
   }
 
-  def triggerSyntheticTest(String dynatraceApiHost, String triggerSyntheticEndpoint, String syntheticTest) {
+  def triggerSyntheticTest(String syntheticTest) {
     def response = null
     try {
       response = steps.httpRequest(
@@ -86,7 +87,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_MONITOR_TOKEN}"]
         ],
-        url: "${dynatraceApiHost}${triggerSyntheticEndpoint}",
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT}",
         requestBody: """{
           "monitors": [
             {
@@ -120,7 +121,7 @@ class DynatraceClient implements Serializable {
     ]
   }
 
-  def getSyntheticStatus(String dynatraceApiHost, String lastExecutionId) {
+  def getSyntheticStatus(String lastExecutionId) {
     def response = null
     try {
       response = steps.httpRequest(
@@ -131,7 +132,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_MONITOR_TOKEN}"]
         ],
-        url: "${dynatraceApiHost}api/v2/synthetic/executions/${lastExecutionId}"
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_GET_SYNTHETICS_EXECUTIONS_ENDPOINT}${lastExecutionId}"
       )
       steps.echo "Check Synthetic Status: Response ${response}"
     } catch (Exception e) {
@@ -151,7 +152,7 @@ class DynatraceClient implements Serializable {
     ]
   }
 
-  def updateSyntheticTest(String dynatraceApiHost, String updateSyntheticEndpoint, String syntheticTest, boolean enabled, String customUrl = null) {
+  def updateSyntheticTest(String syntheticTest, boolean enabled, String customUrl = null) {
     def response = null
     try {
       def getResponse = steps.httpRequest(
@@ -162,7 +163,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_MONITOR_TOKEN}"]
         ],
-        url: "${dynatraceApiHost}${updateSyntheticEndpoint}${syntheticTest}"
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${syntheticTest}"
       )
       
       def json = new JsonSlurper().parseText(getResponse.content)
@@ -182,7 +183,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_UPDATE_TOKEN}"]
         ],
-        url: "${dynatraceApiHost}${updateSyntheticEndpoint}${syntheticTest}",
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${syntheticTest}",
         requestBody: modifiedRequestBody
       )
       steps.echo "Dynatrace synthetic test updated. Response ${response}"

@@ -25,12 +25,9 @@ performanceTestStages
    - Vault secrets must be loaded in the main pipeline using loadVaultSecrets()
    - Required environment variables: PERF_SYNTHETIC_MONITOR_TOKEN, PERF_METRICS_TOKEN, PERF_EVENT_TOKEN, PERF_SYNTHETIC_UPDATE_TOKEN
 
- Global defaults provided by DynatraceClient:
-   - dynatraceApiHost: "https://yrk32651.live.dynatrace.com/"
-   - dynatraceEventIngestEndpoint: "api/v2/events/ingest"
-   - dynatraceMetricIngestEndpoint: "api/v2/metrics/ingest"
-   - dynatraceTriggerSyntheticEndpoint: "api/v2/synthetic/executions/batch"
-   - dynatraceUpdateSyntheticEndpoint: "api/v1/synthetic/monitors/"
+ Infrastructure constants (not configurable):
+   - DynatraceClient handles all API endpoints and host configuration automatically
+   - Teams only need to configure their specific synthetic test IDs and dashboard values
 
  Example usage:
  performanceTestStages([
@@ -72,17 +69,11 @@ def call(Map params) {
       error("Failed to load configuration from ${configPath}")
     }
     
-    // Apply global defaults for common Dynatrace endpoints
-    config.dynatraceApiHost = config.dynatraceApiHost ?: DynatraceClient.DEFAULT_DYNATRACE_API_HOST
-    config.dynatraceEventIngestEndpoint = config.dynatraceEventIngestEndpoint ?: DynatraceClient.DEFAULT_EVENT_INGEST_ENDPOINT
-    config.dynatraceMetricIngestEndpoint = config.dynatraceMetricIngestEndpoint ?: DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT
-    config.dynatraceTriggerSyntheticEndpoint = config.dynatraceTriggerSyntheticEndpoint ?: DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT
-    config.dynatraceUpdateSyntheticEndpoint = config.dynatraceUpdateSyntheticEndpoint ?: DynatraceClient.DEFAULT_UPDATE_SYNTHETIC_ENDPOINT
-    
+    // Set environment-specific configuration (synthetic test IDs, dashboards, etc.)
     config = DynatraceClient.setEnvironmentConfig(config, environment)
     
     echo "Configuration loaded successfully for environment: ${environment}"
-    echo "API Host: ${config.dynatraceApiHost}"
+    echo "API Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Synthetic Test: ${config.dynatraceSyntheticTest}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
@@ -108,13 +99,12 @@ def call(Map params) {
     def entitySelector = params.entitySelector ?: config.dynatraceEntitySelector
 
     echo "Posting Dynatrace Event..."
-    echo "DT Host: ${config.dynatraceApiHost}"
+    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Entity Selector: ${entitySelector}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
     def postEventResult = dynatraceClient.postEvent(
-      config.dynatraceApiHost,
       syntheticTestId,
       dashboardId,
       entitySelector,
@@ -123,16 +113,14 @@ def call(Map params) {
     )
 
     echo "Posting Dynatrace Metric..."
-    echo "DT Host: ${config.dynatraceApiHost}"
-    echo "Metric Endpoint: ${config.dynatraceMetricIngestEndpoint}"
+    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
+    echo "Metric Endpoint: ${DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT}"
     echo "Metric Type: ${config.dynatraceMetricType}"
     echo "Metric Tag: ${config.dynatraceMetricTag}"
     echo "Environment: ${environment}"
     
     try {
       def postMetricResult = dynatraceClient.postMetric(
-        config.dynatraceApiHost,
-        config.dynatraceMetricIngestEndpoint,
         config.dynatraceMetricType,
         config.dynatraceMetricTag,
         environment
@@ -146,8 +134,6 @@ def call(Map params) {
       echo "Custom URL: ${testUrl}"
       try {
         def updateResult = dynatraceClient.updateSyntheticTest(
-          config.dynatraceApiHost,
-          config.dynatraceUpdateSyntheticEndpoint,
           syntheticTestId,
           true,
           testUrl
@@ -158,15 +144,13 @@ def call(Map params) {
     }
 
     echo "Triggering Dynatrace Synthetic Test..."
-    echo "DT Host: ${config.dynatraceApiHost}"
-    echo "Trigger Endpoint: ${config.dynatraceTriggerSyntheticEndpoint}"
+    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
+    echo "Trigger Endpoint: ${DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT}"
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     echo "Environment: ${environment}"
     
     def triggerResult = dynatraceClient.triggerSyntheticTest(
-      config.dynatraceApiHost,
-      config.dynatraceTriggerSyntheticEndpoint,
       syntheticTestId
     )
 
@@ -187,7 +171,6 @@ def call(Map params) {
       
       try {
         def statusResult = dynatraceClient.getSyntheticStatus(
-          config.dynatraceApiHost,
           lastExecutionId
         )
         
@@ -229,8 +212,6 @@ def call(Map params) {
     echo "Custom URL: ${testUrl}"
     try {
       def updateResult = dynatraceClient.updateSyntheticTest(
-        config.dynatraceApiHost,
-        config.dynatraceUpdateSyntheticEndpoint,
         syntheticTestId,
         false,
         testUrl
