@@ -72,6 +72,20 @@ def call(String product, String component = null, Closure body) {
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
         )
+        
+        // Add performance tests for perftest after infrastructure deployment
+        if (pipelineConfig.performanceTestStages && environmentName == 'perftest') {
+          withTeamSecrets(pipelineConfig, environmentName) {
+            stageWithAgent("Performance Test Stages - ${environmentName}", product) {
+              performanceTestStages([
+                product: product,
+                component: component,
+                environment: environmentName,
+                testUrl: "https://${product}-${component}.${environmentName}.platform.hmcts.net"
+              ])
+            }
+          }
+        }
       }
 
       onPR {
