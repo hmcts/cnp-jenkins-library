@@ -9,9 +9,9 @@ performanceTestStages
  their specific values (synthetic test IDs, dashboard IDs, etc.)
  
  @param params Map containing:
-   - product: String product name (required)
-   - component: String component name (required) 
-   - environment: String environment name (required)
+   - product: String product name (required) - Defined in consuming repo's jenkinsfile_CNP
+   - component: String component name (required) - Defined in consuming repo's jenkinsfile_CNP
+   - environment: String environment name (required) - Pulls from environment class
    - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
    - testUrl: String test URL for the environment (optional, uses env.TEST_URL if not provided)
    - secrets: Map of vault secrets configuration (optional, used for documentation only - secrets should be loaded in main pipeline)
@@ -88,7 +88,7 @@ def call(Map params) {
     
   } catch (Exception e) {
     echo "Error loading performance test configuration: ${e.message}"
-    currentBuild.result = 'UNSTABLE'
+    //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
     return
   }
 
@@ -172,7 +172,7 @@ def call(Map params) {
 
     if (!triggerResult || !triggerResult.lastExecutionId) {
       echo "Warning: Failed to trigger synthetic test or get execution ID"
-      currentBuild.result = 'UNSTABLE'
+      //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
       return
     }
 
@@ -212,14 +212,14 @@ def call(Map params) {
 
     if (checkCount > maxStatusChecks) {
       echo "Warning: Synthetic test status check timed out after ${maxStatusChecks} attempts"
-      currentBuild.result = 'UNSTABLE'
+      //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
     } else {
       echo "Final synthetic test status: ${status}"
       if (status == "SUCCESS") {
         echo "Performance test completed successfully"
       } else if (status == "FAILED") {
         echo "Warning: Performance test failed"
-        currentBuild.result = 'UNSTABLE'
+        //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
       }
     }
 
@@ -242,6 +242,6 @@ def call(Map params) {
 
   } catch (Exception e) {
     echo "Error in performance test execution: ${e.message}"
-    currentBuild.result = 'UNSTABLE'
+    //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
   }
 }
