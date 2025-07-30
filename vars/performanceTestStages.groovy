@@ -9,17 +9,12 @@ performanceTestStages
  their specific values (synthetic test IDs, dashboard IDs, etc.)
  
  @param params Map containing:
-   - s: String product name (required) - Defined in consuming repo's jenkinsfile_CNP
+   - product: String product name (required) - Defined in consuming repo's jenkinsfile_CNP
    - component: String component name (required) - Defined in consuming repo's jenkinsfile_CNP
    - environment: String environment name (required) - Pulls from environment class
    - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
    - testUrl: String test URL for the environment (optional, uses env.TEST_URL if not provided)
    - secrets: Map of vault secrets configuration (optional, used for documentation only - secrets should be loaded in main pipeline)
-   - syntheticTestId: String Dynatrace synthetic test ID (optional, overrides config)
-   - dashboardId: String Dynatrace dashboard ID (optional, overrides config)
-   - entitySelector: String Dynatrace entity selector (optional, overrides config)
-   - maxStatusChecks: Integer maximum number of status checks (optional, defaults to 16)
-   - statusCheckInterval: Integer seconds between status checks (optional, defaults to 20)
    
  Prerequisites:
    - Vault secrets must be loaded in the main pipeline using loadVaultSecrets()
@@ -60,13 +55,13 @@ def call(Map params) {
   def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
   def testUrl = env.TEST_URL
-  def maxStatusChecks = params.maxStatusChecks ?: 16
-  def statusCheckInterval = params.statusCheckInterval ?: 20
+  def maxStatusChecks = 16
+  def statusCheckInterval = 20
   
   def config
   def dynatraceClient = new DynatraceClient(this)
 
-  // Load config from comsuming component repo
+  // Load config from consuming component repo
   try {
     echo "Loading performance test configuration from: ${configPath}"
     config = load configPath
@@ -75,17 +70,12 @@ def call(Map params) {
       error("Failed to load configuration from ${configPath}")
     }
     
-    // Apply global defaults for common Dynatrace endpoints
-    config.dynatraceEventIngestEndpoint = config.dynatraceEventIngestEndpoint ?: DynatraceClient.DEFAULT_EVENT_INGEST_ENDPOINT
-    config.dynatraceMetricIngestEndpoint = config.dynatraceMetricIngestEndpoint ?: DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT
-    config.dynatraceTriggerSyntheticEndpoint = config.dynatraceTriggerSyntheticEndpoint ?: DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT
-    config.dynatraceUpdateSyntheticEndpoint = config.dynatraceUpdateSyntheticEndpoint ?: DynatraceClient.DEFAULT_UPDATE_SYNTHETIC_ENDPOINT
     
     //Load the correct config based on environment (switchCase function)
     config = DynatraceClient.setEnvironmentConfig(config, environment)
     
     echo "Configuration loaded successfully for environment: ${environment}"
-    echo "API Host: ${config.dynatraceApiHost}"
+    echo "API Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Synthetic Test: ${config.dynatraceSyntheticTest}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
@@ -106,19 +96,18 @@ def call(Map params) {
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
   try {
-    // set DT params (from config file)
+    // Set DT params from config file
     def syntheticTestId = config.dynatraceSyntheticTest
     def dashboardId = config.dynatraceDashboardId
     def entitySelector = config.dynatraceEntitySelector
 
     echo "Posting Dynatrace Event..."
-    echo "DT Host: ${config.dynatraceApiHost}"
+    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Entity Selector: ${entitySelector}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
     def postEventResult = dynatraceClient.postEvent(
-      config.dynatraceApiHost,
       syntheticTestId,
       dashboardId,
       entitySelector,
@@ -127,16 +116,14 @@ def call(Map params) {
     )
 
     echo "Posting Dynatrace Metric..."
-    echo "DT Host: ${config.dynatraceApiHost}"
-    echo "Metric Endpoint: ${config.dynatraceMetricIngestEndpoint}"
+    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
+    echo "Metric Endpoint: ${DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT}"
     echo "Metric Type: ${config.dynatraceMetricType}"
     echo "Metric Tag: ${config.dynatraceMetricTag}"
     echo "Environment: ${environment}"
     
     try {
       def postMetricResult = dynatraceClient.postMetric(
-        config.dynatraceApiHost,
-        config.dynatraceMetricIngestEndpoint,
         config.dynatraceMetricType,
         config.dynatraceMetricTag,
         environment
@@ -150,8 +137,6 @@ def call(Map params) {
       echo "Custom URL: ${testUrl}"
       try {
         def updateResult = dynatraceClient.updateSyntheticTest(
-          config.dynatraceApiHost,
-          config.dynatraceUpdateSyntheticEndpoint,
           syntheticTestId,
           true,
           testUrl
@@ -162,15 +147,13 @@ def call(Map params) {
     }
 
     echo "Triggering Dynatrace Synthetic Test..."
-    echo "DT Host: ${config.dynatraceApiHost}"
-    echo "Trigger Endpoint: ${config.dynatraceTriggerSyntheticEndpoint}"
+    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
+    echo "Trigger Endpoint: ${DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT}"
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     echo "Environment: ${environment}"
     
     def triggerResult = dynatraceClient.triggerSyntheticTest(
-      config.dynatraceApiHost,
-      config.dynatraceTriggerSyntheticEndpoint,
       syntheticTestId
     )
 
@@ -191,7 +174,6 @@ def call(Map params) {
       
       try {
         def statusResult = dynatraceClient.getSyntheticStatus(
-          config.dynatraceApiHost,
           lastExecutionId
         )
         
@@ -227,22 +209,20 @@ def call(Map params) {
       }
     }
 
-    //Disable the synthetic once triggered for preview env
+    // Disable the synthetic once triggered for preview env
     if (testUrl && environment == 'preview') {
-    echo "Disabling Dynatrace Synthetic Test for preview environment..."
-    echo "Custom URL: ${testUrl}"
-    try {
-      def updateResult = dynatraceClient.updateSyntheticTest(
-        config.dynatraceApiHost,
-        config.dynatraceUpdateSyntheticEndpoint,
-        syntheticTestId,
-        false,
-        testUrl
-      )
-    } catch (Exception e) {
-      echo "Warning: Failed to update Dynatrace synthetic test: ${e.message}"
+      echo "Disabling Dynatrace Synthetic Test for preview environment..."
+      echo "Custom URL: ${testUrl}"
+      try {
+        def updateResult = dynatraceClient.updateSyntheticTest(
+          syntheticTestId,
+          false,
+          testUrl
+        )
+      } catch (Exception e) {
+        echo "Warning: Failed to update Dynatrace synthetic test: ${e.message}"
+      }
     }
-  }
 
   } catch (Exception e) {
     echo "Error in performance test execution: ${e.message}"
