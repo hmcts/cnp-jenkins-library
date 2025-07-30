@@ -5,7 +5,7 @@ import groovy.json.JsonOutput
 
 class DynatraceClient implements Serializable {
   
-  // Default Dynatrace configuration - teams can override if needed
+  // Default Dynatrace configuration
   public static final String DEFAULT_DYNATRACE_API_HOST = "https://yrk32651.live.dynatrace.com/"
   public static final String DEFAULT_EVENT_INGEST_ENDPOINT = "api/v2/events/ingest"
   public static final String DEFAULT_METRIC_INGEST_ENDPOINT = "api/v2/metrics/ingest"

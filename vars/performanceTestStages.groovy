@@ -70,7 +70,6 @@ def call(Map params) {
       error("Failed to load configuration from ${configPath}")
     }
     
-    
     //Load the correct config based on environment (switchCase function)
     config = DynatraceClient.setEnvironmentConfig(config, environment)
     
@@ -107,6 +106,7 @@ def call(Map params) {
     echo "Entity Selector: ${entitySelector}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
+    //Post DT Event
     def postEventResult = dynatraceClient.postEvent(
       syntheticTestId,
       dashboardId,
@@ -122,28 +122,22 @@ def call(Map params) {
     echo "Metric Tag: ${config.dynatraceMetricTag}"
     echo "Environment: ${environment}"
     
-    try {
-      def postMetricResult = dynatraceClient.postMetric(
-        config.dynatraceMetricType,
-        config.dynatraceMetricTag,
-        environment
-      )
-    } catch (Exception e) {
-      echo "Warning: Failed to post Dynatrace metric: ${e.message}"
-    }
+    //Post DT Metric
+    def postMetricResult = dynatraceClient.postMetric(
+      config.dynatraceMetricType,
+      config.dynatraceMetricTag,
+      environment
+    )
 
     if (testUrl && environment == 'preview') {
       echo "Updating Dynatrace Synthetic Test for preview environment..."
       echo "Custom URL: ${testUrl}"
-      try {
-        def updateResult = dynatraceClient.updateSyntheticTest(
-          syntheticTestId,
-          true,
-          testUrl
-        )
-      } catch (Exception e) {
-        echo "Warning: Failed to update Dynatrace synthetic test: ${e.message}"
-      }
+      //Update Synthetic Test for Preview
+      def updateResult = dynatraceClient.updateSyntheticTest(
+        syntheticTestId,
+        true,
+        testUrl
+      )
     }
 
     echo "Triggering Dynatrace Synthetic Test..."
@@ -153,6 +147,7 @@ def call(Map params) {
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     echo "Environment: ${environment}"
     
+    //Trigger Synthetic Test
     def triggerResult = dynatraceClient.triggerSyntheticTest(
       syntheticTestId
     )
@@ -163,6 +158,7 @@ def call(Map params) {
       return
     }
 
+    // Set vars for checking execution status
     def status = "TRIGGERED"
     def checkCount = 1
     def lastExecutionId = triggerResult.lastExecutionId
@@ -172,21 +168,16 @@ def call(Map params) {
     while (status == "TRIGGERED" && checkCount <= maxStatusChecks) {
       echo "Status check ${checkCount}/${maxStatusChecks} - Current status: ${status}"
       
-      try {
-        def statusResult = dynatraceClient.getSyntheticStatus(
-          lastExecutionId
-        )
-        
-        if (statusResult && statusResult.executionStatus) {
-          status = statusResult.executionStatus
-          echo "Retrieved status: ${status}"
-        } else {
-          echo "Warning: Failed to get synthetic test status"
-          break
-        }
-        
-      } catch (Exception e) {
-        echo "Warning: Error checking synthetic test status: ${e.message}"
+      // Get synthetic test status
+      def statusResult = dynatraceClient.getSyntheticStatus(
+        lastExecutionId
+      )
+      
+      if (statusResult && statusResult.executionStatus) {
+        status = statusResult.executionStatus
+        echo "Retrieved status: ${status}"
+      } else {
+        echo "Warning: Failed to get synthetic test status"
         break
       }
       
@@ -213,15 +204,11 @@ def call(Map params) {
     if (testUrl && environment == 'preview') {
       echo "Disabling Dynatrace Synthetic Test for preview environment..."
       echo "Custom URL: ${testUrl}"
-      try {
-        def updateResult = dynatraceClient.updateSyntheticTest(
-          syntheticTestId,
-          false,
-          testUrl
-        )
-      } catch (Exception e) {
-        echo "Warning: Failed to update Dynatrace synthetic test: ${e.message}"
-      }
+      def updateResult = dynatraceClient.updateSyntheticTest(
+        syntheticTestId,
+        false,
+        testUrl
+      )
     }
 
   } catch (Exception e) {
