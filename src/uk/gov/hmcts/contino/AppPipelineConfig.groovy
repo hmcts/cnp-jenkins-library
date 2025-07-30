@@ -43,12 +43,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
 
   // Performance test stages configuration
   boolean performanceTestStages = false
-  int performanceTestStagesTimeout = 30
-  String dynatraceApiHost = "Test"
-  String dynatraceEventIngestEndpoint
-    Map<String, Object> eventIngestDetails = [:]
-
-  boolean enablePerformanceSynthetics = false
+  int performanceTestStagesTimeout
 
 
   boolean legacyDeploymentForEnv(String environment) {

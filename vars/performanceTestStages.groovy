@@ -9,7 +9,7 @@ performanceTestStages
  their specific values (synthetic test IDs, dashboard IDs, etc.)
  
  @param params Map containing:
-   - product: String product name (required) - Defined in consuming repo's jenkinsfile_CNP
+   - s: String product name (required) - Defined in consuming repo's jenkinsfile_CNP
    - component: String component name (required) - Defined in consuming repo's jenkinsfile_CNP
    - environment: String environment name (required) - Pulls from environment class
    - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
@@ -25,9 +25,12 @@ performanceTestStages
    - Vault secrets must be loaded in the main pipeline using loadVaultSecrets()
    - Required environment variables: PERF_SYNTHETIC_MONITOR_TOKEN, PERF_METRICS_TOKEN, PERF_EVENT_TOKEN, PERF_SYNTHETIC_UPDATE_TOKEN
 
- Infrastructure constants (not configurable):
-   - DynatraceClient handles all API endpoints and host configuration automatically
-   - Teams only need to configure their specific synthetic test IDs and dashboard values
+ Global defaults provided by DynatraceClient:
+   - dynatraceApiHost: "https://yrk32651.live.dynatrace.com/"
+   - dynatraceEventIngestEndpoint: "api/v2/events/ingest"
+   - dynatraceMetricIngestEndpoint: "api/v2/metrics/ingest"
+   - dynatraceTriggerSyntheticEndpoint: "api/v2/synthetic/executions/batch"
+   - dynatraceUpdateSyntheticEndpoint: "api/v1/synthetic/monitors/"
 
  Example usage:
  performanceTestStages([
@@ -41,6 +44,8 @@ performanceTestStages
 
 
 def call(Map params) {
+
+  //Ensure required params are present
   if (!params.product) {
     error("performanceTestStages: 'product' parameter is required")
   }
@@ -54,13 +59,14 @@ def call(Map params) {
   def defaultConfigPath = 'src/test/performance/config/config.groovy'
   def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
-  def testUrl = params.testUrl ?: env.TEST_URL
+  def testUrl = env.TEST_URL
   def maxStatusChecks = params.maxStatusChecks ?: 16
   def statusCheckInterval = params.statusCheckInterval ?: 20
   
   def config
   def dynatraceClient = new DynatraceClient(this)
 
+  // Load config from comsuming component repo
   try {
     echo "Loading performance test configuration from: ${configPath}"
     config = load configPath
@@ -69,17 +75,23 @@ def call(Map params) {
       error("Failed to load configuration from ${configPath}")
     }
     
-    // Set environment-specific configuration (synthetic test IDs, dashboards, etc.)
+    // Apply global defaults for common Dynatrace endpoints
+    config.dynatraceEventIngestEndpoint = config.dynatraceEventIngestEndpoint ?: DynatraceClient.DEFAULT_EVENT_INGEST_ENDPOINT
+    config.dynatraceMetricIngestEndpoint = config.dynatraceMetricIngestEndpoint ?: DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT
+    config.dynatraceTriggerSyntheticEndpoint = config.dynatraceTriggerSyntheticEndpoint ?: DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT
+    config.dynatraceUpdateSyntheticEndpoint = config.dynatraceUpdateSyntheticEndpoint ?: DynatraceClient.DEFAULT_UPDATE_SYNTHETIC_ENDPOINT
+    
+    //Load the correct config based on environment (switchCase function)
     config = DynatraceClient.setEnvironmentConfig(config, environment)
     
     echo "Configuration loaded successfully for environment: ${environment}"
-    echo "API Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
+    echo "API Host: ${config.dynatraceApiHost}"
     echo "Synthetic Test: ${config.dynatraceSyntheticTest}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
   } catch (Exception e) {
     echo "Error loading performance test configuration: ${e.message}"
-    //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
+    //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
     return
   }
 
@@ -94,17 +106,19 @@ def call(Map params) {
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
   try {
-    def syntheticTestId = params.syntheticTestId ?: config.dynatraceSyntheticTest
-    def dashboardId = params.dashboardId ?: config.dynatraceDashboardId
-    def entitySelector = params.entitySelector ?: config.dynatraceEntitySelector
+    // set DT params (from config file)
+    def syntheticTestId = config.dynatraceSyntheticTest
+    def dashboardId = config.dynatraceDashboardId
+    def entitySelector = config.dynatraceEntitySelector
 
     echo "Posting Dynatrace Event..."
-    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
+    echo "DT Host: ${config.dynatraceApiHost}"
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Entity Selector: ${entitySelector}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
     def postEventResult = dynatraceClient.postEvent(
+      config.dynatraceApiHost,
       syntheticTestId,
       dashboardId,
       entitySelector,
@@ -113,14 +127,16 @@ def call(Map params) {
     )
 
     echo "Posting Dynatrace Metric..."
-    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
-    echo "Metric Endpoint: ${DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT}"
+    echo "DT Host: ${config.dynatraceApiHost}"
+    echo "Metric Endpoint: ${config.dynatraceMetricIngestEndpoint}"
     echo "Metric Type: ${config.dynatraceMetricType}"
     echo "Metric Tag: ${config.dynatraceMetricTag}"
     echo "Environment: ${environment}"
     
     try {
       def postMetricResult = dynatraceClient.postMetric(
+        config.dynatraceApiHost,
+        config.dynatraceMetricIngestEndpoint,
         config.dynatraceMetricType,
         config.dynatraceMetricTag,
         environment
@@ -134,6 +150,8 @@ def call(Map params) {
       echo "Custom URL: ${testUrl}"
       try {
         def updateResult = dynatraceClient.updateSyntheticTest(
+          config.dynatraceApiHost,
+          config.dynatraceUpdateSyntheticEndpoint,
           syntheticTestId,
           true,
           testUrl
@@ -144,19 +162,21 @@ def call(Map params) {
     }
 
     echo "Triggering Dynatrace Synthetic Test..."
-    echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
-    echo "Trigger Endpoint: ${DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT}"
+    echo "DT Host: ${config.dynatraceApiHost}"
+    echo "Trigger Endpoint: ${config.dynatraceTriggerSyntheticEndpoint}"
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     echo "Environment: ${environment}"
     
     def triggerResult = dynatraceClient.triggerSyntheticTest(
+      config.dynatraceApiHost,
+      config.dynatraceTriggerSyntheticEndpoint,
       syntheticTestId
     )
 
     if (!triggerResult || !triggerResult.lastExecutionId) {
       echo "Warning: Failed to trigger synthetic test or get execution ID"
-      //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
+      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
       return
     }
 
@@ -171,6 +191,7 @@ def call(Map params) {
       
       try {
         def statusResult = dynatraceClient.getSyntheticStatus(
+          config.dynatraceApiHost,
           lastExecutionId
         )
         
@@ -195,14 +216,14 @@ def call(Map params) {
 
     if (checkCount > maxStatusChecks) {
       echo "Warning: Synthetic test status check timed out after ${maxStatusChecks} attempts"
-      //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
+      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
     } else {
       echo "Final synthetic test status: ${status}"
       if (status == "SUCCESS") {
         echo "Performance test completed successfully"
       } else if (status == "FAILED") {
         echo "Warning: Performance test failed"
-        //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
+        //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
       }
     }
 
@@ -212,6 +233,8 @@ def call(Map params) {
     echo "Custom URL: ${testUrl}"
     try {
       def updateResult = dynatraceClient.updateSyntheticTest(
+        config.dynatraceApiHost,
+        config.dynatraceUpdateSyntheticEndpoint,
         syntheticTestId,
         false,
         testUrl
