@@ -1,6 +1,6 @@
 package withNightlyPipeline.onMaster
 
-import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
 import org.junit.Ignore
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
@@ -15,8 +15,8 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
-    def mockBuilder = new MockFor(GradleBuilder)
-    mockBuilder.demand.with {
+    def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
@@ -26,9 +26,8 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       fullFunctionalTest(1){}
     }
 
-    mockBuilder.use {
+    stubBuilder.use {
         runScript("testResources/$jenkinsFile")
     }
   }
 }
-
