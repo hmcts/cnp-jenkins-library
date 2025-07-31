@@ -102,7 +102,7 @@ def call(Map params) {
     
     // Handle missing CHANGE_URL for rebuilds
     if (!env.CHANGE_URL) {
-      env.CHANGE_URL = "No change URL, likely a rebuild. Refer to build URL"
+      env.CHANGE_URL = "No change URL, likely a rebuild. Refer to build URL..."
     }
 
     echo "Posting Dynatrace Event..."
