@@ -163,9 +163,19 @@ class Helm {
     }
     def releases = this.history(imageTag, namespace)
     this.steps.echo releases
-    return !releases || new JsonSlurperClassic().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
-                                                                    it.status?.toLowerCase() == "pending-upgrade" ||
-                                                                    it.status?.toLowerCase() == "pending-install" }
+
+    if (!releases) {
+      return false
+    }
+
+    try {
+      return new JsonSlurperClassic().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
+                                                               it.status?.toLowerCase() == "pending-upgrade" ||
+                                                               it.status?.toLowerCase() == "pending-install" }
+    } catch (Exception e) {
+      this.steps.echo "Failed to parse helm history JSON: ${e.getMessage()}"
+      return false
+    }
   }
 
   private Object execute(String command, String name) {
