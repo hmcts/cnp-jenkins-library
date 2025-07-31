@@ -35,7 +35,7 @@ def call(Map args = [:]) {
   }
 
   try {
-    if (currentBuild.getPreviousBuild()?.getResult() == 'FAILURE') {
+    if (currentBuild?.getPreviousBuild()?.getResult() == 'FAILURE') {
       // Create block message and add our built message to it as a new section
       def slackMessage = new SlackBlockMessage()
       slackMessage.addSection(message)
