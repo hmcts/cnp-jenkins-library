@@ -99,6 +99,11 @@ def call(Map params) {
     def syntheticTestId = config.dynatraceSyntheticTest
     def dashboardId = config.dynatraceDashboardId
     def entitySelector = config.dynatraceEntitySelector
+    
+    // Handle missing CHANGE_URL for rebuilds
+    if (!env.CHANGE_URL) {
+      env.CHANGE_URL = "No change URL, likely a rebuild. Refer to build URL"
+    }
 
     echo "Posting Dynatrace Event..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
