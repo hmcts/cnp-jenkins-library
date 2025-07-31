@@ -1,7 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 class GithubAPI {
 
@@ -115,7 +115,7 @@ class GithubAPI {
       validResponseCodes: '200')
 
     if (response.status == 200) {
-      def json_response = new JsonSlurper().parseText(response.content)
+      def json_response = new JsonSlurperClassic().parseText(response.content)
       cachedLabelList.cache = json_response.collect({ label -> label['name'] })
       cachedLabelList.isValid = true
       this.steps.echo "Updated cache contents: ${getCache()}"
@@ -138,7 +138,7 @@ class GithubAPI {
       validResponseCodes: '200')
 
       if (response.status == 200) {
-      def json_response = new JsonSlurper().parseText(response.content)
+      def json_response = new JsonSlurperClassic().parseText(response.content)
       cachedTopicList.cache = json_response
       cachedTopicList.isValid = true
       this.steps.echo "Updated cache contents: ${getTopicCache()}"
@@ -162,7 +162,7 @@ class GithubAPI {
       validResponseCodes: '200')
 
     if (response.status == 200) {
-      def json_response = new JsonSlurper().parseText(response.content)
+      def json_response = new JsonSlurperClassic().parseText(response.content)
       cachedPR.cache = json_response.base.ref
       cachedPR.isValid = true
       this.steps.echo "Updated cache contents: ${getPRCache()}"

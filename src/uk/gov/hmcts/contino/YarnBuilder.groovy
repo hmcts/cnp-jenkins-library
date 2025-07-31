@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
@@ -179,7 +179,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def prepareCVEReport(String issues, String knownIssues) {
-    def jsonSlurper = new JsonSlurper()
+    def jsonSlurper = new JsonSlurperClassic()
 
     List<Object> issuesParsed = issues.split('\n').collect { jsonSlurper.parseText(it) }
 
@@ -271,7 +271,7 @@ EOF
       if (prepend && !prepend.endsWith(' ')) {
         prepend += ' '
       }
-  
+
       if (steps.fileExists(NVMRC)) {
         def status = steps.sh(script: """
           set +ex
@@ -279,28 +279,28 @@ EOF
           . /opt/nvm/nvm.sh || true
           nvm install
           export PATH=\$HOME/.local/bin:\$PATH
-  
+
           if ${prepend.toBoolean()}; then
             ${prepend}yarn ${task}
           else
             yarn ${task}
           fi
         """, returnStatus: true)
-  
+
         if (status != 0 && !task.contains('install')) {
           steps.error("Yarn task '${task}' failed with status ${status}")
         }
       } else {
         def status = steps.sh(script: """
           export PATH=\$HOME/.local/bin:\$PATH
-  
+
           if ${prepend.toBoolean()}; then
             ${prepend}yarn ${task}
           else
             yarn ${task}
           fi
         """, returnStatus: true)
-  
+
         if (status != 0 && !task.contains('install')) {
           steps.error("Yarn task '${task}' failed with status ${status}")
         }
@@ -404,7 +404,7 @@ EOF
     // Java required on nodejs pipeline, if data import only available as java job, but project itself is nodejs
     def statusCodeJava21 = steps.sh(script: """
       find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(21)" {} + > /dev/null
-      """, returnStatus: true)    
+      """, returnStatus: true)
     if (statusCodeJava21 == 0) {
       def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
       steps.env.JAVA_HOME = javaHomeLocation
