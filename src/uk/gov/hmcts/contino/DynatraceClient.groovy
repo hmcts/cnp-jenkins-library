@@ -51,6 +51,10 @@ class DynatraceClient implements Serializable {
       steps.echo "Dynatrace event posted successfully. Response ${response}"
     } catch (Exception e) {
       steps.echo "Failure posting Dynatrace Event: ${e.message}"
+      if (response) {
+        steps.echo "Response detail: ${response.content}"
+      }
+      steps.echo "Request body was: entitySelector=${entitySelector}, dashboardId=${dashboardId}, syntheticTest=${syntheticTest}"
     }
     return response
   }
