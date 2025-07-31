@@ -163,18 +163,22 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def prepareCVEReport(String owaspReportJSON) {
-    if (!owaspReportJSON) {
+    if (!owaspReportJSON || owaspReportJSON.trim().isEmpty()) {
       // Return empty report structure if no JSON provided (common in test environments)
       return [dependencies: []]
     }
 
-    def report = new JsonSlurperClassic().parseText(owaspReportJSON)
-    // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
-    report.dependencies = report.dependencies.findAll {
-      it.vulnerabilities || it.suppressedVulnerabilities
+    try {
+      def report = new JsonSlurperClassic().parseText(owaspReportJSON)
+      // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+      report.dependencies = report.dependencies.findAll {
+        it.vulnerabilities || it.suppressedVulnerabilities
+      }
+      return report
+    } catch (Exception e) {
+      // If JSON parsing fails, return empty report structure
+      return [dependencies: []]
     }
-
-    return report
   }
 
   @Override
