@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
@@ -163,7 +163,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def prepareCVEReport(String owaspReportJSON) {
-    def report = new JsonSlurper().parseText(owaspReportJSON)
+    def report = new JsonSlurperClassic().parseText(owaspReportJSON)
     // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
     report.dependencies = report.dependencies.findAll {
       it.vulnerabilities || it.suppressedVulnerabilities
