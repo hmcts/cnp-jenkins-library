@@ -21,6 +21,39 @@ class DynatraceClient implements Serializable {
 
   def postEvent(String syntheticTest, String dashboardId, String entitySelector, String product, String component) {
     def response = null
+    
+    // Build request body
+    def requestBody = """{
+      "entitySelector": "${entitySelector}",
+      "eventType": "CUSTOM_INFO",
+      "properties": {
+        "Workspace": "${steps.env.WORKSPACE}",
+        "Branch": "${steps.env.BRANCH_NAME}",
+        "Build Number": "${steps.env.BUILD_NUMBER}",
+        "Change URL": "${steps.env.CHANGE_URL}",
+        "Commit ID": "${steps.env.GIT_COMMIT}",
+        "Build URL": "${steps.env.BUILD_URL}", 
+        "Synthetic Performance Test": "${syntheticTest}",
+        "Performance Dashboard": "${DEFAULT_DYNATRACE_API_HOST}#dashboard;id=${dashboardId};applyDashboardDefaults=true"
+      },
+      "timeout": 1,
+      "title": "${product.toUpperCase()}-${component.toUpperCase()} Performance Event"
+    }"""
+    
+    def requestUrl = "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_EVENT_INGEST_ENDPOINT}"
+    def authHeader = "Api-Token ${steps.env.PERF_EVENT_TOKEN}"
+    
+    // Debug logging - output full request details
+    steps.echo "=== DYNATRACE POST EVENT DEBUG ==="
+    steps.echo "URL: ${requestUrl}"
+    steps.echo "Method: POST"
+    steps.echo "Content-Type: APPLICATION_JSON"
+    steps.echo "Accept: APPLICATION_JSON"
+    steps.echo "Authorization: Api-Token ${steps.env.PERF_EVENT_TOKEN ? 'PRESENT' : 'MISSING'}"
+    steps.echo "Request Body:"
+    steps.echo "${requestBody}"
+    steps.echo "=================================="
+    
     try {
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
@@ -28,25 +61,10 @@ class DynatraceClient implements Serializable {
         httpMode: 'POST',
         quiet: true,
         customHeaders: [
-          [name: 'Authorization', value: "Api-Token ${steps.env.PERF_EVENT_TOKEN}"]
+          [name: 'Authorization', value: authHeader]
         ],
-        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_EVENT_INGEST_ENDPOINT}",
-        requestBody: """{
-          "entitySelector": "${entitySelector}",
-          "eventType": "CUSTOM_INFO",
-          "properties": {
-            "Workspace": "${steps.env.WORKSPACE}",
-            "Branch": "${steps.env.BRANCH_NAME}",
-            "Build Number": "${steps.env.BUILD_NUMBER}",
-            "Change URL": "${steps.env.CHANGE_URL}",
-            "Commit ID": "${steps.env.GIT_COMMIT}",
-            "Build URL": "${steps.env.BUILD_URL}", 
-            "Synthetic Performance Test": "${syntheticTest}",
-            "Performance Dashboard": "${DEFAULT_DYNATRACE_API_HOST}#dashboard;id=${dashboardId};applyDashboardDefaults=true"
-          },
-          "timeout": 1,
-          "title": "${product.toUpperCase()}-${component.toUpperCase()} Performance Event"
-        }"""
+        url: requestUrl,
+        requestBody: requestBody
       )
       steps.echo "Dynatrace event posted successfully. Response ${response}"
     } catch (Exception e) {
