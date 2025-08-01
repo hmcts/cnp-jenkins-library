@@ -97,12 +97,15 @@ def call(Map params) {
   // Load performance test secrets from infrastructure vault
   echo "Loading performance test secrets from infrastructure vault..."
   
-  withAzureKeyvault([
-    [name: 'perf-synthetic-monitor-token', secretType: 'Secret', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
-    [name: 'perf-metrics-token', secretType: 'Secret', envVariable: 'PERF_METRICS_TOKEN'],
-    [name: 'perf-event-token', secretType: 'Secret', envVariable: 'PERF_EVENT_TOKEN'],
-    [name: 'perf-synthetic-update-token', secretType: 'Secret', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
-  ], keyVaultURL: 'https://et-perftest.vault.azure.net/') {
+  withAzureKeyvault(
+    keyVaultURL: 'https://et-perftest.vault.azure.net/',
+    secrets: [
+      [name: 'perf-synthetic-monitor-token', secretType: 'Secret', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+      [name: 'perf-metrics-token', secretType: 'Secret', envVariable: 'PERF_METRICS_TOKEN'],
+      [name: 'perf-event-token', secretType: 'Secret', envVariable: 'PERF_EVENT_TOKEN'],
+      [name: 'perf-synthetic-update-token', secretType: 'Secret', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+    ]
+  ) {
 
   try {
     // Set DT params from config file
