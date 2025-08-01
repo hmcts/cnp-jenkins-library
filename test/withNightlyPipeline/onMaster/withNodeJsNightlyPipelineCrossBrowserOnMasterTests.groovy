@@ -1,12 +1,10 @@
 package withNightlyPipeline.onMaster
 
-import groovy.mock.interceptor.MockFor
-import org.junit.Ignore
+import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("java.lang.StackOverflowError at ConcurrentHashMap.java:1541")
 class withNodeJsNightlyPipelineCrossBrowserOnMasterTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsNightlyPipelineForCrossBrowser.jenkins"
 
@@ -16,19 +14,20 @@ class withNodeJsNightlyPipelineCrossBrowserOnMasterTests extends BaseCnpPipeline
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
-    def mockBuilder = new MockFor(YarnBuilder)
-    mockBuilder.demand.with {
+    def stubBuilder = new StubFor(YarnBuilder)
+    stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
-      crossBrowserTest(5) {}  // Includes parallelCrossBrowserTest
-      performanceTest(0) {}
+      crossBrowserTest(5) {}  // Multiple cross browser tests
+      performanceTest(1) {}
       mutationTest(1){}
+      fullFunctionalTest(1){}
+      asBoolean() { return true }
     }
 
-    mockBuilder.use {
+    stubBuilder.use {
         runScript("testResources/$jenkinsFile")
     }
   }
 }
-
