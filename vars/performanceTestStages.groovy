@@ -97,16 +97,12 @@ def call(Map params) {
   // Load performance test secrets from infrastructure vault
   echo "Loading performance test secrets from infrastructure vault..."
   
-  withAzureKeyvault(
-    vaultURL: 'https://et-perftest.vault.azure.net/',
-    vaultCredentialId: 'jenkins-service-principal',
-    secrets: [
-      [secretType: 'Secret', name: 'perf-synthetic-monitor-token', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
-      [secretType: 'Secret', name: 'perf-metrics-token', envVariable: 'PERF_METRICS_TOKEN'],
-      [secretType: 'Secret', name: 'perf-event-token', envVariable: 'PERF_EVENT_TOKEN'],
-      [secretType: 'Secret', name: 'perf-synthetic-update-token', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
-    ]
-  ) {
+  withAzureKeyvault([
+    [secretType: 'Secret', name: 'perf-synthetic-monitor-token', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+    [secretType: 'Secret', name: 'perf-metrics-token', envVariable: 'PERF_METRICS_TOKEN'],
+    [secretType: 'Secret', name: 'perf-event-token', envVariable: 'PERF_EVENT_TOKEN'],
+    [secretType: 'Secret', name: 'perf-synthetic-update-token', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+  ]) {
 
   try {
     // Set DT params from config file
