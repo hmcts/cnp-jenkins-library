@@ -18,6 +18,7 @@ class withJavaNightlyPipelineOnMasterWithFortifyScanTests extends BaseCnpPipelin
     stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
+      fortifyScan(1) {}
       securityCheck(1) {}
       crossBrowserTest(0) {}
       performanceTest(1) {}
