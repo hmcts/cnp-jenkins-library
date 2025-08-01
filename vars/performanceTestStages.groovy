@@ -97,12 +97,18 @@ def call(Map params) {
   // Load performance test secrets from infrastructure vault
   echo "Loading performance test secrets from infrastructure vault..."
   
-  withAzureKeyvault([
-    [secretType: 'Secret', name: 'perf-synthetic-monitor-token', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
-    [secretType: 'Secret', name: 'perf-metrics-token', envVariable: 'PERF_METRICS_TOKEN'],
-    [secretType: 'Secret', name: 'perf-event-token', envVariable: 'PERF_EVENT_TOKEN'],
-    [secretType: 'Secret', name: 'perf-synthetic-update-token', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
-  ]) {
+  def perfKeyVaultUrl = "https://et-perftest.vault.azure.net/"
+  def perfSecrets = [
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
+    [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+  ]
+  
+  withAzureKeyvault(
+    azureKeyVaultSecrets: perfSecrets,
+    keyVaultURLOverride: perfKeyVaultUrl
+  ) {
 
   try {
     // Set DT params from config file
