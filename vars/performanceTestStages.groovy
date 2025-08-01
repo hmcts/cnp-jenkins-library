@@ -94,6 +94,20 @@ def call(Map params) {
   echo "Build Number: ${env.BUILD_NUMBER}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
+  // Load performance test secrets from shared vault ** et for not whilst waiting for platops 
+  echo "Loading performance test secrets from infrastructure vault..."
+  
+  def perfSecrets = [
+    'et-perftest': [
+      secret('perf-synthetic-monitor-token', 'PERF_SYNTHETIC_MONITOR_TOKEN'),
+      secret('perf-metrics-token', 'PERF_METRICS_TOKEN'),
+      secret('perf-event-token', 'PERF_EVENT_TOKEN'),
+      secret('perf-synthetic-update-token', 'PERF_SYNTHETIC_UPDATE_TOKEN')
+    ]
+  ]
+  
+  loadVaultSecrets perfSecrets
+
   try {
     // Set DT params from config file
     def syntheticTestId = config.dynatraceSyntheticTest
@@ -222,4 +236,5 @@ def call(Map params) {
     echo "Error in performance test execution: ${e.message}"
     //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
   }
+
 }
