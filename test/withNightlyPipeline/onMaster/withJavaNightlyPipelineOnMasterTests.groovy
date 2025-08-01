@@ -24,6 +24,7 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       performanceTest(1) {}
       mutationTest(1){}
       fullFunctionalTest(1){}
+      asBoolean() { return true } // Add missing asBoolean method expectation
     }
 
     stubBuilder.use {

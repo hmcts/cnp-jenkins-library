@@ -24,6 +24,7 @@ class withJavaNightlyPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnp
       mutationTest(1){}
       highLevelDataSetup(1){}
       fullFunctionalTest(1){}
+      asBoolean() { return true } // Add missing asBoolean method expectation
     }
 
     stubBuilder.use {
