@@ -214,7 +214,7 @@ class YarnBuilder extends AbstractBuilder {
 
     def result = [
       vulnerabilities: issuesParsed,
-      summary        : summary.data
+      summary        : summary?.data ?: [:]
     ]
 
     if (!knownIssuesParsed.isEmpty()) {
