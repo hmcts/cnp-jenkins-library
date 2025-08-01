@@ -1,7 +1,6 @@
 package withNightlyPipeline.onMaster
 
 import groovy.mock.interceptor.StubFor
-import org.junit.Ignore
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 import withPipeline.BaseCnpPipelineTest

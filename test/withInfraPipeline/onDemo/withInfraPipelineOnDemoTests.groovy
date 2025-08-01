@@ -1,6 +1,5 @@
 package withInfraPipeline.onDemo
 
-import org.junit.Ignore
 import org.junit.Test
 import withPipeline.BaseCnpPipelineTest
 
