@@ -1,12 +1,10 @@
 package withNightlyPipeline.onMaster
 
-import groovy.mock.interceptor.MockFor
-import org.junit.Ignore
+import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("JsonInternalException: unexpected character .")
 class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleAngularNightlyPipeline.jenkins"
 
@@ -16,8 +14,8 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
-    def mockBuilder = new MockFor(AngularBuilder)
-    mockBuilder.demand.with {
+    def stubBuilder = new StubFor(AngularBuilder)
+    stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
@@ -27,9 +25,8 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       fullFunctionalTest(1){}
     }
 
-    mockBuilder.use {
+    stubBuilder.use {
         runScript("testResources/$jenkinsFile")
     }
   }
 }
-
