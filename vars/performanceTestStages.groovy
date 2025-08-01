@@ -94,19 +94,15 @@ def call(Map params) {
   echo "Build Number: ${env.BUILD_NUMBER}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
-  // Load performance test secrets from shared vault ** et for not whilst waiting for platops 
+  // Load performance test secrets from infrastructure vault
   echo "Loading performance test secrets from infrastructure vault..."
   
-  def perfSecrets = [
-    'et-perftest': [
-      secret('perf-synthetic-monitor-token', 'PERF_SYNTHETIC_MONITOR_TOKEN'),
-      secret('perf-metrics-token', 'PERF_METRICS_TOKEN'),
-      secret('perf-event-token', 'PERF_EVENT_TOKEN'),
-      secret('perf-synthetic-update-token', 'PERF_SYNTHETIC_UPDATE_TOKEN')
-    ]
-  ]
-  
-  loadVaultSecrets perfSecrets
+  withAzureKeyvault([
+    [name: 'perf-synthetic-monitor-token', secretType: 'Secret', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+    [name: 'perf-metrics-token', secretType: 'Secret', envVariable: 'PERF_METRICS_TOKEN'],
+    [name: 'perf-event-token', secretType: 'Secret', envVariable: 'PERF_EVENT_TOKEN'],
+    [name: 'perf-synthetic-update-token', secretType: 'Secret', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+  ], keyVaultURL: 'https://et-perftest.vault.azure.net/') {
 
   try {
     // Set DT params from config file
@@ -237,4 +233,5 @@ def call(Map params) {
     //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
   }
 
+  } // End withAzureKeyvault block
 }
