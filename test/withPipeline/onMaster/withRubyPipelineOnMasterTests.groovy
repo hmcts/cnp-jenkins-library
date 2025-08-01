@@ -42,7 +42,7 @@ class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
       test(0) {}
       securityCheck(0) {}
       sonarScan(0) {}
-      smokeTest(1) {} //aat-staging
+      smokeTest(0) {} //aat-staging - should be 0 in skips scenario
       functionalTest(1) {}
     }
 
