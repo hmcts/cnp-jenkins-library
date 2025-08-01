@@ -94,8 +94,8 @@ def call(Map params) {
   echo "Build Number: ${env.BUILD_NUMBER}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
-  // Load performance test secrets from infrastructure vault
-  echo "Loading performance test secrets from infrastructure vault..."
+  // Load performance test secrets from shared vault ** waiting for platops to add in so reading from ET perftest for now **
+  echo "Loading performance test secrets from shared vault..."
   
   def perfKeyVaultUrl = "https://et-perftest.vault.azure.net/"
   def perfSecrets = [
