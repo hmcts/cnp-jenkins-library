@@ -18,6 +18,10 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
     helper.registerAllowedMethod("saucePublisher", [], {})
     // Register the withSauceConnect method for the test environment
     helper.registerAllowedMethod("withSauceConnect", [String.class, Closure.class], { String tunnelName, Closure closure -> closure.call() })
+    // Register the sauce method that withSauceConnect calls internally
+    helper.registerAllowedMethod("sauce", [String.class, Closure.class], { String sauceId, Closure closure -> closure.call() })
+    // Register the sauceconnect method that sauce calls internally
+    helper.registerAllowedMethod("sauceconnect", [Map.class, Closure.class], { Map options, Closure closure -> closure.call() })
 
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
