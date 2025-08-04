@@ -204,7 +204,8 @@ def call(params) {
                         component: component,
                         environment: environment,
                         testUrl: env.TEST_URL,
-                        secrets: config.vaultSecrets
+                        secrets: config.vaultSecrets,
+                        configPath: config.performanceTestConfigPath
                       ])
                     }
                   }

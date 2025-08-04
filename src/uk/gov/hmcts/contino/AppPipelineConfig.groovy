@@ -44,6 +44,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   // Performance test stages configuration
   boolean performanceTestStages = false
   int performanceTestStagesTimeout
+  String performanceTestConfigPath
 
 
   boolean legacyDeploymentForEnv(String environment) {
