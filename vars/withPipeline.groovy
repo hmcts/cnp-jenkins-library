@@ -291,7 +291,7 @@ def call(type, String product, String component, Closure body) {
                     component: component,
                     environment: environmentName,
                     testUrl: "https://${product}-${component}.${environmentName}.platform.hmcts.net",
-                    configPath: config.performanceTestConfigPath
+                    configPath: pipelineConfig.performanceTestConfigPath
                   ])
                 }
               }
