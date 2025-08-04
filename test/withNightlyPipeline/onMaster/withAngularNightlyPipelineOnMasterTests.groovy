@@ -14,6 +14,9 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
+    // Register the saucePublisher method for the test environment
+    helper.registerAllowedMethod("saucePublisher", [], {})
+
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
       setupToolVersion(1) {}
