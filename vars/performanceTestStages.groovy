@@ -17,7 +17,7 @@ performanceTestStages
    - secrets: Map of vault secrets configuration (optional, used for documentation only - secrets should be loaded in main pipeline)
    
  Prerequisites:
-   - Vault secrets must be loaded in the main pipeline using loadVaultSecrets()
+   - Vault secrets loaded within the performanceTestStages from a global KV (constant)
    - Required environment variables: PERF_SYNTHETIC_MONITOR_TOKEN, PERF_METRICS_TOKEN, PERF_EVENT_TOKEN, PERF_SYNTHETIC_UPDATE_TOKEN
 
  Global defaults provided by DynatraceClient:
@@ -232,7 +232,7 @@ def call(Map params) {
       )
     }
 
-  sleep(time:3600, unit: "SECONDS")  // Added temp sleep for preview deployment
+  sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
 
   } catch (Exception e) {
     echo "Error in performance test execution: ${e.message}"
