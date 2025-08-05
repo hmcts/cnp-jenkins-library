@@ -765,6 +765,12 @@ To consume the new modules, existing resources must be imported to the new modul
 
 Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull
 
+## Notes on Unit tests
+
+Use JsonSlurperClassic instead of JsonSlurper when parsing loosely structured or untyped JSON to avoid errors, especially ones related to unit tests.
+Add null checks and defensive coding patterns when working with Jenkins-provided objects or dynamic properties make sure that things work across different environments.
+Tests should include appropriate stubbing and mocking for any pipeline-specific behavior to improve reliability. This helps prevent issues caused by recent updates to certain plugins.
+
 ## Troubleshooting
 
 Any steps that you see in your Jenkins pipeline can be found within this repository.
