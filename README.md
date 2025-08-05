@@ -768,8 +768,8 @@ Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job
 ## Notes on Unit tests
 
 Use JsonSlurperClassic instead of JsonSlurper when parsing loosely structured or untyped JSON to avoid errors, especially ones related to unit tests.
-Add null checks and defensive coding patterns when working with Jenkins-provided objects or dynamic properties make sure that things work across different environments.
-Tests should include appropriate stubbing and mocking for any pipeline-specific behavior to improve reliability. This helps prevent issues caused by recent updates to certain plugins.
+Add null checks and other checks when working with Jenkins provided objects or properties to make sure that things work across different environments.
+Tests should include appropriate stubbing and mocking for anything that is pipeline specific to improve reliability. This helps prevent issues caused by recent updates to certain plugins.
 
 ## Troubleshooting
 
