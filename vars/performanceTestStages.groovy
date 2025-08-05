@@ -232,7 +232,7 @@ def call(Map params) {
       )
     }
 
-  sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
+  //sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
 
   } catch (Exception e) {
     echo "Error in performance test execution: ${e.message}"
