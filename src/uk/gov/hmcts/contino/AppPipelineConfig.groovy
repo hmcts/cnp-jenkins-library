@@ -28,7 +28,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
   boolean fortifyScan = false
-  boolean clearHelmReleaseOnFailure = true 
+  boolean clearHelmReleaseOnFailure = true
   String fortifyVaultName
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
@@ -40,6 +40,11 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int mutationTestTimeout
   int fullFunctionalTestTimeout = 30
   int securityScanTimeout = 120
+
+  //For Performance Test Pipelines
+  boolean perfGatlingAlerts = false
+  boolean perfRerunOnFail = false
+  String perfSlackChannel = "#performance-alerts"
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)
