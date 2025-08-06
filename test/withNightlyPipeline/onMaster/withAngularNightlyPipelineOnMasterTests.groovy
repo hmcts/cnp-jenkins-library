@@ -1,6 +1,6 @@
 package withNightlyPipeline.onMaster
 
-import groovy.mock.interceptor.StubFor
+import groovy.mock.interceptor.MockFor
 import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest
@@ -23,8 +23,8 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
     // Register the sauceconnect method that sauce calls internally
     helper.registerAllowedMethod("sauceconnect", [Map.class, Closure.class], { Map options, Closure closure -> closure.call() })
 
-    def stubBuilder = new StubFor(AngularBuilder)
-    stubBuilder.demand.with {
+    def mockBuilder = new MockFor(AngularBuilder)
+    mockBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
@@ -36,7 +36,7 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       asBoolean() { return true }
     }
 
-    stubBuilder.use {
+    mockBuilder.use {
         runScript("testResources/$jenkinsFile")
     }
   }
