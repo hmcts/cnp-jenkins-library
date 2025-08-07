@@ -28,15 +28,15 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
-      // Handle parameterless crossBrowserTest calls
-      crossBrowserTest(0..5) {}
-      // Handle parameterized crossBrowserTest calls with browser names
-      crossBrowserTest(0..10) { String browserName -> }
       performanceTest(1) {}
       mutationTest(1){}
       fullFunctionalTest(1){}
       asBoolean() { return true }
     }
+
+    // Register crossBrowserTest method variants to avoid MockFor overloading issues
+    helper.registerAllowedMethod("crossBrowserTest", [], {})
+    helper.registerAllowedMethod("crossBrowserTest", [String.class], { String browser -> })
 
     mockBuilder.use {
         runScript("testResources/$jenkinsFile")
