@@ -22,14 +22,14 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
-      build(0) {}
-      securityCheck(0) {}
-      crossBrowserTest(0) {} // Handle parameterless calls
-      performanceTest(0) {}
-      mutationTest(0) {}
-      fullFunctionalTest(0) {}
-      asBoolean(0) { return true }
+      setupToolVersion(0..10) {}
+      build(0..10) {}
+      securityCheck(0..10) {}
+      crossBrowserTest(0..10) {}
+      performanceTest(0..10) {}
+      mutationTest(0..10) {}
+      fullFunctionalTest(0..10) {}
+      asBoolean(0..10) { return true }
     }
 
     stubBuilder.use {
