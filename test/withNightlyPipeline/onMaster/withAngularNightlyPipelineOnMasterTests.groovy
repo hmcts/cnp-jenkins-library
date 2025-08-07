@@ -1,7 +1,6 @@
 package withNightlyPipeline.onMaster
 
 import org.junit.Test
-import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest
 
 class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
@@ -13,24 +12,31 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
-    // Register the saucePublisher method for the test environment
+    // Register pipeline DSL methods
     helper.registerAllowedMethod("saucePublisher", [], {})
-    // Register the withSauceConnect method for the test environment
     helper.registerAllowedMethod("withSauceConnect", [String.class, Closure.class], { String tunnelName, Closure closure -> closure.call() })
-    // Register the sauce method that withSauceConnect calls internally
     helper.registerAllowedMethod("sauce", [String.class, Closure.class], { String sauceId, Closure closure -> closure.call() })
-    // Register the sauceconnect method that sauce calls internally
     helper.registerAllowedMethod("sauceconnect", [Map.class, Closure.class], { Map options, Closure closure -> closure.call() })
 
-    // Register all AngularBuilder methods with helper to avoid MockFor conflicts
-    helper.registerAllowedMethod("setupToolVersion", [], {})
-    helper.registerAllowedMethod("build", [], {})
-    helper.registerAllowedMethod("securityCheck", [], {})
-    helper.registerAllowedMethod("crossBrowserTest", [], {})
-    helper.registerAllowedMethod("crossBrowserTest", [String.class], { String browser -> })
-    helper.registerAllowedMethod("performanceTest", [], {})
-    helper.registerAllowedMethod("mutationTest", [], {})
-    helper.registerAllowedMethod("fullFunctionalTest", [], {})
+    // Mock the AngularBuilder constructor to return a mock instance
+    def mockAngularBuilder = [
+      setupToolVersion: {},
+      build: {},
+      securityCheck: {},
+      crossBrowserTest: { String browserName = null -> }, // Handle both parameterless and parameterized calls
+      performanceTest: {},
+      mutationTest: {},
+      fullFunctionalTest: {},
+      asBoolean: { true }
+    ]
+
+    // Register a method to intercept AngularBuilder constructor calls
+    helper.registerAllowedMethod("AngularBuilder", [Object.class], { steps ->
+      return mockAngularBuilder
+    })
+
+    // Also register as a constructor call
+    binding.setVariable('AngularBuilder', { steps -> mockAngularBuilder })
 
     runScript("testResources/$jenkinsFile")
   }
