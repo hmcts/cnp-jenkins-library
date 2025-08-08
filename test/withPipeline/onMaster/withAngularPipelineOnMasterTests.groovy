@@ -1,7 +1,6 @@
 package withPipeline.onMaster
 
 import groovy.mock.interceptor.StubFor
-import org.junit.Ignore
 import org.junit.Test
 import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest

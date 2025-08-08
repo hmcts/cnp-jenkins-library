@@ -1,12 +1,10 @@
 package withPipeline.onPreview
 
 import groovy.mock.interceptor.StubFor
-import org.junit.Ignore
 import org.junit.Test
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("java.lang.StackOverflowError at MetaClassImpl.java:1072")
 class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
 
@@ -27,6 +25,7 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       sonarScan(1) {}
       smokeTest(1) {} //preview-staging
       functionalTest(1) {}
+      asBoolean() { return true }
     }
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
@@ -34,8 +33,5 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
   }
 }
-

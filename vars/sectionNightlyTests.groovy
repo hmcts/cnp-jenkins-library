@@ -74,7 +74,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     if (config.performanceTest) {
 
       //Check if build started by chron job
-      def causes = currentBuild.rawBuild.getCauses()
+      def causes = currentBuild.rawBuild?.getCauses() ?: []
       def triggeredByTimer = causes.any { cause ->
         cause.getClass().getSimpleName() == "TimerTriggerCause"
       }
