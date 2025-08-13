@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 class Kubectl {
@@ -98,7 +98,7 @@ class Kubectl {
   private String getILBIP(String serviceName, String namespace) {
     def serviceJson = this.getService(serviceName, namespace)
     this.steps.echo "Service Json: ${serviceJson}"
-    def serviceObject = new JsonSlurper().parseText(serviceJson)
+    def serviceObject = new JsonSlurperClassic().parseText(serviceJson)
 
     if (!serviceObject.status.loadBalancer.ingress) {
       this.steps.echo "ILB not found or still initialising..."

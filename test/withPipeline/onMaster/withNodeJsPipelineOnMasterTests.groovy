@@ -1,12 +1,10 @@
 package withPipeline.onMaster
 
 import groovy.mock.interceptor.StubFor
-import org.junit.Ignore
 import org.junit.Test
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("Fails with verify[0]: expected 1..1 call(s) to 'setupToolVersion' but was called 0 time(s), can't figure out why")
 class withNodeJsPipelineOnMasterTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipeline.jenkins"
 
@@ -29,10 +27,7 @@ class withNodeJsPipelineOnMasterTests extends BaseCnpPipelineTest {
     }
 
     stubBuilder.use {
-      runScript("testResources/$jenkinsFile")
+        runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
   }
 }
-

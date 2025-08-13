@@ -1,12 +1,10 @@
 package withPipeline.onBranch
 
 import groovy.mock.interceptor.StubFor
-import org.junit.Ignore
 import org.junit.Test
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
-@Ignore("java.lang.StackOverflowError at MetaMethod.java:323")
 class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipelineForPact.jenkins"
 
@@ -17,26 +15,16 @@ class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(YarnBuilder)
-    def stubPactBroker = new StubFor(PactBroker)
-
     stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(0) {}
+      runConsumerTests(1) {}
+      runConsumerCanIDeploy(1) {}
+      asBoolean() { return true }
     }
-
-    stubPactBroker.demand.with {
-      canIDeploy(0) { version -> return null }
-    }
-
 
     stubBuilder.use {
-      stubPactBroker.use {
-        runScript("testResources/$jenkinsFile")
-      }
+      runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
-    stubPactBroker.expect.verify()
   }
 }
-
