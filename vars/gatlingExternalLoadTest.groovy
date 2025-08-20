@@ -149,23 +149,63 @@ def call(Map params) {
         sh "java -version"
         sh "echo 'Current JAVA_HOME: \$JAVA_HOME'"
         
-        // Try to use Java 17 as required by the external Gatling repository
-        try {
-          // Check if Java 17 is available
-          sh "test -d /opt/java/openjdk-17"
-          echo "Found Java 17, using it as required by external Gatling repository"
-          withEnv(["JAVA_HOME=/opt/java/openjdk-17", "PATH=/opt/java/openjdk-17/bin:\$PATH"]) {
+        // Search for Java 17 in common locations
+        echo "Searching for Java 17 in common Jenkins locations..."
+        sh "find /usr/lib/jvm -name '*java-17*' -type d 2>/dev/null || echo 'No Java 17 in /usr/lib/jvm'"
+        sh "find /opt -name '*java*17*' -type d 2>/dev/null || echo 'No Java 17 in /opt'"
+        sh "find /usr/local -name '*java*17*' -type d 2>/dev/null || echo 'No Java 17 in /usr/local'"
+        sh "ls -la /usr/lib/jvm/ || echo 'No /usr/lib/jvm directory'"
+        
+        def java17Found = false
+        def java17Path = ""
+        
+        // Try multiple common Java 17 locations
+        def java17Locations = [
+          "/opt/java/openjdk-17",
+          "/usr/lib/jvm/java-17-openjdk",
+          "/usr/lib/jvm/java-17-openjdk-amd64",
+          "/usr/lib/jvm/adoptopenjdk-17-hotspot",
+          "/usr/lib/jvm/temurin-17-jdk",
+          "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64"
+        ]
+        
+        for (location in java17Locations) {
+          try {
+            sh "test -d ${location}"
+            java17Found = true
+            java17Path = location
+            echo "Found Java 17 at: ${location}"
+            break
+          } catch (Exception e) {
+            echo "Java 17 not found at: ${location}"
+          }
+        }
+        
+        if (java17Found) {
+          echo "Using Java 17 from: ${java17Path}"
+          withEnv(["JAVA_HOME=${java17Path}", "PATH=${java17Path}/bin:\$PATH"]) {
             sh "java -version"
             sh "./gradlew --no-daemon clean gatlingRun"
           }
-        } catch (Exception e) {
-          // Fallback: Clear Gradle cache and try with current Java
-          echo "Java 17 not found, clearing Gradle caches and trying with available Java"
-          sh "rm -rf ~/.gradle/caches/ || true"
-          sh "rm -rf .gradle/ || true"
+        } else {
+          echo "Java 17 not found in filesystem. Trying Jenkins tool installations..."
           
-          // Force Gradle to not use toolchain (ignore the Java 17 requirement temporarily)
-          sh "./gradlew --no-daemon clean gatlingRun -Dorg.gradle.java.home=\$JAVA_HOME"
+          try {
+            // Try using Jenkins tool installation for Java 17
+            tool name: 'openjdk-17', type: 'jdk'
+            def toolJava17 = tool name: 'openjdk-17', type: 'jdk'
+            echo "Found Java 17 via Jenkins tools at: ${toolJava17}"
+            withEnv(["JAVA_HOME=${toolJava17}", "PATH=${toolJava17}/bin:\$PATH"]) {
+              sh "java -version"
+              sh "./gradlew --no-daemon clean gatlingRun"
+            }
+          } catch (Exception toolError) {
+            echo "ERROR: Java 17 not available via Jenkins tools either."
+            echo "Available Java installations:"
+            sh "find /usr/lib/jvm /opt -name '*java*' -type d 2>/dev/null || echo 'No Java directories found'"
+            echo "Please ensure Java 17 is installed on the build agent or configured in Jenkins Global Tool Configuration."
+            error("Java 17 is required for Gatling tests but was not found on this build agent.")
+          }
         }
         
         // Archive reports using Jenkins Gatling plugin (same as GradleBuilder)
