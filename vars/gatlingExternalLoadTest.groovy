@@ -185,6 +185,18 @@ def call(Map params) {
           echo "Using Java 17 from: ${java17Path}"
           withEnv(["JAVA_HOME=${java17Path}", "PATH=${java17Path}/bin:\$PATH"]) {
             sh "java -version"
+            
+            // Completely clear all Gradle caches to avoid Java version conflicts
+            echo "Clearing all Gradle caches to avoid Java version conflicts..."
+            sh "rm -rf ~/.gradle/caches/ || true"
+            sh "rm -rf ~/.gradle/wrapper/ || true"
+            sh "rm -rf .gradle/ || true"
+            sh "rm -rf build/ || true"
+            
+            // Also clear any Jenkins workspace Gradle cache
+            sh "find ${env.WORKSPACE} -name '.gradle' -type d -exec rm -rf {} + 2>/dev/null || true"
+            
+            echo "Running Gatling tests with Java 17..."
             sh "./gradlew --no-daemon clean gatlingRun"
           }
         } else {
@@ -197,6 +209,16 @@ def call(Map params) {
             echo "Found Java 17 via Jenkins tools at: ${toolJava17}"
             withEnv(["JAVA_HOME=${toolJava17}", "PATH=${toolJava17}/bin:\$PATH"]) {
               sh "java -version"
+              
+              // Clear Gradle caches for Jenkins tool Java 17 as well
+              echo "Clearing all Gradle caches for Jenkins tool Java 17..."
+              sh "rm -rf ~/.gradle/caches/ || true"
+              sh "rm -rf ~/.gradle/wrapper/ || true"
+              sh "rm -rf .gradle/ || true"
+              sh "rm -rf build/ || true"
+              sh "find ${env.WORKSPACE} -name '.gradle' -type d -exec rm -rf {} + 2>/dev/null || true"
+              
+              echo "Running Gatling tests with Jenkins tool Java 17..."
               sh "./gradlew --no-daemon clean gatlingRun"
             }
           } catch (Exception toolError) {
