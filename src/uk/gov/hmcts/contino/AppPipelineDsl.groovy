@@ -142,7 +142,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.gatlingLoadTests = true
     config.gatlingLoadTestTimeout = params.timeout ?: 10
     config.gatlingRepo = params.repo
-    config.gatlingBranch = params.branch ?: 'main'
+    config.gatlingBranch = params.branch ?: 'master'
     config.gatlingTestPath = params.testPath ?: 'src/test/scala'
     config.gatlingSimulation = params.simulation
     config.gatlingUsers = params.users ?: 5

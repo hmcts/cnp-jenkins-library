@@ -61,8 +61,8 @@ def call(Map params) {
     error("gatlingExternalLoadTest: 'gatlingRepo' parameter is required")
   }
 
-  // Set parameter defaults
-  def gatlingBranch = params.gatlingBranch ?: 'main'
+  // Set parameter defaults - try master first as many repos still use it
+  def gatlingBranch = params.gatlingBranch ?: 'master'
   def testUrl = params.testUrl ?: env.TEST_URL
   def gatlingUsers = params.gatlingUsers ?: 10
   def gatlingRampDuration = params.gatlingRampDuration ?: '30s'
@@ -91,21 +91,17 @@ def call(Map params) {
     dir(gatlingWorkspace) {
       echo "Checking out external Gatling repository..."
       
-      // Checkout external repository (no credentials needed for public repos)
-      checkout([
-        $class: 'GitSCM',
-        branches: [[name: "*/${gatlingBranch}"]],
-        doGenerateSubmoduleConfigurations: false,
-        extensions: [
-          [$class: 'CleanCheckout'],
-          [$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true]
-        ],
-        submoduleCfg: [],
-        userRemoteConfigs: [[
-          url: params.gatlingRepo
-          // No credentialsId needed for public repositories
-        ]]
-      ])
+      // Checkout external repository using simple git commands for better reliability
+      echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
+      
+      try {
+        // Try the specified branch first
+        sh "git clone --depth=1 --branch=${gatlingBranch} ${params.gatlingRepo} ."
+      } catch (Exception e) {
+        echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
+        // If specific branch fails, try without specifying branch (gets default)
+        sh "git clone --depth=1 ${params.gatlingRepo} ."
+      }
       
       echo "External Gatling repository checked out successfully"
       
@@ -126,16 +122,35 @@ def call(Map params) {
         "GATLING_SIMULATION_CLASS=${gatlingSimulation ?: ''}"
       ]) {
         
-        echo "Creating GradleBuilder instance for external Gatling repository..."
+        echo "Executing Gatling performance tests directly without Jenkins library init scripts..."
         
-        // Create GradleBuilder instance using the exact same pattern as the main pipeline
-        def gradleBuilder = new GradleBuilder(this, params.product)
+        // Check if external repo has Gatling plugins
+        def buildGradleContent = ""
+        def hasGatlingPlugin = false
         
-        echo "Executing Gatling performance tests using GradleBuilder.performanceTest()..."
+        if (fileExists('build.gradle')) {
+          buildGradleContent = readFile('build.gradle')
+          hasGatlingPlugin = buildGradleContent.contains('io.gatling.gradle') || buildGradleContent.contains('gradle-gatling-plugin')
+        } else if (fileExists('build.gradle.kts')) {
+          buildGradleContent = readFile('build.gradle.kts')
+          hasGatlingPlugin = buildGradleContent.contains('io.gatling.gradle') || buildGradleContent.contains('gradle-gatling-plugin')
+        }
         
-        // Use the EXACT same method as the existing pipeline - this ensures 100% compatibility
-        // The GradleBuilder handles all the Gatling plugin detection, report paths, and gatlingArchive() calls
-        gradleBuilder.performanceTest()
+        if (!hasGatlingPlugin) {
+          error("External Gatling repository must have Gatling Gradle plugin configured (io.gatling.gradle or gradle-gatling-plugin)")
+        }
+        
+        // Set Gatling reports path (same pattern as GradleBuilder)
+        env.GATLING_REPORTS_PATH = 'build/reports/gatling'
+        env.GATLING_REPORTS_DIR = "${gatlingWorkspace}/" + env.GATLING_REPORTS_PATH
+        
+        // Run Gatling tests directly without Jenkins library init scripts to avoid Java version conflicts
+        echo "Running: ./gradlew --no-daemon clean gatlingRun"
+        sh "./gradlew --no-daemon clean gatlingRun"
+        
+        // Archive reports using Jenkins Gatling plugin (same as GradleBuilder)
+        echo "Archiving Gatling reports..."
+        gatlingArchive()
         
         echo "External Gatling load tests completed successfully using GradleBuilder"
       }

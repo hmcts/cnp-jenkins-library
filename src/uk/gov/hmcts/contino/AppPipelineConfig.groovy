@@ -55,7 +55,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean gatlingLoadTests = false
   int gatlingLoadTestTimeout = 10
   String gatlingRepo
-  String gatlingBranch = 'main'
+  String gatlingBranch = 'master'
   String gatlingTestPath = 'src/test/scala'
   String gatlingSimulation
   int gatlingUsers = 5
