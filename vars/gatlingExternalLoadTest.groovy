@@ -183,7 +183,7 @@ def call(Map params) {
         
         if (java17Found) {
           echo "Using Java 17 from: ${java17Path}"
-          withEnv(["JAVA_HOME=${java17Path}", "PATH=${java17Path}/bin:\$PATH"]) {
+          withEnv(["JAVA_HOME=${java17Path}", "PATH+JAVA=${java17Path}/bin"]) {
             sh "java -version"
             
             // Completely clear all Gradle caches to avoid Java version conflicts
@@ -207,7 +207,7 @@ def call(Map params) {
             tool name: 'openjdk-17', type: 'jdk'
             def toolJava17 = tool name: 'openjdk-17', type: 'jdk'
             echo "Found Java 17 via Jenkins tools at: ${toolJava17}"
-            withEnv(["JAVA_HOME=${toolJava17}", "PATH=${toolJava17}/bin:\$PATH"]) {
+            withEnv(["JAVA_HOME=${toolJava17}", "PATH+JAVA=${toolJava17}/bin"]) {
               sh "java -version"
               
               // Clear Gradle caches for Jenkins tool Java 17 as well
