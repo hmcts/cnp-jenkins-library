@@ -51,6 +51,17 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int performanceTestStagesTimeout
   String performanceTestConfigPath
 
+  // Gatling load test configuration
+  boolean gatlingLoadTests = false
+  int gatlingLoadTestTimeout = 10
+  String gatlingRepo
+  String gatlingBranch = 'main'
+  String gatlingTestPath = 'src/test/scala'
+  String gatlingSimulation
+  int gatlingUsers = 5
+  String gatlingRampDuration = '30s'
+  String gatlingTestDuration = '300s'
+
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)

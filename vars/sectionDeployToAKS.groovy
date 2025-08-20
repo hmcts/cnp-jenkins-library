@@ -192,34 +192,135 @@ def call(params) {
               }
             }
           }
-          if (config.performanceTestStages) {
-            stageWithAgent("Performance Test Stages - ${environment}", product) {
-              testEnv(aksUrl) {
-                def success = true
-                try {
-                  pcr.callAround("performanceTestStages:${environment}") {
-                    timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Performance Test Stages - ${environment}") {
-                      performanceTestStages([
-                        product: product,
-                        component: component,
-                        environment: environment,
-                        testUrl: env.TEST_URL,
-                        secrets: config.vaultSecrets,
-                        configPath: config.performanceTestConfigPath
-                      ])
+          // Performance Test Pipeline: Setup -> Parallel Testing
+          if (config.performanceTestStages || config.gatlingLoadTests) {
+            
+            // Load performance test secrets once for all stages
+            def perfKeyVaultUrl = "https://et-perftest.vault.azure.net/"
+            def perfSecrets = [
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+            ]
+            
+            withAzureKeyvault(
+              azureKeyVaultSecrets: perfSecrets,
+              keyVaultURLOverride: perfKeyVaultUrl
+            ) {
+            
+              // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
+              if (config.performanceTestStages) {
+                stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
+                  testEnv(aksUrl) {
+                    def success = true
+                    try {
+                      pcr.callAround("dynatracePerformanceSetup:${environment}") {
+                        timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
+                          dynatracePerformanceSetup([
+                            product: product,
+                            component: component,
+                            environment: environment,
+                            testUrl: env.TEST_URL,
+                            secrets: config.vaultSecrets,
+                            configPath: config.performanceTestConfigPath
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      success = false
+                      echo "Dynatrace setup failed: ${err.message}"
+                      // Don't fail the build for setup issues, continue with tests
+                    } finally {
+                      savePodsLogs(dockerImage, params, "dynatrace-setup")
                     }
                   }
-                } catch (err) {
-                  success = false
-                  throw err
-                } finally {
-                  savePodsLogs(dockerImage, params, "performance-stages")
-                  if (!success) {
-                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                }
+              }
+            
+            // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
+            def testStages = [:]
+            
+            if (config.performanceTestStages) {
+              testStages['Dynatrace Synthetic Tests'] = {
+                stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
+                  testEnv(aksUrl) {
+                    def success = true
+                    try {
+                      pcr.callAround("dynatraceSyntheticTest:${environment}") {
+                        timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
+                          dynatraceSyntheticTest([
+                            product: product,
+                            component: component,
+                            environment: environment,
+                            testUrl: env.TEST_URL,
+                            secrets: config.vaultSecrets,
+                            configPath: config.performanceTestConfigPath
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      success = false
+                      throw err
+                    } finally {
+                      savePodsLogs(dockerImage, params, "dynatrace-synthetic")
+                      if (!success) {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      }
+                    }
                   }
                 }
               }
             }
+            
+            if (config.gatlingLoadTests) {
+              testStages['Gatling Load Tests'] = {
+                stageWithAgent("Gatling Load Tests - ${environment}", product) {
+                  testEnv(aksUrl) {
+                    def success = true
+                    try {
+                      pcr.callAround("gatlingLoadTests:${environment}") {
+                        timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
+                          gatlingExternalLoadTest([
+                            product: product,
+                            component: component,
+                            environment: environment,
+                            subscription: subscription,
+                            gatlingRepo: config.gatlingRepo,
+                            gatlingBranch: config.gatlingBranch,
+                            gatlingTestPath: config.gatlingTestPath,
+                            gatlingSimulation: config.gatlingSimulation,
+                            gatlingUsers: config.gatlingUsers,
+                            gatlingRampDuration: config.gatlingRampDuration,
+                            gatlingTestDuration: config.gatlingTestDuration,
+                            testUrl: env.TEST_URL
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      success = false
+                      throw err
+                    } finally {
+                      savePodsLogs(dockerImage, params, "gatling-load-tests")
+                      if (!success) {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+              // Execute test stages
+              if (testStages.size() > 1) {
+                echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
+                parallel(testStages)
+              } else {
+                echo "Running single performance test stage..."
+                testStages.values().first().call()
+              }
+              
+            } // End withAzureKeyvault block
           }
 
 
