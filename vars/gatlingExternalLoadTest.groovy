@@ -144,9 +144,29 @@ def call(Map params) {
         env.GATLING_REPORTS_PATH = 'build/reports/gatling'
         env.GATLING_REPORTS_DIR = "${gatlingWorkspace}/" + env.GATLING_REPORTS_PATH
         
-        // Run Gatling tests directly without Jenkins library init scripts to avoid Java version conflicts
-        echo "Running: ./gradlew --no-daemon clean gatlingRun"
-        sh "./gradlew --no-daemon clean gatlingRun"
+        // The external Gatling repo requires Java 17 (as specified in build.gradle)
+        echo "Checking available Java versions for Java 17 compatibility..."
+        sh "java -version"
+        sh "echo 'Current JAVA_HOME: \$JAVA_HOME'"
+        
+        // Try to use Java 17 as required by the external Gatling repository
+        try {
+          // Check if Java 17 is available
+          sh "test -d /opt/java/openjdk-17"
+          echo "Found Java 17, using it as required by external Gatling repository"
+          withEnv(["JAVA_HOME=/opt/java/openjdk-17", "PATH=/opt/java/openjdk-17/bin:\$PATH"]) {
+            sh "java -version"
+            sh "./gradlew --no-daemon clean gatlingRun"
+          }
+        } catch (Exception e) {
+          // Fallback: Clear Gradle cache and try with current Java
+          echo "Java 17 not found, clearing Gradle caches and trying with available Java"
+          sh "rm -rf ~/.gradle/caches/ || true"
+          sh "rm -rf .gradle/ || true"
+          
+          // Force Gradle to not use toolchain (ignore the Java 17 requirement temporarily)
+          sh "./gradlew --no-daemon clean gatlingRun -Dorg.gradle.java.home=\$JAVA_HOME"
+        }
         
         // Archive reports using Jenkins Gatling plugin (same as GradleBuilder)
         echo "Archiving Gatling reports..."
