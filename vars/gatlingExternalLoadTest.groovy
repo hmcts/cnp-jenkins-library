@@ -91,7 +91,7 @@ def call(Map params) {
     dir(gatlingWorkspace) {
       echo "Checking out external Gatling repository..."
       
-      // Checkout external repository
+      // Checkout external repository (no credentials needed for public repos)
       checkout([
         $class: 'GitSCM',
         branches: [[name: "*/${gatlingBranch}"]],
@@ -102,8 +102,8 @@ def call(Map params) {
         ],
         submoduleCfg: [],
         userRemoteConfigs: [[
-          url: params.gatlingRepo,
-          credentialsId: 'jenkins-public-github-api-token'
+          url: params.gatlingRepo
+          // No credentialsId needed for public repositories
         ]]
       ])
       
