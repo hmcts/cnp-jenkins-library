@@ -42,6 +42,7 @@ to ensure exact compatibility with the current pipeline infrastructure.
 
 import uk.gov.hmcts.contino.GradleBuilder
 
+
 def call(Map params) {
   
   // Validate required parameters
@@ -149,35 +150,39 @@ def call(Map params) {
         sh "java -version"
         sh "echo 'Current JAVA_HOME: \$JAVA_HOME'"
         
-        // Search for Java 17 in common locations
-        echo "Searching for Java 17 in common Jenkins locations..."
-        sh "find /usr/lib/jvm -name '*java-17*' -type d 2>/dev/null || echo 'No Java 17 in /usr/lib/jvm'"
-        sh "find /opt -name '*java*17*' -type d 2>/dev/null || echo 'No Java 17 in /opt'"
-        sh "find /usr/local -name '*java*17*' -type d 2>/dev/null || echo 'No Java 17 in /usr/local'"
-        sh "ls -la /usr/lib/jvm/ || echo 'No /usr/lib/jvm directory'"
-        
         def java17Found = false
         def java17Path = ""
         
-        // Try multiple common Java 17 locations
-        def java17Locations = [
-          "/opt/java/openjdk-17",
-          "/usr/lib/jvm/java-17-openjdk",
-          "/usr/lib/jvm/java-17-openjdk-amd64",
-          "/usr/lib/jvm/adoptopenjdk-17-hotspot",
-          "/usr/lib/jvm/temurin-17-jdk",
-          "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64"
-        ]
+        // Try known working location first
+        def knownJava17Location = "/usr/lib/jvm/java-17-openjdk-amd64"
         
-        for (location in java17Locations) {
-          try {
-            sh "test -d ${location}"
-            java17Found = true
-            java17Path = location
-            echo "Found Java 17 at: ${location}"
-            break
-          } catch (Exception e) {
-            echo "Java 17 not found at: ${location}"
+        try {
+          sh "test -d ${knownJava17Location}"
+          java17Found = true
+          java17Path = knownJava17Location
+          echo "Found Java 17 at known location: ${knownJava17Location}"
+        } catch (Exception e) {
+          echo "Java 17 not found at known location: ${knownJava17Location}. Searching alternative locations..."
+          
+          // Fallback to search if known location fails
+          def java17Locations = [
+            "/opt/java/openjdk-17",
+            "/usr/lib/jvm/java-17-openjdk",
+            "/usr/lib/jvm/adoptopenjdk-17-hotspot",
+            "/usr/lib/jvm/temurin-17-jdk",
+            "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64"
+          ]
+          
+          for (location in java17Locations) {
+            try {
+              sh "test -d ${location}"
+              java17Found = true
+              java17Path = location
+              echo "Found Java 17 at: ${location}"
+              break
+            } catch (Exception searchException) {
+              echo "Java 17 not found at: ${location}"
+            }
           }
         }
         
