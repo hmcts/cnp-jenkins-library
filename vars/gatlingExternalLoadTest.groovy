@@ -238,15 +238,30 @@ def call(Map params) {
       }
     }
     
-    // Publish performance reports using existing function
-    echo "Publishing external Gatling performance reports..."
+    // // Publish performance reports using existing function
+    // echo "Publishing external Gatling performance reports..."
+    // publishPerformanceReports(
+    //   product: params.product,
+    //   component: params.component,
+    //   environment: params.environment,
+    //   subscription: params.subscription
+    // )
+
+      // Publish performance reports using existing function
+  echo "Publishing external Gatling performance reports..."
+
+  // Fix: Override GATLING_REPORTS_PATH to point to external workspace reports
+  def externalReportsPath = "external-gatling-tests/build/reports/gatling"
+  echo "Debug: Setting GATLING_REPORTS_PATH to: ${externalReportsPath}"
+
+  withEnv(["GATLING_REPORTS_PATH=${externalReportsPath}"]) {
     publishPerformanceReports(
       product: params.product,
       component: params.component,
       environment: params.environment,
       subscription: params.subscription
     )
-    
+  }
     echo "External Gatling performance reports published successfully"
     
   } catch (Exception e) {
