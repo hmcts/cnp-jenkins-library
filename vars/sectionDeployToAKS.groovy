@@ -306,7 +306,6 @@ def call(params) {
                           ])
                         }
                       }
-                      }
                     } catch (err) {
                       success = false
                       throw err
