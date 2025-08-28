@@ -94,10 +94,8 @@ def call(Map params) {
     echo "DEBUG: bothTestsEnabled = ${bothTestsEnabled}"
     
     if (bothTestsEnabled) {
-      echo "Dynatrace: Setup complete, ready for synchronized execution"
-      milestone(label: "dynatrace-ready", ordinal: 9000)
-      echo "Dynatrace: Waiting for Gatling to be ready..."
-      milestone(label: "both-perf-tests-ready", ordinal: 9001)
+      echo "Dynatrace: Both tests enabled - delaying execution by 1 minute to allow Gatling setup"
+      sleep(time: 60, unit: "SECONDS")
       echo "Dynatrace: Starting synchronized test execution NOW!"
     } else {
       echo "Dynatrace: Single test execution (no sync needed)"
