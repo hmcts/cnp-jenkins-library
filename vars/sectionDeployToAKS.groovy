@@ -262,6 +262,7 @@ def call(params) {
                             configPath: config.performanceTestConfigPath
                           ])
                         }
+                        }
                       }
                     } catch (err) {
                       success = false
@@ -304,6 +305,7 @@ def call(params) {
                             testUrl: env.TEST_URL
                           ])
                         }
+                      }
                       }
                     } catch (err) {
                       success = false
