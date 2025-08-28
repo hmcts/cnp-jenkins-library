@@ -251,9 +251,13 @@ def call(params) {
                         timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
                           echo "DEBUG: config.performanceTestStages = ${config.performanceTestStages}"
                           echo "DEBUG: config.gatlingLoadTests = ${config.gatlingLoadTests}"
+                          def perfStagesEnabled = config.performanceTestStages ? 'true' : 'false'
+                          def gatlingEnabled = config.gatlingLoadTests ? 'true' : 'false'
+                          echo "DEBUG: perfStagesEnabled = ${perfStagesEnabled}"
+                          echo "DEBUG: gatlingEnabled = ${gatlingEnabled}"
                           withEnv([
-                            "PERFORMANCE_STAGES_ENABLED=${config.performanceTestStages ? 'true' : 'false'}",
-                            "GATLING_TESTS_ENABLED=${config.gatlingLoadTests ? 'true' : 'false'}"
+                            "PERFORMANCE_STAGES_ENABLED=${perfStagesEnabled}",
+                            "GATLING_TESTS_ENABLED=${gatlingEnabled}"
                           ]) {                        
                           dynatraceSyntheticTest([
                             product: product,
@@ -290,9 +294,13 @@ def call(params) {
                         timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
                           echo "DEBUG: config.performanceTestStages = ${config.performanceTestStages}"
                           echo "DEBUG: config.gatlingLoadTests = ${config.gatlingLoadTests}"
+                          def perfStagesEnabled = config.performanceTestStages ? 'true' : 'false'
+                          def gatlingEnabled = config.gatlingLoadTests ? 'true' : 'false'
+                          echo "DEBUG: perfStagesEnabled = ${perfStagesEnabled}"
+                          echo "DEBUG: gatlingEnabled = ${gatlingEnabled}"
                           withEnv([
-                            "PERFORMANCE_STAGES_ENABLED=${config.performanceTestStages ? 'true' : 'false'}",
-                            "GATLING_TESTS_ENABLED=${config.gatlingLoadTests ? 'true' : 'false'}"
+                            "PERFORMANCE_STAGES_ENABLED=${perfStagesEnabled}",
+                            "GATLING_TESTS_ENABLED=${gatlingEnabled}"
                           ]) {
                           gatlingExternalLoadTest([
                             product: product,
