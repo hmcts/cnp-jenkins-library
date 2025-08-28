@@ -202,9 +202,9 @@ def call(Map params) {
             sh "find ${env.WORKSPACE} -name '.gradle' -type d -exec rm -rf {} + 2>/dev/null || true"
             
             // Conditional synchronization - only if both performance tests are enabled
-            echo "DEBUG: PERFORMANCE_STAGES_ENABLED = ${System.getenv('PERFORMANCE_STAGES_ENABLED')}"
-            echo "DEBUG: GATLING_TESTS_ENABLED = ${System.getenv('GATLING_TESTS_ENABLED')}"
-            def bothTestsEnabled = System.getenv("PERFORMANCE_STAGES_ENABLED") == "true" && System.getenv("GATLING_TESTS_ENABLED") == "true"
+            def bothTestsEnabled = params.performanceTestStagesEnabled && params.gatlingLoadTestsEnabled
+            echo "DEBUG: performanceTestStagesEnabled = ${params.performanceTestStagesEnabled}"
+            echo "DEBUG: gatlingLoadTestsEnabled = ${params.gatlingLoadTestsEnabled}"
             echo "DEBUG: bothTestsEnabled = ${bothTestsEnabled}"
             
             if (bothTestsEnabled) {
@@ -240,9 +240,9 @@ def call(Map params) {
               sh "find ${env.WORKSPACE} -name '.gradle' -type d -exec rm -rf {} + 2>/dev/null || true"
               
               // Conditional synchronization - only if both performance tests are enabled
-              echo "DEBUG: PERFORMANCE_STAGES_ENABLED = ${System.getenv('PERFORMANCE_STAGES_ENABLED')}"
-              echo "DEBUG: GATLING_TESTS_ENABLED = ${System.getenv('GATLING_TESTS_ENABLED')}"
-              def bothTestsEnabled = System.getenv("PERFORMANCE_STAGES_ENABLED") == "true" && System.getenv("GATLING_TESTS_ENABLED") == "true"
+              def bothTestsEnabled = params.performanceTestStagesEnabled && params.gatlingLoadTestsEnabled
+              echo "DEBUG: performanceTestStagesEnabled = ${params.performanceTestStagesEnabled}"
+              echo "DEBUG: gatlingLoadTestsEnabled = ${params.gatlingLoadTestsEnabled}"
               echo "DEBUG: bothTestsEnabled = ${bothTestsEnabled}"
               
               if (bothTestsEnabled) {

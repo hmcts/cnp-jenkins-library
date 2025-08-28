@@ -249,25 +249,16 @@ def call(params) {
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environment}") {
                         timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
-                          echo "DEBUG: config.performanceTestStages = ${config.performanceTestStages}"
-                          echo "DEBUG: config.gatlingLoadTests = ${config.gatlingLoadTests}"
-                          def perfStagesEnabled = config.performanceTestStages ? 'true' : 'false'
-                          def gatlingEnabled = config.gatlingLoadTests ? 'true' : 'false'
-                          echo "DEBUG: perfStagesEnabled = ${perfStagesEnabled}"
-                          echo "DEBUG: gatlingEnabled = ${gatlingEnabled}"
-                          withEnv([
-                            "PERFORMANCE_STAGES_ENABLED=${perfStagesEnabled}",
-                            "GATLING_TESTS_ENABLED=${gatlingEnabled}"
-                          ]) {                        
                           dynatraceSyntheticTest([
                             product: product,
                             component: component,
                             environment: environment,
                             testUrl: env.TEST_URL,
                             secrets: config.vaultSecrets,
-                            configPath: config.performanceTestConfigPath
+                            configPath: config.performanceTestConfigPath,
+                            performanceTestStagesEnabled: config.performanceTestStages,
+                            gatlingLoadTestsEnabled: config.gatlingLoadTests
                           ])
-                        }
                         }
                       }
                     } catch (err) {
@@ -292,16 +283,6 @@ def call(params) {
                     try {
                       pcr.callAround("gatlingLoadTests:${environment}") {
                         timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
-                          echo "DEBUG: config.performanceTestStages = ${config.performanceTestStages}"
-                          echo "DEBUG: config.gatlingLoadTests = ${config.gatlingLoadTests}"
-                          def perfStagesEnabled = config.performanceTestStages ? 'true' : 'false'
-                          def gatlingEnabled = config.gatlingLoadTests ? 'true' : 'false'
-                          echo "DEBUG: perfStagesEnabled = ${perfStagesEnabled}"
-                          echo "DEBUG: gatlingEnabled = ${gatlingEnabled}"
-                          withEnv([
-                            "PERFORMANCE_STAGES_ENABLED=${perfStagesEnabled}",
-                            "GATLING_TESTS_ENABLED=${gatlingEnabled}"
-                          ]) {
                           gatlingExternalLoadTest([
                             product: product,
                             component: component,
@@ -314,9 +295,10 @@ def call(params) {
                             gatlingUsers: config.gatlingUsers,
                             gatlingRampDuration: config.gatlingRampDuration,
                             gatlingTestDuration: config.gatlingTestDuration,
-                            testUrl: env.TEST_URL
+                            testUrl: env.TEST_URL,
+                            performanceTestStagesEnabled: config.performanceTestStages,
+                            gatlingLoadTestsEnabled: config.gatlingLoadTests
                           ])
-                        }
                         }
                       }
 
