@@ -249,6 +249,8 @@ def call(params) {
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environment}") {
                         timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
+                          echo "DEBUG: config.performanceTestStages = ${config.performanceTestStages}"
+                          echo "DEBUG: config.gatlingLoadTests = ${config.gatlingLoadTests}"
                           withEnv([
                             "PERFORMANCE_STAGES_ENABLED=${config.performanceTestStages ? 'true' : 'false'}",
                             "GATLING_TESTS_ENABLED=${config.gatlingLoadTests ? 'true' : 'false'}"
@@ -286,6 +288,8 @@ def call(params) {
                     try {
                       pcr.callAround("gatlingLoadTests:${environment}") {
                         timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
+                          echo "DEBUG: config.performanceTestStages = ${config.performanceTestStages}"
+                          echo "DEBUG: config.gatlingLoadTests = ${config.gatlingLoadTests}"
                           withEnv([
                             "PERFORMANCE_STAGES_ENABLED=${config.performanceTestStages ? 'true' : 'false'}",
                             "GATLING_TESTS_ENABLED=${config.gatlingLoadTests ? 'true' : 'false'}"
