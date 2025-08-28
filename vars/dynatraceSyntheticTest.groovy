@@ -165,6 +165,8 @@ def call(Map params) {
       )
     }
 
+  sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
+
   } catch (Exception e) {
     echo "Error in Dynatrace synthetic test execution: ${e.message}"
     //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
