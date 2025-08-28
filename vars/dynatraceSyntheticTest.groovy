@@ -88,7 +88,10 @@ def call(Map params) {
     echo "Environment: ${environment}"
     
     // Conditional synchronization - only if both performance tests are enabled
+    echo "DEBUG: PERFORMANCE_STAGES_ENABLED = ${System.getenv('PERFORMANCE_STAGES_ENABLED')}"
+    echo "DEBUG: GATLING_TESTS_ENABLED = ${System.getenv('GATLING_TESTS_ENABLED')}"
     def bothTestsEnabled = System.getenv("PERFORMANCE_STAGES_ENABLED") == "true" && System.getenv("GATLING_TESTS_ENABLED") == "true"
+    echo "DEBUG: bothTestsEnabled = ${bothTestsEnabled}"
     
     if (bothTestsEnabled) {
       echo "Dynatrace: Setup complete, ready for synchronized execution"
