@@ -87,6 +87,19 @@ def call(Map params) {
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     echo "Environment: ${environment}"
     
+    // Conditional synchronization - only if both performance tests are enabled
+    def bothTestsEnabled = System.getenv("PERFORMANCE_STAGES_ENABLED") == "true" && System.getenv("GATLING_TESTS_ENABLED") == "true"
+    
+    if (bothTestsEnabled) {
+      echo "Dynatrace: Setup complete, ready for synchronized execution"
+      milestone(label: "dynatrace-ready", ordinal: 9000)
+      echo "Dynatrace: Waiting for Gatling to be ready..."
+      milestone(label: "both-perf-tests-ready", ordinal: 9001)
+      echo "Dynatrace: Starting synchronized test execution NOW!"
+    } else {
+      echo "Dynatrace: Single test execution (no sync needed)"
+    }
+    
     //Trigger Synthetic Test
     def triggerResult = dynatraceClient.triggerSyntheticTest(
       syntheticTestId

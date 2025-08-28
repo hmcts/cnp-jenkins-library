@@ -236,6 +236,19 @@ def call(Map params) {
               sh "rm -rf build/ || true"
               sh "find ${env.WORKSPACE} -name '.gradle' -type d -exec rm -rf {} + 2>/dev/null || true"
               
+              // Conditional synchronization - only if both performance tests are enabled
+              def bothTestsEnabled = System.getenv("PERFORMANCE_STAGES_ENABLED") == "true" && System.getenv("GATLING_TESTS_ENABLED") == "true"
+              
+              if (bothTestsEnabled) {
+                echo "Gatling: Setup complete, ready for synchronised execution"
+                milestone(label: "gatling-ready", ordinal: 9000)
+                echo "Gatling: Waiting for Dynatrace to be ready..."
+                milestone(label: "both-perf-tests-ready", ordinal: 9001)
+                echo "Gatling: Starting synchronised test execution NOW!"
+              } else {
+                echo "Gatling: Single test execution (no sync needed)"
+              }
+              
               echo "Running Gatling tests with Jenkins tool Java 17..."
               sh "./gradlew --no-daemon clean gatlingRun"
             }

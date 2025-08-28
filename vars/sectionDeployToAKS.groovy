@@ -241,12 +241,6 @@ def call(params) {
             // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
             def testStages = [:]
             
-            // Check if both performance tests are enabled for synchronization
-            def bothTestsEnabled = config.performanceTestStages && config.gatlingLoadTests
-            echo bothTestsEnabled ? 
-              "Both Dynatrace and Gatling tests enabled - using synchronised execution" : 
-              "Single test enabled - no synchronisation needed"
-            
             if (config.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
@@ -255,18 +249,10 @@ def call(params) {
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environment}") {
                         timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
-                          
-                          // Conditional synchronization - only if both tests are enabled
-                          if (bothTestsEnabled) {
-                            echo "Dynatrace: Setup complete, ready for synchronized execution"
-                            milestone(label: "dynatrace-ready", ordinal: 9000)
-                            echo "Dynatrace: Waiting for Gatling to be ready..."
-                            milestone(label: "both-perf-tests-ready", ordinal: 9001)
-                            echo "Dynatrace: Starting synchronized test execution NOW!"
-                          } else {
-                            echo "Dynatrace: Single test execution (no sync needed)"
-                          }
-                          
+                          withEnv([
+                            "PERFORMANCE_STAGES_ENABLED=${config.performanceTestStages ? 'true' : 'false'}",
+                            "GATLING_TESTS_ENABLED=${config.gatlingLoadTests ? 'true' : 'false'}"
+                          ]) {                        
                           dynatraceSyntheticTest([
                             product: product,
                             component: component,
@@ -299,6 +285,10 @@ def call(params) {
                     try {
                       pcr.callAround("gatlingLoadTests:${environment}") {
                         timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
+                          withEnv([
+                            "PERFORMANCE_STAGES_ENABLED=${config.performanceTestStages ? 'true' : 'false'}",
+                            "GATLING_TESTS_ENABLED=${config.gatlingLoadTests ? 'true' : 'false'}"
+                          ]) {
                           gatlingExternalLoadTest([
                             product: product,
                             component: component,
@@ -342,7 +332,7 @@ def call(params) {
           }
 
 
-          onMaster {
+          o
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
