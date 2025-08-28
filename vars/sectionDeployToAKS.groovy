@@ -305,7 +305,9 @@ def call(params) {
                             testUrl: env.TEST_URL
                           ])
                         }
+                        }
                       }
+
                     } catch (err) {
                       success = false
                       throw err
@@ -332,8 +334,7 @@ def call(params) {
             } // End withAzureKeyvault block
           }
 
-
-          o
+          onMaster {
             if (config.crossBrowserTest) {
               stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
