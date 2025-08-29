@@ -17,7 +17,8 @@ class RubyBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    bundle("exec rake fortifyScan")
+    bundle("exec rake fortify_scan")
+
   }
 
   def test() {
