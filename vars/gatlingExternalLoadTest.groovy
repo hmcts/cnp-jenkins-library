@@ -106,8 +106,14 @@ def call(Map params) {
       
       echo "External Gatling repository checked out successfully"
 
+      //Run the Perf test using existing perftest builder
+      try {
+      builder.performanceTest() 
+      } catch (Exception e) {
+        echo "**** Failed to run builder.performanceTest: ${e.message}"
+      }
     } //End of dir
-      
+    
     //   // Set environment variables for Gatling test configuration
     //   withEnv([
     //     "TEST_URL=${testUrl}",
