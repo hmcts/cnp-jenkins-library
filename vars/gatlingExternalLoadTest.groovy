@@ -41,6 +41,7 @@ to ensure exact compatibility with the current pipeline infrastructure.
 ============================================================================================*/
 
 import uk.gov.hmcts.contino.GradleBuilder
+import uk.gov.hmcts.contino.Builder
 
 
 def call(Map params) {
@@ -108,7 +109,8 @@ def call(Map params) {
 
       //Run the Perf test using existing perftest builder
       try {
-      builder.performanceTest() 
+        def builder = new GradleBuilder(this, params.product)
+        builder.performanceTest() 
       } catch (Exception e) {
         echo "**** Failed to run builder.performanceTest: ${e.message}"
       }
