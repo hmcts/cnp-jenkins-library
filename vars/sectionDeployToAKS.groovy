@@ -301,7 +301,9 @@ def call(params) {
                           ])
                         }
                       }
-
+                      pcr.callAround("performanceTest:${environment}") {
+                        builder.performanceTest()
+                      }
                     } catch (err) {
                       success = false
                       throw err

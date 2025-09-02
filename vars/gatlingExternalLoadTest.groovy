@@ -106,13 +106,6 @@ def call(Map params) {
       
       echo "External Gatling repository checked out successfully"
 
-      try {
-      builder.performanceTest()
-      }
-      catch (Exception e) {
-       echo "**** Failed to run builder.performanceTest"
-      }
-
     } //End of dir
       
     //   // Set environment variables for Gatling test configuration
