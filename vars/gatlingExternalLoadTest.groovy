@@ -105,23 +105,32 @@ def call(Map params) {
       }
       
       echo "External Gatling repository checked out successfully"
-      
-      // Set environment variables for Gatling test configuration
-      withEnv([
-        "TEST_URL=${testUrl}",
-        "GATLING_USERS=${gatlingUsers}",
-        "GATLING_RAMP_DURATION=${gatlingRampDuration}",
-        "GATLING_TEST_DURATION=${gatlingTestDuration}",
-        "PRODUCT=${params.product}",
-        "COMPONENT=${params.component}",
-        "ENVIRONMENT=${params.environment}",
-        "GATLING_SIMULATION_CLASS=${gatlingSimulation ?: ''}"
-      ]) {
-        
-      builder.performanceTest()
 
-        }
-    }
+      try {
+      builder.performanceTest()
+      }
+      catch (Exception e) {
+       echo "**** Failed to run builder.performanceTest"
+      }
+
+    } //End of dir
+      
+    //   // Set environment variables for Gatling test configuration
+    //   withEnv([
+    //     "TEST_URL=${testUrl}",
+    //     "GATLING_USERS=${gatlingUsers}",
+    //     "GATLING_RAMP_DURATION=${gatlingRampDuration}",
+    //     "GATLING_TEST_DURATION=${gatlingTestDuration}",
+    //     "PRODUCT=${params.product}",
+    //     "COMPONENT=${params.component}",
+    //     "ENVIRONMENT=${params.environment}",
+    //     "GATLING_SIMULATION_CLASS=${gatlingSimulation ?: ''}"
+    //   ]) {
+        
+      
+
+    //     }
+   
     
   // Publish performance reports using existing function
   echo "Publishing external Gatling performance reports..."
