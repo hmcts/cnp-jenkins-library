@@ -133,34 +133,24 @@ def call(Map params) {
   echo "Debug: Setting GATLING_REPORTS_PATH to: ${externalReportsPath}"
 
  // Publish reports code 
-  withEnv(["GATLING_REPORTS_PATH=${externalReportsPath}"]) {
+  // withEnv(["GATLING_REPORTS_PATH=${externalReportsPath}"]) {
 
-    // Previous implementation using publishPerformanceReports function:
-    // withEnv(["GATLING_REPORTS_PATH=${externalReportsPath}"]) {
-    //   publishPerformanceReports(
-    //     product: params.product,
-    //     component: params.component,
-    //     environment: params.environment,
-    //     subscription: params.subscription
-    //   )
-    // }
+  //   echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
 
-    echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
-
-    try {
-      // Upload to custom directory for external tests
-      azureBlobUpload(
-        params.subscription,
-        'buildlog-storage-account',
-        env.GATLING_REPORTS_PATH,
-        "performance/perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
-      )
-      echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
-    }
-    catch (Exception ex) {
-      echo "ERROR: Failed to upload external Gatling reports: ${ex}"
-    }
-  }
+  //   try {
+  //     // Upload to custom directory for external tests
+  //     azureBlobUpload(
+  //       params.subscription,
+  //       'buildlog-storage-account',
+  //       env.GATLING_REPORTS_PATH,
+  //       "performance/perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
+  //     )
+  //     echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
+  //   }
+  //   catch (Exception ex) {
+  //     echo "ERROR: Failed to upload external Gatling reports: ${ex}"
+  //   }
+  // }
     
   } catch (Exception e) {
     echo "Error in external Gatling load test execution: ${e.message}"
