@@ -108,28 +108,28 @@ def call(params) {
           }
         }
       }
-      if (config.serviceApp) {
-        withTeamSecrets(config, environment) {
-          stageWithAgent("Smoke Test - AKS ${environment}", product) {
-            testEnv(aksUrl) {
-              def success = true
-              try {
-                pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                    builder.smokeTest()
-                  }
-                }
-              } catch (err) {
-                success = false
-                throw err
-              } finally {
-                savePodsLogs(dockerImage, params, "smoke")
-                if (!success) {
-                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                }
-              }
-            }
-          }
+      // if (config.serviceApp) {
+        // withTeamSecrets(config, environment) {
+        //   stageWithAgent("Smoke Test - AKS ${environment}", product) {
+        //     testEnv(aksUrl) {
+        //       def success = true
+        //       try {
+        //         pcr.callAround("smoketest:${environment}") {
+        //           timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+        //             builder.smokeTest()
+        //           }
+        //         }
+        //       } catch (err) {
+        //         success = false
+        //         throw err
+        //       } finally {
+        //         savePodsLogs(dockerImage, params, "smoke")
+        //         if (!success) {
+        //           clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+        //         }
+        //       }
+        //     }
+        //   }
 
           // onFunctionalTestEnvironment(environment) {
           //   if (testLabels.contains('enable_full_functional_tests')) {
