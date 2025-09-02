@@ -130,6 +130,7 @@ def call(params) {
         //       }
         //     }
         //   }
+        // }
 
           // onFunctionalTestEnvironment(environment) {
           //   if (testLabels.contains('enable_full_functional_tests')) {
@@ -392,7 +393,6 @@ def call(params) {
             }
           }
         }
-      }
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
       if (isOnMaster || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
