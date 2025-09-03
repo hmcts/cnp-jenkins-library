@@ -122,24 +122,7 @@ def call(Map params) {
       } catch (Exception e) {
         echo "**** Failed to run builder.performanceTest: ${e.message}"
       }
-    } //End of dir
-    
-    //   // Set environment variables for Gatling test configuration
-    //   withEnv([
-    //     "TEST_URL=${testUrl}",
-    //     "GATLING_USERS=${gatlingUsers}",
-    //     "GATLING_RAMP_DURATION=${gatlingRampDuration}",
-    //     "GATLING_TEST_DURATION=${gatlingTestDuration}",
-    //     "PRODUCT=${params.product}",
-    //     "COMPONENT=${params.component}",
-    //     "ENVIRONMENT=${params.environment}",
-    //     "GATLING_SIMULATION_CLASS=${gatlingSimulation ?: ''}"
-    //   ]) {
-        
-      
-
-    //     }
-   
+    } //End of dir  
     
   // Publish performance reports using existing function
   echo "Publishing external Gatling performance reports..."
@@ -149,24 +132,24 @@ def call(Map params) {
   echo "Debug: Setting GATLING_REPORTS_PATH to: ${externalReportsPath}"
 
  // Publish reports code 
-  // withEnv(["GATLING_REPORTS_PATH=${externalReportsPath}"]) {
+  withEnv(["GATLING_REPORTS_PATH=${externalReportsPath}"]) {
 
-  //   echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
+    echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
 
-  //   try {
-  //     // Upload to custom directory for external tests
-  //     azureBlobUpload(
-  //       params.subscription,
-  //       'buildlog-storage-account',
-  //       env.GATLING_REPORTS_PATH,
-  //       "performance/perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
-  //     )
-  //     echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
-  //   }
-  //   catch (Exception ex) {
-  //     echo "ERROR: Failed to upload external Gatling reports: ${ex}"
-  //   }
-  // }
+    try {
+      // Upload to custom directory for external tests
+      azureBlobUpload(
+        params.subscription,
+        'buildlog-storage-account',
+        env.GATLING_REPORTS_PATH,
+        "performance/perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
+      )
+      echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
+    }
+    catch (Exception ex) {
+      echo "ERROR: Failed to upload external Gatling reports: ${ex}"
+    }
+  }
     
   } catch (Exception e) {
     echo "Error in external Gatling load test execution: ${e.message}"
