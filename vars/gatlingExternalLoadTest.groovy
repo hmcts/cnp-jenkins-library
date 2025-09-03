@@ -93,16 +93,18 @@ def call(Map params) {
     dir(gatlingWorkspace) {
       echo "Checking out external Gatling repository..."
       
-      // Checkout external repository using simple git commands for better reliability
+      // Checkout external repository using Git credentials
       echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
       
-      try {
-        // Try the specified branch first
-        sh "git clone --depth=1 --branch=${gatlingBranch} ${params.gatlingRepo} ."
-      } catch (Exception e) {
-        echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
-        // If specific branch fails, try without specifying branch (gets default)
-        sh "git clone --depth=1 ${params.gatlingRepo} ."
+      withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+        try {
+          // Try the specified branch first
+          sh "git clone --depth=1 --branch=${gatlingBranch} https://\${GIT_USERNAME}:\${GIT_PASSWORD}@${params.gatlingRepo.replace('https://', '')} ."
+        } catch (Exception e) {
+          echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
+          // If specific branch fails, try without specifying branch (gets default)
+          sh "git clone --depth=1 https://\${GIT_USERNAME}:\${GIT_PASSWORD}@${params.gatlingRepo.replace('https://', '')} ."
+        }
       }
       
       echo "External Gatling repository checked out successfully"
