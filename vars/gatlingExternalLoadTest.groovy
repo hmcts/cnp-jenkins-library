@@ -96,14 +96,20 @@ def call(Map params) {
       // Checkout external repository using Git credentials
       echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
       
-      withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+      withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
         try {
           // Try the specified branch first
-          sh "git clone --depth=1 --branch=${gatlingBranch} https://\${GIT_USERNAME}:\${GIT_PASSWORD}@${params.gatlingRepo.replace('https://', '')} ."
+          sh """
+            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+            git clone --depth=1 --branch=${gatlingBranch} \$REPO_URL .
+          """
         } catch (Exception e) {
           echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
           // If specific branch fails, try without specifying branch (gets default)
-          sh "git clone --depth=1 https://\${GIT_USERNAME}:\${GIT_PASSWORD}@${params.gatlingRepo.replace('https://', '')} ."
+          sh """
+            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+            git clone --depth=1 \$REPO_URL .
+          """
         }
       }
       
