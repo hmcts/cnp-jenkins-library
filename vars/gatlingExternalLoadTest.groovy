@@ -118,7 +118,7 @@ def call(Map params) {
       //Run the Perf test using existing perftest builder
       try {
         def builder = new GradleBuilder(this, params.product)
-        builder.performanceTest() 
+        builder.performanceTest(params.gatlingSimulation) 
       } catch (Exception e) {
         echo "**** Failed to run builder.performanceTest: ${e.message}"
       }
