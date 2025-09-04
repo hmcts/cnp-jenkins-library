@@ -18,6 +18,9 @@ def call(String suffix = "") {
       timeout: 15, url: "https://api.github.com/repos/${repositoryShortUrl}/deployments", validResponseCodes: '200:201',
       consoleLogResponseBody: true
 
-    def deploymentId = new JsonSlurperClassic().parseText(response.content).id
+    def deploymentId = null
+    if (response.content) {
+      deploymentId = new JsonSlurperClassic().parseText(response.content).id
+    }
     return deploymentId
 }

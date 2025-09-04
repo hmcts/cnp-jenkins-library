@@ -1,5 +1,5 @@
 import uk.gov.hmcts.contino.Gatling
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 def call(params)  {
   try {
@@ -17,7 +17,7 @@ def call(params)  {
   catch (Exception ex) {
 
     // Get error code from exception
-    def jsonSlurper = new JsonSlurper()
+    def jsonSlurper = new JsonSlurperClassic()
     def errorJson = jsonSlurper.parseText(ex.getMessage())
     def errorCode = errorJson.code ?: "Uknown error code"
 
@@ -28,13 +28,13 @@ def call(params)  {
       def maxRetries = 9
       def retryCount = 0
       def success = false
-      
+
       while (retryCount < maxRetries && !success) {
       retryCount++
       def waitTime = Math.pow(2, retryCount) * 1000 // Exponential backoff in milliseconds
       echo "Retry attempt ${retryCount}/${maxRetries} after ${waitTime}ms delay"
       sleep(waitTime)
-      
+
       try {
         publishToCosmosDb(params, Gatling.COSMOSDB_CONTAINER, reportsPath, '**/*.json')
         success = true

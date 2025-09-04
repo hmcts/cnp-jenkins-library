@@ -2,7 +2,7 @@ package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Docker
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 
 class Helm {
@@ -163,9 +163,19 @@ class Helm {
     }
     def releases = this.history(imageTag, namespace)
     this.steps.echo releases
-    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
-                                                                    it.status?.toLowerCase() == "pending-upgrade" ||
-                                                                    it.status?.toLowerCase() == "pending-install" }
+
+    if (!releases) {
+      return false
+    }
+
+    try {
+      return new JsonSlurperClassic().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
+                                                               it.status?.toLowerCase() == "pending-upgrade" ||
+                                                               it.status?.toLowerCase() == "pending-install" }
+    } catch (Exception e) {
+      this.steps.echo "Failed to parse helm history JSON: ${e.getMessage()}"
+      return false
+    }
   }
 
   private Object execute(String command, String name) {

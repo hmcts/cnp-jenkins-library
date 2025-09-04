@@ -17,7 +17,7 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
  *  </ul>
  */
 def call(teamSlackChannel, metricsPublisher ) {
-  SlackBlockMessage warningMessage = WarningCollector.getSlackWarningMessage()
+  def warningMessage = WarningCollector.getSlackWarningMessage()
   // Fetch all block sections from the warnings mesage to see if anything has been added
   String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
 
