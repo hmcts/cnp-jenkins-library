@@ -12,7 +12,8 @@ allprojects {
   }*/
   buildscript {
     repositories {
-     /* maven {
+      /*
+      maven {
         url mirrorUrl
       }
       mavenCentral()
