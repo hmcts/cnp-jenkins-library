@@ -37,6 +37,8 @@ settingsEvaluated { settings ->
 
 allprojects {
   afterEvaluate { project ->
+    // OWASP dependency check disabled
+    /*
     if (project.hasProperty('dependencyCheck')) {
       configure(project) {
         dependencyCheck {
@@ -59,5 +61,6 @@ allprojects {
         }
       }
     }
+    */
   }
 }
