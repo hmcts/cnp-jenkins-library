@@ -103,20 +103,20 @@ class GradleBuilderTest extends Specification {
     1 * steps.libraryResource('uk/gov/hmcts/gradle/init.gradle')
   }
 
-  // def "securityCheck calls 'gradle dependencyCheckAggregate'"() {
-  //   setup:
-  //     def closure
-  //     steps.withAzureKeyvault(_, { it.call() }) >> { closure = it }
-  //     def spyGradleBuilder = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
-  //       hasPlugin(_) >> true
-  //     }
-  //   when:
-  //   spyGradleBuilder.securityCheck()
-  //   then:
-  //     1 * steps.sh({
-  //       GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate')
-  //     })
-  // }
+  def "securityCheck calls 'gradle dependencyCheckAggregate'"() {
+    setup:
+      def closure
+      steps.withAzureKeyvault(_, { it.call() }) >> { closure = it }
+      def spyGradleBuilder = Spy(GradleBuilder, constructorArgs: [steps, 'test']) {
+        hasPlugin(_) >> true
+      }
+    when:
+    spyGradleBuilder.securityCheck()
+    then:
+      1 * steps.sh({
+        GString it -> it.startsWith(GRADLE_CMD) && it.contains('dependencyCheckAggregate')
+      })
+  }
 
   def "runProviderVerification triggers a gradlew hook"() {
     setup:

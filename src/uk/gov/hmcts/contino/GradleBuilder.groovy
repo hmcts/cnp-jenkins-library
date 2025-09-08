@@ -123,27 +123,25 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
-    localSteps.echo("OWASP dependency check has been disabled with temporary DB issues")
-    return    
-    // def secrets = [
-    //   [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
-    //   [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
-    //   [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V15_CONNECTION_STRING' ]
-    // ]
+    def secrets = [
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V15_CONNECTION_STRING' ]
+    ]
 
-    // localSteps.withAzureKeyvault(secrets) {
-    //   try {
-    //     gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
-    //   } finally {
-    //     localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
-    //     String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
+    localSteps.withAzureKeyvault(secrets) {
+      try {
+        gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+      } finally {
+        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
+        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
 
-    //     def cveReport = prepareCVEReport(dependencyReport)
+        def cveReport = prepareCVEReport(dependencyReport)
 
-    //     new CVEPublisher(localSteps)
-    //       .publishCVEReport('java', cveReport)
-    //   }
-    // }
+        new CVEPublisher(localSteps)
+          .publishCVEReport('java', cveReport)
+      }
+    }
   }
 
   @Override
