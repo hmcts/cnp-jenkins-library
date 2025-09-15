@@ -144,12 +144,10 @@ class YarnBuilder extends AbstractBuilder {
     //      chmod +x yarn-audit-with-suppressions.sh
     //     ./yarn-audit-with-suppressions.sh
     //   """
-    // } finally {
-    //   steps.sh """
-    //     cat yarn-audit-result-formatted | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-    //     cat yarn-audit-result-formatted | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
-    //     cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
-    //   """
+    } finally {
+      steps.sh """
+        echo "skipping stage"
+      """
     //   String issues = steps.readFile('yarn-audit-issues-result')
     //   String knownIssues = null
     //   if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
@@ -158,7 +156,7 @@ class YarnBuilder extends AbstractBuilder {
     //   def cveReport = prepareCVEReport(issues, knownIssues)
     //   new CVEPublisher(steps)
     //     .publishCVEReport('node', cveReport)
-    // }
+    }
   }
 
   @Override
