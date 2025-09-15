@@ -92,9 +92,18 @@ fi
 
 # Always convert to the new format for consistency
 if head -1 yarn-audit-result | jq -e 'has("value") and has("children")' >/dev/null 2>&1; then
+  echo "Converting old format to new format..."
   cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 else
+  echo "Using existing new format..."
   cp yarn-audit-result yarn-audit-result-formatted
+fi
+
+# Verify the formatted file has the correct structure
+if ! jq -e 'has("advisories") and has("metadata")' yarn-audit-result-formatted >/dev/null 2>&1; then
+  echo "Error: yarn-audit-result-formatted does not have the expected structure"
+  echo "Attempting to force conversion..."
+  cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 fi
 
 jq -cr '.advisories | to_entries[] | .key' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
