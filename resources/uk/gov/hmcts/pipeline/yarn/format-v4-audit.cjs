@@ -76,7 +76,7 @@ async function getGitHubAdvisory(htmlUrl) {
   const url = htmlUrl.replace('github.com', 'api.github.com');
   const request = await fetch(url, {
     headers: {
-      "Authorization": "Bearer " + process.env.GIT_CREDENTIALS_ID,
+      "Authorization": "Bearer " + process.env.BEARER_TOKEN,
       "X-GitHub-Api-Version": "2022-11-28"
     }
   });
