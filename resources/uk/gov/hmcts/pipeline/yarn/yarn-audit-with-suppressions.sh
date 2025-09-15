@@ -141,15 +141,37 @@ if [ ! -f yarn-audit-known-issues ]; then
   exit 1
 else
   # Test for old format of yarn-audit-known-issues
+  echo "DEBUG: Processing yarn-audit-known-issues..."
+  echo "DEBUG: First line of yarn-audit-known-issues:"
+  head -1 yarn-audit-known-issues
+  
   if [ "$YARN_VERSION" == "4" ]; then
+    echo "DEBUG: Converting yarn-audit-known-issues with format-v4-audit.cjs..."
     cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
   else
+    echo "DEBUG: Copying yarn-audit-known-issues as-is..."
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
+  
+  echo "DEBUG: First line of yarn-audit-known-issues-formatted:"
+  head -1 yarn-audit-known-issues-formatted
 
-  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
-    print_borked_known_issues
-    exit 1
+  # Check if the file contains valid JSON (either old format or new NDJSON format)
+  if ! jq empty yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+    # Try as newline-delimited JSON (new format)
+    if ! jq -s empty yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+      echo "DEBUG: yarn-audit-known-issues-formatted contains invalid JSON"
+      print_borked_known_issues
+      exit 1
+    fi
+    echo "DEBUG: Detected newline-delimited JSON format (Yarn v4+)"
+  else
+    # Check if it has the old expected structure
+    if jq -e 'has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+      echo "DEBUG: Detected old JSON format with actions/advisories/metadata"
+    else
+      echo "DEBUG: Valid JSON but not old format, assuming new format"
+    fi
   fi
 
   # Handle edge case for when audit returns in different orders for the two files
