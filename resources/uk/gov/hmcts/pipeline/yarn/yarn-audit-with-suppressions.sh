@@ -25,6 +25,7 @@
 
 # Exit script on error
 set -e
+set +x
 
 # Check for dependencies
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
@@ -107,8 +108,21 @@ fi
 echo "DEBUG: First line of yarn-audit-result-formatted:"
 head -10 yarn-audit-result-formatted
 
+echo "DEBUG: Testing if yarn-audit-result-formatted is valid JSON..."
+if ! jq empty yarn-audit-result-formatted >/dev/null 2>&1; then
+  echo "ERROR: yarn-audit-result-formatted is not valid JSON!"
+  echo "DEBUG: Full content of yarn-audit-result-formatted:"
+  cat yarn-audit-result-formatted
+  exit 1
+fi
+
 echo "DEBUG: Testing jq command on yarn-audit-result-formatted..."
-jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted
+if ! jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted; then
+  echo "ERROR: Failed to extract advisories from yarn-audit-result-formatted"
+  echo "DEBUG: Trying to check structure..."
+  jq 'keys' yarn-audit-result-formatted
+  exit 1
+fi
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
@@ -136,6 +150,7 @@ fi
 
 # Check if there are known vulnerabilities
 if [ ! -f yarn-audit-known-issues ]; then
+  echo "Beginning pretty-print"
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
   exit 1
@@ -156,22 +171,9 @@ else
   echo "DEBUG: First line of yarn-audit-known-issues-formatted:"
   head -1 yarn-audit-known-issues-formatted
 
-  # Check if the file contains valid JSON (either old format or new NDJSON format)
-  if ! jq empty yarn-audit-known-issues-formatted >/dev/null 2>&1; then
-    # Try as newline-delimited JSON (new format)
-    if ! jq -s empty yarn-audit-known-issues-formatted >/dev/null 2>&1; then
-      echo "DEBUG: yarn-audit-known-issues-formatted contains invalid JSON"
-      print_borked_known_issues
-      exit 1
-    fi
-    echo "DEBUG: Detected newline-delimited JSON format (Yarn v4+)"
-  else
-    # Check if it has the old expected structure
-    if jq -e 'has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
-      echo "DEBUG: Detected old JSON format with actions/advisories/metadata"
-    else
-      echo "DEBUG: Valid JSON but not old format, assuming new format"
-    fi
+  if ! jq -e 'has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+    print_borked_known_issues
+    exit 1
   fi
 
   # Handle edge case for when audit returns in different orders for the two files
