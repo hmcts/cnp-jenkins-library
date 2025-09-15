@@ -95,7 +95,7 @@ else
   cp yarn-audit-result yarn-audit-result-formatted
 fi
 
-jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
+jq -cr 'select(.value and .children) | .children' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
 if [[ ! -s sorted-yarn-audit-issues ]];  then
@@ -110,8 +110,7 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
       cp yarn-audit-known-issues yarn-audit-known-issues-formatted
     fi
 
-    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
-    | sort > sorted-yarn-audit-known-issues
+    jq -cr 'select(.value and .children) | .children' < yarn-audit-known-issues-formatted | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
     check_for_unneeded_suppressions
@@ -133,18 +132,18 @@ else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
 
-  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
+  if ! jq 'if . then has("value", "children") else false end' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
     exit 1
   fi
 
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
-  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
+  jq -cr 'select(.value and .children) | .children' < yarn-audit-known-issues-formatted \
   | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
-  jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-known-issues-formatted > yarn-audit-known-issues-result
+  jq -cr 'select(.value and .children) | {"type": "auditAdvisory", "data": { "advisory": .children }}' < yarn-audit-known-issues-formatted > yarn-audit-known-issues-result
 
   # Check each issue in sorted-yarn-audit-result is also present in sorted-yarn-audit-known-issues
   while IFS= read -r line; do
