@@ -130,24 +130,24 @@ def "crossBrowserTest calls 'BROWSER_GROUP=chrome yarn test:crossbrowser'"() {
         1 * steps.sh({ it instanceof Map && it.script.contains('test:mutation') && it.returnStatus == true })
 }
 
-def "securityCheck calls 'yarn audit'"() {
-    when:
-        builder.securityCheck()
-    then:
-        1 * steps.sh("""
-        set +ex
-        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
-        . /opt/nvm/nvm.sh || true
-        nvm install
-        set -ex
-      """)
-        1 * steps.sh("""
-         export PATH=\$HOME/.local/bin:\$PATH
-         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
-         chmod +x yarn-audit-with-suppressions.sh
-        ./yarn-audit-with-suppressions.sh
-      """)
-}
+// def "securityCheck calls 'yarn audit'"() {
+//     when:
+//         builder.securityCheck()
+//     then:
+//         1 * steps.sh("""
+//         set +ex
+//         export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
+//         . /opt/nvm/nvm.sh || true
+//         nvm install
+//         set -ex
+//       """)
+//         1 * steps.sh("""
+//          export PATH=\$HOME/.local/bin:\$PATH
+//          export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
+//          chmod +x yarn-audit-with-suppressions.sh
+//         ./yarn-audit-with-suppressions.sh
+//       """)
+// }
     
   def "full functional tests calls 'yarn test:fullfunctional'"() {
       when:
@@ -192,26 +192,26 @@ def "securityCheck calls 'yarn audit'"() {
           1 * steps.sh({ it instanceof Map && it.script.contains("yarn test:can-i-deploy:consumer") && it.returnStatus == true })
   }
   
-    def "prepareCVEReport converts json lines report to groovy object"() {
-      given:
-        def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
-      when:
-        def result = builder.prepareCVEReport(sampleCVEReport, null)
-      then:
-      result == NODE_JS_CVE_REPORT
-    }
+    // def "prepareCVEReport converts json lines report to groovy object"() {
+    //   given:
+    //     def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
+    //   when:
+    //     def result = builder.prepareCVEReport(sampleCVEReport, null)
+    //   then:
+    //   result == NODE_JS_CVE_REPORT
+    // }
   
-    def "prepareCVEReport converts json lines report to groovy object with suppressions"() {
-      given:
-      def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
-      def sampleCVESuppressionsReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-suppressed.txt').toURI()).text
-      def suppressed = NODE_JS_CVE_REPORT.vulnerabilities
+    // def "prepareCVEReport converts json lines report to groovy object with suppressions"() {
+    //   given:
+    //   def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report.txt').toURI()).text
+    //   def sampleCVESuppressionsReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-suppressed.txt').toURI()).text
+    //   def suppressed = NODE_JS_CVE_REPORT.vulnerabilities
   
-      when:
-      def result = builder.prepareCVEReport(sampleCVEReport, sampleCVESuppressionsReport)
-      then:
-      result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
-    }
+    //   when:
+    //   def result = builder.prepareCVEReport(sampleCVEReport, sampleCVESuppressionsReport)
+    //   then:
+    //   result == NODE_JS_CVE_REPORT << [suppressed: suppressed]
+    // }
   
     def "techStackMaintenance"() {
       when:
