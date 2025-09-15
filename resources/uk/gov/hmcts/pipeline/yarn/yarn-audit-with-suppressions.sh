@@ -74,8 +74,20 @@ check_for_unneeded_suppressions() {
 
   if [[ -s unneeded_suppressions ]]; then
     echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
-    source prettyPrintAudit.sh unneeded_suppressions
+    # Convert IDs to full objects for pretty printing
+    create_full_objects_from_ids unneeded_suppressions unneeded_suppressions_full
+    source prettyPrintAudit.sh unneeded_suppressions_full
   fi
+}
+
+# Function to convert advisory IDs to full advisory objects
+create_full_objects_from_ids() {
+  local id_file="$1"
+  local output_file="$2"
+  
+  while IFS= read -r advisory_id; do
+    jq -cr --arg id "$advisory_id" 'select(.advisories) | .advisories | to_entries[] | select(.key == $id) | .value' < yarn-audit-result-formatted >> "$output_file"
+  done < "$id_file"
 }
 
 # Perform yarn audit and process the results
@@ -121,7 +133,9 @@ fi
 
 # Check if there are known vulnerabilities
 if [ ! -f yarn-audit-known-issues ]; then
-  source prettyPrintAudit.sh sorted-yarn-audit-issues
+  # Create a file with full advisory objects for pretty printing
+  jq -cr 'select(.advisories) | .advisories | to_entries[] | .value' < yarn-audit-result-formatted > full-yarn-audit-issues
+  source prettyPrintAudit.sh full-yarn-audit-issues
   print_guidance
   exit 1
 else
@@ -158,7 +172,8 @@ else
   # Check if there were any new vulnerabilities
   if [[ -s new_vulnerabilities ]]; then
     echo "Unsuppressed vulnerabilities found:"
-    source prettyPrintAudit.sh new_vulnerabilities
+    create_full_objects_from_ids new_vulnerabilities new_vulnerabilities_full
+    source prettyPrintAudit.sh new_vulnerabilities_full
     print_guidance
     exit 1
   else
@@ -169,7 +184,10 @@ else
         fi
     done < sorted-yarn-audit-known-issues
 
-    source prettyPrintAudit.sh active_suppressions
+    if [[ -s active_suppressions ]]; then
+      create_full_objects_from_ids active_suppressions active_suppressions_full
+      source prettyPrintAudit.sh active_suppressions_full
+    fi
     exit 0
   fi
 fi
