@@ -74,8 +74,7 @@ check_for_unneeded_suppressions() {
 
   if [[ -s unneeded_suppressions ]]; then
     echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
-    jq -cr '.advisories | to_entries[] | .value' < yarn-audit-result-formatted > full-yarn-audit-issues
-    source prettyPrintAudit.sh full-yarn-audit-issues
+    source prettyPrintAudit.sh unneeded_suppressions
   fi
 }
 
@@ -85,28 +84,32 @@ today=$(date +"%s")
 exclude_until="1708502400"
 
 if [ "$today" -gt "$exclude_until" ]; then
+  echo "DEBUG: Running yarn audit without ignore..."
   yarn npm audit --recursive --environment production --json > yarn-audit-result || true
 else
+  echo "DEBUG: Running yarn audit with ignore 1096460..."
   yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-# Always convert to the new format for consistency
-if head -1 yarn-audit-result | jq -e 'has("value") and has("children")' >/dev/null 2>&1; then
-  echo "Converting old format to new format..."
+echo "DEBUG: Yarn version check - YARN_VERSION=$YARN_VERSION"
+echo "DEBUG: yarn --version output: $(yarn --version)"
+echo "DEBUG: First line of yarn-audit-result:"
+head -1 yarn-audit-result
+
+if [ "$YARN_VERSION" == "4" ]; then
+  echo "DEBUG: Using format-v4-audit.cjs converter..."
   cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 else
-  echo "Using existing new format..."
+  echo "DEBUG: Copying yarn-audit-result as-is..."
   cp yarn-audit-result yarn-audit-result-formatted
 fi
 
-# Verify the formatted file has the correct structure
-if ! jq -e 'has("advisories") and has("metadata")' yarn-audit-result-formatted >/dev/null 2>&1; then
-  echo "Error: yarn-audit-result-formatted does not have the expected structure"
-  echo "Attempting to force conversion..."
-  cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
-fi
+echo "DEBUG: First line of yarn-audit-result-formatted:"
+head -10 yarn-audit-result-formatted
 
-jq -cr '.advisories | to_entries[] | .key' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
+echo "DEBUG: Testing jq command on yarn-audit-result-formatted..."
+jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted
+jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
 if [[ ! -s sorted-yarn-audit-issues ]];  then
@@ -115,13 +118,13 @@ if [[ ! -s sorted-yarn-audit-issues ]];  then
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
-    if head -1 yarn-audit-known-issues | jq -e 'has("value") and has("children")' >/dev/null 2>&1; then
+    if [ "$YARN_VERSION" == "4" ]; then
       cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
     else
       cp yarn-audit-known-issues yarn-audit-known-issues-formatted
     fi
 
-    jq -cr '.advisories | to_entries[] | .key' yarn-audit-known-issues-formatted \
+    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
     | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
@@ -133,13 +136,12 @@ fi
 
 # Check if there are known vulnerabilities
 if [ ! -f yarn-audit-known-issues ]; then
-  jq -cr '.advisories | to_entries[] | .value' < yarn-audit-result-formatted > full-yarn-audit-issues
-  source prettyPrintAudit.sh full-yarn-audit-issues
+  source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
   exit 1
 else
   # Test for old format of yarn-audit-known-issues
-  if head -1 yarn-audit-known-issues | jq -e 'has("value") and has("children")' >/dev/null 2>&1; then
+  if [ "$YARN_VERSION" == "4" ]; then
     cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
@@ -152,7 +154,7 @@ else
 
   # Handle edge case for when audit returns in different orders for the two files
   # Convert JSON array into sorted list of issues.
-  jq -cr '.advisories | to_entries[] | .key' yarn-audit-known-issues-formatted \
+  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
   | sort > sorted-yarn-audit-known-issues
 
   # Retain old data ingestion style for cosmosDB
@@ -171,8 +173,7 @@ else
   # Check if there were any new vulnerabilities
   if [[ -s new_vulnerabilities ]]; then
     echo "Unsuppressed vulnerabilities found:"
-    jq -cr '.advisories | to_entries[] | .value' < yarn-audit-result-formatted > full-yarn-audit-issues
-    source prettyPrintAudit.sh full-yarn-audit-issues
+    source prettyPrintAudit.sh new_vulnerabilities
     print_guidance
     exit 1
   else
@@ -183,10 +184,7 @@ else
         fi
     done < sorted-yarn-audit-known-issues
 
-    if [[ -s active_suppressions ]]; then
-      jq -cr '.advisories | to_entries[] | .value' < yarn-audit-result-formatted > full-yarn-audit-issues  
-      source prettyPrintAudit.sh full-yarn-audit-issues
-    fi
+    source prettyPrintAudit.sh active_suppressions
     exit 0
   fi
 fi
