@@ -25,7 +25,6 @@
 
 # Exit script on error
 set -e
-set +x
 
 # Check for dependencies
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
@@ -85,44 +84,17 @@ today=$(date +"%s")
 exclude_until="1708502400"
 
 if [ "$today" -gt "$exclude_until" ]; then
-  echo "DEBUG: Running yarn audit without ignore..."
   yarn npm audit --recursive --environment production --json > yarn-audit-result || true
 else
-  echo "DEBUG: Running yarn audit with ignore 1096460..."
   yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-echo "DEBUG: Yarn version check - YARN_VERSION=$YARN_VERSION"
-echo "DEBUG: yarn --version output: $(yarn --version)"
-echo "DEBUG: First line of yarn-audit-result:"
-head -1 yarn-audit-result
-
 if [ "$YARN_VERSION" == "4" ]; then
-  echo "DEBUG: Using format-v4-audit.cjs converter..."
   cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 else
-  echo "DEBUG: Copying yarn-audit-result as-is..."
   cp yarn-audit-result yarn-audit-result-formatted
 fi
 
-echo "DEBUG: First line of yarn-audit-result-formatted:"
-head -10 yarn-audit-result-formatted
-
-echo "DEBUG: Testing if yarn-audit-result-formatted is valid JSON..."
-if ! jq empty yarn-audit-result-formatted >/dev/null 2>&1; then
-  echo "ERROR: yarn-audit-result-formatted is not valid JSON!"
-  echo "DEBUG: Full content of yarn-audit-result-formatted:"
-  cat yarn-audit-result-formatted
-  exit 1
-fi
-
-echo "DEBUG: Testing jq command on yarn-audit-result-formatted..."
-if ! jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted; then
-  echo "ERROR: Failed to extract advisories from yarn-audit-result-formatted"
-  echo "DEBUG: Trying to check structure..."
-  jq 'keys' yarn-audit-result-formatted
-  exit 1
-fi
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
@@ -150,28 +122,18 @@ fi
 
 # Check if there are known vulnerabilities
 if [ ! -f yarn-audit-known-issues ]; then
-  echo "Beginning pretty-print"
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
   exit 1
 else
   # Test for old format of yarn-audit-known-issues
-  echo "DEBUG: Processing yarn-audit-known-issues..."
-  echo "DEBUG: First line of yarn-audit-known-issues:"
-  head -1 yarn-audit-known-issues
-  
   if [ "$YARN_VERSION" == "4" ]; then
-    echo "DEBUG: Converting yarn-audit-known-issues with format-v4-audit.cjs..."
     cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
   else
-    echo "DEBUG: Copying yarn-audit-known-issues as-is..."
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
-  
-  echo "DEBUG: First line of yarn-audit-known-issues-formatted:"
-  head -1 yarn-audit-known-issues-formatted
 
-  if ! jq -e 'has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
     exit 1
   fi
