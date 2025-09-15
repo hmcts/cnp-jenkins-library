@@ -95,6 +95,21 @@ else
   cp yarn-audit-result yarn-audit-result-formatted
 fi
 
+# Validate the audit output is valid JSON before running jq
+if [ ! -s yarn-audit-result-formatted ]; then
+  echo "ERROR: yarn audit produced no output. Check yarn invocation."
+  echo "Contents of `yarn-audit-result`:"
+  sed -n '1,200p' yarn-audit-result || true
+  exit 1
+fi
+
+if ! jq -e . yarn-audit-result-formatted >/dev/null 2>&1; then
+  echo "ERROR: yarn audit output is not valid JSON. Aborting."
+  echo "Contents of `yarn-audit-result-formatted`:"
+  sed -n '1,200p' yarn-audit-result-formatted
+  exit 1
+fi
+
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
 # Check if there were any vulnerabilities
