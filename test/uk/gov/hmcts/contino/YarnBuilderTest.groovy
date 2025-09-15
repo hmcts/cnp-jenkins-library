@@ -41,6 +41,7 @@ class YarnBuilderTest extends Specification {
     def closure
     steps.withCredentials(_, { it.call() }) >> { closure = it }
     steps.withSauceConnect(_, { it.call() }) >> { closure = it }
+    steps.usernamePassword(_ as Map) >> [:]
 
     builder = new YarnBuilder(steps)
   }
