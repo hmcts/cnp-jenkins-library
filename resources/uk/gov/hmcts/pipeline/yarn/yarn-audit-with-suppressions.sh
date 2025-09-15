@@ -89,10 +89,26 @@ else
   yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
+echo "Yarn version: ${YARN_VERSION:-unknown}. Formatting audit results accordingly if it is 4.x"
 if [ "$YARN_VERSION" == "4" ]; then
   cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 else
   cp yarn-audit-result yarn-audit-result-formatted
+fi
+
+# Validate the audit output is valid JSON before running jq
+if [ ! -s yarn-audit-result-formatted ]; then
+  echo "ERROR: yarn audit produced no output. Check yarn invocation."
+  echo "Contents of 'yarn-audit-result-formatted':"
+  sed -n '1,200p' yarn-audit-result || true
+  exit 1
+fi
+
+if ! jq -e . yarn-audit-result-formatted >/dev/null 2>&1; then
+  echo "ERROR: yarn audit output is not valid JSON. Aborting."
+  echo "Contents of 'yarn-audit-result-formatted':"
+  sed -n '1,200p' yarn-audit-result-formatted
+  exit 1
 fi
 
 jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
