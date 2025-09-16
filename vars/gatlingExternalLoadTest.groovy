@@ -66,6 +66,7 @@ def call(Map params) {
   // Set parameter defaults - try master first as many repos still use it
   def gatlingBranch = params.gatlingBranch ?: 'master'
   def testUrl = params.testUrl ?: env.TEST_URL
+  def ccdURLPreview = env.CCD_DATA_STORE_API_PREVIEW_URL
   def gatlingUsers = params.gatlingUsers ?: 10
   def gatlingRampDuration = params.gatlingRampDuration ?: '30s'
   def gatlingTestDuration = params.gatlingTestDuration ?: '60s'
@@ -78,6 +79,7 @@ def call(Map params) {
   echo "External Repository: ${params.gatlingRepo}"
   echo "Branch: ${gatlingBranch}"
   echo "Target URL: ${testUrl}"
+  echo "CCD URL: ${ccdURLPreview}"
   echo "Users: ${gatlingUsers}"
   echo "Simulation: ${gatlingSimulation ?: 'All simulations'}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
