@@ -1,6 +1,7 @@
 # Shared Jenkins Library for Code and Infrastructure pipelines
 
 ## How is this used?
+
 Code in this library are loaded at runtime by Jenkins.
 Jenkins is already configured to point to this repository.
 See [Jenkins Shared Libraries](https://jenkins.io/doc/book/pipeline/shared-libraries/)
@@ -41,6 +42,7 @@ script and dependencies in source control. NodeJS apps must use Yarn.
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
 Example `Jenkinsfile` to use the opinionated pipeline:
+
 ```groovy
 #!groovy
 
@@ -58,6 +60,7 @@ withPipeline(type, product, component) {
 ```
 
 #### Branch and Environment Mapping
+
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
 Branch | Environment
@@ -68,8 +71,10 @@ Branch | Environment
 PR branch| `preview`
 
 #### Run Terraform plans against Production
+
 By default terraform plans against production are executed on Pull Requests that have any terraform changes. Application teams
 can opt out of this by:
+
 1. For all PRs. Manually adding a topic `not-plan-on-prod` to the repo.
 2. For a specific PR. Manually adding a label `not-plan-on-prod` to that PR.
 
@@ -94,6 +99,7 @@ java:
 ```
 
 #### Secrets for functional / smoke testing
+
 If your tests need secrets to run, e.g. a smoke test user for production then:
 
 `${env}` will be replaced by the pipeline with the environment that it is being run in. In order to use this feature you **must use single quotes** around your string to prevent Groovy from resolving the variable immediately.
@@ -161,14 +167,17 @@ withPipeline(type, product, component) {
 ```
 
 #### tf output for functional / smoke testing
+
 Any outputs you add to `output.tf` are available as environment variable which can be used in smoke and functional tests.
 
 If your functional tests require an environmental variable S2S_URL you can pass it in to functional test by adding it as a `output.tf`
+
 ````
 output "s2s_url" {
   value = "http://${var.s2s_url}-${local.local_env}.service.core-compute-${local.local_env}.internal"
 }
 ````
+
 this output will be transposed to Uppercase s2s_url => S2S_URL and can then be used by functional and smoke test.
 
 #### Security Checks
@@ -189,7 +198,7 @@ The smoke tests are to be non-destructive (i.e. have no data impact, such as not
 
 An application can configure running continuous smoke/functional tests on java app deployments managed through flux.
 
-https://github.com/hmcts/chart-java/#smoke-and-functional-tests
+<https://github.com/hmcts/chart-java/#smoke-and-functional-tests>
 
 To build docker images for this, add `enableDockerTestBuild()` in `Jenkinsfile_CNP`. `Static Checks/Container Build` stage in the pipeline will execute, including a test docker image.
 
@@ -228,7 +237,6 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
-
 #### Extending the opinionated pipeline
 
 It is not possible to remove stages from the pipeline but it is possible to _add_ extra steps to the existing stages.
@@ -243,15 +251,15 @@ Conditions are:
 
 Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-and-environment-mapping)
 
- * checkout
- * build
- * test
- * securitychecks
- * sonarscan
- * deploy:ENV
- * smoketest:ENV
- * functionalTest:ENV
- * buildinfra:ENV
+* checkout
+* build
+* test
+* securitychecks
+* sonarscan
+* deploy:ENV
+* smoketest:ENV
+* functionalTest:ENV
+* buildinfra:ENV
 
 E.g.
 
@@ -275,8 +283,8 @@ withPipeline(type, product, component) {
 If your service contains an API (in Azure Api Management Service), you need to implement
 tests for that API. For the pipeline to run those tests, do the following:
 
- - define `apiGateway` task (gradle/yarn) in you application
- - from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
+* define `apiGateway` task (gradle/yarn) in you application
+* from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
 
   ```
   withPipeline(type, product, component) {
@@ -290,9 +298,10 @@ The API tests run after smoke tests.
 
 #### Clear Helm Release
 
-- By default your Helm resources are uninstalled to free up resources on the cluster.
-- You can keep these resources by adding the **enable_keep_helm** label on your PR.
-- If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
+* By default your Helm resources are uninstalled to free up resources on the cluster.
+* You can keep these resources by adding the **enable_keep_helm** label on your PR.
+* If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
+
   ```
   withPipeline(type, product, component) {
   ...
@@ -318,8 +327,8 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `aat` (plan only)
 
-
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
+
 ```groovy
 #!groovy
 
@@ -341,10 +350,11 @@ You have the ability to pass extra parameters to the `withInfraPipeline`.
 These parameters include:
 | parameter name | description |
 | --- | --- |
-| component | https://hmcts.github.io/glossary/#component |
-| expires | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
+| component | <https://hmcts.github.io/glossary/#component> |
+| expires | <https://github.com/hmcts/terraform-module-common-tags#expiresafter> |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
+
 ```groovy
 #!groovy
 
@@ -390,8 +400,8 @@ Conditions are:
 
 Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name:
 
- * checkout
- * buildinfra:ENV
+* checkout
+* buildinfra:ENV
 
 E.g.
 
@@ -411,6 +421,7 @@ withInfraPipeline(product) {
 ```
 
 ## Application specific infrastructure
+
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
@@ -420,6 +431,7 @@ In case your infrastructure includes database creation there is a Flyway migrati
 The intent of the Nightly Pipeline is to run dependency checks on a nightly basis against the AAT environment as well as some optional tests.
 
 Example block to enable tests:
+
 ```
 withNightlyPipeline(type, product, component) {
 
@@ -442,7 +454,7 @@ TestName | How to enable | Example
  Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
  FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
 
-*Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
+*Performance tests use Gatling. You can find more information about the tool on their website <https://gatling.io/>.
 
 You can customise the zap proxy scans of your application by passing through options to the security scanning scripts using the `urlExclusions` parameter in your Jenkinsfile.
 
@@ -524,18 +536,19 @@ withNightlyPipeline(type, product, component) {
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
 
-- `enable_full_functional_tests`
-- `enable_performance_test`
-- `enable_fortify_scan`
-- `enable_security_scan`
+* `enable_full_functional_tests`
+* `enable_performance_test`
+* `enable_fortify_scan`
+* `enable_security_scan`
 
-#### If you add a label for a test which is not configured within your application, the build will fail.
+#### If you add a label for a test which is not configured within your application, the build will fail
 
 Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
 ## Cron Jobs
+
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
 
 ```groovy
@@ -549,18 +562,20 @@ withPipeline(type, product, component) {
 ```
 
 ## Building and Testing
+
 This is a Groovy project, and gradle is used to build and test.
 
 Run
+
 ```bash
-$ ./gradlew build
-$ ./gradlew test
+./gradlew build
+./gradlew test
 ```
 
 Alternatively, you can use the gradle tasks from within a container using the following script:
 
 ```bash
-$ ./start-docker-groovy-env
+./start-docker-groovy-env
 ```
 
 Then you can run the build and test tasks as described above.
@@ -621,7 +636,6 @@ Properties expanded by Jenkins:
 | `{{CI_IMAGE_TAG}}`  | is the stadard name of the runtime image                                                                   |
 | `{{REGISTRY_NAME}}` | is the registry name, e.g. hmcts of hmctssandbox. Useful if you want to pass it as `--build-arg` parameter |
 
-
 If you want to learn more about ACR tasks, [here is the documentation](https://docs.microsoft.com/en-gb/azure/container-registry/container-registry-tasks-reference-yaml).
 
 ## Tool versions
@@ -629,12 +643,15 @@ If you want to learn more about ACR tasks, [here is the documentation](https://d
 Some basic versions of tools are installed on the [Jenkins agent VM images](https://github.com/hmcts/jenkins-packer/blob/master/jenkins-agent-centos-7.4-x86_64.json) but we try to use version managers where possible, so that applications can update independently and aren't stuck using old versions forever.
 
 ### Java
+
 Java 11 is installed on the Jenkins agent.
 
 ### Node.JS
+
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
 
 ### Terraform
+
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
 
 ## Camunda Deployments from separate Camunda Process repo
@@ -648,6 +665,7 @@ It has been configured to find BPMN and DMN files in the repo, and create the de
 It will run unit and security tests on PRs, and will upload these DMN/BPMN files to Camunda once merged.
 
 Example of usage
+
 ```groovy
 
 /* … */
@@ -658,10 +676,9 @@ withCamundaOnlyPipeline(type, product, component, s2sServiceName, tenantId) {
 }
 ```
 
-These s2s Service Names can be found in the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/d9024d0fe21592b39cd77fd6dbd5c2e585e56c59/src/main/resources/application.yaml#L58, eg. unspec-service, wa_task_configuration_api etc.
+These s2s Service Names can be found in the camunda-bpm repo: <https://github.com/hmcts/camunda-bpm/blob/d9024d0fe21592b39cd77fd6dbd5c2e585e56c59/src/main/resources/application.yaml#L58>, eg. unspec-service, wa_task_configuration_api etc.
 
-Tenant ID can also be checked from the camunda-bpm repo: https://github.com/hmcts/camunda-bpm/blob/master/src/main/resources/application.yaml#L47 eg. wa, ia, civil-unspecified etc.
-
+Tenant ID can also be checked from the camunda-bpm repo: <https://github.com/hmcts/camunda-bpm/blob/master/src/main/resources/application.yaml#L47> eg. wa, ia, civil-unspecified etc.
 
 ## Contract testing with Pact
 
@@ -703,13 +720,13 @@ The following hooks will then be ran before the deployment:
 
 The Pact broker url and other parameters are passed to these hooks as following:
 
-- `yarn`:
-  - `PACT_BROKER_URL`
-  - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
-- `gradlew`:
-  - `-Ppactbroker.url`
-  - `-Ppact.consumer.version`/`-Ppact.provider.version`
-  - `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
+* `yarn`:
+  * `PACT_BROKER_URL`
+  * `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
+* `gradlew`:
+  * `-Ppactbroker.url`
+  * `-Ppact.consumer.version`/`-Ppact.provider.version`
+  * `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
 
 🛎️  `onMaster` is a boolean that is true if the current branch is `master`
 🛎️  It is expected that the scripts are responsible for figuring out which tag or branch is currently tested.
@@ -723,6 +740,7 @@ The environment specific branches such as demo, ithc and perftest are set by def
 By using the `syncBranchesWithMaster()` method in Application, Infrastructure and Camunda pipelines, you can manually override what environment branches are synced. Setting the value to '[]' will disable the sync for all branches. This method will be invoked in the master build and execute as the last stage in the build.
 
 Example of overriding branches
+
 ```groovy
 
 def branchesToSync = ['demo', 'perftest']
@@ -732,7 +750,9 @@ withPipeline(type, product, component) {
 }
 
 ```
+
 Example of disabling sync
+
 ```groovy
 
 def branchesToSync = []
@@ -744,16 +764,17 @@ withPipeline(type, product, component) {
 ```
 
 ## Import terraform modules created using template deployment to native Terraform resources
+
 #### Usage
 
 Terraform AzureRM provider now supports new resource types, which were previously created using Azure Template Deployment.
 
 Currently, resources created using the following modules can be imported:
 
-* Service Bus Namespace (https://github.com/hmcts/terraform-module-servicebus-namespace)
-* Service Bus Topic (https://github.com/hmcts/terraform-module-servicebus-topic)
-* Service Bus Queue (https://github.com/hmcts/terraform-module-servicebus-queue)
-* Service Bus Subscription (https://github.com/hmcts/terraform-module-servicebus-subscription)
+* Service Bus Namespace (<https://github.com/hmcts/terraform-module-servicebus-namespace>)
+* Service Bus Topic (<https://github.com/hmcts/terraform-module-servicebus-topic>)
+* Service Bus Queue (<https://github.com/hmcts/terraform-module-servicebus-queue>)
+* Service Bus Subscription (<https://github.com/hmcts/terraform-module-servicebus-subscription>)
 
 Platops have released new versions of these modules, where native terraform resource types are used. The new version is available in a separate branch in the respective repositories.
 
@@ -763,7 +784,7 @@ To consume the new modules, existing resources must be imported to the new modul
 
 **Example:**
 
-Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull
+Build Console: <https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull>
 
 ## Notes on Unit tests
 
@@ -791,7 +812,7 @@ This file will point to the repository which defines, in json syntax, which infr
 
  1. Use the Github pull requests to make change
  2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
-
