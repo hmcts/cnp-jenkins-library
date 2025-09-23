@@ -96,7 +96,7 @@ def call(Map params) {
   // Load performance test secrets from shared vault ** waiting for platops to add in so reading from ET perftest for now **
   echo "Loading performance test secrets from shared vault..."
   
-  def perfKeyVaultUrl = "https://et-perftest.vault.azure.net/"
+  def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/"  //"https://et-perftest.vault.azure.net/"
   def perfSecrets = [
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
     [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
