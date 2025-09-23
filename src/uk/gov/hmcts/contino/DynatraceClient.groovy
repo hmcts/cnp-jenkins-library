@@ -170,7 +170,20 @@ class DynatraceClient implements Serializable {
       
       json.enabled = enabled
       if (customUrl) {
-        json.script.events[0].url = customUrl
+        if (syntheticTest.startsWith("HTTP")) {
+          // For HTTP synthetics: replace PREVIEW in URLs
+          def hostname = customUrl.replaceAll('^https?://', '').split('/')[0]
+          json.script.requests?.each { request ->
+            if (request.url?.contains("PREVIEW")) {
+              request.url = request.url.replace("PREVIEW", hostname)
+            }
+          }
+        } else {
+          // For other synthetics: use events array structure with null safety
+          if (json.script?.events) {
+            json.script.events[0].url = customUrl
+          }
+        }
       }
 
       def modifiedRequestBody = JsonOutput.toJson(json)
