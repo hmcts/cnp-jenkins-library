@@ -168,18 +168,33 @@ class DynatraceClient implements Serializable {
       
       def json = new JsonSlurper().parseText(getResponse.content)
       
+      //Set enabaled field in the json
       json.enabled = enabled
+
       if (customUrl) {
         if (syntheticTest.startsWith("HTTP")) {
-          // For HTTP synthetics: replace PREVIEW in URLs
-          def hostname = customUrl.replaceAll('^https?://', '').split('/')[0]
-          json.script.requests?.each { request ->
-            if (request.url?.contains("PREVIEW")) {
-              request.url = request.url.replace("PREVIEW", hostname)
+          if (!enabled) {
+            // When disabling HTTP synthetics, restore PREVIEW URLs
+            json.script.requests?.each { request ->
+              if (request.url && !request.url.contains("PREVIEW")) {
+                def urlParts = request.url.split('://')
+                if (urlParts.length > 1) {
+                  def pathPart = urlParts[1].substring(urlParts[1].indexOf('/'))
+                  request.url = urlParts[0] + "://PREVIEW" + pathPart
+                }
+              }
+            }
+          } else {
+            // When enabling HTTP synthetics, replace PREVIEW with hostname
+            def hostname = customUrl.replaceAll('^https?://', '').split('/')[0]
+            json.script.requests?.each { request ->
+              if (request.url?.contains("PREVIEW")) {
+                request.url = request.url.replace("PREVIEW", hostname)
+              }
             }
           }
         } else {
-          // For other synthetics: use events array structure with null safety
+          // For other synthetics: always use events array structure
           if (json.script?.events) {
             json.script.events[0].url = customUrl
           }
