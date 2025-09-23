@@ -176,11 +176,11 @@ class DynatraceClient implements Serializable {
           if (!enabled) {
             // When disabling HTTP synthetics, restore PREVIEW URLs
             json.script.requests?.each { request ->
-              if (request.url && !request.url.contains("PREVIEW")) {
-                def urlParts = request.url.split('://')
+              if (request.url && !request.url.contains("PREVIEW" && request.url.contains("pr-"))) {
+                def urlParts = request.url.split('://') //Split protocol and url
                 if (urlParts.length > 1) {
-                  def pathPart = urlParts[1].substring(urlParts[1].indexOf('/'))
-                  request.url = urlParts[0] + "://PREVIEW" + pathPart
+                  def pathPart = urlParts[1].substring(urlParts[1].indexOf('/')) // In the URL extract /onwards
+                  request.url = urlParts[0] + "://PREVIEW" + pathPart // rebuild url with protocol + PREVIEW + pathPart
                 }
               }
             }
