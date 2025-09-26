@@ -96,10 +96,15 @@ def call(Map params) {
     if (bothTestsEnabled) {
       echo "Dynatrace: Both tests enabled - delaying execution by 1 minute to allow Gatling setup"
       sleep(time: 60, unit: "SECONDS")
-      echo "Dynatrace: Starting synchronized test execution NOW!"
+      echo "Dynatrace: Starting synchronised test execution"
     } else {
       echo "Dynatrace: Single test execution (no sync needed)"
     }
+    
+    // Capture test start time for SRG evaluation
+    def testStartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+    env.PERF_TEST_START_TIME = testStartTime
+    echo "Performance test start time: ${testStartTime}"
     
     //Trigger Synthetic Test
     def triggerResult = dynatraceClient.triggerSyntheticTest(
@@ -153,6 +158,11 @@ def call(Map params) {
         //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
       }
     }
+
+    // Capture test end time for SRG evaluation
+    def testEndTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+    env.PERF_TEST_END_TIME = testEndTime
+    echo "Performance test end time: ${testEndTime}"
 
     // Disable the synthetic once triggered for preview env
     if (testUrl && environment == 'preview') {
