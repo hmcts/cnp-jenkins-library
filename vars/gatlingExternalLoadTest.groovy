@@ -118,8 +118,19 @@ def call(Map params) {
 
       //Run the Perf test using existing perftest builder
       try {
+        // Capture test start time for SRG evaluation
+        def testStartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+        env.GATLING_TEST_START_TIME = testStartTime
+        echo "Gatling load test start time: ${testStartTime}"
+
         def builder = new GradleBuilder(this, params.product)
-        builder.performanceTest(params.gatlingSimulation) 
+        builder.performanceTest(params.gatlingSimulation)
+
+        //Capture test end time for SRG evaluation
+        def testEndTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+        env.GATLING_TEST_END_TIME = testEndTime
+        echo "Gatling load test end time: ${testEndTime}"
+        
       } catch (Exception e) {
         echo "**** Failed to run builder.performanceTest: ${e.message}"
       }

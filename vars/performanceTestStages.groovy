@@ -93,7 +93,7 @@ def call(Map params) {
   echo "Build Number: ${env.BUILD_NUMBER}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
-  // Load performance test secrets from shared vault ** waiting for platops to add in so reading from ET perftest for now **
+  // Load performance test secrets from shared vault
   echo "Loading performance test secrets from shared vault..."
   
   def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"  //"" / https://et-perftest.vault.azure.net/
@@ -166,6 +166,11 @@ def call(Map params) {
     echo "Synthetic Test: ${syntheticTestId}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     echo "Environment: ${environment}"
+
+    // Capture test start time for SRG evaluation
+    def testStartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+    env.PERF_TEST_START_TIME = testStartTime
+    echo "Performance test start time: ${testStartTime}"
     
     //Trigger Synthetic Test
     def triggerResult = dynatraceClient.triggerSyntheticTest(
@@ -220,6 +225,11 @@ def call(Map params) {
       }
     }
 
+    // Capture test end time for SRG evaluation
+    def testEndTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+    env.PERF_TEST_END_TIME = testEndTime
+    echo "Performance test end time: ${testEndTime}"
+
     // Disable the synthetic once triggered for preview env
     if (testUrl && environment == 'preview') {
       echo "Disabling Dynatrace Synthetic Test for preview environment..."
@@ -231,7 +241,7 @@ def call(Map params) {
       )
     }
 
-  sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
+  //sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
 
   } catch (Exception e) {
     echo "Error in performance test execution: ${e.message}"

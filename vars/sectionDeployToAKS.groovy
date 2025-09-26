@@ -324,6 +324,35 @@ def call(params) {
                 echo "Running single performance test stage..."
                 testStages.values().first().call()
               }
+
+              // Stage 3: Site Reliability Guardian Evaluation (if enabled)
+              if (config.srgEvaluation) {
+                stageWithAgent("Site Reliability Guardian Evaluation - ${environment}", product) {
+                  testEnv(aksUrl) {
+                    try {
+                      pcr.callAround("srgEvaluation:${environment}") {
+                        evaluateDynatraceSRG([
+                          environment: environment,
+                          srgServiceName: config.srgServiceName,
+                          performanceTestStartTime: env.PERF_TEST_START_TIME,
+                          performanceTestEndTime: env.PERF_TEST_END_TIME,
+                          gatlingTestStartTime: env.GATLING_TEST_START_TIME,
+                          gatlingTestEndTime: env.GATLING_TEST_END_TIME,
+                          srgFailureBehavior: config.srgFailureBehavior,
+                          product: product,
+                          component: component
+                        ])
+                      }
+                    } catch (Exception e) {
+                      echo "SRG evaluation stage failed: ${e.message}"
+                      if (config.srgFailureBehavior == 'fail') {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        throw e
+                      }
+                    }
+                  }
+                }
+              }
               
             } // End withAzureKeyvault block
           }

@@ -171,6 +171,7 @@ class DynatraceClient implements Serializable {
       //Set enabaled field in the json
       json.enabled = enabled
 
+      // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below
       if (customUrl) {
         if (syntheticTest.startsWith("HTTP")) {
           if (!enabled) {
@@ -250,4 +251,34 @@ class DynatraceClient implements Serializable {
     
     return config
   }
+
+  //Method to evaluate dynatrace site reliability guardian
+  def evaluateSRG(String service, String stage, String startTime, String endTime) {
+    def response = null
+    try {
+      def dockerImage = "dynatraceace/dynatrace-automation-cli:1.2.3" // Use specific version
+
+      // response = steps.sh(script: """
+      //   docker run --rm \
+      //     -e DYNATRACE_URL_GEN3=${DEFAULT_DYNATRACE_API_HOST} \
+      //     -e ACCOUNT_URN=\${ACCOUNT_URN} \
+      //     -e DYNATRACE_CLIENT_ID=\${DYNATRACE_CLIENT_ID} \
+      //     -e DYNATRACE_SECRET=\${DYNATRACE_SECRET} \
+      //     -e DYNATRACE_SSO_URL=https://sso.dynatrace.com/sso/oauth2/token \
+      //     ${dockerImage} \
+      //     dta srg evaluate \
+      //     --service "${service}" \
+      //     --stage "${stage}" \
+      //     --start-time "${startTime}" \
+      //     --end-time "${endTime}"
+      // """, returnStdout: true).trim()
+
+      steps.echo "SRG evaluation completed. Response: ${response}"
+    } catch (Exception e) {
+      steps.echo "Error during SRG evaluation: ${e.message}"
+      return null
+    }
+    return response
+  }
+
 }

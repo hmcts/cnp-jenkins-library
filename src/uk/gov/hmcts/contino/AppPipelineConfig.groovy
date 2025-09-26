@@ -51,6 +51,11 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int performanceTestStagesTimeout
   String performanceTestConfigPath
 
+  // Site Reliability Guardian configuration
+  boolean srgEvaluation = false
+  String srgServiceName = null  // Explicit SRG service name in Dynatrace
+  String srgFailureBehavior = 'warn' // 'fail', 'warn', 'ignore'
+
   // Gatling load test configuration
   boolean gatlingLoadTests = false
   int gatlingLoadTestTimeout = 10

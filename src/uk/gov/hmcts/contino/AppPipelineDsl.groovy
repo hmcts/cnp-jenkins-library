@@ -138,6 +138,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.performanceTestConfigPath = params.configPath
   }
 
+  void enableSrgEvaluation(Map params = [:]) {
+    config.srgEvaluation = true
+    config.srgServiceName = params.serviceName ?: null
+    config.srgFailureBehavior = params.failureBehavior ?: 'warn'
+  }
+
   void enableGatlingLoadTests(Map params = [:]) {
     config.gatlingLoadTests = true
     config.gatlingLoadTestTimeout = params.timeout ?: 10
