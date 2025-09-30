@@ -175,6 +175,15 @@ class AppPipelineConfigTest extends Specification {
         assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo("highLevelDataSetupKeyVaultName")
     }
 
+    def "ensure enable high level data setup with skipHighLevelDataSetupProd"() {
+      when:
+      dsl.enableHighLevelDataSetup("", true)
+      then:
+      assertThat(pipelineConfig.highLevelDataSetup).isTrue()
+      assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo("")
+      assertThat(pipelineConfig.skipHighLevelDataSetupProd).isEqualTo(true)
+    }
+
     def "ensure enable fortify scan without fortifyVaultName"() {
     when:
     dsl.enableFortifyScan()
