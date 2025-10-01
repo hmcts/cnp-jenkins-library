@@ -30,7 +30,9 @@ set -e
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
-FOUND_VULNERABILITIES=0
+FOUND_VULNERABILITIES=0 # Flag to indicate if unhandled vulnerabilities are found; 0 = none, 1 = found
+OLD_AUDIT_FORMAT=0  # Flag to indicate if old audit format is detected; 0 = no, 1 = yes
+
 
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
@@ -115,9 +117,10 @@ check_audit_file_format(){
   local file="$1"
   if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
     echo "You have an old format of audit file: $file."
-    return 1
+    OLD_AUDIT_FORMAT=1
+  else
+    OLD_AUDIT_FORMAT=0
   fi
-  return 0
 }
 
 # Perform yarn audit and process the results
@@ -141,7 +144,7 @@ if [ ! -s yarn-audit-result ]; then
 else
   check_file_valid_json yarn-audit-result
   check_audit_file_format yarn-audit-result
-  if [ $? -ne 0 ]; then
+  if [ "$OLD_AUDIT_FORMAT" -eq 1 ]; then
     echo "yarn audit returned an old format, try to format the audit result file yarn-audit-result"
     cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
   else
