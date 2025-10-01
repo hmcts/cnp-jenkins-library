@@ -103,6 +103,13 @@ check_vulnerabilities() {
   export FOUND_VULNERABILITIES
 }
 
+check_audit_file_valid() {
+  local file="$1"
+  if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
+    print_borked_known_issues
+  fi
+}
+
 # Perform yarn audit and process the results
 today=$(date +"%s")
 # 2024-02-21
@@ -133,15 +140,18 @@ else # No vulnerabilities found
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
-    if [ "$YARN_VERSION" == "4" ]; then
-      cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
-      jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
-          | sort > sorted-yarn-audit-known-issues
-    else
-      #  prior to v4 the yarn-audit-known-issues file does not contain 'advisories' key
-      jq -cr 'select(.children != null) | .children' yarn-audit-known-issues \
-          | sort > sorted-yarn-audit-known-issues
-    fi
+#    if [ "$YARN_VERSION" == "4" ]; then
+#      cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+#    else
+#      # check if yarn-audit-known-issues is valid json
+#      check_audit_file_valid yarn-audit-known-issues
+#      cp yarn-audit-known-issues yarn-audit-known-issues-formatted
+#    fi
+    check_audit_file_valid yarn-audit-known-issues
+    # Convert JSON array into sorted list of suppressed issues
+    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
+              | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
     check_for_unneeded_suppressions
