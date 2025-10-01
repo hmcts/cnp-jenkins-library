@@ -30,7 +30,7 @@ set -e
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
-local VULNERABILITY_COUNT=0
+FOUND_VULNERABILITIES=0
 
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
@@ -91,7 +91,7 @@ check_vulnerabilities() {
   else
     VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical')
     # Check if the total count is greater than 0.
-    if [ "$VULNERABILITY_COUNT" != "0" ]; then
+    if [ "$VULNERABILITY_COUNT" -gt 0 ]; then
       FOUND_VULNERABILITIES=1
       echo "Vulnerabilities found: $VULNERABILITY_COUNT. See output below for details."
       cat "$file"
@@ -128,7 +128,7 @@ fi
 
 check_vulnerabilities yarn-audit-result
 
-if FOUND_VULNERABILITIES=1; then
+if [ "$FOUND_VULNERABILITIES" -eq 1 ]; then
   if [ "$YARN_VERSION" == "4" ]; then
     cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
   else
