@@ -103,10 +103,12 @@ check_vulnerabilities() {
   export FOUND_VULNERABILITIES
 }
 
-check_audit_file_valid() {
+check_file_valid_json() {
   local file="$1"
-  if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
-    print_borked_known_issues
+  if ! jq empty "$file" 2>/dev/null; then
+    echo "You have an invalid json file: $file."
+  else
+    echo "$file is valid JSON."
   fi
 }
 
@@ -139,27 +141,22 @@ if FOUND_VULNERABILITIES=1; then
 else # No vulnerabilities found
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
-    # Convert JSON array into sorted list of suppressed issues
-#    if [ "$YARN_VERSION" == "4" ]; then
-#      cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
-#    else
-#      # check if yarn-audit-known-issues is valid json
-#      check_audit_file_valid yarn-audit-known-issues
-#      cp yarn-audit-known-issues yarn-audit-known-issues-formatted
-#    fi
-    check_audit_file_valid yarn-audit-known-issues
+    check_file_valid_json yarn-audit-known-issues
     # Convert JSON array into sorted list of suppressed issues
     cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
     jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
               | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
-    check_for_unneeded_suppressions
+    if [ -f yarn-audit-known-issues ]; then
+      echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
+      source prettyPrintAudit.sh sorted-yarn-audit-known-issues
+    fi
   fi
   exit 0
 fi
 
-# Check if there are known vulnerabilities
+# check vulnerabilities against known issues and newly found vulnerabilities in sorted-yarn-audit-issues
 if [ ! -f yarn-audit-known-issues ]; then
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
@@ -171,6 +168,10 @@ else
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
+
+  check_file_valid_json yarn-audit-known-issues
+  # Convert JSON array into sorted list of suppressed issues
+  cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
 
   if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
@@ -192,7 +193,8 @@ else
     fi
   done < sorted-yarn-audit-issues
 
-  # Check for unneeded suppressions
+  # checks for "unneeded suppressions" - vulnerabilities that were previously suppressed in the yarn-audit-known-issues
+  # file but are no longer present in the current audit results
   check_for_unneeded_suppressions
 
   # Check if there were any new vulnerabilities
