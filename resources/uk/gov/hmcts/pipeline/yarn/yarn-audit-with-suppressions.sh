@@ -43,7 +43,7 @@ cat <<'EOF'
   fixes and they do not apply to production, you may ignore them
 
   To ignore these vulnerabilities, run:
-  `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
+  `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
 
   and commit the yarn-audit-known-issues file
 
@@ -59,9 +59,13 @@ cat <<'EOF'
 
   Please now use the following:
 
-  `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
+  `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
 
 EOF
+}
+
+print_upgrade_yarn4() {
+ echo "You have an older version of Yarn, please upgrade to V4 (https://yarnpkg.com/blog/release/4.0)"
 }
 
 # Function to check for unneeded suppressions
@@ -78,45 +82,70 @@ check_for_unneeded_suppressions() {
   fi
 }
 
+check_vulnerabilities() {
+  local file="$1"
+  local VULNERABILITY_COUNT=0
+
+  if [ ! -s "$file" ]; then
+    FOUND_VULNERABILITIES=0
+  else
+    VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical')
+    # Check if the total count is greater than 0.
+    if [ "$VULNERABILITY_COUNT" -gt 0 ]; then
+      FOUND_VULNERABILITIES=1
+      echo "Vulnerabilities found: $VULNERABILITY_COUNT. See output below for details."
+      cat "$file"
+    else
+      echo "No vulnerabilities found."
+      FOUND_VULNERABILITIES=0
+    fi
+  fi
+  export FOUND_VULNERABILITIES
+}
+
 # Perform yarn audit and process the results
 today=$(date +"%s")
 # 2024-02-21
 exclude_until="1708502400"
 
+if [ "$YARN_VERSION" != "4" ]; then
+  print_upgrade_yarn4
+fi
+
 if [ "$today" -gt "$exclude_until" ]; then
-  yarn npm audit --recursive --environment production --json > yarn-audit-result || true
+  yarn npm audit --all --environment production --json > yarn-audit-result || true
 else
-  yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
+  yarn npm audit --all --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-if [ "$YARN_VERSION" == "4" ]; then
-  cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
-else
-  cp yarn-audit-result yarn-audit-result-formatted
-fi
+check_vulnerabilities yarn-audit-result
 
-jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
+if FOUND_VULNERABILITIES=1; then
+  if [ "$YARN_VERSION" == "4" ]; then
+    cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
+  else
+    cp yarn-audit-result yarn-audit-result-formatted
+  fi
 
-# Check if there were any vulnerabilities
-if [[ ! -s sorted-yarn-audit-issues ]];  then
-  echo "No vulnerabilities found in project dependencies."
+  jq -cr '(.advisories // {}) | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
+else # No vulnerabilities found
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     # Convert JSON array into sorted list of suppressed issues
     if [ "$YARN_VERSION" == "4" ]; then
       cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+      jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
+          | sort > sorted-yarn-audit-known-issues
     else
-      cp yarn-audit-known-issues yarn-audit-known-issues-formatted
+      #  prior to v4 the yarn-audit-known-issues file does not contain 'advisories' key
+      jq -cr 'select(.children != null) | .children' yarn-audit-known-issues \
+          | sort > sorted-yarn-audit-known-issues
     fi
-
-    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
-    | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
     check_for_unneeded_suppressions
   fi
-
   exit 0
 fi
 
