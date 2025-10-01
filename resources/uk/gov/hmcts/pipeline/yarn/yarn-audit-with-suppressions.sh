@@ -30,6 +30,8 @@ set -e
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
+local VULNERABILITY_COUNT=0
+
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
 cat <<'EOF'
@@ -84,14 +86,12 @@ check_for_unneeded_suppressions() {
 
 check_vulnerabilities() {
   local file="$1"
-  local VULNERABILITY_COUNT=0
-
   if [ ! -s "$file" ]; then
     FOUND_VULNERABILITIES=0
   else
     VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical')
     # Check if the total count is greater than 0.
-    if [ "$VULNERABILITY_COUNT" -gt 0 ]; then
+    if [ "$VULNERABILITY_COUNT" != "0" ]; then
       FOUND_VULNERABILITIES=1
       echo "Vulnerabilities found: $VULNERABILITY_COUNT. See output below for details."
       cat "$file"
@@ -100,7 +100,6 @@ check_vulnerabilities() {
       FOUND_VULNERABILITIES=0
     fi
   fi
-  export FOUND_VULNERABILITIES
 }
 
 check_file_valid_json() {
