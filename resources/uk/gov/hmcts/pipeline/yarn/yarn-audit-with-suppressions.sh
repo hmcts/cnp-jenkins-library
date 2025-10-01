@@ -153,6 +153,7 @@ else # No vulnerabilities found
       source prettyPrintAudit.sh sorted-yarn-audit-known-issues
     fi
   fi
+  echo "No vulnerabilities found, exiting with code 0"
   exit 0
 fi
 
@@ -210,8 +211,12 @@ else
             echo "$line" >> active_suppressions
         fi
     done < sorted-yarn-audit-known-issues
-
-    source prettyPrintAudit.sh active_suppressions
+    # check active_suppressions is not empty before trying to pretty print it
+    if [ ! -s active_suppressions ]; then
+      echo "No active suppressed vulnerabilities."
+    else
+      source prettyPrintAudit.sh active_suppressions
+    fi
     exit 0
   fi
 fi
