@@ -89,9 +89,9 @@ check_vulnerabilities() {
   if [ ! -s "$file" ]; then
     FOUND_VULNERABILITIES=0
   else
-    VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical')
+    VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical // 0')
     # Check if the total count is greater than 0.
-    if [ "$VULNERABILITY_COUNT" -gt 0 ]; then
+    if [ "${VULNERABILITY_COUNT:-0}" -gt 0 ]; then
       FOUND_VULNERABILITIES=1
       echo "Vulnerabilities found: $VULNERABILITY_COUNT. See output below for details."
       cat "$file"
@@ -105,10 +105,19 @@ check_vulnerabilities() {
 check_file_valid_json() {
   local file="$1"
   if ! jq empty "$file" 2>/dev/null; then
-    echo "You have an invalid json file: $file."
+    echo "You have an empty json file: $file."
   else
     echo "$file is valid JSON."
   fi
+}
+
+check_audit_file_format(){
+  local file="$1"
+  if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
+    echo "You have an old format of audit file: $file."
+    return 1
+  fi
+  return 0
 }
 
 # Perform yarn audit and process the results
@@ -126,18 +135,26 @@ else
   yarn npm audit --all --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-check_vulnerabilities yarn-audit-result
-
-if [ "$FOUND_VULNERABILITIES" -eq 1 ]; then
-  if [ "$YARN_VERSION" == "4" ]; then
+if [ ! -s yarn-audit-result ]; then
+  echo "yarn audit returned no results, assuming no vulnerabilities found"
+  FOUND_VULNERABILITIES = 0
+else
+  check_file_valid_json yarn-audit-result
+  check_audit_file_format yarn-audit-result
+  if [ $? -ne 0 ]; then
+    echo "yarn audit returned an old format, try to format the audit result file yarn-audit-result"
     cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
   else
     cp yarn-audit-result yarn-audit-result-formatted
   fi
+fi
 
+check_vulnerabilities yarn-audit-result-formatted
+
+if [ "$FOUND_VULNERABILITIES" -eq 1 ]; then
   jq -cr '(.advisories // {}) | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
-
-else # No vulnerabilities found
+else
+  # No vulnerabilities found
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
     check_file_valid_json yarn-audit-known-issues
