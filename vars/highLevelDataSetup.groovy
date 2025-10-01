@@ -1,5 +1,6 @@
 #!groovy
 import uk.gov.hmcts.contino.Builder
+import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.AppPipelineConfig
 
@@ -24,6 +25,10 @@ def call(params) {
   }
 
   if (config.highLevelDataSetup) {
+    if (config.skipHighLevelDataSetupProd && new Environment(env).prodName == environment) {
+      echo "Skipping high level data setup for prod environment"
+      return
+    }
     def highLevelDataSetupKeyVaultName = config.highLevelDataSetupKeyVaultName
 
     stageWithAgent("High Level Data Setup - ${environment}", product) {
