@@ -30,10 +30,6 @@ set -e
 command -v yarn >/dev/null 2>&1 || { echo >&2 "yarn is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
-FOUND_VULNERABILITIES=0 # Flag to indicate if unhandled vulnerabilities are found; 0 = none, 1 = found
-OLD_AUDIT_FORMAT=0  # Flag to indicate if old audit format is detected; 0 = no, 1 = yes
-
-
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
 cat <<'EOF'
@@ -47,7 +43,7 @@ cat <<'EOF'
   fixes and they do not apply to production, you may ignore them
 
   To ignore these vulnerabilities, run:
-  `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
+  `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
 
   and commit the yarn-audit-known-issues file
 
@@ -63,13 +59,9 @@ cat <<'EOF'
 
   Please now use the following:
 
-  `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
+  `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
 
 EOF
-}
-
-print_upgrade_yarn4() {
- echo "You have an older version of Yarn, please upgrade to V4 (https://yarnpkg.com/blog/release/4.0)"
 }
 
 # Function to check for unneeded suppressions
@@ -86,97 +78,49 @@ check_for_unneeded_suppressions() {
   fi
 }
 
-check_vulnerabilities() {
-  local file="$1"
-  if [ ! -s "$file" ]; then
-    FOUND_VULNERABILITIES=0
-  else
-    VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical // 0')
-    # Check if the total count is greater than 0.
-    if [ "${VULNERABILITY_COUNT:-0}" -gt 0 ]; then
-      FOUND_VULNERABILITIES=1
-      echo "Vulnerabilities found: $VULNERABILITY_COUNT. See output below for details."
-      cat "$file"
-    else
-      echo "No vulnerabilities found."
-      FOUND_VULNERABILITIES=0
-    fi
-  fi
-}
-
-check_file_valid_json() {
-  local file="$1"
-  if ! jq empty "$file" 2>/dev/null; then
-    echo "You have an empty json file: $file."
-  else
-    echo "$file is valid JSON."
-  fi
-}
-
-check_audit_file_format(){
-  local file="$1"
-  if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
-    echo "You have an old format of audit file: $file."
-    OLD_AUDIT_FORMAT=1
-  else
-    OLD_AUDIT_FORMAT=0
-  fi
-}
-
 # Perform yarn audit and process the results
 today=$(date +"%s")
 # 2024-02-21
 exclude_until="1708502400"
 
-if [ "$YARN_VERSION" != "4" ]; then
-  print_upgrade_yarn4
-fi
-
 if [ "$today" -gt "$exclude_until" ]; then
-  yarn npm audit --all --environment production --json > yarn-audit-result || true
+  yarn npm audit --recursive --environment production --json > yarn-audit-result || true
 else
-  yarn npm audit --all --environment production --json --ignore 1096460 > yarn-audit-result || true
+  yarn npm audit --recursive --environment production --json --ignore 1096460 > yarn-audit-result || true
 fi
 
-if [ ! -s yarn-audit-result ]; then
-  echo "yarn audit returned no results, assuming no vulnerabilities found"
-  FOUND_VULNERABILITIES = 0
+if [ "$YARN_VERSION" == "4" ]; then
+  cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
 else
-  check_file_valid_json yarn-audit-result
-  check_audit_file_format yarn-audit-result
-  if [ "$OLD_AUDIT_FORMAT" -eq 1 ]; then
-    echo "yarn audit returned an old format, try to format the audit result file yarn-audit-result"
-    cat yarn-audit-result | node format-v4-audit.cjs > yarn-audit-result-formatted
-  else
-    cp yarn-audit-result yarn-audit-result-formatted
-  fi
+  cp yarn-audit-result yarn-audit-result-formatted
 fi
 
-check_vulnerabilities yarn-audit-result-formatted
+jq -cr '.advisories | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
 
-if [ "$FOUND_VULNERABILITIES" -eq 1 ]; then
-  jq -cr '(.advisories // {}) | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues
-else
-  # No vulnerabilities found
+# Check if there were any vulnerabilities
+if [[ ! -s sorted-yarn-audit-issues ]];  then
+  echo "No vulnerabilities found in project dependencies."
+
   # Check for unneeded suppressions when no vulnerabilities are present
   if [ -f yarn-audit-known-issues ]; then
-    check_file_valid_json yarn-audit-known-issues
     # Convert JSON array into sorted list of suppressed issues
-    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+    if [ "$YARN_VERSION" == "4" ]; then
+      cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+    else
+      cp yarn-audit-known-issues yarn-audit-known-issues-formatted
+    fi
+
     jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
-              | sort > sorted-yarn-audit-known-issues
+    | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
-    if [ -f yarn-audit-known-issues ]; then
-      echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
-      source prettyPrintAudit.sh sorted-yarn-audit-known-issues
-    fi
+    check_for_unneeded_suppressions
   fi
-  echo "No vulnerabilities found, exiting with code 0"
+
   exit 0
 fi
 
-# check vulnerabilities against known issues and newly found vulnerabilities in sorted-yarn-audit-issues
+# Check if there are known vulnerabilities
 if [ ! -f yarn-audit-known-issues ]; then
   source prettyPrintAudit.sh sorted-yarn-audit-issues
   print_guidance
@@ -188,10 +132,6 @@ else
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi
-
-  check_file_valid_json yarn-audit-known-issues
-  # Convert JSON array into sorted list of suppressed issues
-  cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
 
   if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
     print_borked_known_issues
@@ -213,8 +153,7 @@ else
     fi
   done < sorted-yarn-audit-issues
 
-  # checks for "unneeded suppressions" - vulnerabilities that were previously suppressed in the yarn-audit-known-issues
-  # file but are no longer present in the current audit results
+  # Check for unneeded suppressions
   check_for_unneeded_suppressions
 
   # Check if there were any new vulnerabilities
@@ -230,12 +169,8 @@ else
             echo "$line" >> active_suppressions
         fi
     done < sorted-yarn-audit-known-issues
-    # check active_suppressions is not empty before trying to pretty print it
-    if [ ! -s active_suppressions ]; then
-      echo "No active suppressed vulnerabilities."
-    else
-      source prettyPrintAudit.sh active_suppressions
-    fi
+
+    source prettyPrintAudit.sh active_suppressions
     exit 0
   fi
 fi
