@@ -140,7 +140,7 @@ fi
 
 if [ ! -s yarn-audit-result ]; then
   echo "yarn audit returned no results, assuming no vulnerabilities found"
-  FOUND_VULNERABILITIES = 0
+  FOUND_VULNERABILITIES=0
 else
   check_file_valid_json yarn-audit-result
   check_audit_file_format yarn-audit-result
