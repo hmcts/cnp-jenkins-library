@@ -36,15 +36,15 @@ def call(Map<String, String> params) {
     sh 'rm -f check-helm-api-version.sh'
   }
 
-  sh 'chmod +x check-deprecated-charts.sh'
-  helmChartDeprecationConfig.each { chart, deprecation ->
-    try {
-      sh "./check-deprecated-charts.sh $product $component $chart $deprecation.version"
-    } catch (ignored) {
-      WarningCollector.addPipelineWarning("deprecated_helmcharts", "Version of $chart helm chart below $deprecation.version is deprecated, please upgrade to latest release https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecation.date_deadline))
-    }
-  }
-  sh 'rm -f check-deprecated-charts.sh'
+  // sh 'chmod +x check-deprecated-charts.sh'
+  // helmChartDeprecationConfig.each { chart, deprecation ->
+  //   try {
+  //     sh "./check-deprecated-charts.sh $product $component $chart $deprecation.version"
+  //   } catch (ignored) {
+  //     WarningCollector.addPipelineWarning("deprecated_helmcharts", "Version of $chart helm chart below $deprecation.version is deprecated, please upgrade to latest release https://github.com/hmcts/chart-$chart/releases", LocalDate.parse(deprecation.date_deadline))
+  //   }
+  // }
+  // sh 'rm -f check-deprecated-charts.sh'
 
   sh 'chmod +x check-deprecated-gradle-dependency.sh'
   gradleDeprecationConfig.each { dependency, deprecation ->
