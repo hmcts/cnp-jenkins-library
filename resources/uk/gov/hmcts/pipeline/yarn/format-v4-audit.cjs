@@ -81,6 +81,12 @@ async function getGitHubAdvisory(htmlUrl) {
     }
   });
 
+  if (!request.ok) {
+    return {
+      title: `Could not fetch GitHub Advisory; ResultCode: ${request.status}, Body: ${await request.text()}`
+    }
+  }
+
   const githubJson = await request.json();
 
   return {
