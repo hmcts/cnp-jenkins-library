@@ -32,6 +32,7 @@ command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not install
 
 FOUND_VULNERABILITIES=0 # Flag to indicate if unhandled vulnerabilities are found; 0 = none, 1 = found
 OLD_AUDIT_FORMAT=0  # Flag to indicate if old audit format is detected; 0 = no, 1 = yes
+IS_YARN4=0  # Flag to indicate if Yarn version is 4; 0 = false, 1 = true
 
 
 # Function to print guidance message in case of found vulnerabilities
@@ -47,6 +48,10 @@ cat <<'EOF'
   fixes and they do not apply to production, you may ignore them
 
   To ignore these vulnerabilities, run:
+
+  if Yarn 4
+  `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
+  else
   `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
 
   and commit the yarn-audit-known-issues file
@@ -63,8 +68,10 @@ cat <<'EOF'
 
   Please now use the following:
 
-  `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
-
+  if Yarn 4
+    `yarn npm audit --recursive --environment production --json > yarn-audit-known-issues`
+  else
+    `yarn npm audit --all --environment production --json > yarn-audit-known-issues`
 EOF
 }
 
@@ -129,13 +136,26 @@ today=$(date +"%s")
 exclude_until="1708502400"
 
 if [ "$YARN_VERSION" != "4" ]; then
+  IS_YARN4=0
   print_upgrade_yarn4
+else
+  IS_YARN4=1
 fi
 
+yarn_audit_command="yarn npm audit --recursive --environment production --json"
+if [ "$IS_YARN4" -eq 0 ]; then
+  echo "You have an older version of Yarn that has issues with --recursive flag, so we will run '--all' instead"
+  yarn_audit_command="yarn npm audit --all --environment production --json"
+fi
+
+
 if [ "$today" -gt "$exclude_until" ]; then
-  yarn npm audit --all --environment production --json > yarn-audit-result || true
+  # run yarn audit command
+  $yarn_audit_command > yarn-audit-result || true
 else
-  yarn npm audit --all --environment production --json --ignore 1096460 > yarn-audit-result || true
+  # add "--ignore 1096460" to the yarn audit command
+  echo "Excluding CVE-2023-4949 (advisory 1096460) until $exclude_until"
+  $yarn_audit_command --ignore 1096460 > yarn-audit-result || true
 fi
 
 if [ ! -s yarn-audit-result ]; then
