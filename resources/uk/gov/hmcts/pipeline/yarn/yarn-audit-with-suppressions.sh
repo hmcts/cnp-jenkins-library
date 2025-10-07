@@ -32,8 +32,6 @@ command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not install
 
 FOUND_VULNERABILITIES=0 # Flag to indicate if unhandled vulnerabilities are found; 0 = none, 1 = found
 OLD_AUDIT_FORMAT=0  # Flag to indicate if old audit format is detected; 0 = no, 1 = yes
-IS_YARN4=0  # Flag to indicate if Yarn version is 4; 0 = false, 1 = true
-
 
 # Function to print guidance message in case of found vulnerabilities
 print_guidance() {
@@ -123,7 +121,7 @@ check_file_valid_json() {
 check_audit_file_format(){
   local file="$1"
   if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
-    echo "You have an old format of audit file: $file."
+    echo "You have either an old format or empty of audit file: $file."
     OLD_AUDIT_FORMAT=1
   else
     OLD_AUDIT_FORMAT=0
@@ -135,19 +133,12 @@ today=$(date +"%s")
 # 2024-02-21
 exclude_until="1708502400"
 
-if [ "$YARN_VERSION" != "4" ]; then
-  IS_YARN4=0
-  print_upgrade_yarn4
-else
-  IS_YARN4=1
-fi
-
 yarn_audit_command="yarn npm audit --recursive --environment production --json"
-if [ "$IS_YARN4" -eq 0 ]; then
+if [ "$YARN_VERSION" != "4" ]; then
+  print_upgrade_yarn4
   echo "You have an older version of Yarn that has issues with --recursive flag, so we will run '--all' instead"
   yarn_audit_command="yarn npm audit --all --environment production --json"
 fi
-
 
 if [ "$today" -gt "$exclude_until" ]; then
   # run yarn audit command
