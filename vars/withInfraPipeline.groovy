@@ -9,7 +9,7 @@ import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.ProjectBranch
 
-def call(String product, String component = null, Closure body) {
+def call(String product, String component = null, boolean onlyPlan = false, Closure body) {
 
   Subscription subscription = new Subscription(env)
   Environment environment = new Environment(env)
@@ -46,6 +46,7 @@ def call(String product, String component = null, Closure body) {
           subscription: subscription.nonProdName,
           environment: environment.nonProdName,
           product: product,
+          planOnly: onlyPlan,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
         )
@@ -54,6 +55,7 @@ def call(String product, String component = null, Closure body) {
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
+          planOnly: onlyPlan,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
         )
@@ -69,6 +71,7 @@ def call(String product, String component = null, Closure body) {
           subscription: subscriptionName,
           environment: environmentName,
           product: product,
+          planOnly: onlyPlan,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
         )
