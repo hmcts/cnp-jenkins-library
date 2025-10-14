@@ -67,7 +67,7 @@ class DynatraceClient implements Serializable {
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_METRICS_TOKEN}"]
         ],
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_METRIC_INGEST_ENDPOINT}",
-        requestBody: "env.release.value,type=${metricType},tag=${metricTag},env=${environment} 3"
+        requestBody: "env.release.value,type=${metricType},tag=${metricTag},env=${environment} 1.5"
       ) 
       steps.echo "Dynatrace metric posted successfully. Response ${response}"
     } catch (Exception e) {
