@@ -71,6 +71,15 @@ class YarnBuilder extends AbstractBuilder {
     }
   }
 
+  def e2eTest() {
+    try {
+      yarn("test:e2e")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: 'e2e-output/**/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'e2e-output/**'
+    }
+  }
+
   def apiGatewayTest() {
     try {
       yarn("test:apiGateway")
