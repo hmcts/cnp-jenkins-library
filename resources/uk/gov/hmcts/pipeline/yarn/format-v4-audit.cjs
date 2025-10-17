@@ -36,6 +36,8 @@ async function main() {
 }
 
 async function getAdvisory(advisory) {
+  const children = advisory.children || {};
+
   const partialResult = {
     access: "public",
     created: null,
@@ -44,30 +46,30 @@ async function getAdvisory(advisory) {
     cwe: [],
     deleted: null,
     findings: [{
-      paths: advisory.children.Dependents,
-      version: advisory.children["Tree Versions"][0]
+      paths: children.Dependents || [],
+      version: (children["Tree Versions"] && children["Tree Versions"][0]) || null
     }],
     found_by: null,
     github_advisory_id: null,
-    id: advisory.children.ID,
+    id: children.ID,
     metadata: null,
     module_name: advisory.value,
     npm_advisory_id: null,
-    overview: advisory.children.Issue,
+    overview: children.Issue,
     patched_versions: null,
     recommendation: null,
     references: "",
     reported_by: null,
-    severity: advisory.children.Severity,
-    title: advisory.children.Issue,
+    severity: children.Severity,
+    title: children.Issue,
     updated: null,
     url: null,
-    vulnerable_versions: advisory.children["Vulnerable Versions"]
+    vulnerable_versions: children["Vulnerable Versions"]
   }
 
-  const githubJson = !advisory.children.URL
+  const githubJson = !children.URL
     ? {}
-    : await getGitHubAdvisory(advisory.children.URL);
+    : await getGitHubAdvisory(children.URL);
 
   return { ...partialResult, ...githubJson };
 }
