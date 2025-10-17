@@ -35,6 +35,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.apiGatewayTest = true
   }
 
+  void enableE2eTest(){
+    config.e2eTest = true
+  }
+
   void enableCrossBrowserTest(int timeout = 120) {
     config.crossBrowserTestTimeout = timeout
     config.crossBrowserTest = true
