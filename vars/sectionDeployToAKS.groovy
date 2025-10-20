@@ -180,6 +180,9 @@ def call(params) {
               }
             }
           }
+
+
+
           if (config.performanceTest) {
             stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
@@ -224,7 +227,19 @@ def call(params) {
             }
           }
 
+//          E2E Tests:
+          onPR {
+            if (testLabels.contains('enable_e2e_test')) {
+              stageWithAgent("End to End test", product) {
+                pcr.callAround('E2eTest') {
+                  builder.e2eTest()
+                }
+              }
+            }
+          }
 
+
+//          Performance Tests:
           onPR {
             if (testLabels.contains('enable_performance_test')) {
               stageWithAgent("Performance test", product) {
