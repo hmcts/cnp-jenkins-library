@@ -71,6 +71,14 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
     }
 
+    if (config.e2eTest) {
+      stageWithAgent("End to End test", product) {
+        pcr.callAround('E2eTest') {
+          builder.e2eTest()
+        }
+      }
+    }
+
     if (config.performanceTest) {
 
       //Check if build started by chron job
