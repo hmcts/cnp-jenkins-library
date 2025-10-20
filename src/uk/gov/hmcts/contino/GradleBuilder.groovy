@@ -65,9 +65,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def e2eTest() {
     try{
-      gradle("--rerun-tasks runE2eChromeTests")
-      gradle("--rerun-tasks runE2eFirefoxTests")
-
+      gradle("--rerun-tasks e2eTest")
     } finally {
       //can't actually find where test results are being put
       localSteps.junit '**/test-results/E2e/*.xml,**/test-results/E2e/*.xml'
