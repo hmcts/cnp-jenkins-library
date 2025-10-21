@@ -1,6 +1,7 @@
 #!groovy
 
-@Library("Infrastructure")
+@Library("Infrastructure@HDPI-2264-Add-E2E-test-configuration")
+
 
 def product = "product"
 

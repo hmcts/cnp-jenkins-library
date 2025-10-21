@@ -1,6 +1,6 @@
 #!groovy
 
-@Library("Infrastructure")
+@Library("Infrastructure@HDPI-2264-Add-E2E-test-configuration")
 
 def product = "product"
 
@@ -9,5 +9,6 @@ def app = "app"
 withNightlyPipeline('java', product, app) {
   enablePerformanceTest()
   enableMutationTest()
+  enableE2eTest()
   enableFullFunctionalTest()
 }
