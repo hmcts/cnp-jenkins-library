@@ -228,6 +228,11 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
+If your service is not yet built on prod, you can disable prod HighLevelDataSetup by setting `skipHighLevelDataSetupProd` flag to `true`.
+
+```
+  enableHighLevelDataSetup("", true)
+```
 
 #### Extending the opinionated pipeline
 

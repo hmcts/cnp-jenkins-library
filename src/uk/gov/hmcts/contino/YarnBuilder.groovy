@@ -138,12 +138,14 @@ class YarnBuilder extends AbstractBuilder {
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
       steps.writeFile(file: 'format-v4-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.cjs'))
 
-      steps.sh """
-         export PATH=\$HOME/.local/bin:\$PATH
-         export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
-         chmod +x yarn-audit-with-suppressions.sh
-        ./yarn-audit-with-suppressions.sh
-      """
+      this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+        steps.sh """
+           export PATH=\$HOME/.local/bin:\$PATH
+           export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
+           chmod +x yarn-audit-with-suppressions.sh
+          ./yarn-audit-with-suppressions.sh
+        """
+      }
     } finally {
       steps.sh """
         cat yarn-audit-result-formatted | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
