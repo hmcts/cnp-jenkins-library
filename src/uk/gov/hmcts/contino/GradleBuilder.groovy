@@ -67,7 +67,7 @@ class GradleBuilder extends AbstractBuilder {
     try{
       gradle("--rerun-tasks e2eTest")
     } finally {
-      localSteps.junit '**/test-results/E2e/*.xml,**/test-results/E2e/*.xml'
+      localSteps.junit '**/test-results/E2e/*.xml,**/test-results/e2e/*.xml'
     }
   }
 
