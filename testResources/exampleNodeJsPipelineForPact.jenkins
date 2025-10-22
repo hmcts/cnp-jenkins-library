@@ -1,6 +1,6 @@
 #!groovy
 
-@Library("Infrastructure@HDPI-2264-Add-E2E-test-configuration")
+@Library("Infrastructure")
 
 import uk.gov.hmcts.contino.AppPipelineDsl.PactRoles as PactRoles
 
