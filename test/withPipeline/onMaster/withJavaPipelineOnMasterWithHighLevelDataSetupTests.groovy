@@ -24,6 +24,7 @@ class withJavaPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnpPipelin
       techStackMaintenance(0) {}
       highLevelDataSetup(0) {}
       smokeTest(0) {} //aat-staging
+      e2eTest(0) {}
       functionalTest(0) {}
     }
 

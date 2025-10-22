@@ -23,6 +23,7 @@ class withJavaNightlyPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnp
       performanceTest(1) {}
       mutationTest(1){}
       highLevelDataSetup(1){}
+      e2eTest(1) {}
       fullFunctionalTest(1){}
       asBoolean() { return true } // Add missing asBoolean method expectation
     }

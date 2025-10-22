@@ -93,6 +93,13 @@ class YarnBuilderTest extends Specification {
       1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:functional') && it.returnStatus == true })
   }
 
+    def "e2eTest calls 'yarn test:e2e'"() {
+        when:
+            builder.e2eTest()
+        then:
+        1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:e2e') && it.returnStatus == true })
+    }
+
 def "apiGatewayTest calls 'yarn test:apiGateway'"() {
     when:
         builder.apiGatewayTest()

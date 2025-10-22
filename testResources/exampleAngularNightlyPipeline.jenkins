@@ -11,5 +11,6 @@ withNightlyPipeline('angular', product, app) {
   enableCrossBrowserTest(['chrome', 'firefox', 'safari', 'microsoft'])
   enablePerformanceTest()
   enableMutationTest()
+  enableE2eTest()
   enableFullFunctionalTest()
 }

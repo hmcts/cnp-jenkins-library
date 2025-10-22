@@ -63,6 +63,14 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
+  def e2eTest() {
+    try{
+      gradle("--rerun-tasks e2eTest")
+    } finally {
+//      localSteps.junit '**/test-results/E2e/*.xml,**/test-results/e2e/*.xml'
+    }
+  }
+
   def functionalTest() {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
