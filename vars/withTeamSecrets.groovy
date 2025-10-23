@@ -19,6 +19,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
   def entry = secretIterator.next()
 
   String theKeyVaultUrl = getKeyVaultUrl(entry, environment, vaultOverrides)
+  println "Key Vault URL: ${theKeyVaultUrl}"
 
   withAzureKeyvault(
     azureKeyVaultSecrets: entry.value,
