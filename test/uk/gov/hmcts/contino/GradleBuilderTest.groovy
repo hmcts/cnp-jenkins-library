@@ -58,8 +58,9 @@ class GradleBuilderTest extends Specification {
   }
 
   def "e2eTest calls 'gradle e2eTest' with '--rerun-tasks' flag"(){
-    when:
+    given:
       steps.publishHTML(_ as Map) >> null
+    when:
       builder.e2eTest()
     then:
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('e2eTest') && it.contains('--rerun-tasks') })
