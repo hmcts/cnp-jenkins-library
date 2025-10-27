@@ -24,6 +24,7 @@ class withJavaNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       mutationTest(1) {}
       e2eTest(1) {}
       fullFunctionalTest(1) {}
+      publishHTML(1) {}
       asBoolean() { return true } // Add missing asBoolean method expectation
     }
 
