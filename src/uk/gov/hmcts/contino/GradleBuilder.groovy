@@ -67,7 +67,14 @@ class GradleBuilder extends AbstractBuilder {
     try{
       gradle("--rerun-tasks e2eTest")
     } finally {
-      localSteps.junit '**/test-results/E2e/*.xml,**/test-results/e2e/*.xml'
+      publishHTML([
+              allowMissing: true,
+              alwaysLinkToLastBuild: true,
+              keepAll: true,
+              reportDir: "e2e-output/",
+              reportFiles: 'index.html',
+              reportName: 'E2E Test Report'
+      ])
     }
   }
 
