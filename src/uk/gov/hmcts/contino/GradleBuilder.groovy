@@ -67,7 +67,7 @@ class GradleBuilder extends AbstractBuilder {
     try{
       gradle("--rerun-tasks e2eTest")
     } finally {
-      publishHTML([
+      localSteps.publishHTML([
               allowMissing: true,
               alwaysLinkToLastBuild: true,
               keepAll: true,
