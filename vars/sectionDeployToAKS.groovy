@@ -181,8 +181,6 @@ def call(params) {
             }
           }
 
-
-
           if (config.performanceTest) {
             stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
@@ -195,7 +193,6 @@ def call(params) {
               }
             }
           }
-
 
           onMaster {
             if (config.crossBrowserTest) {
@@ -237,7 +234,6 @@ def call(params) {
               }
             }
           }
-
 
 //          Performance Tests:
           onPR {
