@@ -63,6 +63,21 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
+  def e2eTest() {
+    try{
+      gradle("--rerun-tasks e2eTest")
+    } finally {
+      localSteps.publishHTML([
+              allowMissing: true,
+              alwaysLinkToLastBuild: true,
+              keepAll: true,
+              reportDir: "e2e-output/",
+              reportFiles: 'index.html',
+              reportName: 'E2E Test Report'
+      ])
+    }
+  }
+
   def functionalTest() {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').

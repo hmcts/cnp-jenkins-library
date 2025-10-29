@@ -9,5 +9,6 @@ def app = "app"
 withNightlyPipeline('java', product, app) {
   enablePerformanceTest()
   enableMutationTest()
+  enableE2eTest()
   enableFullFunctionalTest()
 }

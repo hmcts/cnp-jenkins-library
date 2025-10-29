@@ -24,6 +24,7 @@ class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
       sonarScan(1) {}
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
+      e2eTest(1) {}
     }
 
     stubBuilder.use {

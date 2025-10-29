@@ -28,6 +28,7 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       crossBrowserTest(0..10) {}
       performanceTest(0..10) {}
       mutationTest(0..10) {}
+      e2eTest(0..10) {}
       fullFunctionalTest(0..10) {}
       asBoolean(0..10) { return true }
     }

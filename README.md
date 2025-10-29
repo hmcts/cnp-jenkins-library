@@ -446,6 +446,7 @@ TestName | How to enable | Example
  SecurityScan | Call enableSecurityScan() | [Web Application example](https://github.com/hmcts/sds-toffee-frontend/pull/119) <br>[API example](https://github.com/hmcts/sds-toffee-recipes-service/pull/135)
  Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
  FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
+ E2eTest | Call enableE2eTest() | [E2eTest Example](https://github.com/hmcts/cnp-jenkins-library/blob/4443f834ae16c5eab4e081a8553f0c5829e5ef5b/testResources/exampleAngularNightlyPipeline.jenkins#L14)
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
@@ -531,6 +532,7 @@ It is possible to trigger optional full functional tests, performance tests, for
 
 - `enable_full_functional_tests`
 - `enable_performance_test`
+- `enable_e2e_test`
 - `enable_fortify_scan`
 - `enable_security_scan`
 

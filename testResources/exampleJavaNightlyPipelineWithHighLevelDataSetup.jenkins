@@ -11,4 +11,5 @@ withNightlyPipeline('java', product, app) {
   enableMutationTest()
   enableFullFunctionalTest()
   enableHighLevelDataSetup()
+  enableE2eTest()
 }

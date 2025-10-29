@@ -24,6 +24,7 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       techStackMaintenance(1) {}
       sonarScan(1) {}
       smokeTest(1) {} //preview-staging
+      e2eTest(1) {}
       functionalTest(1) {}
       asBoolean() { return true }
     }

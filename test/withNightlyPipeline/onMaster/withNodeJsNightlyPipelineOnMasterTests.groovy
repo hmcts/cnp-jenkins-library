@@ -27,6 +27,7 @@ class withNodeJsNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
     helper.registerAllowedMethod("crossBrowserTest", [String.class], { String browser -> })
     helper.registerAllowedMethod("performanceTest", [], {})
     helper.registerAllowedMethod("mutationTest", [], {})
+    helper.registerAllowedMethod("e2eTest", [], {})
     helper.registerAllowedMethod("fullFunctionalTest", [], {})
 
     runScript("testResources/$jenkinsFile")
