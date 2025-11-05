@@ -15,8 +15,8 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
 
 ### Opinionated app pipeline
 
-This library contains a complete opinionated pipeline that can build, test and deploy Java
-and NodeJS applications. The pipeline contains the following stages:
+This library contains a complete opinionated pipeline that can build, test and deploy Java,
+NodeJS, Angular, Ruby, and Python applications. The pipeline contains the following stages:
 
 * Checkout
 * Build
@@ -36,7 +36,8 @@ and NodeJS applications. The pipeline contains the following stages:
 * (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
-script and dependencies in source control. NodeJS apps must use Yarn.
+script and dependencies in source control. NodeJS apps must use Yarn. Python apps can use
+pip, poetry, or pipenv for dependency management.
 
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
@@ -46,7 +47,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular", "ruby", and "python"
 
 def product = "rhubarb"
 
@@ -179,11 +180,176 @@ Calls `yarn test:nsp` so this command must be implemented in package.json
 
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
 This should, ideally, check the entire happy path of the application. Currently, the pipeline only supports Yarn to run smoketests and will call `yarn test:smoke`
-so this must be implemented as a command in package.json. The pipeline exposes the appropriate application URL in the
+so this must be implemented as a command in package.json. For Python applications, the pipeline will call `python test:smoke` (or `poetry run test:smoke` / `pipenv run test:smoke` depending on the package manager). The pipeline exposes the appropriate application URL in the
 `TEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
 called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
+
+#### Python Application Support
+
+The Jenkins shared library provides comprehensive support for Python applications, including FastAPI, Django, Flask, and other Python web frameworks.
+
+##### Python Version Management
+
+The pipeline automatically detects the Python version from:
+- `.python-version` (pyenv format)
+- `runtime.txt` (Heroku format: `python-3.11.0`)
+- `pyproject.toml` (Poetry format)
+
+Example `.python-version`:
+```
+3.11.0
+```
+
+##### Package Manager Support
+
+The pipeline automatically detects and uses the appropriate package manager:
+
+**pip** (requirements.txt):
+```txt
+# requirements.txt
+fastapi==0.104.0
+uvicorn[standard]==0.24.0
+pytest==7.4.0
+pytest-asyncio==0.21.0
+httpx==0.25.0
+```
+
+**Poetry** (pyproject.toml):
+```toml
+[tool.poetry]
+name = "my-fastapi-app"
+version = "0.1.0"
+python = "^3.11"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+httpx = "^0.25.0"
+```
+
+**Pipenv** (Pipfile):
+```toml
+[packages]
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+
+[dev-packages]
+pytest = "*"
+pytest-asyncio = "*"
+httpx = "*"
+```
+
+##### Test Commands
+
+For Python projects, implement the following test commands based on your package manager:
+
+**With Poetry**, add to `pyproject.toml`:
+```toml
+[tool.poetry.scripts]
+test = "pytest tests/"
+"test:smoke" = "pytest tests/smoke --junitxml=smoke-output/results.xml"
+"test:functional" = "pytest tests/functional --junitxml=functional-output/results.xml"
+lint = "ruff check ."
+```
+
+**With pip**, tests are run directly with pytest. Ensure your test structure follows:
+```
+tests/
+  smoke/
+    test_health.py
+  functional/
+    test_api.py
+  unit/
+    test_models.py
+```
+
+##### FastAPI-Specific Setup
+
+For FastAPI applications, the following structure is recommended:
+
+**Health Endpoints** (for smoke tests):
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+
+@app.get("/ready")
+async def ready():
+    return {"status": "ready"}
+```
+
+**Smoke Tests**:
+```python
+# tests/smoke/test_health.py
+import pytest
+from httpx import AsyncClient
+from main import app
+
+@pytest.mark.asyncio
+async def test_health_endpoint():
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.get("/health")
+        assert response.status_code == 200
+        assert response.json()["status"] == "healthy"
+```
+
+**Jenkinsfile Example**:
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "myproduct"
+def component = "api"
+
+withPipeline('python', product, component) {
+  enableSlackNotifications('#my-team-builds')
+}
+```
+
+##### Security Scanning
+
+Python applications use `pip-audit` for dependency vulnerability scanning. The pipeline automatically:
+- Installs and runs pip-audit
+- Generates CVE reports
+- Publishes reports to the CVE database
+- Archives security scan results
+
+##### Docker Support
+
+Python applications are automatically containerized. For FastAPI applications, use a multi-stage Dockerfile:
+
+```dockerfile
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY . .
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+##### Pact Contract Testing
+
+Python applications support Pact testing with the `pact-python` library. Implement the following commands:
+- `test:pact:verify` - Verify provider contracts
+- `test:pact:verify-and-publish` - Verify and publish results
+- `test:pact:run-and-publish` - Run consumer tests and publish
+- `test:can-i-deploy:consumer` - Check if safe to deploy
 
 #### Docker test build for continuous functional and smoke tests
 
