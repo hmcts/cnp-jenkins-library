@@ -98,11 +98,19 @@ class NextJsBuilder extends AbstractBuilder {
   }
 
   @Override
+  def runProviderVerification(){
+    builder.runProviderVerification()
+  }
+
   def runProviderVerification(pactBrokerUrl, version, publish){
     builder.runProviderVerification(pactBrokerUrl, version, publish)
   }
 
   @Override
+  def runConsumerTests(){
+    builder.runConsumerTests()
+  }
+
   def runConsumerTests(pactBrokerUrl, version){
     builder.runConsumerTests(pactBrokerUrl, version)
   }
