@@ -46,7 +46,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular", "nextjs" and "ruby"
 
 def product = "rhubarb"
 
@@ -522,6 +522,124 @@ withNightlyPipeline(type, product, component) {
   afterAlways('fullFunctionalTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
+}
+```
+
+## Application Type Requirements
+
+### Next.js Applications
+
+Next.js applications must use Yarn as the package manager and follow the same patterns as other Node.js applications in this pipeline.
+
+#### Required Scripts in package.json
+
+Next.js applications should implement the following scripts in `package.json`:
+
+- `build` - Next.js production build (runs `next build`)
+- `test` - Run unit tests (e.g., Jest)
+- `test:smoke` - Smoke tests (if smoke tests are enabled)
+- `test:functional` - Functional tests (if functional tests are enabled)
+- `test:crossbrowser` - Cross-browser tests (if cross-browser tests are enabled)
+- `lint` - Code linting (e.g., ESLint)
+- `analyze` - (Optional) Bundle size analysis
+
+Example `package.json` scripts:
+```json
+{
+  "scripts": {
+    "build": "next build",
+    "test": "jest",
+    "test:smoke": "jest --testPathPattern=smoke",
+    "test:functional": "jest --testPathPattern=functional",
+    "test:crossbrowser": "playwright test",
+    "lint": "next lint",
+    "analyze": "ANALYZE=true next build"
+  }
+}
+```
+
+#### Next.js Configuration
+
+For optimal Docker builds with Next.js, configure standalone output in `next.config.js`:
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  // ... other config
+}
+
+module.exports = nextConfig
+```
+
+The standalone output mode creates a minimal Node.js server in `.next/standalone/` that includes only the necessary files for production deployment, significantly reducing Docker image size.
+
+#### Node.js Version
+
+Specify your Node.js version in a `.nvmrc` file at the repository root:
+
+```
+18.16.0
+```
+
+The pipeline will automatically detect and use this version for builds and tests.
+
+#### Environment Variables
+
+Next.js handles environment variables in a specific way:
+
+- **`NEXT_PUBLIC_*` variables** - Available in the browser (client-side)
+- **Server-only variables** - Never exposed to the client, available only on the server
+- Build-time vs runtime variables should be configured appropriately
+
+Use the standard vault secrets pattern for sensitive configuration:
+
+```groovy
+def secrets = [
+  'your-app-${env}': [
+    secret('next-public-api-url', 'NEXT_PUBLIC_API_URL'),
+    secret('server-secret', 'SERVER_SECRET')
+  ]
+]
+
+withPipeline('nextjs', product, component) {
+  loadVaultSecrets(secrets)
+}
+```
+
+#### Example Next.js Pipeline
+
+Basic pipeline setup:
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+def type = "nextjs"
+def product = "myproduct"
+def component = "frontend"
+
+withPipeline(type, product, component) {
+  enableSlackNotifications('#my-team-builds')
+}
+```
+
+With nightly tests:
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+def type = "nextjs"
+def product = "myproduct"
+def component = "frontend"
+
+withNightlyPipeline(type, product, component) {
+  enableCrossBrowserTest()
+  enablePerformanceTest()
+  enableMutationTest()
+  enableFullFunctionalTest()
+  enableSecurityScan()
 }
 ```
 
