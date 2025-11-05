@@ -23,6 +23,7 @@ class AppPipelineConfigTest extends Specification {
   def "ensure defaults"() {
     expect:
       assertThat(pipelineConfig.migrateDb).isFalse()
+      assertThat(pipelineConfig.e2eTest).isFalse()
       assertThat(pipelineConfig.performanceTest).isFalse()
       assertThat(pipelineConfig.apiGatewayTest).isFalse()
       assertThat(pipelineConfig.crossBrowserTest).isFalse()
@@ -57,6 +58,13 @@ class AppPipelineConfigTest extends Specification {
       dsl.loadVaultSecrets(secrets)
     then:
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
+  }
+
+  def "ensure enable e2e test"() {
+    when:
+    dsl.enableE2eTest()
+    then:
+    assertThat(pipelineConfig.e2eTest).isTrue()
   }
 
   def "ensure enable performance test"() {

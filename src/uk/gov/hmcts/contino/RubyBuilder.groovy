@@ -46,6 +46,10 @@ class RubyBuilder extends AbstractBuilder {
     bundle("exec rake test:functional")
   }
 
+  def e2eTest() {
+    bundle("exec rake test:e2e")
+  }
+
   def apiGatewayTest() {
     bundle("exec rake test:apiGateway")
   }
