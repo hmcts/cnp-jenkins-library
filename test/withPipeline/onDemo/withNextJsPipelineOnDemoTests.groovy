@@ -15,7 +15,6 @@ class withNextJsPipelineOnDemoTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
     def stubBuilder = new StubFor(NextJsBuilder)
-//    todo: revisit these demands
     stubBuilder.demand.with {
       setupToolVersion(0) {}
       build(0) {}
