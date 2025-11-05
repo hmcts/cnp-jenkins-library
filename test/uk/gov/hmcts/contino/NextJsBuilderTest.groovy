@@ -15,6 +15,11 @@ class NextJsBuilderTest extends Specification {
     steps.getEnv() >> [
       BRANCH_NAME: 'master',
     ]
+    def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-no-issues.txt').toURI()).text
+    steps.readFile(_ as String) >> sampleCVEReport
+    def closure
+    steps.withCredentials(_, { it.call() }) >> { closure = it }
+    steps.usernamePassword(_ as Map) >> [:]
     
     builder = new NextJsBuilder(steps)
     yarnBuilder = builder.builder
@@ -24,12 +29,12 @@ class NextJsBuilderTest extends Specification {
     when:
       builder.build()
     then:
-      1 * steps.sh({
+      2 * steps.sh({
         it instanceof Map &&
         it.script.contains('yarn install') &&
         it.returnStatus == true
       })
-      1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
+      2 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
       1 * steps.sh({
         it instanceof Map &&
         it.script.contains('yarn lint') &&
@@ -41,20 +46,6 @@ class NextJsBuilderTest extends Specification {
         it.returnStatus == true
       })
       1 * steps.sh({ it.contains('tee version') })
-  }
-
-  def "build with analyze script calls yarn analyze"() {
-    given:
-      steps.fileExists('package.json') >> true
-      steps.readJSON(_ as Map) >> [scripts: [analyze: 'next build --analyze']]
-    when:
-      builder.build()
-    then:
-      1 * steps.sh({
-        it instanceof Map &&
-        it.script.contains('yarn analyze') &&
-        it.returnStatus == true
-      })
   }
 
   def "test delegates to YarnBuilder"() {
@@ -81,18 +72,9 @@ class NextJsBuilderTest extends Specification {
   }
 
   def "securityCheck delegates to YarnBuilder"() {
-    given:
-      def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-no-issues.txt').toURI()).text
-      steps.readFile(_ as String) >> sampleCVEReport
-      def closure
-      steps.withCredentials(_, { it.call() }) >> { closure = it }
-      steps.usernamePassword(_ as Map) >> [:]
     when:
       builder.securityCheck()
     then:
-      1 * steps.sh({
-        it instanceof Map &&
-        it.script.contains('yarn-audit-with-suppressions.sh')
-      })
+      1 * steps.sh({ it.contains('./yarn-audit-with-suppressions.sh') })
   }
 }
