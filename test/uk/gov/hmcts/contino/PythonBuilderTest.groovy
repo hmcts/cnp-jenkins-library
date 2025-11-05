@@ -15,8 +15,10 @@ class PythonBuilderTest extends Specification {
     steps.getEnv() >> [
       BRANCH_NAME: 'master',
     ]
-    steps.fileExists(_ as String) >> false
-    steps.readFile(_ as String) >> '{"dependencies": []}'
+    
+    def closure
+    steps.withSauceConnect(_, { it.call() }) >> { closure = it }
+    
     builder = new PythonBuilder(steps)
   }
 
@@ -100,6 +102,9 @@ class PythonBuilderTest extends Specification {
   }
 
   def "securityCheck runs pip-audit"() {
+    given:
+      steps.fileExists(_ as String) >> true
+      steps.readFile('pip-audit-report.json') >> '{"dependencies": []}'
     when:
       builder.securityCheck()
     then:
@@ -201,11 +206,13 @@ class PythonBuilderTest extends Specification {
     given:
       steps.fileExists('.python-version') >> true
       steps.readFile('.python-version') >> '3.11.0'
-      steps.sh(_ as String, _ as Boolean) >> 0
+      steps.sh(_ as Map) >> 0
+      steps.sh(_ as String) >> null
     when:
       builder.setupToolVersion()
     then:
       1 * steps.echo('Detected Python version: 3.11.0')
+      1 * steps.sh(_ as String) // python --version check
   }
 
   def "setupToolVersion detects Python version from runtime.txt"() {
@@ -213,10 +220,13 @@ class PythonBuilderTest extends Specification {
       steps.fileExists('.python-version') >> false
       steps.fileExists('runtime.txt') >> true
       steps.readFile('runtime.txt') >> 'python-3.10.5'
+      steps.sh(_ as Map) >> 0
+      steps.sh(_ as String) >> null
     when:
       builder.setupToolVersion()
     then:
       1 * steps.echo('Detected Python version: 3.10.5')
+      1 * steps.sh(_ as String) // python --version check
   }
 
   def "setupToolVersion detects Python version from pyproject.toml"() {
@@ -229,10 +239,13 @@ class PythonBuilderTest extends Specification {
 name = "test"
 python = "^3.9"
 '''
+      steps.sh(_ as Map) >> 0
+      steps.sh(_ as String) >> null
     when:
       builder.setupToolVersion()
     then:
       1 * steps.echo('Detected Python version: 3.9')
+      1 * steps.sh(_ as String) // python --version check
   }
 
   def "python command installs dependencies on first run with pip"() {

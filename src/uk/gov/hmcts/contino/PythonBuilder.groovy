@@ -16,7 +16,6 @@ class PythonBuilder extends AbstractBuilder {
   PythonBuilder(steps) {
     super(steps)
     this.localSteps = steps
-    this.securitytest = new SecurityScan(steps)
   }
 
   def build() {
