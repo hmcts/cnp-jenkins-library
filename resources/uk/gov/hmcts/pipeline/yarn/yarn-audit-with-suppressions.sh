@@ -204,7 +204,8 @@ else
   # Convert JSON array into sorted list of suppressed issues
   cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
 
-  if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
+  # if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
+  if ! jq 'has("actions") and has("advisories") and has("metadata")' "$file" | grep -q true; then
     print_borked_known_issues
     exit 1
   fi
