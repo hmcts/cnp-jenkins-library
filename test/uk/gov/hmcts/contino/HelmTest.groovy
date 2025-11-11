@@ -50,14 +50,18 @@ class HelmTest extends Specification {
     then:
     1 * steps.sh({it.containsKey('label') && 
       it.get('label') == 'helm upgrade' &&
-      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --timeout 15m")
+      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --timeout 1250s")
     })
     1 * steps.sh({it.containsKey('label') && 
       it.get('label') == 'wait for install' &&
+      it.get('script').contains("Waiting 30s for initial pod creation...") &&
+      it.get('script').contains("sleep 30") &&
+      it.get('script').contains("kubectl get pods -n cnp -l app.kubernetes.io/instance=${CHART}-pr-1") &&
+      it.get('script').contains("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError") &&
       it.get('script').contains("kubectl wait --for=condition=ready pod") &&
       it.get('script').contains("-l app.kubernetes.io/instance=${CHART}-pr-1") &&
       it.get('script').contains("-n cnp") &&
-      it.get('script').contains("--timeout=15m || ./aks-debug-info.sh ${CHART}-pr-1 cnp")
+      it.get('script').contains("--timeout=1220s || ./aks-debug-info.sh ${CHART}-pr-1 cnp")
     })
   }
 

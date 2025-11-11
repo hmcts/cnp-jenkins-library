@@ -132,16 +132,27 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh('chmod +x aks-debug-info.sh')
-    def optionsStr = (options + ['--install', '--timeout 15m']).join(' ')
+    def optionsStr = (options + ['--install', '--timeout 1250s']).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
     steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
     steps.sh(label: 'wait for install', script:
       """
+      echo 'Waiting 30s for initial pod creation...'
+      sleep 30
+
+      if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \
+        jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason | 
+        test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
+         echo "❌ Critical error detected - failing fast"
+         ./aks-debug-info.sh ${releaseName} ${this.namespace}
+         exit 1
+      fi
+
       echo 'Waiting for pods to be scheduled and ready...'
       kubectl wait --for=condition=ready pod \\
         -l app.kubernetes.io/instance=${releaseName} \\
         -n ${this.namespace} \\
-        --timeout=15m || ./aks-debug-info.sh ${releaseName} ${this.namespace}
+        --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
       """)
     this.steps.sh 'rm aks-debug-info.sh'
   }
