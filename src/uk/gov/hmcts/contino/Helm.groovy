@@ -140,7 +140,7 @@ class Helm {
       echo 'Waiting for pods to be scheduled and ready...'
       kubectl wait --for=condition=ready pod \\
         -l app.kubernetes.io/instance=${releaseName} \\
-        -n civil \\
+        -n ${this.namespace} \\
         --timeout=15m || ./aks-debug-info.sh ${releaseName} ${this.namespace}
       """)
     this.steps.sh 'rm aks-debug-info.sh'
