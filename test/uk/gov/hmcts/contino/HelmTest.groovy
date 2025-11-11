@@ -48,9 +48,16 @@ class HelmTest extends Specification {
     helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])
 
     then:
-    1 * steps.sh({it.containsKey('script') &&
-      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --wait --timeout 1250s") &&
-      it.get('script').contains("|| ./aks-debug-info.sh ${CHART}-pr-1 cnp")
+    1 * steps.sh({it.containsKey('label') && 
+      it.get('label') == 'helm upgrade' &&
+      it.get('script').contains("helm upgrade ${CHART}-pr-1  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --timeout 15m")
+    })
+    1 * steps.sh({it.containsKey('label') && 
+      it.get('label') == 'wait for install' &&
+      it.get('script').contains("kubectl wait --for=condition=ready pod") &&
+      it.get('script').contains("-l app.kubernetes.io/instance=${CHART}-pr-1") &&
+      it.get('script').contains("-n cnp") &&
+      it.get('script').contains("--timeout=15m || ./aks-debug-info.sh ${CHART}-pr-1 cnp")
     })
   }
 
