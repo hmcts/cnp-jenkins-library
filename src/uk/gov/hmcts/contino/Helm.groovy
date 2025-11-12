@@ -148,11 +148,32 @@ class Helm {
          exit 1
       fi
 
-      echo 'Waiting for pods to be scheduled and ready...'
-      kubectl wait --for=condition=ready pod \\
-        -l app.kubernetes.io/instance=${releaseName} \\
-        -n ${this.namespace} \\
-        --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
+      echo 'Waiting for pods to be scheduled and ready or completed...'
+      
+      # Wait for pods to be either ready or completed
+      timeout_seconds=1220
+      elapsed=0
+      check_interval=5
+      
+      while [ \$elapsed -lt \$timeout_seconds ]; do
+        if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \\
+          jq -e '.items[] | select(.status.phase == "Running" or .status.phase == "Succeeded")' > /dev/null 2>&1; then
+          echo "✅ Pods are ready or completed"
+          break
+        fi
+        
+        echo "Waiting for pods... (\${elapsed}s/\${timeout_seconds}s)"
+        sleep \$check_interval
+        elapsed=\$((elapsed + check_interval))
+      done
+      
+      # Final check - if still not ready or completed, fail
+      if ! kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \\
+        jq -e '.items[] | select(.status.phase == "Running" or .status.phase == "Succeeded")' > /dev/null 2>&1; then
+        echo "❌ No pods are ready or completed after \${timeout_seconds}s"
+        ./aks-debug-info.sh ${releaseName} ${this.namespace}
+        exit 1
+      fi
       """)
     this.steps.sh 'rm aks-debug-info.sh'
   }
