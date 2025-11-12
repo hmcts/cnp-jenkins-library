@@ -156,8 +156,12 @@ class Helm {
       check_interval=5
       
       while [ \$elapsed -lt \$timeout_seconds ]; do
+        # Check if any pod is ready (Running + Ready condition) or completed (Succeeded phase)
         if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \\
-          jq -e '.items[] | select(.status.phase == "Running" or .status.phase == "Succeeded")' > /dev/null 2>&1; then
+          jq -e '.items[] | select(
+            (.status.phase == "Running" and ([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length > 0)) or 
+            .status.phase == "Succeeded"
+          )' > /dev/null 2>&1; then
           echo "✅ Pods are ready or completed"
           break
         fi
@@ -169,7 +173,10 @@ class Helm {
       
       # Final check - if still not ready or completed, fail
       if ! kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \\
-        jq -e '.items[] | select(.status.phase == "Running" or .status.phase == "Succeeded")' > /dev/null 2>&1; then
+        jq -e '.items[] | select(
+          (.status.phase == "Running" and ([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length > 0)) or 
+          .status.phase == "Succeeded"
+        )' > /dev/null 2>&1; then
         echo "❌ No pods are ready or completed after \${timeout_seconds}s"
         ./aks-debug-info.sh ${releaseName} ${this.namespace}
         exit 1

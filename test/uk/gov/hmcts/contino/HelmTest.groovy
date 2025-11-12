@@ -61,7 +61,8 @@ class HelmTest extends Specification {
       it.get('script').contains("Waiting for pods to be scheduled and ready or completed...") &&
       it.get('script').contains("timeout_seconds=1220") &&
       it.get('script').contains("while [ \$elapsed -lt \$timeout_seconds ]; do") &&
-      it.get('script').contains(".status.phase == \"Running\" or .status.phase == \"Succeeded\"") &&
+      it.get('script').contains(".status.phase == \"Running\" and ([.status.conditions[]? | select(.type == \"Ready\" and .status == \"True\")] | length > 0)") &&
+      it.get('script').contains(".status.phase == \"Succeeded\"") &&
       it.get('script').contains("./aks-debug-info.sh ${CHART}-pr-1 cnp")
     })
   }
