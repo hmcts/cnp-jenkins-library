@@ -140,7 +140,7 @@ class Helm {
       echo 'Waiting 30s for initial pod creation...'
       sleep 30
 
-      if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \
+      if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -o json | \
         jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason | 
         test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
          echo "❌ Critical error detected - failing fast"
@@ -150,7 +150,7 @@ class Helm {
 
       echo 'Waiting for pods to be scheduled and ready...'
       kubectl wait --for=condition=ready pod \\
-        -l app.kubernetes.io/instance=${releaseName} \\
+        -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
         -n ${this.namespace} \\
         --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
       """)

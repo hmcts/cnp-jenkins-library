@@ -56,12 +56,13 @@ class HelmTest extends Specification {
       it.get('label') == 'wait for install' &&
       it.get('script').contains("Waiting 30s for initial pod creation...") &&
       it.get('script').contains("sleep 30") &&
-      it.get('script').contains("kubectl get pods -n cnp -l app.kubernetes.io/instance=${CHART}-pr-1") &&
+      it.get('script').contains("kubectl get pods -n cnp -l app.kubernetes.io/instance=${CHART}-pr-1,'!job-name'") &&
       it.get('script').contains("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError") &&
+      it.get('script').contains("Waiting for pods to be scheduled and ready...") &&
       it.get('script').contains("kubectl wait --for=condition=ready pod") &&
-      it.get('script').contains("-l app.kubernetes.io/instance=${CHART}-pr-1") &&
-      it.get('script').contains("-n cnp") &&
-      it.get('script').contains("--timeout=1220s || ./aks-debug-info.sh ${CHART}-pr-1 cnp")
+      it.get('script').contains("-l app.kubernetes.io/instance=${CHART}-pr-1,'!job-name'") &&
+      it.get('script').contains("--timeout=1220s") &&
+      it.get('script').contains("./aks-debug-info.sh ${CHART}-pr-1 cnp")
     })
   }
 
