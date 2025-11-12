@@ -140,7 +140,7 @@ class Helm {
       echo 'Waiting 30s for initial pod creation...'
       sleep 30
 
-      if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \
+      if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -o json | \
         jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason | 
         test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
          echo "❌ Critical error detected - failing fast"
@@ -148,39 +148,11 @@ class Helm {
          exit 1
       fi
 
-      echo 'Waiting for pods to be scheduled and ready or completed...'
-      
-      # Wait for pods to be either ready or completed
-      timeout_seconds=1220
-      elapsed=0
-      check_interval=5
-      
-      while [ \$elapsed -lt \$timeout_seconds ]; do
-        # Check if any pod is ready (Running + Ready condition) or completed (Succeeded phase)
-        if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \\
-          jq -e '.items[] | select(
-            (.status.phase == "Running" and ([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length > 0)) or 
-            .status.phase == "Succeeded"
-          )' > /dev/null 2>&1; then
-          echo "✅ Pods are ready or completed"
-          break
-        fi
-        
-        echo "Waiting for pods... (\${elapsed}s/\${timeout_seconds}s)"
-        sleep \$check_interval
-        elapsed=\$((elapsed + check_interval))
-      done
-      
-      # Final check - if still not ready or completed, fail
-      if ! kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o json | \\
-        jq -e '.items[] | select(
-          (.status.phase == "Running" and ([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length > 0)) or 
-          .status.phase == "Succeeded"
-        )' > /dev/null 2>&1; then
-        echo "❌ No pods are ready or completed after \${timeout_seconds}s"
-        ./aks-debug-info.sh ${releaseName} ${this.namespace}
-        exit 1
-      fi
+      echo 'Waiting for pods to be scheduled and ready...'
+      kubectl wait --for=condition=ready pod \\
+        -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
+        -n ${this.namespace} \\
+        --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
       """)
     this.steps.sh 'rm aks-debug-info.sh'
   }
