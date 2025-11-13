@@ -143,7 +143,7 @@ def call(Map params) {
         params.subscription,
         'buildlog-storage-account',
         env.GATLING_REPORTS_PATH,
-        "performance/build/${params.product}-${params.component}/${params.environment}"
+        "performance/_build/${params.product}-${params.component}/${params.environment}"
       )
       echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
     }

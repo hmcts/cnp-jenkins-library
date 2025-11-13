@@ -2,7 +2,7 @@ import uk.gov.hmcts.contino.Gatling
 import groovy.json.JsonSlurperClassic
 
 def call(params)  {
-  def folder = params.folder ? "${params.folder}/" : ""
+  def folder = params.folder ? "_${params.folder}/" : ""
   try {
       azureBlobUpload(params.subscription, 'buildlog-storage-account', env.GATLING_REPORTS_PATH, "performance/${folder}${params.product}-${params.component}/${params.environment}")
   }
