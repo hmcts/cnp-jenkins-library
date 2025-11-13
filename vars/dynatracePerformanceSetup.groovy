@@ -107,8 +107,8 @@ def call(Map params) {
     echo "Posting Dynatrace Event..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Synthetic Test: ${env.DT_SYNTHETIC_TEST_ID}"
-    echo "Entity Selector: ${entitySelector}"
-    echo "Dashboard: ${config.dynatraceDashboardURL}"
+    echo "Entity Selector: ${ env.DT_ENTITY_SELECTOR}"
+    echo "Dashboard: ${env.DT_DASHBOARD_URL}"
     
     //Post DT Event
     def postEventResult = dynatraceClient.postEvent(
@@ -119,8 +119,8 @@ def call(Map params) {
     echo "Posting Dynatrace Metric..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Metric Endpoint: ${DynatraceClient.DEFAULT_METRIC_INGEST_ENDPOINT}"
-    echo "Metric Type: ${config.dynatraceMetricType}"
-    echo "Metric Tag: ${config.dynatraceMetricTag}"
+    echo "Metric Type: ${env.DT_METRIC_TYPE}"
+    echo "Metric Tag: ${env.DT_METRIC_TAG}"
     echo "Environment: ${environment}"
     
     //Post DT Metric
@@ -136,7 +136,6 @@ def call(Map params) {
       echo "Custom URL: ${testUrl}"
       //Update Synthetic Test for Preview
       def updateResult = dynatraceClient.updateSyntheticTest(
-        syntheticTestId,
         true,
         testUrl
       )
