@@ -84,37 +84,38 @@ class HelmTest extends Specification {
 
   def "installOrUpgrade() on non-PR branch should execute with --wait flag"() {
     given:
-    steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
-                  AKS_CLUSTER_NAME: "cnp-aks-cluster",
-                  TEAM_NAMESPACE: "cnp",
-                  SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
-                  BRANCH_NAME: "master"]
-    helm = new Helm(steps, CHART)
+    def nonPrSteps = Mock(JenkinsStepMock.class)
+    nonPrSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                       AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                       TEAM_NAMESPACE: "cnp",
+                       SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                       BRANCH_NAME: "master"]
+    def nonPrHelm = new Helm(nonPrSteps, CHART)
 
     when:
-    helm.installOrUpgrade("staging", ["val1", "val2"], ["--namespace cnp"])
+    nonPrHelm.installOrUpgrade("staging", ["val1", "val2"], ["--namespace cnp"])
 
     then:
-    1 * steps.sh({it.containsKey('script') &&
+    1 * nonPrSteps.sh({it.containsKey('script') &&
                     it.get('script').contains("helm dependency update ${CHART_PATH}") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)
     })
-    1 * steps.sh({it.containsKey('script') &&
+    1 * nonPrSteps.sh({it.containsKey('script') &&
                     it.get('script').contains("helm lint ${CHART_PATH}  -f val1 -f val2") &&
                     it.containsKey('returnStdout') &&
                     it.get('returnStdout').equals(true)
     })
-    1 * steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
-    1 * steps.writeFile(_)
-    1 * steps.sh('chmod +x aks-debug-info.sh')
-    1 * steps.sh({it.containsKey('label') && 
+    1 * nonPrSteps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
+    1 * nonPrSteps.writeFile(_)
+    1 * nonPrSteps.sh('chmod +x aks-debug-info.sh')
+    1 * nonPrSteps.sh({it.containsKey('label') && 
       it.get('label') == 'helm upgrade' &&
       it.get('script').contains("helm upgrade ${CHART}-staging  ${CHART_PATH}  -f val1 -f val2 --namespace cnp --install --wait --timeout 1250s") &&
       it.get('script').contains("|| ./aks-debug-info.sh ${CHART}-staging cnp")
     })
-    0 * steps.sh({it.containsKey('label') && it.get('label') == 'wait for install'})
-    1 * steps.sh('rm aks-debug-info.sh')
+    0 * nonPrSteps.sh({it.containsKey('label') && it.get('label') == 'wait for install'})
+    1 * nonPrSteps.sh('rm aks-debug-info.sh')
   }
 
   def "delete() should execute with the correct chart and options"() {
