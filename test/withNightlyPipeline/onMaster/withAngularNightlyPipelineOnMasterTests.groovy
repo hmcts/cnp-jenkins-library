@@ -30,7 +30,6 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
       mutationTest(0..10) {}
       e2eTest(0..10) {}
       fullFunctionalTest(0..10) {}
-      asBoolean(0..10) { return true }
     }
 
     stubBuilder.use {
