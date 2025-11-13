@@ -8,7 +8,6 @@ This runs the actual synthetic test after setup has been completed by dynatraceP
   - product: String product name (required)
   - component: String component name (required)
   - environment: String environment name (required)
-  - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
 
 Prerequisites:
   - dynatracePerformanceSetup must be run first to set up environment variables
@@ -38,13 +37,10 @@ def call(Map params) {
     error("dynatraceSyntheticTest: 'environment' parameter is required")
   }
 
-  def defaultConfigPath = 'src/test/performance/config/config.groovy'
-  def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
   def maxStatusChecks = 16
   def statusCheckInterval = 20
-  
-  def config
+
   def dynatraceClient = new DynatraceClient(this)
 
   echo "Starting Dynatrace synthetic test execution..."
@@ -56,8 +52,6 @@ def call(Map params) {
   echo "Using performance test secrets loaded from shared vault (already available as environment variables)..."
 
   try {
-    // Set DT params from config file
-    //def syntheticTestId = config.dynatraceSyntheticTest
 
     echo "Triggering Dynatrace Synthetic Test..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"

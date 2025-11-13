@@ -149,11 +149,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.gatlingLoadTestTimeout = params.timeout ?: 10
     config.gatlingRepo = params.repo
     config.gatlingBranch = params.branch ?: 'master'
-    config.gatlingTestPath = params.testPath ?: 'src/test/scala'
     config.gatlingSimulation = params.simulation
-    config.gatlingUsers = params.users ?: 5
-    config.gatlingRampDuration = params.rampDuration ?: '30s'
-    config.gatlingTestDuration = params.testDuration ?: '300s'
 
     if (!config.gatlingRepo) {
       throw new IllegalArgumentException("enableGatlingLoadTests: 'repo' parameter is required")

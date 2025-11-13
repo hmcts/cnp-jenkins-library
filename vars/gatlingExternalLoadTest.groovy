@@ -13,9 +13,6 @@ performance testing patterns.
   - gatlingRepo: String Git repository URL for Gatling tests (required)
   - gatlingBranch: String branch name (optional, defaults to 'main')
   - gatlingSimulation: String specific simulation class (optional)
-  - gatlingUsers: Integer number of users (optional, defaults to 10)
-  - gatlingRampDuration: String ramp duration (optional, defaults to '30s')
-  - gatlingTestDuration: String test duration (optional, defaults to '60s')
 
 Prerequisites:
   - External Gatling repository must have Gradle with gatling-gradle-plugin or gradle-gatling-plugin
@@ -62,9 +59,6 @@ def call(Map params) {
 
   // Set parameter defaults - try master first as many repos still use it
   def gatlingBranch = params.gatlingBranch ?: 'master'
-  def gatlingUsers = params.gatlingUsers ?: 10
-  def gatlingRampDuration = params.gatlingRampDuration ?: '30s'
-  def gatlingTestDuration = params.gatlingTestDuration ?: '60s'
   def gatlingSimulation = params.gatlingSimulation
 
   echo "Starting external Gatling load test execution using GradleBuilder..."
@@ -75,7 +69,6 @@ def call(Map params) {
   echo "Branch: ${gatlingBranch}"
   echo "Target URL: ${env.TEST_URL}"
   echo "CCD_DATA_STORE_API_PR_URL: ${env.CCD_DATA_STORE_API_URL}"
-  echo "Users: ${gatlingUsers}"
   echo "Simulation: ${gatlingSimulation ?: 'All simulations'}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
