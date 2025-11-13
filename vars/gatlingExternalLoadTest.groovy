@@ -16,7 +16,6 @@ performance testing patterns.
   - gatlingUsers: Integer number of users (optional, defaults to 10)
   - gatlingRampDuration: String ramp duration (optional, defaults to '30s')
   - gatlingTestDuration: String test duration (optional, defaults to '60s')
-  - testUrl: String target URL (optional, uses env.TEST_URL)
 
 Prerequisites:
   - External Gatling repository must have Gradle with gatling-gradle-plugin or gradle-gatling-plugin
@@ -31,9 +30,7 @@ gatlingExternalLoadTest([
   subscription: 'DCD-CFT-Sandbox',
   gatlingRepo: 'https://github.com/hmcts/et-performance-tests.git',
   gatlingBranch: 'main',
-  gatlingSimulation: 'uk.gov.hmcts.et.simulation.ApiLoadTest',
-  gatlingUsers: 50,
-  testUrl: env.TEST_URL
+  gatlingSimulation: 'uk.gov.hmcts.et.simulation.ApiLoadTest'
 ])
 
 Note: This approach leverages the existing GradleBuilder.performanceTest() method
@@ -65,7 +62,6 @@ def call(Map params) {
 
   // Set parameter defaults - try master first as many repos still use it
   def gatlingBranch = params.gatlingBranch ?: 'master'
-  def testUrl = params.testUrl ?: env.TEST_URL
   def gatlingUsers = params.gatlingUsers ?: 10
   def gatlingRampDuration = params.gatlingRampDuration ?: '30s'
   def gatlingTestDuration = params.gatlingTestDuration ?: '60s'

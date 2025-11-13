@@ -289,8 +289,7 @@ def call(params) {
                             subscription: subscription,
                             gatlingRepo: config.gatlingRepo,
                             gatlingBranch: config.gatlingBranch,
-                            gatlingSimulation: config.gatlingSimulation,
-                            testUrl: env.TEST_URL,
+                            gatlingSimulation: config.gatlingSimulation
                           ])
                         }
                       }

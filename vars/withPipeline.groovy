@@ -380,8 +380,7 @@ def call(type, String product, String component, Closure body) {
                             subscription: subscription,
                             gatlingRepo: config.gatlingRepo,
                             gatlingBranch: config.gatlingBranch,
-                            gatlingSimulation: config.gatlingSimulation,
-                            testUrl: env.TEST_URL
+                            gatlingSimulation: config.gatlingSimulation
                           ])
                         }
                       }
