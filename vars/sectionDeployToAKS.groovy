@@ -293,8 +293,6 @@ def call(params) {
                             gatlingBranch: config.gatlingBranch,
                             gatlingSimulation: config.gatlingSimulation,
                             testUrl: env.TEST_URL,
-                            performanceTestStagesEnabled: config.performanceTestStages,
-                            gatlingLoadTestsEnabled: config.gatlingLoadTests
                           ])
                         }
                       }
