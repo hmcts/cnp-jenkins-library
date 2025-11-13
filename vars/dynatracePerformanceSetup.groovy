@@ -75,8 +75,8 @@ def call(Map params) {
   echo "Setting config variables to env.VAR's..."
   // Store config for use by subsequent stages
   env.DT_SYNTHETIC_TEST_ID = config.dynatraceSyntheticTest
-  env.DT_DASHBOARD_ID = config.dashboardId
-  env.DT_ENTITY_SELECTOR = config.entitySelector
+  env.DT_DASHBOARD_ID = config.dynatraceDashboardId
+  env.DT_ENTITY_SELECTOR = config.dynatraceEntitySelector
   env.DT_DASHBOARD_URL = config.dynatraceDashboardURL
   env.DT_METRIC_TYPE = config.dynatraceMetricType
   env.DT_METRIC_TAG = config.dynatraceMetricTag
