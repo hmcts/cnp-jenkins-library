@@ -168,7 +168,7 @@ class DynatraceClient implements Serializable {
       
       def json = new JsonSlurper().parseText(getResponse.content)
       
-      //Set enabaled field in the json
+      //Set enabled field in the json
       json.enabled = enabled
 
       // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below

@@ -213,7 +213,7 @@ def call(params) {
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               if (config.performanceTestStages) {
                 stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
-                  testEnv(aksUrl) {
+                  testEnv(aksUrl) { // ** Double check If I need this here **
                     def success = true
                     try {
                       pcr.callAround("dynatracePerformanceSetup:${environment}") {
