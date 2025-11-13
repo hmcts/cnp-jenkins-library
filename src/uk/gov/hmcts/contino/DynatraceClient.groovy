@@ -19,7 +19,7 @@ class DynatraceClient implements Serializable {
     this.steps = steps
   }
 
-  def postEvent(String syntheticTest, String dashboardId, String entitySelector, String product, String component) {
+  def postEvent(String product, String component) {
     def response = null
     try {
       response = steps.httpRequest(
@@ -32,7 +32,7 @@ class DynatraceClient implements Serializable {
         ],
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_EVENT_INGEST_ENDPOINT}",
         requestBody: """{
-          "entitySelector": "${entitySelector}",
+          "entitySelector": "${steps.env.DT_ENTITY_SELECTOR}",
           "eventType": "CUSTOM_INFO",
           "properties": {
             "Workspace": "${steps.env.WORKSPACE}",
@@ -41,8 +41,8 @@ class DynatraceClient implements Serializable {
             "Change URL": "${steps.env.CHANGE_URL}",
             "Commit ID": "${steps.env.GIT_COMMIT}",
             "Build URL": "${steps.env.BUILD_URL}", 
-            "Synthetic Performance Test": "${syntheticTest}",
-            "Performance Dashboard": "${DEFAULT_DYNATRACE_API_HOST}#dashboard;id=${dashboardId};applyDashboardDefaults=true"
+            "Synthetic Performance Test": "${steps.env.DT_SYNTHETIC_TEST_ID}",
+            "Performance Dashboard": "${DEFAULT_DYNATRACE_API_HOST}#dashboard;id=${steps.env.DT_DASHBOARD_ID};applyDashboardDefaults=true"
           },
           "timeout": 1,
           "title": "${product.toUpperCase()}-${component.toUpperCase()} Performance Event"

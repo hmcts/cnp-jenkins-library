@@ -104,15 +104,12 @@ def call(Map params) {
 
     echo "Posting Dynatrace Event..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
-    echo "Synthetic Test: ${syntheticTestId}"
+    echo "Synthetic Test: ${env.DT_SYNTHETIC_TEST_ID}"
     echo "Entity Selector: ${entitySelector}"
     echo "Dashboard: ${config.dynatraceDashboardURL}"
     
     //Post DT Event
     def postEventResult = dynatraceClient.postEvent(
-      syntheticTestId,
-      dashboardId,
-      entitySelector,
       params.product,
       params.component
     )
