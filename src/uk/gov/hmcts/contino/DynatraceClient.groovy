@@ -76,7 +76,7 @@ class DynatraceClient implements Serializable {
     return response
   }
 
-  def triggerSyntheticTest(String syntheticTest) {
+  def triggerSyntheticTest() {
     def response = null
     try {
       response = steps.httpRequest(
@@ -91,7 +91,7 @@ class DynatraceClient implements Serializable {
         requestBody: """{
           "monitors": [
             {
-              "monitorId": "${syntheticTest}"
+              "monitorId": "${steps.env.DT_SYNTHETIC_TEST_ID}"
             }
           ]
         }"""

@@ -51,22 +51,22 @@ def call(Map params) {
   def config
   def dynatraceClient = new DynatraceClient(this)
 
-  // Load config from consuming component repo
-  try {
-    echo "Loading performance test configuration from: ${configPath}"
-    config = load configPath
+  // // Load config from consuming component repo
+  // try {
+  //   echo "Loading performance test configuration from: ${configPath}"
+  //   config = load configPath
     
-    if (!config) {
-      error("Failed to load configuration from ${configPath}")
-    }
+  //   if (!config) {
+  //     error("Failed to load configuration from ${configPath}")
+  //   }
     
-    //Load the correct config based on environment (switchCase function)
-    config = DynatraceClient.setEnvironmentConfig(config, environment)
+  //   //Load the correct config based on environment (switchCase function)
+  //   config = DynatraceClient.setEnvironmentConfig(config, environment)
     
-  } catch (Exception e) {
-    echo "Error loading performance test configuration: ${e.message}"
-    return
-  }
+  // } catch (Exception e) {
+  //   echo "Error loading performance test configuration: ${e.message}"
+  //   return
+  // }
 
   echo "Starting Dynatrace synthetic test execution..."
   echo "Product: ${params.product}"
@@ -78,13 +78,13 @@ def call(Map params) {
 
   try {
     // Set DT params from config file
-    def syntheticTestId = config.dynatraceSyntheticTest
+    //def syntheticTestId = config.dynatraceSyntheticTest
 
     echo "Triggering Dynatrace Synthetic Test..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Trigger Endpoint: ${DynatraceClient.DEFAULT_TRIGGER_SYNTHETIC_ENDPOINT}"
-    echo "Synthetic Test: ${syntheticTestId}"
-    echo "Dashboard: ${config.dynatraceDashboardURL}"
+    echo "Synthetic Test: ${env.DT_SYNTHETIC_TEST_ID}"
+    echo "Dashboard: ${env.DT_DASHBOARD_URL}"
     echo "Environment: ${environment}"
     
     // Conditional synchronization - only if both performance tests are enabled
@@ -94,8 +94,8 @@ def call(Map params) {
     echo "DEBUG: bothTestsEnabled = ${bothTestsEnabled}"
     
     if (bothTestsEnabled) {
-      echo "Dynatrace: Both tests enabled - delaying execution by 1 minute to allow Gatling setup"
-      sleep(time: 60, unit: "SECONDS")
+      echo "Dynatrace: Both tests enabled - delaying execution by 2 minutes to allow Gatling setup"
+      sleep(time: 120, unit: "SECONDS")
       echo "Dynatrace: Starting synchronised test execution"
     } else {
       echo "Dynatrace: Single test execution (no sync needed)"
@@ -107,9 +107,7 @@ def call(Map params) {
     echo "Performance test start time: ${testStartTime}"
     
     //Trigger Synthetic Test
-    def triggerResult = dynatraceClient.triggerSyntheticTest(
-      syntheticTestId
-    )
+    def triggerResult = dynatraceClient.triggerSyntheticTest()
 
     if (!triggerResult || !triggerResult.lastExecutionId) {
       echo "Warning: Failed to trigger synthetic test or get execution ID"
