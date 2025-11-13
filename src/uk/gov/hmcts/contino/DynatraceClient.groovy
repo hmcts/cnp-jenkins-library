@@ -212,7 +212,7 @@ class DynatraceClient implements Serializable {
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_UPDATE_TOKEN}"]
         ],
-        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${syntheticTest}",
+        url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}",
         requestBody: modifiedRequestBody
       )
       steps.echo "Dynatrace synthetic test updated. Response ${response}"
