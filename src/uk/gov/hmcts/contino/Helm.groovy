@@ -121,10 +121,11 @@ class Helm {
     this.execute('lint', this.chartLocation, values, null)
   }
 
-  def installOrUpgrade(String imageTag, List<String> values, List<String> options, boolean enhancedWait = true) {
+  def installOrUpgrade(String imageTag, List<String> values, List<String> options) {
     if (!values) {
       throw new RuntimeException('Helm charts need at least a values file (none given).')
     }
+
     def releaseName = "${this.chartName}-${imageTag}"
     dependencyUpdate()
     lint(values)
@@ -132,12 +133,14 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh('chmod +x aks-debug-info.sh')
-    def optionsStr = (options + (enhancedWait ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
+    
+    boolean onPR = new ProjectBranch(this.steps.env.BRANCH_NAME).isPR()
+    def optionsStr = (options + (onPR ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
 
-    if (enhancedWait) {
-      steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
-      steps.sh(label: 'wait for install', script:
+    if (onPR) {
+      this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
+      this.steps.sh(label: 'wait for install', script:
         """
         echo 'Waiting 30s for initial pod creation...'
         sleep 30
@@ -157,7 +160,7 @@ class Helm {
           --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
         """)
     } else {
-      steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace}")
+      this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace}")
     }
     this.steps.sh 'rm aks-debug-info.sh'
   }

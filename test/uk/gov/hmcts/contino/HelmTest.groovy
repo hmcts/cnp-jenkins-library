@@ -27,7 +27,8 @@ class HelmTest extends Specification {
                   REGISTRY_NAME: "${REGISTRY_NAME}",
                   REGISTRY_SUBSCRIPTION: "${REGISTRY_SUBSCRIPTION}",
                   DOCKER_HUB_USERNAME: "${DOCKER_HUB_USERNAME}",
-                  DOCKER_HUB_PASSWORD: "${DOCKER_HUB_PASSWORD}"]
+                  DOCKER_HUB_PASSWORD: "${DOCKER_HUB_PASSWORD}",
+                  BRANCH_NAME: "master"]
     helm = new Helm(steps, CHART)
   }
 
@@ -195,12 +196,22 @@ class HelmTest extends Specification {
       1 * steps.sh('rm push-helm-charts-to-git.sh')
   }
 
-  def "upgrade() should execute with the correct chart and values with enhanced wait"() {
+  def "upgrade() should execute with the correct chart and values with enhanced wait on PR"() {
     given:
       steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh') >> "#!/bin/bash\necho debug"
+      steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                    AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                    TEAM_NAMESPACE: "cnp",
+                    SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                    ARM_SUBSCRIPTION_ID: "subscription-id-123",
+                    REGISTRY_NAME: "${REGISTRY_NAME}",
+                    REGISTRY_SUBSCRIPTION: "${REGISTRY_SUBSCRIPTION}",
+                    DOCKER_HUB_USERNAME: "${DOCKER_HUB_USERNAME}",
+                    DOCKER_HUB_PASSWORD: "${DOCKER_HUB_PASSWORD}",
+                    BRANCH_NAME: "PR-123"]
 
     when:
-      helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"], true)
+      helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])
 
     then:
       1 * steps.writeFile({it.file == 'aks-debug-info.sh'})
@@ -224,12 +235,22 @@ class HelmTest extends Specification {
       1 * steps.sh('rm aks-debug-info.sh')
   }
 
-  def "upgrade() should execute with the correct chart and values without enhanced wait"() {
+  def "upgrade() should execute with the correct chart and values without enhanced wait on non-PR branch"() {
     given:
       steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh') >> "#!/bin/bash\necho debug"
+      steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                    AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                    TEAM_NAMESPACE: "cnp",
+                    SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                    ARM_SUBSCRIPTION_ID: "subscription-id-123",
+                    REGISTRY_NAME: "${REGISTRY_NAME}",
+                    REGISTRY_SUBSCRIPTION: "${REGISTRY_SUBSCRIPTION}",
+                    DOCKER_HUB_USERNAME: "${DOCKER_HUB_USERNAME}",
+                    DOCKER_HUB_PASSWORD: "${DOCKER_HUB_PASSWORD}",
+                    BRANCH_NAME: "master"]
 
     when:
-      helm.installOrUpgrade("pr-2", ["val1"], ["--namespace cnp"], false)
+      helm.installOrUpgrade("pr-2", ["val1"], ["--namespace cnp"])
 
     then:
       1 * steps.writeFile({it.file == 'aks-debug-info.sh'})
@@ -240,6 +261,53 @@ class HelmTest extends Specification {
         it.get('script').contains("./aks-debug-info.sh ${CHART}-pr-2 cnp")
       })
       1 * steps.sh('rm aks-debug-info.sh')
+  }
+
+  def "upgrade() should use enhanced wait on PR branch with different PR format"() {
+    given:
+      steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh') >> "#!/bin/bash\necho debug"
+      steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                    AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                    TEAM_NAMESPACE: "cnp",
+                    SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                    ARM_SUBSCRIPTION_ID: "subscription-id-123",
+                    REGISTRY_NAME: "${REGISTRY_NAME}",
+                    REGISTRY_SUBSCRIPTION: "${REGISTRY_SUBSCRIPTION}",
+                    DOCKER_HUB_USERNAME: "${DOCKER_HUB_USERNAME}",
+                    DOCKER_HUB_PASSWORD: "${DOCKER_HUB_PASSWORD}",
+                    BRANCH_NAME: "PR-456-feature"]
+
+    when:
+      helm.installOrUpgrade("test-1", ["val1"], ["--namespace cnp"])
+
+    then:
+      1 * steps.sh({it.containsKey('label') && it.get('label') == 'helm upgrade'})
+      1 * steps.sh({it.containsKey('label') && it.get('label') == 'wait for install'})
+  }
+
+  def "upgrade() should not use enhanced wait on demo branch"() {
+    given:
+      steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh') >> "#!/bin/bash\necho debug"
+      steps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                    AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                    TEAM_NAMESPACE: "cnp",
+                    SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                    ARM_SUBSCRIPTION_ID: "subscription-id-123",
+                    REGISTRY_NAME: "${REGISTRY_NAME}",
+                    REGISTRY_SUBSCRIPTION: "${REGISTRY_SUBSCRIPTION}",
+                    DOCKER_HUB_USERNAME: "${DOCKER_HUB_USERNAME}",
+                    DOCKER_HUB_PASSWORD: "${DOCKER_HUB_PASSWORD}",
+                    BRANCH_NAME: "demo"]
+
+    when:
+      helm.installOrUpgrade("demo-1", ["val1"], ["--namespace cnp"])
+
+    then:
+      1 * steps.sh({it.containsKey('label') && 
+        it.get('label') == 'helm upgrade' &&
+        it.get('script').contains("--install --wait --timeout 1250s")
+      })
+      0 * steps.sh({it.containsKey('label') && it.get('label') == 'wait for install'})
   }
 
   def "installOrUpgrade() should throw exception when no values provided"() {
