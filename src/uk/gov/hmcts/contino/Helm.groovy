@@ -145,6 +145,13 @@ class Helm {
         echo 'Waiting 30s for initial pod creation...'
         sleep 30
 
+        POD_COUNT=\$(kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' --no-headers 2>/dev/null | wc -l)
+
+        if [ "\$POD_COUNT" -eq 0 ]; then
+          echo "ℹ️  No pods found matching selector - this chart may only contain jobs/cronjobs"
+          exit 0
+        fi
+
         if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -o json | \
           jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason |
           test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
