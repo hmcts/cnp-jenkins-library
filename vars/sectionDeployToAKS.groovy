@@ -222,7 +222,6 @@ def call(params) {
                             product: product,
                             component: component,
                             environment: environment,
-                            secrets: config.vaultSecrets,
                             configPath: config.performanceTestConfigPath
                           ])
                         }
@@ -253,8 +252,6 @@ def call(params) {
                             product: product,
                             component: component,
                             environment: environment,
-                            secrets: config.vaultSecrets,
-                            configPath: config.performanceTestConfigPath,
                             performanceTestStagesEnabled: config.performanceTestStages,
                             gatlingLoadTestsEnabled: config.gatlingLoadTests
                           ])

@@ -9,7 +9,6 @@ This should run before the actual performance tests to log build information.
   - component: String component name (required) 
   - environment: String environment name (required)
   - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
-  - secrets: Map of vault secrets configuration (optional)
 
 Prerequisites:
   - Same as performanceTestStages: vault secrets loaded from global KV
@@ -20,8 +19,6 @@ dynatracePerformanceSetup([
   product: 'et',
   component: 'sya-api',
   environment: 'perftest',
-  testUrl: env.TEST_URL,
-  secrets: secrets
 ])
 ============================================================================================*/
 

@@ -9,7 +9,6 @@ This runs the actual synthetic test after setup has been completed by dynatraceP
   - component: String component name (required)
   - environment: String environment name (required)
   - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
-  - secrets: Map of vault secrets configuration (optional)
 
 Prerequisites:
   - dynatracePerformanceSetup must be run first to set up environment variables
@@ -20,7 +19,7 @@ dynatraceSyntheticTest([
   product: 'et',
   component: 'sya-api',
   environment: 'perftest',
-  secrets: secrets
+
 ])
 ============================================================================================*/
 
