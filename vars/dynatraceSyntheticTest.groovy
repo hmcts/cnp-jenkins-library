@@ -67,8 +67,8 @@ def call(Map params) {
     echo "DEBUG: bothTestsEnabled = ${bothTestsEnabled}"
     
     if (bothTestsEnabled) {
-      echo "Dynatrace: Both tests enabled - delaying execution by 2 minutes to allow Gatling setup"
-      sleep(time: 120, unit: "SECONDS")
+      echo "Dynatrace: Both tests enabled - delaying execution by 1 minute to allow Gatling setup"
+      sleep(time: 60, unit: "SECONDS")
       echo "Dynatrace: Starting synchronised test execution"
     } else {
       echo "Dynatrace: Single test execution (no sync needed)"
