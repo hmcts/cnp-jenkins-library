@@ -9,7 +9,6 @@ This should run before the actual performance tests to log build information.
   - component: String component name (required) 
   - environment: String environment name (required)
   - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
-  - testUrl: String test URL for the environment (optional, uses env.TEST_URL if not provided)
   - secrets: Map of vault secrets configuration (optional)
 
 Prerequisites:
@@ -44,8 +43,7 @@ def call(Map params) {
   def defaultConfigPath = 'src/test/performance/config/config.groovy'
   def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
-  def testUrl = env.TEST_URL
-  
+   
   def config
   def dynatraceClient = new DynatraceClient(this)
 
@@ -85,7 +83,7 @@ def call(Map params) {
   echo "Product: ${params.product}"
   echo "Component: ${params.component}"
   echo "Environment: ${environment}"
-  echo "Test URL: ${testUrl}"
+  echo "Test URL: ${env.TEST_URL}"
   echo "Workspace: ${env.WORKSPACE}"
   echo "Branch: ${env.BRANCH_NAME}"
   echo "Build Number: ${env.BUILD_NUMBER}"
@@ -94,11 +92,7 @@ def call(Map params) {
   echo "Using performance test secrets loaded from shared vault (already available as environment variables)..."
 
   try {
-    // Set DT params from config file   *** REMOVE ONCE ENV VARS VERIFIED ****
-    def syntheticTestId = config.dynatraceSyntheticTest
-    def dashboardId = config.dynatraceDashboardId
-    def entitySelector = config.dynatraceEntitySelector
-    
+  
     // Handle missing CHANGE_URL for rebuilds
     if (!env.CHANGE_URL) {
       env.CHANGE_URL = "No change URL, likely a rebuild. Refer to build URL..."
@@ -129,13 +123,12 @@ def call(Map params) {
     )
 
     // Update Synthetic Test for preview environment if needed
-    if (testUrl && environment == 'preview') {
+    if (env.TEST_URL && environment == 'preview') {
       echo "Updating Dynatrace Synthetic Test for preview environment..."
-      echo "Custom URL: ${testUrl}"
+      echo "Custom URL: ${env.TEST_URL}"
       //Update Synthetic Test for Preview
       def updateResult = dynatraceClient.updateSyntheticTest(
-        true,
-        testUrl
+        true
       )
     }
 

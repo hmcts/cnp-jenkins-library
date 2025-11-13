@@ -9,7 +9,6 @@ This runs the actual synthetic test after setup has been completed by dynatraceP
   - component: String component name (required)
   - environment: String environment name (required)
   - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
-  - testUrl: String test URL for the environment (optional, uses env.TEST_URL if not provided)
   - secrets: Map of vault secrets configuration (optional)
 
 Prerequisites:
@@ -21,7 +20,6 @@ dynatraceSyntheticTest([
   product: 'et',
   component: 'sya-api',
   environment: 'perftest',
-  testUrl: env.TEST_URL,
   secrets: secrets
 ])
 ============================================================================================*/
@@ -44,35 +42,17 @@ def call(Map params) {
   def defaultConfigPath = 'src/test/performance/config/config.groovy'
   def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
-  def testUrl = env.TEST_URL
   def maxStatusChecks = 16
   def statusCheckInterval = 20
   
   def config
   def dynatraceClient = new DynatraceClient(this)
 
-  // // Load config from consuming component repo
-  // try {
-  //   echo "Loading performance test configuration from: ${configPath}"
-  //   config = load configPath
-    
-  //   if (!config) {
-  //     error("Failed to load configuration from ${configPath}")
-  //   }
-    
-  //   //Load the correct config based on environment (switchCase function)
-  //   config = DynatraceClient.setEnvironmentConfig(config, environment)
-    
-  // } catch (Exception e) {
-  //   echo "Error loading performance test configuration: ${e.message}"
-  //   return
-  // }
-
   echo "Starting Dynatrace synthetic test execution..."
   echo "Product: ${params.product}"
   echo "Component: ${params.component}"
   echo "Environment: ${environment}"
-  echo "Test URL: ${testUrl}"
+  echo "Test URL: ${env.TEST_URL}"
 
   echo "Using performance test secrets loaded from shared vault (already available as environment variables)..."
 
@@ -163,12 +143,11 @@ def call(Map params) {
     echo "Performance test end time: ${testEndTime}"
 
     // Disable the synthetic once triggered for preview env
-    if (testUrl && environment == 'preview') {
+    if (env.TEST_URL && environment == 'preview') {
       echo "Disabling Dynatrace Synthetic Test for preview environment..."
-      echo "Custom URL: ${testUrl}"
+      echo "Custom URL: ${env.TEST_URL}"
       def updateResult = dynatraceClient.updateSyntheticTest(
-        false,
-        testUrl
+        false
       )
     }
 

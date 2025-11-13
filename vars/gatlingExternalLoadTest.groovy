@@ -77,7 +77,7 @@ def call(Map params) {
   echo "Environment: ${params.environment}"
   echo "External Repository: ${params.gatlingRepo}"
   echo "Branch: ${gatlingBranch}"
-  echo "Target URL: ${testUrl}"
+  echo "Target URL: ${env.TEST_URL}"
   echo "CCD_DATA_STORE_API_PR_URL: ${env.CCD_DATA_STORE_API_URL}"
   echo "Users: ${gatlingUsers}"
   echo "Simulation: ${gatlingSimulation ?: 'All simulations'}"

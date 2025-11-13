@@ -152,7 +152,7 @@ class DynatraceClient implements Serializable {
     ]
   }
 
-  def updateSyntheticTest(boolean enabled, String customUrl = null) {
+  def updateSyntheticTest(boolean enabled) {
     def response = null
     try {
       def getResponse = steps.httpRequest(
@@ -172,7 +172,7 @@ class DynatraceClient implements Serializable {
       json.enabled = enabled
 
       // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below
-      if (customUrl) {
+      if (steps.env.TEST_URL) {
         if (steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP")) {
           if (!enabled) {
             // When disabling HTTP synthetics, restore PREVIEW URLs
@@ -187,7 +187,7 @@ class DynatraceClient implements Serializable {
             }
           } else {
             // When enabling HTTP synthetics, replace PREVIEW with hostname
-            def hostname = customUrl.replaceAll('^https?://', '').split('/')[0]
+            def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
             json.script.requests?.each { request ->
               if (request.url?.contains("PREVIEW")) {
                 request.url = request.url.replace("PREVIEW", hostname)
@@ -197,7 +197,7 @@ class DynatraceClient implements Serializable {
         } else {
           // For other synthetics: always use events array structure
           if (json.script?.events) {
-            json.script.events[0].url = customUrl
+            json.script.events[0].url = steps.env.TEST_URL
           }
         }
       }

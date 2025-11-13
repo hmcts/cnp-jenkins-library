@@ -222,7 +222,6 @@ def call(params) {
                             product: product,
                             component: component,
                             environment: environment,
-                            testUrl: env.TEST_URL,
                             secrets: config.vaultSecrets,
                             configPath: config.performanceTestConfigPath
                           ])
@@ -254,7 +253,6 @@ def call(params) {
                             product: product,
                             component: component,
                             environment: environment,
-                            testUrl: env.TEST_URL,
                             secrets: config.vaultSecrets,
                             configPath: config.performanceTestConfigPath,
                             performanceTestStagesEnabled: config.performanceTestStages,
