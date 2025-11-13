@@ -210,18 +210,13 @@ else
   #   exit 1
   # fi
   if ! jq -e '
-   (
-     # ✅ Yarn 4: single object with expected keys
-     (type == "object" and has("actions") and has("advisories") and has("metadata"))
-   ) or (
-     # ✅ Yarn 3: line-based audit events; when slurped, an array with auditSummary entries
-     (type == "array" and any(.type == "auditSummary"))
-   )
-'  yarn-audit-known-issues-formatted >/dev/null 2>&1; then
-   echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 3 or 4 format)"
-   print_borked_known_issues
-   exit 1
+    type == "object" and has("actions") and has("advisories") and (has("metadata") or .metadata == null)
+'   yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+    echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 3/4 single-object format)"
+    print_borked_known_issues
+    exit 1
   fi
+
 
   # if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
   #   print_borked_known_issues
