@@ -204,10 +204,23 @@ else
   check_file_valid_json yarn-audit-known-issues
   # Convert JSON array into sorted list of suppressed issues
   cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
-  if ! jq -e 'type == "object" and has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
-    echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 4 format)"
-    print_borked_known_issues
-    exit 1
+  # if ! jq -e 'type == "object" and has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+  #   echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 4 format)"
+  #   print_borked_known_issues
+  #   exit 1
+  # fi
+  if ! jq -e '
+   (
+     # ✅ Yarn 4: single object with expected keys
+     (type == "object" and has("actions") and has("advisories") and has("metadata"))
+   ) or (
+     # ✅ Yarn 3: line-based audit events; when slurped, an array with auditSummary entries
+     (type == "array" and any(.type == "auditSummary"))
+   )
+'  yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+   echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 3 or 4 format)"
+   print_borked_known_issues
+   exit 1
   fi
 
   # if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
