@@ -74,10 +74,12 @@ def call(Map params) {
 
   echo "Setting config variables to env.VAR's..."
   // Store config for use by subsequent stages
-  env.DT_SYNTHETIC_TEST_ID = syntheticTestId
-  env.DT_DASHBOARD_ID = dashboardId
-  env.DT_ENTITY_SELECTOR = entitySelector
+  env.DT_SYNTHETIC_TEST_ID = config.syntheticTestId
+  env.DT_DASHBOARD_ID = config.dashboardId
+  env.DT_ENTITY_SELECTOR = config.entitySelector
   env.DT_DASHBOARD_URL = config.dynatraceDashboardURL
+  env.DT_METRIC_TYPE = config.dynatraceMetricType
+  env.DT_METRIC_TAG = config.dynatraceMetricTag
 
   echo "Starting Dynatrace performance setup..."
   echo "Product: ${params.product}"
