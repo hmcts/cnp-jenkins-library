@@ -74,7 +74,7 @@ def call(Map params) {
 
   echo "Setting config variables to env.VAR's..."
   // Store config for use by subsequent stages
-  env.DT_SYNTHETIC_TEST_ID = config.syntheticTestId
+  env.DT_SYNTHETIC_TEST_ID = config.dynatraceSyntheticTest
   env.DT_DASHBOARD_ID = config.dashboardId
   env.DT_ENTITY_SELECTOR = config.entitySelector
   env.DT_DASHBOARD_URL = config.dynatraceDashboardURL
@@ -94,7 +94,7 @@ def call(Map params) {
   echo "Using performance test secrets loaded from shared vault (already available as environment variables)..."
 
   try {
-    // Set DT params from config file
+    // Set DT params from config file   *** REMOVE ONCE ENV VARS VERIFIEC ****
     def syntheticTestId = config.dynatraceSyntheticTest
     def dashboardId = config.dynatraceDashboardId
     def entitySelector = config.dynatraceEntitySelector
