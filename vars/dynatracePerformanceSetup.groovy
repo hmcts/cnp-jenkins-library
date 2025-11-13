@@ -94,7 +94,7 @@ def call(Map params) {
   echo "Using performance test secrets loaded from shared vault (already available as environment variables)..."
 
   try {
-    // Set DT params from config file   *** REMOVE ONCE ENV VARS VERIFIEC ****
+    // Set DT params from config file   *** REMOVE ONCE ENV VARS VERIFIED ****
     def syntheticTestId = config.dynatraceSyntheticTest
     def dashboardId = config.dynatraceDashboardId
     def entitySelector = config.dynatraceEntitySelector
@@ -107,7 +107,7 @@ def call(Map params) {
     echo "Posting Dynatrace Event..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
     echo "Synthetic Test: ${env.DT_SYNTHETIC_TEST_ID}"
-    echo "Entity Selector: ${ env.DT_ENTITY_SELECTOR}"
+    echo "Entity Selector: ${env.DT_ENTITY_SELECTOR}"
     echo "Dashboard: ${env.DT_DASHBOARD_URL}"
     
     //Post DT Event
@@ -125,8 +125,6 @@ def call(Map params) {
     
     //Post DT Metric
     def postMetricResult = dynatraceClient.postMetric(
-      config.dynatraceMetricType,
-      config.dynatraceMetricTag,
       environment
     )
 

@@ -55,7 +55,7 @@ class DynatraceClient implements Serializable {
     return response
   }
 
-  def postMetric(String metricType, String metricTag, String environment) {
+  def postMetric(String environment) {
     def response = null
     try {
       response = steps.httpRequest(
@@ -67,7 +67,7 @@ class DynatraceClient implements Serializable {
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_METRICS_TOKEN}"]
         ],
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_METRIC_INGEST_ENDPOINT}",
-        requestBody: "env.release.value,type=${metricType},tag=${metricTag},env=${environment} 1.5"
+        requestBody: "env.release.value,type=${steps.env.DT_METRIC_TYPE},tag=${steps.env.DT_METRIC_TAG},env=${environment} 1.5"
       ) 
       steps.echo "Dynatrace metric posted successfully. Response ${response}"
     } catch (Exception e) {
