@@ -169,7 +169,6 @@ def call(Map params) {
       echo "Disabling Dynatrace Synthetic Test for preview environment..."
       echo "Custom URL: ${testUrl}"
       def updateResult = dynatraceClient.updateSyntheticTest(
-        syntheticTestId,
         false,
         testUrl
       )
