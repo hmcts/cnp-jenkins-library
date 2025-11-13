@@ -291,11 +291,7 @@ def call(params) {
                             subscription: subscription,
                             gatlingRepo: config.gatlingRepo,
                             gatlingBranch: config.gatlingBranch,
-                            gatlingTestPath: config.gatlingTestPath,
                             gatlingSimulation: config.gatlingSimulation,
-                            gatlingUsers: config.gatlingUsers,
-                            gatlingRampDuration: config.gatlingRampDuration,
-                            gatlingTestDuration: config.gatlingTestDuration,
                             testUrl: env.TEST_URL,
                             performanceTestStagesEnabled: config.performanceTestStages,
                             gatlingLoadTestsEnabled: config.gatlingLoadTests

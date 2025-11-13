@@ -72,6 +72,13 @@ def call(Map params) {
     return
   }
 
+  echo "Setting config variables to env.VAR's..."
+  // Store config for use by subsequent stages
+  env.DT_SYNTHETIC_TEST_ID = syntheticTestId
+  env.DT_DASHBOARD_ID = dashboardId
+  env.DT_ENTITY_SELECTOR = entitySelector
+  env.DT_DASHBOARD_URL = config.dynatraceDashboardURL
+
   echo "Starting Dynatrace performance setup..."
   echo "Product: ${params.product}"
   echo "Component: ${params.component}"
@@ -137,12 +144,6 @@ def call(Map params) {
     }
 
     echo "Dynatrace performance setup completed successfully"
-    
-    // Store config for use by subsequent stages
-    env.DT_SYNTHETIC_TEST_ID = syntheticTestId
-    env.DT_DASHBOARD_ID = dashboardId
-    env.DT_ENTITY_SELECTOR = entitySelector
-    env.DT_DASHBOARD_URL = config.dynatraceDashboardURL
 
   } catch (Exception e) {
     echo "Error in Dynatrace performance setup: ${e.message}"
