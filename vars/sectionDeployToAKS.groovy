@@ -196,7 +196,8 @@ def call(params) {
           // Performance Test Pipeline: Setup -> Parallel Testing
           if (config.performanceTestStages || config.gatlingLoadTests) {
             
-            // Load performance test secrets once for all stages
+            // Load performance test secrets once for all stages - Secrets are stored only within the 
+            // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
             def perfSecrets = [
               [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
