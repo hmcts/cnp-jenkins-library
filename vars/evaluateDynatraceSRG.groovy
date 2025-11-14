@@ -1,37 +1,62 @@
 /*======================================================================================
 evaluateDynatraceSRG
 
-Evaluates Site Reliability Guardian for completed performance tests with configurable
-pipeline control options.
+Checks performance test results against Site Reliability Guardian (SRG) quality gates
+in Dynatrace. SRG lets you set thresholds for things like response times, error rates,
+and resource usage. If the tests exceed those thresholds, this will fail or warn
+depending on your config.
+
+What it does:
+  - Evaluates synthetic test results against SRG rules (if you ran synthetic tests)
+  - Evaluates Gatling test results against SRG rules (if you ran Gatling tests)
+  - Controls what happens when SRG checks fail (fail build, mark unstable, or just log)
+
+You need to provide at least one pair of test times (either synthetic or Gatling).
 
 @param params Map containing:
-  - environment: String environment name (required)
-  - srgServiceName: String service name configured in Dynatrace SRG (required)
-  - performanceTestStartTime: String ISO timestamp when perf tests started (optional)
-  - performanceTestEndTime: String ISO timestamp when perf tests ended (optional)
-  - gatlingTestStartTime: String ISO timestamp when gatling tests started (optional)
-  - gatlingTestEndTime: String ISO timestamp when gatling tests ended (optional)
-  - srgFailureBehavior: String 'fail'|'warn'|'ignore' (optional, defaults to 'warn')
-  - product: String product name (optional, for logging only)
-  - component: String component name (optional, for logging only)
+  - environment: String environment (required) - must match your SRG stage name
+  - srgServiceName: String service name (required) - must match what's in Dynatrace exactly
+  - performanceTestStartTime: String timestamp (optional) - usually from env.PERF_TEST_START_TIME
+  - performanceTestEndTime: String timestamp (optional) - usually from env.PERF_TEST_END_TIME
+  - gatlingTestStartTime: String timestamp (optional) - usually from env.GATLING_TEST_START_TIME
+  - gatlingTestEndTime: String timestamp (optional) - usually from env.GATLING_TEST_END_TIME
+  - srgFailureBehavior: String (optional, defaults to 'warn'):
+    * 'fail' - Fails the pipeline
+    * 'warn' - Marks build as unstable
+    * 'ignore' - Just logs it
+  - product: String product name (optional, for logging)
+  - component: String component name (optional, for logging)
+
+Uses these environment variables:
+  - Usually reads PERF_TEST_START_TIME, PERF_TEST_END_TIME, GATLING_TEST_START_TIME, GATLING_TEST_END_TIME
+    (these are passed in as parameters, but come from the environment)
 
 Prerequisites:
-  - OAuth credentials in vault: ACCOUNT_URN, DYNATRACE_CLIENT_ID, DYNATRACE_SECRET
-  - Performance tests must have completed and provided timing data
-  - SRG service name must match exactly what is configured in Dynatrace
+  - Performance tests must have finished running
+  - SRG must be set up in Dynatrace with rules for your service/stage
+  - OAuth credentials in vault (ACCOUNT_URN, DYNATRACE_CLIENT_ID, DYNATRACE_SECRET)
 
-Example usage:
+Note: ** This isn't implemented yet ** The evaluation code is commented out in
+DynatraceClient.groovy (lines 261-274) because we require a Dynatrace OAuth client to be setup
+The structure is here ready for when that's sorted.
+
+Example:
 evaluateDynatraceSRG([
-  environment: 'preview',
+  environment: 'perftest',
   srgServiceName: 'et-sya-service',
-  performanceTestStartTime: '2025-01-15T10:30:00Z',
-  performanceTestEndTime: '2025-01-15T10:35:00Z',
-  gatlingTestStartTime: '2025-01-15T10:35:30Z', 
-  gatlingTestEndTime: '2025-01-15T10:40:00Z',
+  performanceTestStartTime: env.PERF_TEST_START_TIME,
+  performanceTestEndTime: env.PERF_TEST_END_TIME,
+  gatlingTestStartTime: env.GATLING_TEST_START_TIME,
+  gatlingTestEndTime: env.GATLING_TEST_END_TIME,
   srgFailureBehavior: 'warn',
   product: 'et',
   component: 'sya-api'
 ])
+
+Related files:
+  - Called by: sectionDeployToAKS.groovy (only if you enable SRG evaluation)
+  - Runs after: dynatraceSyntheticTest.groovy or gatlingExternalLoadTest.groovy
+  - Implementation: DynatraceClient.evaluateSRG() (commented out for now)
 ============================================================================================*/
 
 import uk.gov.hmcts.contino.DynatraceClient

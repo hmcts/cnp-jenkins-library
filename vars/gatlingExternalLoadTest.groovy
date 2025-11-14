@@ -1,37 +1,60 @@
 /*======================================================================================
 gatlingExternalLoadTest
 
-Executes Gatling load tests from an external Git repository using the existing 
-GradleBuilder infrastructure. This ensures 100% compatibility with existing 
-performance testing patterns.
+Runs Gatling load tests from a separate Git repository. This lets teams keep their
+performance tests in a dedicated repo rather than alongside service code.
+
+What it does:
+  - Clones your external Gatling test repo
+  - Runs the tests using GradleBuilder.performanceTest() (same as in-repo tests)
+  - Records start/end times for SRG evaluation
+  - Uploads reports to blob storage and CosmosDB
+
+Important: Test parameters like number of users, ramp duration, and test duration are
+configured in the external repo's, not passed in here. This function
+only tells the pipeline which repo to use and which simulation to run.
 
 @param params Map containing:
   - product: String product name (required)
-  - component: String component name (required) 
-  - environment: String environment name (required)
-  - subscription: String Azure subscription (required)
-  - gatlingRepo: String Git repository URL for Gatling tests (required)
-  - gatlingBranch: String branch name (optional, defaults to 'main')
-  - gatlingSimulation: String specific simulation class (optional)
+  - component: String component name (required)
+  - environment: String environment (required)
+  - subscription: String Azure subscription (required, for blob storage)
+  - gatlingRepo: String Git repo URL (required)
+  - gatlingBranch: String branch name (optional, defaults to 'master')
+  - gatlingSimulation: String simulation class to run (optional, runs all if not specified)
+
+Uses these environment variables:
+  - TEST_URL: Where to point the tests (set by testEnv wrapper)
+  - GIT_CREDENTIALS_ID: For cloning private repos
+  - WORKSPACE: Jenkins workspace path
+
+Sets these environment variables:
+  - GATLING_TEST_START_TIME: When the test started (Timestamp)
+  - GATLING_TEST_END_TIME: When the test finished (Timestamp)
+  - GATLING_REPORTS_PATH: Where the reports are 
 
 Prerequisites:
-  - External Gatling repository must have Gradle with gatling-gradle-plugin or gradle-gatling-plugin
-  - Repository structure should support the properties: TEST_URL, GATLING_USERS, etc.
-  - Uses existing GradleBuilder.performanceTest() method for 100% compatibility
+  - Your external repo must have Gradle with gatling-gradle-plugin or gradle-gatling-plugin
+  - Your tests should read TEST_URL from the environment (URL construction and valid code exists within the performance-testing repository)
+  - GIT_CREDENTIALS_ID must be set up in Jenkins
+  - Blob storage account 'buildlog-storage-account' must exist
 
-Example usage:
+Example:
 gatlingExternalLoadTest([
   product: 'et',
-  component: 'sya-api', 
+  component: 'sya-api',
   environment: 'perftest',
   subscription: 'DCD-CFT-Sandbox',
   gatlingRepo: 'https://github.com/hmcts/et-performance-tests.git',
-  gatlingBranch: 'main',
+  gatlingBranch: 'test-synthetics-branch',
   gatlingSimulation: 'uk.gov.hmcts.et.simulation.ApiLoadTest'
 ])
 
-Note: This approach leverages the existing GradleBuilder.performanceTest() method
-to ensure exact compatibility with the current pipeline infrastructure.
+Related files:
+  - Called by: sectionDeployToAKS.groovy and withPipeline.groovy
+  - Runs alongside: dynatraceSyntheticTest.groovy (if both enabled)
+  - Reports via: azureBlobUpload and publishToCosmosDb
+  - May be followed by: evaluateDynatraceSRG.groovy
 ============================================================================================*/
 
 import uk.gov.hmcts.contino.GradleBuilder

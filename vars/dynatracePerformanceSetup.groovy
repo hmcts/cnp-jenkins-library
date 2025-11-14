@@ -1,25 +1,47 @@
 /*======================================================================================
 dynatracePerformanceSetup
 
-Sets up Dynatrace monitoring for performance tests by posting events and metrics.
-This should run before the actual performance tests to log build information.
+Sets up Dynatrace monitoring before running performance tests. This is the first stage
+in the performance test pipeline and must run before dynatraceSyntheticTest.
+
+What it does:
+  - Loads the performance test config from your service repo (this requires services to onboard by adding the configuration method calls and DT config into their repository)
+  - Stores Dynatrace settings as environment variables for later stages
+  - Posts a build event to Dynatrace with metadata (branch, build number, etc.)
+  - Sends a custom release metric to Dynatrace
+  - Updates synthetic test URLs for preview environments
 
 @param params Map containing:
   - product: String product name (required)
-  - component: String component name (required) 
-  - environment: String environment name (required)
-  - configPath: String path to performance config file (optional, defaults to 'src/test/performance/config/config.groovy')
+  - component: String component name (required)
+  - environment: String environment (required) - 'perftest', 'aat', or 'preview'
+  - configPath: String path to config file (optional, defaults to 'src/test/performance/config/config.groovy')
+
+Sets these environment variables:
+  - DT_SYNTHETIC_TEST_ID: The Dynatrace monitor ID
+  - DT_DASHBOARD_ID: Dashboard ID for results
+  - DT_ENTITY_SELECTOR: Entity selector for events
+  - DT_DASHBOARD_URL: URL to view results
+  - DT_METRIC_TYPE: Release metric type
+  - DT_METRIC_TAG: Metric tag
 
 Prerequisites:
-  - Same as performanceTestStages: vault secrets loaded from global KV
-  - Required environment variables: PERF_SYNTHETIC_MONITOR_TOKEN, PERF_METRICS_TOKEN, PERF_EVENT_TOKEN, PERF_SYNTHETIC_UPDATE_TOKEN
+  - Vault secrets must be loaded (done by sectionDeployToAKS):
+    PERF_SYNTHETIC_MONITOR_TOKEN, PERF_METRICS_TOKEN, PERF_EVENT_TOKEN, PERF_SYNTHETIC_UPDATE_TOKEN
+  - Your service repo must have a performance config file
+  - TEST_URL must be set (done by testEnv wrapper)
 
-Example usage:
+Example:
 dynatracePerformanceSetup([
   product: 'et',
   component: 'sya-api',
-  environment: 'perftest',
+  environment: 'perftest'
 ])
+
+Related files:
+  - Called by: sectionDeployToAKS.groovy and withPipeline.groovy
+  - Runs before: dynatraceSyntheticTest.groovy and/or gatlingExternalLoadTest.groovy
+  - Config handler: DynatraceClient.setEnvironmentConfig()
 ============================================================================================*/
 
 import uk.gov.hmcts.contino.DynatraceClient
