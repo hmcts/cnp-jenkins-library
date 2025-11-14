@@ -1,7 +1,40 @@
+/*======================================================================================
+DynatraceClient
+
+Helper class for interacting with Dynatrace APIs during performance testing. This wraps
+the Dynatrace APIs to make them easier to use from Jenkins pipeline scripts.
+
+What it provides:
+  - postEvent(): Sends custom info events to Dynatrace with build metadata
+  - postMetric(): Sends release metrics for tracking deployments
+  - triggerSyntheticTest(): Starts a synthetic browser test
+  - getSyntheticStatus(): Checks if a synthetic test has finished
+  - updateSyntheticTest(): Enables/disables synthetic tests and updates URLs
+  - evaluateSRG(): Evaluates Site Reliability Guardian rules (not implemented yet)
+  - setEnvironmentConfig(): Switches config based on environment (perftest/aat/preview)
+
+All methods use environment variables for Dynatrace config (set by dynatracePerformanceSetup):
+  - DT_SYNTHETIC_TEST_ID: Which monitor to use
+  - DT_DASHBOARD_ID: Dashboard for results
+  - DT_ENTITY_SELECTOR: Entity selector for events
+  - DT_METRIC_TYPE, DT_METRIC_TAG: For release metrics
+
+Authentication tokens come from Azure KeyVault:
+  - PERF_SYNTHETIC_MONITOR_TOKEN: For triggering and checking tests
+  - PERF_METRICS_TOKEN: For sending metrics
+  - PERF_EVENT_TOKEN: For posting events
+  - PERF_SYNTHETIC_UPDATE_TOKEN: For enabling/disabling tests
+
+Usage:
+  def client = new DynatraceClient(this)  // 'this' is the pipeline script context
+  client.postEvent('et', 'sya-api')
+  def result = client.triggerSyntheticTest()
+============================================================================================*/
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+
 
 class DynatraceClient implements Serializable {
   
