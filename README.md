@@ -519,7 +519,6 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
-
 ## Enabling nightly checks on pull requests
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
@@ -534,6 +533,128 @@ It is possible to trigger optional full functional tests, performance tests, for
 Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
+
+
+## Performance Testing with Dynatrace and Gatling
+
+The pipeline supports running performance tests as part of your deployment to AAT or perftest environments. There are two types of performance tests available:
+
+### Dynatrace Synthetic Tests
+Dynatrace synthetic tests are browser-based tests that monitor your application from the user's perspective. These run in Dynatrace and check response times, availability, and functional correctness.
+
+### External Gatling Load Tests
+Gatling tests run load tests against your application from a separate Git repository. This lets teams maintain centralised performance test suites that can be reused across multiple services.
+
+### Enabling Performance Tests
+
+Add the following to your `Jenkinsfile_CNP`:
+
+```groovy
+withPipeline(type, product, component) {
+
+  // Enable Dynatrace synthetic tests
+  enablePerformanceTestStages(
+    timeout: 15,
+    configPath: 'src/test/performance/config/config.groovy'
+  )
+
+  // Enable Gatling load tests from external repo
+  enableGatlingLoadTests(
+    repo: 'https://github.com/hmcts/your-performance-tests.git',
+    branch: 'main',
+    simulation: 'uk.gov.hmcts.yourapp.simulation.LoadTest',
+    timeout: 10
+  )
+
+  // Optionally enable Site Reliability Guardian evaluation
+  enableSrgEvaluation(
+    serviceName: 'your-service-name',
+    failureBehavior: 'warn'  // 'fail', 'warn', or 'ignore'
+  )
+}
+```
+
+### Performance Test Configuration
+
+For Dynatrace tests, create a config file in your service repo (default location: `src/test/performance/config/config.groovy`):
+
+```groovy
+// config.groovy
+dynatraceSyntheticTest = 'SYNTHETIC_TEST-ABC123'
+dynatraceSyntheticTestPreview = 'SYNTHETIC_TEST-PREVIEW123'
+dynatraceSyntheticTestAAT = 'SYNTHETIC_TEST-AAT123'
+
+dynatraceDashboardId = 'DASHBOARD-123'
+dynatraceDashboardIdPreview = 'DASHBOARD-PREVIEW'
+dynatraceDashboardIdAAT = 'DASHBOARD-AAT'
+
+dynatraceDashboardURL = 'https://your-dashboard-url'
+dynatraceDashboardURLPreview = 'https://your-preview-dashboard-url'
+dynatraceDashboardURLAAT = 'https://your-aat-dashboard-url'
+
+dynatraceEntitySelector = 'type(SERVICE),tag(your-app)'
+dynatraceEntitySelectorPreview = 'type(SERVICE),tag(your-app-preview)'
+dynatraceEntitySelectorAAT = 'type(SERVICE),tag(your-app-aat)'
+
+dynatraceMetricType = 'release'
+dynatraceMetricTag = 'your-app'
+```
+
+### Gatling Test Repository
+
+Your external Gatling repository must:
+- Have Gradle with `gatling-gradle-plugin` or `gradle-gatling-plugin`
+- Read `TEST_URL` from the environment to target the correct deployment
+- Define test parameters (users, duration, ramp) in `build.gradle` rather than the pipeline
+
+Example Gatling `build.gradle`:
+```gradle
+gatling {
+  simulations = {
+    include 'uk/gov/hmcts/**/*.scala'
+  }
+}
+```
+
+### Secrets Required
+
+Performance tests require Dynatrace API tokens stored in Azure KeyVault (`et-perftest` or your product-specific vault):
+- `perf-synthetic-monitor-token` - For triggering and monitoring synthetic tests
+- `perf-metrics-token` - For sending release metrics
+- `perf-event-token` - For posting build events
+- `perf-synthetic-update-token` - For enabling/disabling synthetic tests
+
+These are automatically loaded by the pipeline from the shared perftest vault.
+
+### When Tests Run
+
+Performance test stages run:
+- **Preview environment**: After deployment (for PR branches)
+- **AAT environment**: After deployment (for master branch)
+- **Perftest environment**: After deployment (for perftest branch)
+
+Tests can run in parallel (Dynatrace and Gatling at the same time) or individually depending on which you've enabled.
+
+### Site Reliability Guardian (SRG)
+
+SRG evaluates performance test results against quality gates you define in Dynatrace. You can configure what happens when tests fail:
+- `fail` - Pipeline fails if SRG thresholds are breached
+- `warn` - Pipeline marked as unstable (default)
+- `ignore` - Results logged but build continues
+
+Note: SRG evaluation is not yet fully implemented - the structure is in place for future use.
+
+### Test Reports
+
+Gatling test reports are automatically uploaded to Azure Blob Storage and CosmosDB. You can view them at:
+```
+https://buildlog-storage-account.blob.core.windows.net/performance/{product}-{component}/{environment}
+```
+
+For external Gatling tests, reports are uploaded to:
+```
+https://buildlog-storage-account.blob.core.windows.net/performance/perfInBuildPipeline/{product}-{component}/{environment}
+```
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
