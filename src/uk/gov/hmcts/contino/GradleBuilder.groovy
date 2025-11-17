@@ -308,6 +308,8 @@ EOF
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       
+      // If simulation is provided Gatling will run that simulation, otherwise run all simulations within the
+      // performance repo
       def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
       gradle(gatlingCommand)
       this.localSteps.gatlingArchive()
