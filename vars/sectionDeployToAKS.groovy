@@ -196,7 +196,7 @@ def call(params) {
           // Performance Test Pipeline: Setup -> Parallel Testing
           if (config.performanceTestStages || config.gatlingLoadTests) {
             
-            // Load performance test secrets once for all stages - Secrets are stored only within the 
+            // Load performance test secrets once for all stages - Secrets are stored only within the
             // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
             def perfSecrets = [
@@ -205,7 +205,12 @@ def call(params) {
               [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
               [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
             ]
-            
+
+            // Add IDAM test support URL secret if IDAM test user is enabled
+            if (config.idamTestUser) {
+              perfSecrets << [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'idam-test-support-url', version: '', envVariable: 'IDAM_TEST_SUPPORT_URL']
+            }
+
             withAzureKeyvault(
               azureKeyVaultSecrets: perfSecrets,
               keyVaultURLOverride: perfKeyVaultUrl
@@ -223,7 +228,13 @@ def call(params) {
                             product: product,
                             component: component,
                             environment: environment,
-                            configPath: config.performanceTestConfigPath
+                            configPath: config.performanceTestConfigPath,
+                            idamTestUserEnabled: config.idamTestUser,
+                            idamTestUserEmail: config.idamTestUserEmail,
+                            idamTestUserForename: config.idamTestUserForename,
+                            idamTestUserSurname: config.idamTestUserSurname,
+                            idamTestUserPassword: config.idamTestUserPassword,
+                            idamTestUserRoles: config.idamTestUserRoles
                           ])
                         }
                       }

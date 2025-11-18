@@ -571,6 +571,15 @@ withPipeline(type, product, component) {
     serviceName: 'your-service-name',
     failureBehavior: 'warn'  // 'fail', 'warn', or 'ignore'
   )
+
+  // Optionally create IDAM test user for performance tests
+  enableIdamTestUser(
+    email: 'perf.test.caseworker@testmail.com',
+    forename: 'Performance',
+    surname: 'Tester',
+    password: 'PerfTest1!',
+    roles: ['caseworker', 'caseworker-employment', 'caseworker-employment-englandwales']
+  )
 }
 ```
 
@@ -655,6 +664,108 @@ For external Gatling tests, reports are uploaded to:
 ```
 https://buildlog-storage-account.blob.core.windows.net/performance/perfInBuildPipeline/{product}-{component}/{environment}
 ```
+
+### Creating IDAM Test Users
+
+For performance testing, you can create test users in IDAM using the `createIdamTestUsers` pipeline function.
+
+**Important**: This function only runs in **AAT and Preview environments** (both use AAT IDAM). In other environments, it logs a message and returns null without creating users.
+
+#### Prerequisites
+
+1. Store the full IDAM testing-support URL in KeyVault as `idam-test-support-url`
+2. This is already added to the shared rpe-shared-perftest KV which the performance stages load secrets from
+
+#### Usage Example
+
+```groovy
+def secrets = [
+  secret('idam-test-support-url', 'IDAM_TEST_SUPPORT_URL')
+]
+
+withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: 'https://your-vault-aat.vault.azure.net/') {
+  def testUser = createIdamTestUsers(
+    email: 'caseworker@testmail.com',
+    forename: 'Case',
+    surname: 'Worker',
+    password: 'Caseworker1!',
+    roles: ['caseworker', 'caseworker-employment', 'caseworker-employment-englandwales']
+  )
+
+  // Store credentials for use in tests
+  if (testUser) {
+    env.TEST_USER_EMAIL = testUser.email
+  }
+}
+```
+
+#### Password Requirements
+
+IDAM requires passwords to have:
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
+
+#### Idempotent User Creation
+
+If a user already exists (409 Conflict), the function will **continue the build** and use the existing user. This makes user creation idempotent - you can safely call it multiple times with the same email without failing the build.
+
+The response will include `existed: true` to indicate the user already existed:
+```groovy
+def user = createIdamTestUsers(email: 'existing@testmail.com', ...)
+if (user.existed) {
+  echo "Using existing user: ${user.email}"
+} else {
+  echo "Created new user: ${user.email}"
+}
+```
+
+#### Environment Behaviour
+
+The function automatically checks the environment:
+
+- **AAT/Preview**: User creation proceeds (both use AAT IDAM)
+- **Other environments**: Returns `null` and logs a message - build continues normally
+
+This means you can safely call it in any environment without conditional logic:
+
+```groovy
+def testUser = createIdamTestUsers(email: 'test@example.com', ...)
+
+if (testUser) {
+  echo "Test user available: ${testUser.email}"
+} else {
+  echo "Test user creation skipped (not AAT/Preview)"
+}
+```
+
+#### Integration with Performance Tests
+
+The recommended approach is to use `enableIdamTestUser()` in your pipeline configuration (see [Performance Testing](#performance-testing-with-dynatrace-and-gatling) section above). This automatically creates the test user during the Dynatrace Performance Setup stage and makes credentials available via environment variables:
+
+```groovy
+withPipeline(type, product, component) {
+  enablePerformanceTestStages(
+    configPath: 'src/test/performance/config/config.groovy'
+  )
+
+  enableIdamTestUser(
+    email: 'perf.test.caseworker@testmail.com',
+    forename: 'Performance',
+    surname: 'Tester',
+    password: 'PerfTest1!',
+    roles: ['caseworker', 'caseworker-employment']
+  )
+}
+```
+
+The test user is created automatically, and credentials are stored in:
+- `TEST_USER_EMAIL` - The user's email address
+- `TEST_USER_PASSWORD` - The user's password
+
+Your Gatling tests or functional tests can access these environment variables directly.
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.

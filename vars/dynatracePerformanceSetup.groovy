@@ -62,7 +62,7 @@ def call(Map params) {
   def defaultConfigPath = 'src/test/performance/config/config.groovy'
   def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
-   
+
   def config
   def dynatraceClient = new DynatraceClient(this)
 
@@ -156,5 +156,39 @@ def call(Map params) {
   } catch (Exception e) {
     echo "Error in Dynatrace performance setup: ${e.message}"
     //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
+  }
+
+  // Create IDAM test user if configured
+  if (params.idamTestUserEnabled) {
+    echo "IDAM test user creation enabled - creating test user..."
+
+    try {
+      def testUser = createIdamTestUsers(
+        email: params.idamTestUserEmail,
+        forename: params.idamTestUserForename,
+        surname: params.idamTestUserSurname,
+        password: params.idamTestUserPassword,
+        roles: params.idamTestUserRoles
+      )
+
+      if (testUser) {
+        echo "✓ IDAM test user ready: ${testUser.email}"
+        if (testUser.existed) {
+          echo "  (User already existed - reusing)"
+        }
+
+        // Store credentials as environment variables for tests to use
+        env.TEST_USER_EMAIL = testUser.email
+        env.TEST_USER_PASSWORD = params.idamTestUserPassword
+        echo "Test user credentials stored in TEST_USER_EMAIL and TEST_USER_PASSWORD environment variables"
+      } else {
+        echo "IDAM test user creation skipped (not in AAT/Preview environment)"
+      }
+
+    } catch (Exception e) {
+      echo "IDAM test user creation failed: ${e.message}"
+      echo "Continuing without test user - tests may fail if they require IDAM authentication"
+      //currentBuild.result = 'UNSTABLE'
+    }
   }
 }

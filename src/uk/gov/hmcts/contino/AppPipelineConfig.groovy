@@ -63,6 +63,14 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String gatlingBranch = 'master'
   String gatlingSimulation
 
+  // IDAM test user creation configuration
+  boolean idamTestUser = false
+  String idamTestUserEmail
+  String idamTestUserForename
+  String idamTestUserSurname
+  String idamTestUserPassword
+  List<String> idamTestUserRoles = []
+
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)
   }
