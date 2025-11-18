@@ -21,8 +21,14 @@ class GradleBuilder extends AbstractBuilder {
     this.localSteps = steps
   }
 
+  private void ensureDockerForTests() {
+    localSteps.echo "Checking Docker availability."
+    localSteps.ensureDockerAvailable()
+  }
+  
   def build() {
     addVersionInfo()
+    ensureDockerForTests()
     gradle("assemble")
   }
 
@@ -35,6 +41,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def test() {
+    ensureDockerForTests()
     try {
       gradle("check")
     } finally {
@@ -54,6 +61,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def smokeTest() {
+    ensureDockerForTests()
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -64,6 +72,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def e2eTest() {
+    ensureDockerForTests()
     try{
       gradle("--rerun-tasks e2eTest")
     } finally {
@@ -79,6 +88,7 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def functionalTest() {
+    ensureDockerForTests()
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
