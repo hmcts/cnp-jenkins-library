@@ -172,7 +172,7 @@ def call(Map params) {
       )
 
       if (testUser) {
-        echo "✓ IDAM test user ready: ${testUser.email}"
+        echo "IDAM test user ready: ${testUser.email}"
         if (testUser.existed) {
           echo "  (User already existed - reusing)"
         }
