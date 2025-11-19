@@ -163,21 +163,5 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.idamTestUserSurname = params.surname
     config.idamTestUserPassword = params.password
     config.idamTestUserRoles = params.roles ?: []
-
-    if (!config.idamTestUserEmail) {
-      throw new IllegalArgumentException("enableIdamTestUser: 'email' parameter is required")
-    }
-    if (!config.idamTestUserForename) {
-      throw new IllegalArgumentException("enableIdamTestUser: 'forename' parameter is required")
-    }
-    if (!config.idamTestUserSurname) {
-      throw new IllegalArgumentException("enableIdamTestUser: 'surname' parameter is required")
-    }
-    if (!config.idamTestUserPassword) {
-      throw new IllegalArgumentException("enableIdamTestUser: 'password' parameter is required")
-    }
-    if (config.idamTestUserRoles.isEmpty()) {
-      throw new IllegalArgumentException("enableIdamTestUser: 'roles' parameter is required and must contain at least one role")
-    }
   }
 }
