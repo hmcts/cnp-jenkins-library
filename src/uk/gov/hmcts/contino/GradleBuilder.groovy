@@ -21,18 +21,10 @@ class GradleBuilder extends AbstractBuilder {
     this.localSteps = steps
   }
 
-  private void ensureDockerForTests() {
-    localSteps.echo "Checking Docker availability."
-    localSteps.ensureDockerAvailable()
-  }
-  
   def build() {
     addVersionInfo()
-    ensureDockerForTests()
     gradle("assemble")
-  }
-
-  def fortifyScan() {
+  }  def fortifyScan() {
     gradle("fortifyScan")
   }
 
@@ -41,7 +33,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def test() {
-    ensureDockerForTests()
     try {
       gradle("check")
     } finally {
@@ -61,7 +52,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def smokeTest() {
-    ensureDockerForTests()
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -72,7 +62,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def e2eTest() {
-    ensureDockerForTests()
     try{
       gradle("--rerun-tasks e2eTest")
     } finally {
@@ -88,7 +77,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def functionalTest() {
-    ensureDockerForTests()
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -282,6 +270,15 @@ EOF
 
   @Override
   def setupToolVersion() {
+    // Ensure Docker is available before any Gradle operations that might use Testcontainers
+    localSteps.echo "Checking Docker availability for Testcontainers."
+    localSteps.ensureDockerAvailable()
+    
+    // Set Testcontainers environment variables to ensure it uses the verified Docker daemon
+    steps.env.TESTCONTAINERS_RYUK_DISABLED = "false"
+    steps.env.TESTCONTAINERS_CHECKS_DISABLE = "false"
+    steps.env.DOCKER_HOST = "unix:///var/run/docker.sock"
+    
     def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
     if (statusCode == 0) {
       WarningCollector.addPipelineWarning("java_11_deprecated",
@@ -302,7 +299,8 @@ EOF
     }
 
     // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
-    steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
+    // Also add Testcontainers system properties at JVM level
+    steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED -Dtestcontainers.reuse.enable=false"
     gradle("--version") // ensure wrapper has been downloaded
     localSteps.sh "java -version"
   }
