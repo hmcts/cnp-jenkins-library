@@ -180,14 +180,14 @@ def call(Map params) {
     }
 
     // Report detailed results
-    def successCount = executionStatuses.values().count { it == "SUCCESS" }
+    def executedCount = executionStatuses.values().count { it == "EXECUTED" }
     def failedCount = executionStatuses.values().count { it == "FAILED" }
     def triggeredCount = executionStatuses.values().count { it == "TRIGGERED" }
 
     echo "Synthetic test execution summary:"
     echo "Monitor: ${env.DT_SYNTHETIC_TEST_ID} (${monitorType})"
     echo "Total executions: ${executionIds.size()}"
-    echo "Results: ${successCount} SUCCESS, ${failedCount} FAILED, ${triggeredCount} STILL RUNNING"
+    echo "Results: ${executedCount} EXECUTED, ${failedCount} FAILED, ${triggeredCount} STILL RUNNING"
     echo ""
     echo "Execution details:"
 
@@ -201,7 +201,7 @@ def call(Map params) {
       //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
     }
 
-    if (successCount == executionIds.size()) {
+    if (executedCount == executionIds.size()) {
       echo "All Dynatrace synthetic tests completed successfully"
     } else if (failedCount > 0) {
       echo "Warning: ${failedCount} synthetic test(s) failed"
