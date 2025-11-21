@@ -105,56 +105,132 @@ def call(Map params) {
     def testStartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
     env.PERF_TEST_START_TIME = testStartTime
     echo "Performance test start time: ${testStartTime}"
-    
-    //Trigger Synthetic Test
-    def triggerResult = dynatraceClient.triggerSyntheticTest()
 
-    if (!triggerResult || !triggerResult.lastExecutionId) {
-      echo "Warning: Failed to trigger synthetic test or get execution ID"
+    // Determine trigger count based on monitor type (HTTP tests complete quicker so trigger more of these vs browser tests)
+    def monitorType = env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP") ? "HTTP" : "BROWSER"
+    def triggerCount = monitorType == "HTTP" ? 7 : 3
+    def delaySeconds = 65 //Dynatrace limitation (60 seconds between the same synthetic test triggers)
+
+    echo "Triggering ${triggerCount} ${monitorType} synthetic test executions with ${delaySeconds}s intervals"
+
+    /* Trigger multiple executions and collect IDs
+       This is so we can collect more datapoints per synthetic test run */
+    def executionIds = []
+
+    for (int i = 1; i <= triggerCount; i++) {
+      echo "Triggering execution ${i}/${triggerCount}..."
+
+      //Trigger the synthetic test
+      def triggerResult = dynatraceClient.triggerSyntheticTest()
+
+      if (triggerResult && triggerResult.lastExecutionId) {
+        executionIds.add(triggerResult.lastExecutionId)
+        echo "Execution ${i} triggered with ID: ${triggerResult.lastExecutionId}"
+
+        if (i < triggerCount) {
+          echo "Waiting ${delaySeconds} seconds before next trigger..."
+          sleep delaySeconds
+        }
+      } else {
+        echo "Warning: Failed to trigger execution ${i}"
+      }
+    }
+
+    if (executionIds.isEmpty()) {
+      echo "Warning: Failed to trigger any synthetic test executions"
       //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
       return
     }
 
-    // Set vars for checking execution status
-    def status = "TRIGGERED"
-    def checkCount = 1
-    def lastExecutionId = triggerResult.lastExecutionId
-    
-    echo "Monitoring synthetic test execution: ${lastExecutionId}"
+    // Track status of all executions
+    def executionStatuses = [:]
 
-    while (status == "TRIGGERED" && checkCount <= maxStatusChecks) {
-      echo "Status check ${checkCount}/${maxStatusChecks} - Current status: ${status}"
-      
-      // Get synthetic test status
-      def statusResult = dynatraceClient.getSyntheticStatus(
-        lastExecutionId
-      )
-      
-      if (statusResult && statusResult.executionStatus) {
-        status = statusResult.executionStatus
-        echo "Retrieved status: ${status}"
+    def checkCount = 1
+    echo "Monitoring ${executionIds.size()} synthetic test executions..."
+
+    while (checkCount <= maxStatusChecks) {
+      echo "Status check ${checkCount}/${maxStatusChecks}"
+
+      // Check if the last execution is completed (triggered last, so if it's done, others likely are too)
+      def lastExecId = executionIds[-1]
+      def lastStatus = dynatraceClient.getSyntheticStatus(lastExecId)
+
+      if (lastStatus && lastStatus.executionStatus != "TRIGGERED") {
+        echo "Last execution (${lastExecId}) completed with status: ${lastStatus.executionStatus}"
+        echo "Checking all executions for final status..."
+
+        // Store last execution status to avoid redundant check
+        executionStatuses[lastExecId] = lastStatus.executionStatus
+
+        // Check all other executions to confirm
+        def allCompleted = true
+
+        executionIds.each { executionId ->
+          if (executionId == lastExecId) {
+            // Already checked, use stored status
+            if (executionStatuses[lastExecId] == "TRIGGERED") {
+              allCompleted = false
+            }
+          } else {
+            def statusResult = dynatraceClient.getSyntheticStatus(executionId)
+
+            if (statusResult && statusResult.executionStatus) {
+              executionStatuses[executionId] = statusResult.executionStatus
+
+              if (statusResult.executionStatus == "TRIGGERED") {
+                allCompleted = false
+              }
+            } else {
+              echo "Warning: Failed to get status for execution ${executionId}"
+              allCompleted = false
+            }
+          }
+        }
+
+        if (allCompleted) {
+          echo "All executions confirmed complete"
+          break
+        } else {
+          echo "Some executions still running, continuing to poll..."
+        }
       } else {
-        echo "Warning: Failed to get synthetic test status"
-        break
+        echo "Last execution still running, waiting..."
       }
-      
-      if (status == "TRIGGERED") {
-        sleep statusCheckInterval
-        checkCount++
-      }
+
+      sleep statusCheckInterval
+      checkCount++
+    }
+
+    // Report detailed results
+    def successCount = executionStatuses.values().count { it == "SUCCESS" }
+    def failedCount = executionStatuses.values().count { it == "FAILED" }
+    def triggeredCount = executionStatuses.values().count { it == "TRIGGERED" }
+
+    echo "Synthetic test execution summary:"
+    echo "Monitor: ${env.DT_SYNTHETIC_TEST_ID} (${monitorType})"
+    echo "Total executions: ${executionIds.size()}"
+    echo "Results: ${successCount} SUCCESS, ${failedCount} FAILED, ${triggeredCount} STILL RUNNING"
+    echo ""
+    echo "Execution details:"
+
+    executionIds.eachWithIndex { execId, index ->
+      def status = executionStatuses[execId] ?: "UNKNOWN"
+      echo "  ${index + 1}. ${execId} - ${status}"
     }
 
     if (checkCount > maxStatusChecks) {
       echo "Warning: Synthetic test status check timed out after ${maxStatusChecks} attempts"
       //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
-    } else {
-      echo "Final synthetic test status: ${status}"
-      if (status == "SUCCESS") {
-        echo "Dynatrace synthetic test completed successfully"
-      } else if (status == "FAILED") {
-        echo "Warning: Dynatrace synthetic test failed"
-        //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
-      }
+    }
+
+    if (successCount == executionIds.size()) {
+      echo "All Dynatrace synthetic tests completed successfully"
+    } else if (failedCount > 0) {
+      echo "Warning: ${failedCount} synthetic test(s) failed"
+      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
+    } else if (triggeredCount > 0) {
+      echo "Warning: ${triggeredCount} synthetic test(s) still running at timeout"
+      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
     }
 
     // Capture test end time for SRG evaluation
