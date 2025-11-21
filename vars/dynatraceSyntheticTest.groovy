@@ -151,50 +151,28 @@ def call(Map params) {
     while (checkCount <= maxStatusChecks) {
       echo "Status check ${checkCount}/${maxStatusChecks}"
 
-      // Check if the last execution is completed (triggered last, so if it's done, others likely are too)
-      def lastExecId = executionIds[-1]
-      def lastStatus = dynatraceClient.getSyntheticStatus(lastExecId)
+      def allCompleted = true
 
-      if (lastStatus && lastStatus.executionStatus != "TRIGGERED") {
-        echo "Last execution (${lastExecId}) completed with status: ${lastStatus.executionStatus}"
-        echo "Checking all executions for final status..."
+      // Check status of all executions
+      executionIds.each { executionId ->
+        def statusResult = dynatraceClient.getSyntheticStatus(executionId)
 
-        // Store last execution status to avoid redundant check
-        executionStatuses[lastExecId] = lastStatus.executionStatus
+        if (statusResult && statusResult.executionStatus) {
+          executionStatuses[executionId] = statusResult.executionStatus
+          echo "Execution ${executionId}: ${statusResult.executionStatus}"
 
-        // Check all other executions to confirm
-        def allCompleted = true
-
-        executionIds.each { executionId ->
-          if (executionId == lastExecId) {
-            // Already checked, use stored status
-            if (executionStatuses[lastExecId] == "TRIGGERED") {
-              allCompleted = false
-            }
-          } else {
-            def statusResult = dynatraceClient.getSyntheticStatus(executionId)
-
-            if (statusResult && statusResult.executionStatus) {
-              executionStatuses[executionId] = statusResult.executionStatus
-
-              if (statusResult.executionStatus == "TRIGGERED") {
-                allCompleted = false
-              }
-            } else {
-              echo "Warning: Failed to get status for execution ${executionId}"
-              allCompleted = false
-            }
+          if (statusResult.executionStatus == "TRIGGERED") {
+            allCompleted = false
           }
-        }
-
-        if (allCompleted) {
-          echo "All executions confirmed complete"
-          break
         } else {
-          echo "Some executions still running, continuing to poll..."
+          echo "Warning: Failed to get status for execution ${executionId}"
+          allCompleted = false
         }
-      } else {
-        echo "Last execution still running, waiting..."
+      }
+
+      if (allCompleted) {
+        echo "All executions complete"
+        break
       }
 
       sleep statusCheckInterval
