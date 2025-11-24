@@ -176,12 +176,18 @@ class DynatraceClient implements Serializable {
     steps.echo "Raw JSON response:\n${response.content}"
 
     def json = new JsonSlurper().parseText(response.content)
-    def executionStatus = json.executionStage
-        
-    steps.echo "Current Status: ${executionStatus}"
+    def executionStage = json.executionStage
+    def testStatus = json.simpleResults?.status
+
+    steps.echo "Execution Stage: ${executionStage}"
+    if (testStatus) {
+      steps.echo "Test Result Status: ${testStatus}"
+    }
+
     return [
       response: response,
-      executionStatus: executionStatus
+      executionStatus: executionStage,
+      testStatus: testStatus
     ]
   }
 
