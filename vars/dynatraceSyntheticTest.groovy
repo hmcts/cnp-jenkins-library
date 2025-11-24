@@ -87,7 +87,7 @@ def call(Map params) {
     echo "Dashboard: ${env.DT_DASHBOARD_URL}"
     echo "Environment: ${environment}"
     
-    // Conditional synchronization - only if both performance tests are enabled
+    // Conditional synchronisation - only if both performance tests are enabled
     def bothTestsEnabled = params.performanceTestStagesEnabled && params.gatlingLoadTestsEnabled
     echo "DEBUG: performanceTestStagesEnabled = ${params.performanceTestStagesEnabled}"
     echo "DEBUG: gatlingLoadTestsEnabled = ${params.gatlingLoadTestsEnabled}"
@@ -188,7 +188,7 @@ def call(Map params) {
       checkCount++
     }
 
-    // Report detailed results
+    // Report detailed results, count values from the executionsStatuses map
     def successCount = executionStatuses.values().count { it == "SUCCESS" }
     def failedCount = executionStatuses.values().count { it == "FAILED" }
     def triggeredCount = executionStatuses.values().count { it == "TRIGGERED" }
