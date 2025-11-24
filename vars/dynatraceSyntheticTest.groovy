@@ -1,13 +1,15 @@
 /*======================================================================================
 dynatraceSyntheticTest
 
-Runs Dynatrace synthetic browser tests and monitors their progress. This reads the
-Dynatrace config from environment variables set by dynatracePerformanceSetup, so that
+Runs Dynatrace synthetic tests (HTTP or BROWSER) and monitors their progress. This reads
+the Dynatrace config from environment variables set by dynatracePerformanceSetup, so that
 must run before this.
 
 What it does:
-  - Triggers a synthetic test in Dynatrace
-  - Polls until the test finishes, checking the test status.
+  - Triggers multiple executions of the same synthetic test (7 for HTTP, 3 for BROWSER)
+  - Triggers are spaced 65 seconds apart (Dynatrace rate limit)
+  - Polls all executions until they complete, checking execution stage and test results
+  - Reports final results (SUCCESS/FAILED counts)
   - Records start/end times for SRG evaluation
   - Disables the synthetic test afterwards (preview environments only)
   - Waits 1 minute if Gatling tests are also running (to sync the start times)
@@ -114,7 +116,7 @@ def call(Map params) {
     echo "Triggering ${triggerCount} ${monitorType} synthetic test executions with ${delaySeconds}s intervals"
 
     // Trigger multiple executions and collect IDs
-    // This is so we can collect more datapoints per synthetic test run */
+    // This is so we can collect more datapoints per synthetic test run
     def executionIds = []
 
     for (int i = 1; i <= triggerCount; i++) {

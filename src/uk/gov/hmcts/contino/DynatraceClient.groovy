@@ -7,8 +7,8 @@ the Dynatrace APIs to make them easier to use from Jenkins pipeline scripts.
 What it provides:
   - postEvent(): Sends custom info events to Dynatrace with build metadata
   - postMetric(): Sends release metrics for tracking deployments
-  - triggerSyntheticTest(): Starts a synthetic browser test
-  - getSyntheticStatus(): Checks if a synthetic test has finished
+  - triggerSyntheticTest(): Triggers a single execution of a synthetic test
+  - getSyntheticStatus(): Checks execution stage and test result (SUCCESS/FAILED)
   - updateSyntheticTest(): Enables/disables synthetic tests and updates URLs
   - evaluateSRG(): Evaluates Site Reliability Guardian rules (not implemented yet)
   - setEnvironmentConfig(): Switches config based on environment (perftest/aat/preview)
@@ -170,7 +170,9 @@ class DynatraceClient implements Serializable {
       steps.echo "Check Synthetic Status: Response ${response}"
     } catch (Exception e) {
       steps.echo "Error while checking synthetic status: ${e.message}"
-      steps.echo "Raw JSON response:\n${response.content}"
+      if (response) {
+        steps.echo "Raw JSON response:\n${response.content}"
+      }
       return null
     }
 
@@ -181,6 +183,11 @@ class DynatraceClient implements Serializable {
     steps.echo "Execution Stage: ${executionStage}"
     if (testStatus) {
       steps.echo "Test Result Status: ${testStatus}"
+
+      // Log full JSON response if test failed for debugging
+      if (testStatus == "FAILED") {
+        steps.echo "Test failed - Raw JSON response:\n${response.content}"
+      }
     }
 
     return [
