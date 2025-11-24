@@ -170,10 +170,9 @@ class DynatraceClient implements Serializable {
       steps.echo "Check Synthetic Status: Response ${response}"
     } catch (Exception e) {
       steps.echo "Error while checking synthetic status: ${e.message}"
+      steps.echo "Raw JSON response:\n${response.content}"
       return null
     }
-    
-    steps.echo "Raw JSON response:\n${response.content}"
 
     def json = new JsonSlurper().parseText(response.content)
     def executionStage = json.executionStage

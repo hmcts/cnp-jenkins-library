@@ -113,8 +113,8 @@ def call(Map params) {
 
     echo "Triggering ${triggerCount} ${monitorType} synthetic test executions with ${delaySeconds}s intervals"
 
-    /* Trigger multiple executions and collect IDs
-       This is so we can collect more datapoints per synthetic test run */
+    // Trigger multiple executions and collect IDs
+    // This is so we can collect more datapoints per synthetic test run */
     def executionIds = []
 
     for (int i = 1; i <= triggerCount; i++) {
