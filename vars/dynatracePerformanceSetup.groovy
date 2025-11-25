@@ -10,12 +10,19 @@ What it does:
   - Posts a build event to Dynatrace with metadata (branch, build number, etc.)
   - Sends a custom release metric to Dynatrace
   - Updates synthetic test URLs for preview environments
+  - Creates IDAM test user if configured (AAT/Preview only)
 
 @param params Map containing:
   - product: String product name (required)
   - component: String component name (required)
   - environment: String environment (required) - 'perftest', 'aat', or 'preview'
   - configPath: String path to config file (optional, defaults to 'src/test/performance/config/config.groovy')
+  - idamTestUserEnabled: Boolean whether to create IDAM test user (optional)
+  - idamTestUserEmail: String email for test user (optional)
+  - idamTestUserForename: String forename (optional)
+  - idamTestUserSurname: String surname (optional)
+  - idamTestUserPassword: String password (optional)
+  - idamTestUserRoles: List<String> roles to assign (optional)
 
 Sets these environment variables:
   - DT_SYNTHETIC_TEST_ID: The Dynatrace monitor ID
@@ -24,6 +31,8 @@ Sets these environment variables:
   - DT_DASHBOARD_URL: URL to view results
   - DT_METRIC_TYPE: Release metric type
   - DT_METRIC_TAG: Metric tag
+  - TEST_USER_EMAIL: Email of created IDAM test user (if enabled)
+  - TEST_USER_PASSWORD: Password of created IDAM test user (if enabled)
 
 Prerequisites:
   - Vault secrets must be loaded (done by sectionDeployToAKS):

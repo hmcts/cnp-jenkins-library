@@ -1,18 +1,18 @@
 import uk.gov.hmcts.contino.IdamTestUserClient
 import uk.gov.hmcts.contino.Environment
 
-/**
- * Creates a test user in IDAM for performance testing.
- *
- * This function only runs in AAT and Preview environments (both use AAT IDAM).
- * In all other environments, it logs a message and returns null without creating a user.
- *
- * Note: This is typically called automatically by dynatracePerformanceSetup when you use
- * enableIdamTestUser() in your pipeline configuration. You rarely need to call this directly.
- *
- * @param params Map containing: email, forename, surname, password, roles
- * @return Created user details from IDAM, or null if not in AAT/Preview environment
- */
+/*============================================================================================
+Creates a test user in IDAM for performance testing.
+
+This function only runs in AAT and Preview environments (both use AAT IDAM).
+In all other environments, it logs a message and returns null without creating a user.
+
+Note: This is typically called automatically by dynatracePerformanceSetup when you use
+enableIdamTestUser() in your pipeline configuration
+
+@param params Map containing: email, forename, surname, password, roles
+@return Created user details from IDAM, or null if not in AAT/Preview environment
+=============================================================================================*/
 def call(Map params = [:]) {
 
   // Check if we're in AAT or Preview environment

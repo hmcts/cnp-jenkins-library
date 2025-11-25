@@ -3,19 +3,19 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-/**
- * Helper class for creating test users in IDAM via the testing-support API.
- *
- * This client creates test users for performance testing in AAT and Preview
- * environments (both use AAT IDAM).
- *
- * Recommended usage:
- *   Use enableIdamTestUser() in your pipeline configuration - this automatically calls
- *   createIdamTestUsers() which uses this client.
- *
- * The createTestUser() method is idempotent - if the user already exists (409 Conflict),
- * the build continues and returns the existing user details.
- */
+/*==================================================================================================
+Helper class for creating test users in IDAM via the testing-support API.
+ 
+This client creates test users for performance testing in AAT and Preview
+environments (both use AAT IDAM).
+ 
+Recommended usage:
+- Use enableIdamTestUser() in your pipeline configuration - this automatically calls 
+  createIdamTestUsers() which uses this client.
+
+The createTestUser() method is idempotent - if the user already exists (409 Conflict),
+the build continues and returns the existing user details.
+====================================================================================================*/
 class IdamTestUserClient implements Serializable {
 
   def steps

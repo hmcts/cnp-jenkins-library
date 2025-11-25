@@ -217,34 +217,33 @@ def call(params) {
             ) {
             
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
-              if (config.performanceTestStages) {
-                stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
-                  testEnv(aksUrl) {
-                    def success = true
-                    try {
-                      pcr.callAround("dynatracePerformanceSetup:${environment}") {
-                        timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
-                          dynatracePerformanceSetup([
-                            product: product,
-                            component: component,
-                            environment: environment,
-                            configPath: config.performanceTestConfigPath,
-                            idamTestUserEnabled: config.idamTestUser,
-                            idamTestUserEmail: config.idamTestUserEmail,
-                            idamTestUserForename: config.idamTestUserForename,
-                            idamTestUserSurname: config.idamTestUserSurname,
-                            idamTestUserPassword: config.idamTestUserPassword,
-                            idamTestUserRoles: config.idamTestUserRoles
-                          ])
-                        }
+              // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
+              stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
+                testEnv(aksUrl) {
+                  def success = true
+                  try {
+                    pcr.callAround("dynatracePerformanceSetup:${environment}") {
+                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
+                        dynatracePerformanceSetup([
+                          product: product,
+                          component: component,
+                          environment: environment,
+                          configPath: config.performanceTestConfigPath,
+                          idamTestUserEnabled: config.idamTestUser,
+                          idamTestUserEmail: config.idamTestUserEmail,
+                          idamTestUserForename: config.idamTestUserForename,
+                          idamTestUserSurname: config.idamTestUserSurname,
+                          idamTestUserPassword: config.idamTestUserPassword,
+                          idamTestUserRoles: config.idamTestUserRoles
+                        ])
                       }
-                    } catch (err) {
-                      success = false
-                      echo "Dynatrace setup failed: ${err.message}"
-                      // Don't fail the build for setup issues, continue with tests
-                    } finally {
-                      savePodsLogs(dockerImage, params, "dynatrace-setup")
                     }
+                  } catch (err) {
+                    success = false
+                    echo "Dynatrace setup failed: ${err.message}"
+                    // Don't fail the build for setup issues, continue with tests
+                  } finally {
+                    savePodsLogs(dockerImage, params, "dynatrace-setup")
                   }
                 }
               }

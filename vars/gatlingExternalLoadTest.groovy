@@ -8,7 +8,7 @@ What it does:
   - Clones your external Gatling test repo
   - Runs the tests using GradleBuilder.performanceTest() (same as in-repo tests)
   - Records start/end times for SRG evaluation
-  - Uploads reports to blob storage and CosmosDB
+  - Uploads reports to Azure blob storage
 
 Important: Test parameters like number of users, ramp duration, and test duration are
 configured in the external repo's, not passed in here. This function
@@ -53,7 +53,7 @@ gatlingExternalLoadTest([
 Related files:
   - Called by: sectionDeployToAKS.groovy and withPipeline.groovy
   - Runs alongside: dynatraceSyntheticTest.groovy (if both enabled)
-  - Reports via: azureBlobUpload and publishToCosmosDb
+  - Reports via: azureBlobUpload
   - May be followed by: evaluateDynatraceSRG.groovy
 ============================================================================================*/
 

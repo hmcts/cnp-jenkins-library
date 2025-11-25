@@ -8,7 +8,7 @@ must run before this.
 What it does:
   - Triggers multiple executions of the same synthetic test (7 for HTTP, 3 for BROWSER)
   - Triggers are spaced 65 seconds apart (Dynatrace rate limit)
-  - Polls all executions until they complete, checking execution stage and test results
+  - Polls all executions until they complete (EXECUTED), then checks test results (SUCCESS/FAILED)
   - Reports final results (SUCCESS/FAILED counts)
   - Records start/end times for SRG evaluation
   - Disables the synthetic test afterwards (preview environments only)
