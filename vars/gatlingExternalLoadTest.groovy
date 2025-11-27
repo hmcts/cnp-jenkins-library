@@ -121,7 +121,7 @@ def call(Map params) {
             git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
           """
         } catch (Exception e) {
-          echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
+          echo "Failed to clone branch ${gatlingBranch}XXXX, trying default branch..."
           // If specific branch fails, try without specifying branch (gets default)
           sh """
             REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
