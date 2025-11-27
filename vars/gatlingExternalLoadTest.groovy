@@ -95,13 +95,15 @@ def call(Map params) {
   echo "Simulation: ${gatlingSimulation ?: 'All simulations'}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
-  try {
+  //catchError 1: Clean and create new workspace
+  catchError(stageResult: 'WARNING', buildResult: 'SUCCESS', message: 'Error cleaning and creating fresh workspace dir...') {
     // Create separate workspace for external Gatling tests
     def gatlingWorkspace = "${env.WORKSPACE}/external-gatling-tests"
     
     // Clean any existing workspace
     sh "rm -rf ${gatlingWorkspace}"
     sh "mkdir -p ${gatlingWorkspace}"
+  }
     
     dir(gatlingWorkspace) {
       echo "Checking out external Gatling repository..."
