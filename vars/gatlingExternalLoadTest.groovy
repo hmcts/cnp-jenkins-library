@@ -95,64 +95,63 @@ def call(Map params) {
   echo "Simulation: ${gatlingSimulation ?: 'All simulations'}"
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
+  // Create separate workspace for external Gatling tests
+  def gatlingWorkspace = "${env.WORKSPACE}/external-gatling-tests"
+
   //catchError 1: Clean and create new workspace
   catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cleaning and creating fresh workspace dir...') {
-    // Create separate workspace for external Gatling tests
-    def gatlingWorkspace = "${env.WORKSPACE}/external-gatling-tests"
-    
-    // Clean any existing workspace
-    sh "rm -rf ${gatlingWorkspace}"
-    sh "mkdir -p ${gatlingWorkspace}"
+
+  // Clean any existing workspace
+  sh "rm -rf ${gatlingWorkspace}"
+  sh "mkdir -p ${gatlingWorkspace}"
   }
+  dir(gatlingWorkspace) {
+    echo "Checking out external Gatling repository..."
     
-    dir(gatlingWorkspace) {
-      echo "Checking out external Gatling repository..."
-      
-      // Checkout external repository using Git credentials
-      echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
-      
-      withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
-        //catchError 2: Clone repo
-        catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
-          try {
-            // Try the specified branch first
-            sh """
-              REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
-              git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
-            """
-          } catch (Exception e) {
-            echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
-            // If specific branch fails, try without specifying branch (gets default)
-            sh """
-              REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
-              git clone --depth=1 \$REPO_URL .
-            """
-          }
+    // Checkout external repository using Git credentials
+    echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
+    
+    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
+      //catchError 2: Clone repo
+      catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
+        try {
+          // Try the specified branch first
+          sh """
+            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+            git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
+          """
+        } catch (Exception e) {
+          echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
+          // If specific branch fails, try without specifying branch (gets default)
+          sh """
+            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+            git clone --depth=1 \$REPO_URL .
+          """
         }
       }
+    }
     
+    echo "External Gatling repository checked out successfully"
+
+    //Run the Perf test using existing perftest builder
+    try {
+      // Capture test start time for SRG evaluation
+      def testStartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+      env.GATLING_TEST_START_TIME = testStartTime
+      echo "Gatling load test start time: ${testStartTime}"
+
+      def builder = new GradleBuilder(this, params.product)
+      builder.performanceTest(params.gatlingSimulation)
+
+      //Capture test end time for SRG evaluation
+      def testEndTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+      env.GATLING_TEST_END_TIME = testEndTime
+      echo "Gatling load test end time: ${testEndTime}"
       
-      echo "External Gatling repository checked out successfully"
-
-      //Run the Perf test using existing perftest builder
-      try {
-        // Capture test start time for SRG evaluation
-        def testStartTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
-        env.GATLING_TEST_START_TIME = testStartTime
-        echo "Gatling load test start time: ${testStartTime}"
-
-        def builder = new GradleBuilder(this, params.product)
-        builder.performanceTest(params.gatlingSimulation)
-
-        //Capture test end time for SRG evaluation
-        def testEndTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
-        env.GATLING_TEST_END_TIME = testEndTime
-        echo "Gatling load test end time: ${testEndTime}"
-        
-      } catch (Exception e) {
-        echo "****Gatling test Failure or fail to run builder.performanceTest: ${e.message}"
-      }
-    } //End of dir  
+    } catch (Exception e) {
+      echo "****Gatling test Failure or fail to run builder.performanceTest: ${e.message}"
+    }
+  } //End of dir  
     
   // Publish performance reports using existing function
   echo "Publishing external Gatling performance reports..."
