@@ -112,11 +112,13 @@ def call(Map params) {
       echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
       
       withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
+        //catchError 2: Clone repo
+        catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
         try {
           // Try the specified branch first
           sh """
             REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
-            git clone --depth=1 --branch=${gatlingBranch} \$REPO_URL .
+            git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
           """
         } catch (Exception e) {
           echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
@@ -126,7 +128,9 @@ def call(Map params) {
             git clone --depth=1 \$REPO_URL .
           """
         }
+        }
       }
+    
       
       echo "External Gatling repository checked out successfully"
 
