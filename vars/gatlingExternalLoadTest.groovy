@@ -114,20 +114,20 @@ def call(Map params) {
       withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
         //catchError 2: Clone repo
         catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
-        try {
-          // Try the specified branch first
-          sh """
-            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
-            git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
-          """
-        } catch (Exception e) {
-          echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
-          // If specific branch fails, try without specifying branch (gets default)
-          sh """
-            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
-            git clone --depth=1 \$REPO_URL .
-          """
-        }
+          try {
+            // Try the specified branch first
+            sh """
+              REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+              git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
+            """
+          } catch (Exception e) {
+            echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
+            // If specific branch fails, try without specifying branch (gets default)
+            sh """
+              REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+              git clone --depth=1 \$REPO_URL .
+            """
+          }
         }
       }
     
@@ -151,7 +151,6 @@ def call(Map params) {
         
       } catch (Exception e) {
         echo "****Gatling test Failure or fail to run builder.performanceTest: ${e.message}"
-        currentStage.result = 'WARNING'
       }
     } //End of dir  
     
