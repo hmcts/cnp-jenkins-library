@@ -96,7 +96,7 @@ def call(Map params) {
   echo "Date/Time: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
 
   //catchError 1: Clean and create new workspace
-  catchError(stageResult: 'WARNING', buildResult: 'SUCCESS', message: 'Error cleaning and creating fresh workspace dir...') {
+  catchError(stageResult: 'UNSTABLE', buildResult: 'SUCCESS', message: 'Error cleaning and creating fresh workspace dir...') {
     // Create separate workspace for external Gatling tests
     def gatlingWorkspace = "${env.WORKSPACE}/external-gatling-tests"
     
