@@ -144,7 +144,8 @@ def call(Map params) {
         echo "Gatling load test end time: ${testEndTime}"
         
       } catch (Exception e) {
-        echo "**** Failed to run builder.performanceTest: ${e.message}"
+        echo "****Gatling test Failure or fail to run builder.performanceTest: ${e.message}"
+        currentStage.result = 'WARNING'
       }
     } //End of dir  
     
