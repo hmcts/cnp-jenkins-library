@@ -102,7 +102,7 @@ def call(Map params) {
     
     // Clean any existing workspace
     sh "rm -rf ${gatlingWorkspace}"
-    sh "mkdir -p ${gatlingWorkspace}"
+    sh "mkdir -p ${gatlingWorkspaceXXX}"
   }
     
     dir(gatlingWorkspace) {
