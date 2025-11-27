@@ -178,10 +178,10 @@ def call(Map params) {
     }
   }
     
-  } catch (Exception e) {
-    echo "Error in external Gatling load test execution: ${e.message}"
-    e.printStackTrace()
-    currentBuild.result = 'UNSTABLE'
-    throw e
-  }
+  //} catch (Exception e) {
+  //  echo "Error in external Gatling load test execution: ${e.message}"
+  //  e.printStackTrace()
+  //  currentBuild.result = 'UNSTABLE'
+  //  throw e
+  //}
 }
