@@ -60,6 +60,7 @@ Related files:
 import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.contino.Builder
 
+def failureReason = ""
 
 def call(Map params) {
   
@@ -98,7 +99,6 @@ def call(Map params) {
   // Create separate workspace for external Gatling tests
   def gatlingWorkspace = "${env.WORKSPACE}/external-gatling-tests"
 
-  //catchError 1: Clean and create new workspace
   catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error cleaning and creating fresh workspace dir...') {
 
   // Clean any existing workspace
@@ -112,7 +112,6 @@ def call(Map params) {
     echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
     
     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
-      //catchError 2: Clone repo
       catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
         try {
           // Try the specified branch first
