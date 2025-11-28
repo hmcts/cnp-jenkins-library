@@ -118,13 +118,13 @@ def call(Map params) {
           // Try the specified branch first
           sh """
             REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
-            git clone --depth=1 --branch=${gatlingBranch}XXXX \$REPO_URL .
+            git clone --depth=1 --branch=${gatlingBranch} \$REPO_URL .
           """
         } catch (Exception e) {
           echo "Failed to clone branch ${gatlingBranch}, trying default branch..."
           // If specific branch fails, try without specifying branch (gets default)
           sh """
-            REPO_URL=\$(echo ${params.gatlingRepo}XXXX | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
+            REPO_URL=\$(echo ${params.gatlingRepo} | sed "s/github.com/\${USER_NAME}:\${BEARER_TOKEN}@github.com/g")
             git clone --depth=1 \$REPO_URL .
           """
         }
@@ -141,7 +141,9 @@ def call(Map params) {
       echo "Gatling load test start time: ${testStartTime}"
 
       def builder = new GradleBuilder(this, params.product)
-      builder.performanceTest(params.gatlingSimulation)
+      catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error in Gatling Performance test') {
+        builder.performanceTest(params.gatlingSimulationXXX)
+      }
 
       //Capture test end time for SRG evaluation
       def testEndTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
