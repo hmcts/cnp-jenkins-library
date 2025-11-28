@@ -158,7 +158,7 @@ def call(Map params) {
     
     //Post DT Metric
     def postMetricResult = dynatraceClient.postMetric(
-      environmentXXXXXXXXX
+      environment
     )
 
     // Update Synthetic Test for preview environment if needed
