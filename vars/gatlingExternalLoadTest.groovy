@@ -170,8 +170,8 @@ def call(Map params) {
     catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'WARNING: Failed to upload external Gatling reports') {
       // Upload to custom directory for external tests
       azureBlobUpload(
-        params.subscription,
-        'buildlog-storage-accountXXXXX',
+        params.subscriptionXXXXXXXX,
+        'buildlog-storage-account',
         env.GATLING_REPORTS_PATH,
         "performance/_build/${params.product}-${params.component}/${params.environment}"
       )
