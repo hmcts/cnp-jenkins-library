@@ -152,7 +152,6 @@ def call(Map params) {
       catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE', message: failureReason) {
         error(failureReason)
       }
-      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
       return
     }
 
@@ -221,26 +220,23 @@ def call(Map params) {
 
     if (checkCount > maxStatusChecks) {
       echo "Warning: Synthetic test status check timed out after ${maxStatusChecks} attempts"
-      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
     }
 
     if (successCount == executionIds.size()) {
       echo "All Dynatrace synthetic tests completed successfully"
       testResultStatus = "SUCCESS"
     } else if (failedCount > 0) {
-      echo "Warning: ${failedCount} synthetic test(s) failed"
-      testExecutionSuccess = false
-      failureReason = "${failedCount} of ${executionIds.size()} synthetic test(s) failed"
-      testResultStatus = "UNSTABLE"
-      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
+        echo "Warning: ${failedCount} synthetic test(s) failed"
+        testExecutionSuccess = false
+        failureReason = "${failedCount} of ${executionIds.size()} synthetic test(s) failed"
+        testResultStatus = "UNSTABLE"
     } else if (triggeredCount > 0) {
-      echo "Warning: ${triggeredCount} synthetic test(s) still running at timeout"
-      //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
+        echo "Warning: ${triggeredCount} synthetic test(s) still running at timeout"
     } else {
-      echo "Warning: Unexpected test result state"
-      testExecutionSuccess = false
-      failureReason = "Unexpected test state - ${successCount} success, ${failedCount} failed, ${triggeredCount} running"
-      testResultStatus = "UNSTABLE"
+        echo "Warning: Unexpected test result state"
+        testExecutionSuccess = false
+        failureReason = "Unexpected test state - ${successCount} success, ${failedCount} failed, ${triggeredCount} running"
+        testResultStatus = "UNSTABLE"
     }
 
     // Capture test end time for SRG evaluation
@@ -256,19 +252,18 @@ def call(Map params) {
         false
       )
     }
-
-  //sleep(time:3600, unit: "SECONDS")  //******* Added temp sleep for preview deployment******
+  //************************* Added temp sleep for preview deployment ****************************************
+  //sleep(time:3600, unit: "SECONDS") 
+  //**********************************************************************************************************
 
   } catch (Exception e) {
     echo "Error in Dynatrace synthetic test execution: ${e.message}"
     testExecutionSuccess = false
     failureReason = "Synthetic test execution error: ${e.message}"
     testResultStatus = "FAILURE"
-    //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
   }
   // Final evaluation: Set stage status based on test results
   if (!testExecutionSuccess) {
-
     catchError(buildResult: 'SUCCESS', stageResult: testResultStatus, message: "Dynatrace Synthetic Tests ${testResultStatus}: ${failureReason}") {
       error(failureReason)
     }
