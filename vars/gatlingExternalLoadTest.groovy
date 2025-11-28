@@ -142,7 +142,7 @@ def call(Map params) {
 
       def builder = new GradleBuilder(this, params.product)
       catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error in Gatling Performance test') {
-        builder.performanceTest(params.gatlingSimulationXXX)
+        builder.performanceTest(params.gatlingSimulation)
       }
 
       //Capture test end time for SRG evaluation
@@ -167,25 +167,15 @@ def call(Map params) {
 
     echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
 
-    try {
+    catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'ERROR: Failed to upload external Gatling reports') {
       // Upload to custom directory for external tests
       azureBlobUpload(
         params.subscription,
-        'buildlog-storage-account',
+        'buildlog-storage-accountXXXXX',
         env.GATLING_REPORTS_PATH,
         "performance/_build/${params.product}-${params.component}/${params.environment}"
       )
-      echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
     }
-    catch (Exception ex) {
-      echo "ERROR: Failed to upload external Gatling reports: ${ex}"
-    }
+    echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
   }
-    
-  //} catch (Exception e) {
-  //  echo "Error in external Gatling load test execution: ${e.message}"
-  //  e.printStackTrace()
-  //  currentBuild.result = 'UNSTABLE'
-  //  throw e
-  //}
 }
