@@ -99,7 +99,7 @@ def call(Map params) {
   def gatlingWorkspace = "${env.WORKSPACE}/external-gatling-tests"
 
   //catchError 1: Clean and create new workspace
-  catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cleaning and creating fresh workspace dir...') {
+  catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error cleaning and creating fresh workspace dir...') {
 
   // Clean any existing workspace
   sh "rm -rf ${gatlingWorkspace}"
@@ -113,7 +113,7 @@ def call(Map params) {
     
     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
       //catchError 2: Clone repo
-      catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
+      catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
         try {
           // Try the specified branch first
           sh """
@@ -141,7 +141,7 @@ def call(Map params) {
       echo "Gatling load test start time: ${testStartTime}"
 
       def builder = new GradleBuilder(this, params.product)
-      catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Error in Gatling Performance test') {
+      catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error in Gatling Performance test') {
         builder.performanceTest(params.gatlingSimulation)
       }
 
@@ -167,7 +167,7 @@ def call(Map params) {
 
     echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
 
-    catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'ERROR: Failed to upload external Gatling reports') {
+    catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'WARNING: Failed to upload external Gatling reports') {
       // Upload to custom directory for external tests
       azureBlobUpload(
         params.subscription,
