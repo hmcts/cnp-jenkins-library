@@ -89,7 +89,7 @@ def call(Map params) {
     }
     
     //Load the correct config based on environment (switchCase function)
-    config = DynatraceClient.setEnvironmentConfig(config11223344, environment)
+    config = DynatraceClient.setEnvironmentConfig(config, environment)
     
     echo "Configuration loaded successfully for environment: ${environment}"
     echo "API Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"
@@ -158,7 +158,7 @@ def call(Map params) {
     
     //Post DT Metric
     def postMetricResult = dynatraceClient.postMetric(
-      environment
+      environmentXXXXXXXXX
     )
 
     // Update Synthetic Test for preview environment if needed
