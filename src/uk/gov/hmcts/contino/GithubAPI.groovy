@@ -29,7 +29,22 @@ class GithubAPI {
   ]
 
   def currentProject() {
-    return new RepositoryUrl().getShort(this.steps.env.CHANGE_URL)
+    def changeUrl = this.steps.env.CHANGE_URL
+    def gitUrl = this.steps.env.GIT_URL
+
+    String url = changeUrl ?: gitUrl
+
+    if (!url) {
+      throw new RuntimeException("Unable to determine repository URL from CHANGE_URL or GIT_URL")
+    }
+
+    // Normalise both PR URLs and git URLs, e.g.:
+    // https://github.com/hmcts/repo/pull/123 -> hmcts/repo
+    // https://github.com/hmcts/repo.git      -> hmcts/repo
+    return url
+      .replace("https://github.com/", "")
+      .replaceFirst("/pull/\\d+", "")
+      .replaceAll("\\.git\$", "")
   }
 
   def currentPullRequestNumber() {
