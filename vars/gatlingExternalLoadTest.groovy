@@ -175,7 +175,7 @@ def call(Map params) {
         env.GATLING_REPORTS_PATH,
         "performance/_build/${params.product}-${params.component}/${params.environment}"
       )
+      echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
     }
-    echo "Successfully uploaded external Gatling reports to: perfInBuildPipeline/${params.product}-${params.component}/${params.environment}"
   }
 }
