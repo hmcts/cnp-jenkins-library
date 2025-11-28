@@ -167,10 +167,10 @@ def call(Map params) {
 
     echo "Uploading external Gatling reports to perfInBuildPipeline directory..."
 
-    catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'WARNING: Failed to upload external Gatling reports') {
+    catchError(stageResult:'UNSTABLE', buildResult:'SUCCESS', message:'Failed to upload external Gatling reports') {
       // Upload to custom directory for external tests
       azureBlobUpload(
-        params.subscriptionXXXXXXXX,
+        params.subscription,
         'buildlog-storage-account',
         env.GATLING_REPORTS_PATH,
         "performance/_build/${params.product}-${params.component}/${params.environment}"
