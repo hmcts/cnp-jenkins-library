@@ -212,13 +212,13 @@ def call(Map params) {
       echo "Continuing without test user - tests may fail if they require IDAM authentication"
       configSetupSuccess = false
       failureReason = "IDAM test user creation failed: ${e.message}"
-      //currentBuild.result = 'UNSTABLE'#
+      //currentBuild.result = 'UNSTABLE'
     }
   }
   // Final evaluation: Set stage status based on overall success
   if (!configSetupSuccess) {
-    catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE', message: "Dynatrace Performance Setup had issues: ${failureReason}") {
-    error(failureReason)  // Trigger the catchError
-  }
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE', message: "Dynatrace Performance Setup had issues: ${failureReason}") {
+      error(failureReason)  // Trigger the catchError
+    }
   }
 }
