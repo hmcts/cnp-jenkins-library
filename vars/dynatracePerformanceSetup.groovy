@@ -71,8 +71,12 @@ def call(Map params) {
   def defaultConfigPath = 'src/test/performance/config/config.groovy'
   def configPath = params.configPath ?: defaultConfigPath
   def environment = params.environment
-
   def config
+
+  //SuccessFlags
+  def configSetupSuccess = true 
+  def failureReason = ""
+
   def dynatraceClient = new DynatraceClient(this)
 
   // Load config from consuming component repo
@@ -94,8 +98,15 @@ def call(Map params) {
     
   } catch (Exception e) {
     echo "Error loading performance test configuration: ${e.message}"
+    configSetupSuccess = false
+    failureReason = "Config loading failed: ${e.message}"
+
+    // Set stage status before returning
+    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE', message: failureReason) {
+      error(failureReason)
+    }
     //currentBuild.result = 'UNSTABLE' ** Do not currently fail build. Additional logic required here once stablisation period complete **
-    return
+    return // Exit early - can't continue without config
   }
 
   echo "Setting config variables to env.VAR's..."
@@ -164,6 +175,8 @@ def call(Map params) {
 
   } catch (Exception e) {
     echo "Error in Dynatrace performance setup: ${e.message}"
+    configSetupSuccess = false
+    failureReason = "Error in Dynatrace performance setup: ${e.message}"
     //currentBuild.result = 'UNSTABLE' * Do not currently fail build. Implement later once stabilisation complete
   }
 
@@ -197,7 +210,15 @@ def call(Map params) {
     } catch (Exception e) {
       echo "IDAM test user creation failed: ${e.message}"
       echo "Continuing without test user - tests may fail if they require IDAM authentication"
-      //currentBuild.result = 'UNSTABLE'
+      configSetupSuccess = false
+      failureReason = "IDAM test user creation failed: ${e.message}"
+      //currentBuild.result = 'UNSTABLE'#
     }
+  }
+  // Final evaluation: Set stage status based on overall success
+  if (!configSetupSuccess) {
+    catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE', message: "Dynatrace Performance Setup had issues: ${failureReason}") {
+    error(failureReason)  // Trigger the catchError
+  }
   }
 }

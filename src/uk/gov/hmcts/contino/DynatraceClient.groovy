@@ -64,7 +64,7 @@ class DynatraceClient implements Serializable {
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_EVENT_TOKEN}"]
         ],
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_EVENT_INGEST_ENDPOINT}",
-        requestBody: """{
+        requestBody: """{ 
           "entitySelector": "${steps.env.DT_ENTITY_SELECTOR}",
           "eventType": "CUSTOM_INFO",
           "properties": {
