@@ -259,8 +259,12 @@ def call(Map params) {
   } catch (Exception e) {
     echo "Error in Dynatrace synthetic test execution: ${e.message}"
     testExecutionSuccess = false
-    failureReason = "Synthetic test execution error: ${e.message}"
-    testResultStatus = "FAILURE"
+
+    // Only set if not already set
+    if (!failureReason) {
+      failureReason = "Synthetic test execution error: ${e.message}"
+      testResultStatus = "FAILURE"
+    }
   }
   // Final evaluation: Set stage status based on test results
   if (!testExecutionSuccess) {
