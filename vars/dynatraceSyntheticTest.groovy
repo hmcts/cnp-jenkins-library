@@ -128,7 +128,7 @@ def call(Map params) {
       echo "Triggering execution ${i}/${triggerCount}..."
 
       //Trigger the synthetic test
-      def triggerResult = dynatraceClient.triggerSyntheticTest("ErrorForDemo-No Test Exists")
+      def triggerResult = dynatraceClient.triggerSyntheticTest()
 
       if (triggerResult && triggerResult.lastExecutionId) {
         executionIds.add(triggerResult.lastExecutionId)
