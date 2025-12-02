@@ -1,40 +1,79 @@
 
 const fs = require("fs");
 
+// async function main() {
+//   const v3input = fs.readFileSync('/dev/stdin', "utf-8");
+
+//   const v3lines = v3input.split("\n").filter(line => line.length > 0);
+//   const v3json = v3lines.map(line => JSON.parse(line));
+
+//   const advisories = await Promise.all(v3json.map(getAdvisory));
+//   const yarnLock = fs.readFileSync('yarn.lock', 'utf8');
+//   const numDependencies = yarnLock.match(/resolution: "/g).length;
+//   const advisoriesById = advisories.reduce((acc, advisory) => {
+//     acc[advisory.id] = advisory;
+//     return acc;
+//   }, {});
+
+//   console.log(JSON.stringify({
+//     actions: [],
+//     advisories: advisoriesById,
+//     metadata: {
+//       dependencies: numDependencies,
+//       devDependencies: 0,
+//       optionalDependencies: 0,
+//       totalDependencies: numDependencies,
+//       vulnerabilities: {
+//         critical: advisories.filter(advisory => advisory.severity === 'critical').length,
+//         high: advisories.filter(advisory => advisory.severity === 'high').length,
+//         info: advisories.filter(advisory => advisory.severity === 'info').length,
+//         low: advisories.filter(advisory => advisory.severity === 'low').length,
+//         moderate: advisories.filter(advisory => advisory.severity === 'moderate').length
+//       }
+//     },
+//     muted: []
+//   }, null, 2));
+// }
 async function main() {
-  const v3input = fs.readFileSync('/dev/stdin', "utf-8");
+  const v3input = fs.readFileSync('/dev/stdin', "utf-8");
 
-  const v3lines = v3input.split("\n").filter(line => line.length > 0);
-  const v3json = v3lines.map(line => JSON.parse(line));
+  const v3lines = v3input.split("\n").filter(line => line.length > 0);
+  const v3json = v3lines.map(line => JSON.parse(line));
 
-  const advisories = await Promise.all(v3json.map(getAdvisory));
-  const yarnLock = fs.readFileSync('yarn.lock', 'utf8');
-  const numDependencies = yarnLock.match(/resolution: "/g).length;
-  const advisoriesById = advisories.reduce((acc, advisory) => {
-    acc[advisory.id] = advisory;
-    return acc;
-  }, {});
+  const advisories = await Promise.all(v3json.map(getAdvisory));
+  
+  // ADD: Filter out null entries (from non-advisory lines like 'info')
+  const validAdvisories = advisories.filter(advisory => advisory !== null); 
+  
+  const yarnLock = fs.readFileSync('yarn.lock', 'utf8');
+  const numDependencies = yarnLock.match(/resolution: "/g).length;
+  
+  // CHANGE: Use validAdvisories for the final object creation
+  const advisoriesById = validAdvisories.reduce((acc, advisory) => { 
+    acc[advisory.id] = advisory;
+    return acc;
+  }, {});
 
-  console.log(JSON.stringify({
-    actions: [],
-    advisories: advisoriesById,
-    metadata: {
-      dependencies: numDependencies,
-      devDependencies: 0,
-      optionalDependencies: 0,
-      totalDependencies: numDependencies,
-      vulnerabilities: {
-        critical: advisories.filter(advisory => advisory.severity === 'critical').length,
-        high: advisories.filter(advisory => advisory.severity === 'high').length,
-        info: advisories.filter(advisory => advisory.severity === 'info').length,
-        low: advisories.filter(advisory => advisory.severity === 'low').length,
-        moderate: advisories.filter(advisory => advisory.severity === 'moderate').length
-      }
-    },
-    muted: []
-  }, null, 2));
+  console.log(JSON.stringify({
+    actions: [],
+    advisories: advisoriesById,
+    metadata: {
+      dependencies: numDependencies,
+      devDependencies: 0,
+      optionalDependencies: 0,
+      totalDependencies: numDependencies,
+      vulnerabilities: {
+        // CHANGE: Use validAdvisories for all vulnerability counts
+        critical: validAdvisories.filter(advisory => advisory.severity === 'critical').length,
+        high: validAdvisories.filter(advisory => advisory.severity === 'high').length,
+        info: validAdvisories.filter(advisory => advisory.severity === 'info').length,
+        low: validAdvisories.filter(advisory => advisory.severity === 'low').length,
+        moderate: validAdvisories.filter(advisory => advisory.severity === 'moderate').length
+      }
+    },
+    muted: []
+  }, null, 2));
 }
-
 async function getAdvisory(advisory) {
   const partialResult = {
     access: "public",
