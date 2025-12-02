@@ -121,8 +121,11 @@ check_file_valid_json() {
 check_audit_file_format(){
   local file="$1"
   echo "Checking file: $file"  # Debugging output
-  if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
+  # has("actions") and has("advisories") and has("metadata")
+  # has("actions", "advisories", "metadata")
+  if ! jq 'has("actions") and has("advisories") and has("metadata")' "$file" | grep -q true; then
     echo "You have either an old format or empty of audit file: $file."
+    echo "test"
     OLD_AUDIT_FORMAT=1
   else
     OLD_AUDIT_FORMAT=0
