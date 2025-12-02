@@ -75,6 +75,9 @@ async function main() {
   }, null, 2));
 }
 async function getAdvisory(advisory) {
+  if (!advisory.children) {
+      return null; 
+  }
   const partialResult = {
     access: "public",
     created: null,
