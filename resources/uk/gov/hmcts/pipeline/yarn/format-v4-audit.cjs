@@ -44,8 +44,11 @@ async function getAdvisory(advisory) {
     cwe: [],
     deleted: null,
     findings: [{
-      paths: advisory.children.Dependents,
-      version: advisory.children["Tree Versions"][0]
+      paths: advisory.children.Dependents ?? [],
+      // FIX: Use optional chaining (?.) to safely access the array element.
+      version: advisory.children["Tree Versions"]?.[0]
+      // paths: advisory.children.Dependents,
+      // version: advisory.children["Tree Versions"][0]
     }],
     found_by: null,
     github_advisory_id: null,
