@@ -202,7 +202,7 @@ def call(Map params) {
     }
 
     // Report detailed results, count values from the executionsStatuses map
-    def successCount = executionStatuses.values().count { it == "SUCCESS" }
+    def successCount = executionStatuses.values().count { it == "SUCCESS" || it == "DATA_RETRIEVED"  }
     def failedCount = executionStatuses.values().count { it == "FAILED" }
     def triggeredCount = executionStatuses.values().count { it == "TRIGGERED" }
 
