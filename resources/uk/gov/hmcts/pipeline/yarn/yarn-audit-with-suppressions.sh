@@ -211,9 +211,14 @@ else
   #   print_borked_known_issues
   #   exit 1
   # fi
+#   if ! jq -e '
+#     type == "object" and has("actions") and has("advisories") and (has("metadata") or .metadata == null)
+# '   yarn-audit-known-issues-formatted >/dev/null 2>&1; then
   if ! jq -e '
-    type == "object" and has("actions") and has("advisories") and (has("metadata") or .metadata == null)
-'   yarn-audit-known-issues-formatted >/dev/null 2>&1; then
+    type == "object"
+    and (to_entries | all(.key | type == "string"))
+    and (to_entries | all(.value | type == "object"))
+  ' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
     echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 3/4 single-object format)"
     print_borked_known_issues
     exit 1
