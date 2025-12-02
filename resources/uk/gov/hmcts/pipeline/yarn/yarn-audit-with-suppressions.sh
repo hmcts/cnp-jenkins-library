@@ -177,12 +177,8 @@ else
   if [ -f yarn-audit-known-issues ]; then
     check_file_valid_json yarn-audit-known-issues
     # Convert JSON array into sorted list of suppressed issues
-    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
-       jq -cr 'to_entries[].value' yarn-audit-known-issues-formatted \
+    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
               | sort > sorted-yarn-audit-known-issues
-
-      #  jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
-        #      | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
     if [ -f yarn-audit-known-issues ]; then
