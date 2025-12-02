@@ -206,6 +206,10 @@ else
   check_file_valid_json yarn-audit-known-issues
   # Convert JSON array into sorted list of suppressed issues
   cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+  echo "=== DEBUG: yarn-audit-known-issues-formatted ==="
+  cat yarn-audit-known-issues-formatted
+  echo "==============================================="
+
   # if ! jq -e 'type == "object" and has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
   #   echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 4 format)"
   #   print_borked_known_issues
