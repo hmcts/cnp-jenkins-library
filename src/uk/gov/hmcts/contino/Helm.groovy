@@ -125,6 +125,7 @@ class Helm {
     if (!values) {
       throw new RuntimeException('Helm charts need at least a values file (none given).')
     }
+
     def releaseName = "${this.chartName}-${imageTag}"
     dependencyUpdate()
     lint(values)
@@ -132,28 +133,42 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh('chmod +x aks-debug-info.sh')
-    def optionsStr = (options + ['--install', '--timeout 1250s']).join(' ')
+    
+    boolean onPR = new ProjectBranch(this.steps.env.BRANCH_NAME).isPR()
+    def optionsStr = (options + (onPR ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
-    steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
-    steps.sh(label: 'wait for install', script:
-      """
-      echo 'Waiting 30s for initial pod creation...'
-      sleep 30
 
-      if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -o json | \
-        jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason | 
-        test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
-         echo "❌ Critical error detected - failing fast"
-         ./aks-debug-info.sh ${releaseName} ${this.namespace}
-         exit 1
-      fi
+    if (onPR) {
+      this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
+      this.steps.sh(label: 'wait for install', script:
+        """
+        echo 'Waiting 30s for initial pod creation...'
+        sleep 30
 
-      echo 'Waiting for pods to be scheduled and ready...'
-      kubectl wait --for=condition=ready pod \\
-        -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
-        -n ${this.namespace} \\
-        --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
-      """)
+        POD_COUNT=\$(kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' --no-headers 2>/dev/null | wc -l)
+
+        if [ "\$POD_COUNT" -eq 0 ]; then
+          echo "ℹ️  No pods found matching selector - this chart may only contain jobs/cronjobs"
+          exit 0
+        fi
+
+        if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -o json | \
+          jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason |
+          test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
+           echo "❌ Critical error detected - failing fast"
+           ./aks-debug-info.sh ${releaseName} ${this.namespace}
+           exit 1
+        fi
+
+        echo 'Waiting for pods to be scheduled and ready...'
+        kubectl wait --for=condition=ready pod \\
+          -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
+          -n ${this.namespace} \\
+          --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
+        """)
+    } else {
+      this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace}")
+    }
     this.steps.sh 'rm aks-debug-info.sh'
   }
 

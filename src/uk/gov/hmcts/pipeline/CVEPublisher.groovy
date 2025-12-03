@@ -1,17 +1,21 @@
 package uk.gov.hmcts.pipeline
 
+import uk.gov.hmcts.contino.CosmosDbTargetResolver
+
 class CVEPublisher {
 
   def steps
   private final boolean ignoreErrors
+  private final CosmosDbTargetResolver cosmosDbTargetResolver
 
   CVEPublisher(steps) {
     this(steps, true)
   }
 
-  CVEPublisher(steps, ignoreErrors) {
+  CVEPublisher(steps, ignoreErrors, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
     this.steps = steps
     this.ignoreErrors = ignoreErrors
+    this.cosmosDbTargetResolver = cosmosDbTargetResolver ?: new CosmosDbTargetResolver(steps)
   }
 
   /**
@@ -25,6 +29,7 @@ class CVEPublisher {
   def publishCVEReport(String codeBaseType, report) {
     try {
       steps.echo "Publishing CVE report"
+      def database = cosmosDbTargetResolver.databaseName()
       def summary = [
         id    : UUID.randomUUID().toString(),
         build : [
@@ -37,7 +42,7 @@ class CVEPublisher {
         report: report
       ]
 
-      steps.azureCosmosDBCreateDocument(container: 'cve-reports', credentialsId: 'cosmos-connection', database: 'jenkins', document: summary)
+      steps.azureCosmosDBCreateDocument(container: 'cve-reports', credentialsId: 'cosmos-connection', database: database, document: summary)
     } catch (err) {
       if (ignoreErrors) {
         steps.echo "Unable to publish CVE report '${err}'"
