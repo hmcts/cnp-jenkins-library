@@ -86,6 +86,7 @@ check_for_unneeded_suppressions() {
   done < sorted-yarn-audit-known-issues
 
   if [[ -s unneeded_suppressions ]]; then
+    echo "surpression"
     echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
     source prettyPrintAudit.sh unneeded_suppressions
   fi
@@ -182,6 +183,7 @@ else
 
     # When no vulnerabilities are found, all suppressions are unneeded
     if [ -f yarn-audit-known-issues ]; then
+      echo "test"
       echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
       source prettyPrintAudit.sh sorted-yarn-audit-known-issues
     fi
