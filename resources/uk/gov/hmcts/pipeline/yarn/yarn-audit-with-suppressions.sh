@@ -86,7 +86,6 @@ check_for_unneeded_suppressions() {
   done < sorted-yarn-audit-known-issues
 
   if [[ -s unneeded_suppressions ]]; then
-    echo "surpression"
     echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
     source prettyPrintAudit.sh unneeded_suppressions
   fi
@@ -122,11 +121,8 @@ check_file_valid_json() {
 check_audit_file_format(){
   local file="$1"
   echo "Checking file: $file"  # Debugging output
-  # has("actions") and has("advisories") and has("metadata")
-  # has("actions", "advisories", "metadata")
-  if ! jq 'has("actions") and has("advisories") and has("metadata")' "$file" | grep -q true; then
+  if ! jq 'has("actions", "advisories", "metadata")' "$file" | grep -q true; then
     echo "You have either an old format or empty of audit file: $file."
-    echo "test"
     OLD_AUDIT_FORMAT=1
   else
     OLD_AUDIT_FORMAT=0
@@ -178,12 +174,12 @@ else
   if [ -f yarn-audit-known-issues ]; then
     check_file_valid_json yarn-audit-known-issues
     # Convert JSON array into sorted list of suppressed issues
-    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
+    cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
+    jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
               | sort > sorted-yarn-audit-known-issues
 
     # When no vulnerabilities are found, all suppressions are unneeded
     if [ -f yarn-audit-known-issues ]; then
-      echo "test"
       echo "WARNING: Unneeded suppressions found. You can safely delete these from the yarn-audit-known-issues file:"
       source prettyPrintAudit.sh sorted-yarn-audit-known-issues
     fi
@@ -207,22 +203,12 @@ else
 
   check_file_valid_json yarn-audit-known-issues
   # Convert JSON array into sorted list of suppressed issues
-  # cat format-v4-audit.cjs
   cat yarn-audit-known-issues | node format-v4-audit.cjs > yarn-audit-known-issues-formatted
-  echo "=== DEBUG: yarn-audit-known-issues-formatted ==="
-  # cat yarn-audit-known-issues-formatted
-  echo "==============================================="
-
   if ! jq -e 'type == "object" and has("actions") and has("advisories") and has("metadata")' yarn-audit-known-issues-formatted >/dev/null 2>&1; then
     echo "❌ Invalid or unexpected yarn-audit-known-issues-formatted structure (expected Yarn 4 format)"
     print_borked_known_issues
     exit 1
   fi
-#   if ! jq -e '
-#     type == "object" and has("actions") and has("advisories") and (has("metadata") or .metadata == null)
-# '   yarn-audit-known-issues-formatted >/dev/null 2>&1; then
- 
-
 
   # if ! jq 'has("actions", "advisories", "metadata")' yarn-audit-known-issues-formatted | grep -q true; then
   #   print_borked_known_issues
@@ -253,7 +239,7 @@ else
     echo "Unsuppressed vulnerabilities found:"
     source prettyPrintAudit.sh new_vulnerabilities
     print_guidance
-    # exit 1
+    exit 1
   else
     echo "Active suppressed vulnerabilities:"
     while IFS= read -r line; do

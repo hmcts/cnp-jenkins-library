@@ -55,4 +55,3 @@ try {
   throw err
 }
 notifyBuildFixed channel: channel
-
