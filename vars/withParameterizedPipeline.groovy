@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.PythonPipelineType
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -22,7 +23,8 @@ def call(type, String product, String component, String environment, String subs
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
-    ruby: new RubyPipelineType(this, product, component)
+    ruby: new RubyPipelineType(this, product, component),
+    python: new PythonPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
