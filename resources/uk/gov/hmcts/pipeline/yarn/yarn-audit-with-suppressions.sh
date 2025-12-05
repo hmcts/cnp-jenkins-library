@@ -239,7 +239,7 @@ else
     echo "Unsuppressed vulnerabilities found:"
     source prettyPrintAudit.sh new_vulnerabilities
     print_guidance
-    # exit 1
+    exit 1
   else
     echo "Active suppressed vulnerabilities:"
     while IFS= read -r line; do
