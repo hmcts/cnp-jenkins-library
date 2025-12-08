@@ -1,16 +1,11 @@
-import uk.gov.hmcts.contino.Builder
-import uk.gov.hmcts.contino.AppPipelineConfig
-import uk.gov.hmcts.contino.PipelineCallbacksRunner
-import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.Environment
 
-
-def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pipelineType, String product, String component, String subscription) {
+def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
 
   withTeamSecrets(config, environment.nonProdName) {
-    Builder builder = pipelineType.builder
+    def builder = pipelineType.builder
 
     stageWithAgent('Checkout', product) {
       checkoutScm(pipelineCallbacksRunner: pcr)
@@ -76,28 +71,77 @@ def call(PipelineCallbacksRunner pcr, AppPipelineConfig config, PipelineType pip
       }
     }
 
+    if (config.e2eTest) {
+      stageWithAgent("End to End test", product) {
+        pcr.callAround('E2eTest') {
+          builder.e2eTest()
+        }
+      }
+    }
+
     if (config.performanceTest) {
-      stageWithAgent("Performance test", product) {
-        warnError('Failure in performanceTest') {
-          pcr.callAround('PerformanceTest') {
-            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-              builder.performanceTest()
-              publishPerformanceReports(
-                product: product,
-                component: component,
-                environment: environment.nonProdName,
-                subscription: subscription
-              )
+
+      //Check if build started by chron job
+      def causes = currentBuild.rawBuild?.getCauses() ?: []
+      def triggeredByTimer = causes.any { cause ->
+        cause.getClass().getSimpleName() == "TimerTriggerCause"
+      }
+
+      boolean doSecondRun = false
+      def stages = ['Performance test', 'Failed Test Rerun']
+      for (int i = 0; i < 2; i++) {
+        stageWithAgent(stages[i], product) {
+          warnError('Failure in performanceTest') {
+            pcr.callAround('PerformanceTest') {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
+                  catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    try {
+                      builder.performanceTest()
+                    }
+                    catch (e) {
+                      doSecondRun = true
+                      throw e
+                    }
+                  }
+                } else {
+                  catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    builder.performanceTest()
+                  }
+                }
+
+                publishPerformanceReports(
+                  product: product,
+                  component: component,
+                  environment: environment.nonProdName,
+                  subscription: subscription
+                )
+              }
             }
           }
         }
+
+        //Rerun failed test if started by chron job
+        if (triggeredByTimer == false)
+          break
+        else if (config.perfRerunOnFail == false)
+          break
+        else if (doSecondRun == false)
+          break
+
       }
+
+      //Alerts wil become active if config.gatlingAlerts is set to true
+      if (config.perfGatlingAlerts == true)
+        performanceCheckIfTestFailed("${config.perfSlackChannel}")
+
     }
 
     if (config.securityScan) {
       stageWithAgent('Security scan', product) {
         warnError('Failure in securityScan') {
           env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+          env.ALERT_FILTERS = config.securityScanAlertFilters
           env.SCAN_TYPE = config.securityScanType
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {

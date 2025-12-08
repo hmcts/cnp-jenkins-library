@@ -1,6 +1,6 @@
 package withNightlyPipeline.onMaster
 
-import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 import withPipeline.BaseCnpPipelineTest
@@ -8,14 +8,14 @@ import withPipeline.BaseCnpPipelineTest
 class withJavaNightlyPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleJavaNightlyPipelineWithHighLevelDataSetup.jenkins"
 
-    withJavaNightlyPipelineOnMasterWithHighLevelDataSetupTests() {
+  withJavaNightlyPipelineOnMasterWithHighLevelDataSetupTests() {
     super("master", jenkinsFile)
   }
 
   @Test
   void NightlyPipelineExecutesExpectedStepsInExpectedOrder() {
-    def mockBuilder = new MockFor(GradleBuilder)
-    mockBuilder.demand.with {
+    def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.with {
       setupToolVersion(1) {}
       build(1) {}
       securityCheck(1) {}
@@ -23,12 +23,13 @@ class withJavaNightlyPipelineOnMasterWithHighLevelDataSetupTests extends BaseCnp
       performanceTest(1) {}
       mutationTest(1){}
       highLevelDataSetup(1){}
+      e2eTest(1) {}
       fullFunctionalTest(1){}
+      asBoolean() { return true } // Add missing asBoolean method expectation
     }
 
-    mockBuilder.use {
+    stubBuilder.use {
         runScript("testResources/$jenkinsFile")
     }
   }
 }
-

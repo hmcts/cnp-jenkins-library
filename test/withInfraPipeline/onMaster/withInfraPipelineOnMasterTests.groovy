@@ -15,4 +15,3 @@ class withInfraPipelineOnMasterTests extends BaseCnpPipelineTest {
     runScript("testResources/$jenkinsFile")
   }
 }
-

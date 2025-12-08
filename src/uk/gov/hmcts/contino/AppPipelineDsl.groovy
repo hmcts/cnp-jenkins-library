@@ -5,10 +5,10 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
 
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
-  final AppPipelineConfig config
+  def final config
   def final steps
 
-  AppPipelineDsl(Object steps, PipelineCallbacksConfig callbacks, AppPipelineConfig config) {
+  AppPipelineDsl(steps, callbacks, config) {
     super(steps, callbacks, config)
     this.config = config
     this.steps = steps
@@ -23,14 +23,20 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dbMigrationVaultName = dbMigrationVaultName
   }
 
-  void enablePerformanceTest(int timeout = 15) {
+  void enablePerformanceTest(int timeout = 15, perfGatlingAlerts=false, perfRerunOnFail=false) {
     config.perfTestTimeout = timeout
     config.performanceTest = true
+    config.perfGatlingAlerts = perfGatlingAlerts
+    config.perfRerunOnFail = perfRerunOnFail
   }
 
   void enableApiGatewayTest(int timeout = 15) {
     config.apiGatewayTestTimeout = timeout
     config.apiGatewayTest = true
+  }
+
+  void enableE2eTest(){
+    config.e2eTest = true
   }
 
   void enableCrossBrowserTest(int timeout = 120) {
@@ -45,11 +51,15 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableSecurityScan(Map<String, Object> params = [:]) {
     def configuration = [
+        cookieIgnoreList: "",
+        alertFilters: "",
         urlExclusions: "",
         timeout: 120,
         scanType: "auto"
     ] << params
 
+    config.securityScanCookieIgnoreList = configuration.cookieIgnoreList
+    config.securityScanAlertFilters = configuration.alertFilters
     config.securityScanUrlExclusions = configuration.urlExclusions
     config.securityScanType = configuration.scanType
     config.securityScanTimeout = configuration.timeout
@@ -112,10 +122,12 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.pactConsumerCanIDeployEnabled = roles.contains(PactRoles.CONSUMER_DEPLOY_CHECK)
   }
 
-  void enableHighLevelDataSetup(String highLevelDataSetupKeyvaultName = "") {
+  void enableHighLevelDataSetup(String highLevelDataSetupKeyvaultName = "", boolean skipHighLevelDataSetupProd = false) {
     config.highLevelDataSetup = true
     config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
+    config.skipHighLevelDataSetupProd = skipHighLevelDataSetupProd
   }
+
 
   void enableFortifyScan(String fortifyVaultName = "") {
     config.fortifyScan = true

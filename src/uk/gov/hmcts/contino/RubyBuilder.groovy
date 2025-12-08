@@ -17,7 +17,8 @@ class RubyBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    bundle("exec rake fortifyScan")
+    bundle("exec rake fortify_scan")
+
   }
 
   def test() {
@@ -43,6 +44,10 @@ class RubyBuilder extends AbstractBuilder {
 
   def functionalTest() {
     bundle("exec rake test:functional")
+  }
+
+  def e2eTest() {
+    bundle("exec rake test:e2e")
   }
 
   def apiGatewayTest() {

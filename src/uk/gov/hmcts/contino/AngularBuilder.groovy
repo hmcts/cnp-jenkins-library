@@ -46,6 +46,11 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
+  def e2eTest() {
+    builder.e2eTest()
+  }
+
+  @Override
   def performanceTest() {
     builder.performanceTest()
   }
@@ -67,6 +72,10 @@ class AngularBuilder extends AbstractBuilder {
 
   @Override
   def crossBrowserTest() {
+    builder.crossBrowserTest()
+  }
+
+  def crossBrowserTest(String browser) {
     builder.crossBrowserTest()
   }
 

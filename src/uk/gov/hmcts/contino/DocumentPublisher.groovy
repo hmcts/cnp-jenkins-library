@@ -7,11 +7,13 @@ class DocumentPublisher implements Serializable {
   def steps
   def params
   def env
+  CosmosDbTargetResolver cosmosDbTargetResolver
 
-  DocumentPublisher(steps, params) {
+  DocumentPublisher(steps, params, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
     this.steps = steps
     this.params = params
     this.env = steps.env
+    this.cosmosDbTargetResolver = cosmosDbTargetResolver ?: new CosmosDbTargetResolver(steps)
   }
 
   void publishAll(String containerName, String baseDir, String pattern) {
@@ -28,8 +30,9 @@ class DocumentPublisher implements Serializable {
   }
 
   private def publish(containerName, documents) {
+    def database = cosmosDbTargetResolver.databaseName()
     documents.each {
-      steps.azureCosmosDBCreateDocument(container: containerName, credentialsId: 'cosmos-connection', database: 'jenkins', document: it)
+      steps.azureCosmosDBCreateDocument(container: containerName, credentialsId: 'cosmos-connection', database: database, document: it)
     }
   }
 

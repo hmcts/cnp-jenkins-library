@@ -2,8 +2,9 @@
 
 @Library("Infrastructure")
 
+
 def product = "product"
 
-withInfraPipeline(product) {
+withInfraPipeline(product,"test") {
 
 }

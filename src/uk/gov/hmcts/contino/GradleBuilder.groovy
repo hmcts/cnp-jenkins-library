@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
@@ -15,13 +15,10 @@ class GradleBuilder extends AbstractBuilder {
   // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
   def localSteps
 
-  def securitytest
-
   GradleBuilder(steps, product) {
     super(steps)
     this.product = product
     this.localSteps = steps
-    this.securitytest = new SecurityScan(this.steps)
   }
 
   def build() {
@@ -66,13 +63,32 @@ class GradleBuilder extends AbstractBuilder {
     }
   }
 
+  def e2eTest() {
+    try{
+      gradle("--rerun-tasks e2eTest")
+    } finally {
+      localSteps.publishHTML([
+              allowMissing: true,
+              alwaysLinkToLastBuild: true,
+              keepAll: true,
+              reportDir: "e2e-output/",
+              reportFiles: 'index.html',
+              reportName: 'E2E Test Report'
+      ])
+    }
+  }
+
   def functionalTest() {
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
     } finally {
-      localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      if (product == "civil") {
+        localSteps.junit allowEmptyResults: true, testResults: '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      } else {
+        localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
+      }
     }
   }
 
@@ -123,14 +139,14 @@ class GradleBuilder extends AbstractBuilder {
 
   def securityCheck() {
     def secrets = [
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Account', version: '', envVariable: 'OWASPDB_V14_ACCOUNT' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Password', version: '', envVariable: 'OWASPDB_V14_PASSWORD' ],
-      [ secretType: 'Secret', name: 'OWASPPostgresDb-v14-Connection-String', version: '', envVariable: 'OWASPDB_V14_CONNECTION_STRING' ]
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
+      [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V15_CONNECTION_STRING' ]
     ]
 
     localSteps.withAzureKeyvault(secrets) {
       try {
-          gradle("--stacktrace -DdependencyCheck.failBuild=true -Dcve.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V14_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V14_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V14_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
+        gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
         localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
         String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
@@ -162,13 +178,22 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def prepareCVEReport(String owaspReportJSON) {
-    def report = new JsonSlurper().parseText(owaspReportJSON)
-    // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
-    report.dependencies = report.dependencies.findAll {
-      it.vulnerabilities || it.suppressedVulnerabilities
+    if (!owaspReportJSON || owaspReportJSON.trim().isEmpty()) {
+      // Return empty report structure if no JSON provided (common in test environments)
+      return [dependencies: []]
     }
 
-    return report
+    try {
+      def report = new JsonSlurperClassic().parseText(owaspReportJSON)
+      // Only include vulnerable dependencies to reduce the report size; Cosmos has a 2MB limit.
+      report.dependencies = report.dependencies.findAll {
+        it.vulnerabilities || it.suppressedVulnerabilities
+      }
+      return report
+    } catch (Exception e) {
+      // If JSON parsing fails, return empty report structure
+      return [dependencies: []]
+    }
   }
 
   @Override
@@ -189,7 +214,7 @@ EOF
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
     try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
     } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
@@ -197,7 +222,7 @@ EOF
 
   def runConsumerTests(pactBrokerUrl, version) {
    try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
    } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }

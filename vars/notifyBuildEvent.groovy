@@ -1,21 +1,10 @@
 import uk.gov.hmcts.contino.slack.SlackChannelRetriever
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
-/**
- * Send build notification
- * <p>
- * When build happens on master branch then specified team channel is notified. In other cases change author is notified instead.
- * <p>
- * When change author does not have Slack account or uses other Slack username than one registered in LDAP then notification won't be sent.
- *
- * @param args arguments:
- *  <ul>
- *      <li>channel - (string; required) name of the slack channel for team notifications</li>
- *      <li>color   - (string) color of the notification. Valid options are good, danger or warning.</li>
- *      <li>message - (string) message to send. Default is Build has FAILED.</li>
- *  </ul>
- */
-def call(Map args = [:]) {
+def call(Map args) {
+  def slackMessage = new SlackBlockMessage(this)
+
   def config = [
     color: 'danger',
     message: 'has FAILED'
@@ -34,15 +23,22 @@ def call(Map args = [:]) {
       message = "@channel , this is sent here as ${changeAuthor} github user doesn't have a slack mapping in https://github.com/hmcts/github-slack-user-mappings \n\n ".concat(message)
       channel = args.channel
     }
+    if (channel == "@iamabotuser") {
+       echo "Skipping notification on PRs from bot user"
+       return
+     }
   }
 
   try {
+        // Create block message and add our built message to it as a new section
+    slackMessage.addSection(message)
+    slackMessage.setDangerColor()
+
     slackSend(
       failOnError: true,
       channel: channel,
-      color: config.color,
-      message: message )
-  } 
+      attachments: slackMessage.asObject())
+  }
   catch (Exception ex) {
     if(channel!='@iamabotuser') {
       throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
@@ -54,5 +50,3 @@ private static validate(Map args) {
   if (args.channel == null) throw new Exception('Slack channel is required')
   if (!(args.color =~ /^(good|danger|warning)$/)) throw new Exception('A color is required (good|danger|warning)')
 }
-
-

@@ -11,7 +11,7 @@ def call(params) {
 
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
-  Builder builder = params.builder
+  def builder = params.builder
 
   def subscription = params.subscription
   def product = params.product
@@ -37,6 +37,7 @@ def call(params) {
     builder.setupToolVersion()
   }
   boolean dockerFileExists = fileExists('Dockerfile')
+  warnAboutJitpackRemoval(product: product, component: component)
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -55,10 +56,10 @@ def call(params) {
       }
     }
 
-    LinkedHashMap<String, Object> branches = [failFast: false]
+    def branches = [failFast: false]
     branches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
-        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'test') {
+        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
           builder.test()
         }
       }
@@ -194,7 +195,7 @@ def call(params) {
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
           env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
           env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 

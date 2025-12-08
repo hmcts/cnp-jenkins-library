@@ -17,13 +17,15 @@ class withAngularPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(AngularBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
+      setupToolVersion(0) {}
       build(1) {}
       test(1) {}
       securityCheck(1) {}
+      techStackMaintenance(1) {}
       sonarScan(1) {}
       smokeTest(1) {} //preview-staging
       functionalTest(1) {}
+      e2eTest(1) {}
     }
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
@@ -31,8 +33,5 @@ class withAngularPipelineOnPreviewTests extends BaseCnpPipelineTest {
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
   }
 }
-

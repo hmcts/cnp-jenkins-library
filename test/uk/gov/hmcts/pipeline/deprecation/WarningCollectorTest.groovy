@@ -4,7 +4,9 @@ import spock.lang.Specification
 
 import java.time.LocalDate
 
+import static java.time.format.DateTimeFormatter.ofPattern
 import static org.assertj.core.api.Assertions.assertThat
+import uk.gov.hmcts.pipeline.SlackBlockMessage
 
 class WarningCollectorTest extends Specification {
 
@@ -12,8 +14,8 @@ class WarningCollectorTest extends Specification {
   LocalDate now = LocalDate.now()
   LocalDate nextWeek = now.plusWeeks(1)
 
-  String nextWeekFormattedDate = nextWeek.format("dd/MM/yyyy")
-  String nextDayFormattedDate = nextDay.format("dd/MM/yyyy")
+  String nextWeekFormattedDate = nextWeek.format(ofPattern("dd/MM/yyyy"))
+  String nextDayFormattedDate = nextDay.format(ofPattern("dd/MM/yyyy"))
 
   void setup() {
 
@@ -41,7 +43,7 @@ class WarningCollectorTest extends Specification {
 
   def "getMessageByDays() with same day should return today"() {
 
-    String formattedDate = now.format("dd/MM/yyyy")
+    String formattedDate = now.format(ofPattern("dd/MM/yyyy"))
 
     when:
     String message = WarningCollector.getMessageByDays(now)
@@ -74,12 +76,15 @@ class WarningCollectorTest extends Specification {
     WarningCollector.pipelineWarnings.clear()
     WarningCollector.addPipelineWarning("test_key","Test deprecation.", nextDay )
     WarningCollector.addPipelineWarning("test_key_2","Another test deprecation.", nextWeek )
-    String message = WarningCollector.getSlackWarningMessage()
+    SlackBlockMessage message = WarningCollector.getSlackWarningMessage()
 
     String expectedMessage = "Test deprecation. This configuration will stop working by ${nextDayFormattedDate} ( tomorrow )\n\n" +
-      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )\n\n"
+      "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )"
+    // Collect all messages from SlackBlockMessage object for testing
+    String actualMessage = message.blocks.collect { it.text.text }.join("\n\n")
+
     then:
-    assertThat(message).isEqualTo(expectedMessage)
+    assertThat(actualMessage).isEqualTo(expectedMessage)
   }
 
 }

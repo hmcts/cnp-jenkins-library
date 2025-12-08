@@ -1,23 +1,26 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
-import groovy.json.JsonSlurper
-
+import uk.gov.hmcts.contino.Docker
+import groovy.json.JsonSlurperClassic
 
 class Helm {
 
-  public static final String HELM_RESOURCES_DIR = "charts"
+  public static final String HELM_RESOURCES_DIR = 'charts'
   def steps
   def acr
-  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true)}
+  def docker
+  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true) }
 
   def subscription
   def subscriptionId
   def resourceGroup
   def registryName
+  def dockerHubUsername
+  def dockerHubPassword
   String chartLocation
   def chartName
-  def notFoundMessage = "Not found"
+  def notFoundMessage = 'Not found'
   String registrySubscription
   def namespace
 
@@ -28,6 +31,9 @@ class Helm {
     this.resourceGroup = this.steps.env.AKS_RESOURCE_GROUP
     this.registryName = this.steps.env.REGISTRY_NAME
     this.registrySubscription = this.steps.env.REGISTRY_SUBSCRIPTION
+    this.docker = new Docker(this.steps)
+    this.dockerHubUsername = this.steps.env.DOCKER_HUB_USERNAME
+    this.dockerHubPassword = this.steps.env.DOCKER_HUB_PASSWORD
     this.acr = new Acr(this.steps, subscription, registryName, resourceGroup, registrySubscription)
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
@@ -35,9 +41,10 @@ class Helm {
   }
 
   def setup() {
+    authenticateAcr()
     configureAcr()
+    authenticateDockerHub()
     removeRepo()
-    addRepo()
   }
 
   def configureAcr() {
@@ -45,37 +52,44 @@ class Helm {
   }
 
   def removeRepo() {
-    this.steps.echo "Clear out helm repo before re-adding"
-    this.steps.sh(label: "helm repo rm ${registryName}", script: "helm repo rm ${registryName} || echo 'Helm repo may not exist on disk, skipping remove'")
+    this.steps.echo 'Clear out helm repo before re-adding'
+    this.steps.sh(label: "helm repo rm ${registryName}", script: 'helm repo rm $REGISTRY_NAME || echo "Helm repo may not exist on disk, skipping remove"', env: [REGISTRY_NAME: registryName])
   }
 
-  def addRepo() {
-    this.acr.az "acr helm repo add --subscription ${registrySubscription} --name ${registryName}"
+  def authenticateAcr() {
+    this.acr.az "acr login --name ${registryName}"
+  }
+
+  def authenticateDockerHub() {
+    this.steps.echo 'Log into Docker Hub'
+    this.docker.loginDockerHub("${dockerHubUsername}", "${dockerHubPassword}")
   }
 
   def publishIfNotExists(List<String> values) {
     configureAcr()
     removeRepo()
-    addRepo()
+    authenticateAcr()
     dependencyUpdate()
     lint(values)
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
+    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
     def resultOfSearch
     try {
-      resultOfSearch = this.acr.az "acr helm show --subscription ${registrySubscription} --name ${registryName} ${this.chartName} --version ${version} --query version -o tsv"
-    } catch(ignored) {
+      this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+      resultOfSearch = version
+    } catch (ignored) {
       resultOfSearch = notFoundMessage
     }
+
     this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
       this.steps.echo "Publishing new version of ${this.chartName}"
 
-      this.steps.sh "helm package ${this.chartLocation}"
-      this.acr.az "acr helm push --subscription ${registrySubscription} --name ${registryName} ${this.chartName}-${version}.tgz"
-
+      this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
+      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/")
+      this.steps.sh(script: "rm ${this.chartLocation}/${this.chartName}-${version}.tgz")
       this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
     } else {
       this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
@@ -83,7 +97,7 @@ class Helm {
   }
 
   def publishToGitIfNotExists(List<String> values) {
-    addRepo()
+    authenticateAcr()
     lint(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
@@ -92,54 +106,87 @@ class Helm {
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
 
     this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
-      this.steps.sh (
+      this.steps.sh(
         """
         chmod +x push-helm-charts-to-git.sh
         ./push-helm-charts-to-git.sh ${this.chartLocation} ${this.chartName} $version
         """
       )
 
-    this.steps.sh 'rm push-helm-charts-to-git.sh'
+      this.steps.sh 'rm push-helm-charts-to-git.sh'
     }
   }
 
-
   def lint(List<String> values) {
-    this.execute("lint", this.chartLocation, values, null)
+    this.execute('lint', this.chartLocation, values, null)
   }
 
   def installOrUpgrade(String imageTag, List<String> values, List<String> options) {
     if (!values) {
-      throw new RuntimeException("Helm charts need at least a values file (none given).")
+      throw new RuntimeException('Helm charts need at least a values file (none given).')
     }
+
     def releaseName = "${this.chartName}-${imageTag}"
     dependencyUpdate()
     lint(values)
 
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
-    this.steps.sh ("chmod +x aks-debug-info.sh")
-    def optionsStr = (options + ["--install", "--wait", "--timeout 500s"]).join(' ')
+    this.steps.sh('chmod +x aks-debug-info.sh')
+    
+    boolean onPR = new ProjectBranch(this.steps.env.BRANCH_NAME).isPR()
+    def optionsStr = (options + (onPR ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
-    steps.sh(label: "helm upgrade", script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace} ")
+
+    if (onPR) {
+      this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
+      this.steps.sh(label: 'wait for install', script:
+        """
+        echo 'Waiting 30s for initial pod creation...'
+        sleep 30
+
+        POD_COUNT=\$(kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' --no-headers 2>/dev/null | wc -l)
+
+        if [ "\$POD_COUNT" -eq 0 ]; then
+          echo "ℹ️  No pods found matching selector - this chart may only contain jobs/cronjobs"
+          exit 0
+        fi
+
+        if kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -o json | \
+          jq -e '.items[].status.containerStatuses[]? | select(.state.waiting.reason |
+          test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError"))' > /dev/null 2>&1; then
+           echo "❌ Critical error detected - failing fast"
+           ./aks-debug-info.sh ${releaseName} ${this.namespace}
+           exit 1
+        fi
+
+        echo 'Waiting for pods to be scheduled and ready...'
+        kubectl wait --for=condition=ready pod \\
+          -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
+          -n ${this.namespace} \\
+          --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
+        """)
+    } else {
+      this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace}")
+    }
     this.steps.sh 'rm aks-debug-info.sh'
   }
 
   def dependencyUpdate() {
-    this.execute("dependency update", this.chartLocation)
+    this.execute('dependency update', this.chartLocation)
   }
 
   def delete(String imageTag, String namespace) {
-    this.execute("uninstall", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}"])
+    this.execute('uninstall', "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}"])
   }
 
   def exists(String imageTag, String namespace) {
-    def deployments = this.execute("list", "", null, ["--all", "-q", "--namespace ${namespace}"])
+    def deployments = this.execute('list', '', null, ['--all', '-q', "--namespace ${namespace}"])
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
   }
 
   def history(String imageTag, String namespace) {
-    this.execute("history", "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", "-o json"])
+    this.execute('history', "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}", '-o json'])
   }
 
   def hasAnyFailedToDeploy(String imageTag, String namespace) {
@@ -149,9 +196,19 @@ class Helm {
     }
     def releases = this.history(imageTag, namespace)
     this.steps.echo releases
-    return !releases || new JsonSlurper().parseText(releases).any { it.status?.toLowerCase() == "failed" ||
-                                                                    it.status?.toLowerCase() == "pending-upgrade" ||
-                                                                    it.status?.toLowerCase() == "pending-install" }
+
+    if (!releases) {
+      return false
+    }
+
+    try {
+      return new JsonSlurperClassic().parseText(releases).any { it.status?.toLowerCase() == 'failed' ||
+                                                               it.status?.toLowerCase() == 'pending-upgrade' ||
+                                                               it.status?.toLowerCase() == 'pending-install' }
+    } catch (Exception e) {
+      this.steps.echo "Failed to parse helm history JSON: ${e.getMessage()}"
+      return false
+    }
   }
 
   private Object execute(String command, String name) {
@@ -160,7 +217,7 @@ class Helm {
 
   private Object execute(String command, String name, List<String> values, List<String> options) {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
-    def valuesStr = (values == null ? "" : "${' -f ' + values.join(' -f ')}")
+    def valuesStr = (values == null ? '' : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
   }
 

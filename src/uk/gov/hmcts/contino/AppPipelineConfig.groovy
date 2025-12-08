@@ -8,6 +8,8 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String dbMigrationVaultName
   String securityScanUrlExclusions
   String securityScanType
+  String securityScanAlertFilters
+  String securityScanCookieIgnoreList
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
@@ -15,6 +17,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   List<String> parallelCrossBrowsers = []
   boolean mutationTest = false
   boolean fullFunctionalTest = false
+  boolean e2eTest = false
   boolean securityScan = false
   boolean serviceApp = true
   boolean aksStagingDeployment = false
@@ -26,11 +29,12 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
   boolean fortifyScan = false
-  boolean clearHelmReleaseOnFailure = true 
+  boolean clearHelmReleaseOnFailure = true
   String fortifyVaultName
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
+  boolean skipHighLevelDataSetupProd = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15
@@ -38,6 +42,11 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int mutationTestTimeout
   int fullFunctionalTestTimeout = 30
   int securityScanTimeout = 120
+
+  //For Performance Test Pipelines
+  boolean perfGatlingAlerts = false
+  boolean perfRerunOnFail = false
+  String perfSlackChannel = "#performance-alerts"
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)

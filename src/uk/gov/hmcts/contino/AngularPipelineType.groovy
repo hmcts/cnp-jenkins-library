@@ -1,11 +1,11 @@
 package uk.gov.hmcts.contino
 
-public class AngularPipelineType implements PipelineType, Serializable {
+class AngularPipelineType implements PipelineType, Serializable {
   def steps
   def product
   def app
 
-  Builder builder
+  AngularBuilder builder
 
   AngularPipelineType(steps, product, app) {
     this.steps = steps

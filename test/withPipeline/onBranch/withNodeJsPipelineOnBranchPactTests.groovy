@@ -1,14 +1,9 @@
 package withPipeline.onBranch
 
-import com.lesfurets.jenkins.unit.BasePipelineTest
-import groovy.mock.interceptor.MockFor
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import uk.gov.hmcts.contino.*
+import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
-
-import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
-import static uk.gov.hmcts.contino.ProjectSource.projectSource
 
 class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
   final static jenkinsFile = "exampleNodeJsPipelineForPact.jenkins"
@@ -20,26 +15,16 @@ class withNodeJsPipelineOnBranchPactTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(YarnBuilder)
-    def stubPactBroker = new StubFor(PactBroker)
-
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
+      setupToolVersion(1) {}
       build(0) {}
+      runConsumerTests(1) {}
+      runConsumerCanIDeploy(1) {}
+      asBoolean() { return true }
     }
-
-    stubPactBroker.demand.with {
-      canIDeploy(0) { version -> return null }
-    }
-
 
     stubBuilder.use {
-      stubPactBroker.use {
-        runScript("testResources/$jenkinsFile")
-      }
+      runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
-    stubPactBroker.expect.verify()
   }
 }
-

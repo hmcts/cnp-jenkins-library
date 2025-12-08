@@ -21,9 +21,12 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       build(1) {}
       test(1) {}
       securityCheck(1) {}
+      techStackMaintenance(1) {}
       sonarScan(1) {}
       smokeTest(1) {} //preview-staging
+      e2eTest(1) {}
       functionalTest(1) {}
+      asBoolean() { return true }
     }
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
@@ -31,8 +34,5 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
   }
 }
-

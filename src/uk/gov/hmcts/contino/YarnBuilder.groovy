@@ -1,6 +1,6 @@
 package uk.gov.hmcts.contino
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
@@ -24,7 +24,7 @@ class YarnBuilder extends AbstractBuilder {
   YarnBuilder(steps) {
     super(steps)
     this.localSteps = steps
-    this.securitytest = new SecurityScan(this.steps)
+    this.securitytest = new SecurityScan(steps)
   }
 
   def build() {
@@ -68,6 +68,15 @@ class YarnBuilder extends AbstractBuilder {
     } finally {
       steps.junit allowEmptyResults: true, testResults: 'functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
+    }
+  }
+
+  def e2eTest() {
+    try {
+      yarn("test:e2e")
+    } finally {
+      steps.junit allowEmptyResults: true, testResults: 'e2e-output/**/*result.xml'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'e2e-output/**'
     }
   }
 
@@ -136,16 +145,20 @@ class YarnBuilder extends AbstractBuilder {
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
+      steps.writeFile(file: 'format-v4-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.cjs'))
 
-      steps.sh """
-         export PATH=\$HOME/.local/bin:\$PATH
-        chmod +x yarn-audit-with-suppressions.sh
-        ./yarn-audit-with-suppressions.sh
-      """
+      this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+        steps.sh """
+           export PATH=\$HOME/.local/bin:\$PATH
+           export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
+           chmod +x yarn-audit-with-suppressions.sh
+          ./yarn-audit-with-suppressions.sh
+        """
+      }
     } finally {
       steps.sh """
-        cat yarn-audit-result | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-        cat yarn-audit-result | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+        cat yarn-audit-result-formatted | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
+        cat yarn-audit-result-formatted | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
         cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
       """
       String issues = steps.readFile('yarn-audit-issues-result')
@@ -177,9 +190,19 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def prepareCVEReport(String issues, String knownIssues) {
-    def jsonSlurper = new JsonSlurper()
+    def jsonSlurper = new JsonSlurperClassic()
 
-    List<Object> issuesParsed = issues.split('\n').collect { jsonSlurper.parseText(it) }
+    List<Object> issuesParsed = []
+    if (issues) {
+      issuesParsed = issues.split('\n').findAll { it && !it.trim().isEmpty() }.collect {
+        try {
+          return jsonSlurper.parseText(it)
+        } catch (Exception e) {
+          // Skip malformed JSON lines in test environments
+          return null
+        }
+      }.findAll { it != null }
+    }
 
     Object summary = issuesParsed.find { it.type == 'auditSummary' }
     issuesParsed.removeIf { it.type == 'auditSummary' }
@@ -190,14 +213,19 @@ class YarnBuilder extends AbstractBuilder {
 
     List<Object> knownIssuesParsed = []
     if (knownIssues) {
-      knownIssuesParsed = knownIssues.split('\n').collect {
-        mapYarnAuditToOurReport(jsonSlurper.parseText(it))
-      }
+      knownIssuesParsed = knownIssues.split('\n').findAll { it && !it.trim().isEmpty() }.collect {
+        try {
+          return mapYarnAuditToOurReport(jsonSlurper.parseText(it))
+        } catch (Exception e) {
+          // Skip malformed JSON lines in test environments
+          return null
+        }
+      }.findAll { it != null }
     }
 
     def result = [
       vulnerabilities: issuesParsed,
-      summary        : summary.data
+      summary        : summary?.data ?: [:]
     ]
 
     if (!knownIssuesParsed.isEmpty()) {
@@ -266,37 +294,43 @@ EOF
   }
 
   private runYarn(String task, String prepend = "") {
-    if (prepend && !prepend.endsWith(' ')) {
-      prepend += ' '
-    }
+      if (prepend && !prepend.endsWith(' ')) {
+        prepend += ' '
+      }
 
-    if (steps.fileExists(NVMRC)) {
-      steps.sh """
-        set +ex
-        export NVM_DIR='/home/jenkinsssh/.nvm' # TODO get home from variable
-        . /opt/nvm/nvm.sh || true
-        nvm install
-        set -ex
+      if (steps.fileExists(NVMRC)) {
+        def status = steps.sh(script: """
+          set +ex
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh || true
+          nvm install
+          export PATH=\$HOME/.local/bin:\$PATH
 
-        export PATH=\$HOME/.local/bin:\$PATH
+          if ${prepend.toBoolean()}; then
+            ${prepend}yarn ${task}
+          else
+            yarn ${task}
+          fi
+        """, returnStatus: true)
 
-        if ${prepend.toBoolean()}; then
-          ${prepend}yarn ${task}
-        else
-          yarn ${task}
-        fi
-      """
-    } else {
-      steps.sh("""
-        export PATH=\$HOME/.local/bin:\$PATH
+        if (status != 0 && !task.contains('install')) {
+          steps.error("Yarn task '${task}' failed with status ${status}")
+        }
+      } else {
+        def status = steps.sh(script: """
+          export PATH=\$HOME/.local/bin:\$PATH
 
-        if ${prepend.toBoolean()}; then
-          ${prepend}yarn ${task}
-        else
-          yarn ${task}
-        fi
-      """)
-    }
+          if ${prepend.toBoolean()}; then
+            ${prepend}yarn ${task}
+          else
+            yarn ${task}
+          fi
+        """, returnStatus: true)
+
+        if (status != 0 && !task.contains('install')) {
+          steps.error("Yarn task '${task}' failed with status ${status}")
+        }
+      }
   }
 
   private runYarnQuiet(String task, String prepend = "") {
@@ -320,10 +354,10 @@ EOF
     def date;
     switch (steps.env.PRODUCT) {
       case "xui":
-        date = LocalDate.of(2023, 12, 21)
+      case "em":
+        date = LocalDate.of(2024, 01, 15)
         break
       case "ccd":
-      case "em":
         date = LocalDate.of(2023, 12, 21)
         break
       case "bar":
@@ -393,6 +427,17 @@ EOF
   @Override
   def setupToolVersion() {
     super.setupToolVersion()
+    // Java required on nodejs pipeline, if data import only available as java job, but project itself is nodejs
+    def statusCodeJava21 = steps.sh(script: """
+      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(21)" {} + > /dev/null
+      """, returnStatus: true)
+    if (statusCodeJava21 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
+    localSteps.sh "java -version"
     nagAboutOldNodeJSVersions()
   }
 

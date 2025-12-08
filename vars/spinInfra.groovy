@@ -68,6 +68,12 @@ def call(Map<String, ?> params) {
         if (Environment.toTagName(config.environment) != "production") {
           tags = tags + [autoShutdown: "true"]
         }
+
+        if (Environment.toTagName(config.environment) == "sandbox" &&
+            (config.product != "plum" && config.product != "toffee")) {
+            tags = tags + [startupMode: "onDemand"]
+        }
+
         if (changeUrl && changeUrl != "null" && changeUrl != "") {
           tags = tags + [changeUrl: changeUrl]
         }
@@ -96,6 +102,10 @@ def call(Map<String, ?> params) {
         }
 
         sh "terraform --version"
+        
+        onPR {
+          checkTerraformFormat()
+        }
 
         sh """
           terraform init -reconfigure \
@@ -105,9 +115,9 @@ def call(Map<String, ?> params) {
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
         """
 
-        warnAboutOldTfAzureProvider()
+        warnAboutOldTfAzureProvider(config.environment, config.product, builtFrom)
         warnAboutDeprecatedPostgres()
-
+        
         env.TF_VAR_subscription = config.subscription
         env.TF_VAR_component = config.component
 
@@ -116,14 +126,16 @@ def call(Map<String, ?> params) {
         if (aksSubscription != null) {
           env.TF_VAR_aks_subscription_id = aksSubscription.id
         }
-
+        
         sh 'env|grep "TF_VAR\\|AZURE\\|ARM\\|STORE" | grep -v ARM_ACCESS_KEY'
 
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
 
+
         onPR {
+          
           String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
           def credentialsId = env.GIT_CREDENTIALS_ID
           withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'APP_ID')]) {
@@ -131,9 +143,11 @@ def call(Map<String, ?> params) {
               tfcmt --owner hmcts \
                 --repo ${repositoryShortUrl} \
                 --pr ${env.CHANGE_ID} \
+                --var target:${config.environment} \
                 plan -patch -- \
                 terraform show tfplan
             """
+
           }
         }
       }

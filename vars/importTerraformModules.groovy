@@ -2,12 +2,12 @@
 
 // Section to import Azure resources deployed using azurerm_template_deployment in to Terraform native resources
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 //can be run only inside withSubscription
 def call(String subscription, String environment, String product, tags) {
 
-    def jsonSlurper = new JsonSlurper()
+    def jsonSlurper = new JsonSlurperClassic()
 
     String stateJsonString =  sh(script: "terraform show -json", returnStdout: true).trim()
     def stateJsonObj = jsonSlurper.parseText(stateJsonString)
@@ -17,19 +17,19 @@ def call(String subscription, String environment, String product, tags) {
 
         // Get All resources to be imported
         def templateResources = child_modules.findAll { it.resources &&
-                                                        it.resources[0].type == 'azurerm_template_deployment' && 
-                                                        (it.resources[0].name == "namespace" || 
-                                                        it.resources[0].name == "topic" || 
-                                                        it.resources[0].name == "queue" || 
+                                                        it.resources[0].type == 'azurerm_template_deployment' &&
+                                                        (it.resources[0].name == "namespace" ||
+                                                        it.resources[0].name == "topic" ||
+                                                        it.resources[0].name == "queue" ||
                                                         it.resources[0].name == "subscription") }
 
         if (templateResources.size() > 0) {
             stageWithAgent("Import Terraform Modules", product) {
                 echo "Importing Terraform modules"
-                
+
                 Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
-                def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" + 
+                def tfImport = "terraform import -var 'common_tags=${tags}' -var 'env=${environment}' -var 'product=${product}'" +
                                 (fileExists("${environment}.tfvars") ? " -var-file=${environment}.tfvars" : "")
 
                 // Backup state file
@@ -44,13 +44,13 @@ def call(String subscription, String environment, String product, tags) {
                 for (templateResource in templateResources.resources) {
                     for (resource in templateResource) {
                         if (resource.mode == "managed") {
-                            
+
                             // Service Bus Namespace
                             if (resource.name == "namespace") {
                                 echo "Importing Service Bus Namespace - ${resource.values.name}"
 
                                 def address = resource.address.minus(".azurerm_template_deployment.namespace")
-                                
+
                                 if (importModules.importServiceBusNamespaceModule(resource.values.name, resource.values.resource_group_name, address)) {
                                     echo "Import of Service Bus Namespace Module - ${resource.values.name} is successful."
                                 } else {
@@ -64,7 +64,7 @@ def call(String subscription, String environment, String product, tags) {
                                 echo "Importing Service Bus Queue - ${resource.values.name}"
 
                                 def address = resource.address.minus(".azurerm_template_deployment.queue")
-                                
+
                                 if (importModules.importServiceBusQueueModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
                                     echo "Import of Service Bus Queue Module - ${resource.values.name} is successful."
                                 } else {
@@ -78,7 +78,7 @@ def call(String subscription, String environment, String product, tags) {
                                 echo "Importing Service Bus Topic - ${resource.values.name}"
 
                                 def address = resource.address.minus(".azurerm_template_deployment.topic")
-                                
+
                                 if (importModules.importServiceBusTopicModule(resource.values.name, resource.values.parameters.serviceBusNamespaceName, resource.values.resource_group_name, address)) {
                                     echo "Import of Service Bus Topic Module - ${resource.values.name} is successful."
                                 } else {

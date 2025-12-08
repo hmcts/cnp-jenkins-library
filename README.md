@@ -67,6 +67,16 @@ Branch | Environment
 `perftest` | `perftest`
 PR branch| `preview`
 
+#### Run Terraform plans against Production
+By default terraform plans against production are executed on Pull Requests that have any terraform changes. Application teams
+can opt out of this by:
+1. For all PRs. Manually adding a topic `not-plan-on-prod` to the repo.
+2. For a specific PR. Manually adding a label `not-plan-on-prod` to that PR.
+
+If the Pull Request is being merged into these branches `demo`, `perftest`, and `ithc`. Terraform Plan will run against the corresponding environment NOT production.
+
+Plans will only run against production on the Production Jenkins. It will NOT work on the Sandbox Jenkins as its “production” environment is sandbox.
+
 #### Running tests through Azure Front Door
 
 If you want tests in AAT / Stg environments to run via Azure Front Door, you must add configuration for your application to front door. Have a look at the [HMCTS Way](https://hmcts.github.io/cloud-native-platform/path-to-live/front-door.html#front-door-configuration).
@@ -218,6 +228,11 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
+If your service is not yet built on prod, you can disable prod HighLevelDataSetup by setting `skipHighLevelDataSetupProd` flag to `true`.
+
+```
+  enableHighLevelDataSetup("", true)
+```
 
 #### Extending the opinionated pipeline
 
@@ -356,9 +371,9 @@ withInfraPipeline(product, component) {
 
 The expiresAfter parameter is used in the **Sandbox environment** to tag resources with an end date after which they are no longer needed. They will then be automatically deleted after this date.
 
-By default the tag value will be `now() + 30 days`.
+By default the tag value will be `now() + 14 days`.
 
-If you want your resources to remain for longer than 30 days, you can override the parameter manually in your Jenkinsfile by specifying the `expiresAfter` parameter as a date in the format shown above.
+If you want your resources to remain for longer than 14 days, you can override the parameter manually in your Jenkinsfile by specifying the `expiresAfter` parameter as a date in the format shown above.
 
 For resources that must remain permanently, specify a value of `"3000-01-01"`
 
@@ -431,6 +446,7 @@ TestName | How to enable | Example
  SecurityScan | Call enableSecurityScan() | [Web Application example](https://github.com/hmcts/sds-toffee-frontend/pull/119) <br>[API example](https://github.com/hmcts/sds-toffee-recipes-service/pull/135)
  Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
  FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
+ E2eTest | Call enableE2eTest() | [E2eTest Example](https://github.com/hmcts/cnp-jenkins-library/blob/4443f834ae16c5eab4e081a8553f0c5829e5ef5b/testResources/exampleAngularNightlyPipeline.jenkins#L14)
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
@@ -466,7 +482,7 @@ Gradle based applications are more commonly used in the backend but if your fron
 
 ```
 withNightlyPipeline(type, product, component) {
-  enableSecurityScan(                
+  enableSecurityScan(
     scanType: "frontend"
   )
 }
@@ -516,6 +532,7 @@ It is possible to trigger optional full functional tests, performance tests, for
 
 - `enable_full_functional_tests`
 - `enable_performance_test`
+- `enable_e2e_test`
 - `enable_fortify_scan`
 - `enable_security_scan`
 
@@ -697,7 +714,7 @@ The Pact broker url and other parameters are passed to these hooks as following:
   - `PACT_BROKER_URL`
   - `PACT_CONSUMER_VERSION`/`PACT_PROVIDER_VERSION`
 - `gradlew`:
-  - `-Ppact.broker.url`
+  - `-Ppactbroker.url`
   - `-Ppact.consumer.version`/`-Ppact.provider.version`
   - `-Ppact.verifier.publishResults=${onMaster}` is passed by default for providers
 
@@ -754,6 +771,12 @@ To consume the new modules, existing resources must be imported to the new modul
 **Example:**
 
 Build Console: https://sandbox-build.platform.hmcts.net/job/HMCTS_Sandbox_RD/job/rd-shared-infrastructure/job/sandbox/170/consoleFull
+
+## Notes on Unit tests
+
+Use JsonSlurperClassic instead of JsonSlurper when parsing loosely structured or untyped JSON to avoid errors, especially ones related to unit tests.
+Add null checks and other checks when working with Jenkins provided objects or properties to make sure that things work across different environments.
+Tests should include appropriate stubbing and mocking for anything that is pipeline specific to improve reliability. This helps prevent issues caused by recent updates to certain plugins.
 
 ## Troubleshooting
 

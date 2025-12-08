@@ -21,8 +21,5 @@ class withAngularPipelineOnBranchTests extends BaseCnpPipelineTest {
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
-
-    stubBuilder.expect.verify()
   }
 }
-

@@ -8,8 +8,7 @@
  */
 def call(String sauceid, Closure body) {
     sauce(sauceid) {
-              sauceconnect(options: '--shared-tunnel --verbose --no-remove-colliding-tunnels --tunnel-identifier reformtunnel', useGeneratedTunnelIdentifier: false,
-                useLatestSauceConnect: true, verboseLogging: true) {
+            sauceconnect(options: '--shared-tunnel --verbose --tunnel-pool --tunnel-name reformtunnel', useGeneratedTunnelIdentifier: false, verboseLogging: true) {
             body()
         }
     }
