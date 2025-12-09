@@ -16,7 +16,8 @@ allprojects {
       /*
       maven {
         url mirrorUrl
-      }*/
+      }
+      */
       mavenCentral()
     }
     dependencies {
