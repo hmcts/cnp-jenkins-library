@@ -9,13 +9,15 @@ allprojects {
     maven {
       url mirrorUrl
     }
-  }*/
+  }
+  */
   buildscript {
     repositories {
       /*
       maven {
         url mirrorUrl
-      }*/
+      }
+      */
       mavenCentral()
     }
     dependencies {
@@ -36,8 +38,7 @@ settingsEvaluated { settings ->
       }
     }
   }
-}
-*/
+}*/
 
 allprojects {
   afterEvaluate { project ->
