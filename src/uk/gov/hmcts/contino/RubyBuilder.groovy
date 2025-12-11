@@ -17,8 +17,11 @@ class RubyBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    bundle("exec rake fortify_scan")
-
+    try {
+      bundle("exec rake fortify_scan")
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/**'
+    }
   }
 
   def test() {

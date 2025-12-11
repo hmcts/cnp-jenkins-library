@@ -27,7 +27,11 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    gradle("fortifyScan")
+    try {
+      gradle("fortifyScan")
+    } finally {
+      localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/**'
+    }
   }
 
   def addInitScript() {

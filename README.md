@@ -436,6 +436,8 @@ withNightlyPipeline(type, product, component) {
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
+You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
+
 All available test stages are detailed in the table below:
 
 TestName | How to enable | Example
@@ -801,4 +803,3 @@ This file will point to the repository which defines, in json syntax, which infr
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
-

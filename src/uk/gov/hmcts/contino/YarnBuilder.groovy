@@ -34,7 +34,11 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    yarn("fortifyScan")
+    try {
+      yarn("fortifyScan")
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/**'
+    }
   }
 
   def test() {

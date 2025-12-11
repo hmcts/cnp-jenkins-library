@@ -157,6 +157,18 @@ def call(params) {
       }
     }
 
+    if (config.fortifyScan && branches["Fortify scan"] == null) {
+      branches["Fortify scan"] = {
+        withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+          warnError('Failure in Fortify Scan') {
+            pcr.callAround('fortify-scan') {
+              builder.fortifyScan()
+            }
+          }
+        }
+      }
+    }
+
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         parallel branches
