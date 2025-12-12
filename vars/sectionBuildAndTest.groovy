@@ -152,6 +152,10 @@ def call(params) {
                 builder.fortifyScan()
               }
             }
+
+            warnError('Failure in Fortify vulnerability report') {
+              fortifyVulnerabilityReport()
+            }
           }
         }
       }
@@ -164,6 +168,10 @@ def call(params) {
             pcr.callAround('fortify-scan') {
               builder.fortifyScan()
             }
+          }
+
+          warnError('Failure in Fortify vulnerability report') {
+            fortifyVulnerabilityReport()
           }
         }
       }

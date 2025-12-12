@@ -35,9 +35,32 @@ class YarnBuilder extends AbstractBuilder {
 
   def fortifyScan() {
     try {
-      yarn("fortifyScan")
+      String runner = (steps.env.FORTIFY_SCAN_RUNNER ?: 'auto').toString().trim().toLowerCase()
+      if (runner == 'library') {
+        steps.echo('Fortify: using library FoD scan runner (FORTIFY_SCAN_RUNNER=library)')
+        steps.fortifyOnDemandScan()
+      } else if (runner == 'repo' || hasFortifyScanScript()) {
+        yarn("fortifyScan")
+      } else {
+        steps.echo("Fortify: no package.json fortifyScan script found; using library FoD scan runner")
+        steps.fortifyOnDemandScan()
+      }
     } finally {
-      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/**'
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+    }
+  }
+
+  private boolean hasFortifyScanScript() {
+    if (!steps.fileExists('package.json')) {
+      return false
+    }
+    try {
+      def pkg = new JsonSlurperClassic().parseText(steps.readFile('package.json') ?: '{}') as Map
+      def scripts = (pkg.scripts instanceof Map) ? (pkg.scripts as Map) : [:]
+      def script = scripts.fortifyScan
+      return script != null && script.toString().trim()
+    } catch (Exception ignored) {
+      return false
     }
   }
 
