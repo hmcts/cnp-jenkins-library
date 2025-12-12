@@ -438,6 +438,12 @@ Dependency checks are mandatory and will be included in all pipelines. The tests
 
 You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
 
+When Fortify completes, the pipeline archives:
+- `Fortify Scan/FortifyScanReport.html` (summary produced by the Fortify client)
+- `Fortify Scan/FortifyVulnerabilities.html` and `Fortify Scan/FortifyVulnerabilities.json` (per-issue details fetched from FoD)
+
+Authentication for the per-issue vulnerability fetch defaults to `FORTIFY_OAUTH_GRANT_TYPE=auto` (tries OAuth `password` then `client_credentials`); if both fail it falls back to treating `FORTIFY_PASSWORD` as a PAT bearer token. You can force a mode by setting `FORTIFY_OAUTH_GRANT_TYPE` to `password`, `client_credentials`, or `pat`.
+
 All available test stages are detailed in the table below:
 
 TestName | How to enable | Example

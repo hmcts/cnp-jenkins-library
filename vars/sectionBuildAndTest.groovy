@@ -152,6 +152,12 @@ def call(params) {
                 builder.fortifyScan()
               }
             }
+
+            if (fileExists('Fortify Scan/FortifyScanReport.html')) {
+              warnError('Failure in Fortify vulnerability report') {
+                fortifyVulnerabilityReport()
+              }
+            }
           }
         }
       }
@@ -163,6 +169,12 @@ def call(params) {
           warnError('Failure in Fortify Scan') {
             pcr.callAround('fortify-scan') {
               builder.fortifyScan()
+            }
+          }
+
+          if (fileExists('Fortify Scan/FortifyScanReport.html')) {
+            warnError('Failure in Fortify vulnerability report') {
+              fortifyVulnerabilityReport()
             }
           }
         }
