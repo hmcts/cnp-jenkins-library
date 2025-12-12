@@ -17,6 +17,12 @@ def call(params) {
           builder.fortifyScan()
         }
       }
+
+      if (fileExists('Fortify Scan/FortifyScanReport.html')) {
+        warnError('Failure in Fortify vulnerability report') {
+          fortifyVulnerabilityReport()
+        }
+      }
     }
   }
 }

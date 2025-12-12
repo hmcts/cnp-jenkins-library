@@ -152,6 +152,30 @@ def call(params) {
                 builder.fortifyScan()
               }
             }
+
+            if (fileExists('Fortify Scan/FortifyScanReport.html')) {
+              warnError('Failure in Fortify vulnerability report') {
+                fortifyVulnerabilityReport()
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (config.fortifyScan && branches["Fortify scan"] == null) {
+      branches["Fortify scan"] = {
+        withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+          warnError('Failure in Fortify Scan') {
+            pcr.callAround('fortify-scan') {
+              builder.fortifyScan()
+            }
+          }
+
+          if (fileExists('Fortify Scan/FortifyScanReport.html')) {
+            warnError('Failure in Fortify vulnerability report') {
+              fortifyVulnerabilityReport()
+            }
           }
         }
       }
