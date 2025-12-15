@@ -56,8 +56,64 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: 'helm repo rm $REGISTRY_NAME || echo "Helm repo may not exist on disk, skipping remove"', env: [REGISTRY_NAME: registryName])
   }
 
+  /**
+   * Detect if Chart.yaml has dependencies from external ACR registries
+   *
+   * @return
+   *   list of external ACR registry names (e.g., ['hmctsprod'])
+   */
+  private List<String> detectCrossRegistryDependencies() {
+    def chartYamlPath = "${this.chartLocation}/Chart.yaml"
+    
+    if (!steps.fileExists(chartYamlPath)) {
+      return []
+    }
+    
+    try {
+      def chartYaml = steps.readFile(chartYamlPath)
+      def externalRegistries = [] as Set
+      
+      steps.echo "Scanning Chart.yaml for OCI-based cross-registry dependencies..."
+      
+      // Look for OCI repository references in dependencies
+      // Example: repository: oci://hmctsprod.azurecr.io/helm
+      // Handles: repository: 'oci://...' or repository: "oci://..." or repository: oci://...
+      def ociPattern = ~/repository:\s*['"]?oci:\/\/([a-zA-Z0-9]+)\.azurecr\.io/
+      def matcher = chartYaml =~ ociPattern
+      matcher.each { match ->
+        def externalRegistry = match[1]
+        steps.echo "  Found OCI registry: ${externalRegistry}"
+        // Only add if it's not the current registry
+        if (externalRegistry != registryName) {
+          externalRegistries.add(externalRegistry)
+        } else {
+          steps.echo "    (skipped - same as current registry)"
+        }
+      }
+      
+      return externalRegistries.toList()
+    } catch (Exception e) {
+      steps.echo "Warning: Could not parse Chart.yaml for cross-registry dependencies: ${e.message}"
+      return []
+    }
+  }
+
   def authenticateAcr() {
+    // Authenticate to current registry
     this.acr.az "acr login --name ${registryName}"
+    
+    // Check if chart has dependencies from other ACR registries
+    def externalRegistries = detectCrossRegistryDependencies()
+    
+    steps.echo "Detected external registries: ${externalRegistries.size() > 0 ? externalRegistries.join(', ') : 'none'}"
+    
+    if (externalRegistries) {
+      steps.echo "Chart has dependencies from: ${externalRegistries.join(', ')}"
+      externalRegistries.each { externalRegistry ->
+        steps.echo "Authenticating to ${externalRegistry} ACR for chart dependencies"
+        this.acr.az "acr login --name ${externalRegistry}"
+      }
+    }
   }
 
   def authenticateDockerHub() {

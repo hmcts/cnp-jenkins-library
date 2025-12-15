@@ -237,10 +237,24 @@ class Acr extends Az {
   /**
    * Assign managed identity to an existing ACR task
    *
+   * This method assigns the ACR's managed identity to a task, enabling cross-registry authentication.
+   * 
+   * IMPORTANT: Jenkins service principal needs 'Managed Identity Operator' role on the ACR's identity
+   * to perform this operation.
+   * 
+   * Example scenario:
+   *   - ACR: hmctssbox (has managed identity 'hmctssbox-identity' assigned to it)
+   *   - Jenkins SP: jenkins-ptl-mi (f4e06bc2-c8a5-4643-8ce7-85023024abb8)
+   *   - Required: jenkins-ptl-mi needs 'Managed Identity Operator' role on hmctssbox-identity
+   *   - Why: To execute 'az acr task identity assign --identities <hmctssbox-identity-resource-id>'
+   * 
+   * Without this role, the assignment will fail and the build will fall back to 'az acr run',
+   * which doesn't support cross-registry pulls (e.g., pulling from hmctsprod while building in hmctssbox).
+   *
    * @param taskName
-   *   the name of the task
+   *   the name of the task (e.g., 'default-acr-build' or 'toffee-api-build')
    * @param identityResourceId
-   *   the resource ID of the managed identity
+   *   the resource ID of the ACR's managed identity (e.g., /subscriptions/.../hmctssbox-identity)
    *
    * @return
    *   true if identity was successfully assigned, false otherwise
