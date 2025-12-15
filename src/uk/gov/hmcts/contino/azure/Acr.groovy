@@ -90,6 +90,12 @@ class Acr extends Az {
   private Map getManagedIdentity() {
     try {
       def identityJson = this.az "acr identity show --name ${registryName} --resource-group ${resourceGroup} --subscription ${registrySubscription} -o json"
+      
+      // Handle empty or null response (ACR without managed identity)
+      if (!identityJson || identityJson.trim().isEmpty()) {
+        return null
+      }
+      
       def identity = steps.readJSON(text: identityJson)
       
       // Check for user-assigned identities first
