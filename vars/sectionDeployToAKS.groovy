@@ -235,17 +235,6 @@ def call(params) {
 
 //          E2E Tests:
           onPR {
-          ///////This is just for testing purpose
-          if (config.e2eTest) {
-                        stageWithAgent("E2e Test - AKS ${environment}", product) {
-                          testEnv(aksUrl) {
-                            pcr.callAround("E2eTest:${environment}") {
-                              builder.e2eTest()
-                            }
-                          }
-                        }
-                      }
-          ////////
             if (testLabels.contains('enable_e2e_test')) {
               stageWithAgent("E2e Test - AKS ${environment}", product) {
                 pcr.callAround("E2eTest: ${environment}") {
