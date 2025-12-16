@@ -360,10 +360,14 @@ class Acr extends Az {
       return
     }
     
-    // Create task if it doesn't exist
+    // Create or update task with the latest ACB file
     def taskAlreadyExists = taskExists(taskName)
     if (!taskAlreadyExists) {
       createTask(taskName, acbFilePath)
+    } else {
+      // Update existing task with new ACB file to pick up template changes
+      steps.echo "Updating ACR task '${taskName}' with latest ACB file"
+      this.az "acr task update --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --file ${acbFilePath}"
     }
     
     // Check if task has the identity assigned, if not, assign it
