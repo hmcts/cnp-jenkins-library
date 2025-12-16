@@ -82,12 +82,12 @@ class Helm {
       def matcher = chartYaml =~ ociPattern
       matcher.each { match ->
         def externalRegistry = match[1]
-        steps.echo "  Found OCI registry: ${externalRegistry}"
+        steps.echo('Found OCI registry: ' + externalRegistry)
         // Only add if it's not the current registry
         if (externalRegistry != registryName) {
           externalRegistries.add(externalRegistry)
         } else {
-          steps.echo "    (skipped - same as current registry)"
+          steps.echo('skipped - same as current registry')
         }
       }
       
