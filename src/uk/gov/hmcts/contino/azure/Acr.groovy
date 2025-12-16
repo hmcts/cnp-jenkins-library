@@ -125,6 +125,12 @@ class Acr extends Az {
   /**
    * Detect if ACB template contains cross-registry pulls
    *
+   * Searches for any Azure Container Registry reference (*.azurecr.io) in the ACB YAML file.
+   * This catches all patterns:
+   *   - Registry aliases: "registry: hmctspublic.azurecr.io"
+   *   - Docker commands: "docker pull hmctsprod.azurecr.io/base/node:20-alpine"
+   *   - Build arguments: "--cache-from hmctsprod.azurecr.io/..."
+   *
    * @param acbFilePath
    *   the path to the ACB template file
    *
@@ -133,32 +139,22 @@ class Acr extends Az {
    */
   private Map detectCrossRegistryPulls(String acbFilePath) {
     def acbContent = steps.readFile(acbFilePath)
-    def externalRegistries = []
+    def externalRegistries = [] as Set
     
-    // Check for registry aliases (e.g., "registry: hmctsprod.azurecr.io")
-    def registryAliasPattern = ~/registry:\s*([a-zA-Z0-9.-]+\.azurecr\.io)/
-    def matcher = acbContent =~ registryAliasPattern
-    matcher.each { match ->
-      def externalRegistry = match[1]
+    // Match any ACR reference: extract registry name from "registryname.azurecr.io"
+    // This catches all patterns: docker pull, registry aliases, cache-from, etc.
+    def acrPattern = ~/([a-zA-Z0-9.-]+)\.azurecr\.io/
+    (acbContent =~ acrPattern).each { match ->
+      def registryUrl = match[0]  // Full URL: "hmctsprod.azurecr.io"
       // Only add if it's not the current registry
-      if (externalRegistry != "${registryName}.azurecr.io" && !externalRegistries.contains(externalRegistry)) {
-        externalRegistries.add(externalRegistry)
-      }
-    }
-    
-    // Also check for direct references in from: statements
-    def fromPattern = ~/from:\s*([a-zA-Z0-9.-]+\.azurecr\.io)/
-    matcher = acbContent =~ fromPattern
-    matcher.each { match ->
-      def externalRegistry = match[1]
-      if (externalRegistry != "${registryName}.azurecr.io" && !externalRegistries.contains(externalRegistry)) {
-        externalRegistries.add(externalRegistry)
+      if (registryUrl != registryName + '.azurecr.io') {
+        externalRegistries.add(registryUrl)
       }
     }
     
     return [
       crossRegistry: !externalRegistries.isEmpty(),
-      registries: externalRegistries
+      registries: externalRegistries.toList()
     ]
   }
 
@@ -359,7 +355,7 @@ class Acr extends Az {
     def identity = getManagedIdentity()
     
     if (!identity) {
-      steps.echo "Warning: Cross-registry authentication requires a managed identity assigned to ACR '${registryName}'. Falling back to quick run (may fail)."
+      steps.echo "Warning: Cross-registry authentication requires a managed identity assigned to ACR '${registryName}'. Falling back to (az acr run)."
       quickRun()
       return
     }
