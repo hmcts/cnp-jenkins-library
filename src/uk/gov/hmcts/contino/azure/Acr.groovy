@@ -334,7 +334,7 @@ class Acr extends Az {
    * @param setArgs
    *   optional --set arguments for the task (only used for task-based execution)
    */
-  private void handleAcrExecution(String acbFilePath, String taskName, String setArgs = "") {
+  private void handleAcrExecution(String acbFilePath, String taskName, String setArgs = "") { 
     // Check if ACB file exists and detect cross-registry pulls
     if (!steps.fileExists(acbFilePath)) {
       quickRun()
@@ -414,8 +414,19 @@ class Acr extends Az {
       returnStdout: true
     )?.trim()
     
-    // Use a repository-specific task name and pass template parameters
-    def taskName = "${dockerImage.getRepositoryName().replaceAll('/', '-')}-build"
+    // Use a unique task name per build to avoid conflicts between parallel builds
+    // Format: repo-identifier-build (e.g., plum-frontend-1347-build, plum-frontend-staging-build)
+    // Note: master branch uses "staging" as imageTag, not "master"
+    def repoName = dockerImage.getRepositoryName().replaceAll('/', '-')
+    def imageTag = dockerImage.getImageTag()
+    
+    // Extract just the PR number for cleaner task names (pr-1347 -> 1347)
+    def taskIdentifier = imageTag
+    if (imageTag =~ /^pr-(\d+)$/) {
+      taskIdentifier = (imageTag =~ /^pr-(\d+)$/)[0][1]
+    }
+    
+    def taskName = "${repoName}-${taskIdentifier}-build"
     def setArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
     
     handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs)
