@@ -32,9 +32,10 @@ interface JenkinsStepMock {
   String readFile(String)
   Object usernamePassword(Map)
   Object publishHTML(Map)
+  Object fortifyOnDemandScan()
+  Object fortifyOnDemandScan(Map)
 
   void azureCosmosDBCreateDocument(LinkedHashMap)
 }
-
 
 

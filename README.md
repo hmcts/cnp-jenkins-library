@@ -453,6 +453,20 @@ withNightlyPipeline(type, product, component) {
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
+You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
+
+When Fortify completes, the pipeline archives:
+- `Fortify Scan/FortifyScanReport.html` (summary produced by the Fortify client)
+- `Fortify Scan/FortifyVulnerabilities.html` and `Fortify Scan/FortifyVulnerabilities.json` (per-issue details fetched from FoD)
+
+If your repo does not already provide a `fortifyScan` script/task, the library falls back to a built-in FoD API runner (zips the workspace, starts a static scan, and writes `Fortify Scan/FortifyScanReport.html`). The scan runner resolves `releaseId` from `FORTIFY_RELEASE_ID`, `config/fortify-client.properties`, or by looking up a FoD release whose name matches the repository name (derived from `GIT_URL`).
+
+To force the built-in scan runner (even if the repo has its own `fortifyScan` hook), set `FORTIFY_SCAN_RUNNER=library`. Default is `auto` (use repo hook if present, otherwise library runner).
+
+Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD` (client id/secret).
+
+`withFortifySecrets(...)` reads Key Vault secrets `fortify-on-demand-username`/`fortify-on-demand-password` and exports them as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`.
+
 All available test stages are detailed in the table below:
 
 TestName | How to enable | Example
@@ -818,4 +832,3 @@ This file will point to the repository which defines, in json syntax, which infr
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
-

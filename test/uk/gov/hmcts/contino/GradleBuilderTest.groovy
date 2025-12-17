@@ -11,12 +11,12 @@ class GradleBuilderTest extends Specification {
   def sampleCVEReport
 
   def builder
+  def envVars
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.getEnv() >> [
-      BRANCH_NAME: 'master',
-    ]
+    envVars = [BRANCH_NAME: 'master']
+    steps.getEnv() >> envVars
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
@@ -41,6 +41,52 @@ class GradleBuilderTest extends Specification {
       builder.sonarScan()
     then:
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('sonarqube') })
+  }
+
+  def "fortifyScan uses gradle fortifyScan task when available"() {
+    given:
+      steps.fileExists('gradlew') >> true
+      steps.libraryResource('uk/gov/hmcts/gradle/init.gradle') >> null
+      steps.writeFile([file: 'init.gradle', text: null]) >> null
+      steps.sh({ it instanceof Map && it.returnStatus == true && it.script.contains('tasks --all') }) >> 0
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      0 * steps.fortifyOnDemandScan()
+      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
+  def "fortifyScan falls back to library runner when gradle task missing"() {
+    given:
+      steps.fileExists('gradlew') >> true
+      steps.libraryResource('uk/gov/hmcts/gradle/init.gradle') >> null
+      steps.writeFile([file: 'init.gradle', text: null]) >> null
+      steps.sh({ it instanceof Map && it.returnStatus == true && it.script.contains('tasks --all') }) >> 1
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      1 * steps.fortifyOnDemandScan()
+      0 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
+  def "fortifyScan can be forced to use library runner"() {
+    given:
+      envVars.FORTIFY_SCAN_RUNNER = 'library'
+      steps.fileExists('gradlew') >> true
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      1 * steps.fortifyOnDemandScan()
+      0 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
   }
 
   def "smokeTest calls 'gradle smoke' with '--rerun-tasks' flag"() {

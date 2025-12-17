@@ -29,15 +29,15 @@ class YarnBuilderTest extends Specification {
   def steps
 
   YarnBuilder builder
+  def envVars
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
 
     def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-no-issues.txt').toURI()).text
-    steps.readFile(_ as String) >> sampleCVEReport
-    steps.getEnv() >> [
-      BRANCH_NAME: 'master',
-    ]
+    steps.readFile({ String path -> path != 'package.json' }) >> sampleCVEReport
+    envVars = [BRANCH_NAME: 'master']
+    steps.getEnv() >> envVars
     def closure
     steps.withCredentials(_, { it.call() }) >> { closure = it }
     steps.withSauceConnect(_, { it.call() }) >> { closure = it }
@@ -77,6 +77,50 @@ class YarnBuilderTest extends Specification {
       builder.sonarScan()
     then:
       1 * steps.sh({ it.contains('sonar-scan') })
+  }
+
+  def "fortifyScan uses yarn fortifyScan script when present"() {
+    given:
+      steps.fileExists('.yarn_dependencies_installed') >> true
+      steps.fileExists('.nvmrc') >> false
+      steps.fileExists('package.json') >> true
+      steps.readFile('package.json') >> '{"scripts":{"fortifyScan":"./scripts/fortify.sh"}}'
+      steps.sh(_ as Map) >> 0
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      0 * steps.fortifyOnDemandScan()
+      1 * steps.sh({ it instanceof Map && it.script.contains('yarn fortifyScan') && it.returnStatus == true })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
+  def "fortifyScan falls back to library runner when script missing"() {
+    given:
+      steps.fileExists('package.json') >> false
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      1 * steps.fortifyOnDemandScan()
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
+  def "fortifyScan can be forced to use library runner"() {
+    given:
+      envVars.FORTIFY_SCAN_RUNNER = 'library'
+      steps.fileExists('package.json') >> true
+      steps.readFile('package.json') >> '{"scripts":{"fortifyScan":"./scripts/fortify.sh"}}'
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      1 * steps.fortifyOnDemandScan()
+      0 * steps.sh({ it instanceof Map && it.script.contains('yarn fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
   }
 
   def "smokeTest calls 'yarn test:smoke'"() {

@@ -17,6 +17,10 @@ def call(params) {
           builder.fortifyScan()
         }
       }
+
+      warnError('Failure in Fortify vulnerability report') {
+        fortifyVulnerabilityReport()
+      }
     }
   }
 }

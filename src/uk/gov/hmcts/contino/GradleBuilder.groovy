@@ -27,7 +27,36 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    gradle("fortifyScan")
+    try {
+      String runner = (localSteps.env.FORTIFY_SCAN_RUNNER ?: 'auto').toString().trim().toLowerCase()
+      if (runner == 'library') {
+        localSteps.echo('Fortify: using library FoD scan runner (FORTIFY_SCAN_RUNNER=library)')
+        localSteps.fortifyOnDemandScan()
+      } else if (runner == 'repo' || hasFortifyScanTask()) {
+        gradle("fortifyScan")
+      } else {
+        localSteps.echo("Fortify: no Gradle fortifyScan task found; using library FoD scan runner")
+        localSteps.fortifyOnDemandScan()
+      }
+    } finally {
+      localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+    }
+  }
+
+  private boolean hasFortifyScanTask() {
+    if (!localSteps.fileExists('gradlew')) {
+      return false
+    }
+    try {
+      addInitScript()
+      int status = localSteps.sh(
+        script: "./gradlew --no-daemon --init-script init.gradle tasks --all | grep -q \"\\bfortifyScan\\b\"",
+        returnStatus: true
+      ) as int
+      return status == 0
+    } catch (Exception ignored) {
+      return false
+    }
   }
 
   def addInitScript() {
