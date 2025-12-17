@@ -446,10 +446,7 @@ If your repo does not already provide a `fortifyScan` script/task, the library f
 
 To force the built-in scan runner (even if the repo has its own `fortifyScan` hook), set `FORTIFY_SCAN_RUNNER=library`. Default is `auto` (use repo hook if present, otherwise library runner).
 
-Authentication for the per-issue vulnerability fetch defaults to `auto` (tries OAuth `password` then `client_credentials`); if OAuth fails or returns 401/403 it falls back to Basic auth (legacy `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`) and then PAT bearer token.
-
-- To force a mode, set `FORTIFY_VULN_AUTH_MODE` (preferred) or `FORTIFY_OAUTH_GRANT_TYPE` to `password`, `client_credentials`, `basic`, or `pat`.
-- PAT mode uses `FORTIFY_PAT` (or `FORTIFY_PAT_TOKEN`). If PAT mode is configured but no PAT token is provided, the library treats this as a misconfiguration and falls back to OAuth auto mode (common when `FORTIFY_OAUTH_GRANT_TYPE=pat` is set globally but the Key Vault secrets contain an OAuth client id/secret).
+Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD` (client id/secret).
 
 `withFortifySecrets(...)` reads Key Vault secrets `fortify-on-demand-username`/`fortify-on-demand-password` and exports them as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`.
 
