@@ -41,11 +41,12 @@ class TeamConfig {
   def getTeamNamesMap() {
     if (teamConfigMap ==null ){
       def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+      def branch = steps.env.JENKINS_CONFIG_BRANCH ?: "master"
 
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/team-config.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/${branch}/team-config.yml",
         validResponseCodes: '200'
       )
       teamConfigMap = steps.readYaml (text: response.content)
