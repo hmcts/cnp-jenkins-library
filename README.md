@@ -293,6 +293,23 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+#### E2E Tests on master branch
+
+E2E tests can be enabled to run on the `master` branch after deployment to AKS environments (AAT and Production). To enable E2E tests, add `enableE2eTest()` to your `withPipeline` block:
+
+```
+withPipeline(type, product, component) {
+  ...
+  enableE2eTest()
+  ...
+}
+```
+
+E2E tests require the appropriate task to be defined in your application's build configuration:
+- For Java: `e2eTest` task in build.gradle
+
+The tests run after deployment to each environment (AAT and Production) on the master branch, after smoke tests and API gateway tests (if enabled).
+
 #### Clear Helm Release
 
 - By default your Helm resources are uninstalled to free up resources on the cluster.
