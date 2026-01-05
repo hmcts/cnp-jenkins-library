@@ -22,5 +22,17 @@
       ],
       "allowedVersions": "<12"
     }
-  ]
+  ],
+    "customManagers": [
+      {
+        "customType": "regex",
+        "description": "Update zaproxy docker image",
+        "managerFilePatterns": ["/SecurityScan.groovy$/"],
+        "matchStrings": [
+          "OWASP_ZAP_IMAGE = '(?<depName>ghcr\\.io/zaproxy/zaproxy):(?<currentValue>[^'@]+)@sha256:(?<digest>[a-f0-9]+)'"
+        ],
+        "datasourceTemplate": "docker",
+        "depNameTemplate": "ghcr.io/zaproxy/zaproxy"
+      }
+    ]
 }
