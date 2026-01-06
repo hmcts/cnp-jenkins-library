@@ -2,11 +2,25 @@ package uk.gov.hmcts.contino.azure
 
 import uk.gov.hmcts.contino.DockerImage
 
+/**
+ * Azure Container Registry (ACR) operations class.
+ * 
+ * Supports dual ACR publish mode for transitioning between registries.
+ * When DUAL_ACR_PUBLISH_ENABLED is set to 'true', operations like build,
+ * retagForStage, and purgeOldTags will be performed on both primary and
+ * secondary registries.
+ */
 class Acr extends Az {
 
   def registryName
   def resourceGroup
   def registrySubscription
+  
+  // Secondary ACR for dual publish mode
+  def secondaryRegistryName
+  def secondaryResourceGroup
+  def secondaryRegistrySubscription
+  def dualPublishEnabled = false
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -25,6 +39,76 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
+    
+    // Initialize dual publish mode from environment
+    initDualPublishMode()
+  }
+
+  /**
+   * Initialize dual ACR publish mode from environment variables.
+   * When enabled, operations will be performed on both primary and secondary registries.
+   */
+  private void initDualPublishMode() {
+    this.dualPublishEnabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
+    
+    if (this.dualPublishEnabled) {
+      this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
+      this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+      this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
+      
+      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
+        steps.echo "WARNING: Dual ACR publish is enabled but secondary registry details are missing. Disabling dual publish."
+        this.dualPublishEnabled = false
+      } else if (this.secondaryRegistryName == this.registryName) {
+        steps.echo "WARNING: Dual ACR publish is enabled but secondary registry name matches primary (${this.registryName}). Disabling dual publish."
+        this.dualPublishEnabled = false
+      } else {
+        steps.echo "Dual ACR publish mode enabled: Primary=${registryName}, Secondary=${secondaryRegistryName}"
+      }
+    }
+  }
+
+  /**
+   * Temporarily switch this Acr instance to operate against a different registry context.
+   *
+   * This is used to perform the same ACR task/run operations against the secondary registry
+   * without constructing a nested Acr instance (which would re-read env and could recurse).
+   */
+  private void withRegistryContext(String targetRegistryName, String targetResourceGroup, String targetRegistrySubscription, Closure block) {
+    def originalRegistryName = this.registryName
+    def originalResourceGroup = this.resourceGroup
+    def originalRegistrySubscription = this.registrySubscription
+
+    try {
+      this.registryName = targetRegistryName
+      this.resourceGroup = targetResourceGroup
+      this.registrySubscription = targetRegistrySubscription
+      block.call()
+    } finally {
+      this.registryName = originalRegistryName
+      this.resourceGroup = originalResourceGroup
+      this.registrySubscription = originalRegistrySubscription
+    }
+  }
+
+  /**
+   * Check if dual ACR publish mode is enabled
+   *
+   * @return
+   *   true if dual publish mode is enabled and properly configured
+   */
+  boolean isDualPublishEnabled() {
+    return this.dualPublishEnabled
+  }
+
+  /**
+   * Get the secondary registry name (for dual publish mode)
+   *
+   * @return
+   *   the secondary registry name, or null if not configured
+   */
+  String getSecondaryRegistryName() {
+    return this.secondaryRegistryName
   }
 
   /**
@@ -35,6 +119,12 @@ class Acr extends Az {
    */
   def login() {
     this.az "acr login --name ${registryName} --subscription ${registrySubscription}"
+    
+    // Also login to secondary registry if dual publish is enabled
+    if (this.dualPublishEnabled) {
+      steps.echo "Logging into secondary ACR: ${secondaryRegistryName}"
+      this.az "acr login --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription}"
+    }
   }
 
   /**
@@ -76,7 +166,14 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(dockerImage, additionalArgs) {
+    // Build to primary registry
     this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
+    
+    // Also build to secondary registry if dual publish is enabled
+    if (this.dualPublishEnabled) {
+      steps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
+      this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
+    }
   }
 
   // ==================== Private Helper Methods ====================
@@ -403,6 +500,13 @@ class Acr extends Az {
    */
   def run() {
     handleAcrExecution("acb.yaml", "default-acr-build")
+
+    if (this.dualPublishEnabled) {
+      steps.echo "Running ACR build script on secondary registry: ${secondaryRegistryName}"
+      withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
+        handleAcrExecution("acb.yaml", "default-acr-build")
+      }
+    }
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
@@ -430,6 +534,20 @@ class Acr extends Az {
     def setArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
     
     handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs)
+
+    if (this.dualPublishEnabled) {
+      steps.echo "Running ACB template build on secondary registry: ${secondaryRegistryName}"
+      withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
+        // Regenerate acb.yaml for the secondary registry so any templated REGISTRY_NAME matches.
+        steps.sh(
+          script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getBaseShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
+          returnStdout: true
+        )?.trim()
+
+        def secondarySetArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
+        handleAcrExecution(defaultAcrScriptFilePath, taskName, secondarySetArgs)
+      }
+    }
   }
 
   /**
@@ -462,7 +580,17 @@ class Acr extends Az {
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
+    
+    // Retag in primary registry
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
+    
+    // Also retag in secondary registry if dual publish is enabled
+    if (this.dualPublishEnabled) {
+      steps.echo "Promoting image to secondary ACR: ${secondaryRegistryName}"
+      // Need to use the secondary registry's hostname in the source
+      def secondaryBaseTag = baseTag.replace("${registryName}.azurecr.io", "${secondaryRegistryName}.azurecr.io")
+      this.az "acr import --force -n ${secondaryRegistryName} -g ${secondaryResourceGroup} --subscription ${secondaryRegistrySubscription} --source ${secondaryBaseTag} -t ${additionalTag}"?.trim()
+    }
   }
 
   def untag(DockerImage dockerImage) {
@@ -500,6 +628,14 @@ class Acr extends Az {
   def purgeOldTags(stage, dockerImage) {
     String purgeTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getImageTag() : stage.getLabel()
     String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
+    
+    // Purge from primary registry
     this.az "acr run --registry ${registryName} --subscription ${registrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
+    
+    // Also purge from secondary registry if dual publish is enabled
+    if (this.dualPublishEnabled) {
+      steps.echo "Purging old tags from secondary ACR: ${secondaryRegistryName}"
+      this.az "acr run --registry ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
+    }
   }
 }

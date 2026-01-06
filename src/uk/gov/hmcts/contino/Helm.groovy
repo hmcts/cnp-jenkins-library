@@ -4,6 +4,13 @@ import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Docker
 import groovy.json.JsonSlurperClassic
 
+/**
+ * Helm chart management class.
+ * 
+ * Supports dual ACR publish mode for transitioning between registries.
+ * When DUAL_ACR_PUBLISH_ENABLED is set to 'true', Helm charts will be
+ * published to both primary and secondary ACR registries.
+ */
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = 'charts'
@@ -23,6 +30,12 @@ class Helm {
   def notFoundMessage = 'Not found'
   String registrySubscription
   def namespace
+  
+  // Secondary ACR for dual publish mode
+  def secondaryRegistryName
+  def secondaryResourceGroup
+  def secondaryRegistrySubscription
+  def dualPublishEnabled = false
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -38,6 +51,29 @@ class Helm {
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
     this.namespace = this.steps.env.TEAM_NAMESPACE
+    
+    // Initialize dual publish mode
+    initDualPublishMode()
+  }
+
+  /**
+   * Initialize dual ACR publish mode from environment variables.
+   */
+  private void initDualPublishMode() {
+    this.dualPublishEnabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
+    
+    if (this.dualPublishEnabled) {
+      this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
+      this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+      this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
+      
+      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
+        steps.echo "WARNING: Dual ACR publish is enabled but secondary registry details are missing for Helm. Disabling dual publish."
+        this.dualPublishEnabled = false
+      } else {
+        steps.echo "Dual ACR publish mode enabled for Helm: Primary=${registryName}, Secondary=${secondaryRegistryName}"
+      }
+    }
   }
 
   def setup() {
@@ -114,6 +150,12 @@ class Helm {
         this.acr.az "acr login --name ${externalRegistry}"
       }
     }
+    
+    // Also authenticate to secondary registry if dual publish is enabled
+    if (this.dualPublishEnabled) {
+      steps.echo "Authenticating to secondary ACR for dual publish: ${secondaryRegistryName}"
+      this.acr.az "acr login --name ${secondaryRegistryName}"
+    }
   }
 
   def authenticateDockerHub() {
@@ -130,25 +172,50 @@ class Helm {
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
+    
+    // Check and publish to primary registry
+    def primaryResult = checkAndPublishToRegistry(registryName, version)
+    
+    // Also publish to secondary registry if dual publish is enabled
+    if (this.dualPublishEnabled) {
+      this.steps.echo "Checking secondary ACR for chart: ${secondaryRegistryName}"
+      checkAndPublishToRegistry(secondaryRegistryName, version)
+    }
+  }
+
+  /**
+   * Check if a chart version exists in a registry and publish if not.
+   *
+   * @param targetRegistry
+   *   the registry name to publish to
+   * @param version
+   *   the chart version
+   *
+   * @return
+   *   true if published, false if already exists
+   */
+  private boolean checkAndPublishToRegistry(String targetRegistry, String version) {
     def resultOfSearch
     try {
-      this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+      this.steps.sh(script: "helm pull oci://${targetRegistry}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
       resultOfSearch = version
     } catch (ignored) {
       resultOfSearch = notFoundMessage
     }
 
-    this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
+    this.steps.echo "Searched remote repo ${targetRegistry}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
-      this.steps.echo "Publishing new version of ${this.chartName}"
+      this.steps.echo "Publishing new version of ${this.chartName} to ${targetRegistry}"
 
       this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
-      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/")
+      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${targetRegistry}.azurecr.io/helm/")
       this.steps.sh(script: "rm ${this.chartLocation}/${this.chartName}-${version}.tgz")
-      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
+      this.steps.echo "Published ${this.chartName}-${version} to ${targetRegistry}"
+      return true
     } else {
-      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+      this.steps.echo "Chart already published to ${targetRegistry}, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+      return false
     }
   }
 
