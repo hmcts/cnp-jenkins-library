@@ -33,6 +33,16 @@
         ],
         "datasourceTemplate": "docker",
         "depNameTemplate": "ghcr.io/zaproxy/zaproxy"
+      },
+      {
+        "customType": "regex",
+        "description": "Update zap-glue docker image",
+        "managerFilePatterns": ["/SecurityScan.groovy$/"],
+        "matchStrings": [
+          "GLUEIMAGE = '(?<depName>hmctspublic.azurecr.io/zap-glue):(?<currentValue>[a-f0-9]{8}-[0-9]{10})'"
+        ],
+        "datasourceTemplate": "gitlab-tags",
+        "depNameTemplate": "hmcts/zap-glue"
       }
     ]
 }
