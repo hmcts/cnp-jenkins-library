@@ -41,7 +41,7 @@
         "matchStrings": [
           "GLUEIMAGE = '(?<depName>hmctspublic.azurecr.io/zap-glue):(?<currentValue>[a-f0-9]{8}-[0-9]{10})'"
         ],
-        "datasourceTemplate": "gitlab-tags",
+        "datasourceTemplate": "github-tags",
         "depNameTemplate": "hmcts/zap-glue"
       }
     ]
