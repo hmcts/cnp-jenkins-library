@@ -35,7 +35,6 @@ class Helm {
   def secondaryRegistryName
   def secondaryResourceGroup
   def secondaryRegistrySubscription
-  def dualPublishEnabled = false
 
   Helm(steps, String chartName) {
     this.steps = steps
@@ -51,29 +50,42 @@ class Helm {
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
     this.namespace = this.steps.env.TEAM_NAMESPACE
-    
-    // Initialize dual publish mode
-    initDualPublishMode()
+    // NOTE: Do NOT initialize dual publish mode here - Jenkins CPS cannot call 
+    // CPS-transformed methods (steps.env, steps.echo) from constructors.
+    // Dual publish mode is checked lazily via isDualPublishModeEnabled().
   }
 
   /**
-   * Initialize dual ACR publish mode from environment variables.
+   * Check if dual ACR publish mode is enabled.
+   * Reads directly from environment variables each time to avoid CPS issues.
+   * 
+   * @return true if dual publish is enabled and properly configured
    */
-  private void initDualPublishMode() {
-    this.dualPublishEnabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
+  private boolean isDualPublishModeEnabled() {
+    def enabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
     
-    if (this.dualPublishEnabled) {
-      this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
-      this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
-      this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
-      
-      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
-        steps.echo "WARNING: Dual ACR publish is enabled but secondary registry details are missing for Helm. Disabling dual publish."
-        this.dualPublishEnabled = false
-      } else {
-        steps.echo "Dual ACR publish mode enabled for Helm: Primary=${registryName}, Secondary=${secondaryRegistryName}"
+    if (enabled) {
+      // Load secondary registry details from environment if not already set
+      if (!this.secondaryRegistryName) {
+        this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
+        this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+        this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
+      
+      // Validate configuration
+      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
+        return false
+      }
+      return true
     }
+    return false
+  }
+  
+  /**
+   * Check if dual publish mode is enabled (public accessor for tests).
+   */
+  boolean isDualPublishEnabled() {
+    return isDualPublishModeEnabled()
   }
 
   def setup() {
@@ -152,7 +164,7 @@ class Helm {
     }
     
     // Also authenticate to secondary registry if dual publish is enabled
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Authenticating to secondary ACR for dual publish: ${secondaryRegistryName}"
       this.acr.az "acr login --name ${secondaryRegistryName}"
     }
@@ -177,7 +189,7 @@ class Helm {
     def primaryResult = checkAndPublishToRegistry(registryName, version)
     
     // Also publish to secondary registry if dual publish is enabled
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       this.steps.echo "Checking secondary ACR for chart: ${secondaryRegistryName}"
       checkAndPublishToRegistry(secondaryRegistryName, version)
     }

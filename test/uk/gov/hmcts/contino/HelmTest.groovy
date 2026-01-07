@@ -158,7 +158,7 @@ class HelmTest extends Specification {
     def testHelm = new Helm(testSteps, CHART)
     
     then:
-    testHelm.dualPublishEnabled == false
+    testHelm.isDualPublishEnabled() == false
   }
 
   def "dual publish mode is disabled when secondary registry details are missing"() {
@@ -177,7 +177,7 @@ class HelmTest extends Specification {
     def testHelm = new Helm(testSteps, CHART)
     
     then:
-    testHelm.dualPublishEnabled == false
+    testHelm.isDualPublishEnabled() == false
   }
 
   def "dual publish mode is enabled when all secondary registry details are provided"() {
@@ -198,7 +198,7 @@ class HelmTest extends Specification {
     def testHelm = new Helm(testSteps, CHART)
     
     then:
-    testHelm.dualPublishEnabled == true
+    testHelm.isDualPublishEnabled() == true
     testHelm.secondaryRegistryName == "hmctsold"
   }
 

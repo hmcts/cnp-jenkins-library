@@ -16,12 +16,10 @@ class Acr extends Az {
   def resourceGroup
   def registrySubscription
   
-  // Secondary ACR for dual publish mode
+  // Secondary ACR for dual publish mode - these are set once when first checked
   def secondaryRegistryName
   def secondaryResourceGroup
   def secondaryRegistrySubscription
-  private Boolean dualPublishInitialized = false
-  private Boolean dualPublishEnabled = false
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -40,39 +38,35 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
-    // NOTE: Do NOT call initDualPublishMode() here - Jenkins CPS cannot call 
-    // CPS-transformed methods (steps.env, steps.echo) from constructors.
-    // Dual publish mode is initialized lazily via checkDualPublishMode().
   }
 
   /**
-   * Initialize dual ACR publish mode from environment variables (lazy initialization).
-   * When enabled, operations will be performed on both primary and secondary registries.
-   * This must be called lazily, not from the constructor, due to Jenkins CPS limitations.
+   * Check if dual ACR publish mode is enabled.
+   * Reads directly from environment variables each time to avoid CPS issues.
+   * 
+   * @return true if dual publish is enabled and properly configured
    */
-  private void checkDualPublishMode() {
-    if (this.dualPublishInitialized) {
-      return
-    }
-    this.dualPublishInitialized = true
+  private boolean isDualPublishModeEnabled() {
+    def enabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
     
-    this.dualPublishEnabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
-    
-    if (this.dualPublishEnabled) {
-      this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
-      this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
-      this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
-      
-      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
-        steps.echo "WARNING: Dual ACR publish is enabled but secondary registry details are missing. Disabling dual publish."
-        this.dualPublishEnabled = false
-      } else if (this.secondaryRegistryName == this.registryName) {
-        steps.echo "WARNING: Dual ACR publish is enabled but secondary registry name matches primary (${this.registryName}). Disabling dual publish."
-        this.dualPublishEnabled = false
-      } else {
-        steps.echo "Dual ACR publish mode enabled: Primary=${registryName}, Secondary=${secondaryRegistryName}"
+    if (enabled) {
+      // Load secondary registry details from environment if not already set
+      if (!this.secondaryRegistryName) {
+        this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
+        this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+        this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
+      
+      // Validate configuration
+      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
+        return false
+      }
+      if (this.secondaryRegistryName == this.registryName) {
+        return false
+      }
+      return true
     }
+    return false
   }
 
   /**
@@ -105,8 +99,7 @@ class Acr extends Az {
    *   true if dual publish mode is enabled and properly configured
    */
   boolean isDualPublishEnabled() {
-    checkDualPublishMode()
-    return this.dualPublishEnabled
+    return isDualPublishModeEnabled()
   }
 
   /**
@@ -116,7 +109,7 @@ class Acr extends Az {
    *   the secondary registry name, or null if not configured
    */
   String getSecondaryRegistryName() {
-    checkDualPublishMode()
+    isDualPublishModeEnabled()
     return this.secondaryRegistryName
   }
 
@@ -127,11 +120,10 @@ class Acr extends Az {
    *   stdout/stderr of login command
    */
   def login() {
-    checkDualPublishMode()
     this.az "acr login --name ${registryName} --subscription ${registrySubscription}"
     
     // Also login to secondary registry if dual publish is enabled
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Logging into secondary ACR: ${secondaryRegistryName}"
       this.az "acr login --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription}"
     }
@@ -176,12 +168,11 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(dockerImage, additionalArgs) {
-    checkDualPublishMode()
     // Build to primary registry
     this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
     
     // Also build to secondary registry if dual publish is enabled
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
       this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
     }
@@ -510,10 +501,9 @@ class Acr extends Az {
    *   stdout of the step
    */
   def run() {
-    checkDualPublishMode()
     handleAcrExecution("acb.yaml", "default-acr-build")
 
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Running ACR build script on secondary registry: ${secondaryRegistryName}"
       withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
         handleAcrExecution("acb.yaml", "default-acr-build")
@@ -522,7 +512,6 @@ class Acr extends Az {
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
-    checkDualPublishMode()
     def defaultAcrScriptFilePath = "acb.yaml"
     
     // Generate acb.yaml from template by replacing placeholders
@@ -548,7 +537,7 @@ class Acr extends Az {
     
     handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs)
 
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Running ACB template build on secondary registry: ${secondaryRegistryName}"
       withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
         // Regenerate acb.yaml for the secondary registry so any templated REGISTRY_NAME matches.
@@ -589,7 +578,6 @@ class Acr extends Az {
    *   stdout of the step
    */
   def retagForStage(stage, dockerImage) {
-    checkDualPublishMode()
     def additionalTag = dockerImage.getShortName(stage)
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
@@ -599,7 +587,7 @@ class Acr extends Az {
     this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${baseTag} -t ${additionalTag}"?.trim()
     
     // Also retag in secondary registry if dual publish is enabled
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Promoting image to secondary ACR: ${secondaryRegistryName}"
       // Need to use the secondary registry's hostname in the source
       def secondaryBaseTag = baseTag.replace("${registryName}.azurecr.io", "${secondaryRegistryName}.azurecr.io")
@@ -640,7 +628,6 @@ class Acr extends Az {
   }
 
   def purgeOldTags(stage, dockerImage) {
-    checkDualPublishMode()
     String purgeTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getImageTag() : stage.getLabel()
     String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
     
@@ -648,7 +635,7 @@ class Acr extends Az {
     this.az "acr run --registry ${registryName} --subscription ${registrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
     
     // Also purge from secondary registry if dual publish is enabled
-    if (this.dualPublishEnabled) {
+    if (isDualPublishModeEnabled()) {
       steps.echo "Purging old tags from secondary ACR: ${secondaryRegistryName}"
       this.az "acr run --registry ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
     }
