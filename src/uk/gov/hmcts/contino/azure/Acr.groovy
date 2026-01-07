@@ -20,7 +20,8 @@ class Acr extends Az {
   def secondaryRegistryName
   def secondaryResourceGroup
   def secondaryRegistrySubscription
-  def dualPublishEnabled = false
+  private Boolean dualPublishInitialized = false
+  private Boolean dualPublishEnabled = false
 
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
@@ -39,16 +40,22 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
-    
-    // Initialize dual publish mode from environment
-    initDualPublishMode()
+    // NOTE: Do NOT call initDualPublishMode() here - Jenkins CPS cannot call 
+    // CPS-transformed methods (steps.env, steps.echo) from constructors.
+    // Dual publish mode is initialized lazily via checkDualPublishMode().
   }
 
   /**
-   * Initialize dual ACR publish mode from environment variables.
+   * Initialize dual ACR publish mode from environment variables (lazy initialization).
    * When enabled, operations will be performed on both primary and secondary registries.
+   * This must be called lazily, not from the constructor, due to Jenkins CPS limitations.
    */
-  private void initDualPublishMode() {
+  private void checkDualPublishMode() {
+    if (this.dualPublishInitialized) {
+      return
+    }
+    this.dualPublishInitialized = true
+    
     this.dualPublishEnabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
     
     if (this.dualPublishEnabled) {
@@ -98,6 +105,7 @@ class Acr extends Az {
    *   true if dual publish mode is enabled and properly configured
    */
   boolean isDualPublishEnabled() {
+    checkDualPublishMode()
     return this.dualPublishEnabled
   }
 
@@ -108,6 +116,7 @@ class Acr extends Az {
    *   the secondary registry name, or null if not configured
    */
   String getSecondaryRegistryName() {
+    checkDualPublishMode()
     return this.secondaryRegistryName
   }
 
@@ -118,6 +127,7 @@ class Acr extends Az {
    *   stdout/stderr of login command
    */
   def login() {
+    checkDualPublishMode()
     this.az "acr login --name ${registryName} --subscription ${registrySubscription}"
     
     // Also login to secondary registry if dual publish is enabled
@@ -166,6 +176,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(dockerImage, additionalArgs) {
+    checkDualPublishMode()
     // Build to primary registry
     this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
     
@@ -499,6 +510,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def run() {
+    checkDualPublishMode()
     handleAcrExecution("acb.yaml", "default-acr-build")
 
     if (this.dualPublishEnabled) {
@@ -510,6 +522,7 @@ class Acr extends Az {
   }
 
   def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
+    checkDualPublishMode()
     def defaultAcrScriptFilePath = "acb.yaml"
     
     // Generate acb.yaml from template by replacing placeholders
@@ -576,6 +589,7 @@ class Acr extends Az {
    *   stdout of the step
    */
   def retagForStage(stage, dockerImage) {
+    checkDualPublishMode()
     def additionalTag = dockerImage.getShortName(stage)
     // Non master branch builds like preview are tagged with the base tag
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
@@ -626,6 +640,7 @@ class Acr extends Az {
   }
 
   def purgeOldTags(stage, dockerImage) {
+    checkDualPublishMode()
     String purgeTag = stage == DockerImage.DeploymentStage.PR ? dockerImage.getImageTag() : stage.getLabel()
     String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
     
