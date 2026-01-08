@@ -1,18 +1,18 @@
 def call(String fortifyVaultName = null, Closure block) {
-  String credentialsId = (env.FORTIFY_CREDENTIALS_ID ?: 'fortify-on-demand-oauth').toString().trim()
-
-  if (!credentialsId) {
-    echo('Fortify: missing FORTIFY_CREDENTIALS_ID; proceeding without Fortify credentials')
-    block.call()
+  if (fortifyVaultName?.trim()) {
+    def fortifySecrets = [
+      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'fortify-on-demand-username', version: '', envVariable: 'FORTIFY_USER_NAME'],
+      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'fortify-on-demand-password', version: '', envVariable: 'FORTIFY_PASSWORD'],
+    ]
+    String theKeyVaultUrl = "https://${fortifyVaultName}.vault.azure.net"
+    withAzureKeyvault(azureKeyVaultSecrets: fortifySecrets, keyVaultURLOverride: theKeyVaultUrl) {
+      block.call()
+    }
     return
   }
 
-  try {
-    withCredentials([usernamePassword(credentialsId: credentialsId, usernameVariable: 'FORTIFY_USER_NAME', passwordVariable: 'FORTIFY_PASSWORD')]) {
-      block.call()
-    }
-  } catch (Exception e) {
-    echo("Fortify: unable to bind Jenkins credentialsId='${credentialsId}'; proceeding without Fortify credentials (${e.message})")
+  String credentialsId = 'fortify-on-demand-oauth'
+  withCredentials([usernamePassword(credentialsId: credentialsId, usernameVariable: 'FORTIFY_USER_NAME', passwordVariable: 'FORTIFY_PASSWORD')]) {
     block.call()
   }
 }
