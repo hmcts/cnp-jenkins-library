@@ -430,7 +430,7 @@ class AcrTest extends Specification {
                     it.get('script').contains("az acr login --name hmctsold")})
   }
 
-  def "build() should build to both registries when dual publish is enabled"() {
+  def "build() should build to primary and import to secondary when dual publish is enabled"() {
     given:
       steps = Mock(JenkinsStepMock.class)
       steps.env >> [
@@ -452,7 +452,9 @@ class AcrTest extends Specification {
       1 * steps.sh({it.containsKey('script') &&
                     it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME}")})
       1 * steps.sh({it.containsKey('script') &&
-                    it.get('script').contains("az acr build --no-format -r hmctsold -t ${IMAGE_NAME}")})
+                    it.get('script').contains("az acr import --name hmctsold") &&
+                    it.get('script').contains("--source ${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}") &&
+                    it.get('script').contains("--image ${IMAGE_NAME}")})
   }
 
   def "retagForStage() should retag in both registries when dual publish is enabled"() {

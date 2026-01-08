@@ -171,10 +171,11 @@ class Acr extends Az {
     // Build to primary registry
     this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
     
-    // Also build to secondary registry if dual publish is enabled
+    // Import built image to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
-      this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
+      def imageName = dockerImage.getBaseShortName()
+      steps.echo "Importing image to secondary ACR: ${secondaryRegistryName}"
+      this.az "acr import --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription} --source ${registryName}.azurecr.io/${imageName} --image ${imageName} --force"
     }
   }
 
