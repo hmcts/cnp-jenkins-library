@@ -4,7 +4,7 @@ package uk.gov.hmcts.contino
 class SecurityScan implements Serializable {
     public static final String OWASP_ZAP_IMAGE = 'ghcr.io/zaproxy/zaproxy:20251215-stable@sha256:8e79e827afb9e8bdba390c829eb3062062cdb407570559e2ddebd49130c00a59'
     public static final String OWASP_ZAP_ARGS = '-u 0:0 --name zap -p 1001:1001 -v $WORKSPACE:/zap/wrk/:rw'
-    public static final String GLUEIMAGE = 'hmctspublic.azurecr.io/zap-glue:52ee45b8-1767618451'
+    public static final String GLUEIMAGE = 'hmctsprod.azurecr.io/zap-glue:94516277-1767967285'
     public static final String GLUE_ARGS = '-u 0:0 --name=Glue -v ${WORKSPACE}:/tmp -w /tmp'
     def steps
 
