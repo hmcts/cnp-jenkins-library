@@ -465,7 +465,7 @@ To force the built-in scan runner (even if the repo has its own `fortifyScan` ho
 
 Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD` (client id/secret).
 
-`withFortifySecrets(...)` reads Key Vault secrets `fortify-on-demand-username`/`fortify-on-demand-password` and exports them as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`.
+`withFortifySecrets(...)` prefers the Jenkins `usernamePassword` credential `fortify-on-demand-oauth` containing the FoD OAuth `client_id`/`client_secret`, exported as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`. If a Key Vault name is supplied, it is only used as a fallback (`fortify-on-demand-username`/`fortify-on-demand-password`). If neither path binds credentials, the pipeline fails fast.
 
 All available test stages are detailed in the table below:
 
