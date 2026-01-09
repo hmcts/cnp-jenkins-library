@@ -50,32 +50,24 @@ class Acr extends Az {
     def envValue = steps.env.DUAL_ACR_PUBLISH_ENABLED
     def enabled = envValue?.toLowerCase() == 'true'
     
-    steps.echo "[DEBUG] isDualPublishModeEnabled: DUAL_ACR_PUBLISH_ENABLED='${envValue}', enabled=${enabled}"
-    
     if (enabled) {
       // Load secondary registry details from environment if not already set
-      if (!this.secondaryRegistryName) {
-        this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
-        this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
-        this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
+      // Use @field to access fields directly, avoiding getter recursion
+      if (!this.@secondaryRegistryName) {
+        this.@secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
+        this.@secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+        this.@secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
-      
-      steps.echo "[DEBUG] isDualPublishModeEnabled: secondaryRegistryName='${this.secondaryRegistryName}', secondaryResourceGroup='${this.secondaryResourceGroup}', secondaryRegistrySubscription='${this.secondaryRegistrySubscription}'"
-      steps.echo "[DEBUG] isDualPublishModeEnabled: primary registryName='${this.registryName}'"
       
       // Validate configuration
-      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
-        steps.echo "[DEBUG] isDualPublishModeEnabled: returning false - missing secondary config"
+      if (!this.@secondaryRegistryName || !this.@secondaryResourceGroup || !this.@secondaryRegistrySubscription) {
         return false
       }
-      if (this.secondaryRegistryName == this.registryName) {
-        steps.echo "[DEBUG] isDualPublishModeEnabled: returning false - secondary same as primary"
+      if (this.@secondaryRegistryName == this.@registryName) {
         return false
       }
-      steps.echo "[DEBUG] isDualPublishModeEnabled: returning true - dual publish enabled"
       return true
     }
-    steps.echo "[DEBUG] isDualPublishModeEnabled: returning false - not enabled"
     return false
   }
 
@@ -119,8 +111,8 @@ class Acr extends Az {
    *   the secondary registry name, or null if not configured
    */
   String getSecondaryRegistryName() {
-    isDualPublishModeEnabled()
-    return this.secondaryRegistryName
+    // Use @field to access field directly, avoiding infinite recursion
+    return this.@secondaryRegistryName
   }
 
   /**
