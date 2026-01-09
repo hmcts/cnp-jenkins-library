@@ -62,7 +62,7 @@ def call(params) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
           withAksClient(subscription, environment, product) {
-            timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'Install Charts to AKS') {
+            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
               onPR {
                 deploymentNumber = githubCreateDeployment()
               }
@@ -180,6 +180,7 @@ def call(params) {
               }
             }
           }
+
           if (config.performanceTest) {
             stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
@@ -192,7 +193,6 @@ def call(params) {
               }
             }
           }
-
 
           onMaster {
             if (config.crossBrowserTest) {
@@ -222,9 +222,29 @@ def call(params) {
                 }
               }
             }
+            if (config.e2eTest) {
+              stageWithAgent("E2E Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  pcr.callAround("E2eTest:${environment}") {
+                    builder.e2eTest()
+                  }
+                }
+              }
+            }
           }
 
+//          E2E Tests:
+          onPR {
+            if (testLabels.contains('enable_e2e_test')) {
+              stageWithAgent("E2E Test - AKS ${environment}", product) {
+                pcr.callAround("E2eTest: ${environment}") {
+                  builder.e2eTest()
+                }
+              }
+            }
+          }
 
+//          Performance Tests:
           onPR {
             if (testLabels.contains('enable_performance_test')) {
               stageWithAgent("Performance test", product) {

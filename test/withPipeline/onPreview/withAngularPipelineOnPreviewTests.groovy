@@ -25,6 +25,7 @@ class withAngularPipelineOnPreviewTests extends BaseCnpPipelineTest {
       sonarScan(1) {}
       smokeTest(1) {} //preview-staging
       functionalTest(1) {}
+      e2eTest(1) {}
     }
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')

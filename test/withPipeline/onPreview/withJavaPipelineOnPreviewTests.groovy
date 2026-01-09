@@ -24,6 +24,7 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
       techStackMaintenance(0) {}
       sonarScan(0) {}
       smokeTest(0) {} //preview-staging
+      e2eTest(0) {}
       functionalTest(0) {}
     }
 
