@@ -47,7 +47,10 @@ class Acr extends Az {
    * @return true if dual publish is enabled and properly configured
    */
   private boolean isDualPublishModeEnabled() {
-    def enabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
+    def envValue = steps.env.DUAL_ACR_PUBLISH_ENABLED
+    def enabled = envValue?.toLowerCase() == 'true'
+    
+    steps.echo "[DEBUG] isDualPublishModeEnabled: DUAL_ACR_PUBLISH_ENABLED='${envValue}', enabled=${enabled}"
     
     if (enabled) {
       // Load secondary registry details from environment if not already set
@@ -57,15 +60,22 @@ class Acr extends Az {
         this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
       
+      steps.echo "[DEBUG] isDualPublishModeEnabled: secondaryRegistryName='${this.secondaryRegistryName}', secondaryResourceGroup='${this.secondaryResourceGroup}', secondaryRegistrySubscription='${this.secondaryRegistrySubscription}'"
+      steps.echo "[DEBUG] isDualPublishModeEnabled: primary registryName='${this.registryName}'"
+      
       // Validate configuration
       if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
+        steps.echo "[DEBUG] isDualPublishModeEnabled: returning false - missing secondary config"
         return false
       }
       if (this.secondaryRegistryName == this.registryName) {
+        steps.echo "[DEBUG] isDualPublishModeEnabled: returning false - secondary same as primary"
         return false
       }
+      steps.echo "[DEBUG] isDualPublishModeEnabled: returning true - dual publish enabled"
       return true
     }
+    steps.echo "[DEBUG] isDualPublishModeEnabled: returning false - not enabled"
     return false
   }
 
