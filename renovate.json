@@ -21,6 +21,11 @@
         "openjdk"
       ],
       "allowedVersions": "<12"
+    },
+    {
+      "matchPackageNames": ["hmctspublic.azurecr.io/zap-glue"],
+      "description": "Allow increased maxMajorIncrement for zap-glue docker image",
+      "maxMajorIncrement": 0
     }
   ],
     "customManagers": [
