@@ -146,7 +146,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
               builder.securityScan(
-                subscription: subscription
+                subscription
               )
             }
           }
