@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import uk.gov.hmcts.contino.azure.Acr
 
 class SecurityScan implements Serializable {
     public static final String OWASP_ZAP_IMAGE = 'ghcr.io/zaproxy/zaproxy:20251215-stable@sha256:8e79e827afb9e8bdba390c829eb3062062cdb407570559e2ddebd49130c00a59'
@@ -14,6 +15,10 @@ class SecurityScan implements Serializable {
 
     def execute() {
         try {
+            // Login to ACR for private images
+            def acr = new Acr(steps, steps.env.SUBSCRIPTION_NAME, 'hmctsprod', steps.env.RESOURCE_GROUP, steps.env.REGISTRY_SUBSCRIPTION)
+            acr.login()
+            
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
                 this.steps.sh '''
                     chmod +x security.sh
@@ -24,6 +29,7 @@ class SecurityScan implements Serializable {
                 wget https://raw.githubusercontent.com/hmcts/zap-glue/master/jq_pattern -O ${WORKSPACE}/jq_pattern
                 jq -f ${WORKSPACE}/jq_pattern ${WORKSPACE}/report.json > ${WORKSPACE}/output.json
                 '''
+            
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
                 this.steps.sh '''
                     cd /glue
