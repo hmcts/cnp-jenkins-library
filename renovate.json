@@ -44,11 +44,11 @@
         "description": "Update zap-glue docker image",
         "managerFilePatterns": ["/SecurityScan.groovy$/"],
         "matchStrings": [
-          "GLUEIMAGE = '(?<depName>hmctspublic\\.azurecr\\.io/zap-glue):(?<currentValue>[a-f0-9]{8}-[a-f0-9]{10})'"
+          "GLUEIMAGE = '(?<depName>hmctspublic\\.azurecr\\.io/zap-glue):(?<currentValue>[a-f0-9]{8}-[0-9]{10})'"
         ],
         "datasourceTemplate": "docker",
         "depNameTemplate": "hmctspublic.azurecr.io/zap-glue",
-        "extractVersionTemplate": "^[a-f0-9]{8}-(?<version>.+)$",
+        "extractVersionTemplate": "^[a-f0-9]{8}-(?<version>[0-9]{10})$",
         "versioningTemplate": "loose"
       }
     ]
