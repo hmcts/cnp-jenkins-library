@@ -14,10 +14,10 @@ class SecurityScan implements Serializable {
         this.steps = steps
     }
 
-    def execute() {
+    def execute(String subscription) {
         try {
             // Login to ACR for private images
-            def acr = new Acr(steps, subscription, 'hmctsprod', steps.env.RESOURCE_GROUP, steps.env.REGISTRY_SUBSCRIPTION)
+            def acr = new Acr(steps, subscription, 'hmctsprod', steps.env.REGISTRY_RESOURCE_GROUP, steps.env.REGISTRY_SUBSCRIPTION)
             acr.login()
             
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
