@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.DockerImage
 
 class SecurityScan implements Serializable {
     public static final String OWASP_ZAP_IMAGE = 'ghcr.io/zaproxy/zaproxy:20251215-stable@sha256:8e79e827afb9e8bdba390c829eb3062062cdb407570559e2ddebd49130c00a59'
