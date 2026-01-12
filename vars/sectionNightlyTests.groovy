@@ -145,9 +145,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           env.SCAN_TYPE = config.securityScanType
           pcr.callAround('securityScan') {
             timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-              builder.securityScan(
-                subscription: subscription
-              )
+              builder.securityScan()
             }
           }
         }
