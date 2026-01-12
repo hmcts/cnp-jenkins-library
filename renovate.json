@@ -42,7 +42,7 @@
           "GLUEIMAGE = '(?<depName>hmctspublic\\.azurecr\\.io/zap-glue):(?<currentValue>[a-f0-9]{8}-[a-f0-9]{10})'"
         ],
         "datasourceTemplate": "docker",
-        "depNameTemplate": "hmctspublic.azurecr.io/hmcts/zap-glue"
+        "depNameTemplate": "hmctspublic.azurecr.io/zap-glue"
       }
     ]
 }
