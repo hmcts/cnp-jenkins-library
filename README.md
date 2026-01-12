@@ -463,9 +463,12 @@ If your repo does not already provide a `fortifyScan` script/task, the library f
 
 To force the built-in scan runner (even if the repo has its own `fortifyScan` hook), set `FORTIFY_SCAN_RUNNER=library`. Default is `auto` (use repo hook if present, otherwise library runner).
 
-Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD` (client id/secret).
+Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_OAUTH_CLIENT_ID`/`FORTIFY_OAUTH_CLIENT_SECRET` (client id/secret).
 
-`withFortifySecrets(...)` prefers the Jenkins `usernamePassword` credential `fortify-on-demand-oauth` containing the FoD OAuth `client_id`/`client_secret`, exported as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`. If a Key Vault name is supplied, it is only used as a fallback (`fortify-on-demand-username`/`fortify-on-demand-password`). If neither path binds credentials, the pipeline fails fast.
+`withFortifySecrets(...)` loads Fortify scan credentials from Azure Key Vault secrets `fortify-on-demand-username`/`fortify-on-demand-password` and exports them as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`.
+
+`withFortifyOAuthSecrets(...)` binds the Jenkins `usernamePassword` credential `fortify-on-demand-oauth` (override via `FORTIFY_OAUTH_CREDENTIALS_ID`) and exports it as `FORTIFY_OAUTH_CLIENT_ID`/`FORTIFY_OAUTH_CLIENT_SECRET`.
+
 
 All available test stages are detailed in the table below:
 
