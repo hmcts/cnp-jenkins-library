@@ -7,11 +7,9 @@ class SecurityScan implements Serializable {
     public static final String GLUEIMAGE = 'hmctsprod.azurecr.io/zap-glue:94516277-1767967285'
     public static final String GLUE_ARGS = '-u 0:0 --name=Glue -v ${WORKSPACE}:/tmp -w /tmp'
     def steps
-    def subscription
 
     SecurityScan(steps) {
         this.steps = steps
-        this.subscription = this.steps.env.SUBSCRIPTION_NAME
     }
 
     def execute() {
