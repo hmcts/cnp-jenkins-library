@@ -199,6 +199,7 @@ class DynatraceClient implements Serializable {
 
   def updateSyntheticTest(boolean enabled) {
     def response = null
+    def modifiedRequestBody = null
     try {
       def getResponse = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
@@ -251,11 +252,12 @@ class DynatraceClient implements Serializable {
         }
       }
 
-      def modifiedRequestBody = JsonOutput.toJson(json)
+      modifiedRequestBody = JsonOutput.toJson(json)
 
       steps.echo "About to send PUT request to update synthetic test"
       steps.echo "Enabled: ${enabled}"
-      steps.echo "Modified request body (first 1000 chars): ${modifiedRequestBody.take(1000)}"
+      steps.echo "Full modified request body:"
+      steps.echo modifiedRequestBody
 
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
