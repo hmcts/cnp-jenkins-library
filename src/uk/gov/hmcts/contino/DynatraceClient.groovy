@@ -261,8 +261,13 @@ class DynatraceClient implements Serializable {
 
       steps.echo "About to send PUT request to update synthetic test"
       steps.echo "Enabled: ${enabled}"
-      steps.echo "Full modified request body:"
-      steps.echo modifiedRequestBody
+      steps.echo "Request body length: ${modifiedRequestBody?.length()}"
+      steps.echo "Request body keys in JSON: ${json.keySet()}"
+
+      // Pretty print for debugging
+      def prettyJson = JsonOutput.prettyPrint(modifiedRequestBody)
+      steps.writeFile(file: 'dynatrace-request-debug.json', text: prettyJson)
+      steps.echo "Full request body written to: dynatrace-request-debug.json"
 
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
