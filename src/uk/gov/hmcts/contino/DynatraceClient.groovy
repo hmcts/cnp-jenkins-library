@@ -249,6 +249,10 @@ class DynatraceClient implements Serializable {
 
       def modifiedRequestBody = JsonOutput.toJson(json)
 
+      steps.echo "About to send PUT request to update synthetic test"
+      steps.echo "Enabled: ${enabled}"
+      steps.echo "Modified request body (first 1000 chars): ${modifiedRequestBody.take(1000)}"
+
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         contentType: 'APPLICATION_JSON',
@@ -266,6 +270,8 @@ class DynatraceClient implements Serializable {
       if (response) {
         steps.echo "Response detail: ${response.content}"
       }
+      steps.echo "Request body that was sent:"
+      steps.echo modifiedRequestBody
     }
     return response
   }
