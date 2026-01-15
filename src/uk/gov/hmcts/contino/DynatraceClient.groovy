@@ -199,7 +199,6 @@ class DynatraceClient implements Serializable {
 
   def updateSyntheticTest(boolean enabled) {
     def response = null
-    def modifiedRequestBody = null
     try {
       def getResponse = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
@@ -211,20 +210,11 @@ class DynatraceClient implements Serializable {
         ],
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}"
       )
-      
-      steps.echo "GET response received, parsing JSON..."
-      def json = new JsonSlurper().parseText(getResponse.content)
 
-      steps.echo "Current enabled status: ${json.enabled}"
+      def json = new JsonSlurper().parseText(getResponse.content)
 
       //Set enabled field in the json
       json.enabled = enabled
-      steps.echo "Setting enabled to: ${enabled}"
-
-      // Remove read-only fields that cannot be sent in PUT requests (causes 400 errors)
-      steps.echo "Removing read-only fields..."
-      //json.remove('entityId')
-      json.remove('requests')  // Read-only computed field for HTTP monitors
 
       // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below
       if (steps.env.TEST_URL) {
@@ -257,12 +247,7 @@ class DynatraceClient implements Serializable {
         }
       }
 
-      modifiedRequestBody = JsonOutput.toJson(json)
-
-      steps.echo "About to send PUT request to update synthetic test"
-      steps.echo "Enabled: ${enabled}"
-      steps.echo "Request body length: ${modifiedRequestBody?.length()}"
-      steps.echo "Request body keys in JSON: ${json.keySet()}"
+      def modifiedRequestBody = JsonOutput.toJson(json)
 
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
@@ -281,8 +266,6 @@ class DynatraceClient implements Serializable {
       if (response) {
         steps.echo "Response detail: ${response.content}"
       }
-      steps.echo "Request body that was sent:"
-      steps.echo modifiedRequestBody
     }
     return response
   }
