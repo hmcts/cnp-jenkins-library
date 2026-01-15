@@ -212,9 +212,13 @@ class DynatraceClient implements Serializable {
       )
       
       def json = new JsonSlurper().parseText(getResponse.content)
-      
+
       //Set enabled field in the json
       json.enabled = enabled
+
+      // Remove read-only fields that cannot be sent in PUT requests (causes 400 errors)
+      json.remove('entityId')
+      json.remove('requests')  // Read-only computed field for HTTP monitors
 
       // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below
       if (steps.env.TEST_URL) {
