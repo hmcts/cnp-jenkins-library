@@ -223,7 +223,7 @@ class DynatraceClient implements Serializable {
 
       // Remove read-only fields that cannot be sent in PUT requests (causes 400 errors)
       steps.echo "Removing read-only fields..."
-      json.remove('entityId')
+      //json.remove('entityId')
       json.remove('requests')  // Read-only computed field for HTTP monitors
 
       // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below
@@ -263,11 +263,6 @@ class DynatraceClient implements Serializable {
       steps.echo "Enabled: ${enabled}"
       steps.echo "Request body length: ${modifiedRequestBody?.length()}"
       steps.echo "Request body keys in JSON: ${json.keySet()}"
-
-      // Pretty print for debugging
-      def prettyJson = JsonOutput.prettyPrint(modifiedRequestBody)
-      steps.writeFile(file: 'dynatrace-request-debug.json', text: prettyJson)
-      steps.echo "Full request body written to: dynatrace-request-debug.json"
 
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
