@@ -212,12 +212,17 @@ class DynatraceClient implements Serializable {
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}"
       )
       
+      steps.echo "GET response received, parsing JSON..."
       def json = new JsonSlurper().parseText(getResponse.content)
+
+      steps.echo "Current enabled status: ${json.enabled}"
 
       //Set enabled field in the json
       json.enabled = enabled
+      steps.echo "Setting enabled to: ${enabled}"
 
       // Remove read-only fields that cannot be sent in PUT requests (causes 400 errors)
+      steps.echo "Removing read-only fields..."
       json.remove('entityId')
       json.remove('requests')  // Read-only computed field for HTTP monitors
 
