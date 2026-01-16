@@ -96,7 +96,7 @@ def call(params) {
           def acbTemplateFilePath = 'acb.tpl.yaml'
 
           pcr.callAround('dockerbuild') {
-            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
+            timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Docker build') {
               if (!fileExists('.dockerignore')) {
                 writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
               } else {
