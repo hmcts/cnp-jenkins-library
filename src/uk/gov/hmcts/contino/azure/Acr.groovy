@@ -21,6 +21,9 @@ class Acr extends Az {
   def secondaryResourceGroup
   def secondaryRegistrySubscription
 
+  // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
+  def localSteps
+
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
    *
@@ -38,6 +41,7 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
+    this.localSteps = steps
   }
 
   /**
@@ -47,16 +51,16 @@ class Acr extends Az {
    * @return true if dual publish is enabled and properly configured
    */
   private boolean isDualPublishModeEnabled() {
-    def envValue = steps.env.DUAL_ACR_PUBLISH_ENABLED
+    def envValue = localSteps.env.DUAL_ACR_PUBLISH_ENABLED
     def enabled = envValue?.toLowerCase() == 'true'
     
     if (enabled) {
       // Load secondary registry details from environment if not already set
       // Use @field to access fields directly, avoiding getter recursion
       if (!this.@secondaryRegistryName) {
-        this.@secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
-        this.@secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
-        this.@secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
+        this.@secondaryRegistryName = localSteps.env.SECONDARY_REGISTRY_NAME
+        this.@secondaryResourceGroup = localSteps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+        this.@secondaryRegistrySubscription = localSteps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
       
       // Validate configuration
@@ -126,7 +130,7 @@ class Acr extends Az {
     
     // Also login to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Logging into secondary ACR: ${secondaryRegistryName}"
+      localSteps.echo "Logging into secondary ACR: ${secondaryRegistryName}"
       this.az "acr login --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription}"
     }
   }
@@ -175,7 +179,7 @@ class Acr extends Az {
     
     // Also build to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
+      localSteps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
       this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
     }
   }
@@ -197,7 +201,7 @@ class Acr extends Az {
         return null
       }
       
-      def identity = steps.readJSON(text: identityJson)
+      def identity = localSteps.readJSON(text: identityJson)
       
       // Check for user-assigned identities first
       if (identity.userAssignedIdentities) {
@@ -239,7 +243,7 @@ class Acr extends Az {
    *   a map with crossRegistry (boolean) and registries (list of external registry URLs)
    */
   private Map detectCrossRegistryPulls(String acbFilePath) {
-    def acbContent = steps.readFile(acbFilePath)
+    def acbContent = localSteps.readFile(acbFilePath)
     def externalRegistries = [] as Set
     
     // Match any ACR reference: extract registry name from "registryname.azurecr.io"
@@ -291,7 +295,7 @@ class Acr extends Az {
   private boolean taskHasIdentity(String taskName, String identityResourceId) {
     try {
       def taskJson = this.az "acr task show --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} -o json"
-      def task = steps.readJSON(text: taskJson)
+      def task = localSteps.readJSON(text: taskJson)
       
       // Check if the task has the identity in its identity configuration
       if (task.identity?.userAssignedIdentities) {
