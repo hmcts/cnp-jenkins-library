@@ -211,50 +211,31 @@ class DynatraceClient implements Serializable {
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}"
       )
 
-      def json = new JsonSlurper().parseText(getResponse.content)
+      // Use string replacement to preserve JSON field order (Dynatrace API is sensitive to order)
+      def modifiedRequestBody = getResponse.content
 
-      //Set enabled field in the json
-      json.enabled = enabled
+      // Update enabled status
+      modifiedRequestBody = modifiedRequestBody.replaceFirst('"enabled"\\s*:\\s*false', '"enabled":true')
+      modifiedRequestBody = modifiedRequestBody.replaceFirst('"enabled"\\s*:\\s*true', enabled ? '"enabled":true' : '"enabled":false')
 
-      // Code to update URL's in synthetic tests for PREVIEW. The JSON format is different for HTTP vs SYNTHETIC monitors hence the conditional statements below
-      if (steps.env.TEST_URL) {
-        if (steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP")) {
-          if (!enabled) {
-            // When disabling HTTP synthetics, restore PREVIEW URLs
-            for (int i = 0; i < json.script.requests.size(); i++) {
-              def request = json.script.requests[i]
-              if (request.url && !request.url.contains("PREVIEW") && request.url.contains("pr-")) {
-                def urlParts = request.url.split('://') //Split protocol and url
-                if (urlParts.length > 1) {
-                  def pathPart = urlParts[1].substring(urlParts[1].indexOf('/')) // In the URL extract /onwards
-                  json.script.requests[i].url = urlParts[0] + "://PREVIEW" + pathPart // rebuild url with protocol + PREVIEW + pathPart
-                }
-              }
-            }
-          } else {
-            // When enabling HTTP synthetics, replace PREVIEW with hostname
-            steps.echo "Enabling HTTP synthetic - replacing PREVIEW with TEST_URL: ${steps.env.TEST_URL}"
-            def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
-            steps.echo "Extracted hostname: ${hostname}"
+      // Update URLs for preview environment if needed
+      if (steps.env.TEST_URL && steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP") && enabled) {
+        // When enabling HTTP synthetics, replace PREVIEW with hostname
+        steps.echo "Enabling HTTP synthetic - replacing PREVIEW with TEST_URL: ${steps.env.TEST_URL}"
+        def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
+        steps.echo "Extracted hostname: ${hostname}"
 
-            // Use indexed assignment to ensure the JSON structure is properly updated
-            for (int i = 0; i < json.script.requests.size(); i++) {
-              if (json.script.requests[i].url?.contains("PREVIEW")) {
-                def oldUrl = json.script.requests[i].url
-                json.script.requests[i].url = json.script.requests[i].url.replace("PREVIEW", hostname)
-                steps.echo "Request ${i + 1}: ${oldUrl} -> ${json.script.requests[i].url}"
-              }
-            }
-          }
-        } else {
-          // For other synthetics: always use events array structure
-          if (json.script?.events) {
-            json.script.events[0].url = steps.env.TEST_URL
-          }
+        // Replace all PREVIEW URLs with the actual hostname
+        modifiedRequestBody = modifiedRequestBody.replaceAll('"url"\\s*:\\s*"https://PREVIEW/', "\"url\":\"https://${hostname}/")
+        steps.echo "Replaced PREVIEW URLs with ${hostname}"
+      } else if (steps.env.TEST_URL && !steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP")) {
+        // For BROWSER synthetics: parse JSON to update events array
+        def json = new JsonSlurper().parseText(modifiedRequestBody)
+        if (json.script?.events) {
+          json.script.events[0].url = steps.env.TEST_URL
+          modifiedRequestBody = JsonOutput.toJson(json)
         }
       }
-
-      def modifiedRequestBody = JsonOutput.toJson(json)
 
       // Debug: Check if JSON serialization changed anything critical
       steps.echo "Original content length: ${getResponse.content.length()}"
