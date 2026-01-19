@@ -232,10 +232,15 @@ class DynatraceClient implements Serializable {
             }
           } else {
             // When enabling HTTP synthetics, replace PREVIEW with hostname
+            steps.echo "Enabling HTTP synthetic - replacing PREVIEW with TEST_URL: ${steps.env.TEST_URL}"
             def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
-            json.script.requests?.each { request ->
+            steps.echo "Extracted hostname: ${hostname}"
+
+            json.script.requests?.eachWithIndex { request, index ->
               if (request.url?.contains("PREVIEW")) {
+                def oldUrl = request.url
                 request.url = request.url.replace("PREVIEW", hostname)
+                steps.echo "Request ${index + 1}: ${oldUrl} -> ${request.url}"
               }
             }
           }
