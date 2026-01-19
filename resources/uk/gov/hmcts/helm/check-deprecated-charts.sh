@@ -6,7 +6,6 @@ DEPRECATED_CHART_NAME=${3}
 DEPRECATED_CHART_VERSION=${4}
 
 function ver { 
-    # Clean the version: remove v prefix
     local clean_version=$(echo "$1" | sed 's/^v//')
     printf "%03d%03d%03d%03d" $(echo "$clean_version" | tr '.' ' '); 
 }
