@@ -260,6 +260,12 @@ class DynatraceClient implements Serializable {
       steps.echo "Original content length: ${getResponse.content.length()}"
       steps.echo "Modified content length: ${modifiedRequestBody.length()}"
 
+      // Write both versions for comparison and archive as build artifacts
+      steps.writeFile(file: 'dt-original.json', text: getResponse.content)
+      steps.writeFile(file: 'dt-modified.json', text: modifiedRequestBody)
+      steps.archiveArtifacts(artifacts: 'dt-*.json', allowEmptyArchive: true)
+      steps.echo "Archived dt-original.json and dt-modified.json as build artifacts"
+
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         contentType: 'APPLICATION_JSON',
