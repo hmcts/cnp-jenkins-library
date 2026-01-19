@@ -21,6 +21,9 @@ class Acr extends Az {
   def secondaryResourceGroup
   def secondaryRegistrySubscription
 
+  // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
+  def localSteps
+
   /**
    * Create a new instance of Acr with the given pipeline script, subscription and registry name
    *
@@ -38,6 +41,7 @@ class Acr extends Az {
     this.registryName = registryName
     this.resourceGroup = resourceGroup
     this.registrySubscription = registrySubscription
+    this.localSteps = steps
   }
 
   /**
@@ -47,16 +51,16 @@ class Acr extends Az {
    * @return true if dual publish is enabled and properly configured
    */
   private boolean isDualPublishModeEnabled() {
-    def envValue = steps.env.DUAL_ACR_PUBLISH_ENABLED
+    def envValue = localSteps.env.DUAL_ACR_PUBLISH_ENABLED
     def enabled = envValue?.toLowerCase() == 'true'
     
     if (enabled) {
       // Load secondary registry details from environment if not already set
       // Use @field to access fields directly, avoiding getter recursion
       if (!this.@secondaryRegistryName) {
-        this.@secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
-        this.@secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
-        this.@secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
+        this.@secondaryRegistryName = localSteps.env.SECONDARY_REGISTRY_NAME
+        this.@secondaryResourceGroup = localSteps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+        this.@secondaryRegistrySubscription = localSteps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
       
       // Validate configuration
@@ -126,7 +130,7 @@ class Acr extends Az {
     
     // Also login to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Logging into secondary ACR: ${secondaryRegistryName}"
+      localSteps.echo "Logging into secondary ACR: ${secondaryRegistryName}"
       this.az "acr login --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription}"
     }
   }
@@ -175,7 +179,7 @@ class Acr extends Az {
     
     // Also build to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
+      localSteps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
       this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
     }
   }
@@ -197,7 +201,7 @@ class Acr extends Az {
         return null
       }
       
-      def identity = steps.readJSON(text: identityJson)
+      def identity = localSteps.readJSON(text: identityJson)
       
       // Check for user-assigned identities first
       if (identity.userAssignedIdentities) {
@@ -218,7 +222,7 @@ class Acr extends Az {
       
       return null
     } catch (Exception e) {
-      steps.echo "Warning: Could not retrieve managed identity for ACR '${registryName}': ${e.message}"
+      localSteps.echo "Warning: Could not retrieve managed identity for ACR '${registryName}': ${e.message}"
       return null
     }
   }
@@ -239,7 +243,7 @@ class Acr extends Az {
    *   a map with crossRegistry (boolean) and registries (list of external registry URLs)
    */
   private Map detectCrossRegistryPulls(String acbFilePath) {
-    def acbContent = steps.readFile(acbFilePath)
+    def acbContent = localSteps.readFile(acbFilePath)
     def externalRegistries = [] as Set
     
     // Match any ACR reference: extract registry name from "registryname.azurecr.io"
@@ -291,7 +295,7 @@ class Acr extends Az {
   private boolean taskHasIdentity(String taskName, String identityResourceId) {
     try {
       def taskJson = this.az "acr task show --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} -o json"
-      def task = steps.readJSON(text: taskJson)
+      def task = localSteps.readJSON(text: taskJson)
       
       // Check if the task has the identity in its identity configuration
       if (task.identity?.userAssignedIdentities) {
@@ -333,7 +337,7 @@ class Acr extends Az {
    *   the ACB YAML file to use
    */
   private void createTask(String taskName, String acbFile) {
-    steps.echo "Creating ACR task '${taskName}'"
+    localSteps.echo "Creating ACR task '${taskName}'"
     this.az "acr task create --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --file ${acbFile} --context /dev/null"
   }
 
@@ -364,27 +368,27 @@ class Acr extends Az {
    */
   private boolean assignIdentityToTask(String taskName, String identityResourceId) {
     try {
-      steps.echo "Assigning identity to task '${taskName}'"
+      localSteps.echo "Assigning identity to task '${taskName}'"
       // Use the dedicated identity assign command
       this.az "acr task identity assign --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --identities ${identityResourceId}"
-      steps.echo "✓ Successfully assigned identity to task"
+      localSteps.echo "✓ Successfully assigned identity to task"
       return true
     } catch (Exception e) {
-      steps.echo "════════════════════════════════════════════════════════════════════════"
-      steps.echo "ERROR: Cannot assign managed identity to ACR task"
-      steps.echo "════════════════════════════════════════════════════════════════════════"
-      steps.echo ""
-      steps.echo "Error: ${e.message}"
-      steps.echo ""
-      steps.echo "Possible causes:"
-      steps.echo "1. Jenkins service principal needs 'Managed Identity Operator' role"
-      steps.echo "   Verify: az role assignment list --assignee f4e06bc2-c8a5-4643-8ce7-85023024abb8 --scope ${identityResourceId}"
-      steps.echo ""
-      steps.echo "2. Jenkins service principal needs 'Contributor' role on the ACR"
-      steps.echo "   Verify: az role assignment list --assignee f4e06bc2-c8a5-4643-8ce7-85023024abb8 --all"
-      steps.echo ""
-      steps.echo "3. Role assignment needs time to propagate (wait 5-10 minutes)"
-      steps.echo "════════════════════════════════════════════════════════════════════════"
+      localSteps.echo "════════════════════════════════════════════════════════════════════════"
+      localSteps.echo "ERROR: Cannot assign managed identity to ACR task"
+      localSteps.echo "════════════════════════════════════════════════════════════════════════"
+      localSteps.echo ""
+      localSteps.echo "Error: ${e.message}"
+      localSteps.echo ""
+      localSteps.echo "Possible causes:"
+      localSteps.echo "1. Jenkins service principal needs 'Managed Identity Operator' role"
+      localSteps.echo "   Verify: az role assignment list --assignee f4e06bc2-c8a5-4643-8ce7-85023024abb8 --scope ${identityResourceId}"
+      localSteps.echo ""
+      localSteps.echo "2. Jenkins service principal needs 'Contributor' role on the ACR"
+      localSteps.echo "   Verify: az role assignment list --assignee f4e06bc2-c8a5-4643-8ce7-85023024abb8 --all"
+      localSteps.echo ""
+      localSteps.echo "3. Role assignment needs time to propagate (wait 5-10 minutes)"
+      localSteps.echo "════════════════════════════════════════════════════════════════════════"
       return false
     }
   }
@@ -400,7 +404,7 @@ class Acr extends Az {
    *   the client ID of the user-assigned managed identity
    */
   private void addTaskCredentials(String taskName, String loginServer, String identityClientId) {
-    steps.echo "Adding credentials for ${loginServer} to task '${taskName}'"
+    localSteps.echo "Adding credentials for ${loginServer} to task '${taskName}'"
     this.az "acr task credential add --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --login-server ${loginServer} --use-identity ${identityClientId}"
   }
 
@@ -437,7 +441,7 @@ class Acr extends Az {
    */
   private void handleAcrExecution(String acbFilePath, String taskName, String setArgs = "") { 
     // Check if ACB file exists and detect cross-registry pulls
-    if (!steps.fileExists(acbFilePath)) {
+    if (!localSteps.fileExists(acbFilePath)) {
       quickRun()
       return
     }
@@ -450,13 +454,13 @@ class Acr extends Az {
       return
     }
 
-    steps.echo "Cross-registry pull detected for: ${crossRegistryInfo.registries.join(', ')}"
+    localSteps.echo "Cross-registry pull detected for: ${crossRegistryInfo.registries.join(', ')}"
     
     // Get managed identity from the ACR itself
     def identity = getManagedIdentity()
     
     if (!identity) {
-      steps.echo "Warning: Cross-registry authentication requires a managed identity assigned to ACR '${registryName}'. Falling back to (az acr run)."
+      localSteps.echo "Warning: Cross-registry authentication requires a managed identity assigned to ACR '${registryName}'. Falling back to (az acr run)."
       quickRun()
       return
     }
@@ -467,7 +471,7 @@ class Acr extends Az {
       createTask(taskName, acbFilePath)
     } else {
       // Update existing task with new ACB file to pick up template changes
-      steps.echo "Updating ACR task '${taskName}' with latest ACB file"
+      localSteps.echo "Updating ACR task '${taskName}' with latest ACB file"
       this.az "acr task update --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --file ${acbFilePath}"
     }
     
@@ -475,7 +479,7 @@ class Acr extends Az {
     if (!taskHasIdentity(taskName, identity.resourceId)) {
       def identityAssigned = assignIdentityToTask(taskName, identity.resourceId)
       if (!identityAssigned) {
-        steps.echo "Falling back to quick run due to permission issues"
+        localSteps.echo "Falling back to quick run due to permission issues"
         quickRun()
         return
       }
@@ -506,7 +510,7 @@ class Acr extends Az {
     handleAcrExecution("acb.yaml", "default-acr-build")
 
     if (isDualPublishModeEnabled()) {
-      steps.echo "Running ACR build script on secondary registry: ${secondaryRegistryName}"
+      localSteps.echo "Running ACR build script on secondary registry: ${secondaryRegistryName}"
       withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
         handleAcrExecution("acb.yaml", "default-acr-build")
       }
@@ -517,7 +521,7 @@ class Acr extends Az {
     def defaultAcrScriptFilePath = "acb.yaml"
     
     // Generate acb.yaml from template by replacing placeholders
-    steps.sh(
+    localSteps.sh(
       script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getBaseShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
       returnStdout: true
     )?.trim()
@@ -540,10 +544,10 @@ class Acr extends Az {
     handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs)
 
     if (isDualPublishModeEnabled()) {
-      steps.echo "Running ACB template build on secondary registry: ${secondaryRegistryName}"
+      localSteps.echo "Running ACB template build on secondary registry: ${secondaryRegistryName}"
       withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
         // Regenerate acb.yaml for the secondary registry so any templated REGISTRY_NAME matches.
-        steps.sh(
+        localSteps.sh(
           script: "sed -e \"s@{{CI_IMAGE_TAG}}@${dockerImage.getBaseShortName()}@g\" -e \"s@{{REGISTRY_NAME}}@${registryName}@g\" ${acbTemplateFilePath} > ${defaultAcrScriptFilePath}",
           returnStdout: true
         )?.trim()
@@ -590,7 +594,7 @@ class Acr extends Az {
     
     // Also retag in secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Promoting image to secondary ACR: ${secondaryRegistryName}"
+      localSteps.echo "Promoting image to secondary ACR: ${secondaryRegistryName}"
       // Need to use the secondary registry's hostname in the source
       def secondaryBaseTag = baseTag.replace("${registryName}.azurecr.io", "${secondaryRegistryName}.azurecr.io")
       this.az "acr import --force -n ${secondaryRegistryName} -g ${secondaryResourceGroup} --subscription ${secondaryRegistrySubscription} --source ${secondaryBaseTag} -t ${additionalTag}"?.trim()
@@ -615,7 +619,7 @@ class Acr extends Az {
   private boolean hasRepoTag(String tag, String repository) {
     // staging and latest are not really tags for our purposes, it just marks the most recent master build before and after tests are run in AAT.
     if (tag in ['staging' , 'latest'] ) {
-      steps.echo "Warning: matching '${tag}' tag for ${repository}"
+      localSteps.echo "Warning: matching '${tag}' tag for ${repository}"
     }
 
     def tagFound = false
@@ -638,7 +642,7 @@ class Acr extends Az {
     
     // Also purge from secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
-      steps.echo "Purging old tags from secondary ACR: ${secondaryRegistryName}"
+      localSteps.echo "Purging old tags from secondary ACR: ${secondaryRegistryName}"
       this.az "acr run --registry ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
     }
   }
