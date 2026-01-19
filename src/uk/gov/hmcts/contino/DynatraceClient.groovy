@@ -256,6 +256,10 @@ class DynatraceClient implements Serializable {
 
       def modifiedRequestBody = JsonOutput.toJson(json)
 
+      // Debug: Check if JSON serialization changed anything critical
+      steps.echo "Original content length: ${getResponse.content.length()}"
+      steps.echo "Modified content length: ${modifiedRequestBody.length()}"
+
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         contentType: 'APPLICATION_JSON',
