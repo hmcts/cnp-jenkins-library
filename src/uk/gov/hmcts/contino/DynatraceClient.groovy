@@ -211,12 +211,11 @@ class DynatraceClient implements Serializable {
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}"
       )
 
-      // Use string replacement to preserve JSON field order (Dynatrace API is sensitive to order)
-      def modifiedRequestBody = getResponse.content
+      // Parse JSON to modify, then serialize with proper escaping
+      def json = new JsonSlurper().parseText(getResponse.content)
 
       // Update enabled status
-      modifiedRequestBody = modifiedRequestBody.replaceFirst('"enabled"\\s*:\\s*false', '"enabled":true')
-      modifiedRequestBody = modifiedRequestBody.replaceFirst('"enabled"\\s*:\\s*true', enabled ? '"enabled":true' : '"enabled":false')
+      json.enabled = enabled
 
       // Update URLs for preview environment if needed
       if (steps.env.TEST_URL && steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP") && enabled) {
@@ -225,17 +224,23 @@ class DynatraceClient implements Serializable {
         def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
         steps.echo "Extracted hostname: ${hostname}"
 
-        // Replace all PREVIEW URLs with the actual hostname
-        modifiedRequestBody = modifiedRequestBody.replaceAll('"url"\\s*:\\s*"https://PREVIEW/', "\"url\":\"https://${hostname}/")
-        steps.echo "Replaced PREVIEW URLs with ${hostname}"
+        // Replace PREVIEW in all request URLs
+        for (int i = 0; i < json.script.requests.size(); i++) {
+          if (json.script.requests[i].url?.contains("PREVIEW")) {
+            def oldUrl = json.script.requests[i].url
+            json.script.requests[i].url = json.script.requests[i].url.replace("PREVIEW", hostname)
+            steps.echo "Request ${i + 1}: ${oldUrl} -> ${json.script.requests[i].url}"
+          }
+        }
       } else if (steps.env.TEST_URL && !steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP")) {
-        // For BROWSER synthetics: parse JSON to update events array
-        def json = new JsonSlurper().parseText(modifiedRequestBody)
+        // For BROWSER synthetics: update events array
         if (json.script?.events) {
           json.script.events[0].url = steps.env.TEST_URL
-          modifiedRequestBody = JsonOutput.toJson(json)
         }
       }
+
+      // Use JsonOutput with custom escaping to match Dynatrace format
+      def modifiedRequestBody = JsonOutput.toJson(json)
 
       // Debug: Check if JSON serialization changed anything critical
       steps.echo "Original content length: ${getResponse.content.length()}"
