@@ -221,12 +221,13 @@ class DynatraceClient implements Serializable {
         if (steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP")) {
           if (!enabled) {
             // When disabling HTTP synthetics, restore PREVIEW URLs
-            json.script.requests?.each { request ->
+            for (int i = 0; i < json.script.requests.size(); i++) {
+              def request = json.script.requests[i]
               if (request.url && !request.url.contains("PREVIEW") && request.url.contains("pr-")) {
                 def urlParts = request.url.split('://') //Split protocol and url
                 if (urlParts.length > 1) {
                   def pathPart = urlParts[1].substring(urlParts[1].indexOf('/')) // In the URL extract /onwards
-                  request.url = urlParts[0] + "://PREVIEW" + pathPart // rebuild url with protocol + PREVIEW + pathPart
+                  json.script.requests[i].url = urlParts[0] + "://PREVIEW" + pathPart // rebuild url with protocol + PREVIEW + pathPart
                 }
               }
             }
@@ -236,11 +237,12 @@ class DynatraceClient implements Serializable {
             def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
             steps.echo "Extracted hostname: ${hostname}"
 
-            json.script.requests?.eachWithIndex { request, index ->
-              if (request.url?.contains("PREVIEW")) {
-                def oldUrl = request.url
-                request.url = request.url.replace("PREVIEW", hostname)
-                steps.echo "Request ${index + 1}: ${oldUrl} -> ${request.url}"
+            // Use indexed assignment to ensure the JSON structure is properly updated
+            for (int i = 0; i < json.script.requests.size(); i++) {
+              if (json.script.requests[i].url?.contains("PREVIEW")) {
+                def oldUrl = json.script.requests[i].url
+                json.script.requests[i].url = json.script.requests[i].url.replace("PREVIEW", hostname)
+                steps.echo "Request ${i + 1}: ${oldUrl} -> ${json.script.requests[i].url}"
               }
             }
           }
