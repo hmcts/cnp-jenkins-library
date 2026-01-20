@@ -10,7 +10,6 @@ function ver {
     printf "%03d%03d%03d%03d" $(echo "$clean_version" | tr '.' ' '); 
 }
 
-
 CURRENT_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "^${DEPRECATED_CHART_NAME}" | awk '{ print $2}' | sed "s/~//g" | grep -v -E '\-(alpha|beta)' | head -1)
 if [[ -n $CURRENT_VERSION ]] && [ $(ver $CURRENT_VERSION) -lt $(ver ${DEPRECATED_CHART_VERSION}) ]; then
     echo "$deprecation chart $CURRENT_VERSION is deprecated, please upgrade to at least ${DEPRECATED_CHART_VERSION}"
