@@ -143,4 +143,63 @@ class HelmTest extends Specification {
     })
   }
 
+  // ==================== Dual ACR Publish Tests ====================
+
+  def "dual publish mode is disabled when DUAL_ACR_PUBLISH_ENABLED is not set"() {
+    given:
+    def testSteps = Mock(JenkinsStepMock.class)
+    testSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                      REGISTRY_NAME: "hmctspublic",
+                      REGISTRY_SUBSCRIPTION: "test-sub",
+                      SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                      BRANCH_NAME: "PR-123"]
+    
+    when:
+    def testHelm = new Helm(testSteps, CHART)
+    
+    then:
+    testHelm.isDualPublishEnabled() == false
+  }
+
+  def "dual publish mode is disabled when secondary registry details are missing"() {
+    given:
+    def testSteps = Mock(JenkinsStepMock.class)
+    testSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                      REGISTRY_NAME: "hmctspublic",
+                      REGISTRY_SUBSCRIPTION: "test-sub",
+                      SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                      BRANCH_NAME: "PR-123",
+                      DUAL_ACR_PUBLISH_ENABLED: "true",
+                      SECONDARY_REGISTRY_NAME: null]
+    testSteps.echo(_) >> null
+    
+    when:
+    def testHelm = new Helm(testSteps, CHART)
+    
+    then:
+    testHelm.isDualPublishEnabled() == false
+  }
+
+  def "dual publish mode is enabled when all secondary registry details are provided"() {
+    given:
+    def testSteps = Mock(JenkinsStepMock.class)
+    testSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                      REGISTRY_NAME: "hmctspublic",
+                      REGISTRY_SUBSCRIPTION: "test-sub",
+                      SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                      BRANCH_NAME: "PR-123",
+                      DUAL_ACR_PUBLISH_ENABLED: "true",
+                      SECONDARY_REGISTRY_NAME: "hmctsold",
+                      SECONDARY_REGISTRY_RESOURCE_GROUP: "hmcts-old-rg",
+                      SECONDARY_REGISTRY_SUBSCRIPTION: "old-sub"]
+    testSteps.echo(_) >> null
+    
+    when:
+    def testHelm = new Helm(testSteps, CHART)
+    
+    then:
+    testHelm.isDualPublishEnabled() == true
+    testHelm.secondaryRegistryName == "hmctsold"
+  }
+
 }
