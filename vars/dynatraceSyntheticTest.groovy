@@ -115,8 +115,8 @@ def call(Map params) {
 
     // Determine trigger count based on monitor type (HTTP tests complete quicker so trigger more of these vs browser tests)
     def monitorType = env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP") ? "HTTP" : "BROWSER"
-    def triggerCount = monitorType == "HTTP" ? 7 : 3
-    def delaySeconds = 65 //Dynatrace limitation (60 seconds between the same synthetic test triggers)
+    def triggerCount = monitorType == "HTTP" ? 3 : 3
+    def delaySeconds = 75 //Dynatrace limitation (60 seconds between the same synthetic test triggers)
 
     echo "Triggering ${triggerCount} ${monitorType} synthetic test executions with ${delaySeconds}s intervals"
 
