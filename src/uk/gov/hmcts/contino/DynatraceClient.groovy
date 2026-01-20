@@ -252,17 +252,23 @@ class DynatraceClient implements Serializable {
       steps.archiveArtifacts(artifacts: 'dt-*.json', allowEmptyArchive: true)
       steps.echo "Archived dt-original.json and dt-modified.json as build artifacts"
 
+      // Remove debug artifacts before sending
+      steps.sh 'rm -f dt-*.json || true'
+
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         contentType: 'APPLICATION_JSON',
         httpMode: 'PUT',
-        quiet: true,
+        validResponseCodes: '100:599',  // Accept all responses to see what Dynatrace returns
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_UPDATE_TOKEN}"]
         ],
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}",
         requestBody: modifiedRequestBody
       )
+
+      steps.echo "Response status: ${response.status}"
+      steps.echo "Response body: ${response.content}"
       steps.echo "Dynatrace synthetic test updated. Response ${response}"
     } catch (Exception e) {
       steps.echo "Error while updating synthetic test: ${e.message}"
