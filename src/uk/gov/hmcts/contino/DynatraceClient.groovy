@@ -211,7 +211,7 @@ class DynatraceClient implements Serializable {
         url: "${DEFAULT_DYNATRACE_API_HOST}${DEFAULT_UPDATE_SYNTHETIC_ENDPOINT}${steps.env.DT_SYNTHETIC_TEST_ID}"
       )
 
-      // Parse JSON to modify, then serialize with proper escaping
+      // Parse JSON to modify, then serialize 
       def json = new JsonSlurper().parseText(getResponse.content)
 
       // Update enabled status
@@ -242,24 +242,11 @@ class DynatraceClient implements Serializable {
       // Use JsonOutput with custom escaping to match Dynatrace format
       def modifiedRequestBody = JsonOutput.toJson(json)
 
-      // Debug: Check if JSON serialization changed anything critical
-      steps.echo "Original content length: ${getResponse.content.length()}"
-      steps.echo "Modified content length: ${modifiedRequestBody.length()}"
-
-      // Write both versions for comparison and archive as build artifacts
-      steps.writeFile(file: 'dt-original.json', text: getResponse.content)
-      steps.writeFile(file: 'dt-modified.json', text: modifiedRequestBody)
-      steps.archiveArtifacts(artifacts: 'dt-*.json', allowEmptyArchive: true)
-      steps.echo "Archived dt-original.json and dt-modified.json as build artifacts"
-
-      // Remove debug artifacts before sending
-      steps.sh 'rm -f dt-*.json || true'
-
       response = steps.httpRequest(
         acceptType: 'APPLICATION_JSON',
         contentType: 'APPLICATION_JSON',
         httpMode: 'PUT',
-        validResponseCodes: '100:599',  // Accept all responses to see what Dynatrace returns
+        quiet: true,
         customHeaders: [
           [name: 'Authorization', value: "Api-Token ${steps.env.PERF_SYNTHETIC_UPDATE_TOKEN}"]
         ],
@@ -267,8 +254,6 @@ class DynatraceClient implements Serializable {
         requestBody: modifiedRequestBody
       )
 
-      steps.echo "Response status: ${response.status}"
-      steps.echo "Response body: ${response.content}"
       steps.echo "Dynatrace synthetic test updated. Response ${response}"
     } catch (Exception e) {
       steps.echo "Error while updating synthetic test: ${e.message}"
