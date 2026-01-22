@@ -318,15 +318,15 @@ def call(type, String product, String component, Closure body) {
 
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
-              stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
+              stageWithAgent("Dynatrace Performance Setup - ${environmentName}", product) {
                 testEnv(aksUrl) {
                   try {
-                    pcr.callAround("dynatracePerformanceSetup:${environment}") {
-                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
+                    pcr.callAround("dynatracePerformanceSetup:${environmentName}") {
+                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environmentName}") {
                         dynatracePerformanceSetup([
                           product: product,
                           component: component,
-                          environment: environment,
+                          environment: environmentName,
                           testUrl: env.TEST_URL,
                           secrets: pipelineConfig.vaultSecrets,
                           configPath: pipelineConfig.performanceTestConfigPath
@@ -345,15 +345,15 @@ def call(type, String product, String component, Closure body) {
             
             if (pipelineConfig.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
-                stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
+                stageWithAgent("Dynatrace Synthetic Tests - ${environmentName}", product) {
                   testEnv(aksUrl) {
                     try {
-                      pcr.callAround("dynatraceSyntheticTest:${environment}") {
-                        timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
+                      pcr.callAround("dynatraceSyntheticTest:${environmentName}") {
+                        timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environmentName}") {
                           dynatraceSyntheticTest([
                             product: product,
                             component: component,
-                            environment: environment,
+                            environment: environmentName,
                             testUrl: env.TEST_URL,
                             secrets: pipelineConfig.vaultSecrets,
                             configPath: pipelineConfig.performanceTestConfigPath,
@@ -372,16 +372,16 @@ def call(type, String product, String component, Closure body) {
             
             if (pipelineConfig.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
-                stageWithAgent("Gatling Load Tests - ${environment}", product) {
+                stageWithAgent("Gatling Load Tests - ${environmentName}", product) {
                   testEnv(aksUrl) {
                     try {
-                      pcr.callAround("gatlingLoadTests:${environment}") {
-                        timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
+                      pcr.callAround("gatlingLoadTests:${environmentName}") {
+                        timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environmentName}") {
                           gatlingExternalLoadTest([
                             product: product,
                             component: component,
-                            environment: environment,
-                            subscription: subscription,
+                            environment: environmentName,
+                            subscription: subscriptionName,
                             gatlingRepo: pipelineConfig.gatlingRepo,
                             gatlingBranch: pipelineConfig.gatlingBranch,
                             gatlingSimulation: pipelineConfig.gatlingSimulation
@@ -407,12 +407,12 @@ def call(type, String product, String component, Closure body) {
 
               // Stage 3: Site Reliability Guardian Evaluation (if enabled)
               if (pipelineConfig.srgEvaluation) {
-                stageWithAgent("Site Reliability Guardian Evaluation - ${environment}", product) {
+                stageWithAgent("Site Reliability Guardian Evaluation - ${environmentName}", product) {
                   testEnv(aksUrl) {
                     try {
-                      pcr.callAround("srgEvaluation:${environment}") {
+                      pcr.callAround("srgEvaluation:${environmentName}") {
                         evaluateDynatraceSRG([
-                          environment: environment,
+                          environment: environmentName,
                           srgServiceName: pipelineConfig.srgServiceName,
                           performanceTestStartTime: env.PERF_TEST_START_TIME,
                           performanceTestEndTime: env.PERF_TEST_END_TIME,
