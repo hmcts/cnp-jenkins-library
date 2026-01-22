@@ -283,7 +283,7 @@ def call(type, String product, String component, Closure body) {
             )
             
           // Performance Test Pipeline: Setup -> Parallel Testing
-          if (config.performanceTestStages || config.gatlingLoadTests) {
+          if (pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) {
             
             // Load performance test secrets once for all stages
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/" //https://et-perftest.vault.azure.net/
@@ -300,7 +300,7 @@ def call(type, String product, String component, Closure body) {
             ) {
             
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
-              if (config.performanceTestStages) {
+              if (pipelineConfig.performanceTestStages) {
                 stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
                   testEnv(aksUrl) {
                     def success = true
@@ -312,8 +312,8 @@ def call(type, String product, String component, Closure body) {
                             component: component,
                             environment: environment,
                             testUrl: env.TEST_URL,
-                            secrets: config.vaultSecrets,
-                            configPath: config.performanceTestConfigPath
+                            secrets: pipelineConfig.vaultSecrets,
+                            configPath: pipelineConfig.performanceTestConfigPath
                           ])
                         }
                       }
@@ -331,23 +331,23 @@ def call(type, String product, String component, Closure body) {
             // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
             def testStages = [:]
             
-            if (config.performanceTestStages) {
+            if (pipelineConfig.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
                   testEnv(aksUrl) {
                     def success = true
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environment}") {
-                        timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
+                        timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
                           dynatraceSyntheticTest([
                             product: product,
                             component: component,
                             environment: environment,
                             testUrl: env.TEST_URL,
-                            secrets: config.vaultSecrets,
-                            configPath: config.performanceTestConfigPath,
-                            performanceTestStagesEnabled: config.performanceTestStages,
-                            gatlingLoadTestsEnabled: config.gatlingLoadTests
+                            secrets: pipelineConfig.vaultSecrets,
+                            configPath: pipelineConfig.performanceTestConfigPath,
+                            performanceTestStagesEnabled: pipelineConfig.performanceTestStages,
+                            gatlingLoadTestsEnabled: pipelineConfig.gatlingLoadTests
                           ])
                         }
                       }
@@ -357,7 +357,7 @@ def call(type, String product, String component, Closure body) {
                     } finally {
                       savePodsLogs(dockerImage, params, "dynatrace-synthetic")
                       if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        clearHelmReleaseForFailure(enableHelmLabel, pipelineConfig, dockerImage, params, pcr)
                       }
                     }
                   }
@@ -365,22 +365,22 @@ def call(type, String product, String component, Closure body) {
               }
             }
             
-            if (config.gatlingLoadTests) {
+            if (pipelineConfig.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
                 stageWithAgent("Gatling Load Tests - ${environment}", product) {
                   testEnv(aksUrl) {
                     def success = true
                     try {
                       pcr.callAround("gatlingLoadTests:${environment}") {
-                        timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
+                        timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
                           gatlingExternalLoadTest([
                             product: product,
                             component: component,
                             environment: environment,
                             subscription: subscription,
-                            gatlingRepo: config.gatlingRepo,
-                            gatlingBranch: config.gatlingBranch,
-                            gatlingSimulation: config.gatlingSimulation
+                            gatlingRepo: pipelineConfig.gatlingRepo,
+                            gatlingBranch: pipelineConfig.gatlingBranch,
+                            gatlingSimulation: pipelineConfig.gatlingSimulation
                           ])
                         }
                       }
@@ -390,7 +390,7 @@ def call(type, String product, String component, Closure body) {
                     } finally {
                       savePodsLogs(dockerImage, params, "gatling-load-tests")
                       if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        clearHelmReleaseForFailure(enableHelmLabel, pipelineConfig, dockerImage, params, pcr)
                       }
                     }
                   }
@@ -408,27 +408,27 @@ def call(type, String product, String component, Closure body) {
               }
 
               // Stage 3: Site Reliability Guardian Evaluation (if enabled)
-              if (config.srgEvaluation) {
+              if (pipelineConfig.srgEvaluation) {
                 stageWithAgent("Site Reliability Guardian Evaluation - ${environment}", product) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("srgEvaluation:${environment}") {
                         evaluateDynatraceSRG([
                           environment: environment,
-                          srgServiceName: config.srgServiceName,
+                          srgServiceName: pipelineConfig.srgServiceName,
                           performanceTestStartTime: env.PERF_TEST_START_TIME,
                           performanceTestEndTime: env.PERF_TEST_END_TIME,
                           gatlingTestStartTime: env.GATLING_TEST_START_TIME,
                           gatlingTestEndTime: env.GATLING_TEST_END_TIME,
-                          srgFailureBehavior: config.srgFailureBehavior,
+                          srgFailureBehavior: pipelineConfig.srgFailureBehavior,
                           product: product,
                           component: component
                         ])
                       }
                     } catch (Exception e) {
                       echo "SRG evaluation stage failed: ${e.message}"
-                      if (config.srgFailureBehavior == 'fail') {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      if (pipelineConfig.srgFailureBehavior == 'fail') {
+                        clearHelmReleaseForFailure(enableHelmLabel, pipelineConfig, dockerImage, params, pcr)
                         throw e
                       }
                     }
