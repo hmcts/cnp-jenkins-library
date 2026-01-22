@@ -293,6 +293,8 @@ def call(type, String product, String component, Closure body) {
               def testEnvName = new Environment(env).nonProdName
               def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnvName}"]
 
+            def pcr = params.pipelineCallbacksRunner
+
               withEnv(testEnvVariables) {
                 echo "Using TEST_URL: ${env.TEST_URL}"
                 echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
