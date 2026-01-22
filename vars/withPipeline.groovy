@@ -300,7 +300,7 @@ def call(type, String product, String component, Closure body) {
               }
             }
 
-            def pcr = params.pipelineCallbacksRunner
+            def pcr = callbacksRunner
 
             // Load performance test secrets once for all stages
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/" //https://et-perftest.vault.azure.net/
