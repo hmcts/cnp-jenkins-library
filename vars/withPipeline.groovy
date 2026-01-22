@@ -337,7 +337,7 @@ def call(type, String product, String component, Closure body) {
                       echo "Dynatrace setup failed: ${err.message}"
                       // Don't fail the build for setup issues, continue with tests
                     } finally {
-                      savePodsLogs(dockerImage, params, "dynatrace-setup")
+                      //savePodsLogs(dockerImage, params, "dynatrace-setup")
                     }
                   }
                 }
