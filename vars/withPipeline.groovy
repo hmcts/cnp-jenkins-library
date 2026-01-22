@@ -287,7 +287,19 @@ def call(type, String product, String component, Closure body) {
 
             // Set aksUrl from TEST_URL for performance test stages
             def aksUrl = env.TEST_URL
-            
+
+            // Helper method to set test environment variables (only used within performance stages)
+            def testEnv = { String testUrl, block ->
+              def testEnvName = new Environment(env).nonProdName
+              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnvName}"]
+
+              withEnv(testEnvVariables) {
+                echo "Using TEST_URL: ${env.TEST_URL}"
+                echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
+                block.call()
+              }
+            }
+
             // Load performance test secrets once for all stages
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/" //https://et-perftest.vault.azure.net/
             def perfSecrets = [
