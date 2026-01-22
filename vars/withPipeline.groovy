@@ -315,32 +315,27 @@ def call(type, String product, String component, Closure body) {
               azureKeyVaultSecrets: perfSecrets,
               keyVaultURLOverride: perfKeyVaultUrl
             ) {
-            
+
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
-              if (pipelineConfig.performanceTestStages) {
-                stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
-                  testEnv(aksUrl) {
-                    def success = true
-                    try {
-                      pcr.callAround("dynatracePerformanceSetup:${environment}") {
-                        timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
-                          dynatracePerformanceSetup([
-                            product: product,
-                            component: component,
-                            environment: environment,
-                            testUrl: env.TEST_URL,
-                            secrets: pipelineConfig.vaultSecrets,
-                            configPath: pipelineConfig.performanceTestConfigPath
-                          ])
-                        }
+              // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
+              stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
+                testEnv(aksUrl) {
+                  try {
+                    pcr.callAround("dynatracePerformanceSetup:${environment}") {
+                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
+                        dynatracePerformanceSetup([
+                          product: product,
+                          component: component,
+                          environment: environment,
+                          testUrl: env.TEST_URL,
+                          secrets: pipelineConfig.vaultSecrets,
+                          configPath: pipelineConfig.performanceTestConfigPath
+                        ])
                       }
-                    } catch (err) {
-                      success = false
-                      echo "Dynatrace setup failed: ${err.message}"
-                      // Don't fail the build for setup issues, continue with tests
-                    } finally {
-                      //savePodsLogs(dockerImage, params, "dynatrace-setup")
                     }
+                  } catch (err) {
+                    echo "Dynatrace setup failed: ${err.message}"
+                    // Don't fail the build for setup issues, continue with tests
                   }
                 }
               }
