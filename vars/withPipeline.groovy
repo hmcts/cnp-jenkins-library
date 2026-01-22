@@ -350,7 +350,6 @@ def call(type, String product, String component, Closure body) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
                   testEnv(aksUrl) {
-                    def success = true
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environment}") {
                         timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
@@ -367,13 +366,7 @@ def call(type, String product, String component, Closure body) {
                         }
                       }
                     } catch (err) {
-                      success = false
                       throw err
-                    } finally {
-                      //savePodsLogs(dockerImage, params, "dynatrace-synthetic")
-                      if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, pipelineConfig, params, pcr) //dockerImage
-                      }
                     }
                   }
                 }
@@ -384,7 +377,6 @@ def call(type, String product, String component, Closure body) {
               testStages['Gatling Load Tests'] = {
                 stageWithAgent("Gatling Load Tests - ${environment}", product) {
                   testEnv(aksUrl) {
-                    def success = true
                     try {
                       pcr.callAround("gatlingLoadTests:${environment}") {
                         timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
@@ -400,13 +392,7 @@ def call(type, String product, String component, Closure body) {
                         }
                       }
                     } catch (err) {
-                      success = false
                       throw err
-                    } finally {
-                      //savePodsLogs(dockerImage, params, "gatling-load-tests")
-                      if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, pipelineConfig, params, pcr) //dockerImage 
-                      }
                     }
                   }
                 }
@@ -443,7 +429,6 @@ def call(type, String product, String component, Closure body) {
                     } catch (Exception e) {
                       echo "SRG evaluation stage failed: ${e.message}"
                       if (pipelineConfig.srgFailureBehavior == 'fail') {
-                        clearHelmReleaseForFailure(enableHelmLabel, pipelineConfig, params, pcr) //dockerImage
                         throw e
                       }
                     }
