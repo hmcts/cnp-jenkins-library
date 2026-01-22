@@ -281,9 +281,12 @@ def call(type, String product, String component, Closure body) {
               aksSubscription: aksSubscription,
               tfPlanOnly: false
             )
-            
+
           // Performance Test Pipeline: Setup -> Parallel Testing
           if (pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) {
+
+            // Set aksUrl from TEST_URL for performance test stages
+            def aksUrl = env.TEST_URL
             
             // Load performance test secrets once for all stages
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/" //https://et-perftest.vault.azure.net/
