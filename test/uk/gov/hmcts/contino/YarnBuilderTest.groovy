@@ -22,7 +22,9 @@ class YarnBuilderTest extends Specification {
         patched_versions   : '>=4.17.19',
         severity           : 'low',
         cwe                : 'CWE-471',
-        url                : 'https://npmjs.com/advisories/1523']
+        url                : 'https://npmjs.com/advisories/1523',
+        cvss               : [score: 2.0, vector_string: 'CVSS:2.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L']
+      ]
     ]
   ]
 
