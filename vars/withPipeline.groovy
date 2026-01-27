@@ -66,6 +66,11 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  if (agentType == "") {
+    nodeSelector = "dtspo-29750"
+  } else {
+    nodeSelector = agentType + ' && dtspo-29750'
+  }
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
