@@ -115,7 +115,10 @@ class TeamConfig {
   String getBuildAgentType(String product) {
     def teamNames = getTeamNamesMap()
     def rawProductName = getRawProductName(product)
-    if (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY)) {
+    if (rawProductName == "toffee") {
+      steps.echo("Using special agent for toffee")
+      return "dtspo-29750"
+    } else (!teamNames.containsKey(rawProductName) || !teamNames.get(rawProductName).get(AGENT_KEY)) {
       steps.echo("Agent type not found. Using default agent")
       return ""
     }

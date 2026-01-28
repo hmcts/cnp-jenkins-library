@@ -68,7 +68,7 @@ def call(type, String product, String component, Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
   
-  if (namespace == "toffee") {
+  if (agentType == "dtspo-29750") {
     nodeSelector = "dtspo-29750"
   } else {
     nodeSelector = agentType + ' && daily'
