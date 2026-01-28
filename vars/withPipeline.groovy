@@ -245,6 +245,58 @@ def call(type, String product, String component, Closure body) {
               )
             }
 
+            node(agentTypeProd) {
+              timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+                def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+                try {
+                  dockerAgentSetup()
+                  env.PATH = "$env.PATH:/usr/local/bin"
+
+                  sectionDeployToEnvironment(
+                    appPipelineConfig: pipelineConfig,
+                    pipelineCallbacksRunner: callbacksRunner,
+                    pipelineType: pipelineType,
+                    subscription: subscription.prodName,
+                    environment: environment.prodName,
+                    agentType: nodeSelectorProd,
+                    product: product,
+                    component: component,
+                    aksSubscription: aksSubscriptions.prod,
+                    tfPlanOnly: false
+                  )
+
+                  highLevelDataSetup(
+                    appPipelineConfig: pipelineConfig,
+                    pipelineCallbacksRunner: callbacksRunner,
+                    builder: pipelineType.builder,
+                    environment: environment.prodName,
+                    agentType: nodeSelectorProd,
+                    product: product,
+                  )
+                } catch (err) {
+                  if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+                    currentBuild.result = 'ABORTED'
+                    metricsPublisher.publish(err.message)
+                    return
+                  } else {
+                    currentBuild.result = "FAILURE"
+                    notifyBuildFailure channel: slackChannel
+                    metricsPublisher.publish('Pipeline Failed')
+                  }
+                  callbacksRunner.call('onFailure')
+                  throw err
+                } finally {
+                  notifyPipelineDeprecations(slackChannel, metricsPublisher)
+                  if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+                    deleteDir()
+                  }
+                }
+
+                notifyBuildFixed channel: slackChannel
+
+              }
+            }
+
             // sectionDeployToEnvironment(
             //   appPipelineConfig: pipelineConfig,
             //   pipelineCallbacksRunner: callbacksRunner,
@@ -347,63 +399,3 @@ def call(type, String product, String component, Closure body) {
       }
     }
   }
-
-  // Run prod stages on a different agent (only for master branch)
-  if (branch.branchName == 'master') {
-    retry(conditions: [agent()], count: 2) {
-      node(agentTypeProd) {
-        timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
-          def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-          try {
-            dockerAgentSetup()
-            env.PATH = "$env.PATH:/usr/local/bin"
-
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.prodName,
-              environment: environment.prodName,
-              agentType: nodeSelectorProd,
-              product: product,
-              component: component,
-              aksSubscription: aksSubscriptions.prod,
-              tfPlanOnly: false
-            )
-
-            highLevelDataSetup(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              environment: environment.prodName,
-              agentType: nodeSelectorProd,
-              product: product,
-            )
-          } catch (err) {
-            if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
-              currentBuild.result = 'ABORTED'
-              metricsPublisher.publish(err.message)
-              return
-            } else {
-              currentBuild.result = "FAILURE"
-              notifyBuildFailure channel: slackChannel
-              metricsPublisher.publish('Pipeline Failed')
-            }
-            callbacksRunner.call('onFailure')
-            throw err
-          } finally {
-            notifyPipelineDeprecations(slackChannel, metricsPublisher)
-            if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-              deleteDir()
-            }
-          }
-
-          notifyBuildFixed channel: slackChannel
-
-          callbacksRunner.call('onSuccess')
-          metricsPublisher.publish('Pipeline Succeeded')
-        }
-      }
-    }
-  }
-}
