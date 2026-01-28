@@ -67,9 +67,9 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
-  
-  if (agentType == "dtspo-29750") {
-    nodeSelector = "dtspo-29750"
+
+  if (environment == "prod") {
+    nodeSelector = agentType + "dtspo-29750"
   } else {
     nodeSelector = agentType + ' && daily'
   }
