@@ -245,6 +245,23 @@ def call(type, String product, String component, Closure body) {
               )
             }
 
+            sectionPromoteBuildToStage(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.nonProdName,
+              product: product,
+              component: component,
+              stage: DockerImage.DeploymentStage.PROD,
+              environment: environment.nonProdName,
+              agentType: nodeSelector,
+            )
+
+            sectionSyncBranchesWithMaster(
+              branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+              product: product
+            )
+
             node(agentTypeProd) {
               timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
                 try {
@@ -295,45 +312,6 @@ def call(type, String product, String component, Closure body) {
 
               }
             }
-
-            // sectionDeployToEnvironment(
-            //   appPipelineConfig: pipelineConfig,
-            //   pipelineCallbacksRunner: callbacksRunner,
-            //   pipelineType: pipelineType,
-            //   subscription: subscription.prodName,
-            //   environment: environment.prodName,
-            //   agentType: nodeSelector,
-            //   product: product,
-            //   component: component,
-            //   aksSubscription: aksSubscriptions.prod,
-            //   tfPlanOnly: false
-            // )
-
-            // highLevelDataSetup(
-            //   appPipelineConfig: pipelineConfig,
-            //   pipelineCallbacksRunner: callbacksRunner,
-            //   builder: pipelineType.builder,
-            //   environment: environment.prodName,
-            //   agentType: nodeSelector,
-            //   product: product,
-            // )
-
-            sectionPromoteBuildToStage(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              product: product,
-              component: component,
-              stage: DockerImage.DeploymentStage.PROD,
-              environment: environment.nonProdName,
-              agentType: nodeSelector,
-            )
-
-            sectionSyncBranchesWithMaster(
-              branchestoSync: pipelineConfig.branchesToSyncWithMaster,
-              product: product
-            )
           }
 
           onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
