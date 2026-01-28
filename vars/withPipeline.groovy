@@ -69,11 +69,7 @@ def call(type, String product, String component, Closure body) {
   String nodeSelector
   String nodeSelectorProd
 
-  if (environment != "prod") {
-    nodeSelector = agentType + "dtspo-29750"
-  } else {
-    nodeSelector = agentType + ' && daily'
-  }
+  nodeSelector = agentType + "dtspo-29750"
   
   // Separate selector for prod stages
   nodeSelectorProd = agentType + ' && daily'
