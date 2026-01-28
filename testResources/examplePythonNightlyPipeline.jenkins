@@ -1,0 +1,15 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "product"
+
+def app = "app"
+
+withNightlyPipeline('python', product, app) {
+  enableCrossBrowserTest()
+  enablePerformanceTest()
+  enableMutationTest()
+  enableFullFunctionalTest()
+  enableSecurityScan()
+}
