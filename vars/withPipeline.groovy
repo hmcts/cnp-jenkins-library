@@ -66,6 +66,7 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  String agentTypeProd = "dtspo-29750"
   String nodeSelector
   String nodeSelectorProd
 
@@ -242,27 +243,27 @@ def call(type, String product, String component, Closure body) {
               )
             }
 
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.prodName,
-              environment: environment.prodName,
-              agentType: nodeSelector,
-              product: product,
-              component: component,
-              aksSubscription: aksSubscriptions.prod,
-              tfPlanOnly: false
-            )
+            // sectionDeployToEnvironment(
+            //   appPipelineConfig: pipelineConfig,
+            //   pipelineCallbacksRunner: callbacksRunner,
+            //   pipelineType: pipelineType,
+            //   subscription: subscription.prodName,
+            //   environment: environment.prodName,
+            //   agentType: nodeSelector,
+            //   product: product,
+            //   component: component,
+            //   aksSubscription: aksSubscriptions.prod,
+            //   tfPlanOnly: false
+            // )
 
-            highLevelDataSetup(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              environment: environment.prodName,
-              agentType: nodeSelector,
-              product: product,
-            )
+            // highLevelDataSetup(
+            //   appPipelineConfig: pipelineConfig,
+            //   pipelineCallbacksRunner: callbacksRunner,
+            //   builder: pipelineType.builder,
+            //   environment: environment.prodName,
+            //   agentType: nodeSelector,
+            //   product: product,
+            // )
 
             sectionPromoteBuildToStage(
               appPipelineConfig: pipelineConfig,
@@ -345,3 +346,59 @@ def call(type, String product, String component, Closure body) {
     }
   }
 }
+
+  retry(conditions: [agent()], count: 2) {
+    node(agentTypeProd) {
+      timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+        def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+        try {
+          dockerAgentSetup()
+          env.PATH = "$env.PATH:/usr/local/bin"
+
+            sectionDeployToEnvironment(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              pipelineType: pipelineType,
+              subscription: subscription.prodName,
+              environment: environment.prodName,
+              agentType: nodeSelector,
+              product: product,
+              component: component,
+              aksSubscription: aksSubscriptions.prod,
+              tfPlanOnly: false
+            )
+
+            highLevelDataSetup(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              builder: pipelineType.builder,
+              environment: environment.prodName,
+              agentType: nodeSelector,
+              product: product,
+            )
+        } catch (err) {
+          if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+            currentBuild.result = 'ABORTED'
+            metricsPublisher.publish(err.message)
+            return
+          } else {
+            currentBuild.result = "FAILURE"
+            notifyBuildFailure channel: slackChannel
+            metricsPublisher.publish('Pipeline Failed')
+          }
+          callbacksRunner.call('onFailure')
+          throw err
+        } finally {
+          notifyPipelineDeprecations(slackChannel, metricsPublisher)
+          if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+            deleteDir()
+          }
+        }
+
+        notifyBuildFixed channel: slackChannel
+
+        callbacksRunner.call('onSuccess')
+        metricsPublisher.publish('Pipeline Succeeded')
+      }
+    }
+  }
