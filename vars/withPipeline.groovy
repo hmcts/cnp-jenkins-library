@@ -245,23 +245,6 @@ def call(type, String product, String component, Closure body) {
               )
             }
 
-            sectionPromoteBuildToStage(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              product: product,
-              component: component,
-              stage: DockerImage.DeploymentStage.PROD,
-              environment: environment.nonProdName,
-              agentType: nodeSelector,
-            )
-
-            sectionSyncBranchesWithMaster(
-              branchestoSync: pipelineConfig.branchesToSyncWithMaster,
-              product: product
-            )
-
             node(agentTypeProd) {
               timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
                 try {
@@ -311,6 +294,25 @@ def call(type, String product, String component, Closure body) {
                 notifyBuildFixed channel: slackChannel
 
               }
+            }
+
+            node(agentType) {
+              sectionPromoteBuildToStage(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.nonProdName,
+                product: product,
+                component: component,
+                stage: DockerImage.DeploymentStage.PROD,
+                environment: environment.nonProdName,
+                agentType: nodeSelector,
+              )
+
+              sectionSyncBranchesWithMaster(
+                branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+                product: product
+              )
             }
           }
 
