@@ -141,8 +141,7 @@ def call(type, String product, String component, Closure body) {
                     component: component,
                     tfPlanOnly: true
                   )
-                }
-                catch (err) {
+                } catch (err) {
                   if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
                     currentBuild.result = 'ABORTED'
                     metricsPublisher.publish(err.message)
@@ -150,7 +149,18 @@ def call(type, String product, String component, Closure body) {
                   } else {
                     currentBuild.result = "FAILURE"
                     notifyBuildFailure channel: slackChannel
+                    metricsPublisher.publish('Pipeline Failed')
+                  }
+                  callbacksRunner.call('onFailure')
+                  throw err
+                } finally {
+                  notifyPipelineDeprecations(slackChannel, metricsPublisher)
+                  if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+                    deleteDir()
+                  }
+                }
               }
+            }
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
