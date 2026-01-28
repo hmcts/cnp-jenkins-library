@@ -172,7 +172,7 @@ class YarnBuilder extends AbstractBuilder {
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
-      steps.writeFile(file: 'format-v4-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.cjs'))
+      steps.writeFile(file: 'transform-v4-to-v3-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/transform-v4-to-v3-audit.cjs'))
 
       this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
         steps.sh """
@@ -274,6 +274,7 @@ class YarnBuilder extends AbstractBuilder {
       patched_versions   : it?.data?.advisory?.patched_versions,
       severity           : it?.data?.advisory?.severity,
       cwe                : it?.data?.advisory?.cwe,
+      cvss               : it?.data?.advisory?.cvss,
       url                : it?.data?.advisory?.url,
       module_name        : it?.data?.advisory?.module_name
     ]
