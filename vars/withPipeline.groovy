@@ -67,12 +67,16 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
+  String nodeSelectorProd
 
   if (environment != "prod") {
     nodeSelector = agentType + "dtspo-29750"
   } else {
     nodeSelector = agentType + ' && daily'
   }
+  
+  // Separate selector for prod stages
+  nodeSelectorProd = agentType + ' && daily'
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
@@ -248,7 +252,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.prodName,
               environment: environment.prodName,
-              agentType: nodeSelector,
+              agentType: nodeSelectorProd,
               product: product,
               component: component,
               aksSubscription: aksSubscriptions.prod,
@@ -260,7 +264,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.prodName,
-              agentType: nodeSelector,
+              agentType: nodeSelectorProd,
               product: product,
             )
 
