@@ -66,14 +66,16 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  // wrong way around for testing as test agent doesn't have permissions
   String agentTypeProd = "dtspo-29750"
   String nodeSelector
   String nodeSelectorProd
 
-  nodeSelector = agentType + "dtspo-29750"
+  // wrong way around for testing as test agent doesn't have permissions
+  nodeSelectorProd = agentType + "dtspo-29750"
   
   // Separate selector for prod stages
-  nodeSelectorProd = agentType + ' && daily'
+  nodeSelector = agentType + ' && daily'
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
@@ -89,7 +91,7 @@ def call(type, String product, String component, Closure body) {
             builder: pipelineType.builder,
             subscription: subscription.nonProdName,
             environment: environment.nonProdName,
-            agentType: nodeSelectorProd,
+            agentType: nodeSelector,
             product: product,
             component: component
           )
@@ -100,7 +102,7 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
                 environment: environment.nonProdName,
-                agentType: nodeSelectorProd,
+                agentType: nodeSelector,
                 product: product,
                 component: component
               )
@@ -115,7 +117,7 @@ def call(type, String product, String component, Closure body) {
               component: component,
               stage: DockerImage.DeploymentStage.PREVIEW,
               environment: environment.nonProdName,
-              agentType: nodeSelectorProd
+              agentType: nodeSelector
             )
           }
 
@@ -129,7 +131,7 @@ def call(type, String product, String component, Closure body) {
                 subscription: subscription.nonProdName,
                 aksSubscription: aksSubscriptions.aat,
                 environment: environment.nonProdName,
-                agentType: nodeSelectorProd,
+                agentType: nodeSelector,
                 product: product,
                 component: component,
                 tfPlanOnly: true
@@ -172,7 +174,7 @@ def call(type, String product, String component, Closure body) {
                   subscription: subscription."${base_env_name}Name",
                   aksSubscription: aksSubscriptions."${base_env_name}",
                   environment: environment."${base_env_name}Name",
-                  agentType: nodeSelectorProd,
+                  agentType: nodeSelector,
                   product: product,
                   component: component,
                   tfPlanOnly: true
@@ -189,7 +191,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.preview,
               environment: environment.previewName,
-              agentType: nodeSelectorProd,
+              agentType: nodeSelector,
               product: product,
               component: component,
             )
@@ -205,7 +207,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.aat,
               environment: environment.nonProdName,
-              agentType: nodeSelectorProd,
+              agentType: nodeSelector,
               product: product,
               component: component,
               tfPlanOnly: false
@@ -216,7 +218,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.nonProdName,
-              agentType: nodeSelectorProd,
+              agentType: nodeSelector,
               product: product,
             )
 
@@ -227,7 +229,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.aat,
               environment: environment.nonProdName,
-              agentType: nodeSelectorProd,
+              agentType: nodeSelector,
               product: product,
               component: component,
             )
@@ -237,7 +239,7 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
                 environment: environment.nonProdName,
-                agentType: nodeSelectorProd,
+                agentType: nodeSelector,
                 product: product,
                 component: component
               )
@@ -274,7 +276,7 @@ def call(type, String product, String component, Closure body) {
               component: component,
               stage: DockerImage.DeploymentStage.PROD,
               environment: environment.nonProdName,
-              agentType: nodeSelectorProd,
+              agentType: nodeSelector,
             )
 
             sectionSyncBranchesWithMaster(
@@ -312,7 +314,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.previewName,
               environment: environment.previewName,
-              agentType: nodeSelectorProd,
+              agentType: nodeSelector,
               product: deploymentProduct,
               component: component,
               aksSubscription: aksSubscriptions.preview,
@@ -345,15 +347,16 @@ def call(type, String product, String component, Closure body) {
       }
     }
   }
-}
 
-  retry(conditions: [agent()], count: 2) {
-    node(agentTypeProd) {
-      timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
-        def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-        try {
-          dockerAgentSetup()
-          env.PATH = "$env.PATH:/usr/local/bin"
+  // Run prod stages on a different agent (only for master branch)
+  if (branch.branchName == 'master') {
+    retry(conditions: [agent()], count: 2) {
+      node(agentTypeProd) {
+        timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+          def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+          try {
+            dockerAgentSetup()
+            env.PATH = "$env.PATH:/usr/local/bin"
 
             sectionDeployToEnvironment(
               appPipelineConfig: pipelineConfig,
@@ -361,7 +364,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.prodName,
               environment: environment.prodName,
-              agentType: nodeSelector,
+              agentType: nodeSelectorProd,
               product: product,
               component: component,
               aksSubscription: aksSubscriptions.prod,
@@ -373,32 +376,34 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.prodName,
-              agentType: nodeSelector,
+              agentType: nodeSelectorProd,
               product: product,
             )
-        } catch (err) {
-          if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
-            currentBuild.result = 'ABORTED'
-            metricsPublisher.publish(err.message)
-            return
-          } else {
-            currentBuild.result = "FAILURE"
-            notifyBuildFailure channel: slackChannel
-            metricsPublisher.publish('Pipeline Failed')
+          } catch (err) {
+            if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+              currentBuild.result = 'ABORTED'
+              metricsPublisher.publish(err.message)
+              return
+            } else {
+              currentBuild.result = "FAILURE"
+              notifyBuildFailure channel: slackChannel
+              metricsPublisher.publish('Pipeline Failed')
+            }
+            callbacksRunner.call('onFailure')
+            throw err
+          } finally {
+            notifyPipelineDeprecations(slackChannel, metricsPublisher)
+            if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+              deleteDir()
+            }
           }
-          callbacksRunner.call('onFailure')
-          throw err
-        } finally {
-          notifyPipelineDeprecations(slackChannel, metricsPublisher)
-          if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-            deleteDir()
-          }
+
+          notifyBuildFixed channel: slackChannel
+
+          callbacksRunner.call('onSuccess')
+          metricsPublisher.publish('Pipeline Succeeded')
         }
-
-        notifyBuildFixed channel: slackChannel
-
-        callbacksRunner.call('onSuccess')
-        metricsPublisher.publish('Pipeline Succeeded')
       }
     }
   }
+}
