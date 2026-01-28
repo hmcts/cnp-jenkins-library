@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.NextJsPipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
@@ -19,6 +20,7 @@ def call(type, String product, String component, Closure body) {
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
+    nextjs: new NextJsPipelineType(this, product, component),
     ruby: new RubyPipelineType(this, product, component)
   ]
 

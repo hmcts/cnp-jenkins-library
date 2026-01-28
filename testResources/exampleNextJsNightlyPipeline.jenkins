@@ -1,0 +1,16 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "product"
+
+def app = "app"
+
+withNightlyPipeline('nextjs', product, app) {
+  enableCrossBrowserTest()
+  enableCrossBrowserTest(['chrome', 'firefox', 'safari', 'edge'])
+  enablePerformanceTest()
+  enableMutationTest()
+  enableFullFunctionalTest()
+  enableSecurityScan()
+}
