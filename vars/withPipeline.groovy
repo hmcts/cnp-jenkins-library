@@ -67,10 +67,11 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
-  if (agentType == "") {
+
+  if (environment != "prod") {
     nodeSelector = "dtspo-29750"
   } else {
-    nodeSelector = agentType + ' && dtspo-29750'
+    nodeSelector = agentType + ' && daily'
   }
 
   retry(conditions: [agent()], count: 2) {
@@ -87,6 +88,7 @@ def call(type, String product, String component, Closure body) {
             builder: pipelineType.builder,
             subscription: subscription.nonProdName,
             environment: environment.nonProdName,
+            agentType: nonProdAgent,
             product: product,
             component: component
           )
@@ -97,6 +99,7 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
                 environment: environment.nonProdName,
+                agentType: nonProdAgent,
                 product: product,
                 component: component
               )
@@ -110,7 +113,8 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
               stage: DockerImage.DeploymentStage.PREVIEW,
-              environment: environment.nonProdName
+              environment: environment.nonProdName,
+              agentType: nonProdAgent
             )
           }
 
@@ -124,6 +128,7 @@ def call(type, String product, String component, Closure body) {
                 subscription: subscription.nonProdName,
                 aksSubscription: aksSubscriptions.aat,
                 environment: environment.nonProdName,
+                agentType: nonProdAgent,
                 product: product,
                 component: component,
                 tfPlanOnly: true
@@ -166,6 +171,7 @@ def call(type, String product, String component, Closure body) {
                   subscription: subscription."${base_env_name}Name",
                   aksSubscription: aksSubscriptions."${base_env_name}",
                   environment: environment."${base_env_name}Name",
+                  agentType: prodAgent,
                   product: product,
                   component: component,
                   tfPlanOnly: true
@@ -182,6 +188,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.preview,
               environment: environment.previewName,
+              agentType: nonProdAgent,
               product: product,
               component: component,
             )
@@ -197,6 +204,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.aat,
               environment: environment.nonProdName,
+              agentType: nonProdAgent,
               product: product,
               component: component,
               tfPlanOnly: false
@@ -207,6 +215,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.nonProdName,
+              agentType: nonProdAgent,
               product: product,
             )
 
@@ -217,6 +226,7 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.aat,
               environment: environment.nonProdName,
+              agentType: nonProdAgent,
               product: product,
               component: component,
             )
@@ -226,6 +236,7 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
                 environment: environment.nonProdName,
+                agentType: nonProdAgent,
                 product: product,
                 component: component
               )
@@ -237,6 +248,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.prodName,
               environment: environment.prodName,
+              agentType: prodAgent,
               product: product,
               component: component,
               aksSubscription: aksSubscriptions.prod,
@@ -248,6 +260,7 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.prodName,
+              agentType: prodAgent,
               product: product,
             )
 
@@ -259,7 +272,8 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
               stage: DockerImage.DeploymentStage.PROD,
-              environment: environment.nonProdName
+              environment: environment.nonProdName,
+              agentType: nonProdAgent
             )
 
             sectionSyncBranchesWithMaster(
@@ -297,6 +311,7 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.previewName,
               environment: environment.previewName,
+              agentType: nonProdAgent,
               product: deploymentProduct,
               component: component,
               aksSubscription: aksSubscriptions.preview,
