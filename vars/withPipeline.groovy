@@ -123,7 +123,7 @@ def call(type, String product, String component, Closure body) {
                 product: product,
                 component: component,
                 tfPlanOnly: true
-              )}
+              )
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
@@ -171,7 +171,7 @@ def call(type, String product, String component, Closure body) {
                 } else {
                   println "Skipping Terraform Plan against ${base_env_name} ... "
                 }
-            }
+            }}
 
             sectionDeployToAKS(
               appPipelineConfig: pipelineConfig,
