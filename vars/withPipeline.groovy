@@ -123,7 +123,7 @@ def call(type, String product, String component, Closure body) {
 
           onPR {
             onTerraformChangeInPR {
-              node(agentTypeProd) {
+              node(agentType) {
                 timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
                 try {
                   dockerAgentSetup()
@@ -160,7 +160,6 @@ def call(type, String product, String component, Closure body) {
                   }
                 }
               }
-            }
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
@@ -191,23 +190,48 @@ def call(type, String product, String component, Closure body) {
 
               // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
               if (!optOutTfPlanOnProdFound) {
-                println "Apply Terraform Plan against ${base_env_name}"
-                sectionDeployToEnvironment(
-                  appPipelineConfig: pipelineConfig,
-                  pipelineCallbacksRunner: callbacksRunner,
-                  pipelineType: pipelineType,
-                  subscription: subscription."${base_env_name}Name",
-                  aksSubscription: aksSubscriptions."${base_env_name}",
-                  environment: environment."${base_env_name}Name",
-                  agentType: nodeSelector,
-                  product: product,
-                  component: component,
-                  tfPlanOnly: true
-                )
-              } else {
-                println "Skipping Terraform Plan against ${base_env_name} ... "
+              node(agentTypeProd) {
+                timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+                try {
+                  dockerAgentSetup()
+                  env.PATH = "$env.PATH:/usr/local/bin"
+                  // we always need a tf plan of aat (i.e. staging)
+                  println "Apply Terraform Plan against ${base_env_name}"
+                  sectionDeployToEnvironment(
+                    appPipelineConfig: pipelineConfig,
+                    pipelineCallbacksRunner: callbacksRunner,
+                    pipelineType: pipelineType,
+                    subscription: subscription."${base_env_name}Name",
+                    aksSubscription: aksSubscriptions."${base_env_name}",
+                    environment: environment."${base_env_name}Name",
+                    agentType: nodeSelector,
+                    product: product,
+                    component: component,
+                    tfPlanOnly: true
+                  )
+                } else {
+                  println "Skipping Terraform Plan against ${base_env_name} ... "
+                } catch (err) {
+                  if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+                    currentBuild.result = 'ABORTED'
+                    metricsPublisher.publish(err.message)
+                    return
+                  } else {
+                    currentBuild.result = "FAILURE"
+                    notifyBuildFailure channel: slackChannel
+                    metricsPublisher.publish('Pipeline Failed')
+                  }
+                  callbacksRunner.call('onFailure')
+                  throw err
+                } finally {
+                  notifyPipelineDeprecations(slackChannel, metricsPublisher)
+                  if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+                    deleteDir()
+                  }
+                }
               }
             }
+          }
 
             sectionDeployToAKS(
               appPipelineConfig: pipelineConfig,
@@ -220,7 +244,7 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
             )
-
+            }
           }
 
           onMaster {
