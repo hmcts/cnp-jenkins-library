@@ -15,10 +15,10 @@ def call(params) {
   def product = params.product
   def component = params.component
   def tfPlanOnly = params.tfPlanOnly
-  def checkout = params.checkout ?: false
+  def performCheckout = params.checkout ?: false
   Long deploymentNumber
 
-  if (checkout) {
+  if (performCheckout) {
     checkout scm
   }
 
