@@ -156,7 +156,6 @@ def call(type, String product, String component, Closure body) {
                 node(agentTypeProd)  {
                   println "Run Terraform Plan against ${base_env_name}"
                   sectionDeployToEnvironment(
-                    checkout: true
                     appPipelineConfig: pipelineConfig,
                     pipelineCallbacksRunner: callbacksRunner,
                     pipelineType: pipelineType,
@@ -165,7 +164,8 @@ def call(type, String product, String component, Closure body) {
                     environment: environment."${base_env_name}Name",
                     product: product,
                     component: component,
-                    tfPlanOnly: true
+                    tfPlanOnly: true,
+                    checkout: true
                   )}
                 } else {
                   println "Skipping Terraform Plan against ${base_env_name} ... "
