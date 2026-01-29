@@ -66,7 +66,7 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
-  String agentTypeProd = "dtspo-29750"
+  String agentTypeProd = "daily"
 
   retry(conditions: [agent()], count: 2) {
     node(agentTypeProd) {

@@ -108,6 +108,18 @@ def call(params) {
                         cat .dockerignore_build >> .dockerignore
                       """
               }
+              /**
+               * Conditionally sets build arguments based on whether the current branch is a pull request.
+               * 
+               * If the project branch is a PR (detected via projectBranch.isPR()), the DEV_MODE build argument
+               * is set to true. For non-PR branches (e.g., main, master, release branches), no additional
+               * build arguments are added.
+               * 
+               * This is commonly used to enable development-specific features, debugging tools, or optimizations
+               * during PR builds while keeping production builds lean.
+               *
+               * @see projectBranch.isPR() - Returns true if the pipeline is running on a pull request branch
+               */
               def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
               if (fileExists(acbTemplateFilePath)) {
                 acr.runWithTemplate(acbTemplateFilePath, dockerImage)
