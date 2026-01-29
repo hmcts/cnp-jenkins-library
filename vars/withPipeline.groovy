@@ -365,8 +365,9 @@ def call(type, String product, String component, Closure body) {
               product: deploymentProduct,
               component: component,
               aksSubscription: aksSubscriptions.preview,
-              tfPlanOnly: false
-            )
+                tfPlanOnly: false
+              )
+            }
           }
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
