@@ -65,8 +65,8 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
-  String agentTypeStg = "dtspo-29750"
+  String agentTypeProd = env.BUILD_AGENT_TYPE
+  String agentType = "dtspo-29750"
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
@@ -111,7 +111,6 @@ def call(type, String product, String component, Closure body) {
 
           onPR {
             onTerraformChangeInPR {
-              node(agentTypeStg) {
                 // we always need a tf plan of aat (i.e. staging)
                 sectionDeployToEnvironment(
                   appPipelineConfig: pipelineConfig,
@@ -124,7 +123,6 @@ def call(type, String product, String component, Closure body) {
                   component: component,
                   tfPlanOnly: true
                 )
-              }
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
@@ -155,7 +153,7 @@ def call(type, String product, String component, Closure body) {
 
               // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
               if (!optOutTfPlanOnProdFound) {
-                node(agentType)  {
+                node(agentTypeProd)  {
                   println "Run Terraform Plan against ${base_env_name}"
                   sectionDeployToEnvironment(
                     appPipelineConfig: pipelineConfig,
