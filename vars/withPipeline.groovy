@@ -244,7 +244,6 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
             )
-            }
           }
 
           onMaster {
