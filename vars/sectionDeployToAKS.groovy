@@ -108,79 +108,79 @@ def call(params) {
           }
         }
       }
-      // if (config.serviceApp) {
-        // withTeamSecrets(config, environment) {
-        //   stageWithAgent("Smoke Test - AKS ${environment}", product) {
-        //     testEnv(aksUrl) {
-        //       def success = true
-        //       try {
-        //         pcr.callAround("smoketest:${environment}") {
-        //           timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-        //             builder.smokeTest()
-        //           }
-        //         }
-        //       } catch (err) {
-        //         success = false
-        //         throw err
-        //       } finally {
-        //         savePodsLogs(dockerImage, params, "smoke")
-        //         if (!success) {
-        //           clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-        //         }
-        //       }
-        //     }
-        //   }
-        // }
+      if (config.serviceApp) {
+        withTeamSecrets(config, environment) {
+          stageWithAgent("Smoke Test - AKS ${environment}", product) {
+            testEnv(aksUrl) {
+              def success = true
+              try {
+                pcr.callAround("smoketest:${environment}") {
+                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                    builder.smokeTest()
+                  }
+                }
+              } catch (err) {
+                success = false
+                throw err
+              } finally {
+                savePodsLogs(dockerImage, params, "smoke")
+                if (!success) {
+                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                }
+              }
+            }
+          }
+        }
 
-          // onFunctionalTestEnvironment(environment) {
-          //   if (testLabels.contains('enable_full_functional_tests')) {
-          //     stageWithAgent('Functional test (Full)', product) {
-          //       testEnv(aksUrl) {
-          //         warnError('Failure in fullFunctionalTest') {
-          //           def success = true
-          //           try {
-          //             pcr.callAround("fullFunctionalTest:${environment}") {
-          //               timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-          //                 builder.fullFunctionalTest()
-          //               }
-          //             }
-          //           } catch (err) {
-          //             success = false
-          //             throw err
-          //           } finally {
-          //             savePodsLogs(dockerImage, params, "full-functional")
-          //             if (!success) {
-          //               clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-          //               error('Functional test failed')
-          //             }
-          //           }
-          //         }
-          //       }
-          //     }
-          //   } else {
-          //     stageWithAgent("Functional Test - ${environment}", product) {
-          //       testEnv(aksUrl) {
-          //         def success = true
-          //         try {
-          //           pcr.callAround("functionalTest:${environment}") {
-          //             timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-          //               builder.functionalTest()
-          //             }
-          //           }
-          //         } catch (err) {
-          //           success = false
-          //           throw err
-          //         } finally {
-          //           savePodsLogs(dockerImage, params, "functional")
-          //           if (!success) {
-          //             clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-          //             error('Functional test failed')
-          //           }
-          //         }
-          //       }
-          //     }
-          //   }
-          // }
+          onFunctionalTestEnvironment(environment) {
+            if (testLabels.contains('enable_full_functional_tests')) {
+              stageWithAgent('Functional test (Full)', product) {
+                testEnv(aksUrl) {
+                  warnError('Failure in fullFunctionalTest') {
+                    def success = true
+                    try {
+                      pcr.callAround("fullFunctionalTest:${environment}") {
+                        timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                          builder.fullFunctionalTest()
+                        }
+                      }
+                    } catch (err) {
+                      success = false
+                      throw err
+                    } finally {
+                      savePodsLogs(dockerImage, params, "full-functional")
+                      if (!success) {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        error('Functional test failed')
+                      }
+                    }
+                  }
+                }
+              }
+            } else {
+              stageWithAgent("Functional Test - ${environment}", product) {
+                testEnv(aksUrl) {
+                  def success = true
+                  try {
+                    pcr.callAround("functionalTest:${environment}") {
+                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                        builder.functionalTest()
+                      }
+                    }
+                  } catch (err) {
+                    success = false
+                    throw err
+                  } finally {
+                    savePodsLogs(dockerImage, params, "functional")
+                    if (!success) {
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('Functional test failed')
+                    }
+                  }
+                }
+              }
+            }
+          }
           if (config.performanceTest) {
             stageWithAgent("Performance Test - ${environment}", product) {
               testEnv(aksUrl) {
