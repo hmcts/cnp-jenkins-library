@@ -15,7 +15,12 @@ def call(params) {
   def product = params.product
   def component = params.component
   def tfPlanOnly = params.tfPlanOnly
+  def checkout = params.checkout ?: false
   Long deploymentNumber
+
+  if (checkout) {
+    checkout scm
+  }
 
   def builder = pipelineType.builder
   def tfOutput

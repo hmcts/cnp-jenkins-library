@@ -154,8 +154,9 @@ def call(type, String product, String component, Closure body) {
               // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
               if (!optOutTfPlanOnProdFound) {
                 node(agentTypeProd)  {
-                  println "Apply Terraform Plan against ${base_env_name}"
+                  println "Run Terraform Plan against ${base_env_name}"
                   sectionDeployToEnvironment(
+                    checkout: true
                     appPipelineConfig: pipelineConfig,
                     pipelineCallbacksRunner: callbacksRunner,
                     pipelineType: pipelineType,
