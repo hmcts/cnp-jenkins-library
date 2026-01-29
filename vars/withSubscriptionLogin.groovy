@@ -22,6 +22,8 @@ def call(String subscription, Closure body) {
     ]) {
       az "account set --subscription ${env.ARM_SUBSCRIPTION_ID}"
       def tenantId = az "account show --query tenantId -o tsv"
+      def accountShow = az "account show"
+      echo "Logged in ${accountShow}"
       env.SUBSCRIPTION_NAME = subscription
       env.ARM_TENANT_ID = tenantId
       env.CURRENT_ARM_SUBSCRIPTION_ID = env.ARM_SUBSCRIPTION_ID
