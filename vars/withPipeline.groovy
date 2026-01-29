@@ -66,16 +66,6 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
-  // wrong way around for testing as test agent doesn't have permissions
-  String agentTypeProd = "dtspo-29750"
-  String nodeSelector
-  String nodeSelectorProd
-
-  // wrong way around for testing as test agent doesn't have permissions
-  nodeSelectorProd = agentType + "dtspo-29750"
-  
-  // Separate selector for prod stages
-  nodeSelector = agentType + ' && daily'
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
@@ -91,7 +81,6 @@ def call(type, String product, String component, Closure body) {
             builder: pipelineType.builder,
             subscription: subscription.nonProdName,
             environment: environment.nonProdName,
-            
             product: product,
             component: component
           )
@@ -102,7 +91,6 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
                 environment: environment.nonProdName,
-                
                 product: product,
                 component: component
               )
@@ -116,30 +104,24 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
               stage: DockerImage.DeploymentStage.PREVIEW,
-              environment: environment.nonProdName,
-              
+              environment: environment.nonProdName
             )
           }
 
           onPR {
             onTerraformChangeInPR {
-              node(agentTypeProd) {
-                  dockerAgentSetup()
-                  env.PATH = "$env.PATH:/usr/local/bin"
-                  // we always need a tf plan of aat (i.e. staging)
-                  sectionDeployToEnvironment(
-                    appPipelineConfig: pipelineConfig,
-                    pipelineCallbacksRunner: callbacksRunner,
-                    pipelineType: pipelineType,
-                    subscription: subscription.nonProdName,
-                    aksSubscription: aksSubscriptions.aat,
-                    environment: environment.nonProdName,
-                    
-                    product: product,
-                    component: component,
-                    tfPlanOnly: true
-                  )
-              }
+              // we always need a tf plan of aat (i.e. staging)
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.nonProdName,
+                aksSubscription: aksSubscriptions.aat,
+                environment: environment.nonProdName,
+                product: product,
+                component: component,
+                tfPlanOnly: true
+              )
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
@@ -170,10 +152,6 @@ def call(type, String product, String component, Closure body) {
 
               // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
               if (!optOutTfPlanOnProdFound) {
-              node(agentTypeProd) {
-                dockerAgentSetup()
-                env.PATH = "$env.PATH:/usr/local/bin"
-                // we always need a tf plan of aat (i.e. staging)
                 println "Apply Terraform Plan against ${base_env_name}"
                 sectionDeployToEnvironment(
                   appPipelineConfig: pipelineConfig,
@@ -182,13 +160,14 @@ def call(type, String product, String component, Closure body) {
                   subscription: subscription."${base_env_name}Name",
                   aksSubscription: aksSubscriptions."${base_env_name}",
                   environment: environment."${base_env_name}Name",
-                  
                   product: product,
                   component: component,
                   tfPlanOnly: true
                 )
+              } else {
+                println "Skipping Terraform Plan against ${base_env_name} ... "
               }
-          }
+            }
 
             sectionDeployToAKS(
               appPipelineConfig: pipelineConfig,
@@ -197,10 +176,10 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.preview,
               environment: environment.previewName,
-              
               product: product,
               component: component,
             )
+
           }
 
           onMaster {
@@ -212,7 +191,6 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.aat,
               environment: environment.nonProdName,
-              
               product: product,
               component: component,
               tfPlanOnly: false
@@ -223,7 +201,6 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.nonProdName,
-              
               product: product,
             )
 
@@ -234,7 +211,6 @@ def call(type, String product, String component, Closure body) {
               subscription: subscription.nonProdName,
               aksSubscription: aksSubscriptions.aat,
               environment: environment.nonProdName,
-              
               product: product,
               component: component,
             )
@@ -244,7 +220,6 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
                 environment: environment.nonProdName,
-                
                 product: product,
                 component: component
               )
@@ -256,7 +231,6 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.prodName,
               environment: environment.prodName,
-              
               product: product,
               component: component,
               aksSubscription: aksSubscriptions.prod,
@@ -268,7 +242,6 @@ def call(type, String product, String component, Closure body) {
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
               environment: environment.prodName,
-              
               product: product,
             )
 
@@ -280,8 +253,7 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
               stage: DockerImage.DeploymentStage.PROD,
-              environment: environment.nonProdName,
-              
+              environment: environment.nonProdName
             )
 
             sectionSyncBranchesWithMaster(
@@ -319,13 +291,11 @@ def call(type, String product, String component, Closure body) {
               pipelineType: pipelineType,
               subscription: subscription.previewName,
               environment: environment.previewName,
-              
               product: deploymentProduct,
               component: component,
               aksSubscription: aksSubscriptions.preview,
-                tfPlanOnly: false
-              )
-            }
+              tfPlanOnly: false
+            )
           }
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
