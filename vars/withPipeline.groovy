@@ -209,8 +209,6 @@ def call(type, String product, String component, Closure body) {
                     component: component,
                     tfPlanOnly: true
                   )
-                } else {
-                  println "Skipping Terraform Plan against ${base_env_name} ... "
                 } catch (err) {
                   if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
                     currentBuild.result = 'ABORTED'
@@ -228,6 +226,10 @@ def call(type, String product, String component, Closure body) {
                   if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
                     deleteDir()
                   }
+                  }
+                }
+                } else {
+                  println "Skipping Terraform Plan against ${base_env_name} ... "
                 }
               }
             }
@@ -244,6 +246,7 @@ def call(type, String product, String component, Closure body) {
               product: product,
               component: component,
             )
+            }
           }
 
           onMaster {
