@@ -66,10 +66,10 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
-  String agentTypeProd = "dtspo-29750"
+  String agentTypeStg = "dtspo-29750"
 
   retry(conditions: [agent()], count: 2) {
-    node(agentTypeProd) {
+    node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
@@ -111,6 +111,7 @@ def call(type, String product, String component, Closure body) {
 
           onPR {
             onTerraformChangeInPR {
+              node(agentTypeStg) {
               // we always need a tf plan of aat (i.e. staging)
               sectionDeployToEnvironment(
                 appPipelineConfig: pipelineConfig,
@@ -122,7 +123,7 @@ def call(type, String product, String component, Closure body) {
                 product: product,
                 component: component,
                 tfPlanOnly: true
-              )
+              )}
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
