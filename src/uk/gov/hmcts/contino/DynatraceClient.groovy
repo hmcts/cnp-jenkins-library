@@ -9,27 +9,31 @@ What it provides:
   - postMetric(): Sends release metrics for tracking deployments
   - triggerSyntheticTest(): Triggers a single execution of a synthetic test
   - getSyntheticStatus(): Checks execution stage and test result (SUCCESS/FAILED)
-  - updateSyntheticTest(): Enables/disables synthetic tests and updates URLs
-  - evaluateSRG(): Evaluates Site Reliability Guardian rules (not implemented yet)
-  - setEnvironmentConfig(): Switches config based on environment (perftest/aat/preview)
+  - updateSyntheticTest(): Enables/disables synthetic tests and updates URLs for preview environments
+      * HTTP monitors: Replaces 'PREVIEW' placeholder with TEST_URL hostname in request URLs
+      * BROWSER monitors: Updates events[0].url with TEST_URL
+  - setEnvironmentConfig(): Switches config based on environment (preview/aat/perftest, throws error for unknown)
+  - evaluateSRG(): Evaluates Site Reliability Guardian rules (implementation incomplete - Docker CLI call commented out)
 
 All methods use environment variables for Dynatrace config (set by dynatracePerformanceSetup):
   - DT_SYNTHETIC_TEST_ID: Which monitor to use
   - DT_DASHBOARD_ID: Dashboard for results
   - DT_ENTITY_SELECTOR: Entity selector for events
   - DT_METRIC_TYPE, DT_METRIC_TAG: For release metrics
+  - TEST_URL: Preview environment URL (used by updateSyntheticTest to replace PREVIEW placeholders)
 
 Authentication tokens come from Azure KeyVault:
-  - PERF_SYNTHETIC_MONITOR_TOKEN: For triggering and checking tests
+  - PERF_SYNTHETIC_MONITOR_TOKEN: For triggering and checking tests (also used for GET in updateSyntheticTest)
   - PERF_METRICS_TOKEN: For sending metrics
   - PERF_EVENT_TOKEN: For posting events
-  - PERF_SYNTHETIC_UPDATE_TOKEN: For enabling/disabling tests
+  - PERF_SYNTHETIC_UPDATE_TOKEN: For enabling/disabling tests (PUT operations in updateSyntheticTest)
 
 Usage:
   def client = new DynatraceClient(this)  // 'this' is the pipeline script context
   client.postEvent('et', 'sya-api')
   def result = client.triggerSyntheticTest()
 ============================================================================================*/
+
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurper
