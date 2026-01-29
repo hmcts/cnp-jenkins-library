@@ -165,11 +165,10 @@ def call(type, String product, String component, Closure body) {
                     product: product,
                     component: component,
                     tfPlanOnly: true
-                  )
+                  )}
                 } else {
                   println "Skipping Terraform Plan against ${base_env_name} ... "
                 }
-              }
             }
 
             sectionDeployToAKS(
