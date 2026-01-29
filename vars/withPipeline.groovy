@@ -66,6 +66,7 @@ def call(type, String product, String component, Closure body) {
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
+  String agentTypeProd = "dtspo-29750"
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
@@ -152,20 +153,22 @@ def call(type, String product, String component, Closure body) {
 
               // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
               if (!optOutTfPlanOnProdFound) {
-                println "Apply Terraform Plan against ${base_env_name}"
-                sectionDeployToEnvironment(
-                  appPipelineConfig: pipelineConfig,
-                  pipelineCallbacksRunner: callbacksRunner,
-                  pipelineType: pipelineType,
-                  subscription: subscription."${base_env_name}Name",
-                  aksSubscription: aksSubscriptions."${base_env_name}",
-                  environment: environment."${base_env_name}Name",
-                  product: product,
-                  component: component,
-                  tfPlanOnly: true
-                )
-              } else {
-                println "Skipping Terraform Plan against ${base_env_name} ... "
+                node(agentTypeProd)  {
+                  println "Apply Terraform Plan against ${base_env_name}"
+                  sectionDeployToEnvironment(
+                    appPipelineConfig: pipelineConfig,
+                    pipelineCallbacksRunner: callbacksRunner,
+                    pipelineType: pipelineType,
+                    subscription: subscription."${base_env_name}Name",
+                    aksSubscription: aksSubscriptions."${base_env_name}",
+                    environment: environment."${base_env_name}Name",
+                    product: product,
+                    component: component,
+                    tfPlanOnly: true
+                  )
+                } else {
+                  println "Skipping Terraform Plan against ${base_env_name} ... "
+                }
               }
             }
 
