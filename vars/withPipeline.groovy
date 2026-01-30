@@ -69,7 +69,7 @@ def call(type, String product, String component, Closure body) {
   String agentType = "dtspo-29750"
 
   retry(conditions: [agent()], count: 2) {
-    node(agentType) {
+    node(agentTypeProd) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
@@ -153,7 +153,7 @@ def call(type, String product, String component, Closure body) {
 
               // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
               if (!optOutTfPlanOnProdFound) {
-                node(agentTypeProd)  {
+                node(agentType)  {
                   println "Run Terraform Plan against ${base_env_name}"
                   sectionDeployToEnvironment(
                     appPipelineConfig: pipelineConfig,
