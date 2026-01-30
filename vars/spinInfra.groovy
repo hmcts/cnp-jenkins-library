@@ -82,6 +82,8 @@ def call(Map<String, ?> params) {
 
         log.info "Building with following input parameters: common_tags='$pipelineTags'; product='$config.product'; component='$config.component'; deploymentNamespace='$config.deploymentNamespace'; environment='$config.environment'; subscription='$config.subscription'; tfPlanOnly='$config.tfPlanOnly'"
 
+        sh "hostname"
+
         if (env.STORE_rg_name_template != null &&
           env.STORE_sa_name_template != null &&
           env.STORE_sa_container_name_template != null) {
