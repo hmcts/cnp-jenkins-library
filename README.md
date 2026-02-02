@@ -60,12 +60,12 @@ withPipeline(type, product, component) {
 #### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
-Branch | Environment
---- | ---
-`master` | `aat` then `prod`
-`demo` | `demo`
-`perftest` | `perftest`
-PR branch| `preview`
+| Branch     | Environment       |
+|------------|-------------------|
+| `master`   | `aat` then `prod` |
+| `demo`     | `demo`            |
+| `perftest` | `perftest`        |
+| PR branch  | `preview`         |
 
 #### Run Terraform plans against Production
 By default terraform plans against production are executed on Pull Requests that have any terraform changes. Application teams
@@ -220,13 +220,13 @@ withPipeline(type, product, component) {
 
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 
-Branch | HighDataSetup Stage
---- | ---
-`master` | `aat` then `prod`
-`PR` | `aat`
-`perftest` | `perftest`
-`demo` | `demo`
-`ithc` | `ithc`
+| Branch     | HighDataSetup Stage |
+|------------|---------------------|
+| `master`   | `aat` then `prod`   |
+| `PR`       | `aat`               |
+| `perftest` | `perftest`          |
+| `demo`     | `demo`              |
+| `ithc`     | `ithc`              |
 
 If your service is not yet built on prod, you can disable prod HighLevelDataSetup by setting `skipHighLevelDataSetupProd` flag to `true`.
 
@@ -333,13 +333,12 @@ The opinionated infrastructure pipeline supports Slack notifications when the bu
 
 It uses a similar branch --> environment strategy as the app pipeline but with some differences for PRs
 
-Branch | Environment
---- | ---
-`master` | `aat` then `prod`
-`demo` | `demo`
-`perftest` | `perftest`
-PR branch| `aat` (plan only)
-
+| Branch     | Environment       |
+|------------|-------------------|
+| `master`   | `aat` then `prod` |
+| `demo`     | `demo`            |
+| `perftest` | `perftest`        |
+| PR branch  | `aat` (plan only) |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
@@ -472,15 +471,15 @@ Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_cred
 
 All available test stages are detailed in the table below:
 
-TestName | How to enable | Example
---- | --- | ---
- CrossBrowser | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" and call enableCrossBrowserTest()| [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)
- FortifyScan | Call enableFortifyScan() | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-case-management-web/pull/1102/files)
- Performance* | Add Gatling config and call enablePerformancetest() | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)
- SecurityScan | Call enableSecurityScan() | [Web Application example](https://github.com/hmcts/sds-toffee-frontend/pull/119) <br>[API example](https://github.com/hmcts/sds-toffee-recipes-service/pull/135)
- Mutation | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest() | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)
- FullFunctional | Call enableFullFunctionalTest() | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)
- E2eTest | Call enableE2eTest() | [E2eTest Example](https://github.com/hmcts/cnp-jenkins-library/blob/4443f834ae16c5eab4e081a8553f0c5829e5ef5b/testResources/exampleAngularNightlyPipeline.jenkins#L14)
+| TestName       | How to enable                                                                                                         | Example                                                                                                                                                               |
+|----------------|-----------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| CrossBrowser   | Add package.json file with "test:crossbrowser" : "Your script to run browser tests" and call enableCrossBrowserTest() | [CrossBrowser example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/package.json#L31)                                        |
+| FortifyScan    | Call enableFortifyScan()                                                                                              | [Java example](https://github.com/hmcts/ccd-user-profile-api/pull/409/files) <br>[Node example](https://github.com/hmcts/ccd-case-management-web/pull/1102/files)     |
+| Performance*   | Add Gatling config and call enablePerformancetest()                                                                   | [Example Gatling config](https://github.com/hmcts/sscs-performance/tree/64168f527add681d8a2853791a0508b7997fbb1b/src/gatling)                                         |
+| SecurityScan   | Call enableSecurityScan()                                                                                             | [Web Application example](https://github.com/hmcts/sds-toffee-frontend/pull/119) <br>[API example](https://github.com/hmcts/sds-toffee-recipes-service/pull/135)      |
+| Mutation       | Add package.json file with "test:mutation": "Your script to run mutation tests" and call enableMutationTest()         | [Mutation example](https://github.com/hmcts/pcq-frontend/blob/77d59f2143c91502bec4a1690609b5195cc78908/package.json#L30)                                              |
+| FullFunctional | Call enableFullFunctionalTest()                                                                                       | [FullFunctional example](https://github.com/hmcts/nfdiv-frontend/blob/aea2aa8429d3c7495226ee6b5178bde6f0b639e4/Jenkinsfile_nightly#L48)                               |
+| E2eTest        | Call enableE2eTest()                                                                                                  | [E2eTest Example](https://github.com/hmcts/cnp-jenkins-library/blob/4443f834ae16c5eab4e081a8553f0c5829e5ef5b/testResources/exampleAngularNightlyPipeline.jenkins#L14) |
 
 *Performance tests use Gatling. You can find more information about the tool on their website https://gatling.io/.
 
