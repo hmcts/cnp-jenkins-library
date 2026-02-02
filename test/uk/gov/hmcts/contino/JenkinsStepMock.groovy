@@ -30,9 +30,12 @@ interface JenkinsStepMock {
   Object retry(Integer, Closure)
   Object readYaml(LinkedHashMap)
   String readFile(String)
+  Object usernamePassword(Map)
+  Object publishHTML(Map)
+  Object fortifyOnDemandScan()
+  Object fortifyOnDemandScan(Map)
 
   void azureCosmosDBCreateDocument(LinkedHashMap)
 }
-
 
 

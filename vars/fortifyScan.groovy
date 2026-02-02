@@ -17,6 +17,12 @@ def call(params) {
           builder.fortifyScan()
         }
       }
+
+      warnError('Failure in Fortify vulnerability report') {
+        fortifyVulnerabilityReport()
+      }
+
+      archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
     }
   }
 }

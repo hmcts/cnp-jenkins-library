@@ -20,6 +20,7 @@ import uk.gov.hmcts.pipeline.DeprecationConfig
 def call(type, String product, String component, Closure body) {
 
   def branch = new ProjectBranch(env.BRANCH_NAME)
+  env.COMPONENT = component
 
   def deploymentNamespace = branch.deploymentNamespace()
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product

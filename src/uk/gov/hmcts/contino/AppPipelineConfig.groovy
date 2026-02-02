@@ -17,6 +17,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   List<String> parallelCrossBrowsers = []
   boolean mutationTest = false
   boolean fullFunctionalTest = false
+  boolean e2eTest = false
   boolean securityScan = false
   boolean serviceApp = true
   boolean aksStagingDeployment = false
@@ -33,6 +34,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
+  boolean skipHighLevelDataSetupProd = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15

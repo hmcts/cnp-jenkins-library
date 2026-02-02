@@ -8,14 +8,16 @@ class MetricsPublisher implements Serializable {
   String product
   String component
   String correlationId
+  CosmosDbTargetResolver cosmosDbTargetResolver
 
-  MetricsPublisher(steps, currentBuild, product, component) {
+  MetricsPublisher(steps, currentBuild, product, component, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
     this.product = product
     this.component = component
     this.steps = steps
     this.env = steps.env
     this.currentBuild = currentBuild
     this.correlationId = UUID.randomUUID().toString()
+    this.cosmosDbTargetResolver = cosmosDbTargetResolver ?: new CosmosDbTargetResolver(steps)
   }
 
   private def collectMetrics(currentStepName) {
@@ -57,7 +59,8 @@ class MetricsPublisher implements Serializable {
 
   def publish(eventName) {
     try {
-      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: 'jenkins', document: collectMetrics(eventName))
+      def database = cosmosDbTargetResolver.databaseName()
+      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName))
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
     }

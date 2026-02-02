@@ -21,6 +21,33 @@
         "openjdk"
       ],
       "allowedVersions": "<12"
+    },
+    {
+      "matchPackageNames": ["hmctspublic.azurecr.io/zap-glue"],
+      "description": "Allow increased maxMajorIncrement for zap-glue docker image",
+      "maxMajorIncrement": 0
     }
-  ]
+  ],
+    "customManagers": [
+      {
+        "customType": "regex",
+        "description": "Update zaproxy docker image",
+        "managerFilePatterns": ["/SecurityScan.groovy$/"],
+        "matchStrings": [
+          "OWASP_ZAP_IMAGE = '(?<depName>ghcr\\.io/zaproxy/zaproxy):(?<currentValue>[^'@]+)@sha256:(?<digest>[a-f0-9]+)'"
+        ],
+        "datasourceTemplate": "docker",
+        "depNameTemplate": "ghcr.io/zaproxy/zaproxy"
+      },
+      {
+        "customType": "regex",
+        "description": "Update zap-glue docker image",
+        "managerFilePatterns": ["/SecurityScan.groovy$/"],
+        "matchStrings": [
+          "GLUEIMAGE = '(?<depName>hmctspublic\\.azurecr\\.io/zap-glue):(?<currentValue>\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d+)'"
+        ],
+        "datasourceTemplate": "docker",
+        "depNameTemplate": "hmctspublic.azurecr.io/zap-glue"
+      }
+    ]
 }

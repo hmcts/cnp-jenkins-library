@@ -1,8 +1,6 @@
 package withNightlyPipeline.onMaster
 
-import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import uk.gov.hmcts.contino.AngularBuilder
 import withPipeline.BaseCnpPipelineTest
 
 class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
@@ -20,20 +18,17 @@ class withAngularNightlyPipelineOnMasterTests extends BaseCnpPipelineTest {
     helper.registerAllowedMethod("sauce", [String.class, Closure.class], { String sauceId, Closure closure -> closure.call() })
     helper.registerAllowedMethod("sauceconnect", [Map.class, Closure.class], { Map options, Closure closure -> closure.call() })
 
-    def stubBuilder = new StubFor(AngularBuilder)
-    stubBuilder.demand.with {
-      setupToolVersion(0..10) {}
-      build(0..10) {}
-      securityCheck(0..10) {}
-      crossBrowserTest(0..10) {}
-      performanceTest(0..10) {}
-      mutationTest(0..10) {}
-      fullFunctionalTest(0..10) {}
-      asBoolean(0..10) { return true }
-    }
+    // Register all AngularBuilder/YarnBuilder methods with helper to avoid StubFor conflicts
+    helper.registerAllowedMethod("setupToolVersion", [], {})
+    helper.registerAllowedMethod("build", [], {})
+    helper.registerAllowedMethod("securityCheck", [], {})
+    helper.registerAllowedMethod("crossBrowserTest", [], {})
+    helper.registerAllowedMethod("crossBrowserTest", [String.class], { String browser -> })
+    helper.registerAllowedMethod("performanceTest", [], {})
+    helper.registerAllowedMethod("mutationTest", [], {})
+    helper.registerAllowedMethod("e2eTest", [], {})
+    helper.registerAllowedMethod("fullFunctionalTest", [], {})
 
-    stubBuilder.use {
-      runScript("testResources/$jenkinsFile")
-    }
+    runScript("testResources/$jenkinsFile")
   }
 }

@@ -75,6 +75,11 @@ class AbstractBuilderTest extends Specification {
     }
 
     @Override
+    def e2eTest() {
+      return null
+    }
+
+    @Override
     def apiGatewayTest() {
       return null
     }
