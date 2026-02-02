@@ -34,7 +34,34 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    yarn("fortifyScan")
+    try {
+      String runner = (steps.env.FORTIFY_SCAN_RUNNER ?: 'auto').toString().trim().toLowerCase()
+      if (runner == 'library') {
+        steps.echo('Fortify: using library FoD scan runner (FORTIFY_SCAN_RUNNER=library)')
+        steps.fortifyOnDemandScan()
+      } else if (runner == 'repo' || hasFortifyScanScript()) {
+        yarn("fortifyScan")
+      } else {
+        steps.echo("Fortify: no package.json fortifyScan script found; using library FoD scan runner")
+        steps.fortifyOnDemandScan()
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+    }
+  }
+
+  private boolean hasFortifyScanScript() {
+    if (!steps.fileExists('package.json')) {
+      return false
+    }
+    try {
+      def pkg = new JsonSlurperClassic().parseText(steps.readFile('package.json') ?: '{}') as Map
+      def scripts = (pkg.scripts instanceof Map) ? (pkg.scripts as Map) : [:]
+      def script = scripts.fortifyScan
+      return script != null && script.toString().trim()
+    } catch (Exception ignored) {
+      return false
+    }
   }
 
   def test() {
@@ -145,7 +172,7 @@ class YarnBuilder extends AbstractBuilder {
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
-      steps.writeFile(file: 'format-v4-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.cjs'))
+      steps.writeFile(file: 'transform-v4-to-v3-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/transform-v4-to-v3-audit.cjs'))
 
       this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
         steps.sh """
@@ -247,6 +274,7 @@ class YarnBuilder extends AbstractBuilder {
       patched_versions   : it?.data?.advisory?.patched_versions,
       severity           : it?.data?.advisory?.severity,
       cwe                : it?.data?.advisory?.cwe,
+      cvss               : it?.data?.advisory?.cvss,
       url                : it?.data?.advisory?.url,
       module_name        : it?.data?.advisory?.module_name
     ]

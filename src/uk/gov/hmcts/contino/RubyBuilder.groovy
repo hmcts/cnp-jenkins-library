@@ -17,8 +17,28 @@ class RubyBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    bundle("exec rake fortify_scan")
+    try {
+      String runner = (steps.env.FORTIFY_SCAN_RUNNER ?: 'auto').toString().trim().toLowerCase()
+      if (runner == 'library') {
+        steps.echo('Fortify: using library FoD scan runner (FORTIFY_SCAN_RUNNER=library)')
+        steps.fortifyOnDemandScan()
+      } else if (runner == 'repo' || hasFortifyRakeTask()) {
+        bundle("exec rake fortify_scan")
+      } else {
+        steps.echo("Fortify: no rake fortify_scan task detected; using library FoD scan runner")
+        steps.fortifyOnDemandScan()
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+    }
+  }
 
+  private boolean hasFortifyRakeTask() {
+    if (steps.fileExists('Rakefile')) {
+      def status = steps.sh(script: "grep -Rqs \"\\bfortify_scan\\b\" Rakefile lib/tasks 2>/dev/null", returnStatus: true)
+      return status == 0
+    }
+    return false
   }
 
   def test() {

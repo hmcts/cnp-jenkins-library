@@ -293,6 +293,23 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+#### E2E Tests on master branch
+
+E2E tests can be enabled to run on the `master` branch after deployment to AKS environments (AAT and Production). To enable E2E tests, add `enableE2eTest()` to your `withPipeline` block:
+
+```
+withPipeline(type, product, component) {
+  ...
+  enableE2eTest()
+  ...
+}
+```
+
+E2E tests require the appropriate task to be defined in your application's build configuration:
+- For Java: `e2eTest` task in build.gradle
+
+The tests run after deployment to each environment (AAT and Production) on the master branch, after smoke tests and API gateway tests (if enabled).
+
 #### Clear Helm Release
 
 - By default your Helm resources are uninstalled to free up resources on the cluster.
@@ -435,6 +452,23 @@ withNightlyPipeline(type, product, component) {
 ```
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
+
+You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
+
+When Fortify completes, the pipeline archives:
+- `Fortify Scan/FortifyScanReport.html` (summary produced by the Fortify client)
+- `Fortify Scan/FortifyVulnerabilities.html` and `Fortify Scan/FortifyVulnerabilities.json` (per-issue details fetched from FoD)
+
+If your repo does not already provide a `fortifyScan` script/task, the library falls back to a built-in FoD API runner (zips the workspace, starts a static scan, and writes `Fortify Scan/FortifyScanReport.html`). The scan runner resolves `releaseId` from `FORTIFY_RELEASE_ID`, `config/fortify-client.properties`, or by looking up a FoD release whose name matches the repository name (derived from `GIT_URL`).
+
+To force the built-in scan runner (even if the repo has its own `fortifyScan` hook), set `FORTIFY_SCAN_RUNNER=library`. Default is `auto` (use repo hook if present, otherwise library runner).
+
+Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_OAUTH_CLIENT_ID`/`FORTIFY_OAUTH_CLIENT_SECRET` (client id/secret).
+
+`withFortifySecrets(...)` loads Fortify scan credentials from Azure Key Vault secrets `fortify-on-demand-username`/`fortify-on-demand-password` and exports them as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`.
+
+`withFortifyOAuthSecrets(...)` binds the Jenkins `usernamePassword` credential `fortify-on-demand-oauth` (override via `FORTIFY_OAUTH_CREDENTIALS_ID`) and exports it as `FORTIFY_OAUTH_CLIENT_ID`/`FORTIFY_OAUTH_CLIENT_SECRET`.
+
 
 All available test stages are detailed in the table below:
 
@@ -801,4 +835,3 @@ This file will point to the repository which defines, in json syntax, which infr
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
-

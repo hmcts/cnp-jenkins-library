@@ -59,7 +59,11 @@ if cd hmcts-charts; then
       fi
     fi
 
-    git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
+    # Only modify URL if it doesn't already contain credentials
+    REMOTE_URL=$(git config remote.origin.url)
+    if [[ ! "$REMOTE_URL" =~ @github\.com ]]; then
+      git remote set-url origin $(echo "$REMOTE_URL" | sed "s/github.com/${GIT_CREDENTIALS_ID}:${BEARER_TOKEN}@github.com/g")
+    fi
     git config --global user.name "${GIT_CREDENTIALS_ID}"
     git config --global user.email "${GIT_APP_EMAIL_ID}"
     git add "stable/${CHART_NAME}/"
