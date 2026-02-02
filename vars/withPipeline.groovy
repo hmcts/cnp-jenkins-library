@@ -65,7 +65,7 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = "kubernetes"
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
