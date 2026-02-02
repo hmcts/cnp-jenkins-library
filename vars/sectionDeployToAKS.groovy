@@ -131,7 +131,7 @@ def call(params) {
             }
           }
         
-      onFunctionalTestEnvironment(environment) {
+          onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
@@ -353,6 +353,7 @@ def call(params) {
                 }
               }
             } // End withAzureKeyvault block
+          } // End if (config.performanceTestStages || config.gatlingLoadTests)
 
           onMaster {
             if (config.crossBrowserTest) {
@@ -438,10 +439,13 @@ def call(params) {
               }
             }
           }
+        }
+      }
+    }
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
       if (isOnMaster || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
     }
   }
-}
+
