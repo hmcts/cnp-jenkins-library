@@ -3,7 +3,7 @@ import groovy.json.JsonSlurperClassic
 
 def call(String subscription, Closure body) {
   def azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd") }
-  azJenkins 'login --identity'
+  azJenkins 'login --federated-token "$(cat  $AZURE_FEDERATED_TOKEN_FILE)" --service-principal -u $AZURE_CLIENT_ID -t $AZURE_TENANT_ID'
   identityBasedLogin(subscription, body)
 }
 
