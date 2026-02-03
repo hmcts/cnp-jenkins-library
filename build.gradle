@@ -48,7 +48,7 @@ dependencies {
   implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3773.v505e0052522c'
   testImplementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.460'
+  implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.549'
   implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '657.v03b_e8115821b_', ext: 'jar'
   implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '2.2221.vc657003fb_d93', ext: 'jar'
   implementation 'org.jenkins-ci.plugins:job-dsl-core:1.90'
