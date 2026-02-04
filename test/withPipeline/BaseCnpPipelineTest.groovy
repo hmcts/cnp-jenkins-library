@@ -40,6 +40,10 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       .implicit(false)
       .build()
     helper.registerSharedLibrary(library)
+    helper.registerAllowedMethod("ws", [Closure.class], { body -> body.call() })
+    helper.registerAllowedMethod("ws", [String.class, Closure.class], { String path, Closure body -> body.call() })
+    helper.registerAllowedMethod("checkout", [Object.class], { _ -> return [GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'] })
+    helper.registerAllowedMethod("deleteDir", [], {})
     helper.registerAllowedMethod("deleteDir",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("dir",  [String], { body ->
       body.call()
