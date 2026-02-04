@@ -295,7 +295,7 @@ class DynatraceClient implements Serializable {
     return config
   }
 
-  //Method to evaluate dynatrace site reliability guardian
+  //Method to evaluate dynatrace site reliability guardian *Not yet ready to be implemented*
   def evaluateSRG(String service, String stage, String startTime, String endTime) {
     def response = null
     try {
