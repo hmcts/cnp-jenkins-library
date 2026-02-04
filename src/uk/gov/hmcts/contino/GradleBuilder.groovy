@@ -67,7 +67,7 @@ class GradleBuilder extends AbstractBuilder {
     try {
       gradle("check")
     } finally {
-      localSteps.junit '**/test-results/test/*.xml'
+      localSteps.junit allowEmptyResults: true, testResults: '**/test-results/test/*.xml'
       localSteps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
     }
   }
