@@ -68,7 +68,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableFullFunctionalTest(int timeout = 30) {
     config.fullFunctionalTestTimeout = timeout
-    config.fullFunctionalTest = false  //true **
+    config.fullFunctionalTest = true
   }
 
   void enableMutationTest(int timeout = 120) {
