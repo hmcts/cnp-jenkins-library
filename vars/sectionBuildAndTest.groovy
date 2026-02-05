@@ -38,6 +38,11 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
+  
+  stage('ACR Migration Check') {
+    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+  }
+  
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
