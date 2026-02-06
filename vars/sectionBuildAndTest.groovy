@@ -147,6 +147,32 @@ def call(params) {
       def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
       if (testLabels.contains('enable_fortify_scan')) {
         branches["Fortify scan"] = {
+          ws("${env.WORKSPACE}@fortify") {
+            deleteDir()
+            checkout scm
+            withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+              warnError('Failure in Fortify Scan') {
+                pcr.callAround('fortify-scan') {
+                  builder.fortifyScan()
+                }
+              }
+
+              warnError('Failure in Fortify vulnerability report') {
+                fortifyVulnerabilityReport()
+              }
+
+              archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+            }
+          }
+        }
+      }
+    }
+
+    if (config.fortifyScan && branches["Fortify scan"] == null) {
+      branches["Fortify scan"] = {
+        ws("${env.WORKSPACE}@fortify") {
+          deleteDir()
+          checkout scm
           withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
             warnError('Failure in Fortify Scan') {
               pcr.callAround('fortify-scan') {
@@ -160,24 +186,6 @@ def call(params) {
 
             archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
           }
-        }
-      }
-    }
-
-    if (config.fortifyScan && branches["Fortify scan"] == null) {
-      branches["Fortify scan"] = {
-        withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
-          warnError('Failure in Fortify Scan') {
-            pcr.callAround('fortify-scan') {
-              builder.fortifyScan()
-            }
-          }
-
-          warnError('Failure in Fortify vulnerability report') {
-            fortifyVulnerabilityReport()
-          }
-
-          archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
         }
       }
     }
