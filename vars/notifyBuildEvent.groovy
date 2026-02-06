@@ -34,11 +34,11 @@ def call(Map args) {
     slackMessage.addSection(message)
     slackMessage.setDangerColor()
 
-    // slackSend(
-      // failOnError: true,
-      // channel: channel,
-      // attachments: slackMessage.asObject())
-  } 
+    slackSend(
+      failOnError: true,
+      channel: channel,
+      attachments: slackMessage.asObject())
+  }
   catch (Exception ex) {
     if(channel!='@iamabotuser') {
       throw new Exception("ERROR: Failed to notify ${channel} due to the following error: ${ex}")
