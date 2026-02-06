@@ -559,7 +559,6 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
-
 ## Enabling nightly checks on pull requests
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
@@ -575,6 +574,243 @@ It is possible to trigger optional full functional tests, performance tests, for
 Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
+
+
+## Performance Testing with Dynatrace and Gatling
+
+The pipeline supports running performance tests as part of your deployment to AAT or perftest environments. There are two types of performance tests available:
+
+### Dynatrace Synthetic Tests
+Dynatrace synthetic tests are browser-based tests that monitor your application from the user's perspective. These run in Dynatrace and check response times, availability, and functional correctness.
+
+### External Gatling Load Tests
+Gatling tests run load tests against your application from a separate Git repository. This lets teams maintain centralised performance test suites that can be reused across multiple services.
+
+### Enabling Performance Tests
+
+Add the following to your `Jenkinsfile_CNP`:
+
+```groovy
+withPipeline(type, product, component) {
+
+  // Enable Dynatrace synthetic tests
+  enablePerformanceTestStages(
+    timeout: 15,
+    configPath: 'src/test/performance/config/config.groovy'
+  )
+
+  // Enable Gatling load tests from external repo
+  enableGatlingLoadTests(
+    repo: 'https://github.com/hmcts/your-performance-tests.git',
+    branch: 'main',
+    simulation: 'uk.gov.hmcts.yourapp.simulation.LoadTest',
+    timeout: 10
+  )
+
+  // Optionally enable Site Reliability Guardian evaluation
+  enableSrgEvaluation(
+    serviceName: 'your-service-name',
+    failureBehavior: 'warn'  // 'fail', 'warn', or 'ignore'
+  )
+
+  // Optionally create IDAM test user for performance tests
+  enableIdamTestUser(
+    email: 'perf.test.caseworker@testmail.com',
+    forename: 'Performance',
+    surname: 'Tester',
+    password: 'PerfTest1!',
+    roles: ['caseworker', 'caseworker-employment', 'caseworker-employment-englandwales']
+  )
+}
+```
+
+### Performance Test Configuration
+
+For Dynatrace tests, create a config file in your service repo (default location: `src/test/performance/config/config.groovy`):
+
+```groovy
+// config.groovy
+
+// ====== Set up default values ======
+this.dynatraceMetricType = 'service-application'
+this.dynatraceMetricTag = 'namespace:'
+
+//Preview Config
+this.dynatraceSyntheticTestPreview = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdPreview = "DASHBOARD-123"
+this.dynatraceDashboardURLPreview = "https://your-preview-dashboard-url"
+this.dynatraceEntitySelectorPreview = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:PREVIEW\\"),entityId(\\"\\")'
+
+//AAT Config
+this.dynatraceSyntheticTestAAT = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdAAT = "DASHBOARD-123"
+this.dynatraceDashboardURLAAT = "https://your-aat-dashboard-url"
+this.dynatraceEntitySelectorAAT = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:AAT\\"),entityId(\\"\\")'
+
+//Perftest Config
+this.dynatraceSyntheticTestPerfTest = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdPerfTest = "DASHBOARD-123"
+this.dynatraceDashboardURLPerfTest = "https://your-perftest-dashboard-url"
+this.dynatraceEntitySelectorPerfTest = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:PERF\\"),entityId(\\"\\")'
+```
+
+### Gatling Test Repository
+
+Your external Gatling repository must:
+- Have Gradle with `gatling-gradle-plugin` or `gradle-gatling-plugin`
+- Read `TEST_URL` from the environment to target the correct deployment
+- Define test parameters (users, duration, ramp) in `build.gradle` rather than the pipeline
+
+Example Gatling `build.gradle`:
+```gradle
+gatling {
+  simulations = {
+    include 'uk/gov/hmcts/**/*.scala'
+  }
+}
+```
+
+### Secrets Required
+
+Performance tests require Dynatrace API tokens stored in Azure KeyVault (`et-perftest` or your product-specific vault):
+- `perf-synthetic-monitor-token` - For triggering and monitoring synthetic tests
+- `perf-metrics-token` - For sending release metrics
+- `perf-event-token` - For posting build events
+- `perf-synthetic-update-token` - For enabling/disabling synthetic tests
+
+These are automatically loaded by the pipeline from the shared perftest vault.
+
+### When Tests Run
+
+Performance test stages run:
+- **Preview environment**: After deployment (for PR branches)
+- **AAT environment**: After deployment (for master branch)
+- **Perftest environment**: After deployment (for perftest branch)
+
+Tests can run in parallel (Dynatrace and Gatling at the same time) or individually depending on which you've enabled.
+
+### Site Reliability Guardian (SRG)
+
+SRG evaluates performance test results against quality gates you define in Dynatrace. You can configure what happens when tests fail:
+- `fail` - Pipeline fails if SRG thresholds are breached
+- `warn` - Pipeline marked as unstable (default)
+- `ignore` - Results logged but build continues
+
+Note: SRG evaluation is not yet fully implemented - the structure is in place for future use.
+
+### Test Reports
+
+Gatling test reports are automatically uploaded to Azure Blob Storage and CosmosDB. You can view them at:
+```
+https://buildlog-storage-account.blob.core.windows.net/performance/{product}-{component}/{environment}
+```
+
+For external Gatling tests, reports are uploaded to:
+```
+https://buildlog-storage-account.blob.core.windows.net/performance/perfInBuildPipeline/{product}-{component}/{environment}
+```
+
+### Creating IDAM Test Users
+
+For performance testing, you can create test users in IDAM using the `createIdamTestUsers` pipeline function.
+
+**Important**: This function only runs in **AAT and Preview environments** (both use AAT IDAM). In other environments, it logs a message and returns null without creating users.
+
+#### Prerequisites
+
+1. Store the full IDAM testing-support URL in KeyVault as `idam-test-support-url`
+2. This is already added to the shared rpe-shared-perftest KV which the performance stages load secrets from
+
+#### Usage Example
+
+```groovy
+def secrets = [
+  secret('idam-test-support-url', 'IDAM_TEST_SUPPORT_URL')
+]
+
+withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: 'https://your-vault-aat.vault.azure.net/') {
+  def testUser = createIdamTestUsers(
+    email: 'caseworker@testmail.com',
+    forename: 'Case',
+    surname: 'Worker',
+    password: 'Caseworker1!',
+    roles: ['caseworker', 'caseworker-employment', 'caseworker-employment-englandwales']
+  )
+
+  // Store credentials for use in tests
+  if (testUser) {
+    env.TEST_USER_EMAIL = testUser.email
+  }
+}
+```
+
+#### Password Requirements
+
+IDAM requires passwords to have:
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
+
+#### Idempotent User Creation
+
+If a user already exists (409 Conflict), the function will **continue the build** and use the existing user. This makes user creation idempotent - you can safely call it multiple times with the same email without failing the build.
+
+The response will include `existed: true` to indicate the user already existed:
+```groovy
+def user = createIdamTestUsers(email: 'existing@testmail.com', ...)
+if (user.existed) {
+  echo "Using existing user: ${user.email}"
+} else {
+  echo "Created new user: ${user.email}"
+}
+```
+
+#### Environment Behaviour
+
+The function automatically checks the environment:
+
+- **AAT/Preview**: User creation proceeds (both use AAT IDAM)
+- **Other environments**: Returns `null` and logs a message - build continues normally
+
+This means you can safely call it in any environment without conditional logic:
+
+```groovy
+def testUser = createIdamTestUsers(email: 'test@example.com', ...)
+
+if (testUser) {
+  echo "Test user available: ${testUser.email}"
+} else {
+  echo "Test user creation skipped (not AAT/Preview)"
+}
+```
+
+#### Integration with Performance Tests
+
+The recommended approach is to use `enableIdamTestUser()` in your pipeline configuration (see [Performance Testing](#performance-testing-with-dynatrace-and-gatling) section above). This automatically creates the test user during the Dynatrace Performance Setup stage and makes credentials available via environment variables:
+
+```groovy
+withPipeline(type, product, component) {
+  enablePerformanceTestStages(
+    configPath: 'src/test/performance/config/config.groovy'
+  )
+
+  enableIdamTestUser(
+    email: 'perf.test.caseworker@testmail.com',
+    forename: 'Performance',
+    surname: 'Tester',
+    password: 'PerfTest1!',
+    roles: ['caseworker', 'caseworker-employment']
+  )
+}
+```
+
+The test user is created automatically, and credentials are stored in:
+- `TEST_USER_EMAIL` - The user's email address
+- `TEST_USER_PASSWORD` - The user's password
+
+Your Gatling tests or functional tests can access these environment variables directly.
 
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.

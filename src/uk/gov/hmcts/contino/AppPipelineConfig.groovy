@@ -48,6 +48,31 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean perfRerunOnFail = false
   String perfSlackChannel = "#performance-alerts"
 
+  // Performance test stages configuration
+  boolean performanceTestStages = false
+  int performanceTestStagesTimeout
+  String performanceTestConfigPath
+
+  // Site Reliability Guardian configuration
+  boolean srgEvaluation = false
+  String srgServiceName = null  // Explicit SRG service name in Dynatrace
+  String srgFailureBehavior = 'warn' // 'fail', 'warn', 'ignore'
+
+  // Gatling load test configuration
+  boolean gatlingLoadTests = false
+  int gatlingLoadTestTimeout = 10
+  String gatlingRepo
+  String gatlingBranch = 'master'
+  String gatlingSimulation
+
+  // IDAM test user creation configuration
+  boolean idamTestUser = false
+  String idamTestUserEmail
+  String idamTestUserForename
+  String idamTestUserSurname
+  String idamTestUserPassword
+  List<String> idamTestUserRoles = []
+
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)
   }

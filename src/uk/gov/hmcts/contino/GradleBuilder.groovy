@@ -346,12 +346,16 @@ EOF
   }
 
   @Override
-  def performanceTest() {
+  def performanceTest(simulation = null) {
     //support for the new and old (deprecated) gatling gradle plugins
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
-      gradle("gatlingRun")
+      
+      // If simulation is provided Gatling will run that simulation, otherwise run all simulations within the
+      // performance repo
+      def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
+      gradle(gatlingCommand)
       this.localSteps.gatlingArchive()
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",

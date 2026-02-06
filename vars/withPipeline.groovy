@@ -282,6 +282,160 @@ def call(type, String product, String component, Closure body) {
               aksSubscription: aksSubscription,
               tfPlanOnly: false
             )
+
+          // Performance Test Pipeline: Setup -> Parallel Testing
+          if (pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) {
+
+            // Set aksUrl from TEST_URL for performance test stages
+            def aksUrl = env.TEST_URL
+
+            // Helper method to set test environment variables (only used within performance stages)
+            def testEnv = { String testUrl, block ->
+              def testEnvName = new Environment(env).nonProdName
+              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${testEnvName}"]
+
+              withEnv(testEnvVariables) {
+                echo "Using TEST_URL: ${env.TEST_URL}"
+                echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
+                block.call()
+              }
+            }
+
+            def pcr = callbacksRunner
+
+            // Load performance test secrets once for all stages
+            def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/" //https://et-perftest.vault.azure.net/
+            def perfSecrets = [
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+            ]
+            
+            withAzureKeyvault(
+              azureKeyVaultSecrets: perfSecrets,
+              keyVaultURLOverride: perfKeyVaultUrl
+            ) {
+
+              // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
+              // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
+              stageWithAgent("Dynatrace Performance Setup - ${environmentName}", product) {
+                testEnv(aksUrl) {
+                  try {
+                    pcr.callAround("dynatracePerformanceSetup:${environmentName}") {
+                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environmentName}") {
+                        dynatracePerformanceSetup([
+                          product: product,
+                          component: component,
+                          environment: environmentName,
+                          testUrl: env.TEST_URL,
+                          secrets: pipelineConfig.vaultSecrets,
+                          configPath: pipelineConfig.performanceTestConfigPath
+                        ])
+                      }
+                    }
+                  } catch (err) {
+                    echo "Dynatrace setup failed: ${err.message}"
+                    // Don't fail the build for setup issues, continue with tests
+                  }
+                }
+              }
+            
+            // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
+            def testStages = [:]
+            
+            if (pipelineConfig.performanceTestStages) {
+              testStages['Dynatrace Synthetic Tests'] = {
+                stageWithAgent("Dynatrace Synthetic Tests - ${environmentName}", product) {
+                  testEnv(aksUrl) {
+                    try {
+                      pcr.callAround("dynatraceSyntheticTest:${environmentName}") {
+                        timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environmentName}") {
+                          dynatraceSyntheticTest([
+                            product: product,
+                            component: component,
+                            environment: environmentName,
+                            testUrl: env.TEST_URL,
+                            secrets: pipelineConfig.vaultSecrets,
+                            configPath: pipelineConfig.performanceTestConfigPath,
+                            performanceTestStagesEnabled: pipelineConfig.performanceTestStages,
+                            gatlingLoadTestsEnabled: pipelineConfig.gatlingLoadTests
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      throw err
+                    }
+                  }
+                }
+              }
+            }
+            
+            if (pipelineConfig.gatlingLoadTests) {
+              testStages['Gatling Load Tests'] = {
+                stageWithAgent("Gatling Load Tests - ${environmentName}", product) {
+                  testEnv(aksUrl) {
+                    try {
+                      pcr.callAround("gatlingLoadTests:${environmentName}") {
+                        timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environmentName}") {
+                          gatlingExternalLoadTest([
+                            product: product,
+                            component: component,
+                            environment: environmentName,
+                            subscription: subscriptionName,
+                            gatlingRepo: pipelineConfig.gatlingRepo,
+                            gatlingBranch: pipelineConfig.gatlingBranch,
+                            gatlingSimulation: pipelineConfig.gatlingSimulation
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      throw err
+                    }
+                  }
+                }
+              }
+            }
+            
+              // Execute test stages
+              if (testStages.size() > 1) {
+                echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
+                parallel(testStages)
+              } else {
+                echo "Running single performance test stage..."
+                testStages.values().first().call()
+              }
+
+              // Stage 3: Site Reliability Guardian Evaluation (if enabled)
+              if (pipelineConfig.srgEvaluation) {
+                stageWithAgent("Site Reliability Guardian Evaluation - ${environmentName}", product) {
+                  testEnv(aksUrl) {
+                    try {
+                      pcr.callAround("srgEvaluation:${environmentName}") {
+                        evaluateDynatraceSRG([
+                          environment: environmentName,
+                          srgServiceName: pipelineConfig.srgServiceName,
+                          performanceTestStartTime: env.PERF_TEST_START_TIME,
+                          performanceTestEndTime: env.PERF_TEST_END_TIME,
+                          gatlingTestStartTime: env.GATLING_TEST_START_TIME,
+                          gatlingTestEndTime: env.GATLING_TEST_END_TIME,
+                          srgFailureBehavior: pipelineConfig.srgFailureBehavior,
+                          product: product,
+                          component: component
+                        ])
+                      }
+                    } catch (Exception e) {
+                      echo "SRG evaluation stage failed: ${e.message}"
+                      if (pipelineConfig.srgFailureBehavior == 'fail') {
+                        throw e
+                      }
+                    }
+                  }
+                }
+              }
+              
+            } // End withAzureKeyvault block
+          } // End performance Block
           }
 
           onPreview {
