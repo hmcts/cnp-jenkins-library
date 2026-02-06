@@ -283,7 +283,7 @@ class DynatraceClient implements Serializable {
         config.dynatraceEntitySelector = config.dynatraceEntitySelectorAAT
         break
       case "perftest":
-        config.dynatraceSyntheticTest = config.dynatraceSyntheticTest
+        config.dynatraceSyntheticTest = config.dynatraceSyntheticTestPerfTest
         config.dynatraceDashboardId = config.dynatraceDashboardIdPerfTest
         config.dynatraceDashboardURL = config.dynatraceDashboardURLPerfTest
         config.dynatraceEntitySelector = config.dynatraceEntitySelectorPerfTest

@@ -630,24 +630,28 @@ For Dynatrace tests, create a config file in your service repo (default location
 
 ```groovy
 // config.groovy
-dynatraceSyntheticTest = 'SYNTHETIC_TEST-ABC123'
-dynatraceSyntheticTestPreview = 'SYNTHETIC_TEST-PREVIEW123'
-dynatraceSyntheticTestAAT = 'SYNTHETIC_TEST-AAT123'
 
-dynatraceDashboardId = 'DASHBOARD-123'
-dynatraceDashboardIdPreview = 'DASHBOARD-PREVIEW'
-dynatraceDashboardIdAAT = 'DASHBOARD-AAT'
+// ====== Set up default values ======
+this.dynatraceMetricType = 'service-application'
+this.dynatraceMetricTag = 'namespace:'
 
-dynatraceDashboardURL = 'https://your-dashboard-url'
-dynatraceDashboardURLPreview = 'https://your-preview-dashboard-url'
-dynatraceDashboardURLAAT = 'https://your-aat-dashboard-url'
+//Preview Config
+this.dynatraceSyntheticTestPreview = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdPreview = "DASHBOARD-123"
+this.dynatraceDashboardURLPreview = "https://your-preview-dashboard-url"
+this.dynatraceEntitySelectorPreview = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:PREVIEW\\"),entityId(\\"\\")'
 
-dynatraceEntitySelector = 'type(SERVICE),tag(your-app)'
-dynatraceEntitySelectorPreview = 'type(SERVICE),tag(your-app-preview)'
-dynatraceEntitySelectorAAT = 'type(SERVICE),tag(your-app-aat)'
+//AAT Config
+this.dynatraceSyntheticTestAAT = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdAAT = "DASHBOARD-123"
+this.dynatraceDashboardURLAAT = "https://your-aat-dashboard-url"
+this.dynatraceEntitySelectorAAT = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:AAT\\"),entityId(\\"\\")'
 
-dynatraceMetricType = 'release'
-dynatraceMetricTag = 'your-app'
+//Perftest Config
+this.dynatraceSyntheticTestPerfTest = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdPerfTest = "DASHBOARD-123"
+this.dynatraceDashboardURLPerfTest = "https://your-perftest-dashboard-url"
+this.dynatraceEntitySelectorPerfTest = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:PERF\\"),entityId(\\"\\")'
 ```
 
 ### Gatling Test Repository
