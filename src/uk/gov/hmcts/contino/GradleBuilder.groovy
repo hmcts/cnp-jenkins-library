@@ -352,9 +352,7 @@ EOF
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
       gradle("gatlingRun")
-      // Note: gatlingArchive() disabled due to a known bug with path parsing (StringIndexOutOfBoundsException)
-      // Reports are published via publishPerformanceReports() and uploaded to Azure Blob storage
-      localSteps.echo "Gatling reports generated at: ${localSteps.env.GATLING_REPORTS_PATH}"
+      this.localSteps.gatlingArchive()
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +
