@@ -111,17 +111,17 @@ def call(type, String product, String component, Closure body) {
           onPR {
             onTerraformChangeInPR {
               // we always need a tf plan of aat (i.e. staging)
-              sectionDeployToEnvironment(
-                appPipelineConfig: pipelineConfig,
-                pipelineCallbacksRunner: callbacksRunner,
-                pipelineType: pipelineType,
-                subscription: subscription.nonProdName,
-                aksSubscription: aksSubscriptions.aat,
-                environment: environment.nonProdName,
-                product: product,
-                component: component,
-                tfPlanOnly: true
-              )
+              // sectionDeployToEnvironment(
+              //   appPipelineConfig: pipelineConfig,
+              //   pipelineCallbacksRunner: callbacksRunner,
+              //   pipelineType: pipelineType,
+              //   subscription: subscription.nonProdName,
+              //   aksSubscription: aksSubscriptions.aat,
+              //   environment: environment.nonProdName,
+              //   product: product,
+              //   component: component,
+              //   tfPlanOnly: true
+              // )
 
               final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
               def githubApi = new GithubAPI(this)
