@@ -16,7 +16,7 @@ class DeploymentControls {
         consoleLogResponseBody: true,
         authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/deployment-controls.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/DTSPO-29801-discovery-deployment-enablement/deployment-controls.yml",
         validResponseCodes: '200'
       )
       deploymentControls = steps.readYaml(text: response.content)
