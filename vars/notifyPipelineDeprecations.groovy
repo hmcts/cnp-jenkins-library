@@ -27,6 +27,17 @@ def call(teamSlackChannel, metricsPublisher ) {
 
   // Only send if there are blocks in the warning message meaning there is something to send
   if (!warnings.isEmpty()) {
+    // Echo warnings to the console so they appear in the pipeline run
+    echo """
+================================================================================
+⚠️  PIPELINE DEPRECATION WARNINGS
+================================================================================
+
+${warnings}
+
+================================================================================
+"""
+    
     String channel
     if (! new ProjectBranch(env.BRANCH_NAME).isMaster()) {
       channel = new SlackChannelRetriever(this).retrieve(teamSlackChannel, changeAuthor)
