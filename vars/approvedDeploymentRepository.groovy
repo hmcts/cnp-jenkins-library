@@ -29,6 +29,7 @@ Deployment stages are disabled for this repository.
 ================================================================================
 """
     metricsPublisher.publish("deployment-not-enabled")
+    return null
   } else {
     return block.call()
   }
