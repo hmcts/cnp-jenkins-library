@@ -312,21 +312,6 @@ EOF
       // Mark build as unstable (yellow) with warning message visible in build summary
       steps.unstable(message: fullWarning)
       
-      // Echo warning immediately so it appears in the pipeline console
-      steps.echo """
-================================================================================
-⚠️  DEPRECATION WARNING: Java 17
-================================================================================
-
-${warningMsg}
-
-This configuration will stop working by 12/05/2026.
-
-Build marked as UNSTABLE due to this deprecation warning.
-
-================================================================================
-"""
-      
       WarningCollector.addPipelineWarning("java_17_deprecated", warningMsg, LocalDate.of(2026, 5, 12))
     }
 
