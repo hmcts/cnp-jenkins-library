@@ -307,16 +307,10 @@ EOF
           "Oracle JDK 17 is reaching end of life in September 2026. " +
           "Java 21 is available in the container registry: hmctsprod.azurecr.io/base/java:21-distroless."
       
-      // Add visual warning badge and text to the stage in Jenkins UI
-      try {
-        steps.addWarningBadge(text: warningMsg)
-        steps.addShortText(text: "⚠️ Java 17 EOL 12/05/2026", background: "orange", border: 1)
-      } catch (Exception ignored) {
-        // Badge plugin might not be available, continue without it
-      }
+      def fullWarning = warningMsg + " This configuration will stop working by 12/05/2026."
       
-      // Mark build as unstable (yellow) and add the full warning message
-      steps.unstable(message: warningMsg + " This configuration will stop working by 12/05/2026.")
+      // Mark build as unstable (yellow) with warning message visible in build summary
+      steps.unstable(message: fullWarning)
       
       // Echo warning immediately so it appears in the pipeline console
       steps.echo """
