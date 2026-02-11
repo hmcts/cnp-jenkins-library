@@ -309,6 +309,9 @@ EOF
       
       def fullWarning = warningMsg + " This configuration will stop working by 12/05/2026."
       
+      // Set build description to show the warning in the UI
+      steps.currentBuild.description = "⚠️ Java 17 Deprecated - Upgrade to Java 21 by 12/05/2026"
+      
       // Mark build as unstable (yellow) with warning message visible in build summary
       steps.unstable(message: fullWarning)
       
