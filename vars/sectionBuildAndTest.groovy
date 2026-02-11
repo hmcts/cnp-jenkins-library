@@ -203,21 +203,19 @@ def call(params) {
     }
 
     if (noSkipImgBuild) {
-      approvedDeploymentRepository(metricsPublisher) {
-        stageWithAgent("Promote Docker Image", product) {
-          if (dockerFileExists) {
-            def deploymentStage = DockerImage.DeploymentStage.STAGING
-            def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-            if (isOnPreview) {
-              deploymentStage = DockerImage.DeploymentStage.PREVIEW
-            }
-            onPR {
-              deploymentStage = DockerImage.DeploymentStage.PR
-            }
-            withAcrClient(subscription) {
-              acr.retagForStage(deploymentStage, dockerImage)
-              acr.purgeOldTags(deploymentStage, dockerImage)
-            }
+      stageWithAgent("Promote Docker Image", product) {
+        if (dockerFileExists) {
+          def deploymentStage = DockerImage.DeploymentStage.STAGING
+          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
+          if (isOnPreview) {
+            deploymentStage = DockerImage.DeploymentStage.PREVIEW
+          }
+          onPR {
+            deploymentStage = DockerImage.DeploymentStage.PR
+          }
+          withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
           }
         }
       }
