@@ -85,30 +85,31 @@ def call(type, String product, String component, Closure body) {
             component: component
           )
 
-          if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-            stage('Publish Helm chart') {
-              helmPublish(
+          approvedDeploymentRepository(metricsPublisher) {
+            if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+              stage('Publish Helm chart') {
+                helmPublish(
+                  appPipelineConfig: pipelineConfig,
+                  subscription: subscription.nonProdName,
+                  environment: environment.nonProdName,
+                  product: product,
+                  component: component
+                )
+              }
+
+              sectionPromoteBuildToStage(
                 appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
                 subscription: subscription.nonProdName,
-                environment: environment.nonProdName,
                 product: product,
-                component: component
+                component: component,
+                stage: DockerImage.DeploymentStage.PREVIEW,
+                environment: environment.nonProdName
               )
             }
 
-            sectionPromoteBuildToStage(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              product: product,
-              component: component,
-              stage: DockerImage.DeploymentStage.PREVIEW,
-              environment: environment.nonProdName
-            )
-          }
-
-          onPR {
+            onPR {
             onTerraformChangeInPR {
               // we always need a tf plan of aat (i.e. staging)
               sectionDeployToEnvironment(
@@ -297,6 +298,7 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: false
             )
           }
+          } // end approvedDeploymentRepository
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'
