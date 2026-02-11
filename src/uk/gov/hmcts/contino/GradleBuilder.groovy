@@ -307,13 +307,11 @@ EOF
           "Oracle JDK 17 is reaching end of life in September 2026. " +
           "Java 21 is available in the container registry: hmctsprod.azurecr.io/base/java:21-distroless."
       
-      def fullWarning = warningMsg + " This configuration will stop working by 12/05/2026."
+      def fullWarning = "Java 17 Deprecated - Upgrade to Java 21 by 12/05/2026"
       
-      // Set build description to show the warning in the UI
-      steps.currentBuild.description = "⚠️ Java 17 Deprecated - Upgrade to Java 21 by 12/05/2026"
-      
-      // Mark build as unstable (yellow) with warning message visible in build summary
-      steps.unstable(message: fullWarning)
+      // Set build description and result
+      steps.currentBuild.description = fullWarning + "Upgrade to Jave 21 by 12/05/2026"
+      steps.currentBuild.result = 'UNSTABLE'
       
       WarningCollector.addPipelineWarning("java_17_deprecated", warningMsg, LocalDate.of(2026, 5, 12))
     }
