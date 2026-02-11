@@ -303,11 +303,29 @@ EOF
   def setupToolVersion() {
     def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
     if (statusCode == 0) {
-      WarningCollector.addPipelineWarning("java_17_deprecated",
-        "Please upgrade to Java 21. PlatOps no longer provides Java 17 base image updates as " +
+      def warningMsg = "Please upgrade to Java 21. PlatOps no longer provides Java 17 base image updates as " +
           "Oracle JDK 17 is reaching end of life in September 2026. " +
-          "Java 21 is available in the container registry: hmctsprod.azurecr.io/base/java:21-distroless.", LocalDate.of(2026, 5, 12)
-      )
+          "Java 21 is available in the container registry: hmctsprod.azurecr.io/base/java:21-distroless."
+      
+      // Mark build as unstable (yellow) to make the warning highly visible in Jenkins UI
+      steps.currentBuild.result = 'UNSTABLE'
+      
+      // Echo warning immediately so it appears in the pipeline console
+      steps.echo """
+================================================================================
+⚠️  DEPRECATION WARNING: Java 17
+================================================================================
+
+${warningMsg}
+
+This configuration will stop working by 12/05/2026.
+
+Build marked as UNSTABLE due to this deprecation warning.
+
+================================================================================
+"""
+      
+      WarningCollector.addPipelineWarning("java_17_deprecated", warningMsg, LocalDate.of(2026, 5, 12))
     }
 
     def statusCodeJava21 = steps.sh script: 'grep -F "JavaLanguageVersion.of(21)" build.gradle', returnStatus: true
