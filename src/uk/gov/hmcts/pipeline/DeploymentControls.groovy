@@ -34,10 +34,8 @@ class DeploymentControls {
 
     def repositories = deploymentControls.get('repositories')
 
-    steps.echo "repositories: ${repositories}"
     def repoEntry = repositories.find { it.repo.equalsIgnoreCase(repository) }
 
-    steps.echo "repoEntry: ${repoEntry}"
     return repoEntry && repoEntry['deployment-enabled'] == true
   }
 
