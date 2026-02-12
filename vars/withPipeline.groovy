@@ -89,7 +89,8 @@ def call(type, String product, String component, Closure body) {
             deploymentEnabled: deploymentEnabled
           )
 
-          approvedDeploymentRepository(metricsPublisher) {
+          if (deploymentEnabled) {
+            echo "Deployment Enabled status: ${deploymentEnabled}"
             if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
               stage('Publish Helm chart') {
                 helmPublish(
