@@ -25,32 +25,14 @@ class DeploymentControls {
   }
 
   boolean isDeployEnabled(String repository) {
-    steps.echo "[DeploymentControls] Checking deployment status for: ${repository}"
     def deploymentControls = getDeploymentControls()
-    
-    steps.echo "[DeploymentControls] YAML contains 'repositories' key: ${deploymentControls.containsKey('repositories')}"
-    
     if (!deploymentControls.containsKey('repositories')) {
-      steps.echo "[DeploymentControls] No 'repositories' key found, returning false"
       return false
     }
 
     def repositories = deploymentControls.get('repositories')
-    steps.echo "[DeploymentControls] Number of repositories in list: ${repositories.size()}"
-    
     def repoEntry = repositories.find { it.repo.equalsIgnoreCase(repository) }
-    
-    if (repoEntry == null) {
-      steps.echo "[DeploymentControls] Repository not found in list, returning false"
-      return false
-    }
-    
-    steps.echo "[DeploymentControls] Found repository entry: ${repoEntry}"
-    steps.echo "[DeploymentControls] deployment-enabled value: ${repoEntry['deployment-enabled']}"
-    
-    def result = repoEntry && repoEntry['deployment-enabled'] == true
-    steps.echo "[DeploymentControls] Final result: ${result}"
-    return result
+    return repoEntry && repoEntry['deployment-enabled'] == true
   }
 
 }
