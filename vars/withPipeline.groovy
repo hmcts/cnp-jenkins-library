@@ -76,6 +76,7 @@ def call(type, String product, String component, Closure body) {
         try {
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
+          echo "Deployment Enabled status: ${deploymentEnabled} for repository ${env.GIT_URL}"
 
           sectionBuildAndTest(
             appPipelineConfig: pipelineConfig,

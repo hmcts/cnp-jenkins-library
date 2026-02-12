@@ -202,7 +202,7 @@ def call(params) {
         sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
       }
     }
-
+    echo "Deployment Enabled in build section: ${deploymentEnabled}"
     if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
