@@ -6,7 +6,6 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
-import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
 
@@ -21,9 +20,6 @@ def call(params) {
   def dockerImage
   def projectBranch
   def imageRegistry
-  def metricsPublisher = params.metricsPublisher
-  def deployEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
-  echo "sectionBuildAndTest: deployEnabled = ${deployEnabled} for repository ${env.GIT_URL}"
   boolean noSkipImgBuild = true
 
   stageWithAgent('Checkout', product) {
@@ -207,23 +203,19 @@ def call(params) {
     }
 
     if (noSkipImgBuild) {
-      echo "noSkipImgBuild is true, checking deployEnabled: ${deployEnabled}"
-      if (deployEnabled) {
-        echo "deployEnabled is true, running Promote Docker Image stage"
-        stageWithAgent("Promote Docker Image", product) {
-          if (dockerFileExists) {
-            def deploymentStage = DockerImage.DeploymentStage.STAGING
-            def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-            if (isOnPreview) {
-              deploymentStage = DockerImage.DeploymentStage.PREVIEW
-            }
-            onPR {
-              deploymentStage = DockerImage.DeploymentStage.PR
-            }
-            withAcrClient(subscription) {
-              acr.retagForStage(deploymentStage, dockerImage)
-              acr.purgeOldTags(deploymentStage, dockerImage)
-            }
+      stageWithAgent("Promote Docker Image", product) {
+        if (dockerFileExists) {
+          def deploymentStage = DockerImage.DeploymentStage.STAGING
+          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
+          if (isOnPreview) {
+            deploymentStage = DockerImage.DeploymentStage.PREVIEW
+          }
+          onPR {
+            deploymentStage = DockerImage.DeploymentStage.PR
+          }
+          withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
           }
         }
       }
