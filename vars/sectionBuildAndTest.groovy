@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
 
@@ -21,6 +22,7 @@ def call(params) {
   def projectBranch
   def imageRegistry
   def metricsPublisher = params.metricsPublisher
+  def deployEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
   boolean noSkipImgBuild = true
 
   stageWithAgent('Checkout', product) {
@@ -204,7 +206,7 @@ def call(params) {
     }
 
     if (noSkipImgBuild) {
-      approvedDeploymentRepository(metricsPublisher) {
+      if (deployEnabled) {
         stageWithAgent("Promote Docker Image", product) {
           if (dockerFileExists) {
             def deploymentStage = DockerImage.DeploymentStage.STAGING
