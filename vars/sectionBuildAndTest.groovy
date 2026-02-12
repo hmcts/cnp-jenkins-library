@@ -27,6 +27,7 @@ def call(params) {
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
 
+    // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
     deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
     echo "Deployment Enabled (post-checkout): ${deploymentEnabled} for repository ${env.GIT_URL}"
 
