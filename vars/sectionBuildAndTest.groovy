@@ -23,6 +23,7 @@ def call(params) {
   def imageRegistry
   def metricsPublisher = params.metricsPublisher
   def deployEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
+  echo "sectionBuildAndTest: deployEnabled = ${deployEnabled} for repository ${env.GIT_URL}"
   boolean noSkipImgBuild = true
 
   stageWithAgent('Checkout', product) {
@@ -206,7 +207,9 @@ def call(params) {
     }
 
     if (noSkipImgBuild) {
+      echo "noSkipImgBuild is true, checking deployEnabled: ${deployEnabled}"
       if (deployEnabled) {
+        echo "deployEnabled is true, running Promote Docker Image stage"
         stageWithAgent("Promote Docker Image", product) {
           if (dockerFileExists) {
             def deploymentStage = DockerImage.DeploymentStage.STAGING
