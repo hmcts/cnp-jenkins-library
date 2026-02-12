@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
 
@@ -16,15 +17,19 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
-  def deploymentEnabled = params.deploymentEnabled
   def acr
   def dockerImage
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
+  boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
+
+    deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
+    echo "Deployment Enabled (post-checkout): ${deploymentEnabled} for repository ${env.GIT_URL}"
+
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
@@ -202,7 +207,7 @@ def call(params) {
         sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
       }
     }
-    echo "Deployment Enabled in build section: ${deploymentEnabled}"
+
     if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
@@ -243,4 +248,6 @@ def call(params) {
       }
     }
   }
+
+  return deploymentEnabled
 }

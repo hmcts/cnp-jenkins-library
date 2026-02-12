@@ -16,7 +16,6 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
-import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(type, String product, String component, Closure body) {
 
@@ -50,7 +49,6 @@ def call(type, String product, String component, Closure body) {
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
-  def deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
@@ -76,9 +74,8 @@ def call(type, String product, String component, Closure body) {
         try {
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
-          echo "Deployment Enabled status: ${deploymentEnabled} for repository ${env.GIT_URL}"
 
-          sectionBuildAndTest(
+          def deploymentEnabled = sectionBuildAndTest(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
@@ -86,9 +83,10 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component,
-            metricsPublisher: metricsPublisher,
-            deploymentEnabled: deploymentEnabled
+            metricsPublisher: metricsPublisher
           )
+
+          echo "Deployment Enabled status: ${deploymentEnabled} for repository ${env.GIT_URL}"
 
           if (deploymentEnabled) {
             echo "Deployment Enabled status: ${deploymentEnabled}"
