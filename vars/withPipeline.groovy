@@ -82,8 +82,7 @@ def call(type, String product, String component, Closure body) {
             subscription: subscription.nonProdName,
             environment: environment.nonProdName,
             product: product,
-            component: component,
-            metricsPublisher: metricsPublisher
+            component: component
           )
 
           echo "Deployment Enabled status: ${deploymentEnabled} for repository ${env.GIT_URL}"
