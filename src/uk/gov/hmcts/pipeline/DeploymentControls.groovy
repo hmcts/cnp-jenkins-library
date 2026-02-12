@@ -27,14 +27,17 @@ class DeploymentControls {
   boolean isDeployEnabled(String repository) {
     def deploymentControls = getDeploymentControls()
     if (!deploymentControls.containsKey('repositories')) {
-			echo "No 'repositories' key found in deployment controls configuration. Deployment will be disabled by default." 
+
+      steps.echo "No 'repositories' key found in deployment controls configuration. Deployment will be disabled by default."
       return false
     }
 
     def repositories = deploymentControls.get('repositories')
-		echo "repositories: ${repositories}"
+
+    steps.echo "repositories: ${repositories}"
     def repoEntry = repositories.find { it.repo.equalsIgnoreCase(repository) }
-		echo "repoEntry: ${repoEntry}"
+
+    steps.echo "repoEntry: ${repoEntry}"
     return repoEntry && repoEntry['deployment-enabled'] == true
   }
 
