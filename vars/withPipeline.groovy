@@ -49,6 +49,7 @@ def call(type, String product, String component, Closure body) {
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
+  def deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
 
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
@@ -83,7 +84,8 @@ def call(type, String product, String component, Closure body) {
             environment: environment.nonProdName,
             product: product,
             component: component,
-            metricsPublisher: metricsPublisher
+            metricsPublisher: metricsPublisher,
+            deploymentEnabled: deploymentEnabled
           )
 
           approvedDeploymentRepository(metricsPublisher) {

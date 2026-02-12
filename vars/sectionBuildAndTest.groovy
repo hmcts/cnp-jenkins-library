@@ -16,6 +16,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def deploymentEnabled = params.deploymentEnabled
   def acr
   def dockerImage
   def projectBranch
@@ -202,7 +203,7 @@ def call(params) {
       }
     }
 
-    if (noSkipImgBuild) {
+    if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING
