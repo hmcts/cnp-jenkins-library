@@ -303,7 +303,9 @@ EOF
   @Override
   def setupToolVersion() {
     def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
-    if (statusCode == 0) {
+    def dockerfileStatusCode = steps.sh script: 'grep -E "FROM.*java.*:17|FROM.*java17" Dockerfile', returnStatus: true
+
+    if (statusCode == 0 || dockerfileStatusCode == 0) {
       def deprecationConfig = new DeprecationConfig(steps)
       def repoUrl = steps.env.GIT_URL
       def config = deprecationConfig.getDeprecationConfig(repoUrl)
