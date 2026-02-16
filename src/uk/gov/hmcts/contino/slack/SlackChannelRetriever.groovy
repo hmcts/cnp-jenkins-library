@@ -30,6 +30,27 @@ class SlackChannelRetriever implements Serializable {
     }
 
     SlackUserMapping mappedUser = slackUserMapping.find { user -> user.github == changeAuthor }
-    return mappedUser != null? '@' + mappedUser.slack : null
+    if (mappedUser == null || mappedUser.slack == null || mappedUser.slack.toString().trim().empty) {
+      return null
+    }
+
+    return normaliseRecipient(mappedUser.slack.toString())
+  }
+
+  private static String normaliseRecipient(String mappedSlack) {
+    String value = mappedSlack.trim()
+    if (value ==~ /^<@[UW][A-Z0-9]{8,}>$/) {
+      return value.substring(2, value.length() - 1)
+    }
+
+    if (value.startsWith('@')) {
+      value = value.substring(1)
+    }
+
+    if (value ==~ /^[UW][A-Z0-9]{8,}$/) {
+      return value
+    }
+
+    return "@${value}"
   }
 }
