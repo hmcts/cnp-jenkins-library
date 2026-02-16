@@ -305,7 +305,10 @@ EOF
     def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
     def dockerfileStatusCode = steps.sh script: 'grep -E "FROM.*java.*:17|FROM.*java17" Dockerfile', returnStatus: true
 
+    steps.echo "Java 17 deprecation check: build.gradle status=${statusCode}, Dockerfile status=${dockerfileStatusCode}"
+
     if (statusCode == 0 || dockerfileStatusCode == 0) {
+      steps.echo "Java 17 detected - adding deprecation warning"
       def deprecationConfig = new DeprecationConfig(steps)
       def repoUrl = steps.env.GIT_URL
       def config = deprecationConfig.getDeprecationConfig(repoUrl)
@@ -319,6 +322,7 @@ EOF
           "update your Dockerfile to use the Java 21 base image. " +
           "See <https://github.com/hmcts/spring-boot-template/|spring-boot-template> for reference.", deadline
       )
+      steps.echo "Java 17 deprecation warning added successfully. Deadline: ${deadline}"
     }
 
     def statusCodeJava21 = steps.sh script: 'grep -F "JavaLanguageVersion.of(21)" build.gradle', returnStatus: true
