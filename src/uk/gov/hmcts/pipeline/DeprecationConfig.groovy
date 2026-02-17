@@ -13,7 +13,7 @@ class DeprecationConfig {
             def response = steps.httpRequest(
                 consoleLogResponseBody: true,
                 timeout: 10,
-                url: "https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/dtspo-30033-java-17-deprecation/nagger-versions.yaml",
+                url: "https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml",
                 validResponseCodes: '200'
             )
             deprecationConfigInternal = steps.readYaml(text: response.content)
