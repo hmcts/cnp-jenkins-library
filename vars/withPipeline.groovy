@@ -72,18 +72,23 @@ def call(type, String product, String component, Closure body) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
+          node("build-only") {
+            dockerAgentSetup()
+            env.PATH = "$env.PATH:/usr/local/bin"
+
+            sectionBuildAndTest(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              builder: pipelineType.builder,
+              subscription: subscription.nonProdName,
+              environment: environment.nonProdName,
+              product: product,
+              component: component
+            )
+          }
+
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
-
-          sectionBuildAndTest(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            builder: pipelineType.builder,
-            subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
-            product: product,
-            component: component
-          )
 
           if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
             stage('Publish Helm chart') {
