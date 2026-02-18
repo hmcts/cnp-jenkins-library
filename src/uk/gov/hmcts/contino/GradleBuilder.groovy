@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
@@ -301,15 +302,22 @@ EOF
 
   @Override
   def setupToolVersion() {
-    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
-    if (statusCode == 0) {
-      WarningCollector.addPipelineWarning("java_11_deprecated",
-        "Please upgrade to Java 17, upgrade to " +
-          "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
-          "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
-          "Make sure you use the latest version of the Application insights agent, see the configuration in " +
-          "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
-          "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
+    def dockerfileStatusCode = steps.sh script: 'grep -E "FROM.*java.*:17|FROM.*java17" Dockerfile', returnStatus: true
+
+    if (statusCode == 0 || dockerfileStatusCode == 0) {
+      def deprecationConfig = new DeprecationConfig(steps)
+      def repoUrl = steps.env.GIT_URL
+      def config = deprecationConfig.getDeprecationConfig(repoUrl)
+      def java17Config = config?.java?.java17
+      def deadline = java17Config?.date_deadline ? LocalDate.parse(java17Config.date_deadline) : LocalDate.of(2026, 6, 1)
+
+      WarningCollector.addPipelineWarning("java_17_deprecated",
+        "Please upgrade to Java 21. " +
+          "Java 17 support will be removed. " +
+          "Update your build.gradle to use JavaLanguageVersion.of(21) and " +
+          "update your Dockerfile to use the Java 21 base image. " +
+          "See <https://github.com/hmcts/spring-boot-template/|spring-boot-template> for reference.", deadline
       )
     }
 
