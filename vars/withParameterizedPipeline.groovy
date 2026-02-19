@@ -79,7 +79,6 @@ def call(type, String product, String component, String environment, String subs
           }
         }
       }
-    }
 
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
