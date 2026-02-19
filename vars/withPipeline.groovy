@@ -68,27 +68,31 @@ def call(type, String product, String component, Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
 
   retry(conditions: [agent()], count: 2) {
-    node(agentType) {
-      timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
-        def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-        try {
-          node("build-only") {
-            dockerAgentSetup()
-            env.PATH = "$env.PATH:/usr/local/bin"
-
-            sectionBuildAndTest(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              subscription: subscription.nonProdName,
-              environment: environment.nonProdName,
-              product: product,
-              component: component
-            )
-          }
-
+    timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+      def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+      try {
+        node("build-only") {
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
+
+          sectionBuildAndTest(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
+
+          stash name: 'pipeline-workspace', includes: '**/*', useDefaultExcludes: false
+        }
+
+        node(agentType) {
+          dockerAgentSetup()
+          env.PATH = "$env.PATH:/usr/local/bin"
+          deleteDir()
+          unstash 'pipeline-workspace'
 
           if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
             stage('Publish Helm chart') {
@@ -302,30 +306,32 @@ def call(type, String product, String component, Closure body) {
               tfPlanOnly: false
             )
           }
-        } catch (err) {
-          if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
-            currentBuild.result = 'ABORTED'
-            metricsPublisher.publish(err.message)
-            return
-          } else {
-            currentBuild.result = "FAILURE"
-            notifyBuildFailure channel: slackChannel
-            metricsPublisher.publish('Pipeline Failed')
-          }
-          callbacksRunner.call('onFailure')
-          throw err
-        } finally {
+        }
+      } catch (err) {
+        if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+          currentBuild.result = 'ABORTED'
+          metricsPublisher.publish(err.message)
+          return
+        } else {
+          currentBuild.result = "FAILURE"
+          notifyBuildFailure channel: slackChannel
+          metricsPublisher.publish('Pipeline Failed')
+        }
+        callbacksRunner.call('onFailure')
+        throw err
+      } finally {
+        node(agentType) {
           notifyPipelineDeprecations(slackChannel, metricsPublisher)
           if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
             deleteDir()
           }
         }
-
-        notifyBuildFixed channel: slackChannel
-
-        callbacksRunner.call('onSuccess')
-        metricsPublisher.publish('Pipeline Succeeded')
       }
+
+      notifyBuildFixed channel: slackChannel
+
+      callbacksRunner.call('onSuccess')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
   }
 }
