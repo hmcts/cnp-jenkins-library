@@ -77,11 +77,16 @@ def call(type, String product, String component, String environment, String subs
           builder.build()
         }
       }
+
+      stash name: 'build-workspace', includes: '**/*', useDefaultExcludes: false
     }
 
     node(agentType) {
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
+
+      deleteDir()
+      unstash 'build-workspace'
 
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
