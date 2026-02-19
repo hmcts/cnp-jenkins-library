@@ -63,20 +63,23 @@ def call(type, String product, String component, String environment, String subs
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
+      node("build-only") {
+        dockerAgentSetup()
+        env.PATH = "$env.PATH:/usr/local/bin"
 
-      stageWithAgent('Checkout', product) {
-        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
-      }
+        stageWithAgent('Checkout', product) {
+          checkoutScm(pipelineCallbacksRunner: callbacksRunner)
+        }
 
-      stageWithAgent("Build", product) {
-        builder.setupToolVersion()
+        stageWithAgent("Build", product) {
+          builder.setupToolVersion()
 
-        callbacksRunner.callAround('build') {
-          builder.build()
+          callbacksRunner.callAround('build') {
+            builder.build()
+          }
         }
       }
+    }
 
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
