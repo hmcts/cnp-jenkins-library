@@ -226,7 +226,8 @@ def call(params) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
                   pcr.callAround("E2eTest:${environment}") {
-                  builder.e2eTest()
+                    builder.e2eTest()
+                  }
                 }
               }
             }
@@ -236,8 +237,8 @@ def call(params) {
           onPR {
             if (testLabels.contains('enable_e2e_test')) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
-                pcr.callAround("E2eTest:${environment}") {
-                builder.e2eTest()
+                pcr.callAround("E2eTest: ${environment}") {
+                  builder.e2eTest()
                 }
               }
             }
