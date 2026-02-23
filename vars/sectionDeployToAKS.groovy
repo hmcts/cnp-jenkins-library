@@ -225,20 +225,8 @@ def call(params) {
             if (config.e2eTest) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
-                  try {
-                    pcr.callAround("E2eTest:${environment}") {
-                      builder.e2eTest()
-                    }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
-                  }
+                  pcr.callAround("E2eTest:${environment}") {
+                  builder.e2eTest()
                 }
               }
             }
@@ -248,21 +236,8 @@ def call(params) {
           onPR {
             if (testLabels.contains('enable_e2e_test')) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
-                testEnv(aksUrl) {
-                  def success = true
-                  try {
-                    pcr.callAround("E2eTest:${environment}") {
-                      builder.e2eTest()
-                    }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
-                  }
+                pcr.callAround("E2eTest:${environment}") {
+                builder.e2eTest()
                 }
               }
             }
