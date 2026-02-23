@@ -15,7 +15,7 @@ def call(String subscription, Closure body) {
   } else {
     echo "New az login: /opt/jenkins/.azure-${subscription}"
     Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
-    az 'login --identity'
+    az 'login --identity --allow-no-subscriptions'
 
     withAzureKeyvault([
       [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: "${subscription}-subscription-id", version: '', envVariable: 'ARM_SUBSCRIPTION_ID']
