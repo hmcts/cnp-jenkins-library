@@ -42,10 +42,10 @@ def call(Map args = [:]) {
       def slackMessage = new SlackBlockMessage()
       slackMessage.addSection(message)
 
-      slackSend(
-        failOnError: true,
-        channel: channel,
-        attachments: slackMessage.asObject())
+      // slackSend(
+        // failOnError: true,
+        // channel: channel,
+        // attachments: slackMessage.asObject())
     }
   } catch (Exception ex) {
     if(channel!='@iamabotuser')
