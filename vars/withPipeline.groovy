@@ -94,6 +94,14 @@ def call(type, String product, String component, Closure body) {
           deleteDir()
           unstash 'pipeline-workspace'
 
+          sectionDockerBuildAndPromote(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            subscription: subscription.nonProdName,
+            product: product,
+            component: component
+          )
+
           if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
             stage('Publish Helm chart') {
               helmPublish(
