@@ -37,6 +37,14 @@ def call(params) {
     builder.setupToolVersion()
   }
   boolean dockerFileExists = fileExists('Dockerfile')
+  def withBuildOnlyWorkspace = { Closure action ->
+    node('build-only') {
+      deleteDir()
+      unstash 'pipeline-workspace-build-only'
+      action.call()
+    }
+  }
+
   warnAboutJitpackRemoval(product: product, component: component)
   onPathToLive {
     stageWithAgent("Build", product) {
@@ -92,27 +100,29 @@ def call(params) {
 
     if (dockerFileExists) {
       branches["Docker Build"] = {
-        withAcrClient(subscription) {
-          def acbTemplateFilePath = 'acb.tpl.yaml'
+        withBuildOnlyWorkspace {
+          withAcrClient(subscription) {
+            def acbTemplateFilePath = 'acb.tpl.yaml'
 
-          pcr.callAround('dockerbuild') {
-            // temporary whilst we have dual acr push enabled
-            timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Docker build') {
-              if (!fileExists('.dockerignore')) {
-                writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-              } else {
-                writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-                sh script: """
-                        # in case anyone doesn't have a trailing new line in their file
-                        printf '\r\n' >> .dockerignore
-                        cat .dockerignore_build >> .dockerignore
-                      """
-              }
-              def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-              if (fileExists(acbTemplateFilePath)) {
-                acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-              } else {
-                acr.build(dockerImage, buildArgs)
+            pcr.callAround('dockerbuild') {
+              // temporary whilst we have dual acr push enabled
+              timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Docker build') {
+                if (!fileExists('.dockerignore')) {
+                  writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                } else {
+                  writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                  sh script: """
+                          # in case anyone doesn't have a trailing new line in their file
+                          printf '\r\n' >> .dockerignore
+                          cat .dockerignore_build >> .dockerignore
+                        """
+                }
+                def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+                if (fileExists(acbTemplateFilePath)) {
+                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                } else {
+                  acr.build(dockerImage, buildArgs)
+                }
               }
             }
           }
@@ -123,18 +133,20 @@ def call(params) {
     onMaster {
       if (config.dockerTestBuild && fileExists('build.gradle') && dockerFileExists) {
         branches["Docker Test Build"] = {
-          withAcrClient(subscription) {
-            def dockerfileTest = 'Dockerfile_test'
+          withBuildOnlyWorkspace {
+            withAcrClient(subscription) {
+              def dockerfileTest = 'Dockerfile_test'
 
-            pcr.callAround('dockertestbuild') {
-              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-                writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
-                writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
-                if (!fileExists(dockerfileTest)) {
-                  writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+              pcr.callAround('dockertestbuild') {
+                timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
+                  writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
+                  writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
+                  if (!fileExists(dockerfileTest)) {
+                    writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+                  }
+                  def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+                  acr.build(dockerImageTest, " -f ${dockerfileTest}")
                 }
-                def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-                acr.build(dockerImageTest, " -f ${dockerfileTest}")
               }
             }
           }
@@ -192,6 +204,10 @@ def call(params) {
 
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
+        if (dockerFileExists) {
+          stash name: 'pipeline-workspace-build-only', includes: '**/*', useDefaultExcludes: false
+        }
+
         parallel branches
 
         // files related to dependency checking that are not needed for the rest of the pipeline
@@ -204,18 +220,20 @@ def call(params) {
 
     if (noSkipImgBuild) {
       stageWithAgent("Promote Docker Image", product) {
-        if (dockerFileExists) {
-          def deploymentStage = DockerImage.DeploymentStage.STAGING
-          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-          if (isOnPreview) {
-            deploymentStage = DockerImage.DeploymentStage.PREVIEW
-          }
-          onPR {
-            deploymentStage = DockerImage.DeploymentStage.PR
-          }
-          withAcrClient(subscription) {
-            acr.retagForStage(deploymentStage, dockerImage)
-            acr.purgeOldTags(deploymentStage, dockerImage)
+        withBuildOnlyWorkspace {
+          if (dockerFileExists) {
+            def deploymentStage = DockerImage.DeploymentStage.STAGING
+            def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
+            if (isOnPreview) {
+              deploymentStage = DockerImage.DeploymentStage.PREVIEW
+            }
+            onPR {
+              deploymentStage = DockerImage.DeploymentStage.PR
+            }
+            withAcrClient(subscription) {
+              acr.retagForStage(deploymentStage, dockerImage)
+              acr.purgeOldTags(deploymentStage, dockerImage)
+            }
           }
         }
       }
