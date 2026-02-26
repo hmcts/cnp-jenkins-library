@@ -21,74 +21,100 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
+  boolean dockerFileExists = false
+  final String buildOnlyNodeLabel = 'build-only'
+  final String buildOnlyWorkspaceStash = "build-only-workspace-${env.BUILD_ID ?: 'current'}"
 
-  stageWithAgent('Checkout', product) {
-    checkoutScm(pipelineCallbacksRunner: pcr)
-    withAcrClient(subscription) {
-      projectBranch = new ProjectBranch(env.BRANCH_NAME)
-      imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-      acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-      dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-      boolean hasTag = acr.hasTag(dockerImage)
-      boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
-      noSkipImgBuild = envOverrideForSkip || !hasTag
-      echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
-    }
-    builder.setupToolVersion()
+  def stashBuildOnlyWorkspace = {
+    stash name: buildOnlyWorkspaceStash, includes: '**', allowEmpty: true
   }
-  boolean dockerFileExists = fileExists('Dockerfile')
-  warnAboutJitpackRemoval(product: product, component: component)
-  onPathToLive {
-    stageWithAgent("Build", product) {
-      onPR {
-        enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
-      }
 
-      // always build master and demo as we currently do not deploy an image there
-      boolean envSub = autoDeployEnvironment() != null
-      when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
-        pcr.callAround('build') {
-          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-            builder.build()
+  def restoreBuildOnlyWorkspace = {
+    deleteDir()
+    unstash buildOnlyWorkspaceStash
+  }
+
+  def buildOnlyBranches = [failFast: false]
+  buildOnlyBranches["Unit tests and Sonar scan"] = {
+    pcr.callAround('test') {
+      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+        builder.test()
+      }
+    }
+
+    pcr.callAround('sonarscan') {
+      pluginActive('sonar') {
+        withSonarQubeEnv("SonarQube") {
+          builder.sonarScan()
+        }
+
+        timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+          def qg = waitForQualityGate()
+          if (qg.status != 'OK') {
+            error "Pipeline aborted due to quality gate failure: ${qg.status}"
           }
         }
       }
     }
+  }
+  buildOnlyBranches["Security Checks"] = {
+    pcr.callAround('securitychecks') {
+      builder.securityCheck()
+    }
+  }
+  buildOnlyBranches["Tech Stack"] = {
+    pcr.callAround('techstack') {
+      builder.techStackMaintenance()
+    }
+  }
 
-    def branches = [failFast: false]
-    branches["Unit tests and Sonar scan"] = {
-      pcr.callAround('test') {
-        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-          builder.test()
+  stage('Build-only stages') {
+    node(buildOnlyNodeLabel) {
+      stage('Checkout') {
+        checkoutScm(pipelineCallbacksRunner: pcr)
+        withAcrClient(subscription) {
+          projectBranch = new ProjectBranch(env.BRANCH_NAME)
+          imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+          acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+          dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+          boolean hasTag = acr.hasTag(dockerImage)
+          boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
+          noSkipImgBuild = envOverrideForSkip || !hasTag
+          echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
         }
+        builder.setupToolVersion()
+
+        dockerFileExists = fileExists('Dockerfile')
+        warnAboutJitpackRemoval(product: product, component: component)
       }
 
-      pcr.callAround('sonarscan') {
-        pluginActive('sonar') {
-          withSonarQubeEnv("SonarQube") {
-            builder.sonarScan()
+      onPathToLive {
+        stage("Build") {
+          onPR {
+            enforceChartVersionBumped product: product, component: component
+            warnAboutAADIdentityPreviewHack product: product, component: component
           }
 
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+          // always build master and demo as we currently do not deploy an image there
+          boolean envSub = autoDeployEnvironment() != null
+          when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+            pcr.callAround('build') {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+                builder.build()
+              }
             }
           }
         }
       }
+
+      stashBuildOnlyWorkspace()
     }
-    branches["Security Checks"] = {
-      pcr.callAround('securitychecks') {
-        builder.securityCheck()
-      }
-    }
-    branches["Tech Stack"] = {
-      pcr.callAround('techstack') {
-        builder.techStackMaintenance()
-      }
-    }
+  }
+
+  restoreBuildOnlyWorkspace()
+
+  onPathToLive {
+    def branches = [failFast: false]
 
     if (dockerFileExists) {
       branches["Docker Build"] = {
@@ -192,7 +218,17 @@ def call(params) {
 
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
-        parallel branches
+        def parallelBranches = [failFast: false]
+        parallelBranches["Build-only checks"] = {
+          node(buildOnlyNodeLabel) {
+            restoreBuildOnlyWorkspace()
+            parallel buildOnlyBranches
+          }
+        }
+        parallelBranches["Default agent checks / Container build"] = {
+          parallel branches
+        }
+        parallel parallelBranches
 
         // files related to dependency checking that are not needed for the rest of the pipeline
         // they can't be safely deleted in the parallel branches as docker build context will collect files
