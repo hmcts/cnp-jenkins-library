@@ -21,43 +21,62 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
+  final String buildOnlyNodeLabel = 'build-only'
+  final String buildOnlyWorkspaceStash = "build-only-workspace-${env.BUILD_ID ?: 'current'}"
 
-  stageWithAgent('Checkout', product) {
-    checkoutScm(pipelineCallbacksRunner: pcr)
-    withAcrClient(subscription) {
-      projectBranch = new ProjectBranch(env.BRANCH_NAME)
-      imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-      acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-      dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-      boolean hasTag = acr.hasTag(dockerImage)
-      boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
-      noSkipImgBuild = envOverrideForSkip || !hasTag
-      echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
-    }
-    builder.setupToolVersion()
+  def stashBuildOnlyWorkspace = {
+    stash name: buildOnlyWorkspaceStash, includes: '**', allowEmpty: true
   }
+
+  def restoreBuildOnlyWorkspace = {
+    deleteDir()
+    unstash buildOnlyWorkspaceStash
+  }
+
+  stage('Checkout') {
+    node(buildOnlyNodeLabel) {
+      checkoutScm(pipelineCallbacksRunner: pcr)
+      withAcrClient(subscription) {
+        projectBranch = new ProjectBranch(env.BRANCH_NAME)
+        imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+        acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+        dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+        boolean hasTag = acr.hasTag(dockerImage)
+        boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
+        noSkipImgBuild = envOverrideForSkip || !hasTag
+        echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
+      }
+      builder.setupToolVersion()
+      stashBuildOnlyWorkspace()
+    }
+  }
+  restoreBuildOnlyWorkspace()
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
   onPathToLive {
-    stageWithAgent("Build", product) {
-      onPR {
-        enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
-      }
+    stage("Build") {
+      node(buildOnlyNodeLabel) {
+        restoreBuildOnlyWorkspace()
+        onPR {
+          enforceChartVersionBumped product: product, component: component
+          warnAboutAADIdentityPreviewHack product: product, component: component
+        }
 
-      // always build master and demo as we currently do not deploy an image there
-      boolean envSub = autoDeployEnvironment() != null
-      when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
-        pcr.callAround('build') {
-          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-            builder.build()
+        // always build master and demo as we currently do not deploy an image there
+        boolean envSub = autoDeployEnvironment() != null
+        when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+          pcr.callAround('build') {
+            timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+              builder.build()
+            }
           }
         }
+        stashBuildOnlyWorkspace()
       }
     }
 
-    def branches = [failFast: false]
-    branches["Unit tests and Sonar scan"] = {
+    def buildOnlyBranches = [failFast: false]
+    buildOnlyBranches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
           builder.test()
@@ -79,19 +98,21 @@ def call(params) {
         }
       }
     }
-    branches["Security Checks"] = {
+    buildOnlyBranches["Security Checks"] = {
       pcr.callAround('securitychecks') {
         builder.securityCheck()
       }
     }
-    branches["Tech Stack"] = {
+    buildOnlyBranches["Tech Stack"] = {
       pcr.callAround('techstack') {
         builder.techStackMaintenance()
       }
     }
 
+    def defaultBranches = [failFast: false]
+
     if (dockerFileExists) {
-      branches["Docker Build"] = {
+      defaultBranches["Docker Build"] = {
         withAcrClient(subscription) {
           def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -122,7 +143,7 @@ def call(params) {
 
     onMaster {
       if (config.dockerTestBuild && fileExists('build.gradle') && dockerFileExists) {
-        branches["Docker Test Build"] = {
+        defaultBranches["Docker Test Build"] = {
           withAcrClient(subscription) {
             def dockerfileTest = 'Dockerfile_test'
 
@@ -146,7 +167,7 @@ def call(params) {
       GithubAPI gitHubAPI = new GithubAPI(this)
       def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
       if (testLabels.contains('enable_fortify_scan')) {
-        branches["Fortify scan"] = {
+        defaultBranches["Fortify scan"] = {
           ws("${env.WORKSPACE}@fortify") {
             deleteDir()
             checkout scm
@@ -168,8 +189,8 @@ def call(params) {
       }
     }
 
-    if (config.fortifyScan && branches["Fortify scan"] == null) {
-      branches["Fortify scan"] = {
+    if (config.fortifyScan && defaultBranches["Fortify scan"] == null) {
+      defaultBranches["Fortify scan"] = {
         ws("${env.WORKSPACE}@fortify") {
           deleteDir()
           checkout scm
@@ -192,7 +213,17 @@ def call(params) {
 
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
-        parallel branches
+        node(buildOnlyNodeLabel) {
+          restoreBuildOnlyWorkspace()
+          parallel buildOnlyBranches
+        }
+
+        restoreBuildOnlyWorkspace()
+
+        def defaultBranchCount = defaultBranches.keySet().count { it != 'failFast' }
+        if (defaultBranchCount > 0) {
+          parallel defaultBranches
+        }
 
         // files related to dependency checking that are not needed for the rest of the pipeline
         // they can't be safely deleted in the parallel branches as docker build context will collect files
