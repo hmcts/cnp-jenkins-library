@@ -22,6 +22,16 @@ def call(params) {
   def imageRegistry
   boolean noSkipImgBuild = true
 
+  def withDeployEnabledAgent = { Closure action ->
+    node(env.BUILD_AGENT_TYPE) {
+      deleteDir()
+      unstash 'pipeline-workspace-agent-type'
+      action.call()
+    }
+  }
+
+  node('build-only') {
+
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
     withAcrClient(subscription) {
@@ -37,13 +47,6 @@ def call(params) {
     builder.setupToolVersion()
   }
   boolean dockerFileExists = fileExists('Dockerfile')
-  def withBuildOnlyWorkspace = { Closure action ->
-    node('build-only') {
-      deleteDir()
-      unstash 'pipeline-workspace-build-only'
-      action.call()
-    }
-  }
 
   warnAboutJitpackRemoval(product: product, component: component)
   onPathToLive {
@@ -100,7 +103,7 @@ def call(params) {
 
     if (dockerFileExists) {
       branches["Docker Build"] = {
-        withBuildOnlyWorkspace {
+        withDeployEnabledAgent {
           withAcrClient(subscription) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -133,7 +136,7 @@ def call(params) {
     onMaster {
       if (config.dockerTestBuild && fileExists('build.gradle') && dockerFileExists) {
         branches["Docker Test Build"] = {
-          withBuildOnlyWorkspace {
+          withDeployEnabledAgent {
             withAcrClient(subscription) {
               def dockerfileTest = 'Dockerfile_test'
 
@@ -205,7 +208,7 @@ def call(params) {
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         if (dockerFileExists) {
-          stash name: 'pipeline-workspace-build-only', includes: '**/*', useDefaultExcludes: false
+          stash name: 'pipeline-workspace-agent-type', includes: '**/*', useDefaultExcludes: false
         }
 
         parallel branches
@@ -220,7 +223,7 @@ def call(params) {
 
     if (noSkipImgBuild) {
       stageWithAgent("Promote Docker Image", product) {
-        withBuildOnlyWorkspace {
+        withDeployEnabledAgent {
           if (dockerFileExists) {
             def deploymentStage = DockerImage.DeploymentStage.STAGING
             def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
@@ -259,5 +262,6 @@ def call(params) {
         }
       }
     }
+  }
   }
 }
