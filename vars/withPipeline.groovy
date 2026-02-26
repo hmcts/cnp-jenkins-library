@@ -71,7 +71,7 @@ def call(type, String product, String component, Closure body) {
     timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
-        node(agentType) {
+        node("build-only") {
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
