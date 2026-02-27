@@ -105,7 +105,9 @@ def call(type, String product, String component, Closure body) {
           )
 
           sectionDockerPromoteAndPactTests(
+            appPipelineConfig: pipelineConfig,
             subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
             product: product,
             component: component
           )

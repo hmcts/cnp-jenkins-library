@@ -8,6 +8,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  AppPipelineConfig config = params.appPipelineConfig
 
   def projectBranch
   def imageRegistry

@@ -137,7 +137,9 @@ def call(params) {
       }
     }
 
-    stageWithAgent("Container build", product) {
+    def stageName = branches["Fortify scan"] == null ? "Container Build" : "Container Build and Fortify Scan"
+
+    stageWithAgent(stageName, product) {
       when(noSkipImgBuild && branches.size() > 1) {
         parallel branches
       }
