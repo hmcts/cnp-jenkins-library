@@ -94,9 +94,17 @@ def call(type, String product, String component, Closure body) {
           deleteDir()
           unstash 'pipeline-workspace'
 
-          sectionDockerBuildAndPromote(
+          sectionDockerBuildAndFortify(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
+
+          sectionDockerPromoteAndPactTests(
             subscription: subscription.nonProdName,
             product: product,
             component: component

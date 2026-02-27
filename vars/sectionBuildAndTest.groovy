@@ -5,7 +5,6 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
-import uk.gov.hmcts.contino.GithubAPI
 
 def call(params) {
 
@@ -89,54 +88,6 @@ def call(params) {
       }
     }
 
-    onPR {
-      GithubAPI gitHubAPI = new GithubAPI(this)
-      def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-      if (testLabels.contains('enable_fortify_scan')) {
-        branches["Fortify scan"] = {
-          ws("${env.WORKSPACE}@fortify") {
-            deleteDir()
-            checkout scm
-            withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
-              warnError('Failure in Fortify Scan') {
-                pcr.callAround('fortify-scan') {
-                  builder.fortifyScan()
-                }
-              }
-
-              warnError('Failure in Fortify vulnerability report') {
-                fortifyVulnerabilityReport()
-              }
-
-              archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
-            }
-          }
-        }
-      }
-    }
-
-    if (config.fortifyScan && branches["Fortify scan"] == null) {
-      branches["Fortify scan"] = {
-        ws("${env.WORKSPACE}@fortify") {
-          deleteDir()
-          checkout scm
-          withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
-            warnError('Failure in Fortify Scan') {
-              pcr.callAround('fortify-scan') {
-                builder.fortifyScan()
-              }
-            }
-
-            warnError('Failure in Fortify vulnerability report') {
-              fortifyVulnerabilityReport()
-            }
-
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
-          }
-        }
-      }
-    }
-
     stageWithAgent("Static checks", product) {
       when(noSkipImgBuild) {
         parallel branches
@@ -146,27 +97,6 @@ def call(params) {
         // and then upload them, if any are missing it will error:
         // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
         sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
-      }
-    }
-
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
-      stageWithAgent("Pact Consumer Verification", product) {
-        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
-          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-
-          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
-          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
-
-          /*
-         * These instructions have to be kept in order
-         */
-          pcr.callAround('pact-consumer-tests') {
-            builder.runConsumerTests(env.PACT_BROKER_URL, version)
-          }
-        }
       }
     }
   }

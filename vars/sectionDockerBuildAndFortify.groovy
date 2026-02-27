@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.GithubAPI
 
 def call(params) {
 
@@ -13,6 +14,7 @@ def call(params) {
   def subscription = params.subscription
   def product = params.product
   def component = params.component
+  def builder = params.builder
 
   def projectBranch
   def imageRegistry
@@ -35,6 +37,54 @@ def call(params) {
 
   onPathToLive {
     def branches = [failFast: false]
+
+    onPR {
+      GithubAPI gitHubAPI = new GithubAPI(this)
+      def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+      if (testLabels.contains('enable_fortify_scan')) {
+        branches["Fortify scan"] = {
+          ws("${env.WORKSPACE}@fortify") {
+            deleteDir()
+            checkout scm
+            withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+              warnError('Failure in Fortify Scan') {
+                pcr.callAround('fortify-scan') {
+                  builder.fortifyScan()
+                }
+              }
+
+              warnError('Failure in Fortify vulnerability report') {
+                fortifyVulnerabilityReport()
+              }
+
+              archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+            }
+          }
+        }
+      }
+    }
+
+    if (config.fortifyScan && branches["Fortify scan"] == null) {
+      branches["Fortify scan"] = {
+        ws("${env.WORKSPACE}@fortify") {
+          deleteDir()
+          checkout scm
+          withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+            warnError('Failure in Fortify Scan') {
+              pcr.callAround('fortify-scan') {
+                builder.fortifyScan()
+              }
+            }
+
+            warnError('Failure in Fortify vulnerability report') {
+              fortifyVulnerabilityReport()
+            }
+
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+          }
+        }
+      }
+    }
 
     if (dockerFileExists) {
       branches["Docker Build"] = {
@@ -93,23 +143,5 @@ def call(params) {
       }
     }
 
-    if (noSkipImgBuild) {
-      stageWithAgent("Promote Docker Image", product) {
-        if (dockerFileExists) {
-          def deploymentStage = DockerImage.DeploymentStage.STAGING
-          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-          if (isOnPreview) {
-            deploymentStage = DockerImage.DeploymentStage.PREVIEW
-          }
-          onPR {
-            deploymentStage = DockerImage.DeploymentStage.PR
-          }
-          withAcrClient(subscription) {
-            acr.retagForStage(deploymentStage, dockerImage)
-            acr.purgeOldTags(deploymentStage, dockerImage)
-          }
-        }
-      }
-    }
   }
 }
