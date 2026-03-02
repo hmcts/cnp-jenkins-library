@@ -137,7 +137,7 @@ def call(params) {
       }
     }
 
-    def stageName = branches["Fortify scan"] == null ? "Container Build" : "Container Build and Fortify Scan"
+    def stageName = branches["Fortify scan"] == null ? "Container Build" : "Container Build / Fortify Scan"
 
     stageWithAgent(stageName, product) {
       when(noSkipImgBuild && branches.size() > 1) {

@@ -2,6 +2,7 @@
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.contino.AppPipelineConfig
 
 def call(params) {
 
