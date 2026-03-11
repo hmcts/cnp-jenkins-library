@@ -76,7 +76,7 @@ trap cleanup EXIT
 client_id="\${FORTIFY_USER_NAME:-}"
 client_secret="\${FORTIFY_PASSWORD:-}"
 if [ -z "$client_id" ] || [ -z "$client_secret" ]; then
-  error='missing FoD credentials (expected FORTIFY_USER_NAME/FORTIFY_PASSWORD from Key Vault)'
+  error='missing FoD credentials (expected FORTIFY_USER_NAME/FORTIFY_PASSWORD from Jenkins credentials binding)'
   echo "Fortify: $error"
   exit 1
 fi

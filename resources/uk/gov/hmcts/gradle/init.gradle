@@ -46,12 +46,12 @@ allprojects {
           failBuildOnCVSS = 0
 
           // JSON dependency check reports are logged to cosmos for reporting.
-          formats += 'JSON'
+          formats.add('JSON')
 
           // Scan only the dependencies used at application runtime.
           // See https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
           if (!('runtimeClasspath' in it.scanConfigurations)) {
-            scanConfigurations += 'runtimeClasspath'
+            scanConfigurations.add('runtimeClasspath')
           }
           // Scan and skip configurations are mutually exclusive,
           // so we must clear any skipped configurations the build may have configured.

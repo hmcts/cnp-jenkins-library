@@ -20,6 +20,8 @@ class AcrTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
+    // Default env with dual publish disabled
+    steps.env >> [:]
     dockerImage = Mock(DockerImage.class)
     acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
   }
@@ -355,6 +357,156 @@ class AcrTest extends Specification {
     then:
       // Should NOT add credentials again
       0 * steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential add")})
+  }
+
+  // ==================== Dual ACR Publish Tests ====================
+
+  def "isDualPublishEnabled() returns false when DUAL_ACR_PUBLISH_ENABLED is not set"() {
+    given:
+      steps.env >> [:]
+
+    when:
+      def result = acr.isDualPublishEnabled()
+
+    then:
+      result == false
+  }
+
+  def "isDualPublishEnabled() returns false when secondary registry details are missing"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: null
+      ]
+      steps.echo(_) >> null
+
+    when:
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def result = acr.isDualPublishEnabled()
+
+    then:
+      result == false
+  }
+
+  def "isDualPublishEnabled() returns true when all secondary registry details are provided"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+
+    when:
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def result = acr.isDualPublishEnabled()
+
+    then:
+      result == true
+  }
+
+  def "login() should login to both registries when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+
+    when:
+      acr.login()
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr login --name ${REGISTRY_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr login --name hmctsold")})
+  }
+
+  def "build() should build to primary and secondary when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage = Mock(DockerImage.class)
+      dockerImage.getImageTag() >> IMAGE_TAG
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+
+    when:
+      acr.build(dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr build --no-format -r hmctsold -t ${IMAGE_NAME}") &&
+                    it.get('script').contains("--build-arg REGISTRY_NAME=hmctsold")})
+  }
+
+  def "retagForStage() should retag in both registries when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage = Mock(DockerImage.class)
+      dockerImage.getShortName(_) >> IMAGE_NAME
+      dockerImage.getBaseTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      dockerImage.imageTag >> 'staging'
+
+    when:
+      acr.retagForStage(DockerImage.DeploymentStage.STAGING, dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr import --force -n ${REGISTRY_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr import --force -n hmctsold")})
+  }
+
+  def "purgeOldTags() should purge from both registries when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage = Mock(DockerImage.class)
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getImageTag() >> IMAGE_TAG
+
+    when:
+      acr.purgeOldTags(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr run --registry ${REGISTRY_NAME}") &&
+                    it.get('script').contains("acr purge")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr run --registry hmctsold") &&
+                    it.get('script').contains("acr purge")})
   }
 
 }
