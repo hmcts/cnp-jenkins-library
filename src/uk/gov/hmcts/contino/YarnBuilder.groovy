@@ -469,4 +469,18 @@ EOF
     nagAboutOldNodeJSVersions()
   }
 
+  def dbMigrate(String vaultName, String microserviceName) {
+    def secrets = [
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-DATABASE", version: '', envVariable: 'POSTGRES_DATABASE' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-HOST", version: '', envVariable: 'POSTGRES_HOST' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PASS", version: '', envVariable: 'POSTGRES_PASS' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-PORT", version: '', envVariable: 'POSTGRES_PORT' ],
+      [ secretType: 'Secret', name: "${microserviceName}-POSTGRES-USER", version: '', envVariable: 'POSTGRES_USER' ]
+    ]
+
+    def azureKeyVaultURL = "https://${vaultName}.vault.azure.net"
+    steps.azureKeyVault(secrets: secrets, keyVaultURL: azureKeyVaultURL) {
+      yarn("db:create db:migrate")
+    }
+  }
 }
