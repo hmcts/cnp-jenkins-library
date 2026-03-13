@@ -131,11 +131,6 @@ def call(Map params) {
   echo "Using performance test secrets loaded from shared vault (already available as environment variables)..."
 
   try {
-  
-    // Handle missing CHANGE_URL for rebuilds
-    if (!env.CHANGE_URL) {
-      env.CHANGE_URL = "No change URL, likely a rebuild. Refer to build URL..."
-    }
 
     echo "Posting Dynatrace Event..."
     echo "DT Host: ${DynatraceClient.DEFAULT_DYNATRACE_API_HOST}"

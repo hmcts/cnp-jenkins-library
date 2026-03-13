@@ -75,7 +75,7 @@ class DynatraceClient implements Serializable {
             "Workspace": "${steps.env.WORKSPACE}",
             "Branch": "${steps.env.BRANCH_NAME}",
             "Build Number": "${steps.env.BUILD_NUMBER}",
-            "Change URL": "${steps.env.CHANGE_URL}",
+            "Change URL": "${steps.env.CHANGE_URL ?: 'No change URL, likely a rebuild. Refer to build URL...'}",
             "Commit ID": "${steps.env.GIT_COMMIT}",
             "Build URL": "${steps.env.BUILD_URL}", 
             "Synthetic Performance Test": "${steps.env.DT_SYNTHETIC_TEST_ID}",
