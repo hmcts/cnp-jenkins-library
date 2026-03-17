@@ -66,6 +66,7 @@ def call(params) {
       pcr.callAround('test') {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
           withAcrClient(subscription){
+            az.login()
             builder.test()
           }
         }
