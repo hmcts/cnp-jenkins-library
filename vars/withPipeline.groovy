@@ -284,7 +284,7 @@ def call(type, String product, String component, Closure body) {
             )
 
           // Performance Test Pipeline: Setup -> Parallel Testing
-          if (pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) {
+          if ((config.performanceTestStages || config.gatlingLoadTests) && testEnvName != 'ithc') {
 
             // Set aksUrl from TEST_URL for performance test stages
             def aksUrl = env.TEST_URL
