@@ -65,7 +65,10 @@ def call(params) {
     branches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-          builder.test()
+          withAcrClient(subscription){
+            acr.login()
+            builder.test()
+          }
         }
       }
 
