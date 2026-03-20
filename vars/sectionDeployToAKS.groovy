@@ -135,7 +135,6 @@ def call(params) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
-                  warnError('Failure in fullFunctionalTest') {
                     def success = true
                     try {
                       pcr.callAround("fullFunctionalTest:${environment}") {
@@ -150,10 +149,8 @@ def call(params) {
                       savePodsLogs(dockerImage, params, "full-functional")
                       if (!success) {
                         clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                        error('Functional test failed')
                       }
                     }
-                  }
                 }
               }
             } else {
@@ -173,7 +170,6 @@ def call(params) {
                     savePodsLogs(dockerImage, params, "functional")
                     if (!success) {
                       clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('Functional test failed')
                     }
                   }
                 }
