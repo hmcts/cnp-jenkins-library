@@ -38,6 +38,11 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
+  
+  stage('ACR Migration Check') {
+    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+  }
+  
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -60,7 +65,10 @@ def call(params) {
     branches["Unit tests and Sonar scan"] = {
       pcr.callAround('test') {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-          builder.test()
+          withAcrClient(subscription){
+            acr.login()
+            builder.test()
+          }
         }
       }
 

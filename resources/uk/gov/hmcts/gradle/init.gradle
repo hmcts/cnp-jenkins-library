@@ -25,6 +25,7 @@ allprojects {
     doLast { println project.version }
   }
 }
+
 settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
