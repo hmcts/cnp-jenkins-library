@@ -292,7 +292,7 @@ def call(type, String product, String component, Closure body) {
             // Helper method to set test environment variables (only used within performance stages)
             def testEnv = { String testUrl, block ->
               //def testEnvName = new Environment(env).nonProdName
-              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${environmentName}"]   //testEnvName
+              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${environmentName}"]
 
               withEnv(testEnvVariables) {
                 echo "Using TEST_URL: ${env.TEST_URL}"
