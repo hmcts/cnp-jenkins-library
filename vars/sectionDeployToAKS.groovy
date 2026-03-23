@@ -113,20 +113,26 @@ def call(params) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
               def success = true
-              try {
-                pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                    builder.smokeTest()
+              // catchError sets stageResult for Classic Stage View; we still fail the build with error() below
+              catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                try {
+                  pcr.callAround("smoketest:${environment}") {
+                    timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                      builder.smokeTest()
+                    }
+                  }
+                } catch (err) {
+                  success = false
+                  throw err
+                } finally {
+                  savePodsLogs(dockerImage, params, "smoke")
+                  if (!success) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                   }
                 }
-              } catch (err) {
-                success = false
-                throw err
-              } finally {
-                savePodsLogs(dockerImage, params, "smoke")
-                if (!success) {
-                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                }
+              }
+              if (!success) {
+                error('Smoke test failed')
               }
             }
           }
@@ -138,20 +144,25 @@ def call(params) {
                 stage('Functional test (Full)') {
                   testEnv(aksUrl) {
                     def success = true
-                    try {
-                      pcr.callAround("fullFunctionalTest:${environment}") {
-                        timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                          builder.fullFunctionalTest()
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      try {
+                        pcr.callAround("fullFunctionalTest:${environment}") {
+                          timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                            builder.fullFunctionalTest()
+                          }
+                        }
+                      } catch (err) {
+                        success = false
+                        throw err
+                      } finally {
+                        savePodsLogs(dockerImage, params, "full-functional")
+                        if (!success) {
+                          clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                         }
                       }
-                    } catch (err) {
-                      success = false
-                      throw err
-                    } finally {
-                      savePodsLogs(dockerImage, params, "full-functional")
-                      if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      }
+                    }
+                    if (!success) {
+                      error('Functional test (Full) failed')
                     }
                   }
                 }
@@ -161,20 +172,25 @@ def call(params) {
                 stage("Functional Test - ${environment}") {
                   testEnv(aksUrl) {
                     def success = true
-                    try {
-                      pcr.callAround("functionalTest:${environment}") {
-                        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                          builder.functionalTest()
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      try {
+                        pcr.callAround("functionalTest:${environment}") {
+                          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                            builder.functionalTest()
+                          }
+                        }
+                      } catch (err) {
+                        success = false
+                        throw err
+                      } finally {
+                        savePodsLogs(dockerImage, params, "functional")
+                        if (!success) {
+                          clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                         }
                       }
-                    } catch (err) {
-                      success = false
-                      throw err
-                    } finally {
-                      savePodsLogs(dockerImage, params, "functional")
-                      if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      }
+                    }
+                    if (!success) {
+                      error('Functional test failed')
                     }
                   }
                 }
@@ -379,8 +395,19 @@ def call(params) {
               withDockerAgent(product) {
                 stage("FullFunctional Test - AKS ${environment}") {
                   testEnv(aksUrl) {
-                    pcr.callAround("fullFunctionalTest:${environment}") {
-                      builder.fullFunctionalTest()
+                    def failed = false
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      try {
+                        pcr.callAround("fullFunctionalTest:${environment}") {
+                          builder.fullFunctionalTest()
+                        }
+                      } catch (e) {
+                        failed = true
+                        throw e
+                      }
+                    }
+                    if (failed) {
+                      error('Full functional test failed')
                     }
                   }
                 }
