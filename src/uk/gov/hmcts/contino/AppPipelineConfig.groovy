@@ -52,6 +52,8 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean performanceTestStages = false
   int performanceTestStagesTimeout
   String performanceTestConfigPath
+  List<String> performanceTestEnvironments = ['preview', 'aat', 'perftest']
+
 
   // Site Reliability Guardian configuration
   boolean srgEvaluation = false

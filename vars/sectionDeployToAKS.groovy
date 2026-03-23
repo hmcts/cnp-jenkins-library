@@ -194,7 +194,7 @@ def call(params) {
             }
           }
           // Performance Test Pipeline: Setup -> Parallel Testing
-          if ((config.performanceTestStages || config.gatlingLoadTests) && environment != 'ithc') {
+          if ((config.performanceTestStages || config.gatlingLoadTests) && environment in config.performanceTestEnvironments) {
             
             // Load performance test secrets once for all stages - Secrets are stored only within the
             // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
