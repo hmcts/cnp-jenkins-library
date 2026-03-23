@@ -284,7 +284,7 @@ def call(type, String product, String component, Closure body) {
             )
 
           // Performance Test Pipeline: Setup -> Parallel Testing
-          if ((pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) && environmentName in config.performanceTestEnvironments) {
+          if ((pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) && environmentName in pipelineConfig.performanceTestEnvironments) {
 
             // Set aksUrl from TEST_URL for performance test stages
             def aksUrl = env.TEST_URL
@@ -292,7 +292,7 @@ def call(type, String product, String component, Closure body) {
             // Helper method to set test environment variables (only used within performance stages)
             def testEnv = { String testUrl, block ->
               //def testEnvName = new Environment(env).nonProdName
-              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${environmentName}"]   //testEnvName
+              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${environmentName}"]
 
               withEnv(testEnvVariables) {
                 echo "Using TEST_URL: ${env.TEST_URL}"
