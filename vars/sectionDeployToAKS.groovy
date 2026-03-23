@@ -132,7 +132,7 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            if (testLabels.contains('enable_full_xxxfunctional_tests')) {
+            if (testLabels.contains('enable_full_functional_tests')) {
               // withDockerAgent then stage (not stageWithAgent) so Classic Stage View maps failures to this stage
               withDockerAgent(product) {
                 stage('Functional test (Full)') {
@@ -153,6 +153,7 @@ def call(params) {
                         clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                       }
                     }
+                  }
                 }
               }
             } else {
