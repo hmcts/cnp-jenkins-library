@@ -130,11 +130,13 @@ def call(params) {
               }
             }
           }
-        
+
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_xxxfunctional_tests')) {
-              stageWithAgent('Functional test (Full)', product) {
-                testEnv(aksUrl) {
+              // withDockerAgent then stage (not stageWithAgent) so Classic Stage View maps failures to this stage
+              withDockerAgent(product) {
+                stage('Functional test (Full)') {
+                  testEnv(aksUrl) {
                     def success = true
                     try {
                       pcr.callAround("fullFunctionalTest:${environment}") {
@@ -154,22 +156,24 @@ def call(params) {
                 }
               }
             } else {
-              stageWithAgent("Functional Test - ${environment}", product) {
-                testEnv(aksUrl) {
-                  def success = true
-                  try {
-                    pcr.callAround("functionalTest:${environment}") {
-                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                        builder.functionalTest()
+              withDockerAgent(product) {
+                stage("Functional Test - ${environment}") {
+                  testEnv(aksUrl) {
+                    def success = true
+                    try {
+                      pcr.callAround("functionalTest:${environment}") {
+                        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                          builder.functionalTest()
+                        }
                       }
-                    }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "functional")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    } catch (err) {
+                      success = false
+                      throw err
+                    } finally {
+                      savePodsLogs(dockerImage, params, "functional")
+                      if (!success) {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      }
                     }
                   }
                 }
@@ -191,7 +195,7 @@ def call(params) {
           }
           // Performance Test Pipeline: Setup -> Parallel Testing
           if ((config.performanceTestStages || config.gatlingLoadTests) && environment != 'ithc') {
-            
+
             // Load performance test secrets once for all stages - Secrets are stored only within the
             // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
@@ -211,7 +215,7 @@ def call(params) {
               azureKeyVaultSecrets: perfSecrets,
               keyVaultURLOverride: perfKeyVaultUrl
             ) {
-            
+
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
               stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
@@ -243,10 +247,10 @@ def call(params) {
                   }
                 }
               }
-            
+
             // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
             def testStages = [:]
-            
+
             if (config.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
@@ -277,7 +281,7 @@ def call(params) {
                 }
               }
             }
-            
+
             if (config.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
                 stageWithAgent("Gatling Load Tests - ${environment}", product) {
@@ -310,7 +314,7 @@ def call(params) {
                 }
               }
             }
-            
+
               // Execute test stages
               if (testStages.size() > 1) {
                 echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
@@ -371,10 +375,12 @@ def call(params) {
               }
             }
             if (config.fullFunctionalTest) {
-              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
-                testEnv(aksUrl) {
-                  pcr.callAround("fullFunctionalTest:${environment}") {
-                    builder.fullFunctionalTest()
+              withDockerAgent(product) {
+                stage("FullFunctional Test - AKS ${environment}") {
+                  testEnv(aksUrl) {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      builder.fullFunctionalTest()
+                    }
                   }
                 }
               }
