@@ -132,7 +132,7 @@ def call(params) {
           }
         
           onFunctionalTestEnvironment(environment) {
-            if (testLabels.contains('enable_full_functional_tests')) {
+            if (testLabels.contains('enable_full_xxxfunctional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
                     def success = true
