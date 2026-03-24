@@ -381,20 +381,18 @@ def call(params) {
               }
             }
             if (config.e2eTest) {
-              stageWithAgent("E2E Test - AKS ${environment}", product) {
-                testEnv(aksUrl) {
-                  def success = true
-                  try {
-                    pcr.callAround("E2eTest:${environment}") {
-                      builder.e2eTest()
+              withDockerAgent(product) {
+                stage("E2E Test - AKS ${environment}") {
+                  testEnv(aksUrl) {
+                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      pcr.callAround("E2eTest:${environment}") {
+                        builder.e2eTest()
+                      }
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
                     savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
+                    if (passed == false) {
                       clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('E2E test failed')
                     }
                   }
                 }
@@ -405,20 +403,18 @@ def call(params) {
 //          E2E Tests:
           onPR {
             if (testLabels.contains('enable_e2e_test')) {
-              stageWithAgent("E2E Test - AKS ${environment}", product) {
-                testEnv(aksUrl) {
-                  def success = true
-                  try {
-                    pcr.callAround("E2eTest:${environment}") {
-                      builder.e2eTest()
+              withDockerAgent(product) {
+                stage("E2E Test - AKS ${environment}") {
+                  testEnv(aksUrl) {
+                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      pcr.callAround("E2eTest:${environment}") {
+                        builder.e2eTest()
+                      }
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
                     savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
+                    if (passed == false) {
                       clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('E2E test failed')
                     }
                   }
                 }
