@@ -112,7 +112,6 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
-              // catchError return value is reliable in CPS; mutating a flag inside its closure is not
               def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                 pcr.callAround("smoketest:${environment}") {
                   timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
@@ -130,41 +129,36 @@ def call(params) {
 
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
-              // withDockerAgent then stage (not stageWithAgent) so Classic Stage View maps failures to this stage
-              withDockerAgent(product) {
-                stage('Functional test (Full)') {
-                  testEnv(aksUrl) {
-                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      pcr.callAround("fullFunctionalTest:${environment}") {
-                        timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                          builder.fullFunctionalTest()
-                        }
+              stageWithAgent('Functional test (Full)', product) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
                       }
                     }
-                    savePodsLogs(dockerImage, params, "full-functional")
-                    if (passed == false) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('Functional test (Full) failed')
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "full-functional")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test (Full) failed')
                   }
                 }
               }
             } else {
-              withDockerAgent(product) {
-                stage("Functional Test - ${environment}") {
-                  testEnv(aksUrl) {
-                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      pcr.callAround("functionalTest:${environment}") {
-                        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                          builder.functionalTest()
-                        }
+              stageWithAgent("Functional Test - ${environment}", product) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("functionalTest:${environment}") {
+                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                        builder.functionalTest()
                       }
                     }
-                    savePodsLogs(dockerImage, params, "functional")
-                    if (passed == false) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('Functional test failed')
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "functional")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test failed')
                   }
                 }
               }
@@ -365,35 +359,31 @@ def call(params) {
               }
             }
             if (config.fullFunctionalTest) {
-              withDockerAgent(product) {
-                stage("FullFunctional Test - AKS ${environment}") {
-                  testEnv(aksUrl) {
-                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      pcr.callAround("fullFunctionalTest:${environment}") {
-                        builder.fullFunctionalTest()
-                      }
+              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      builder.fullFunctionalTest()
                     }
-                    if (passed == false) {
-                      error('Full functional test failed')
-                    }
+                  }
+                  if (passed == false) {
+                    error('Full functional test failed')
                   }
                 }
               }
             }
             if (config.e2eTest) {
-              withDockerAgent(product) {
-                stage("E2E Test - AKS ${environment}") {
-                  testEnv(aksUrl) {
-                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      pcr.callAround("E2eTest:${environment}") {
-                        builder.e2eTest()
-                      }
+              stageWithAgent("E2E Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("E2eTest:${environment}") {
+                      builder.e2eTest()
                     }
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (passed == false) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('E2E test failed')
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
                   }
                 }
               }
@@ -403,19 +393,17 @@ def call(params) {
 //          E2E Tests:
           onPR {
             if (testLabels.contains('enable_e2e_test')) {
-              withDockerAgent(product) {
-                stage("E2E Test - AKS ${environment}") {
-                  testEnv(aksUrl) {
-                    def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      pcr.callAround("E2eTest:${environment}") {
-                        builder.e2eTest()
-                      }
+              stageWithAgent("E2E Test - AKS ${environment}", product) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("E2eTest:${environment}") {
+                      builder.e2eTest()
                     }
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (passed == false) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('E2E test failed')
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
                   }
                 }
               }
