@@ -112,21 +112,25 @@ def call(params) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
-              def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+              def success = true
+              try {
                 pcr.callAround("smoketest:${environment}") {
                   timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                     builder.smokeTest()
                   }
                 }
-              }
-              savePodsLogs(dockerImage, params, "smoke")
-              if (passed == false) {
-                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                error('Smoke test failed')
+              } catch (err) {
+                success = false
+                throw err
+              } finally {
+                savePodsLogs(dockerImage, params, "smoke")
+                if (!success) {
+                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                }
               }
             }
           }
-
+        
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
@@ -199,7 +203,7 @@ def call(params) {
               azureKeyVaultSecrets: perfSecrets,
               keyVaultURLOverride: perfKeyVaultUrl
             ) {
-
+            
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
               stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
@@ -231,10 +235,10 @@ def call(params) {
                   }
                 }
               }
-
+            
             // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
             def testStages = [:]
-
+            
             if (config.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
@@ -265,7 +269,7 @@ def call(params) {
                 }
               }
             }
-
+            
             if (config.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
                 stageWithAgent("Gatling Load Tests - ${environment}", product) {
@@ -298,7 +302,7 @@ def call(params) {
                 }
               }
             }
-
+            
               // Execute test stages
               if (testStages.size() > 1) {
                 echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
@@ -361,13 +365,8 @@ def call(params) {
             if (config.fullFunctionalTest) {
               stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    pcr.callAround("fullFunctionalTest:${environment}") {
-                      builder.fullFunctionalTest()
-                    }
-                  }
-                  if (passed == false) {
-                    error('Full functional test failed')
+                  pcr.callAround("fullFunctionalTest:${environment}") {
+                    builder.fullFunctionalTest()
                   }
                 }
               }
