@@ -348,4 +348,18 @@ class GithubAPI {
       consoleLogResponseBody: true,
       validResponseCodes: '204')
   }
+
+  def getLatestCommitOnBranch(String branch) {
+    def project = currentProject()
+    def response = this.steps.httpRequest(
+      httpMode: 'GET',
+      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: "${API_URL}/${project}/commits/${branch}",
+      validResponseCodes: '200'
+    )
+  
+    return new JsonSlurperClassic().parseText(response.content)
+  }
 }
