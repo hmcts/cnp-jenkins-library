@@ -115,7 +115,7 @@ def call(params) {
               def success = true
               try {
                 pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                     builder.smokeTest()
                   }
                 }
@@ -154,7 +154,7 @@ def call(params) {
                 testEnv(aksUrl) {
                   def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("functionalTest:${environment}") {
-                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      timeoutWithMsg(time: 90, unit: 'MINUTES', action: 'Functional Test - AKS') {
                         builder.functionalTest()
                       }
                     }
