@@ -77,7 +77,7 @@ def call(params) {
           withSonarQubeEnv("SonarQube") {
             builder.sonarScan()
           }
-
+          sleep 30
           timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
             def qg = waitForQualityGate()
             if (qg.status != 'OK') {
