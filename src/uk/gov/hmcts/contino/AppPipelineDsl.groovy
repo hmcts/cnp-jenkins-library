@@ -142,6 +142,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.performanceTestStages = true
     config.performanceTestStagesTimeout = params.timeout ?: 15
     config.performanceTestConfigPath = params.configPath
+    config.performanceTestEnvironments = params.perfTestEnvironments ?: ['preview','aat','perftest']
   }
 
   void enableSrgEvaluation(Map params = [:]) {
