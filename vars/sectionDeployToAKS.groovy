@@ -135,46 +135,34 @@ def call(params) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
-                  warnError('Failure in fullFunctionalTest') {
-                    def success = true
-                    try {
-                      pcr.callAround("fullFunctionalTest:${environment}") {
-                        timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                          builder.fullFunctionalTest()
-                        }
-                      }
-                    } catch (err) {
-                      success = false
-                      throw err
-                    } finally {
-                      savePodsLogs(dockerImage, params, "full-functional")
-                      if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                        error('Functional test failed')
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
                       }
                     }
+                  }
+                  savePodsLogs(dockerImage, params, "full-functional")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test (Full) failed')
                   }
                 }
               }
             } else {
               stageWithAgent("Functional Test - ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
-                  try {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("functionalTest:${environment}") {
                       timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
                         builder.functionalTest()
                       }
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "functional")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('Functional test failed')
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "functional")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test failed')
                   }
                 }
               }
@@ -386,19 +374,15 @@ def call(params) {
             if (config.e2eTest) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
-                  try {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("E2eTest:${environment}") {
                       builder.e2eTest()
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
                   }
                 }
               }
@@ -410,19 +394,15 @@ def call(params) {
             if (testLabels.contains('enable_e2e_test')) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
-                  try {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("E2eTest:${environment}") {
                       builder.e2eTest()
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
                   }
                 }
               }
