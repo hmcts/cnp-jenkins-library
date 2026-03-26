@@ -75,6 +75,10 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String idamTestUserPassword
   List<String> idamTestUserRoles = []
 
+  // Terraform apply retry configuration
+  boolean terraformApplyRetry = false
+  int terraformApplyRetryCount = 2
+
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)
   }
