@@ -171,4 +171,9 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.idamTestUserPassword = params.password
     config.idamTestUserRoles = params.roles ?: []
   }
+
+  void enableTerraformApplyRetry(int count = 2) {
+    config.terraformApplyRetry = true
+    config.terraformApplyRetryCount = count
+  }
 }
