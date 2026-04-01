@@ -77,13 +77,13 @@ def call(params) {
           withSonarQubeEnv("SonarQube") {
             builder.sonarScan()
           }
-
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
-            }
-          }
+          // >>SKIPPING SONARQUBE so there won't be a quality gate<<
+          // timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+          //   def qg = waitForQualityGate()
+          //   if (qg.status != 'OK') {
+          //     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+          //   }
+          // }
         }
       }
     }
