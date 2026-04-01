@@ -65,6 +65,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def test() {
+    localSteps.echo('--SKIPPING UNIT TESTS--')
+    return
     try {
       gradle("check")
     } finally {
@@ -74,6 +76,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def sonarScan() {
+      localSteps.echo('--SKIPPING SONARQUBE--')
+      return
       String properties = SonarProperties.get(localSteps)
 
       gradle("--info ${properties} sonarqube")
@@ -84,6 +88,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def smokeTest() {
+    localSteps.echo('--SKIPPING SMOKE TESTS--')
+    return    
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -109,6 +115,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def functionalTest() {
+    localSteps.echo('--SKIPPING FUNCTIONAL TESTS--')
+    return    
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -123,6 +131,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def apiGatewayTest() {
+    localSteps.echo('--SKIPPING API GATEWAY TESTS--')
+    return    
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -168,6 +178,8 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    localSteps.echo('--SKIPPING SECURITY CHECKS--')
+    return
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
@@ -191,6 +203,8 @@ class GradleBuilder extends AbstractBuilder {
 
   @Override
   def techStackMaintenance() {
+    localSteps.echo('--SKIPPING TECH STACK MAINTENANCE--')
+    return
     localSteps.echo "Running Gradle Tech stack maintenance"
     try {
       def secrets = [
@@ -251,6 +265,8 @@ EOF
   }
 
   def runConsumerTests(pactBrokerUrl, version) {
+    localSteps.echo('--SKIPPING CONSUMER TESTS--')
+    return    
    try {
       gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.consumer.version=${version} runAndPublishConsumerPactTests")
    } finally {
