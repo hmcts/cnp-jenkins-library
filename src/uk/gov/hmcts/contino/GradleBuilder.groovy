@@ -88,8 +88,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def smokeTest() {
-    localSteps.echo('--SKIPPING SMOKE TESTS--')
-    return    
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
@@ -115,8 +113,6 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def functionalTest() {
-    localSteps.echo('--SKIPPING FUNCTIONAL TESTS--')
-    return    
     try {
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
