@@ -176,7 +176,8 @@ def call(params) {
       }
       echo 'Checking for only_deploy label to determine if we should skip build and tests'
       def onlyDeployLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'only_deploy')
-      echo onlyDeployLabels
+      echo "Type: ${onlyDeployLabels.getClass()}"
+      echo "Labels found: ${onlyDeployLabels}"
       if (onlyDeployLabels.contains('only_deploy')) {
         echo 'only_deploy label found, skipping build and tests'
         config.onlyDeploy = true
