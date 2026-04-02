@@ -89,12 +89,12 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
-      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
+      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Consumer Can I Deploy", product) {
           builder.runConsumerCanIDeploy()
         }
       }
-      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
+      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Provider Verification", product) {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
@@ -108,7 +108,7 @@ def call(params) {
           }
         }
       }
-      if (config.serviceApp) {
+      if (config.serviceApp && !config.onlyDeploy) {
         withTeamSecrets(config, environment) {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
@@ -130,7 +130,7 @@ def call(params) {
               }
             }
           }
-        
+
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
@@ -183,7 +183,7 @@ def call(params) {
           }
           // Performance Test Pipeline: Setup -> Parallel Testing
           if ((config.performanceTestStages || config.gatlingLoadTests) && environment in config.performanceTestEnvironments) {
-            
+
             // Load performance test secrets once for all stages - Secrets are stored only within the
             // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
@@ -203,7 +203,7 @@ def call(params) {
               azureKeyVaultSecrets: perfSecrets,
               keyVaultURLOverride: perfKeyVaultUrl
             ) {
-            
+
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
               stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
@@ -235,10 +235,10 @@ def call(params) {
                   }
                 }
               }
-            
+
             // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
             def testStages = [:]
-            
+
             if (config.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
@@ -269,7 +269,7 @@ def call(params) {
                 }
               }
             }
-            
+
             if (config.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
                 stageWithAgent("Gatling Load Tests - ${environment}", product) {
@@ -302,7 +302,7 @@ def call(params) {
                 }
               }
             }
-            
+
               // Execute test stages
               if (testStages.size() > 1) {
                 echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
@@ -446,9 +446,18 @@ def call(params) {
         }
       }
     }
-      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      if (isOnMaster || !enableHelmLabel) {
-        helmUninstall(dockerImage, params, pcr)
+      if (config.onlyDeploy) {
+        stageWithAgent('Deployment only pipeline', product) {
+          echo "Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge"
+          catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+            process.exit(1)
+          }
+        }
+      } else {
+        def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+        if (isOnMaster || !enableHelmLabel) {
+          helmUninstall(dockerImage, params, pcr)
+        }
       }
     }
   }

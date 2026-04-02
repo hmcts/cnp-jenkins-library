@@ -38,11 +38,11 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
-  
+
   stage('ACR Migration Check') {
     warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
   }
-  
+
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -77,13 +77,13 @@ def call(params) {
           withSonarQubeEnv("SonarQube") {
             builder.sonarScan()
           }
-          // >>SKIPPING SONARQUBE so there won't be a quality gate<<
-          // timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-          //   def qg = waitForQualityGate()
-          //   if (qg.status != 'OK') {
-          //     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-          //   }
-          // }
+
+          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+            def qg = waitForQualityGate()
+            if (qg.status != 'OK') {
+              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+            }
+          }
         }
       }
     }
@@ -174,6 +174,14 @@ def call(params) {
           }
         }
       }
+      def onlyDeployLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'only_deploy')
+      if (onlyDeployLabels.contains('only_deploy')) {
+        config.onlyDeploy = true
+        branches.remove("Unit tests and Sonar scan")
+        branches.remove("Security Checks")
+        branches.remove("Tech Stack")
+        branches.remove("Fortify scan")
+      }
     }
 
     if (config.fortifyScan && branches["Fortify scan"] == null) {
@@ -229,7 +237,7 @@ def call(params) {
       }
     }
 
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
