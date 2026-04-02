@@ -180,10 +180,6 @@ def call(params) {
       if (onlyDeployLabels.contains('only_deploy')) {
         echo 'only_deploy label found, skipping build and tests'
         config.onlyDeploy = true
-        branches.remove("Unit tests and Sonar scan")
-        branches.remove("Security Checks")
-        branches.remove("Tech Stack")
-        branches.remove("Fortify scan")
       }
     }
 
@@ -207,6 +203,14 @@ def call(params) {
           }
         }
       }
+    }
+
+    if (config.onlyDeploy) {
+      echo 'onlyDeploy is true, removing branches that are not needed'
+      branches.remove("Unit tests and Sonar scan")
+      branches.remove("Security Checks")
+      branches.remove("Tech Stack")
+      branches.remove("Fortify scan")
     }
 
     stageWithAgent("Static checks / Container build", product) {
