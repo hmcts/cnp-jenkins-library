@@ -40,7 +40,7 @@ def call(Map args = [:]) {
     slackMessage.setDangerColor()
 
     slackSend(
-      failOnError: true,
+      failOnError: false,
       channel: channel,
       attachments: slackMessage.asObject())
   }

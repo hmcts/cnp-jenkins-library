@@ -49,7 +49,7 @@ def call(teamSlackChannel, metricsPublisher ) {
 
     try {
       slackSend(
-        failOnError: true,
+        failOnError: false,
         channel: channel,
         attachments: warningMessage.asObject())
     }

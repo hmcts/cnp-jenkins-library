@@ -43,7 +43,7 @@ def call(Map args = [:]) {
       slackMessage.addSection(message)
 
       slackSend(
-        failOnError: true,
+        failOnError: false,
         channel: channel,
         attachments: slackMessage.asObject())
     }
