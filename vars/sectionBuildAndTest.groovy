@@ -38,11 +38,11 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
-  
+
   stage('ACR Migration Check') {
     warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
   }
-  
+
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -174,6 +174,12 @@ def call(params) {
           }
         }
       }
+      echo 'Checking for only_deploy label to determine if we should skip build and tests'
+      def onlyDeployLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'only_deploy')
+      if (onlyDeployLabels.contains('only_deploy')) {
+        echo 'only_deploy label found, skipping build and tests'
+        config.onlyDeploy = true
+      }
     }
 
     if (config.fortifyScan && branches["Fortify scan"] == null) {
@@ -196,6 +202,12 @@ def call(params) {
           }
         }
       }
+    }
+
+    if (config.onlyDeploy) {
+      branches.remove("Unit tests and Sonar scan")
+      branches.remove("Tech Stack")
+      branches.remove("Fortify scan")
     }
 
     stageWithAgent("Static checks / Container build", product) {
@@ -229,7 +241,7 @@ def call(params) {
       }
     }
 
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
