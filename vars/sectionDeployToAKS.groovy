@@ -450,10 +450,9 @@ def call(params) {
       }
     }
     if (config.onlyDeploy) {
-        echo "Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge"
       stageWithAgent('Deployment only pipeline', product) {
         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-          process.exit(1)
+          throw new RuntimeException("\"Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge")
         }
       }
     } else {
