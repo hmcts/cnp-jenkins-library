@@ -135,15 +135,19 @@ def call(params) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
-                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  def passed = true
+                  try {
                     pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
                         builder.fullFunctionalTest()
                       }
                     }
+                  } catch (err) {
+                    passed = false
+                  } finally {
+                    savePodsLogs(dockerImage, params, "full-functional")
                   }
-                  savePodsLogs(dockerImage, params, "full-functional")
-                  if (passed == false) {
+                  if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     error('Functional test (Full) failed')
                   }
@@ -152,15 +156,19 @@ def call(params) {
             } else {
               stageWithAgent("Functional Test - ${environment}", product) {
                 testEnv(aksUrl) {
-                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  def passed = true
+                  try {
                     pcr.callAround("functionalTest:${environment}") {
                       timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
                         builder.functionalTest()
                       }
                     }
+                  } catch (err) {
+                    passed = false
+                  } finally {
+                    savePodsLogs(dockerImage, params, "functional")
                   }
-                  savePodsLogs(dockerImage, params, "functional")
-                  if (passed == false) {
+                  if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     error('Functional test failed')
                   }
