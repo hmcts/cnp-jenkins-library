@@ -26,7 +26,16 @@ class PythonBuilder extends AbstractBuilder {
 
   def build() {
     addVersionInfo()
-    uv("sync")
+    if (localSteps.fileExists('pyproject.toml')) {
+      uv("sync")
+    } else if (localSteps.fileExists('requirements.txt')) {
+      uv("pip install -r requirements.txt")
+      if (localSteps.fileExists('requirements-dev.txt')) {
+        uv("pip install -r requirements-dev.txt")
+      }
+    } else {
+      localSteps.error "No dependency file found. Add a pyproject.toml (recommended) or requirements.txt"
+    }
     localSteps.sh(script: "uv run python -m compileall . -q", label: "Compile Python sources")
   }
 
