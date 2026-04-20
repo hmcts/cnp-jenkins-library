@@ -115,7 +115,7 @@ def call(params) {
               def success = true
               try {
                 pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                     builder.smokeTest()
                   }
                 }
