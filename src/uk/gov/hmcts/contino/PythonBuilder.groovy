@@ -132,7 +132,33 @@ class PythonBuilder extends AbstractBuilder {
 
     try {
       def report = new JsonSlurperClassic().parseText(auditReportJSON)
-      return report
+
+      // Convert pip-audit format to our standard format
+      def vulnerabilities = []
+      if (report.dependencies) {
+        report.dependencies.each { dep ->
+          if (dep.vulns) {
+            dep.vulns.each { vuln ->
+              vulnerabilities << [
+                title: vuln.id,
+                cves: vuln.aliases ?: [],
+                vulnerable_versions: dep.version,
+                patched_versions: vuln.fix_versions?.join(', ') ?: 'None',
+                severity: vuln.severity ?: 'unknown',
+                url: vuln.url ?: '',
+                module_name: dep.name
+              ]
+            }
+          }
+        }
+      }
+
+      return [
+        vulnerabilities: vulnerabilities,
+        summary: [
+          total: vulnerabilities.size()
+        ]
+      ]
     } catch (Exception e) {
       return [dependencies: []]
     }
