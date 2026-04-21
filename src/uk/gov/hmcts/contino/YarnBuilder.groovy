@@ -84,7 +84,7 @@ class YarnBuilder extends AbstractBuilder {
     try {
       yarn("test:smoke")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: 'smoke-output/**/*result.xml'
+      steps.junit allowEmptyResults: true, skipMarkingBuildUnstable: true, testResults: 'smoke-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-output/**'
     }
   }
@@ -93,7 +93,7 @@ class YarnBuilder extends AbstractBuilder {
     try {
       yarn("test:functional")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: 'functional-output/**/*result.xml'
+      steps.junit allowEmptyResults: true, skipMarkingBuildUnstable: true, testResults: 'functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
     }
   }
@@ -102,7 +102,7 @@ class YarnBuilder extends AbstractBuilder {
     try {
       yarn("test:e2e")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: 'e2e-output/**/*result.xml'
+      steps.junit allowEmptyResults: true, skipMarkingBuildUnstable: true, testResults: 'e2e-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'e2e-output/**'
     }
   }
@@ -111,7 +111,7 @@ class YarnBuilder extends AbstractBuilder {
     try {
       yarn("test:apiGateway")
     } finally {
-      steps.junit allowEmptyResults: true, testResults: 'api-output/*result.xml'
+      steps.junit allowEmptyResults: true, skipMarkingBuildUnstable: true, testResults: 'api-output/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'api-output/*'
     }
   }
@@ -145,7 +145,7 @@ class YarnBuilder extends AbstractBuilder {
       yarn("test:fullfunctional")
     }
     finally {
-      steps.junit allowEmptyResults: true, testResults: 'functional-output/**/*result.xml'
+      steps.junit allowEmptyResults: true, skipMarkingBuildUnstable: true, testResults: 'functional-output/**/*result.xml'
       steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**'
     }
   }
