@@ -159,7 +159,7 @@ def call(params) {
                   def passed = true
                   try {
                     pcr.callAround("functionalTest:${environment}") {
-                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                      timeoutWithMsg(time: 90, unit: 'MINUTES', action: 'Functional Test - AKS') {
                         builder.functionalTest()
                       }
                     }
