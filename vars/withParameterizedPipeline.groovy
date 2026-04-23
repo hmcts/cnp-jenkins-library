@@ -60,9 +60,9 @@ def call(type, String product, String component, String environment, String subs
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
-  node(agentType) {
-    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-    try {
+  def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+  try {
+    node("build-only") {
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -78,6 +78,16 @@ def call(type, String product, String component, String environment, String subs
         }
       }
 
+      stash name: 'build-workspace', includes: '**/*', useDefaultExcludes: false
+    }
+
+    node(agentType) {
+      dockerAgentSetup()
+      env.PATH = "$env.PATH:/usr/local/bin"
+
+      deleteDir()
+      unstash 'build-workspace'
+
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
         pipelineCallbacksRunner: callbacksRunner,
@@ -90,24 +100,26 @@ def call(type, String product, String component, String environment, String subs
         deploymentTargets: deploymentTargetList,
         tfPlanOnly: false
       )
-    } catch (err) {
-      currentBuild.result = "FAILURE"
+    }
+  } catch (err) {
+    currentBuild.result = "FAILURE"
 
-      notifyBuildFailure channel: slackChannel
+    notifyBuildFailure channel: slackChannel
 
-      callbacksRunner.call('onFailure')
-      metricsPublisher.publish('Pipeline Failed')
-      throw err
-    } finally {
+    callbacksRunner.call('onFailure')
+    metricsPublisher.publish('Pipeline Failed')
+    throw err
+  } finally {
+    node(agentType) {
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
         deleteDir()
       }
     }
-
-    notifyBuildFixed channel: slackChannel
-
-    callbacksRunner.call('onSuccess')
-    metricsPublisher.publish('Pipeline Succeeded')
   }
+
+  notifyBuildFixed channel: slackChannel
+
+  callbacksRunner.call('onSuccess')
+  metricsPublisher.publish('Pipeline Succeeded')
 }
