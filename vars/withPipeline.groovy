@@ -216,13 +216,15 @@ def call(type, String product, String component, Closure body) {
             )
 
             stageWithAgent('Publish Helm chart', product) {
-              helmPublish(
-                appPipelineConfig: pipelineConfig,
-                subscription: subscription.nonProdName,
-                environment: environment.nonProdName,
-                product: product,
-                component: component
-              )
+              callbacksRunner.callAround('Publish Helm chart') {
+                helmPublish(
+                  appPipelineConfig: pipelineConfig,
+                  subscription: subscription.nonProdName,
+                  environment: environment.nonProdName,
+                  product: product,
+                  component: component
+                )
+              }
             }
 
             sectionDeployToEnvironment(
