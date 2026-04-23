@@ -42,7 +42,9 @@ def call(params) {
                   component: component,
                   pipelineCallbacksRunner: pcr,
                   planOnly: tfPlanOnly,
-                  expires: config.expiryDate
+                  expires: config.expiryDate,
+                  terraformApplyRetry: config.terraformApplyRetry,
+                  terraformApplyRetryCount: config.terraformApplyRetryCount
                 )
             }
           }
