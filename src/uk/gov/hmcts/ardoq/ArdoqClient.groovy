@@ -73,8 +73,9 @@ class ArdoqClient {
       String jsonPayload = getJson(applicationId, repositoryName, b64Dependencies, parser, language, languageVersion)
 
       this.steps.writeFile(file: 'payload.json', text: jsonPayload);
-      // gzip the payload
-      this.steps.sh "gzip payload.json"
+      // Keep the original payload file in place so parallel docker/acr context collection
+      // cannot race a disappearing workspace file.
+      this.steps.sh "gzip -c payload.json > payload.json.gz"
 
       this.steps.sh """curl -w "%{http_code}" --location --request POST '${this.apiUrl}/api/dependencies' \
                   --header 'Authorization: Bearer ${this.apiKey}' \
