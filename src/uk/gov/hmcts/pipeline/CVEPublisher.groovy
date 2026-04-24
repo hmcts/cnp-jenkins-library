@@ -27,6 +27,8 @@ class CVEPublisher {
    * @param report provider specific report should be a groovy object that can be converted to json.
    */
   def publishCVEReport(String codeBaseType, report) {
+    def publishError = null
+
     try {
       steps.echo "Publishing CVE report"
       def database = cosmosDbTargetResolver.databaseName()
@@ -47,8 +49,14 @@ class CVEPublisher {
       if (ignoreErrors) {
         steps.echo "Unable to publish CVE report '${err}'"
       } else {
-        throw err
+        publishError = err
       }
+    }
+
+    new CveDashboardSnapshotPublisher(steps).publishSnapshot(codeBaseType, report)
+
+    if (publishError) {
+      throw publishError
     }
   }
 }
