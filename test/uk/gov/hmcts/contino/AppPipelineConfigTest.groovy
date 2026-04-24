@@ -42,6 +42,8 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
       assertThat(pipelineConfig.buildCache).isTrue()
+      assertThat(pipelineConfig.cveDashboardIngestion).isFalse()
+      assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -54,6 +56,51 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScanType).isEqualTo("auto")
       assertThat(pipelineConfig.securityScanTimeout).isEqualTo(120)
       assertThat(pipelineConfig.securityScan).isTrue()
+  }
+
+  def "ensure CVE dashboard ingestion can be enabled without explicit vault name"() {
+    when:
+      dsl.enableCveDashboardIngestion()
+    then:
+      assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("")
+      assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
+  }
+
+  def "ensure CVE dashboard ingestion can be enabled with explicit vault name"() {
+    when:
+      dsl.enableCveDashboardIngestion("ccd-aat")
+    then:
+      assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("ccd-aat")
+      assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
+  }
+
+  def "ensure CVE dashboard ingestion can be enabled with explicit branches"() {
+    when:
+      dsl.enableCveDashboardIngestion(['master', 'demo'])
+    then:
+      assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("")
+      assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master', 'demo'])
+  }
+
+  def "ensure CVE dashboard ingestion can be enabled with explicit vault and branches"() {
+    when:
+      dsl.enableCveDashboardIngestion("ccd-aat", [' master ', '', 'demo', 'master'])
+    then:
+      assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("ccd-aat")
+      assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master', 'demo'])
+  }
+
+  def "ensure CVE dashboard ingestion falls back to master when branch override is blank"() {
+    when:
+      dsl.enableCveDashboardIngestion("ccd-aat", ['', '  '])
+    then:
+      assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("ccd-aat")
+      assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
   }
 
   def "load vault secrets"() {
