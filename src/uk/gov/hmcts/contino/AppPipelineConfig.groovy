@@ -10,6 +10,9 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String securityScanType
   String securityScanAlertFilters
   String securityScanCookieIgnoreList
+  boolean cveDashboardIngestion = false
+  String cveDashboardVaultName
+  List<String> cveDashboardIngestionBranches = ['master']
 
   boolean performanceTest = false
   boolean apiGatewayTest = false
