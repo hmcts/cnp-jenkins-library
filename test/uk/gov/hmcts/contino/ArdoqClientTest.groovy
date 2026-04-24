@@ -57,6 +57,26 @@ class ArdoqClientTest extends Specification {
     1 * steps.echo('Missing required parameters for tech stack maintenance')
   }
 
+  def "UpdateDependencies keeps payload.json while creating the gzipped upload"() {
+    given:
+    steps.fileExists('Dockerfile') >> true
+    steps.readFile('languageProc') >> 'node'
+    steps.readFile('languageVersionProc') >> '20-alpine'
+
+    when:
+    ardoqClient.updateDependencies("deps", "yarn")
+
+    then:
+    1 * steps.sh("grep -E '^FROM' Dockerfile | awk '{print \\$2}' | awk -F ':' '{printf(\"%s\", \\$1)}' | tr '/' '\\n' | tail -1 > languageProc")
+    1 * steps.sh("grep -E '^FROM' Dockerfile | awk '{print \\$2}' | awk -F ':' '{printf(\"%s\", \\$2)}' > languageVersionProc")
+    1 * steps.writeFile([file: 'payload.json', text: _])
+    1 * steps.sh('gzip -c payload.json > payload.json.gz')
+    1 * steps.sh({ String script ->
+      script.contains("--data-binary '@payload.json.gz'")
+    })
+    0 * steps.echo('Missing required parameters for tech stack maintenance')
+  }
+
   def "json"() {
     when:
     String json = ArdoqClient.getJson("appId", "repoName", "deps", "yarn", "java", "1.8")
@@ -75,5 +95,4 @@ class ArdoqClientTest extends Specification {
               """.stripIndent())
   }
 }
-
 
