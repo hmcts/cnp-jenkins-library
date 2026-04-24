@@ -177,6 +177,27 @@ this output will be transposed to Uppercase s2s_url => S2S_URL and can then be u
 
 Calls `yarn test:nsp` so this command must be implemented in package.json
 
+Security checks continue to publish the trimmed CVE report to Cosmos. Services can also opt into publishing a normalized repository snapshot to the HMCTS CVE Dashboard:
+
+```
+enableCveDashboardIngestion()
+```
+
+By default the pipeline publishes CVE dashboard snapshots from `master` only and loads `cve-dashboard-url` and `cve-dashboard-api-key` from the product/environment Key Vault, for example `ccd-aat`. To use a different vault, pass its name:
+
+```
+enableCveDashboardIngestion('shared-cve-dashboard')
+```
+
+To publish from additional long-lived branches, pass a branch allow-list:
+
+```
+enableCveDashboardIngestion('', ['master', 'demo'])
+enableCveDashboardIngestion('shared-cve-dashboard', ['master', 'release/1.x'])
+```
+
+Branches outside the allow-list still run security checks and still keep the existing Cosmos publishing behaviour, but they do not update the dashboard's current repository snapshot. The secrets are exported as `CVE_DASHBOARD_URL` and `CVE_DASHBOARD_API_KEY` for the security-check stage only. Dashboard publishing is fail-open: scanner execution and Cosmos publishing keep their existing behaviour, and dashboard request failures are logged without failing the build.
+
 #### Smoke tests
 
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
