@@ -364,13 +364,26 @@ EOF
       // performance repo
       def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
       gradle(gatlingCommand)
-      this.localSteps.gatlingArchive()
+      archiveGatlingReports()
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +
           "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
       )
       super.executeGatling()
+    }
+  }
+
+  private void archiveGatlingReports() {
+    try {
+      this.localSteps.gatlingArchive()
+    } catch (Exception e) {
+      localSteps.echo("Gatling plugin archive step failed: ${e.class.simpleName}: ${e.message}")
+      localSteps.echo("Falling back to artifact archiving for Gatling reports")
+      localSteps.archiveArtifacts(
+        artifacts: "${localSteps.env.GATLING_REPORTS_PATH}/**/*",
+        allowEmptyArchive: true
+      )
     }
   }
 }
