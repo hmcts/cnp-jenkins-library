@@ -54,6 +54,7 @@ def call(String product, String component = null, Closure body) {
           subscription: subscription.prodName,
           environment: environment.prodName,
           product: product,
+          planOnly: true,
           component: component,
           pipelineCallbacksRunner: callbacksRunner,
         )
