@@ -10,7 +10,7 @@ def call(String environment, String product, Closure body) {
   }
 
   String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
-  String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: UUID.randomUUID().toString()}"
+  String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
 
   echo "Using ${agentLabel} agent for ${environment}"
   stash name: stashName, includes: '**/*'
@@ -27,7 +27,9 @@ def call(String environment, String product, Closure body) {
       if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
         env.PATH = "$env.PATH:/usr/local/bin"
       }
-      debugEnvironmentManagedIdentity(normalisedEnvironment, agentLabel)
+      if (env.ENVIRONMENT_AGENT_DEBUG == "true") {
+        debugEnvironmentManagedIdentity(normalisedEnvironment, agentLabel)
+      }
       try {
         body()
       } finally {

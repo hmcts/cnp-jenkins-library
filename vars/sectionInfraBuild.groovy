@@ -12,28 +12,26 @@ def call(params) {
   def businessArea = env.BUSINESS_AREA_TAG
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
-  withEnvironmentAgent(environment, product) {
-    approvedEnvironmentRepository(environment, metricsPublisher) {
-      withSubscription(subscription) {
-        pcr.callAround("buildinfra:${environment}") {
-          timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
-            // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox
-            if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
-              withAksClient(subscription, environment, product) {
-                startEnvironmentIfRequired params
-              }
+  approvedEnvironmentRepository(environment, metricsPublisher) {
+    withSubscription(subscription) {
+      pcr.callAround("buildinfra:${environment}") {
+        timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
+          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox
+          if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
+            withAksClient(subscription, environment, product) {
+              startEnvironmentIfRequired params
             }
-
-            // build environment infrastructure once
-            return spinInfra(
-              product: product,
-              component: component,
-              expires: expires,
-              environment: environment,
-              tfPlanOnly: planOnly,
-              subscription: subscription
-            )
           }
+
+          // build environment infrastructure once
+          return spinInfra(
+            product: product,
+            component: component,
+            expires: expires,
+            environment: environment,
+            tfPlanOnly: planOnly,
+            subscription: subscription
+          )
         }
       }
     }

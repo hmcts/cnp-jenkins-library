@@ -11,10 +11,24 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironment(environment)).isEqualTo(label)
 
     where:
+    environment | label
+    'sandbox'   | 'ubuntu-sbox'
+    'preview'   | 'ubuntu-preview'
+    'aat'       | 'ubuntu-aat'
+    'ithc'      | 'ubuntu-ithc'
+    'perftest'  | 'ubuntu-perftest'
+    'demo'      | 'ubuntu-demo'
+    'prod'      | 'ubuntu-prod'
+  }
+
+  def "labelForEnvironment should preserve existing prefixed environment normalisation"() {
+    expect:
+    assertThat(AgentSelector.labelForEnvironment(environment)).isEqualTo(label)
+
+    where:
     environment    | label
-    'aat'          | 'ubuntu-aat'
     'idam-aat'     | 'ubuntu-aat'
-    'sandbox'      | 'ubuntu-sbox'
+    'idam-preview' | 'ubuntu-preview'
     'packer-prod'  | 'ubuntu-prod'
     'vault-demo'   | 'ubuntu-demo'
   }

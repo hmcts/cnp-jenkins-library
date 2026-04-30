@@ -35,6 +35,7 @@ def call(Map<String, ?> params) {
   def productName = config.component
   def changeUrl = config.changeUrl
   def environmentDeploymentTarget = params.environment
+  String terraformPlanStashName = "tfplan-${config.productName}-${environmentDeploymentTarget}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}".replaceAll(/[^A-Za-z0-9_.-]/, '-')
   def teamName
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(
@@ -52,8 +53,18 @@ def call(Map<String, ?> params) {
   approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
     stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
+    Closure terraformInit = {
+      sh """
+        terraform init -reconfigure \
+          -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
+          -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+          -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
+          -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
+      """
+    }
+
     lock("${config.productName}-${environmentDeploymentTarget}") {
-      stageWithAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product) {
+      stageWithEnvironmentAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
@@ -107,13 +118,7 @@ def call(Map<String, ?> params) {
           checkTerraformFormat()
         }
 
-        sh """
-          terraform init -reconfigure \
-            -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
-            -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
-        """
+        terraformInit()
 
         warnAboutOldTfAzureProvider(config.environment, config.product, builtFrom)
         warnAboutDeprecatedPostgres()
@@ -132,6 +137,7 @@ def call(Map<String, ?> params) {
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
+        stash name: terraformPlanStashName, includes: 'tfplan'
 
 
         onPR {
@@ -152,7 +158,9 @@ def call(Map<String, ?> params) {
         }
       }
       if (!config.tfPlanOnly) {
-        stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
+        stageWithEnvironmentAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
+          terraformInit()
+          unstash terraformPlanStashName
           sh "terraform apply -auto-approve tfplan"
           parseResult = null
           try {

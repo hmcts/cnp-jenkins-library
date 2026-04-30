@@ -30,16 +30,14 @@ def call(params) {
       return
     }
 
-    withEnvironmentAgent(environment, product) {
-      def highLevelDataSetupKeyVaultName = config.highLevelDataSetupKeyVaultName
+    def highLevelDataSetupKeyVaultName = config.highLevelDataSetupKeyVaultName
 
-      stageWithAgent("High Level Data Setup - ${environment}", product) {
-        def vaultName = !highLevelDataSetupKeyVaultName?.trim() ? product : highLevelDataSetupKeyVaultName
+    stageWithEnvironmentAgent("High Level Data Setup - ${environment}", product, environment) {
+      def vaultName = !highLevelDataSetupKeyVaultName?.trim() ? product : highLevelDataSetupKeyVaultName
 
-        withDefinitionImportSecretsAndEnvVars(vaultName, environment, config.vaultEnvironmentOverrides){
-          pcr.callAround('highleveldatasetup') {
-            builder.highLevelDataSetup(environment)
-          }
+      withDefinitionImportSecretsAndEnvVars(vaultName, environment, config.vaultEnvironmentOverrides){
+        pcr.callAround('highleveldatasetup') {
+          builder.highLevelDataSetup(environment)
         }
       }
     }
