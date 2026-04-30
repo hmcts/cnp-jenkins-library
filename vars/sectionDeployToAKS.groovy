@@ -44,35 +44,37 @@ def call(params) {
 
   def builder = pipelineType.builder
 
-  withAcrClient(subscription) {
-    imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-    acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-    dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-  }
+  withEnvironmentAgent(environment, product) {
+    withAcrClient(subscription) {
+      imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+      acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+      dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+    }
 
-  def deploymentNamespace = projectBranch.deploymentNamespace()
-  def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
+    def deploymentNamespace = projectBranch.deploymentNamespace()
+    def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
-  GithubAPI gitHubAPI = new GithubAPI(this)
-  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-  boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
+    GithubAPI gitHubAPI = new GithubAPI(this)
+    def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+    boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
-  lock("${deploymentProduct}-${component}-${environment}-deploy") {
-    stageWithAgent("AKS deploy - ${environment}", product) {
-      withTeamSecrets(config, environment) {
-        pcr.callAround('akschartsinstall') {
-          withAksClient(subscription, environment, product) {
-            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
-              onPR {
-                deploymentNumber = githubCreateDeployment()
-              }
-              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-              log.info("Using AKS environment: ${params.environment}")
-              warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
-              aksUrl = helmInstall(dockerImage, params)
-              log.info("deployed component URL: ${aksUrl}")
-              onPR {
-                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+    lock("${deploymentProduct}-${component}-${environment}-deploy") {
+      stageWithAgent("AKS deploy - ${environment}", product) {
+        withTeamSecrets(config, environment) {
+          pcr.callAround('akschartsinstall') {
+            withAksClient(subscription, environment, product) {
+              timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
+                onPR {
+                  deploymentNumber = githubCreateDeployment()
+                }
+                params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+                log.info("Using AKS environment: ${params.environment}")
+                warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
+                aksUrl = helmInstall(dockerImage, params)
+                log.info("deployed component URL: ${aksUrl}")
+                onPR {
+                  githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+                }
               }
             }
           }
@@ -460,4 +462,3 @@ def call(params) {
       }
     }
   }
-

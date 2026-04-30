@@ -52,7 +52,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return []
     })
 
-    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
+    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], { List variables, Closure body -> body.call() })
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
@@ -71,6 +71,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("azureCosmosDBCreateDocument", [LinkedHashMap], null)
     helper.registerAllowedMethod("retry", [LinkedHashMap, Closure.class], {})
     helper.registerAllowedMethod("agent", [], {})
+    helper.registerAllowedMethod("stash", [LinkedHashMap.class], {})
+    helper.registerAllowedMethod("unstash", [String.class], {})
     helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], { secrets, body ->
       body.call()
     })

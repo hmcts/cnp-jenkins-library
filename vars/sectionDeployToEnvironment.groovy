@@ -20,20 +20,21 @@ def call(params) {
   def builder = pipelineType.builder
   def tfOutput
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
-  approvedEnvironmentRepository(environment, metricsPublisher) {
-    lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
-      folderExists('infrastructure') {
-        def buildInfraStageName = "Build Infrastructure - ${environment}"
-        if(tfPlanOnly){
-          buildInfraStageName = "Terraform Plan -${environment}"
-        }
-        stageWithAgent(buildInfraStageName, product) {
-          onPreview {
-            deploymentNumber = githubCreateDeployment()
+  withEnvironmentAgent(environment, product) {
+    approvedEnvironmentRepository(environment, metricsPublisher) {
+      lock(resource: "${product}-${component}-${environment}-deploy", inversePrecedence: true) {
+        folderExists('infrastructure') {
+          def buildInfraStageName = "Build Infrastructure - ${environment}"
+          if(tfPlanOnly){
+            buildInfraStageName = "Terraform Plan -${environment}"
           }
+          stageWithAgent(buildInfraStageName, product) {
+            onPreview {
+              deploymentNumber = githubCreateDeployment()
+            }
 
-          withSubscription(subscription) {
-            dir('infrastructure') {
+            withSubscription(subscription) {
+              dir('infrastructure') {
                 sectionInfraBuild(
                   subscription: subscription,
                   environment: environment,
@@ -44,24 +45,25 @@ def call(params) {
                   planOnly: tfPlanOnly,
                   expires: config.expiryDate
                 )
-            }
-          }
-        }
-      }
-
-      if(!tfPlanOnly){
-
-        if (config.migrateDb) {
-          stageWithAgent("DB Migration - ${environment}", product) {
-            pcr.callAround("dbmigrate:${environment}") {
-              builder.dbMigrate(
-                tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
-                component
-              )
+              }
             }
           }
         }
 
+        if(!tfPlanOnly){
+
+          if (config.migrateDb) {
+            stageWithAgent("DB Migration - ${environment}", product) {
+              pcr.callAround("dbmigrate:${environment}") {
+                builder.dbMigrate(
+                  tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",
+                  component
+                )
+              }
+            }
+          }
+
+        }
       }
     }
   }
