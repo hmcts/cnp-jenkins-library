@@ -58,6 +58,8 @@ def call(params) {
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
+    // AKS deploy touches shared ACR, PTL private DNS and AKS cluster subscriptions,
+    // so it remains on the shared Jenkins identity rather than the environment MI.
     stageWithAgent("AKS deploy - ${environment}", product) {
       withTeamSecrets(config, environment) {
         pcr.callAround('akschartsinstall') {
@@ -79,16 +81,17 @@ def call(params) {
         }
       }
     }
-    onPR {
-      highLevelDataSetup(
-        appPipelineConfig: config,
-        pipelineCallbacksRunner: pcr,
-        builder: builder,
-        environment: environment,
-        product: product,
-      )
-    }
-    withSubscriptionLogin(subscription) {
+  }
+  onPR {
+    highLevelDataSetup(
+      appPipelineConfig: config,
+      pipelineCallbacksRunner: pcr,
+      builder: builder,
+      environment: environment,
+      product: product,
+    )
+  }
+  withSubscriptionLogin(subscription) {
       if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
         stageWithAgent("Pact Consumer Can I Deploy", product) {
           builder.runConsumerCanIDeploy()
@@ -453,11 +456,9 @@ def call(params) {
           }
         }
       }
-    }
-      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      if (isOnMaster || !enableHelmLabel) {
-        helmUninstall(dockerImage, params, pcr)
-      }
-    }
   }
-
+  def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+  if (isOnMaster || !enableHelmLabel) {
+    helmUninstall(dockerImage, params, pcr)
+  }
+}
