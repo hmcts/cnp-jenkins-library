@@ -30,18 +30,9 @@ allprojects {
 settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
-      maven {
-        url mirrorUrl
-      }
-       exclusiveContent {
-          forRepository {
-            maven { url = uri(azureUrl) }
-          }
-          filter {
-            includeModule("com.github.hmcts.rse-cft-lib", "ccd-gradle-plugin")
-          }
-        }
-        gradlePluginPortal()
+      maven { url uri(mirrorUrl) }
+      maven { url = uri(azureUrl) }
+      gradlePluginPortal()
     }
     resolutionStrategy {
         eachPlugin {
