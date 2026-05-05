@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -35,6 +36,8 @@ def call(type, product, component, timeout = 300, Closure body) {
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
   }
+
+  new GithubAPI(this).initializeGitCredentials()
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl

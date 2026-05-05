@@ -2,6 +2,7 @@ package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurperClassic
+import jenkins.scm.api.SCMSource
 
 class GithubAPI {
 
@@ -11,6 +12,37 @@ class GithubAPI {
 
   GithubAPI(steps) {
     this.steps = steps
+  }
+
+  def initializeGitCredentials() {
+    def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
+
+    if (!credentialsId) {
+      try {
+        def source = SCMSource.SourceByItem.findSource(this.steps.currentBuild.rawBuild.parent)
+        credentialsId = source?.credentialsId
+      } catch (err) {
+        this.steps.echo "Unable to resolve GIT_CREDENTIALS_ID from SCM source: ${err}"
+        return null
+      }
+
+      if (credentialsId) {
+        this.steps.env.GIT_CREDENTIALS_ID = credentialsId
+        this.steps.echo "Initialized GIT_CREDENTIALS_ID from SCM source."
+        def response = this.steps.httpRequest(
+          url: "https://api.github.com/users/$credentialsId%5Bbot%5D",
+          httpMode: 'GET',
+          acceptType: 'APPLICATION_JSON',
+          authentication: credentialsId
+        )
+        def gitUserId = this.steps.readYaml(text: response.content).id
+        this.steps.env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
+      } else {
+        this.steps.echo "Unable to resolve GIT_CREDENTIALS_ID from SCM source."
+        return null
+      }
+    }
+    return credentialsId
   }
 
   private static cachedLabelList = [

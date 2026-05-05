@@ -1,5 +1,6 @@
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
+import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
@@ -39,6 +40,8 @@ def call(type, String product, String component, String s2sServiceName, String t
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
   }
+
+  new GithubAPI(this).initializeGitCredentials()
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl

@@ -9,6 +9,7 @@ import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AppPipelineConfig
 import uk.gov.hmcts.contino.AppPipelineDsl
+import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
@@ -40,6 +41,8 @@ def call(type, String product, String component, Closure body) {
   callbacks.registerAfterAll { stage ->
     metricsPublisher.publish(stage)
   }
+
+  new GithubAPI(this).initializeGitCredentials()
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl

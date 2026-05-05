@@ -1,6 +1,6 @@
-import jenkins.scm.api.SCMSource;
 import uk.gov.hmcts.contino.PipelineCallbacksConfig;
 import uk.gov.hmcts.contino.PipelineCallbacksRunner;
+import uk.gov.hmcts.contino.GithubAPI;
 
 /**
 * Compatibility for external consumers that were using this (mostly IDAM)
@@ -20,17 +20,6 @@ def call(params) {
       env.GIT_URL = scmVars.GIT_URL
       env.LAST_COMMIT_TIMESTAMP = steps.sh(script: "git log -1 --pretty='%cd' --date=iso | TZ=UTC date '+%Y%m%d%H%M%S' -f -", returnStdout: true)
       env.ORIGINAL_REMOTE_URL = steps.sh(script: "git config remote.origin.url", returnStdout: true).trim()
-    }
-    try {
-      def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
-      env.GIT_CREDENTIALS_ID = credentialsId
-      //This code assumes it uses GitHub App Authentication
-      def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
-        authentication: credentialsId
-      def gitUserId = steps.readYaml(text: response.content).id
-      env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
-    } catch (err) {
-      echo "Unable to find git email Id for the user' ${err}'"
     }
     warnAboutRenovateConfig()
   }

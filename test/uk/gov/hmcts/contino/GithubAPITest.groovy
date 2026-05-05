@@ -281,4 +281,31 @@ class GithubAPITest extends Specification {
       assertThat(masterLabelExists).isFalse()
       assertThat(prLabelExists).isTrue()
   }
+
+  def "initializeGitCredentials populates app email when credentials are already present"() {
+    given:
+      steps.httpRequest(_) >> [content: '{"id":12345}']
+      steps.readYaml(_) >> [id: 12345]
+
+    when:
+      def credentialsId = githubApi.initializeGitCredentials()
+
+    then:
+      assertThat(credentialsId).isEqualTo('test-app-id')
+      assertThat(steps.env.GIT_APP_EMAIL_ID).isEqualTo('12345+test-app-id[bot]@users.noreply.github.com')
+  }
+
+  def "initializeGitCredentials returns null when credentials are absent and scm lookup is unavailable"() {
+    given:
+      def env = [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68", CHANGE_ID: "68"]
+      steps.env >> env
+      steps.currentBuild >> [:]
+
+    when:
+      def credentialsId = githubApi.initializeGitCredentials()
+
+    then:
+      assertThat(credentialsId).isNull()
+      assertThat(env.containsKey('GIT_APP_EMAIL_ID')).isFalse()
+  }
 }

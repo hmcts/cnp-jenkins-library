@@ -54,6 +54,8 @@ def call(type, String product, String component, Closure body) {
     metricsPublisher.publish(stage)
   }
 
+  new GithubAPI(this).initializeGitCredentials()
+
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
