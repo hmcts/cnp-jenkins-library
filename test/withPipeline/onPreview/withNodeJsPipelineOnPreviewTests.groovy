@@ -35,4 +35,28 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       runScript("testResources/$jenkinsFile")
     }
   }
+
+  @Test
+  void PipelineSkipsSecurityChecksWhenRequested() {
+    def stubBuilder = new StubFor(YarnBuilder)
+    stubBuilder.demand.with {
+      setupToolVersion(1) {}
+      build(1) {}
+      test(1) {}
+      securityCheck(0) {}
+      techStackMaintenance(1) {}
+      sonarScan(1) {}
+      smokeTest(1) {}
+      e2eTest(1) {}
+      functionalTest(1) {}
+      asBoolean() { return true }
+    }
+
+    binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
+    binding.getVariable('env').putAt('CHANGE_TITLE', 'Some change')
+    binding.getVariable('env').putAt('SKIP_SECURITY_CHECK', 'true')
+    stubBuilder.use {
+      runScript("testResources/$jenkinsFile")
+    }
+  }
 }

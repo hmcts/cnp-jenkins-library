@@ -13,11 +13,24 @@ def call(String environment, String product, Closure body) {
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
 
   echo "Using ${agentLabel} agent for ${environment}"
-  stash name: stashName, includes: '**/*'
+  if (env.WORKSPACE) {
+    dir(env.WORKSPACE) {
+      stash name: stashName, includes: '**/*'
+    }
+  } else {
+    stash name: stashName, includes: '**/*'
+  }
 
   node(agentLabel) {
-    deleteDir()
-    unstash stashName
+    if (env.WORKSPACE) {
+      dir(env.WORKSPACE) {
+        deleteDir()
+        unstash stashName
+      }
+    } else {
+      deleteDir()
+      unstash stashName
+    }
     withEnv([
       "BUILD_AGENT_TYPE=${agentLabel}",
       'BUILD_AGENT_CONTAINER=',
@@ -34,7 +47,13 @@ def call(String environment, String product, Closure body) {
         body()
       } finally {
         if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-          deleteDir()
+          if (env.WORKSPACE) {
+            dir(env.WORKSPACE) {
+              deleteDir()
+            }
+          } else {
+            deleteDir()
+          }
         }
       }
     }
