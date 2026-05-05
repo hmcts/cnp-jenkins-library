@@ -22,15 +22,18 @@ def call(params) {
       env.ORIGINAL_REMOTE_URL = steps.sh(script: "git config remote.origin.url", returnStdout: true).trim()
     }
     try {
-      def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
-      env.GIT_CREDENTIALS_ID = credentialsId
-      this.steps.echo "GIT_CREDENTIALS_ID=${this.steps.env.GIT_CREDENTIALS_ID}"
-      //This code assumes it uses GitHub App Authentication
-      def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
-        authentication: credentialsId
-      this.steps.echo "body=${response.content}"
-      def gitUserId = steps.readYaml(text: response.content).id
-      env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
+      def source = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent)
+      def credentialsId = source?.credentialsId
+      if (credentialsId) {
+        env.GIT_CREDENTIALS_ID = credentialsId
+        //This code assumes it uses GitHub App Authentication
+        def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
+          authentication: credentialsId
+        def gitUserId = steps.readYaml(text: response.content).id
+        env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
+      } else {
+        echo "WARNING: SCMSource found but credentialsId is null - GIT_CREDENTIALS_ID will not be set. Source: ${source}"
+      }
     } catch (err) {
       echo "Unable to find git email Id for the user' ${err}'"
     }
