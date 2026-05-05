@@ -127,10 +127,12 @@ class GithubAPI {
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
       consoleLogResponseBody: true,
-      validResponseCodes: '200,403')
+      validResponseCodes: '200,403,429')
 
-    if (response.status == 403) {
-      this.steps.echo "GitHub API returned 403 - authentication may not be working. GIT_CREDENTIALS_ID=${this.steps.env.GIT_CREDENTIALS_ID}, body=${response.content}"
+    this.steps.echo "GitHub rate limit: ${response.headers['X-RateLimit-Remaining']}/${response.headers['X-RateLimit-Limit']} remaining"
+
+    if (response.status == 403 || response.status == 429) {
+      this.steps.echo "GitHub API rate limit response (${response.status}): ${response.content}"
       return getCache()
     }
 
