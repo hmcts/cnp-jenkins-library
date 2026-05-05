@@ -53,7 +53,8 @@ class GithubAPI {
 
   private githubRequest(Map params) {
     def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
-    if (!credentialsId) {
+    this.steps.echo "githubRequest: GIT_CREDENTIALS_ID=${credentialsId}"
+    if (!credentialsId || credentialsId == 'null') {
       throw new RuntimeException("GIT_CREDENTIALS_ID is not set - checkoutScm may not have run or failed to resolve credentials")
     }
     def result
