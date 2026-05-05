@@ -22,12 +22,11 @@ def call(params) {
       env.ORIGINAL_REMOTE_URL = steps.sh(script: "git config remote.origin.url", returnStdout: true).trim()
     }
     try {
-      def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
+      def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent)?.credentialsId ?: 'hmcts-jenkins-cnp'
       env.GIT_CREDENTIALS_ID = credentialsId
       //This code assumes it uses GitHub App Authentication
       def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
         authentication: credentialsId
-      this.steps.echo "GitHub rate limit: ${response.headers['X-RateLimit-Remaining']}/${response.headers['X-RateLimit-Limit']} remaining"
       def gitUserId = steps.readYaml(text: response.content).id
       env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
     } catch (err) {
