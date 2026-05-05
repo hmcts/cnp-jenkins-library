@@ -53,9 +53,17 @@ class GithubAPI {
 
   private githubRequest(Map params) {
     def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
-    this.steps.echo "githubRequest: GIT_CREDENTIALS_ID=${credentialsId}"
     if (!credentialsId || credentialsId == 'null') {
-      throw new RuntimeException("GIT_CREDENTIALS_ID is not set - checkoutScm may not have run or failed to resolve credentials")
+      this.steps.echo "GIT_CREDENTIALS_ID not set, attempting to resolve from SCMSource"
+      try {
+        credentialsId = jenkins.scm.api.SCMSource.SourceByItem.findSource(this.steps.currentBuild.rawBuild.parent)?.credentialsId
+      } catch (e) {
+        this.steps.echo "Failed to resolve credentialsId from SCMSource: ${e}"
+      }
+    }
+    this.steps.echo "githubRequest: using credentialsId=${credentialsId}"
+    if (!credentialsId || credentialsId == 'null') {
+      throw new RuntimeException("Unable to resolve GitHub credentials - GIT_CREDENTIALS_ID is not set and SCMSource lookup failed")
     }
     def result
     this.steps.withCredentials([[$class: 'UsernamePasswordMultiBinding',
