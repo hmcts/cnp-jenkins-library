@@ -27,6 +27,7 @@ def call(params) {
       //This code assumes it uses GitHub App Authentication
       def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
         authentication: credentialsId
+      this.steps.echo "GitHub rate limit: ${response.headers['X-RateLimit-Remaining']}/${response.headers['X-RateLimit-Limit']} remaining"
       def gitUserId = steps.readYaml(text: response.content).id
       env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
     } catch (err) {
