@@ -282,30 +282,43 @@ class GithubAPITest extends Specification {
       assertThat(prLabelExists).isTrue()
   }
 
-  def "initializeGitCredentials populates app email when credentials are already present"() {
+  def "initializeGitCredentials returns existing credential id without scm lookup when already present"() {
     given:
-      steps.httpRequest(_) >> [content: '{"id":12345}']
-      steps.readYaml(_) >> [id: 12345]
+      def env = [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
+                 CHANGE_ID: "68",
+                 GIT_CREDENTIALS_ID:"test-app-id",
+                 GIT_APP_EMAIL_ID: "12345+test-app-id[bot]@users.noreply.github.com"]
+      def localSteps = Mock(JenkinsStepMock.class)
+      localSteps.env >> env
+      def localGithubApi = new GithubAPI(localSteps)
 
     when:
-      def credentialsId = githubApi.initializeGitCredentials()
+      def credentialsId = localGithubApi.initializeGitCredentials()
 
     then:
       assertThat(credentialsId).isEqualTo('test-app-id')
-      assertThat(steps.env.GIT_APP_EMAIL_ID).isEqualTo('12345+test-app-id[bot]@users.noreply.github.com')
+      0 * localSteps.httpRequest(_)
+      0 * localSteps.readYaml(_)
   }
 
   def "initializeGitCredentials returns null when credentials are absent and scm lookup is unavailable"() {
     given:
-      def env = [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68", CHANGE_ID: "68"]
-      steps.env >> env
-      steps.currentBuild >> [:]
+      def env = new Expando(
+        CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
+        CHANGE_ID: "68"
+      )
+      def localSteps = new Expando(
+        env: env,
+        currentBuild: [:],
+        echo: { String ignored -> null }
+      )
+      def localGithubApi = new GithubAPI(localSteps)
 
     when:
-      def credentialsId = githubApi.initializeGitCredentials()
+      def credentialsId = localGithubApi.initializeGitCredentials()
 
     then:
       assertThat(credentialsId).isNull()
-      assertThat(env.containsKey('GIT_APP_EMAIL_ID')).isFalse()
+      assertThat(env.properties.containsKey('GIT_APP_EMAIL_ID')).isFalse()
   }
 }
