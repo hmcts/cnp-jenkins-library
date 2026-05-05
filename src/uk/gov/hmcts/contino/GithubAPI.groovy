@@ -139,6 +139,7 @@ class GithubAPI {
       cachedLabelList.cache = json_response.collect({ label -> label['name'] })
       cachedLabelList.isValid = true
       this.steps.echo "Updated cache contents: ${getCache()}"
+      this.steps.echo "GIT_CREDENTIALS_ID=${this.steps.env.GIT_CREDENTIALS_ID}, body=${response.content}"
     } else {
       this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
     }
