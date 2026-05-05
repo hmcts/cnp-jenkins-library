@@ -127,7 +127,12 @@ class GithubAPI {
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
       consoleLogResponseBody: true,
-      validResponseCodes: '200')
+      validResponseCodes: '200,403')
+
+    if (response.status == 403) {
+      this.steps.echo "GitHub API returned 403 - authentication may not be working. GIT_CREDENTIALS_ID=${this.steps.env.GIT_CREDENTIALS_ID}, body=${response.content}"
+      return getCache()
+    }
 
     if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
