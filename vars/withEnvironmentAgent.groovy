@@ -11,6 +11,11 @@ def call(String environment, String product, Closure body) {
 
   String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
+  String originalDir = pwd()
+  String relativeDir = ''
+  if (env.WORKSPACE && originalDir?.startsWith(env.WORKSPACE)) {
+    relativeDir = originalDir.substring(env.WORKSPACE.length()).replaceFirst('^/', '')
+  }
 
   echo "Using ${agentLabel} agent for ${environment}"
   if (env.WORKSPACE) {
@@ -44,7 +49,13 @@ def call(String environment, String product, Closure body) {
         debugEnvironmentManagedIdentity(normalisedEnvironment, agentLabel)
       }
       try {
-        body()
+        if (relativeDir) {
+          dir(relativeDir) {
+            body()
+          }
+        } else {
+          body()
+        }
       } finally {
         if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
           if (env.WORKSPACE) {
