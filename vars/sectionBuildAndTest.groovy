@@ -54,7 +54,7 @@ def call(params) {
       boolean envSub = autoDeployEnvironment() != null
       when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
         pcr.callAround('build') {
-          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+          timeoutWithMsg(time: 25, unit: 'MINUTES', action: 'build') {
             builder.build()
           }
         }
