@@ -29,6 +29,7 @@ allprojects {
 
 settingsEvaluated { settings ->
   settings.pluginManagement {
+    repositories.clear()
     repositories {
       maven { url uri(mirrorUrl) }
       maven { url = uri(azureUrl) }
