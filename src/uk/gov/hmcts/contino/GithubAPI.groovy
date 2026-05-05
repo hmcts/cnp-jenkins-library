@@ -162,12 +162,7 @@ class GithubAPI {
     def response = githubRequest(
       httpMode: 'GET',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
-      validResponseCodes: '200,403')
-
-    if (response.status == 403) {
-      this.steps.echo "Received 403 from GitHub API - likely due to rate limiting. Returning empty label list and leaving cache invalid."
-      
-    }
+      validResponseCodes: '200')
 
     if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
