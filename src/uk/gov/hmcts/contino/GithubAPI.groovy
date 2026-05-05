@@ -51,6 +51,23 @@ class GithubAPI {
     return this.steps.env.CHANGE_ID
   }
 
+  private githubRequest(Map params) {
+    def result
+    this.steps.withCredentials([this.steps.usernamePassword(
+      credentialsId: this.steps.env.GIT_CREDENTIALS_ID,
+      usernameVariable: 'APP_ID',
+      passwordVariable: 'GITHUB_TOKEN')]) {
+      result = this.steps.httpRequest([
+        customHeaders: [[name: 'Authorization', value: "Bearer ${this.steps.env.GITHUB_TOKEN}"]],
+        acceptType: 'APPLICATION_JSON',
+        contentType: 'APPLICATION_JSON',
+        consoleLogResponseBody: true
+      ] + params)
+    }
+    this.steps.echo "GitHub rate limit: ${result.headers['X-RateLimit-Remaining']}/${result.headers['X-RateLimit-Limit']} remaining"
+    return result
+  }
+
   /**
    * Return whether the cache is valid
    */
@@ -121,27 +138,16 @@ class GithubAPI {
     this.steps.echo "Refreshing label cache."
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
+    def response = githubRequest(
+      httpMode: 'GET',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
-      consoleLogResponseBody: true,
-      validResponseCodes: '200,403,429')
-
-    this.steps.echo "GitHub rate limit: ${response.headers['X-RateLimit-Remaining']}/${response.headers['X-RateLimit-Limit']} remaining"
-
-    if (response.status == 403 || response.status == 429) {
-      this.steps.echo "GitHub API rate limit response (${response.status}): ${response.content}"
-      return getCache()
-    }
+      validResponseCodes: '200')
 
     if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
       cachedLabelList.cache = json_response.collect({ label -> label['name'] })
       cachedLabelList.isValid = true
       this.steps.echo "Updated cache contents: ${getCache()}"
-      this.steps.echo "GIT_CREDENTIALS_ID=${this.steps.env.GIT_CREDENTIALS_ID}, body=${response.content}"
     } else {
       this.steps.echo "Failed to update cache. Server returned status: ${response.status}"
     }
@@ -152,12 +158,9 @@ class GithubAPI {
   def refreshTopicCache() {
     this.steps.echo "Get topic cache"
     def project = currentProject()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
+    def response = githubRequest(
+      httpMode: 'GET',
       url: API_URL + "/${project}/topics",
-      consoleLogResponseBody: true,
       validResponseCodes: '200')
 
       if (response.status == 200) {
@@ -176,12 +179,9 @@ class GithubAPI {
     this.steps.echo "Get pull request"
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
+    def response = githubRequest(
+      httpMode: 'GET',
       url: API_URL + "/${project}/pulls/${issueNumber}",
-      consoleLogResponseBody: true,
       validResponseCodes: '200')
 
     if (response.status == 200) {
@@ -211,13 +211,10 @@ class GithubAPI {
   def addLabels(project, issueNumber, labels) {
     this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
-    def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
+    def response = githubRequest(
+      httpMode: 'POST',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
       requestBody: "${body}",
-      consoleLogResponseBody: true,
       validResponseCodes: '200')
 
     if (response.status == 200) {
@@ -347,13 +344,10 @@ class GithubAPI {
          }
        }
     """
-    def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
-      acceptType: 'APPLICATION_JSON',
-      contentType: 'APPLICATION_JSON',
+    def response = githubRequest(
+      httpMode: 'POST',
       url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
       requestBody: body,
-      consoleLogResponseBody: true,
       validResponseCodes: '204')
   }
 }
