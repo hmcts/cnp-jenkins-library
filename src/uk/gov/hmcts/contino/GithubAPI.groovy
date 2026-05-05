@@ -52,9 +52,10 @@ class GithubAPI {
   }
 
   private githubRequest(Map params) {
+    def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
     def result
     this.steps.withCredentials([this.steps.usernamePassword(
-      credentialsId: this.steps.env.GIT_CREDENTIALS_ID,
+      credentialsId: credentialsId,
       usernameVariable: 'APP_ID',
       passwordVariable: 'GITHUB_TOKEN')]) {
       result = this.steps.httpRequest([
