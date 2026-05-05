@@ -66,7 +66,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def test() {
     try {
-      gradle("--info check")
+      gradle("--info --debug check")
     } finally {
       localSteps.junit '**/test-results/test/*.xml'
       localSteps.archiveArtifacts artifacts: '**/reports/checkstyle/*.html', allowEmptyArchive: true
