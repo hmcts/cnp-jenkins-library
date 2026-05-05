@@ -153,8 +153,9 @@ class GithubAPI {
     this.steps.echo "Refreshing label cache."
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
@@ -176,8 +177,9 @@ class GithubAPI {
   def refreshTopicCache() {
     this.steps.echo "Get topic cache"
     def project = currentProject()
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/topics",
@@ -200,8 +202,9 @@ class GithubAPI {
     this.steps.echo "Get pull request"
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/pulls/${issueNumber}",
@@ -235,8 +238,9 @@ class GithubAPI {
   def addLabels(project, issueNumber, labels) {
     this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
@@ -371,8 +375,9 @@ class GithubAPI {
          }
        }
     """
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
