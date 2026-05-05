@@ -22,13 +22,18 @@ def call(params) {
       env.ORIGINAL_REMOTE_URL = steps.sh(script: "git config remote.origin.url", returnStdout: true).trim()
     }
     try {
-      def credentialsId = 'hmcts-jenkins-cnp'
-      env.GIT_CREDENTIALS_ID = credentialsId
-      //This code assumes it uses GitHub App Authentication
-      def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
-        authentication: credentialsId
-      def gitUserId = steps.readYaml(text: response.content).id
-      env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
+      def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent)?.credentialsId ?:
+        scm.userRemoteConfigs[0].credentialsId
+      if (credentialsId) {
+        env.GIT_CREDENTIALS_ID = credentialsId
+        //This code assumes it uses GitHub App Authentication
+        def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
+          authentication: credentialsId
+        def gitUserId = steps.readYaml(text: response.content).id
+        env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
+      } else {
+        echo "WARNING: Unable to resolve GitHub credentials ID - GIT_CREDENTIALS_ID will not be set"
+      }
     } catch (err) {
       echo "Unable to find git email Id for the user' ${err}'"
     }

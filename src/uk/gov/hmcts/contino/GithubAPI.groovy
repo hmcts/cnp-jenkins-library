@@ -52,19 +52,28 @@ class GithubAPI {
   }
 
   private githubRequest(Map params) {
+    def result = unauthenticatedGithubRequest(params)
+    this.steps.echo "GitHub rate limit: ${result.headers['X-RateLimit-Remaining']}/${result.headers['X-RateLimit-Limit']} remaining"
+    if (result.status == 403 || result.status == 429) {
+      this.steps.echo "Unauthenticated request returned ${result.status}, falling back to authenticated request."
+      result = authenticatedGithubRequest(params)
+      this.steps.echo "GitHub rate limit: ${result.headers['X-RateLimit-Remaining']}/${result.headers['X-RateLimit-Limit']} remaining"
+    }
+    return result
+  }
+
+  private unauthenticatedGithubRequest(Map params) {
+    return this.steps.httpRequest([
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      consoleLogResponseBody: true,
+      validResponseCodes: '200,403,429'
+    ] + params)
+  }
+
+  private authenticatedGithubRequest(Map params) {
     def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
-    if (!credentialsId || credentialsId == 'null') {
-      this.steps.echo "GIT_CREDENTIALS_ID not set, attempting to resolve from SCMSource"
-      try {
-        credentialsId = jenkins.scm.api.SCMSource.SourceByItem.findSource(this.steps.currentBuild.rawBuild.parent)?.credentialsId
-      } catch (e) {
-        this.steps.echo "Failed to resolve credentialsId from SCMSource: ${e}"
-      }
-    }
-    this.steps.echo "githubRequest: using credentialsId=${credentialsId}"
-    if (!credentialsId || credentialsId == 'null') {
-      throw new RuntimeException("Unable to resolve GitHub credentials - GIT_CREDENTIALS_ID is not set and SCMSource lookup failed")
-    }
+    this.steps.echo "authenticatedGithubRequest: using credentialsId=${credentialsId}"
     def result
     this.steps.withCredentials([[$class: 'UsernamePasswordMultiBinding',
       credentialsId: credentialsId,
@@ -77,7 +86,6 @@ class GithubAPI {
         consoleLogResponseBody: true
       ] + params)
     }
-    this.steps.echo "GitHub rate limit: ${result.headers['X-RateLimit-Remaining']}/${result.headers['X-RateLimit-Limit']} remaining"
     return result
   }
 
@@ -154,7 +162,12 @@ class GithubAPI {
     def response = githubRequest(
       httpMode: 'GET',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
-      validResponseCodes: '200')
+      validResponseCodes: '200,403')
+
+    if (response.status == 403) {
+      this.steps.echo "Received 403 from GitHub API - likely due to rate limiting. Returning empty label list and leaving cache invalid."
+      
+    }
 
     if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
