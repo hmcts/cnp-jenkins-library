@@ -53,11 +53,14 @@ class GithubAPI {
 
   private githubRequest(Map params) {
     def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
+    if (!credentialsId) {
+      throw new RuntimeException("GIT_CREDENTIALS_ID is not set - checkoutScm may not have run or failed to resolve credentials")
+    }
     def result
-    withCredentials([usernamePassword(
+    this.steps.withCredentials([[$class: 'UsernamePasswordMultiBinding',
       credentialsId: credentialsId,
       usernameVariable: 'APP_ID',
-      passwordVariable: 'GITHUB_TOKEN')]) {
+      passwordVariable: 'GITHUB_TOKEN']]) {
       result = this.steps.httpRequest([
         customHeaders: [[name: 'Authorization', value: "Bearer ${this.steps.env.GITHUB_TOKEN}"]],
         acceptType: 'APPLICATION_JSON',
