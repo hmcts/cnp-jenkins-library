@@ -24,6 +24,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def build() {
     addVersionInfo()
+    localsteps.sh('rm -rf .gradle ~/.gradle/caches/modules-2')
     gradle("--info --debug --refresh-dependencies assemble")
   }
 
