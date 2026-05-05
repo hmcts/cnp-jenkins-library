@@ -24,9 +24,11 @@ def call(params) {
     try {
       def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
       env.GIT_CREDENTIALS_ID = credentialsId
+      this.steps.echo "GIT_CREDENTIALS_ID=${this.steps.env.GIT_CREDENTIALS_ID}"
       //This code assumes it uses GitHub App Authentication
       def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
         authentication: credentialsId
+      this.steps.echo "body=${response.content}"
       def gitUserId = steps.readYaml(text: response.content).id
       env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
     } catch (err) {
