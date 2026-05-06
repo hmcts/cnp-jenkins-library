@@ -198,7 +198,8 @@ class GradleBuilder extends AbstractBuilder {
         [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
       ]
       localSteps.withAzureKeyvault(secrets) {
-        localSteps.sh "./gradlew -q dependencies > depsProc"
+        addInitScript()
+        localSteps.sh "./gradlew --no-daemon --init-script init.gradle -q dependencies > depsProc"
         def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
         client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')
       }
@@ -229,7 +230,8 @@ class GradleBuilder extends AbstractBuilder {
   @Override
   def addVersionInfo() {
     addInitScript()
-    localSteps.sh '''
+    try {
+      localSteps.sh '''
 mkdir -p src/main/resources/META-INF
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
@@ -240,6 +242,10 @@ build.date=$(date)
 EOF
 
 '''
+    } catch (Exception e) {
+      runGradlePluginDiagnostics("addVersionInfo")
+      throw e
+    }
   }
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
@@ -272,12 +278,64 @@ EOF
       prepend += ' '
     }
     addInitScript()
-    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    try {
+      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    } catch (Exception e) {
+      runGradlePluginDiagnostics(task)
+      throw e
+    }
   }
 
   private String gradleWithOutput(String task) {
     addInitScript()
     localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+  }
+
+  private boolean isGradlePluginDiagnosticsEnabled() {
+    return (localSteps.env.GRADLE_PLUGIN_DIAGNOSTICS ?: 'false').toString().trim().toLowerCase() == 'true'
+  }
+
+  private void runGradlePluginDiagnostics(String sourceTask) {
+    if (!isGradlePluginDiagnosticsEnabled()) {
+      return
+    }
+
+    localSteps.echo("Gradle plugin diagnostics enabled; collecting troubleshooting details for '${sourceTask}'")
+    addInitScript()
+    localSteps.sh(
+      script: """#!/usr/bin/env bash
+set +e
+LOG_FILE="gradle-plugin-diagnostics.log"
+
+{
+  echo "=== Gradle plugin diagnostics ==="
+  echo "Task: ${sourceTask}"
+  echo "Timestamp: \$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+  echo
+  echo "--- Environment ---"
+  echo "NONPROD_SUBSCRIPTION_NAME=\${NONPROD_SUBSCRIPTION_NAME:-<unset>}"
+  echo
+  echo "--- Probe marker URLs ---"
+  for url in \
+    "https://artifactory.platform.hmcts.net/artifactory/maven-remotes/com/github/hmcts/rse-cft-lib/com.github.hmcts.rse-cft-lib.gradle.plugin/0.19.2133/com.github.hmcts.rse-cft-lib.gradle.plugin-0.19.2133.pom" \
+    "https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/maven/v1/com/github/hmcts/rse-cft-lib/com.github.hmcts.rse-cft-lib.gradle.plugin/0.19.2133/com.github.hmcts.rse-cft-lib.gradle.plugin-0.19.2133.pom"
+  do
+    status="\$(curl -sS -o /dev/null -w '%{http_code}' "\$url" || echo "curl_error")"
+    echo "\$status \$url"
+  done
+  echo
+  echo "--- Probe module URL (commonly used by plugin implementation) ---"
+  module_url="https://artifactory.platform.hmcts.net/artifactory/maven-remotes/com/github/hmcts/rse-cft-lib/rse-cft-lib-plugin/0.19.2133/rse-cft-lib-plugin-0.19.2133.pom"
+  module_status="\$(curl -sS -o /dev/null -w '%{http_code}' "\$module_url" || echo "curl_error")"
+  echo "\$module_status \$module_url"
+  echo
+  echo "--- Gradle --info output (printVersionInit) ---"
+  ./gradlew --no-daemon --init-script init.gradle -q :printVersionInit --info --stacktrace
+} > "\$LOG_FILE" 2>&1
+""",
+      returnStatus: true
+    )
+    localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'gradle-plugin-diagnostics.log'
   }
 
   def fullFunctionalTest() {
