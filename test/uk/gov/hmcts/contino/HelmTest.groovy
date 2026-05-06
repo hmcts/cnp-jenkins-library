@@ -44,6 +44,27 @@ class HelmTest extends Specification {
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${SUBSCRIPTION}")})
   }
 
+  def "authenticateAcr() should login to the current registry using the registry subscription"() {
+    given:
+    def testSteps = Mock(JenkinsStepMock.class)
+    testSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                      AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                      TEAM_NAMESPACE: "cnp",
+                      SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                      REGISTRY_NAME: "hmctsprod",
+                      REGISTRY_SUBSCRIPTION: "DCD-CNP-PROD",
+                      BRANCH_NAME: "PR-123"]
+    testSteps.fileExists("${CHART_PATH}/Chart.yaml") >> false
+    def testHelm = new Helm(testSteps, CHART)
+    testHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    testHelm.authenticateAcr()
+
+    then:
+    1 * testHelm.acr.az("acr login --name hmctsprod --subscription DCD-CNP-PROD")
+  }
+
   def "installOrUpgrade() on PR branch should execute without --wait flag and do manual wait"() {
     when:
     helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])

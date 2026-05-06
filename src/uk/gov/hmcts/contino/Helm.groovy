@@ -148,7 +148,7 @@ class Helm {
 
   def authenticateAcr() {
     // Authenticate to current registry
-    this.acr.az "acr login --name ${registryName}"
+    this.acr.az "acr login --name ${registryName} --subscription ${registrySubscription}"
     
     // Check if chart has dependencies from other ACR registries
     def externalRegistries = detectCrossRegistryDependencies()
@@ -166,7 +166,7 @@ class Helm {
     // Also authenticate to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
       steps.echo "Authenticating to secondary ACR for dual publish: ${secondaryRegistryName}"
-      this.acr.az "acr login --name ${secondaryRegistryName}"
+      this.acr.az "acr login --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription}"
     }
   }
 
