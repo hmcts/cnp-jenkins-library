@@ -89,11 +89,7 @@ def call(params) {
     }
     branches["Security Checks"] = {
       pcr.callAround('securitychecks') {
-        if (env.SKIP_SECURITY_CHECK?.trim()?.toLowerCase() == 'true') {
-          echo 'Skipping security checks because SKIP_SECURITY_CHECK=true'
-        } else {
-          builder.securityCheck()
-        }
+        builder.securityCheck()
       }
     }
     branches["Tech Stack"] = {
