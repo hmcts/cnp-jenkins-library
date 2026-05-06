@@ -56,6 +56,40 @@ class AzPrivateDnsTest extends Specification {
       it.get('returnStdout').equals(true)})
   }
 
+  def "registerAzDns() should use environment managed identity profile on environment agent"() {
+    given:
+    def envAgentSteps = Mock(JenkinsStepMock.class)
+    envAgentSteps.readYaml([text: response.content]) >> response.content
+    envAgentSteps.httpRequest(_) >> response
+    envAgentSteps.error(_) >> { throw new Exception(_ as String) }
+    envAgentSteps.env >> ["SUBSCRIPTION_NAME": "nonprod",
+                          "BUILD_AGENT_TYPE": "ubuntu-sbox"]
+    def envAgentDnsConfigEntry = new EnvironmentDnsConfig(envAgentSteps).getEntry(ENVIRONMENT, 'plum', 'recipes-service')
+    def envAgentAzPrivateDns = new AzPrivateDns(envAgentSteps, ENVIRONMENT, envAgentDnsConfigEntry)
+    def recordName = "rn"
+    def ip = "4.3.2.1"
+
+    when:
+      envAgentAzPrivateDns.registerDns(recordName, ip)
+
+    then:
+    1 * envAgentSteps.sh({it.get('script') == "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az login --identity" &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+    1 * envAgentSteps.sh({it.containsKey('script') &&
+      it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a show") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+    1 * envAgentSteps.sh({it.containsKey('script') &&
+      it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a create") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+    1 * envAgentSteps.sh({it.containsKey('script') &&
+      it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a add-record") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+  }
+
   def "registerAzDns() should throw exception if environment does not have a private DNS zone registered"() {
     def environment = "sbox"
     def recordName = "rn"
