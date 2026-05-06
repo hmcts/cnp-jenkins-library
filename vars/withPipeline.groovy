@@ -173,7 +173,7 @@ def call(type, String product, String component, Closure body) {
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
+              subscription: subscription.previewName,
               aksSubscription: aksSubscriptions.preview,
               environment: environment.previewName,
               product: product,
