@@ -45,7 +45,6 @@ settingsEvaluated { settings ->
             maven {
                 url = uri(azureUrl)
             }
-            gradlePluginPortal()
         }
     }
 }
