@@ -16,6 +16,9 @@ allprojects {
         maven {
             url = uri(azureUrl)
         }
+         maven {
+           url = uri("https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/temp-maven-central-mirror/maven/v1")
+        }
     }
 
     buildscript {
