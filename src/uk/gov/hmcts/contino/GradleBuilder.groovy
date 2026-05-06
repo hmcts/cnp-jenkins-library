@@ -269,6 +269,7 @@ EOF
 
 
   def gradle(String task, String prepend = "") {
+    localSteps.env.GRADLE_USER_HOME="$WORKSPACE/.gradle-user-home"
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
