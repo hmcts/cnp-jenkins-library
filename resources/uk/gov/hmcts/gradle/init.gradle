@@ -69,3 +69,46 @@ allprojects {
         }
     }
 }
+
+gradle.settingsEvaluated { settings ->
+
+    println "========== Plugin Management Repositories =========="
+
+    settings.pluginManagement.repositories.each { repo ->
+        if (repo.hasProperty("url")) {
+            println "PLUGIN REPO -> ${repo.name} : ${repo.url}"
+        } else {
+            println "PLUGIN REPO -> ${repo.name}"
+        }
+    }
+
+    println "===================================================="
+}
+
+gradle.projectsLoaded {
+
+    rootProject.allprojects { project ->
+
+        println "========== Project: ${project.path} =========="
+
+        println "--- repositories ---"
+        project.repositories.each { repo ->
+            if (repo.hasProperty("url")) {
+                println "REPO -> ${repo.name} : ${repo.url}"
+            } else {
+                println "REPO -> ${repo.name}"
+            }
+        }
+
+        println "--- buildscript repositories ---"
+        project.buildscript.repositories.each { repo ->
+            if (repo.hasProperty("url")) {
+                println "BUILD REPO -> ${repo.name} : ${repo.url}"
+            } else {
+                println "BUILD REPO -> ${repo.name}"
+            }
+        }
+
+        println "=============================================="
+    }
+}
