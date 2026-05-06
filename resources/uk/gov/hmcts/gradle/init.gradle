@@ -112,3 +112,28 @@ gradle.projectsLoaded {
         println "=============================================="
     }
 }
+
+gradle.projectsEvaluated {
+    rootProject.allprojects { project ->
+        println "========== Final repos for ${project.path} =========="
+        project.repositories.each { repo ->
+            println "REPO -> ${repo.name} : ${repo.hasProperty('url') ? repo.url : repo}"
+        }
+    }
+}
+gradle.settingsEvaluated { settings ->
+    println "========== Plugin repos =========="
+    settings.pluginManagement.repositories.each { repo ->
+        println "PLUGIN REPO -> ${repo.name} : ${repo.hasProperty('url') ? repo.url : repo}"
+    }
+}
+
+gradle.beforeProject { project ->
+    println "========== Before project ${project.path} =========="
+    project.buildscript.repositories.each { repo ->
+        println "BUILD REPO -> ${repo.name} : ${repo.hasProperty('url') ? repo.url : repo}"
+    }
+    project.repositories.each { repo ->
+        println "REPO -> ${repo.name} : ${repo.hasProperty('url') ? repo.url : repo}"
+    }
+}
