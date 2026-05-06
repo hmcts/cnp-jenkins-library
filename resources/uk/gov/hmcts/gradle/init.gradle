@@ -32,6 +32,14 @@ settingsEvaluated { settings ->
         url mirrorUrl
       }
     }
+    resolutionStrategy {
+      eachPlugin { details ->
+        if (details.requested.id.id == "com.github.hmcts.rse-cft-lib" && details.requested.version) {
+          // Resolve directly to module coordinates to avoid plugin marker lookup issues.
+          details.useModule("com.github.hmcts:rse-cft-lib:${details.requested.version}")
+        }
+      }
+    }
   }
 }
 
