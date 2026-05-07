@@ -5,10 +5,7 @@ def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
 def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactory.sandbox' : 'artifactory'
 def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
 
-// Azure DevOps Artifacts feed used as a Maven Central mirror.
-// PAT is supplied via the ADO_MAVEN_PAT env var (a Jenkins "secret text"
-// credential: `ado-maven-mirror-pat`). The username is ignored by Azure DevOps
-// for PAT auth, but BasicAuthentication requires a non-empty value.
+// Azure DevOps Artifacts feed used as a Maven Central mirror
 def adoMavenMirrorUrl = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/temp-maven-central-mirror/maven/v1'
 def adoMavenPat = System.getenv('ADO_MAVEN_PAT') ?: ''
 
