@@ -1,89 +1,42 @@
-import org.gradle.authentication.http.BasicAuthentication
-
-// Azure DevOps Artifacts feed used as a Maven Central mirror
-def adoMavenMirrorUrl = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/temp-maven-central-mirror/maven/v1'
-// Internal HMCTS Gradle plugin feed (e.g. uk.gov.hmcts.java)
-def hmctsPluginFeedUrl = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/maven/v1'
-def adoMavenPat = System.getenv('ADO_MAVEN_PAT') ?: ''
-
-allprojects {
-  repositories {
-    maven { url hmctsPluginFeedUrl; name 'hmcts-lib' } 
-    maven {
-      url adoMavenMirrorUrl
-      name 'temp-maven-central-mirror'
-      credentials {
-        username = 'jenkins'
-        password = adoMavenPat
-      }
-      authentication { basic(BasicAuthentication) }
-    }
-  }
-  buildscript {
-    repositories {
-      maven { url hmctsPluginFeedUrl; name 'hmcts-lib' } 
-      maven {
-        url adoMavenMirrorUrl
-        name 'temp-maven-central-mirror'
-        credentials {
-          username = 'jenkins'
-          password = adoMavenPat
-        }
-        authentication { basic(BasicAuthentication) }
-      }
-    }
-    dependencies {
-      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
-    }
-  }
-
-  // Strip any repositories the project itself declares (e.g. mavenCentral(),
-  // artifactory, etc.) and force resolution through the ADO Maven Central
-  // mirror only. Runs after the project's build.gradle has been evaluated so
-  // it overrides project-level config.
-  afterEvaluate { project ->
-    project.repositories.clear()
-    project.repositories {
-      maven { url hmctsPluginFeedUrl; name 'hmcts-lib' } 
-      maven {
-        url adoMavenMirrorUrl
-        name 'temp-maven-central-mirror'
-        credentials {
-          username = 'jenkins'
-          password = adoMavenPat
-        }
-        authentication { basic(BasicAuthentication) }
-      }
-    }
-  }
-
-  task printVersionInit {
-    doLast { println project.version }
-  }
-}
+def mirrorUrl = "https://${System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox" ? 'artifactory.sandbox' : 'artifactory'}.platform.hmcts.net/artifactory/maven-remotes"
 
 settingsEvaluated { settings ->
-  settings.pluginManagement {
-    repositories {
-      // Project settings.gradle may declare gradlePluginPortal() (which
-      // ultimately resolves from Maven Central). Clear and enforce internal
-      // repositories only for plugin resolution.
-      clear()
-      // Internal HMCTS plugins (e.g. uk.gov.hmcts.java) — these don't require
-      // auth so no credentials block is needed.
-      maven { url hmctsPluginFeedUrl; name 'hmcts-lib'  }
-      maven {
-        url adoMavenMirrorUrl
-        name 'temp-maven-central-mirror'
-        credentials {
-          username = 'jenkins'
-          password = adoMavenPat
+    settings.pluginManagement {
+        repositories {
+            clear()
+            maven {
+                name = "JenkinsMirrorPlugins"
+                url = mirrorUrl
+            }
         }
-        authentication { basic(BasicAuthentication) }
-      }
     }
-  }
+
+    settings.dependencyResolutionManagement {
+      // PREFER_SETTINGS ignores repositories declared in build.gradle
+      repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+      repositories {
+            clear()
+            maven {
+                name = "JenkinsMirrorDeps"
+                url = mirrorUrl
+            }
+        }
+    }
 }
+
+allprojects {
+    // Legacy support for buildscript blocks
+    buildscript {
+        repositories {
+            clear()
+            maven { url mirrorUrl }
+        }
+        dependencies {
+            classpath 'org.postgresql:postgresql:42.6.0'
+        }
+    }
+}
+
 
 allprojects {
   afterEvaluate { project ->
