@@ -12,8 +12,6 @@ settingsEvaluated { settings ->
     }
 
     settings.dependencyResolutionManagement {
-        // PREFER_SETTINGS ignores repositories declared in build.gradle
-        repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
         repositories {
             clear()
             maven { 
