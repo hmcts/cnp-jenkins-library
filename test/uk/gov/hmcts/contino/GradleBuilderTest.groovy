@@ -20,6 +20,8 @@ class GradleBuilderTest extends Specification {
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
+    // Pass the ADO_MAVEN_PAT withAzureKeyvault wrapper through to the closure body.
+    steps.withAzureKeyvault(_, _) >> { args -> args[1].call() }
   }
 
   def "build calls 'gradle assemble'"() {
