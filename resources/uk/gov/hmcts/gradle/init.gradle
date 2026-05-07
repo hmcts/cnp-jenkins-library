@@ -67,6 +67,7 @@ allprojects {
 settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
+      clear()
       maven { url mirrorUrl }
       maven {
         url adoMavenMirrorUrl
