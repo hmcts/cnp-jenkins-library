@@ -11,8 +11,17 @@ def call(String environment, String product, Closure body) {
 
   String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
+  String stashExcludes = [
+    '.terraform/**',
+    '**/.terraform/**',
+    'node_modules/**',
+    '**/node_modules/**',
+    '.gradle/**',
+    '**/.gradle/**'
+  ].join(',')
   String originalDir = pwd()
   String relativeDir = ''
+  // Keep the caller's workspace-relative directory after switching nodes.
   if (env.WORKSPACE && originalDir?.startsWith(env.WORKSPACE)) {
     relativeDir = originalDir.substring(env.WORKSPACE.length()).replaceFirst('^/', '')
   }
@@ -20,10 +29,10 @@ def call(String environment, String product, Closure body) {
   echo "Using ${agentLabel} agent for ${environment}"
   if (env.WORKSPACE) {
     dir(env.WORKSPACE) {
-      stash name: stashName, includes: '**/*'
+      stash name: stashName, includes: '**/*', excludes: stashExcludes
     }
   } else {
-    stash name: stashName, includes: '**/*'
+    stash name: stashName, includes: '**/*', excludes: stashExcludes
   }
 
   node(agentLabel) {
@@ -41,7 +50,6 @@ def call(String environment, String product, Closure body) {
       'BUILD_AGENT_CONTAINER=',
       'IS_DOCKER_BUILD_AGENT=false'
     ]) {
-      dockerAgentSetup()
       if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
         env.PATH = "$env.PATH:/usr/local/bin"
       }

@@ -86,7 +86,7 @@ def call(type, String product, String component, Closure body) {
           )
 
           if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-            stage('Publish Helm chart') {
+            stageWithEnvironmentAgent('Publish Helm chart', product, environment.nonProdName) {
               helmPublish(
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
@@ -215,7 +215,7 @@ def call(type, String product, String component, Closure body) {
               component: component,
             )
 
-            stageWithAgent('Publish Helm chart', product) {
+            stageWithEnvironmentAgent('Publish Helm chart', product, environment.nonProdName) {
               callbacksRunner.callAround('Publish Helm chart') {
                 helmPublish(
                   appPipelineConfig: pipelineConfig,

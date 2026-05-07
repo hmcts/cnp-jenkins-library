@@ -30,11 +30,12 @@ def call(params) {
     AppPipelineConfig config = params.appPipelineConfig
 
     def subscription = params.subscription
+    def environment = params.environment
     def product = params.product
     def component = params.component
     DockerImage.DeploymentStage deploymentStage = params.stage
 
-    stageWithAgent("${deploymentStage.label} build promotion", product) {
+    stageWithEnvironmentAgent("${deploymentStage.label} build promotion", product, environment) {
       withAcrClient(subscription) {
         def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
         def projectBranch = new ProjectBranch(env.BRANCH_NAME)

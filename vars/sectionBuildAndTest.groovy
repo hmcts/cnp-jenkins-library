@@ -14,6 +14,7 @@ def call(params) {
   def builder = params.builder
 
   def subscription = params.subscription
+  def environment = params.environment
   def product = params.product
   def component = params.component
   def acr
@@ -44,7 +45,7 @@ def call(params) {
   }
   
   onPathToLive {
-    stageWithAgent("Build", product) {
+    stageWithEnvironmentAgent("Build", product, environment) {
       onPR {
         enforceChartVersionBumped product: product, component: component
         warnAboutAADIdentityPreviewHack product: product, component: component
@@ -198,7 +199,7 @@ def call(params) {
       }
     }
 
-    stageWithAgent("Static checks / Container build", product) {
+    stageWithEnvironmentAgent("Static checks / Container build", product, environment) {
       when(noSkipImgBuild) {
         parallel branches
 
@@ -211,7 +212,7 @@ def call(params) {
     }
 
     if (noSkipImgBuild) {
-      stageWithAgent("Promote Docker Image", product) {
+      stageWithEnvironmentAgent("Promote Docker Image", product, environment) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING
           def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
