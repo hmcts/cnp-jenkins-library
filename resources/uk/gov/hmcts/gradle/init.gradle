@@ -4,41 +4,34 @@ def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
 
 def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactory.sandbox' : 'artifactory'
 def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
-
-// Azure DevOps Artifacts feed used as a Maven Central mirror.
-// PAT is supplied via the ADO_MAVEN_PAT env var (a Jenkins "secret text"
-// credential: `ado-maven-mirror-pat`). The username is ignored by Azure DevOps
-// for PAT auth, but BasicAuthentication requires a non-empty value.
 def adoMavenMirrorUrl = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/temp-maven-central-mirror/maven/v1'
 def adoMavenPat = System.getenv('ADO_MAVEN_PAT') ?: ''
 
-def adoMavenMirror = { handler ->
-  handler.maven {
-    url adoMavenMirrorUrl
-    name 'temp-maven-central-mirror'
-    credentials {
-      username = 'jenkins'
-      password = adoMavenPat
-    }
-    authentication {
-      basic(BasicAuthentication)
-    }
-  }
-}
-
 allprojects {
   repositories {
+    maven { url mirrorUrl }
     maven {
-      url mirrorUrl
+      url adoMavenMirrorUrl
+      name 'temp-maven-central-mirror'
+      credentials {
+        username = 'jenkins'
+        password = adoMavenPat
+      }
+      authentication { basic(BasicAuthentication) }
     }
-    adoMavenMirror(delegate)
   }
   buildscript {
     repositories {
+      maven { url mirrorUrl }
       maven {
-        url mirrorUrl
+        url adoMavenMirrorUrl
+        name 'temp-maven-central-mirror'
+        credentials {
+          username = 'jenkins'
+          password = adoMavenPat
+        }
+        authentication { basic(BasicAuthentication) }
       }
-      adoMavenMirror(delegate)
     }
     dependencies {
       classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
@@ -52,7 +45,15 @@ allprojects {
     project.repositories.clear()
     project.repositories {
       maven { url mirrorUrl }
-      adoMavenMirror(delegate)
+      maven {
+        url adoMavenMirrorUrl
+        name 'temp-maven-central-mirror'
+        credentials {
+          username = 'jenkins'
+          password = adoMavenPat
+        }
+        authentication { basic(BasicAuthentication) }
+      }
     }
   }
 
@@ -64,8 +65,15 @@ allprojects {
 settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
+      maven { url mirrorUrl }
       maven {
-        url mirrorUrl
+        url adoMavenMirrorUrl
+        name 'temp-maven-central-mirror'
+        credentials {
+          username = 'jenkins'
+          password = adoMavenPat
+        }
+        authentication { basic(BasicAuthentication) }
       }
     }
   }
