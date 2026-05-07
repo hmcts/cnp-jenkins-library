@@ -8,6 +8,7 @@ def adoMavenPat = System.getenv('ADO_MAVEN_PAT') ?: ''
 
 allprojects {
   repositories {
+    maven { url hmctsPluginFeedUrl; name 'hmcts-lib' } 
     maven {
       url adoMavenMirrorUrl
       name 'temp-maven-central-mirror'
@@ -20,6 +21,7 @@ allprojects {
   }
   buildscript {
     repositories {
+      maven { url hmctsPluginFeedUrl; name 'hmcts-lib' } 
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
@@ -42,6 +44,7 @@ allprojects {
   afterEvaluate { project ->
     project.repositories.clear()
     project.repositories {
+      maven { url hmctsPluginFeedUrl; name 'hmcts-lib' } 
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
@@ -68,7 +71,7 @@ settingsEvaluated { settings ->
       clear()
       // Internal HMCTS plugins (e.g. uk.gov.hmcts.java) — these don't require
       // auth so no credentials block is needed.
-      maven { url hmctsPluginFeedUrl }
+      maven { url hmctsPluginFeedUrl; name 'hmcts-lib'  }
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
