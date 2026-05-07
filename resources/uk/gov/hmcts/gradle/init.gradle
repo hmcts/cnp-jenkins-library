@@ -1,41 +1,39 @@
-def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
-
-def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactory.sandbox' : 'artifactory'
-def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
-
-allprojects {
-  repositories.clear()
-  repositories {
-    maven {
-      url mirrorUrl
-    }
-  }
-  buildscript {
-    repositories.clear()
-    repositories {
-      maven {
-        url mirrorUrl
-      }
-    }
-    dependencies {
-      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
-    }
-  }
-
-  task printVersionInit {
-    doLast { println project.version }
-  }
-}
+def mirrorUrl = "https://${System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox" ? 'artifactory.sandbox' : 'artifactory'}.platform.hmcts.net/artifactory/maven-remotes"
 
 settingsEvaluated { settings ->
-  settings.pluginManagement {
-    repositories {
-      maven {
-        url mirrorUrl
-      }
+    settings.pluginManagement {
+        repositories {
+            clear() 
+            maven { 
+                name = "JenkinsMirrorPlugins"
+                url = mirrorUrl 
+            }
+        }
     }
-  }
+
+    settings.dependencyResolutionManagement {
+        // PREFER_SETTINGS ignores repositories declared in build.gradle
+        repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+        repositories {
+            clear()
+            maven { 
+                name = "JenkinsMirrorDeps"
+                url = mirrorUrl 
+            }
+        }
+    }
 }
+
+allprojects {
+    // Legacy support for buildscript blocks
+    buildscript {
+        repositories {
+            clear()
+            maven { url mirrorUrl }
+        }
+    }
+}
+
 
 allprojects {
   afterEvaluate { project ->
