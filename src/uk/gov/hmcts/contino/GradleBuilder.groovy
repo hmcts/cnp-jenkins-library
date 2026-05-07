@@ -24,7 +24,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def build() {
     addVersionInfo()
-    gradle("--debug assemble")
+    gradle("assemble")
   }
 
   def fortifyScan() {
