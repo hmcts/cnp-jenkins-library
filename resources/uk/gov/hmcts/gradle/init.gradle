@@ -3,20 +3,22 @@ def mirrorUrl = "https://${System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbo
 settingsEvaluated { settings ->
     settings.pluginManagement {
         repositories {
-            clear() 
-            maven { 
+            clear()
+            maven {
                 name = "JenkinsMirrorPlugins"
-                url = mirrorUrl 
+                url = mirrorUrl
             }
         }
     }
 
     settings.dependencyResolutionManagement {
-        repositories {
+      // PREFER_SETTINGS ignores repositories declared in build.gradle
+      repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+      repositories {
             clear()
-            maven { 
+            maven {
                 name = "JenkinsMirrorDeps"
-                url = mirrorUrl 
+                url = mirrorUrl
             }
         }
     }
