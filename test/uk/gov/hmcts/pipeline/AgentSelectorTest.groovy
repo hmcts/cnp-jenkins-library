@@ -12,6 +12,7 @@ class AgentSelectorTest extends Specification {
 
     where:
     environment | label
+    'sbox'      | 'ubuntu-sbox'
     'sandbox'   | 'ubuntu-sbox'
     'preview'   | 'ubuntu-preview'
     'aat'       | 'ubuntu-aat'
