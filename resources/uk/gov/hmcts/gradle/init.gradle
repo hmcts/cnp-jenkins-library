@@ -7,6 +7,8 @@ def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remo
 
 // Azure DevOps Artifacts feed used as a Maven Central mirror
 def adoMavenMirrorUrl = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/temp-maven-central-mirror/maven/v1'
+// Internal HMCTS Gradle plugin feed (e.g. uk.gov.hmcts.java)
+def hmctsPluginFeedUrl = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/maven/v1'
 def adoMavenPat = System.getenv('ADO_MAVEN_PAT') ?: ''
 
 allprojects {
@@ -69,7 +71,13 @@ allprojects {
 settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
+      // Project settings.gradle may declare gradlePluginPortal() (which
+      // ultimately resolves from Maven Central). Clear and enforce internal
+      // repositories only for plugin resolution.
       clear()
+      // Internal HMCTS plugins (e.g. uk.gov.hmcts.java) — these don't require
+      // auth so no credentials block is needed.
+      maven { url hmctsPluginFeedUrl }
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
@@ -79,6 +87,7 @@ settingsEvaluated { settings ->
         }
         authentication { basic(BasicAuthentication) }
       }
+      maven { url mirrorUrl }
     }
   }
 }
