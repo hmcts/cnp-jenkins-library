@@ -11,7 +11,6 @@ def adoMavenPat = System.getenv('ADO_MAVEN_PAT') ?: ''
 
 allprojects {
   repositories {
-    maven { url mirrorUrl }
     maven {
       url adoMavenMirrorUrl
       name 'temp-maven-central-mirror'
@@ -21,10 +20,10 @@ allprojects {
       }
       authentication { basic(BasicAuthentication) }
     }
+    maven { url mirrorUrl }
   }
   buildscript {
     repositories {
-      maven { url mirrorUrl }
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
@@ -34,6 +33,7 @@ allprojects {
         }
         authentication { basic(BasicAuthentication) }
       }
+      maven { url mirrorUrl }
     }
     dependencies {
       classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
@@ -41,12 +41,13 @@ allprojects {
   }
 
   // Strip any repositories the project itself declares (e.g. mavenCentral())
-  // and force resolution through our mirrors only. Runs after the project's
-  // build.gradle has been evaluated so it overrides project-level config.
+  // and force resolution through our mirrors only, with the ADO Maven Central
+  // mirror first so it isn't shadowed by stale negative caches in artifactory.
+  // Runs after the project's build.gradle has been evaluated so it overrides
+  // project-level config.
   afterEvaluate { project ->
     project.repositories.clear()
     project.repositories {
-      maven { url mirrorUrl }
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
@@ -56,6 +57,7 @@ allprojects {
         }
         authentication { basic(BasicAuthentication) }
       }
+      maven { url mirrorUrl }
     }
   }
 
@@ -68,7 +70,6 @@ settingsEvaluated { settings ->
   settings.pluginManagement {
     repositories {
       clear()
-      maven { url mirrorUrl }
       maven {
         url adoMavenMirrorUrl
         name 'temp-maven-central-mirror'
