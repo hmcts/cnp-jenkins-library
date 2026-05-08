@@ -1,21 +1,18 @@
 package uk.gov.hmcts.contino
 
 import uk.gov.hmcts.contino.azure.Az
-import uk.gov.hmcts.pipeline.AgentSelector
 
 class AzPrivateDns {
 
     def steps
     def environment
     def az
-    def azureConfigName
     def environmentDnsConfigEntry
 
     AzPrivateDns(steps, environment, environmentDnsConfigEntry) {
         this.steps = steps
         this.environment = environment
-        this.azureConfigName = this.steps.env.SUBSCRIPTION_NAME
-        this.az = new Az(this.steps, this.azureConfigName)
+        this.az = new Az(this.steps, this.steps.env.SUBSCRIPTION_NAME)
         this.environmentDnsConfigEntry = environmentDnsConfigEntry
     }
 
@@ -46,8 +43,6 @@ class AzPrivateDns {
     def zone = this.environmentDnsConfigEntry.zone
 
     try {
-      configureAzureClientForCurrentAgent()
-      loginWithEnvironmentManagedIdentityIfRequired()
       def cnameRecordSet = this.az.az "network private-dns record-set cname show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
       return cnameRecordSet ? true : false
     } catch (e) {
@@ -69,9 +64,6 @@ class AzPrivateDns {
       
       def aRecordSet
 
-      configureAzureClientForCurrentAgent()
-      loginWithEnvironmentManagedIdentityIfRequired()
-
       // check for existing record
       try {
         aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
@@ -85,33 +77,6 @@ class AzPrivateDns {
       } else {
         this.steps.echo "Updating existing A record for ${recordName}"
         this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
-      }
-    }
-
-    private void configureAzureClientForCurrentAgent() {
-      String resolvedAzureConfigName = resolveAzureConfigName()
-      if (this.azureConfigName != resolvedAzureConfigName) {
-        this.azureConfigName = resolvedAzureConfigName
-        this.az = new Az(this.steps, this.azureConfigName)
-      }
-    }
-
-    private String resolveAzureConfigName() {
-      if (usesEnvironmentManagedIdentity()) {
-        return AgentSelector.normaliseEnvironment(this.environment)
-      }
-
-      return this.steps.env.SUBSCRIPTION_NAME
-    }
-
-    private boolean usesEnvironmentManagedIdentity() {
-      return this.environment &&
-        this.steps.env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(this.environment, this.steps.env)
-    }
-
-    private void loginWithEnvironmentManagedIdentityIfRequired() {
-      if (usesEnvironmentManagedIdentity()) {
-        this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.azureConfigName} az login --identity", returnStdout: true)
       }
     }
 }

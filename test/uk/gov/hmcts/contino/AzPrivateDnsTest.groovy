@@ -63,6 +63,7 @@ class AzPrivateDnsTest extends Specification {
     envAgentSteps.httpRequest(_) >> response
     envAgentSteps.error(_) >> { throw new Exception(_ as String) }
     envAgentSteps.env >> ["SUBSCRIPTION_NAME": "nonprod",
+                          "DEPLOYMENT_ENVIRONMENT": "sandbox",
                           "BUILD_AGENT_TYPE": "ubuntu-sbox"]
     def envAgentDnsConfigEntry = new EnvironmentDnsConfig(envAgentSteps).getEntry(ENVIRONMENT, 'plum', 'recipes-service')
     def envAgentAzPrivateDns = new AzPrivateDns(envAgentSteps, ENVIRONMENT, envAgentDnsConfigEntry)

@@ -108,12 +108,24 @@ class Kubectl {
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    def azureConfigName = subscription
-    if (this.environment && this.steps.env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(this.environment, this.steps.env)) {
-      azureConfigName = AgentSelector.normaliseEnvironment(this.environment)
+    def azureConfigName = resolveAzureConfigName()
+    if (usesEnvironmentManagedIdentity()) {
       this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName} az login --identity", returnStdout: true)
     }
     this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a --overwrite-existing ", returnStdout: true)
+  }
+
+  private String resolveAzureConfigName() {
+    if (usesEnvironmentManagedIdentity()) {
+      return AgentSelector.normaliseEnvironment(this.environment)
+    }
+
+    return this.subscription
+  }
+
+  private boolean usesEnvironmentManagedIdentity() {
+    return this.environment &&
+      this.steps.env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(this.environment, this.steps.env)
   }
 
   private String getILBIP(String serviceName, String namespace) {

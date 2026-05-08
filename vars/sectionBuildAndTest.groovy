@@ -25,6 +25,12 @@ def call(params) {
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
+    onPathToLive {
+      onPR {
+        enforceChartVersionBumped product: product, component: component
+        warnAboutAADIdentityPreviewHack product: product, component: component
+      }
+    }
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
@@ -46,11 +52,6 @@ def call(params) {
   
   onPathToLive {
     stageWithEnvironmentAgent("Build", product, environment) {
-      onPR {
-        enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
-      }
-
       // always build master and demo as we currently do not deploy an image there
       boolean envSub = autoDeployEnvironment() != null
       when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
@@ -99,8 +100,9 @@ def call(params) {
       }
     }
 
+    Closure dockerBuildBranch = null
     if (dockerFileExists) {
-      branches["Docker Build"] = {
+      dockerBuildBranch = {
         withAcrClient(subscription) {
           def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -199,7 +201,7 @@ def call(params) {
       }
     }
 
-    stageWithEnvironmentAgent("Static checks / Container build", product, environment) {
+    stageWithEnvironmentAgent("Static checks", product, environment) {
       when(noSkipImgBuild) {
         parallel branches
 
@@ -208,6 +210,13 @@ def call(params) {
         // and then upload them, if any are missing it will error:
         // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
         sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
+      }
+    }
+
+    if (noSkipImgBuild && dockerBuildBranch) {
+      // ACR packs the live workspace. Keep Docker build separate from parallel checks that can mutate dependency files.
+      stageWithEnvironmentAgent("Container build", product, environment) {
+        dockerBuildBranch()
       }
     }
 

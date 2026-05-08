@@ -47,6 +47,7 @@ def call(String environment, String product, Closure body) {
     }
     withEnv([
       "BUILD_AGENT_TYPE=${agentLabel}",
+      "DEPLOYMENT_ENVIRONMENT=${environment}",
       'BUILD_AGENT_CONTAINER=',
       'IS_DOCKER_BUILD_AGENT=false'
     ]) {
