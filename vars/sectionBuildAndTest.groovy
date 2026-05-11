@@ -67,9 +67,11 @@ def call(params) {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
           withAcrClient(subscription){
             acr.login()
-            // Ensure Playwright browsers are installed before running tests
+            // Ensure Playwright and Puppeteer browsers are installed before running tests
             if (fileExists('node_modules/.bin/playwright')) {
-              sh 'yarn playwright install'
+              sh 'yarn playwright install || npx puppeteer browsers install chrome'
+            } else if (fileExists('node_modules/.bin/puppeteer')) {
+              sh 'npx puppeteer browsers install chrome'
             }
             builder.test()
           }
