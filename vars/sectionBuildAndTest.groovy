@@ -67,6 +67,10 @@ def call(params) {
         timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
           withAcrClient(subscription){
             acr.login()
+            // Ensure Chrome is installed for Puppeteer/pa11y
+            if (fileExists('node_modules/.bin/puppeteer')) {
+              sh 'npx puppeteer browsers install chrome'
+            }
             builder.test()
           }
         }
