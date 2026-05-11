@@ -32,19 +32,17 @@ def call(params) {
             deploymentNumber = githubCreateDeployment()
           }
 
-          withSubscription(subscription) {
-            dir('infrastructure') {
-              sectionInfraBuild(
-                subscription: subscription,
-                environment: environment,
-                aksSubscription: aksSubscription,
-                product: product,
-                component: component,
-                pipelineCallbacksRunner: pcr,
-                planOnly: tfPlanOnly,
-                expires: config.expiryDate
-              )
-            }
+          dir('infrastructure') {
+            sectionInfraBuild(
+              subscription: subscription,
+              environment: environment,
+              aksSubscription: aksSubscription,
+              product: product,
+              component: component,
+              pipelineCallbacksRunner: pcr,
+              planOnly: tfPlanOnly,
+              expires: config.expiryDate
+            )
           }
         }
       }

@@ -13,7 +13,7 @@ def call(params) {
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
-    withSubscription(subscription) {
+    withSubscription(subscription, product, environment) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox

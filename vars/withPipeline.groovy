@@ -13,6 +13,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
+import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
@@ -65,13 +66,17 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(environment.nonProdName, env) ?: env.BUILD_AGENT_TYPE
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
+          echo "Using ${agentType} as primary pipeline agent for ${environment.nonProdName}"
+          // These values also drive withEnvironmentAgent's no-op path and Az.az()'s env MI config-dir selection.
+          env.BUILD_AGENT_TYPE = agentType
+          env.DEPLOYMENT_ENVIRONMENT = environment.nonProdName
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
