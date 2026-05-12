@@ -250,7 +250,15 @@ EOF
   }
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
-    def effectivePublish = publish || (localSteps.env.PACT_PUBLISH_VERIFICATION_RESULTS?.toBoolean() ?: false)
+    def publishOverride = false
+    try {
+      publishOverride = localSteps?.env?.PACT_PUBLISH_VERIFICATION_RESULTS?.toBoolean() ?: false
+    } catch (ignored) {
+      publishOverride = false
+    }
+
+    def effectivePublish = publish || publishOverride
+
     try {
       gradle("-Ppact.broker.url=${pactBrokerUrl} " +
         "-Ppactbroker.url=${pactBrokerUrl} " +
@@ -373,7 +381,6 @@ EOF
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
-
       // If simulation is provided Gatling will run that simulation, otherwise run all simulations within the
       // performance repo
       def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
