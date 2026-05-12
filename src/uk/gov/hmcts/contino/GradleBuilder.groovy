@@ -249,16 +249,13 @@ EOF
 '''
   }
 
-  def shouldPublishProviderVerification() {
-    return onMaster || (env.PACT_PUBLISH_VERIFICATION_RESULTS?.toBoolean() ?: false)
-  }
-
-  def runProviderVerification(pactBrokerUrl, version, publish = shouldPublishProviderVerification()) {
+  def runProviderVerification(pactBrokerUrl, version, publish) {
+    def effectivePublish = publish || (localSteps.env.PACT_PUBLISH_VERIFICATION_RESULTS?.toBoolean() ?: false)
     try {
       gradle("-Ppact.broker.url=${pactBrokerUrl} " +
         "-Ppactbroker.url=${pactBrokerUrl} " +
         "-Ppact.provider.version=${version} " +
-        "-Ppact.verifier.publishResults=${publish} " +
+        "-Ppact.verifier.publishResults=${effectivePublish} " +
         "runProviderPactVerification")
     } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
