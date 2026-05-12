@@ -249,9 +249,17 @@ EOF
 '''
   }
 
-  def runProviderVerification(pactBrokerUrl, version, publish) {
+  def shouldPublishProviderVerification() {
+    return onMaster || (env.PACT_PUBLISH_VERIFICATION_RESULTS?.toBoolean() ?: false)
+  }
+
+  def runProviderVerification(pactBrokerUrl, version, publish = shouldPublishProviderVerification()) {
     try {
-      gradle("-Ppact.broker.url=${pactBrokerUrl} -Ppactbroker.url=${pactBrokerUrl} -Ppact.provider.version=${version} -Ppact.verifier.publishResults=${publish} runProviderPactVerification")
+      gradle("-Ppact.broker.url=${pactBrokerUrl} " +
+        "-Ppactbroker.url=${pactBrokerUrl} " +
+        "-Ppact.provider.version=${version} " +
+        "-Ppact.verifier.publishResults=${publish} " +
+        "runProviderPactVerification")
     } finally {
       localSteps.junit allowEmptyResults: true, testResults: '**/test-results/contract/TEST-*.xml,**/test-results/contractTest/TEST-*.xml'
     }
@@ -368,7 +376,7 @@ EOF
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
-      
+
       // If simulation is provided Gatling will run that simulation, otherwise run all simulations within the
       // performance repo
       def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
