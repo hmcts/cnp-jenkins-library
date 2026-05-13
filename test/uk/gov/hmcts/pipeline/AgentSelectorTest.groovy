@@ -45,6 +45,51 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironment('aat', envVars)).isEqualTo('jenkins-aat-template')
   }
 
+  def "labelForEnvironment should use product and environment-specific override first"() {
+    given:
+    def envVars = [
+      PRODUCT: 'civil',
+      ENVIRONMENT_AGENT_LABEL_CIVIL_PREVIEW: 'civil-preview',
+      ENVIRONMENT_AGENT_LABEL_PREVIEW: 'ubuntu-preview-override',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'jenkins-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironment('preview', envVars)).isEqualTo('civil-preview')
+  }
+
+  def "labelForEnvironment should render product-specific label template"() {
+    given:
+    def envVars = [
+      RAW_PRODUCT_NAME: 'civil',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL: 'civil-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironment('preview', envVars)).isEqualTo('civil-preview')
+  }
+
+  def "labelForEnvironment should use configured product agent label"() {
+    given:
+    def envVars = [
+      PRODUCT: 'civil',
+      PRODUCT_AGENT_LABEL: 'civil'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironment('preview', envVars)).isEqualTo('civil')
+  }
+
+  def "labelForEnvironment should allow product argument to drive product-specific lookup"() {
+    given:
+    def envVars = [
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL: 'civil-{environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironment('aat', envVars, 'civil')).isEqualTo('civil-aat')
+  }
+
   def "labelForEnvironment should use build agent type fallback"() {
     given:
     def envVars = [

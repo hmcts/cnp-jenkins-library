@@ -3,7 +3,7 @@ import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.pipeline.AgentSelector
 
 def call(String subscription, Closure body) {
-  call(subscription, env.PRODUCT ?: '', body)
+  call(subscription, env.PRODUCT ?: env.RAW_PRODUCT_NAME ?: '', body)
 }
 
 def call(String subscription, String product, Closure body) {

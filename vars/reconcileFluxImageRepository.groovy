@@ -9,7 +9,7 @@ def call(Map<String, String> params) {
   def reconcile = {
     def azureConfigName = 'jenkins'
     def currentEnvironment = environment ?: env.DEPLOYMENT_ENVIRONMENT
-    if (currentEnvironment && env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(currentEnvironment, env)) {
+    if (currentEnvironment && env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(currentEnvironment, env, product)) {
       azureConfigName = AgentSelector.normaliseEnvironment(currentEnvironment)
     }
 

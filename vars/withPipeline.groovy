@@ -66,7 +66,7 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = AgentSelector.labelForEnvironment(environment.nonProdName, env) ?: env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(environment.nonProdName, env, product) ?: env.BUILD_AGENT_TYPE
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {

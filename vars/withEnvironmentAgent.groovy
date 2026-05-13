@@ -2,14 +2,19 @@ import uk.gov.hmcts.pipeline.AgentSelector
 import java.util.UUID
 
 def call(String environment, String product, Closure body) {
-  String agentLabel = AgentSelector.labelForEnvironment(environment, env)
+  String agentLabel = AgentSelector.labelForEnvironment(environment, env, product)
   // Idempotency guard: nested calls should no-op once already running on the target agent.
-  if (!agentLabel || agentLabel == env.BUILD_AGENT_TYPE) {
+  if (!agentLabel) {
     body()
     return
   }
 
   String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
+  if (agentLabel == env.BUILD_AGENT_TYPE) {
+    withEnvironmentContext(agentLabel, environment, body)
+    return
+  }
+
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
   String stashExcludes = [
     '.terraform/**',
@@ -45,12 +50,7 @@ def call(String environment, String product, Closure body) {
       deleteDir()
       unstash stashName
     }
-    withEnv([
-      "BUILD_AGENT_TYPE=${agentLabel}",
-      "DEPLOYMENT_ENVIRONMENT=${environment}",
-      'BUILD_AGENT_CONTAINER=',
-      'IS_DOCKER_BUILD_AGENT=false'
-    ]) {
+    withEnvironmentContext(agentLabel, environment) {
       if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
         env.PATH = "$env.PATH:/usr/local/bin"
       }
@@ -77,5 +77,16 @@ def call(String environment, String product, Closure body) {
         }
       }
     }
+  }
+}
+
+def withEnvironmentContext(String agentLabel, String environment, Closure body) {
+  withEnv([
+    "BUILD_AGENT_TYPE=${agentLabel}",
+    "DEPLOYMENT_ENVIRONMENT=${environment}",
+    'BUILD_AGENT_CONTAINER=',
+    'IS_DOCKER_BUILD_AGENT=false'
+  ]) {
+    body()
   }
 }

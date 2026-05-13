@@ -4,13 +4,32 @@ class AgentSelector implements Serializable {
 
   static final String DEFAULT_ENVIRONMENT_AGENT_LABEL_TEMPLATE = 'ubuntu-${environment}'
 
-  static String labelForEnvironment(String environment, Object envVars = [:]) {
+  static String labelForEnvironment(String environment, Object envVars = [:], String product = '') {
     String normalisedEnvironment = normaliseEnvironment(environment)
     if (!normalisedEnvironment) {
       return ''
     }
 
     String overrideKey = normalisedEnvironment.toUpperCase().replaceAll(/[^A-Z0-9]/, '_')
+    String productKey = normaliseProduct(product ?: envValue(envVars, 'PRODUCT') ?: envValue(envVars, 'RAW_PRODUCT_NAME'))
+
+    if (productKey) {
+      String productEnvironmentSpecificLabel = envValue(envVars, "ENVIRONMENT_AGENT_LABEL_${productKey}_${overrideKey}")
+      if (productEnvironmentSpecificLabel) {
+        return productEnvironmentSpecificLabel
+      }
+
+      String productLabelTemplate = envValue(envVars, "ENVIRONMENT_AGENT_LABEL_TEMPLATE_${productKey}")
+      if (productLabelTemplate) {
+        return renderLabel(productLabelTemplate, normalisedEnvironment)
+      }
+
+      String productAgentLabel = envValue(envVars, 'PRODUCT_AGENT_LABEL')
+      if (productAgentLabel) {
+        return productAgentLabel
+      }
+    }
+
     // BUILD_AGENT_TYPE_* is supported as a transitional alias while Jenkins env vars are standardised.
     String environmentSpecificLabel = envValue(envVars, "ENVIRONMENT_AGENT_LABEL_${overrideKey}") ?:
       envValue(envVars, "BUILD_AGENT_TYPE_${overrideKey}")
@@ -22,6 +41,10 @@ class AgentSelector implements Serializable {
     String labelTemplate = envValue(envVars, 'ENVIRONMENT_AGENT_LABEL_TEMPLATE') ?:
       DEFAULT_ENVIRONMENT_AGENT_LABEL_TEMPLATE
 
+    return renderLabel(labelTemplate, normalisedEnvironment)
+  }
+
+  private static String renderLabel(String labelTemplate, String normalisedEnvironment) {
     return labelTemplate
       .replace('${environment}', normalisedEnvironment)
       .replace('{environment}', normalisedEnvironment)
@@ -42,6 +65,10 @@ class AgentSelector implements Serializable {
       default:
         return cleanedEnvironment
     }
+  }
+
+  private static String normaliseProduct(String product) {
+    return product?.trim()?.toUpperCase()?.replaceAll(/[^A-Z0-9]/, '_') ?: ''
   }
 
   private static String envValue(Object envVars, String key) {
