@@ -117,6 +117,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def functionalTest() {
     try {
+      installYarnDependenciesForFunctionalTestsIfRequired()
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
@@ -127,6 +128,20 @@ class GradleBuilder extends AbstractBuilder {
         localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       }
     }
+  }
+
+  private void installYarnDependenciesForFunctionalTestsIfRequired() {
+    // Only Yarn Berry workspaces need this; Yarn Classic uses .yarnrc, not .yarnrc.yml.
+    if (!localSteps.fileExists('package.json') || !localSteps.fileExists('yarn.lock') || !localSteps.fileExists('.yarnrc.yml')) {
+      return
+    }
+
+    if (localSteps.fileExists('node_modules/.yarn-state.yml') || localSteps.fileExists('.pnp.cjs')) {
+      return
+    }
+
+    localSteps.echo('Installing yarn dependencies - install state missing after agent hop')
+    localSteps.sh(label: 'Install yarn dependencies', script: '/usr/bin/yarn install --immutable --silent')
   }
 
   def apiGatewayTest() {

@@ -16,14 +16,18 @@ def call(String environment, String product, Closure body) {
   }
 
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
+  String updatedStashName = "${stashName}-updated"
   String stashExcludes = [
     '.terraform/**',
     '**/.terraform/**',
     'node_modules/**',
     '**/node_modules/**',
+    '.yarn/cache/**',
+    '**/.yarn/cache/**',
     '.gradle/**',
     '**/.gradle/**'
   ].join(',')
+  boolean updatedWorkspaceStashed = false
   String originalDir = pwd()
   String relativeDir = ''
   // Keep the caller's workspace-relative directory after switching nodes.
@@ -45,10 +49,12 @@ def call(String environment, String product, Closure body) {
       dir(env.WORKSPACE) {
         deleteDir()
         unstash stashName
+        restoreGitMetadataIfRequired()
       }
     } else {
       deleteDir()
       unstash stashName
+      restoreGitMetadataIfRequired()
     }
     withEnvironmentContext(agentLabel, environment) {
       if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
@@ -57,6 +63,7 @@ def call(String environment, String product, Closure body) {
       if (env.ENVIRONMENT_AGENT_DEBUG == "true") {
         debugEnvironmentManagedIdentity(normalisedEnvironment, agentLabel)
       }
+      boolean bodySucceeded = false
       try {
         if (relativeDir) {
           dir(relativeDir) {
@@ -65,7 +72,19 @@ def call(String environment, String product, Closure body) {
         } else {
           body()
         }
+        bodySucceeded = true
       } finally {
+        if (bodySucceeded) {
+          if (env.WORKSPACE) {
+            dir(env.WORKSPACE) {
+              stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
+              updatedWorkspaceStashed = true
+            }
+          } else {
+            stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
+            updatedWorkspaceStashed = true
+          }
+        }
         if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
           if (env.WORKSPACE) {
             dir(env.WORKSPACE) {
@@ -76,6 +95,18 @@ def call(String environment, String product, Closure body) {
           }
         }
       }
+    }
+  }
+
+  // Preserve generated files from env-agent stages for later stages that restash
+  // from the original workspace, while still avoiding expensive dependency dirs.
+  if (updatedWorkspaceStashed) {
+    if (env.WORKSPACE) {
+      dir(env.WORKSPACE) {
+        unstash updatedStashName
+      }
+    } else {
+      unstash updatedStashName
     }
   }
 }
@@ -89,4 +120,27 @@ def withEnvironmentContext(String agentLabel, String environment, Closure body) 
   ]) {
     body()
   }
+}
+
+def restoreGitMetadataIfRequired() {
+  if (fileExists('.git')) {
+    return
+  }
+
+  String remoteUrl = env.ORIGINAL_REMOTE_URL ?: env.GIT_URL
+  if (!remoteUrl) {
+    return
+  }
+
+  // Jenkins stash excludes .git; restore only the remote metadata needed by tools
+  // that call `git config remote.origin.url`, not the full commit history.
+  sh(
+    label: 'Restore git metadata',
+    script: """
+      #!/usr/bin/env bash
+      set -e
+      git init -q
+      git remote add origin '${remoteUrl.replace("'", "'\\''")}'
+    """.stripIndent()
+  )
 }
