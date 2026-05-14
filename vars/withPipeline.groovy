@@ -156,8 +156,9 @@ def call(type, String product, String component, Closure body) {
       }
     }
   }
+}
 
-  void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component) {
     onPR {
       onTerraformChangeInPR {
         // we always need a tf plan of aat (i.e. staging)
@@ -229,9 +230,9 @@ def call(type, String product, String component, Closure body) {
         component: component,
       )
     }
-  }
+}
 
-  void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component) {
     onMaster {
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
@@ -312,9 +313,9 @@ def call(type, String product, String component, Closure body) {
         product: product
       )
     }
-  }
+}
 
-  void handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+void handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component) {
     highLevelDataSetup(
       appPipelineConfig: pipelineConfig,
       pipelineCallbacksRunner: callbacksRunner,
@@ -338,9 +339,9 @@ def call(type, String product, String component, Closure body) {
     if ((pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) && environmentName in pipelineConfig.performanceTestEnvironments) {
       runPerformanceTests(environmentName, aksSubscription, subscriptionName, pipelineConfig, callbacksRunner, product, component)
     }
-  }
+}
 
-  void runPerformanceTests(environmentName, aksSubscription, subscriptionName, pipelineConfig, callbacksRunner, product, component) {
+void runPerformanceTests(environmentName, aksSubscription, subscriptionName, pipelineConfig, callbacksRunner, product, component) {
     // Set aksUrl from TEST_URL for performance test stages
     def aksUrl = env.TEST_URL
 
@@ -485,5 +486,5 @@ def call(type, String product, String component, Closure body) {
         }
       }
     }
-  }
+}
 }
