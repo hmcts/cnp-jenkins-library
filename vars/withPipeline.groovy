@@ -487,4 +487,3 @@ void runPerformanceTests(environmentName, aksSubscription, subscriptionName, pip
       }
     }
 }
-}
