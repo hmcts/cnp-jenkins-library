@@ -64,6 +64,13 @@ class GradleBuilder extends AbstractBuilder {
     localSteps.writeFile(file: 'init.gradle', text: localSteps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
   }
 
+  private withAdoMavenPat(Closure body) {
+    def secrets = [
+      [ secretType: 'Secret', name: 'ado-maven-mirror-pat', version: '', envVariable: 'ADO_MAVEN_PAT' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) { body() }
+  }
+
   def test() {
     try {
       gradle("check")
@@ -272,7 +279,9 @@ EOF
       prepend += ' '
     }
     addInitScript()
-    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    withAdoMavenPat {
+      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    }
   }
 
   private String gradleWithOutput(String task) {

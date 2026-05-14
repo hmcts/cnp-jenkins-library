@@ -65,6 +65,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("junit", [LinkedHashMap.class])
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
     helper.registerAllowedMethod("warnError", [String.class, Closure.class], null)
+    helper.registerAllowedMethod('warnError', [Map.class, Closure.class], { Map args, Closure body -> body() })
     helper.registerAllowedMethod("registerDns", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("helmPublish", [LinkedHashMap], null)
     helper.registerAllowedMethod("azureCosmosDBCreateDocument", [LinkedHashMap], null)
