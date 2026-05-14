@@ -1,4 +1,6 @@
-def mirrorUrl = "https://${System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox" ? 'artifactory.sandbox' : 'artifactory'}.platform.hmcts.net/artifactory/maven-remotes"
+// SDS subscription name is set to 'sbox' while CNP one is set to 'sandbox' in sds-flux and cnp-flux respectively
+def isSandboxSubscription = (System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox" || System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sbox")
+def mirrorUrl = "https://${isSandboxSubscription ? 'artifactory.sandbox' : 'artifactory'}.platform.hmcts.net/artifactory/maven-remotes"
 
 settingsEvaluated { settings ->
     settings.pluginManagement {
