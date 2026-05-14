@@ -15,11 +15,14 @@ class DeploymentControls {
       // https://github.com/hmcts/sds-flux-config/blob/a5c7deaccf6d07fb7960feb6bc2fb91650422fd3/apps/jenkins/jenkins/ptl/jenkins.yaml#L122
       def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
 
+      // todo - remove this, for testing only
+      def branch = repo == "cnp-jenkins-config" ? "test-plum-disallowed" : "test-toffee-disallowed"
+
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/${repo}/master/deployment-controls.yml",
+        url: "https://raw.githubusercontent.com/hmcts/${repo}/${branch}/deployment-controls.yml",
         validResponseCodes: '200'
       )
       deploymentControls = steps.readYaml(text: response.content)
