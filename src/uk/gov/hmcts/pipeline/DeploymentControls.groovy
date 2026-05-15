@@ -8,21 +8,25 @@ class DeploymentControls {
     this.steps = steps
   }
 
+  def getConfigRepoUrl() {
+    // this variable is not set in CNP-Flux-Config so set it by default
+    // For SDS this will be set to sds-jenkins-config
+    // https://github.com/hmcts/sds-flux-config/blob/a5c7deaccf6d07fb7960feb6bc2fb91650422fd3/apps/jenkins/jenkins/ptl/jenkins.yaml#L122
+    def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+
+    // TODO: remove this, for testing only
+    def branch = repo == "cnp-jenkins-config" ? "test-plum-disallowed" : "test-toffee-disallowed"
+
+    return "https://raw.githubusercontent.com/hmcts/${repo}/${branch}/deployment-controls.yml"
+  }
+
   def getDeploymentControls() {
     if (deploymentControls == null) {
-      // this variable is not set in CNP-Flux-Config so set it by default
-      // For SDS this will be set to sds-jenkins-config
-      // https://github.com/hmcts/sds-flux-config/blob/a5c7deaccf6d07fb7960feb6bc2fb91650422fd3/apps/jenkins/jenkins/ptl/jenkins.yaml#L122
-      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
-
-      // todo - remove this, for testing only
-      def branch = repo == "cnp-jenkins-config" ? "test-plum-disallowed" : "test-toffee-disallowed"
-
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
         authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
-        url: "https://raw.githubusercontent.com/hmcts/${repo}/${branch}/deployment-controls.yml",
+        url: getConfigRepoUrl(),
         validResponseCodes: '200'
       )
       deploymentControls = steps.readYaml(text: response.content)
@@ -57,8 +61,7 @@ class DeploymentControls {
       steps.echo """
         Repo ${steps.env.GIT_URL} is not approved for deployment actions.
         Make sure to add your repository to:
-        - https://github.com/hmcts/cnp-jenkins-config/blob/master/deployment-controls.yml"
-        - Or https://github.com/hmcts/sds-jenkins-config/blob/master/deployment-controls.yml
+        - ${getConfigRepoUrl()}
         
         If you recently updated deployment controls and this is unexpected ensure you are using a new agent as this can be cached.
         ================================================================================
