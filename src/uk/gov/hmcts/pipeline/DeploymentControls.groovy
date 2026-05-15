@@ -44,24 +44,24 @@ class DeploymentControls {
     def deploymentEnabled = repoEntry && repoEntry['deployment-enabled'] == true
 
     if (!deploymentEnabled) {
-      echo '''
-  ================================================================================
+      steps.echo '''
+       ================================================================================
+       ____      ____  _       _______     ____  _____  _____  ____  _____   ______
+       |_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  |
+         \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_|
+         \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____
+           \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
+           \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
+      '''
 
-  ____      ____  _       _______     ____  _____  _____  ____  _____   ______
-  |_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  |
-    \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_|
-    \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____
-      \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
-      \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
-  '''
-
-      echo """
-  Repo ${env.GIT_URL} is not approved for deployment actions.
-  Make sure to add your repository to:
-  - https://github.com/hmcts/cnp-jenkins-config/blob/master/deployment-controls.yml"
-  - Or https://github.com/hmcts/sds-jenkins-config/blob/master/deployment-controls.yml
-  If you recently updated deployment controls and this is unexpected ensure you are using a new agent as this can be cached.
-  ================================================================================
+      steps.echo """
+        Repo ${steps.env.GIT_URL} is not approved for deployment actions.
+        Make sure to add your repository to:
+        - https://github.com/hmcts/cnp-jenkins-config/blob/master/deployment-controls.yml"
+        - Or https://github.com/hmcts/sds-jenkins-config/blob/master/deployment-controls.yml
+        
+        If you recently updated deployment controls and this is unexpected ensure you are using a new agent as this can be cached.
+        ================================================================================
       """
     }
 
