@@ -29,8 +29,6 @@ def call(params) {
 
     // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
     deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
-    echo "Is Deployment Enabled (post-checkout): '${deploymentEnabled}', for repository ${env.GIT_URL}. If you recently updated deployment controls and this is unexpected ensure you are using a new agent as this can be cached."
-
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME

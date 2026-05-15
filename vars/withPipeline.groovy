@@ -85,7 +85,6 @@ def call(type, String product, String component, Closure body) {
             component: component
           )
 
-          echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
           if (deploymentEnabled) {
             if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
               stage('Publish Helm chart') {
