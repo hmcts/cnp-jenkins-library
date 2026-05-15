@@ -14,7 +14,7 @@ class DeploymentControls {
     // https://github.com/hmcts/sds-flux-config/blob/a5c7deaccf6d07fb7960feb6bc2fb91650422fd3/apps/jenkins/jenkins/ptl/jenkins.yaml#L122
     def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
 
-    // TODO: remove this, for testing only
+    // TODO: remove this once testing done
     def branch = repo == "cnp-jenkins-config" ? "test-plum-disallowed" : "test-toffee-disallowed"
 
     return "https://raw.githubusercontent.com/hmcts/${repo}/${branch}/deployment-controls.yml"
@@ -59,7 +59,7 @@ class DeploymentControls {
       '''
 
       steps.echo """
-        Repo ${steps.env.GIT_URL} is not approved for deployment actions.
+        Repo ${steps.env.GIT_URL} is not approved for deployment stages.
         Make sure to add your repository to:
         - ${getConfigRepoUrl()}
         
