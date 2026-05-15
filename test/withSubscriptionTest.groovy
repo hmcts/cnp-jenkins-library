@@ -145,7 +145,6 @@ class WithSubscriptionTest extends BasePipelineTest {
   @Test
   void 'environment-like subscription uses subscription agent when environment differs'() {
     boolean bodyCalled = false
-    binding.env.PRODUCT_AGENT_LABEL = 'toffee-vm'
 
     script.call('dev', 'toffee', 'prod') {
       bodyCalled = true
@@ -170,10 +169,30 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
+  void 'environment-like subscription honours product-specific environment agent label'() {
+    boolean bodyCalled = false
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_TOFFEE = 'toffee-${environment}'
+
+    script.call('dev', 'toffee', 'prod') {
+      bodyCalled = true
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(subscriptionLoginCalls).containsExactly([
+      subscription: 'dev',
+      buildAgentType: 'toffee-dev',
+      deploymentEnvironment: 'dev'
+    ])
+    assertThat(environmentAgentCalls).containsExactly(
+      [environment: 'dev', product: 'toffee', agentLabel: 'toffee-dev'],
+      [environment: 'ptl', product: 'toffee', agentLabel: 'ubuntu-ptl']
+    )
+  }
+
+  @Test
   void 'product-only flow uses current deployment environment for env-like subscription routing'() {
     boolean bodyCalled = false
     binding.env.DEPLOYMENT_ENVIRONMENT = 'stg'
-    binding.env.PRODUCT_AGENT_LABEL = 'toffee-vm'
 
     script.call('dev', 'toffee') {
       bodyCalled = true

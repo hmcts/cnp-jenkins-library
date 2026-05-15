@@ -29,9 +29,7 @@ class Az {
   }
 
   boolean usesEnvironmentManagedIdentity() {
-    String environment = steps.env?.DEPLOYMENT_ENVIRONMENT
-    return environment &&
-      steps.env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(environment, steps.env)
+    return AgentSelector.isRunningOnEnvironmentAgent(steps.env)
   }
 
   void loginWithEnvironmentManagedIdentityIfRequired(String azureConfigName) {

@@ -124,8 +124,7 @@ class Kubectl {
   }
 
   private boolean usesEnvironmentManagedIdentity() {
-    return this.environment &&
-      this.steps.env.BUILD_AGENT_TYPE == AgentSelector.labelForEnvironment(this.environment, this.steps.env)
+    return AgentSelector.isRunningOnEnvironmentAgent(this.steps.env, this.environment)
   }
 
   private String getILBIP(String serviceName, String namespace) {

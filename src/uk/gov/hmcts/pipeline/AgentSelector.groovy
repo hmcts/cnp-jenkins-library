@@ -3,6 +3,7 @@ package uk.gov.hmcts.pipeline
 class AgentSelector implements Serializable {
 
   static final String DEFAULT_ENVIRONMENT_AGENT_LABEL_TEMPLATE = 'ubuntu-${environment}'
+  private static final Set<String> ENVIRONMENT_LIKE_SUBSCRIPTIONS = ['dev', 'stg', 'prod', 'sbox'] as Set
 
   static String labelForEnvironment(String environment, Object envVars = [:], String product = '') {
     return selectLabelForEnvironment(environment, envVars, product, true)
@@ -10,6 +11,19 @@ class AgentSelector implements Serializable {
 
   static String labelForEnvironmentWithoutProductFallback(String environment, Object envVars = [:]) {
     return selectLabelForEnvironment(environment, envVars, '', false)
+  }
+
+  static boolean isEnvironmentLikeSubscription(String subscription) {
+    return ENVIRONMENT_LIKE_SUBSCRIPTIONS.contains(normaliseEnvironment(subscription))
+  }
+
+  static boolean isRunningOnEnvironmentAgent(Object envVars, String environment = null, String product = '') {
+    String currentEnvironment = environment ?: envValue(envVars, 'DEPLOYMENT_ENVIRONMENT')
+    if (!currentEnvironment) {
+      return false
+    }
+
+    return envValue(envVars, 'BUILD_AGENT_TYPE') == labelForEnvironment(currentEnvironment, envVars, product)
   }
 
   private static String selectLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback) {

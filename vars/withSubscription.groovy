@@ -79,8 +79,8 @@ def identityBasedLogin(String subscription, String product, String environment, 
 def withTargetSubscriptionIdentity(String subscription, String product, String environment, Closure body) {
   if (product && environment) {
     String targetEnvironment = targetIdentityEnvironment(subscription, environment)
-    if (isEnvironmentLikeSubscription(subscription)) {
-      String agentLabel = "ubuntu-${targetEnvironment}"
+    if (AgentSelector.isEnvironmentLikeSubscription(subscription)) {
+      String agentLabel = AgentSelector.labelForEnvironment(targetEnvironment, env, product) ?: "ubuntu-${targetEnvironment}"
       withEnvironmentAgent(targetEnvironment, product, agentLabel, body)
     } else {
       withEnvironmentAgent(targetEnvironment, product, body)
@@ -112,12 +112,8 @@ String targetIdentityEnvironment(String subscription, String environment) {
   // Env-like SDS subscriptions own their Terraform state stores, so run Azure
   // login on that subscription's MI. CFT-style aliases such as nonprod/qa keep
   // routing by the concrete environment, e.g. aat or preview.
-  if (isEnvironmentLikeSubscription(subscription)) {
+  if (AgentSelector.isEnvironmentLikeSubscription(subscription)) {
     return AgentSelector.normaliseEnvironment(subscription)
   }
   return environment
-}
-
-boolean isEnvironmentLikeSubscription(String subscription) {
-  return ['dev', 'stg', 'prod', 'sbox'].contains(AgentSelector.normaliseEnvironment(subscription))
 }

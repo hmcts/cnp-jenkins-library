@@ -1,3 +1,5 @@
+// Diagnostic only. Set ENVIRONMENT_AGENT_DEBUG=true on the job to enable;
+// it has no runtime effect unless withEnvironmentAgent sees that flag.
 def call(String environment, String agentLabel) {
   sh(
     label: "Debug managed identity for ${environment}",

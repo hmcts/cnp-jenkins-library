@@ -42,22 +42,12 @@ def call(String environment, String product, String agentLabelOverride, Closure 
   }
 
   echo "Using ${agentLabel} agent for ${environment}"
-  if (env.WORKSPACE) {
-    dir(env.WORKSPACE) {
-      stash name: stashName, includes: '**/*', excludes: stashExcludes
-    }
-  } else {
+  inOriginalWorkspace {
     stash name: stashName, includes: '**/*', excludes: stashExcludes
   }
 
   node(agentLabel) {
-    if (env.WORKSPACE) {
-      dir(env.WORKSPACE) {
-        deleteDir()
-        unstash stashName
-        restoreGitMetadataIfRequired()
-      }
-    } else {
+    inOriginalWorkspace {
       deleteDir()
       unstash stashName
       restoreGitMetadataIfRequired()
@@ -81,22 +71,13 @@ def call(String environment, String product, String agentLabelOverride, Closure 
         bodySucceeded = true
       } finally {
         if (bodySucceeded) {
-          if (env.WORKSPACE) {
-            dir(env.WORKSPACE) {
-              stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
-              updatedWorkspaceStashed = true
-            }
-          } else {
+          inOriginalWorkspace {
             stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
-            updatedWorkspaceStashed = true
           }
+          updatedWorkspaceStashed = true
         }
         if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-          if (env.WORKSPACE) {
-            dir(env.WORKSPACE) {
-              deleteDir()
-            }
-          } else {
+          inOriginalWorkspace {
             deleteDir()
           }
         }
@@ -107,13 +88,19 @@ def call(String environment, String product, String agentLabelOverride, Closure 
   // Preserve generated files from env-agent stages for later stages that restash
   // from the original workspace, while still avoiding expensive dependency dirs.
   if (updatedWorkspaceStashed) {
-    if (env.WORKSPACE) {
-      dir(env.WORKSPACE) {
-        unstash updatedStashName
-      }
-    } else {
+    inOriginalWorkspace {
       unstash updatedStashName
     }
+  }
+}
+
+def inOriginalWorkspace(Closure body) {
+  if (env.WORKSPACE) {
+    dir(env.WORKSPACE) {
+      body()
+    }
+  } else {
+    body()
   }
 }
 

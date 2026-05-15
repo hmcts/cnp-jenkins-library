@@ -326,7 +326,7 @@ def call(type, String product, String component, Closure body) {
 
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
-              stageWithAgent("Dynatrace Performance Setup - ${environmentName}", product) {
+              stageWithEnvironmentAgent("Dynatrace Performance Setup - ${environmentName}", product, environmentName) {
                 testEnv(aksUrl) {
                   try {
                     pcr.callAround("dynatracePerformanceSetup:${environmentName}") {
@@ -353,7 +353,7 @@ def call(type, String product, String component, Closure body) {
             
             if (pipelineConfig.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
-                stageWithAgent("Dynatrace Synthetic Tests - ${environmentName}", product) {
+                stageWithEnvironmentAgent("Dynatrace Synthetic Tests - ${environmentName}", product, environmentName) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environmentName}") {
@@ -380,7 +380,7 @@ def call(type, String product, String component, Closure body) {
             
             if (pipelineConfig.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
-                stageWithAgent("Gatling Load Tests - ${environmentName}", product) {
+                stageWithEnvironmentAgent("Gatling Load Tests - ${environmentName}", product, environmentName) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("gatlingLoadTests:${environmentName}") {
@@ -415,7 +415,7 @@ def call(type, String product, String component, Closure body) {
 
               // Stage 3: Site Reliability Guardian Evaluation (if enabled)
               if (pipelineConfig.srgEvaluation) {
-                stageWithAgent("Site Reliability Guardian Evaluation - ${environmentName}", product) {
+                stageWithEnvironmentAgent("Site Reliability Guardian Evaluation - ${environmentName}", product, environmentName) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("srgEvaluation:${environmentName}") {

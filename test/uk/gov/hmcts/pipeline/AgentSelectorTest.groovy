@@ -146,6 +146,36 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironment('aat', new ThrowingEnvVars())).isEqualTo('ubuntu-aat')
   }
 
+  def "isEnvironmentLikeSubscription should identify env-scoped subscription names"() {
+    expect:
+    assertThat(AgentSelector.isEnvironmentLikeSubscription(subscription)).isEqualTo(expected)
+
+    where:
+    subscription | expected
+    'dev'        | true
+    'stg'        | true
+    'prod'       | true
+    'sbox'       | true
+    'sandbox'    | true
+    'nonprod'    | false
+    'preview'    | false
+    null         | false
+  }
+
+  def "isRunningOnEnvironmentAgent should compare current label with selected environment label"() {
+    expect:
+    assertThat(AgentSelector.isRunningOnEnvironmentAgent(envVars, environment, product)).isEqualTo(expected)
+
+    where:
+    envVars                                                                                       | environment | product  | expected
+    [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'ubuntu-preview']                       | null        | ''       | true
+    [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'civil-preview', PRODUCT: 'civil']      | null        | ''       | false
+    [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'civil-preview',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL: 'civil-${environment}']                             | 'preview'   | 'civil'  | true
+    [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'ubuntu-aat']                           | 'preview'   | ''       | false
+    [BUILD_AGENT_TYPE: 'ubuntu-preview']                                                          | null        | ''       | false
+  }
+
   private static class ThrowingEnvVars {
     Object getAt(String key) {
       throw new RuntimeException("lookup failed")
