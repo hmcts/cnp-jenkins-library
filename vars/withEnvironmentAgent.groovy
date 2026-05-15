@@ -2,7 +2,11 @@ import uk.gov.hmcts.pipeline.AgentSelector
 import java.util.UUID
 
 def call(String environment, String product, Closure body) {
-  String agentLabel = AgentSelector.labelForEnvironment(environment, env, product)
+  call(environment, product, null, body)
+}
+
+def call(String environment, String product, String agentLabelOverride, Closure body) {
+  String agentLabel = agentLabelOverride ?: AgentSelector.labelForEnvironment(environment, env, product)
   // Idempotency guard: nested calls should no-op once already running on the target agent.
   if (!agentLabel) {
     body()
@@ -18,6 +22,8 @@ def call(String environment, String product, Closure body) {
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
   String updatedStashName = "${stashName}-updated"
   String stashExcludes = [
+    '.yarn_dependencies_installed',
+    '**/.yarn_dependencies_installed',
     '.terraform/**',
     '**/.terraform/**',
     'node_modules/**',

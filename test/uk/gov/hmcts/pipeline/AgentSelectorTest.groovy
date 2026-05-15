@@ -80,6 +80,18 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironment('preview', envVars)).isEqualTo('civil')
   }
 
+  def "labelForEnvironmentWithoutProductFallback should ignore product-level labels"() {
+    given:
+    def envVars = [
+      PRODUCT: 'toffee',
+      PRODUCT_AGENT_LABEL: 'toffee-vm',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'ubuntu-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironmentWithoutProductFallback('dev', envVars)).isEqualTo('ubuntu-dev')
+  }
+
   def "labelForEnvironment should allow product argument to drive product-specific lookup"() {
     given:
     def envVars = [

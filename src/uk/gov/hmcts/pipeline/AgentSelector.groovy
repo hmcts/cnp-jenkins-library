@@ -5,13 +5,23 @@ class AgentSelector implements Serializable {
   static final String DEFAULT_ENVIRONMENT_AGENT_LABEL_TEMPLATE = 'ubuntu-${environment}'
 
   static String labelForEnvironment(String environment, Object envVars = [:], String product = '') {
+    return selectLabelForEnvironment(environment, envVars, product, true)
+  }
+
+  static String labelForEnvironmentWithoutProductFallback(String environment, Object envVars = [:]) {
+    return selectLabelForEnvironment(environment, envVars, '', false)
+  }
+
+  private static String selectLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback) {
     String normalisedEnvironment = normaliseEnvironment(environment)
     if (!normalisedEnvironment) {
       return ''
     }
 
     String overrideKey = normalisedEnvironment.toUpperCase().replaceAll(/[^A-Z0-9]/, '_')
-    String productKey = normaliseProduct(product ?: envValue(envVars, 'PRODUCT') ?: envValue(envVars, 'RAW_PRODUCT_NAME'))
+    String productKey = allowProductFallback ?
+      normaliseProduct(product ?: envValue(envVars, 'PRODUCT') ?: envValue(envVars, 'RAW_PRODUCT_NAME')) :
+      ''
 
     if (productKey) {
       String productEnvironmentSpecificLabel = envValue(envVars, "ENVIRONMENT_AGENT_LABEL_${productKey}_${overrideKey}")

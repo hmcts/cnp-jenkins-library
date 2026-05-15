@@ -11,6 +11,7 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   List<String> nodeLabels = []
   List<String> shellScripts = []
   List<String> stashNames = []
+  List<Map> stashArgs = []
   List<String> unstashNames = []
   boolean gitDirectoryExists = false
 
@@ -43,7 +44,10 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
       body()
     })
     helper.registerAllowedMethod('pwd', [], { -> '/opt/jenkins/workspace/job' })
-    helper.registerAllowedMethod('stash', [Map.class], { Map args -> stashNames << args.name })
+    helper.registerAllowedMethod('stash', [Map.class], { Map args ->
+      stashNames << args.name
+      stashArgs << args
+    })
     helper.registerAllowedMethod('unstash', [String.class], { String name -> unstashNames << name })
     helper.registerAllowedMethod('deleteDir', [], { -> })
     helper.registerAllowedMethod('fileExists', [String.class], { String path -> path == '.git' && gitDirectoryExists })
@@ -90,6 +94,23 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'forced agent label bypasses product agent fallback'() {
+    binding.env.PRODUCT_AGENT_LABEL = 'toffee-vm'
+
+    def environmentInsideBody
+    def buildAgentTypeInsideBody
+
+    script.call('dev', 'toffee', 'ubuntu-dev') {
+      environmentInsideBody = binding.env.DEPLOYMENT_ENVIRONMENT
+      buildAgentTypeInsideBody = binding.env.BUILD_AGENT_TYPE
+    }
+
+    assertThat(nodeLabels).containsExactly('ubuntu-dev')
+    assertThat(environmentInsideBody).isEqualTo('dev')
+    assertThat(buildAgentTypeInsideBody).isEqualTo('ubuntu-dev')
+  }
+
+  @Test
   void 'switching environment agent propagates generated files back to original workspace'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.ORIGINAL_REMOTE_URL = 'https://github.com/HMCTS/civil-service.git'
@@ -100,6 +121,20 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
     assertThat(stashNames).hasSize(2)
     assertThat(stashNames[1]).isEqualTo("${stashNames[0]}-updated")
     assertThat(unstashNames).containsExactly(stashNames[0], stashNames[1])
+  }
+
+  @Test
+  void 'switching environment agent excludes yarn install marker with yarn cache'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    script.call('preview', 'civil') {
+    }
+
+    assertThat(stashArgs).hasSize(2)
+    stashArgs.each { Map args ->
+      assertThat(args.excludes as String).contains('.yarn_dependencies_installed')
+      assertThat(args.excludes as String).contains('.yarn/cache/**')
+    }
   }
 
   @Test

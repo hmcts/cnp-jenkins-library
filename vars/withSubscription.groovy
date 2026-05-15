@@ -7,7 +7,7 @@ def call(String subscription, Closure body) {
 }
 
 def call(String subscription, String product, Closure body) {
-  identityBasedLogin(subscription, product, null, body)
+  identityBasedLogin(subscription, product, env.DEPLOYMENT_ENVIRONMENT ?: null, body)
 }
 
 def call(String subscription, String product, String environment, Closure body) {
@@ -19,7 +19,7 @@ def identityBasedLogin(String subscription, String product, String environment, 
     def mgmtSubscriptionId
     def jenkinsObjectId
 
-    withTargetSubscriptionIdentity(product, environment) {
+    withTargetSubscriptionIdentity(subscription, product, environment) {
       withSubscriptionLogin(subscription) {
         def infraVaultName = env.INFRA_VAULT_NAME
         log.info "Using $infraVaultName"
@@ -76,9 +76,15 @@ def identityBasedLogin(String subscription, String product, String environment, 
   }
 }
 
-def withTargetSubscriptionIdentity(String product, String environment, Closure body) {
+def withTargetSubscriptionIdentity(String subscription, String product, String environment, Closure body) {
   if (product && environment) {
-    withEnvironmentAgent(environment, product, body)
+    String targetEnvironment = targetIdentityEnvironment(subscription, environment)
+    if (isEnvironmentLikeSubscription(subscription)) {
+      String agentLabel = "ubuntu-${targetEnvironment}"
+      withEnvironmentAgent(targetEnvironment, product, agentLabel, body)
+    } else {
+      withEnvironmentAgent(targetEnvironment, product, body)
+    }
   } else {
     body.call()
   }
@@ -86,7 +92,7 @@ def withTargetSubscriptionIdentity(String product, String environment, Closure b
 
 def withJenkinsIdentity(String product, String environment, Closure body) {
   if (usePtlJenkinsIdentity(product, environment)) {
-    withEnvironmentAgent('ptl', product, body)
+    withEnvironmentAgent('ptl', product, 'ubuntu-ptl', body)
   } else {
     body.call()
   }
@@ -100,4 +106,18 @@ boolean usePtlJenkinsIdentity(String product, String environment) {
     return true
   }
   return !['sandbox', 'sbox'].contains(AgentSelector.normaliseEnvironment(environment))
+}
+
+String targetIdentityEnvironment(String subscription, String environment) {
+  // Env-like SDS subscriptions own their Terraform state stores, so run Azure
+  // login on that subscription's MI. CFT-style aliases such as nonprod/qa keep
+  // routing by the concrete environment, e.g. aat or preview.
+  if (isEnvironmentLikeSubscription(subscription)) {
+    return AgentSelector.normaliseEnvironment(subscription)
+  }
+  return environment
+}
+
+boolean isEnvironmentLikeSubscription(String subscription) {
+  return ['dev', 'stg', 'prod', 'sbox'].contains(AgentSelector.normaliseEnvironment(subscription))
 }

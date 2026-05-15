@@ -1,10 +1,28 @@
 #!groovy
+import uk.gov.hmcts.pipeline.AgentSelector
+
 /**
  * Simple login to Azure for the correct subscription
  * @param subscription the subscription short name, i.e. sandbox, qa, nonprod, prod
  * @param body the body to execute after logged in
  */
 def call(String subscription, Closure body) {
+  String targetEnvironment = AgentSelector.normaliseEnvironment(subscription)
+  if (['dev', 'stg', 'prod', 'sbox'].contains(targetEnvironment)) {
+    String agentLabel = "ubuntu-${targetEnvironment}"
+    String product = env.PRODUCT ?: env.RAW_PRODUCT_NAME ?: ''
+    if (env.BUILD_AGENT_TYPE != agentLabel) {
+      withEnvironmentAgent(targetEnvironment, product, agentLabel) {
+        loginOnCurrentAgent(subscription, body)
+      }
+      return
+    }
+  }
+
+  loginOnCurrentAgent(subscription, body)
+}
+
+def loginOnCurrentAgent(String subscription, Closure body) {
   Closure az = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$subscription az $cmd", returnStdout: true).trim() }
 
   if (env.SUBSCRIPTION_NAME == subscription && fileExists("/opt/jenkins/.azure-${subscription}")) {
