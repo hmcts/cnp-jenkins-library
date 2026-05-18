@@ -1,0 +1,12 @@
+#!groovy
+
+@Library("Infrastructure")
+
+
+def product = "xui"
+
+def app = "e2e-tests"
+
+withNightlyPipeline('nodejs', product, app) {
+  enableFullFunctionalTest()
+}
