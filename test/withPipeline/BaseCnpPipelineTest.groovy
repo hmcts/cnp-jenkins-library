@@ -93,7 +93,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
 
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
-      if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
+      if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml'
+        || m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/xui-jenkins-8cpu-agent/team-config.yml') {
         return TeamConfigTest.response
       } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml') {
         return EnvironmentApprovalsTest.response
