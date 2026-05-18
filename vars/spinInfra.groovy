@@ -162,9 +162,9 @@ def call(Map<String, ?> params) {
           terraformInit()
           unstash terraformPlanStashName
           sh "terraform apply -auto-approve tfplan"
-          parseResult = null
+          def parseResult = null
           try {
-            result = sh(script: "terraform output -json", returnStdout: true).trim()
+            def result = sh(script: "terraform output -json", returnStdout: true).trim()
             parseResult = new JsonSlurperClassic().parseText(result)
             log.info("returning parsed JSON terraform output: ${parseResult}")
           } catch (err) {

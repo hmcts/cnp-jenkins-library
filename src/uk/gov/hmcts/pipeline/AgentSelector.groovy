@@ -75,10 +75,7 @@ class AgentSelector implements Serializable {
   }
 
   static String normaliseEnvironment(String environment) {
-    String cleanedEnvironment = environment?.trim()
-      ?.replaceFirst(/^idam-/, '')
-      ?.replaceFirst(/^packer-/, '')
-      ?.replaceFirst(/^vault-/, '')
+    String cleanedEnvironment = cleanedEnvironment(environment)
 
     switch (cleanedEnvironment) {
       case null:
@@ -89,6 +86,17 @@ class AgentSelector implements Serializable {
       default:
         return cleanedEnvironment
     }
+  }
+
+  static String managedIdentityResourceGroupEnvironment(String environment) {
+    return cleanedEnvironment(environment)
+  }
+
+  private static String cleanedEnvironment(String environment) {
+    return environment?.trim()
+      ?.replaceFirst(/^idam-/, '')
+      ?.replaceFirst(/^packer-/, '')
+      ?.replaceFirst(/^vault-/, '')
   }
 
   private static String normaliseProduct(String product) {

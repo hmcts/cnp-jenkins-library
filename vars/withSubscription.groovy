@@ -27,6 +27,8 @@ def identityBasedLogin(String subscription, String product, String environment, 
         log.warning "=== you are building with $subscription subscription credentials ==="
 
         boolean usePtlJenkinsIdentity = usePtlJenkinsIdentity(product, environment)
+        String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
+        String managedIdentityResourceGroupEnvironment = AgentSelector.managedIdentityResourceGroupEnvironment(environment)
         String jenkinsAzureConfigDir = product ? "/opt/jenkins/.azure-${usePtlJenkinsIdentity ? 'ptl' : subscription}" : '/opt/jenkins/.azure-jenkins'
         withJenkinsIdentity(product, environment) {
           Closure azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=${jenkinsAzureConfigDir} az $cmd", returnStdout: true).trim() }
@@ -36,10 +38,15 @@ def identityBasedLogin(String subscription, String product, String environment, 
           }
           mgmtSubscriptionId = usePtlJenkinsIdentity || !product ?
             azJenkins('account show --query id -o tsv') :
-            env.JENKINS_SUBSCRIPTION_ID ?: ''
-          jenkinsObjectId = usePtlJenkinsIdentity || !product ?
-            azJenkins("identity show -g managed-identities-${infraVaultName}-rg --name jenkins-${infraVaultName}-mi --query principalId -o tsv") :
-            env.JENKINS_AAD_OBJECT_ID ?: ''
+            env.JENKINS_SUBSCRIPTION_ID ?: azJenkins('account show --query id -o tsv')
+
+          String identityResourceGroupName = usePtlJenkinsIdentity || !product ?
+            "managed-identities-${infraVaultName}-rg" :
+            "managed-identities-${managedIdentityResourceGroupEnvironment}-rg"
+          String identityName = usePtlJenkinsIdentity || !product ?
+            "jenkins-${infraVaultName}-mi" :
+            "jenkins-${normalisedEnvironment}-mi"
+          jenkinsObjectId = azJenkins("identity show -g ${identityResourceGroupName} --name ${identityName} --query principalId -o tsv")
         }
 
         def tfStateRgNameTemplate = env.TF_STATE_RG_TEMPLATE ?: "mgmt-state-store"
@@ -102,10 +109,7 @@ boolean usePtlJenkinsIdentity(String product, String environment) {
   if (!product) {
     return false
   }
-  if (!environment) {
-    return true
-  }
-  return !['sandbox', 'sbox'].contains(AgentSelector.normaliseEnvironment(environment))
+  return AgentSelector.normaliseEnvironment(environment) == 'ptl'
 }
 
 String targetIdentityEnvironment(String subscription, String environment) {

@@ -112,7 +112,7 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
-  void 'product and environment flow switches to target env then ptl and exposes terraform vars'() {
+  void 'product and environment flow stays on target env and resolves environment jenkins identity'() {
     boolean bodyCalled = false
 
     script.call('prod', 'toffee', 'prod') {
@@ -125,21 +125,41 @@ class WithSubscriptionTest extends BasePipelineTest {
       buildAgentType: 'ubuntu-prod',
       deploymentEnvironment: 'prod'
     ])
-    assertThat(environmentAgentCalls).containsExactly(
-      [environment: 'prod', product: 'toffee', agentLabel: 'ubuntu-prod'],
-      [environment: 'ptl', product: 'toffee', agentLabel: 'ubuntu-ptl']
-    )
+    assertThat(environmentAgentCalls).containsExactly([environment: 'prod', product: 'toffee', agentLabel: 'ubuntu-prod'])
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-prod') &&
         it.contains('storage account keys list') &&
         it.contains('--resource-group mgmt-state-store-prod')
     }
-    assertThat(shellCalls*.script).anyMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') && it.contains('identity show') }
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-prod') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-prod-rg') &&
+        it.contains('jenkins-prod-mi')
+    }
     assertThat(withEnvVariables).contains(
-      'TF_VAR_mgmt_subscription_id=management-subscription-id',
+      'TF_VAR_mgmt_subscription_id=jenkins-subscription-id',
       'TF_VAR_jenkins_AAD_objectId=jenkins-object-id',
       'ARM_ACCESS_KEY=storage-account-key'
     )
+  }
+
+  @Test
+  void 'ptl product flow uses infra vault identity naming'() {
+    binding.env.INFRA_VAULT_NAME = 'cftptl-intsvc'
+
+    script.call('ptl', 'civil', 'ptl') {}
+
+    assertThat(environmentAgentCalls).containsExactly(
+      [environment: 'ptl', product: 'civil', agentLabel: 'ubuntu-ptl'],
+      [environment: 'ptl', product: 'civil', agentLabel: 'ubuntu-ptl']
+    )
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-cftptl-intsvc-rg') &&
+        it.contains('jenkins-cftptl-intsvc-mi')
+    }
   }
 
   @Test
@@ -157,8 +177,7 @@ class WithSubscriptionTest extends BasePipelineTest {
       deploymentEnvironment: 'dev'
     ])
     assertThat(environmentAgentCalls).containsExactly(
-      [environment: 'dev', product: 'toffee', agentLabel: 'ubuntu-dev'],
-      [environment: 'ptl', product: 'toffee', agentLabel: 'ubuntu-ptl']
+      [environment: 'dev', product: 'toffee', agentLabel: 'ubuntu-dev']
     )
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-dev') &&
@@ -184,8 +203,7 @@ class WithSubscriptionTest extends BasePipelineTest {
       deploymentEnvironment: 'dev'
     ])
     assertThat(environmentAgentCalls).containsExactly(
-      [environment: 'dev', product: 'toffee', agentLabel: 'toffee-dev'],
-      [environment: 'ptl', product: 'toffee', agentLabel: 'ubuntu-ptl']
+      [environment: 'dev', product: 'toffee', agentLabel: 'toffee-dev']
     )
   }
 
@@ -205,8 +223,7 @@ class WithSubscriptionTest extends BasePipelineTest {
       deploymentEnvironment: 'dev'
     ])
     assertThat(environmentAgentCalls).containsExactly(
-      [environment: 'dev', product: 'toffee', agentLabel: 'ubuntu-dev'],
-      [environment: 'ptl', product: 'toffee', agentLabel: 'ubuntu-ptl']
+      [environment: 'dev', product: 'toffee', agentLabel: 'ubuntu-dev']
     )
   }
 
@@ -225,8 +242,7 @@ class WithSubscriptionTest extends BasePipelineTest {
       deploymentEnvironment: 'aat'
     ])
     assertThat(environmentAgentCalls).containsExactly(
-      [environment: 'aat', product: 'civil', agentLabel: 'ubuntu-aat'],
-      [environment: 'ptl', product: 'civil', agentLabel: 'ubuntu-ptl']
+      [environment: 'aat', product: 'civil', agentLabel: 'ubuntu-aat']
     )
     assertThat(withEnvVariables).doesNotContain('PRODUCT_AGENT_LABEL=')
   }
@@ -234,7 +250,6 @@ class WithSubscriptionTest extends BasePipelineTest {
   @Test
   void 'sandbox product flow stays on sandbox agent and does not require ptl'() {
     boolean bodyCalled = false
-    binding.env.JENKINS_AAD_OBJECT_ID = 'jenkins-aad-object-id'
 
     script.call('sbox', 'plum', 'sbox') {
       bodyCalled = true
@@ -249,31 +264,72 @@ class WithSubscriptionTest extends BasePipelineTest {
     assertThat(environmentAgentCalls).containsExactly([environment: 'sbox', product: 'plum', agentLabel: 'ubuntu-sbox'])
     assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
     assertThat(shellCalls*.script).noneMatch { it.contains('account set --subscription') }
-    assertThat(shellCalls*.script).noneMatch { it.contains('identity show') }
     assertThat(shellCalls*.script).noneMatch { it.contains('account show --query id') }
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-sbox-rg') &&
+        it.contains('jenkins-sbox-mi')
+    }
     assertThat(shellCalls*.script).anyMatch {
       it.contains('storage account keys list') &&
         it.contains('--resource-group mgmt-state-store-sbox')
     }
     assertThat(withEnvVariables).contains(
       'TF_VAR_mgmt_subscription_id=jenkins-subscription-id',
-      'TF_VAR_jenkins_AAD_objectId=jenkins-aad-object-id'
+      'TF_VAR_jenkins_AAD_objectId=jenkins-object-id'
     )
   }
 
   @Test
-  void 'sandbox product flow uses empty terraform vars when central Jenkins env vars are missing'() {
+  void 'sandbox alias uses sandbox resource group but sbox identity name'() {
+    boolean bodyCalled = false
+
+    script.call('sandbox', 'plum', 'sandbox') {
+      bodyCalled = true
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(subscriptionLoginCalls).containsExactly([
+      subscription: 'sandbox',
+      buildAgentType: 'ubuntu-sbox',
+      deploymentEnvironment: 'sbox'
+    ])
+    assertThat(environmentAgentCalls).containsExactly([environment: 'sbox', product: 'plum', agentLabel: 'ubuntu-sbox'])
+    assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sandbox') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-sandbox-rg') &&
+        it.contains('jenkins-sbox-mi')
+    }
+    assertThat(withEnvVariables).contains(
+      'TF_VAR_mgmt_subscription_id=jenkins-subscription-id',
+      'TF_VAR_jenkins_AAD_objectId=jenkins-object-id'
+    )
+  }
+
+  @Test
+  void 'sandbox product flow resolves terraform vars when central Jenkins env vars are missing'() {
     binding.env.remove('JENKINS_SUBSCRIPTION_ID')
     binding.env.remove('JENKINS_AAD_OBJECT_ID')
 
     script.call('sbox', 'plum', 'sbox') {}
 
     assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
-    assertThat(shellCalls*.script).noneMatch { it.contains('identity show') }
-    assertThat(shellCalls*.script).noneMatch { it.contains('account show --query id') }
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
+        it.contains('account show --query id')
+    }
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-sbox-rg') &&
+        it.contains('jenkins-sbox-mi')
+    }
     assertThat(withEnvVariables).contains(
-      'TF_VAR_mgmt_subscription_id=',
-      'TF_VAR_jenkins_AAD_objectId='
+      'TF_VAR_mgmt_subscription_id=management-subscription-id',
+      'TF_VAR_jenkins_AAD_objectId=jenkins-object-id'
     )
   }
 }

@@ -34,6 +34,21 @@ class AgentSelectorTest extends Specification {
     'vault-demo'   | 'ubuntu-demo'
   }
 
+  def "managedIdentityResourceGroupEnvironment should preserve sandbox alias while stripping prefixes"() {
+    expect:
+    assertThat(AgentSelector.managedIdentityResourceGroupEnvironment(environment)).isEqualTo(resourceGroupEnvironment)
+
+    where:
+    environment      | resourceGroupEnvironment
+    'sbox'           | 'sbox'
+    'sandbox'        | 'sandbox'
+    'idam-sandbox'   | 'sandbox'
+    'vault-sbox'     | 'sbox'
+    'packer-prod'    | 'prod'
+    null             | null
+    ''               | ''
+  }
+
   def "labelForEnvironment should use environment-specific override first"() {
     given:
     def envVars = [
