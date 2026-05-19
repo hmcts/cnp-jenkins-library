@@ -38,7 +38,7 @@ def identityBasedLogin(String subscription, String product, String environment, 
           }
           mgmtSubscriptionId = usePtlJenkinsIdentity || !product ?
             azJenkins('account show --query id -o tsv') :
-            env.JENKINS_SUBSCRIPTION_ID ?: azJenkins('account show --query id -o tsv')
+            env.JENKINS_SUBSCRIPTION_ID ?: ''
 
           String identityResourceGroupName = usePtlJenkinsIdentity || !product ?
             "managed-identities-${infraVaultName}-rg" :
@@ -109,7 +109,11 @@ boolean usePtlJenkinsIdentity(String product, String environment) {
   if (!product) {
     return false
   }
-  return AgentSelector.normaliseEnvironment(environment) == 'ptl'
+  String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
+  if (!normalisedEnvironment) {
+    return true
+  }
+  return normalisedEnvironment == 'ptl'
 }
 
 String targetIdentityEnvironment(String subscription, String environment) {

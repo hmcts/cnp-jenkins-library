@@ -112,6 +112,22 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
+  void 'product-only flow with no deployment environment falls back to ptl identity'() {
+    binding.env.PRODUCT = 'civil'
+    binding.env.INFRA_VAULT_NAME = 'cftptl-intsvc'
+
+    script.call('nonprod') {}
+
+    assertThat(environmentAgentCalls).containsExactly([environment: 'ptl', product: 'civil', agentLabel: 'ubuntu-ptl'])
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-cftptl-intsvc-rg') &&
+        it.contains('jenkins-cftptl-intsvc-mi')
+    }
+  }
+
+  @Test
   void 'product and environment flow stays on target env and resolves environment jenkins identity'() {
     boolean bodyCalled = false
 
@@ -268,7 +284,7 @@ class WithSubscriptionTest extends BasePipelineTest {
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
         it.contains('identity show') &&
-        it.contains('managed-identities-sbox-rg') &&
+        it.contains('managed-identities-sandbox-rg') &&
         it.contains('jenkins-sbox-mi')
     }
     assertThat(shellCalls*.script).anyMatch {
@@ -310,25 +326,22 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
-  void 'sandbox product flow resolves terraform vars when central Jenkins env vars are missing'() {
+  void 'sandbox product flow uses empty management subscription when central Jenkins env vars are missing'() {
     binding.env.remove('JENKINS_SUBSCRIPTION_ID')
     binding.env.remove('JENKINS_AAD_OBJECT_ID')
 
     script.call('sbox', 'plum', 'sbox') {}
 
     assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
-    assertThat(shellCalls*.script).anyMatch {
-      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
-        it.contains('account show --query id')
-    }
+    assertThat(shellCalls*.script).noneMatch { it.contains('account show --query id') }
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
         it.contains('identity show') &&
-        it.contains('managed-identities-sbox-rg') &&
+        it.contains('managed-identities-sandbox-rg') &&
         it.contains('jenkins-sbox-mi')
     }
     assertThat(withEnvVariables).contains(
-      'TF_VAR_mgmt_subscription_id=management-subscription-id',
+      'TF_VAR_mgmt_subscription_id=',
       'TF_VAR_jenkins_AAD_objectId=jenkins-object-id'
     )
   }

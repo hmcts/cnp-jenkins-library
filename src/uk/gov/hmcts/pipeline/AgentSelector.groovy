@@ -89,7 +89,10 @@ class AgentSelector implements Serializable {
   }
 
   static String managedIdentityResourceGroupEnvironment(String environment) {
-    return cleanedEnvironment(environment)
+    String cleanedEnvironment = cleanedEnvironment(environment)
+    // The CFT sandbox MI RG is provisioned with the literal subscription alias,
+    // while the MI itself still uses the normalised sbox identity name.
+    return cleanedEnvironment == 'sbox' ? 'sandbox' : cleanedEnvironment
   }
 
   private static String cleanedEnvironment(String environment) {
