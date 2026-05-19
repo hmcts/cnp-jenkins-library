@@ -29,7 +29,7 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
 def stageWithEnvironmentAgentAndSecrets(String stageName, AppPipelineConfig config, String product, String environment, Closure body) {
   stageWithEnvironmentAgent(stageName, product, environment) {
     // Fetch team secrets after the node hop so Key Vault auth/env injection runs on the target environment agent.
-    withTeamSecrets(config, environment) {
+    withTeamSecrets(config, environment, product) {
       body.call()
     }
   }
