@@ -48,7 +48,7 @@ def call(type, product, component, timeout = 300, Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
 
-  if (agentType == "") {
+  if (agentType == "" || agentType == TeamConfig.DEFAULT_AGENT_LABEL) {
     nodeSelector = "daily"
   } else if (agentType == "civil") {
     nodeSelector = agentType
