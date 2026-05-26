@@ -52,6 +52,8 @@ def call(type, product, component, timeout = 300, Closure body) {
     nodeSelector = "daily"
   } else if (agentType == "civil") {
     nodeSelector = agentType
+  } else if (agentType == "xui") {
+    nodeSelector = agentType
   } else {
     nodeSelector = agentType + ' && daily'
   }
