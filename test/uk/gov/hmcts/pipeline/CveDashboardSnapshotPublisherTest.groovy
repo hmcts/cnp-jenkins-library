@@ -199,6 +199,33 @@ class CveDashboardSnapshotPublisherTest extends Specification {
       payload.branchName == 'demo'
   }
 
+  def "normalizes Jenkins Git URLs in snapshot payload"() {
+    given:
+      def request
+      envVars.GIT_URL = gitUrl
+
+    when:
+      publisher.publishSnapshot('node', [
+        vulnerabilities: [[module_name: 'lodash', cves: ['CVE-2026-1001'], severity: 'high']]
+      ])
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> { LinkedHashMap args ->
+        request = args
+        [status: 200]
+      }
+
+      def payload = new JsonSlurperClassic().parseText(request.requestBody)
+      payload.gitUrl == expectedGitUrl
+      payload.repository == 'ccd-admin-web'
+
+    where:
+      gitUrl                                           | expectedGitUrl
+      'git@github.com:hmcts/ccd-admin-web.git'        | 'https://github.com/hmcts/ccd-admin-web.git'
+      'ssh://git@github.com/hmcts/ccd-admin-web.git'  | 'https://github.com/hmcts/ccd-admin-web.git'
+      'http://github.com/hmcts/ccd-admin-web'         | 'https://github.com/hmcts/ccd-admin-web'
+  }
+
   def "logs and continues when dashboard request fails"() {
     when:
       publisher.publishSnapshot('node', [
