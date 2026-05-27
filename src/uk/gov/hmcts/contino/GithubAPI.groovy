@@ -2,6 +2,7 @@ package uk.gov.hmcts.contino
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurperClassic
+import jenkins.scm.api.SCMSource
 
 class GithubAPI {
 
@@ -11,6 +12,26 @@ class GithubAPI {
 
   GithubAPI(steps) {
     this.steps = steps
+  }
+
+  private String resolveCredentialsId() {
+    def credentialsId = this.steps.env.GIT_CREDENTIALS_ID
+    if (credentialsId) {
+      return credentialsId
+    }
+    try {
+      def parent = this.steps.currentBuild?.rawBuild?.parent
+      if (parent != null) {
+        def source = SCMSource.SourceByItem.findSource(parent)
+        if (source != null && source.credentialsId) {
+          this.steps.echo "resolved missing github credentials"
+          this.steps.env.GIT_CREDENTIALS_ID = source.credentialsId
+          return source.credentialsId
+        }
+      }
+    } catch (ignored) { }
+    this.steps.echo "failed to resolve missing github credentials"
+    return null
   }
 
   private static cachedLabelList = [
@@ -121,8 +142,9 @@ class GithubAPI {
     this.steps.echo "Refreshing label cache."
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
@@ -144,8 +166,9 @@ class GithubAPI {
   def refreshTopicCache() {
     this.steps.echo "Get topic cache"
     def project = currentProject()
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/topics",
@@ -168,8 +191,9 @@ class GithubAPI {
     this.steps.echo "Get pull request"
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/pulls/${issueNumber}",
@@ -203,8 +227,9 @@ class GithubAPI {
   def addLabels(project, issueNumber, labels) {
     this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
@@ -339,8 +364,9 @@ class GithubAPI {
          }
        }
     """
+    def credentialsId = resolveCredentialsId()
     def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: this.steps.env.GIT_CREDENTIALS_ID,
+      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
