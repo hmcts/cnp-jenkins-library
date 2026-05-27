@@ -183,7 +183,7 @@ Security checks continue to publish the trimmed CVE report to Cosmos. Services c
 enableCveDashboardIngestion()
 ```
 
-By default the pipeline publishes CVE dashboard snapshots from `master` only and loads `cve-dashboard-url` and `cve-dashboard-api-key` from the product/environment Key Vault, for example `ccd-aat`. To use a different vault, pass its name:
+By default the pipeline publishes CVE dashboard snapshots from `master` only, sends them to `https://cve-dashboard.${env}.platform.hmcts.net`, and loads `cve-dashboard-cve-intake-api-key` from the `ccd-${env}` Key Vault, for example `ccd-aat`. To load the API key from a different vault, pass its name:
 
 ```
 enableCveDashboardIngestion('shared-cve-dashboard')
@@ -196,7 +196,7 @@ enableCveDashboardIngestion('', ['master', 'demo'])
 enableCveDashboardIngestion('shared-cve-dashboard', ['master', 'release/1.x'])
 ```
 
-Branches outside the allow-list still run security checks and still keep the existing Cosmos publishing behaviour, but they do not update the dashboard's current repository snapshot. The secrets are exported as `CVE_DASHBOARD_URL` and `CVE_DASHBOARD_API_KEY` for the security-check stage only. Dashboard publishing is fail-open: scanner execution and Cosmos publishing keep their existing behaviour, and dashboard request failures are logged without failing the build.
+Branches outside the allow-list still run security checks and still keep the existing Cosmos publishing behaviour, but they do not update the dashboard's current repository snapshot. The dashboard URL and API key are exported as `CVE_DASHBOARD_URL` and `CVE_DASHBOARD_API_KEY` for the security-check stage only. Dashboard request failures are logged without failing the build.
 
 #### Smoke tests
 
