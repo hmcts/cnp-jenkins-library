@@ -1,8 +1,8 @@
 package uk.gov.hmcts.pipeline
 
 import groovy.json.JsonOutput
-import uk.gov.hmcts.contino.RepositoryUrl
 
+import java.net.URI
 import java.util.Locale
 
 class CveDashboardSnapshotPublisher implements Serializable {
@@ -53,7 +53,7 @@ class CveDashboardSnapshotPublisher implements Serializable {
   }
 
   def buildPayload(String codeBaseType, report) {
-    String gitUrl = trimValue(steps.env.GIT_URL)
+    String gitUrl = normaliseGitUrl(steps.env.GIT_URL)
     [
       team        : trimValue(steps.env.TEAM_NAME),
       repository  : repositoryName(gitUrl),
@@ -168,12 +168,43 @@ class CveDashboardSnapshotPublisher implements Serializable {
     }
   }
 
-  private String repositoryName(String gitUrl) {
+  private static String repositoryName(String gitUrl) {
     if (!gitUrl) {
       return ''
     }
 
-    new RepositoryUrl().getShortWithoutOrgOrSuffix(gitUrl)
+    try {
+      def path = new URI(gitUrl).path ?: ''
+      def segments = path.split('/')
+        .collect { trimValue(it) }
+        .findAll { it }
+      return stripGitSuffix(segments ? segments.last() : '')
+    } catch (ignored) {
+      return stripGitSuffix(gitUrl.tokenize('/').last() ?: '')
+    }
+  }
+
+  private static String normaliseGitUrl(value) {
+    String gitUrl = trimValue(value)
+    if (!gitUrl) {
+      return ''
+    }
+
+    def scpStyle = gitUrl =~ /^git@([^:]+):(.+)$/
+    if (scpStyle.matches()) {
+      return "https://${scpStyle[0][1]}/${scpStyle[0][2]}"
+    }
+
+    def sshStyle = gitUrl =~ /^ssh:\/\/git@([^\/]+)\/(.+)$/
+    if (sshStyle.matches()) {
+      return "https://${sshStyle[0][1]}/${sshStyle[0][2]}"
+    }
+
+    gitUrl.replaceFirst(/^http:\/\//, 'https://')
+  }
+
+  private static String stripGitSuffix(String value) {
+    trimValue(value).replaceAll(/\.git$/, '')
   }
 
   private static String gradlePackageName(dependency) {
