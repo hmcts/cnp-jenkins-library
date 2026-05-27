@@ -45,7 +45,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       withEnvArguments == null
   }
 
-  def "loads default product environment CVE dashboard secrets when ingestion is enabled"() {
+  def "loads default CCD environment CVE dashboard secrets when ingestion is enabled"() {
     given:
       def called = false
       def config = new AppPipelineConfig(cveDashboardIngestion: true)
@@ -59,10 +59,12 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       called
       keyVaultArguments.keyVaultURLOverride == 'https://ccd-aat.vault.azure.net/'
       keyVaultArguments.azureKeyVaultSecrets == [
-        [secretType: 'Secret', name: 'cve-dashboard-url', version: '', envVariable: 'CVE_DASHBOARD_URL'],
-        [secretType: 'Secret', name: 'cve-dashboard-api-key', version: '', envVariable: 'CVE_DASHBOARD_API_KEY']
+        [secretType: 'Secret', name: 'cve-dashboard-cve-intake-api-key', version: '', envVariable: 'CVE_DASHBOARD_API_KEY']
       ]
-      withEnvArguments == ['CVE_DASHBOARD_PUBLISH_BRANCHES=master']
+      withEnvArguments == [
+        'CVE_DASHBOARD_URL=https://cve-dashboard.aat.platform.hmcts.net',
+        'CVE_DASHBOARD_PUBLISH_BRANCHES=master'
+      ]
   }
 
   def "loads explicit CVE dashboard vault when configured"() {
@@ -106,6 +108,9 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
 
     then:
       keyVaultArguments.keyVaultURLOverride == 'https://ccd-aat.vault.azure.net/'
-      withEnvArguments == ['CVE_DASHBOARD_PUBLISH_BRANCHES=master,demo']
+      withEnvArguments == [
+        'CVE_DASHBOARD_URL=https://cve-dashboard.aat.platform.hmcts.net',
+        'CVE_DASHBOARD_PUBLISH_BRANCHES=master,demo'
+      ]
   }
 }
