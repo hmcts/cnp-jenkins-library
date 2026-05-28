@@ -13,6 +13,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
+import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
@@ -65,13 +66,17 @@ def call(type, String product, String component, Closure body) {
   Environment environment = new Environment(env)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(environment.nonProdName, env, product) ?: env.BUILD_AGENT_TYPE
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
+          echo "Using ${agentType} as primary pipeline agent for ${environment.nonProdName}"
+          // These values also drive withEnvironmentAgent's no-op path and Az.az()'s env MI config-dir selection.
+          env.BUILD_AGENT_TYPE = agentType
+          env.DEPLOYMENT_ENVIRONMENT = environment.nonProdName
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -86,7 +91,7 @@ def call(type, String product, String component, Closure body) {
           )
 
           if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-            stage('Publish Helm chart') {
+            stageWithEnvironmentAgent('Publish Helm chart', product, environment.nonProdName) {
               helmPublish(
                 appPipelineConfig: pipelineConfig,
                 subscription: subscription.nonProdName,
@@ -173,7 +178,7 @@ def call(type, String product, String component, Closure body) {
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
+              subscription: subscription.previewName,
               aksSubscription: aksSubscriptions.preview,
               environment: environment.previewName,
               product: product,
@@ -215,7 +220,7 @@ def call(type, String product, String component, Closure body) {
               component: component,
             )
 
-            stageWithAgent('Publish Helm chart', product) {
+            stageWithEnvironmentAgent('Publish Helm chart', product, environment.nonProdName) {
               callbacksRunner.callAround('Publish Helm chart') {
                 helmPublish(
                   appPipelineConfig: pipelineConfig,
@@ -321,7 +326,7 @@ def call(type, String product, String component, Closure body) {
 
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
-              stageWithAgent("Dynatrace Performance Setup - ${environmentName}", product) {
+              stageWithEnvironmentAgent("Dynatrace Performance Setup - ${environmentName}", product, environmentName) {
                 testEnv(aksUrl) {
                   try {
                     pcr.callAround("dynatracePerformanceSetup:${environmentName}") {
@@ -348,7 +353,7 @@ def call(type, String product, String component, Closure body) {
             
             if (pipelineConfig.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
-                stageWithAgent("Dynatrace Synthetic Tests - ${environmentName}", product) {
+                stageWithEnvironmentAgent("Dynatrace Synthetic Tests - ${environmentName}", product, environmentName) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("dynatraceSyntheticTest:${environmentName}") {
@@ -375,7 +380,7 @@ def call(type, String product, String component, Closure body) {
             
             if (pipelineConfig.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
-                stageWithAgent("Gatling Load Tests - ${environmentName}", product) {
+                stageWithEnvironmentAgent("Gatling Load Tests - ${environmentName}", product, environmentName) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("gatlingLoadTests:${environmentName}") {
@@ -410,7 +415,7 @@ def call(type, String product, String component, Closure body) {
 
               // Stage 3: Site Reliability Guardian Evaluation (if enabled)
               if (pipelineConfig.srgEvaluation) {
-                stageWithAgent("Site Reliability Guardian Evaluation - ${environmentName}", product) {
+                stageWithEnvironmentAgent("Site Reliability Guardian Evaluation - ${environmentName}", product, environmentName) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("srgEvaluation:${environmentName}") {

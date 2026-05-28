@@ -12,12 +12,14 @@ class KubectlTest extends Specification {
 
   def steps
   def kubectl
+  def envVars
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.env >> [
+    envVars = [
       AKS_RESOURCE_GROUP: "cnp-aks-rg",
       AKS_CLUSTER_NAME: "cnp-aks-cluster",
+      DEPLOYMENT_ENVIRONMENT: "sandbox",
       AKS_PREVIEW_SUBSCRIPTION_NAME: "preview-sub",
       AKS_AAT_SUBSCRIPTION_NAME: "aat-sub",
       AAT_AKS_KEY_VAULT: "aat-kv",
@@ -27,6 +29,7 @@ class KubectlTest extends Specification {
       PROD_AKS_KEY_VAULT: "prod-kv",
 
     ]
+    steps.env >> envVars
     kubectl = new Kubectl(steps, SUBSCRIPTION, NAMESPACE)
   }
 
@@ -57,6 +60,22 @@ class KubectlTest extends Specification {
     then:
       1 * steps.sh({it.containsKey('script') &&
                     it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${SUBSCRIPTION}")})
+  }
+
+  def "login() should use environment azure config on matching environment agent"() {
+    given:
+      envVars.BUILD_AGENT_TYPE = "ubuntu-sbox"
+      kubectl = new Kubectl(steps, SUBSCRIPTION, NAMESPACE, "sbox-aks-subscription")
+
+    when:
+      kubectl.login()
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az login --identity")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az aks get-credentials") &&
+                    it.get('script').contains("--subscription  sbox-aks-subscription")})
   }
 
   def "apply() should have namespace and NO JSON output"() {

@@ -44,4 +44,23 @@ class SubscriptionTest extends Specification {
     assert subscription.nonProdName == "snonprod"
   }
 
+  def "Defaults preview env name to nonProd when preview subscription var override is not set"() {
+    when:
+    def subscription = new Subscription(["NONPROD_SUBSCRIPTION_NAME": "snonprod"])
+
+    then:
+    assert subscription.previewName == "snonprod"
+  }
+
+  def "Overrides preview env name when subscription var override is set"() {
+    when:
+    def subscription = new Subscription([
+      "NONPROD_SUBSCRIPTION_NAME": "snonprod",
+      "PREVIEW_SUBSCRIPTION_NAME": "spreview"
+    ])
+
+    then:
+    assert subscription.previewName == "spreview"
+  }
+
 }

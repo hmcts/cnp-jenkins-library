@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurperClassic
+import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 class Kubectl {
@@ -11,6 +12,7 @@ class Kubectl {
   def namespace
   def resourceGroup
   def clusterName
+  def environment
   def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
@@ -29,6 +31,7 @@ class Kubectl {
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
     this.aksSubscription = aksSubscription
+    this.environment = steps.env.DEPLOYMENT_ENVIRONMENT
   }
 
   // ignore return status so doesn't fail if namespace already exists
@@ -105,7 +108,23 @@ class Kubectl {
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a --overwrite-existing ", returnStdout: true)
+    def azureConfigName = resolveAzureConfigName()
+    if (usesEnvironmentManagedIdentity()) {
+      this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName} az login --identity", returnStdout: true)
+    }
+    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a --overwrite-existing ", returnStdout: true)
+  }
+
+  private String resolveAzureConfigName() {
+    if (usesEnvironmentManagedIdentity()) {
+      return AgentSelector.normaliseEnvironment(this.environment)
+    }
+
+    return this.subscription
+  }
+
+  private boolean usesEnvironmentManagedIdentity() {
+    return AgentSelector.isRunningOnEnvironmentAgent(this.steps.env, this.environment)
   }
 
   private String getILBIP(String serviceName, String namespace) {

@@ -105,6 +105,53 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
   }
 
+  def "functionalTest installs Yarn dependencies when generated test package is missing install state"() {
+    given:
+      steps.fileExists('package.json') >> true
+      steps.fileExists('yarn.lock') >> true
+      steps.fileExists('.yarnrc.yml') >> true
+      steps.fileExists('node_modules/.yarn-state.yml') >> false
+      steps.fileExists('.pnp.cjs') >> false
+
+    when:
+      builder.functionalTest()
+
+    then:
+      1 * steps.echo('Installing yarn dependencies - install state missing after agent hop')
+      1 * steps.sh({ it instanceof Map && it.label == 'Install yarn dependencies' && it.script == '/usr/bin/yarn install --immutable --silent' })
+      1 * steps.sh({ !(it instanceof Map) && it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
+  }
+
+  def "functionalTest skips Yarn install when dependencies are already installed"() {
+    given:
+      steps.fileExists('package.json') >> true
+      steps.fileExists('yarn.lock') >> true
+      steps.fileExists('.yarnrc.yml') >> true
+      steps.fileExists('node_modules/.yarn-state.yml') >> true
+
+    when:
+      builder.functionalTest()
+
+    then:
+      0 * steps.sh({ it instanceof Map && it.label == 'Install yarn dependencies' })
+      1 * steps.sh({ !(it instanceof Map) && it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
+  }
+
+  def "functionalTest skips Yarn install when project is not a Yarn Berry workspace"() {
+    given:
+      steps.fileExists('package.json') >> true
+      steps.fileExists('yarn.lock') >> true
+      steps.fileExists('.yarnrc.yml') >> false
+
+    when:
+      builder.functionalTest()
+
+    then:
+      0 * steps.echo('Installing yarn dependencies - install state missing after agent hop')
+      0 * steps.sh({ it instanceof Map && it.label == 'Install yarn dependencies' })
+      1 * steps.sh({ !(it instanceof Map) && it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
+  }
+
   def "e2eTest calls 'gradle e2eTest' with '--rerun-tasks' flag"(){
     given:
       steps.publishHTML(_ as Map) >> null

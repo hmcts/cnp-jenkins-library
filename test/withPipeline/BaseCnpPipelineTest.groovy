@@ -43,6 +43,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("ws", [Closure.class], { body -> body.call() })
     helper.registerAllowedMethod("ws", [String.class, Closure.class], { String path, Closure body -> body.call() })
     helper.registerAllowedMethod("checkout", [Object.class], { _ -> return [GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'] })
+    helper.registerAllowedMethod("pwd", [], { -> 'localPath' })
     helper.registerAllowedMethod("deleteDir", [], {})
     helper.registerAllowedMethod("deleteDir",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("dir",  [String], { body ->
@@ -52,7 +53,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return []
     })
 
-    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
+    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], { List variables, Closure body -> body.call() })
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
@@ -71,6 +72,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("azureCosmosDBCreateDocument", [LinkedHashMap], null)
     helper.registerAllowedMethod("retry", [LinkedHashMap, Closure.class], {})
     helper.registerAllowedMethod("agent", [], {})
+    helper.registerAllowedMethod("stash", [LinkedHashMap.class], {})
+    helper.registerAllowedMethod("unstash", [String.class], {})
     helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], { secrets, body ->
       body.call()
     })
