@@ -68,7 +68,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableCveDashboardIngestion(String vaultName = "", List<String> publishingBranches = ["master"]) {
     config.cveDashboardIngestion = true
-    config.cveDashboardVaultName = vaultName
+    config.cveDashboardVaultName = ""
     config.cveDashboardIngestionBranches = normaliseCveDashboardBranches(publishingBranches)
   }
 

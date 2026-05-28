@@ -67,12 +67,12 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
   }
 
-  def "ensure CVE dashboard ingestion can be enabled with explicit vault name"() {
+  def "ensure CVE dashboard ingestion ignores explicit vault name"() {
     when:
-      dsl.enableCveDashboardIngestion("ccd-aat")
+      dsl.enableCveDashboardIngestion("shared-cve-dashboard")
     then:
       assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
-      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("ccd-aat")
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("")
       assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
   }
 
@@ -85,12 +85,12 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master', 'demo'])
   }
 
-  def "ensure CVE dashboard ingestion can be enabled with explicit vault and branches"() {
+  def "ensure CVE dashboard ingestion ignores explicit vault and uses branches"() {
     when:
-      dsl.enableCveDashboardIngestion("ccd-aat", [' master ', '', 'demo', 'master'])
+      dsl.enableCveDashboardIngestion("shared-cve-dashboard", [' master ', '', 'demo', 'master'])
     then:
       assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
-      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("ccd-aat")
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("")
       assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master', 'demo'])
   }
 
@@ -99,7 +99,7 @@ class AppPipelineConfigTest extends Specification {
       dsl.enableCveDashboardIngestion("ccd-aat", ['', '  '])
     then:
       assertThat(pipelineConfig.cveDashboardIngestion).isTrue()
-      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("ccd-aat")
+      assertThat(pipelineConfig.cveDashboardVaultName).isEqualTo("")
       assertThat(pipelineConfig.cveDashboardIngestionBranches).isEqualTo(['master'])
   }
 
