@@ -73,7 +73,7 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
 
     if (secretValue == forbiddenSentinel && shouldFallbackToAatSecretReader(azureConfigName, vaultName)) {
       if (!fallbackLoggedIn) {
-        echo "Preview Jenkins MI cannot read ${vaultName}; retrying with AAT Jenkins MI for DTSPO-30107 bootstrap"
+        echo "Preview Jenkins MI cannot read ${vaultName}; retrying with AAT Jenkins MI"
         loginWithManagedIdentity(fallbackAzureConfigDir)
         fallbackLoggedIn = true
       }
@@ -81,12 +81,12 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
       secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir, fallbackForbiddenSentinel).trim()
 
       if (secretValue == fallbackForbiddenSentinel) {
-        throw new RuntimeException("Preview Jenkins MI was denied access to ${vaultName}/${secretName}; AAT Jenkins MI fallback was also denied. Check whether the Key Vault module bootstrap access has been applied.")
+        throw new RuntimeException("Preview Jenkins MI was denied access to ${vaultName}/${secretName}; AAT Jenkins MI retry was also denied. Check Key Vault access policies.")
       }
     }
 
     if (secretValue == forbiddenSentinel) {
-      throw new RuntimeException("Key Vault secret ${vaultName}/${secretName} returned Forbidden and no bootstrap fallback applies")
+      throw new RuntimeException("Key Vault secret ${vaultName}/${secretName} returned Forbidden and no retry applies")
     }
 
     [envVariable: envVariable, value: secretValue]
@@ -140,8 +140,6 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
   )
 }
 
-// Temporary DTSPO-30107 bootstrap fallback. Remove once app repos have migrated
-// to the Key Vault module version that grants preview Jenkins access explicitly.
 private boolean shouldFallbackToAatSecretReader(String azureConfigName, String vaultName) {
   return azureConfigName == 'preview' && vaultName ==~ /.*-aat$/
 }

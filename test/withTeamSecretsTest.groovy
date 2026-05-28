@@ -146,7 +146,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
       it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat'") &&
         it.contains("az keyvault secret show --vault-name 'civil-aat' --name 'case-document-am-api-s2s-secret'")
     }
-    assertThat(echoCalls).anyMatch { it.contains('retrying with AAT Jenkins MI for DTSPO-30107 bootstrap') }
+    assertThat(echoCalls).anyMatch { it.contains('retrying with AAT Jenkins MI') }
   }
 
   @Test
@@ -159,7 +159,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     assertThatThrownBy {
       script.call(nonAatPreviewConfig(), 'preview', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('returned Forbidden and no bootstrap fallback applies')
+      .hasMessageContaining('returned Forbidden and no retry applies')
 
     assertThat(shellCalls*.script).noneMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }
   }
@@ -174,7 +174,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     assertThatThrownBy {
       script.call(config(), 'aat', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('returned Forbidden and no bootstrap fallback applies')
+      .hasMessageContaining('returned Forbidden and no retry applies')
 
     assertThat(echoCalls).isEmpty()
   }
@@ -189,8 +189,8 @@ class WithTeamSecretsTest extends BasePipelineTest {
     assertThatThrownBy {
       script.call(config(), 'preview', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('AAT Jenkins MI fallback was also denied')
-      .hasMessageContaining('Key Vault module bootstrap access')
+      .hasMessageContaining('AAT Jenkins MI retry was also denied')
+      .hasMessageContaining('Check Key Vault access policies')
   }
 
   @Test
@@ -209,7 +209,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
 
     assertThat(bodyCalled).isTrue()
     assertThat(shellCalls*.script.findAll { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }).hasSize(1)
-    assertThat(echoCalls.findAll { it.contains('retrying with AAT Jenkins MI for DTSPO-30107 bootstrap') }).hasSize(1)
+    assertThat(echoCalls.findAll { it.contains('retrying with AAT Jenkins MI') }).hasSize(1)
     assertThat(withEnvCalls.toString()).contains('CASE_DOCUMENT_AM_API_S2S_SECRET=case-document-secret')
     assertThat(withEnvCalls.toString()).contains('SECOND_SECRET=second-secret-value')
   }
