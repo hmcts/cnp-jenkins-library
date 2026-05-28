@@ -261,8 +261,6 @@ def withCveDashboardSecretsIfEnabled(AppPipelineConfig config, String product, S
   }
 
   def dashboardEnvironment = environment?.trim()
-  def vaultName = config.cveDashboardVaultName?.trim() ?: "ccd-${dashboardEnvironment}"
-  def keyVaultUrl = "https://${vaultName}.vault.azure.net/"
   def secrets = [
     [secretType: 'Secret', name: 'cve-dashboard-cve-intake-api-key', version: '', envVariable: 'CVE_DASHBOARD_API_KEY']
   ]
@@ -271,7 +269,7 @@ def withCveDashboardSecretsIfEnabled(AppPipelineConfig config, String product, S
     "CVE_DASHBOARD_URL=https://cve-dashboard.${dashboardEnvironment}.platform.hmcts.net",
     "CVE_DASHBOARD_PUBLISH_BRANCHES=${normaliseCveDashboardBranches(config.cveDashboardIngestionBranches).join(',')}"
   ]) {
-    withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: keyVaultUrl) {
+    withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: 'https://ccd-aat.vault.azure.net/') {
       body.call()
     }
   }
