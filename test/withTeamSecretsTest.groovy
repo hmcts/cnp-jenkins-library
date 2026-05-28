@@ -52,10 +52,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
       }
       if (args.script.contains('keyvault secret show')) {
         if (forbiddenAzureConfigNames.any { String azureConfigName -> args.script.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-${azureConfigName}'") }) {
-          if (!args.script.contains("if true; then")) {
-            throw new RuntimeException('az keyvault secret show failed')
-          }
-          return forbiddenSentinelFrom(args.script)
+          throw new RuntimeException('az keyvault secret show failed')
         }
         if (args.script.contains("--name 'second-secret'")) {
           return 'second-secret-value'
@@ -192,7 +189,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     assertThatThrownBy {
       script.call(config(), 'preview', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('AAT Jenkins MI retry was also denied')
+      .hasMessageContaining('AAT Jenkins MI retry also failed')
       .hasMessageContaining('Check Key Vault access policies')
   }
 
@@ -276,11 +273,5 @@ class WithTeamSecretsTest extends BasePipelineTest {
       ],
       vaultEnvironmentOverrides: ['preview': 'aat', 'dev': 'stg']
     ]
-  }
-
-  private String forbiddenSentinelFrom(String script) {
-    def matcher = script =~ /echo '(__HMCTS_KEYVAULT_FORBIDDEN_[^']+)'/
-    assertThat(matcher.find()).isTrue()
-    return matcher.group(1)
   }
 }

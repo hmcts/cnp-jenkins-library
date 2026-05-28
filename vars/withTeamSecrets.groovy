@@ -68,26 +68,27 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
   List<String> secretEnvVars = secrets.collect { Map<String, Object> secret ->
     String secretName = secret.name.toString()
     String envVariable = secret.envVariable.toString()
-    String forbiddenSentinel = keyVaultForbiddenSentinel()
     boolean retryWithAat = shouldRetryWithAatSecretReader(azureConfigName, vaultName)
-    String secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir, forbiddenSentinel, retryWithAat).trim()
+    String secretValue
 
-    if (secretValue == forbiddenSentinel && retryWithAat) {
+    try {
+      secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir).trim()
+    } catch (Exception primaryError) {
+      if (!retryWithAat) {
+        throw primaryError
+      }
+
       if (!fallbackLoggedIn) {
         echo "Preview Jenkins MI cannot read ${vaultName}; retrying with AAT Jenkins MI"
         loginWithManagedIdentity(fallbackAzureConfigDir)
         fallbackLoggedIn = true
       }
-      String fallbackForbiddenSentinel = keyVaultForbiddenSentinel()
-      secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir, fallbackForbiddenSentinel, true).trim()
 
-      if (secretValue == fallbackForbiddenSentinel) {
-        throw new RuntimeException("Preview Jenkins MI was denied access to ${vaultName}/${secretName}; AAT Jenkins MI retry was also denied. Check Key Vault access policies.")
+      try {
+        secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir).trim()
+      } catch (Exception fallbackError) {
+        throw new RuntimeException("Preview Jenkins MI could not read ${vaultName}/${secretName}; AAT Jenkins MI retry also failed. Check Key Vault access policies.", fallbackError)
       }
-    }
-
-    if (secretValue == forbiddenSentinel) {
-      throw new RuntimeException("Key Vault secret ${vaultName}/${secretName} returned Forbidden and no retry applies")
     }
 
     [envVariable: envVariable, value: secretValue]
@@ -113,7 +114,7 @@ private void loginWithManagedIdentity(String azureConfigDir) {
   )
 }
 
-private String readKeyVaultSecret(String vaultName, String secretName, String azureConfigDir, String failureSentinel, boolean returnFailureSentinel) {
+private String readKeyVaultSecret(String vaultName, String secretName, String azureConfigDir) {
   sh(
     label: "az keyvault secret show ${vaultName}/${secretName}",
     script: """
@@ -123,12 +124,6 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
       status=\$?
 
       if [ "\$status" -ne 0 ]; then
-        if ${returnFailureSentinel ? 'true' : 'false'}; then
-          rm -f "\$error_file"
-          echo '${shellQuote(failureSentinel)}'
-          exit 0
-        fi
-
         cat "\$error_file" >&2
         rm -f "\$error_file"
         exit "\$status"
@@ -143,10 +138,6 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
 
 private boolean shouldRetryWithAatSecretReader(String azureConfigName, String vaultName) {
   return azureConfigName == 'preview' && vaultName ==~ /.*-aat$/
-}
-
-private String keyVaultForbiddenSentinel() {
-  return "__HMCTS_KEYVAULT_FORBIDDEN_${java.util.UUID.randomUUID()}__"
 }
 
 private String vaultNameFromUrl(String keyVaultUrl) {
