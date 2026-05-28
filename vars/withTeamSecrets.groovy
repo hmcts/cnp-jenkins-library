@@ -69,16 +69,17 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
     String secretName = secret.name.toString()
     String envVariable = secret.envVariable.toString()
     String forbiddenSentinel = keyVaultForbiddenSentinel()
-    String secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir, forbiddenSentinel).trim()
+    boolean retryWithAat = shouldRetryWithAatSecretReader(azureConfigName, vaultName)
+    String secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir, forbiddenSentinel, retryWithAat).trim()
 
-    if (secretValue == forbiddenSentinel && shouldFallbackToAatSecretReader(azureConfigName, vaultName)) {
+    if (secretValue == forbiddenSentinel && retryWithAat) {
       if (!fallbackLoggedIn) {
         echo "Preview Jenkins MI cannot read ${vaultName}; retrying with AAT Jenkins MI"
         loginWithManagedIdentity(fallbackAzureConfigDir)
         fallbackLoggedIn = true
       }
       String fallbackForbiddenSentinel = keyVaultForbiddenSentinel()
-      secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir, fallbackForbiddenSentinel).trim()
+      secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir, fallbackForbiddenSentinel, true).trim()
 
       if (secretValue == fallbackForbiddenSentinel) {
         throw new RuntimeException("Preview Jenkins MI was denied access to ${vaultName}/${secretName}; AAT Jenkins MI retry was also denied. Check Key Vault access policies.")
@@ -112,7 +113,7 @@ private void loginWithManagedIdentity(String azureConfigDir) {
   )
 }
 
-private String readKeyVaultSecret(String vaultName, String secretName, String azureConfigDir, String forbiddenSentinel) {
+private String readKeyVaultSecret(String vaultName, String secretName, String azureConfigDir, String failureSentinel, boolean returnFailureSentinel) {
   sh(
     label: "az keyvault secret show ${vaultName}/${secretName}",
     script: """
@@ -122,9 +123,9 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
       status=\$?
 
       if [ "\$status" -ne 0 ]; then
-        if grep -Eqi "Forbidden|AccessDenied" "\$error_file"; then
+        if ${returnFailureSentinel ? 'true' : 'false'}; then
           rm -f "\$error_file"
-          echo '${shellQuote(forbiddenSentinel)}'
+          echo '${shellQuote(failureSentinel)}'
           exit 0
         fi
 
@@ -140,7 +141,7 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
   )
 }
 
-private boolean shouldFallbackToAatSecretReader(String azureConfigName, String vaultName) {
+private boolean shouldRetryWithAatSecretReader(String azureConfigName, String vaultName) {
   return azureConfigName == 'preview' && vaultName ==~ /.*-aat$/
 }
 

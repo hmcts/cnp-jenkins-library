@@ -52,6 +52,9 @@ class WithTeamSecretsTest extends BasePipelineTest {
       }
       if (args.script.contains('keyvault secret show')) {
         if (forbiddenAzureConfigNames.any { String azureConfigName -> args.script.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-${azureConfigName}'") }) {
+          if (!args.script.contains("if true; then")) {
+            throw new RuntimeException('az keyvault secret show failed')
+          }
           return forbiddenSentinelFrom(args.script)
         }
         if (args.script.contains("--name 'second-secret'")) {
@@ -159,7 +162,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     assertThatThrownBy {
       script.call(nonAatPreviewConfig(), 'preview', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('returned Forbidden and no retry applies')
+      .hasMessageContaining('az keyvault secret show failed')
 
     assertThat(shellCalls*.script).noneMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }
   }
@@ -174,7 +177,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     assertThatThrownBy {
       script.call(config(), 'aat', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('returned Forbidden and no retry applies')
+      .hasMessageContaining('az keyvault secret show failed')
 
     assertThat(echoCalls).isEmpty()
   }
