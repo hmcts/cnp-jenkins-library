@@ -153,6 +153,40 @@ class CveDashboardSnapshotPublisherTest extends Specification {
       ]
   }
 
+  def "removes packages from suppressed list when the same package is active"() {
+    given:
+      def request
+      def report = [
+        vulnerabilities: [
+          [module_name: 'lodash', cves: ['CVE-2026-1001'], severity: 'high', cvss: [score: 7.8]]
+        ],
+        suppressed     : [
+          [module_name: 'lodash', cves: ['CVE-2026-1001'], severity: 'high', cvss: [score: 7.8]],
+          [module_name: 'legacy-helper', cves: ['CVE-2026-1001'], severity: 'low', cvss: [score: 3.1]]
+        ]
+      ]
+
+    when:
+      publisher.publishSnapshot('node', report)
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> { LinkedHashMap args ->
+        request = args
+        [status: 200]
+      }
+
+      def payload = new JsonSlurperClassic().parseText(request.requestBody)
+      payload.items == [
+        [
+          cve               : 'CVE-2026-1001',
+          severity          : 'high',
+          activePackages    : ['lodash'],
+          suppressedPackages: ['legacy-helper'],
+          score             : '7.8'
+        ]
+      ]
+  }
+
   def "skips publishing when dashboard secrets are absent"() {
     given:
       envVars.remove('CVE_DASHBOARD_URL')
