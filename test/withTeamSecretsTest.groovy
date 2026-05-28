@@ -13,7 +13,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
   List<String> echoCalls = []
   List<List<String>> withEnvCalls = []
   boolean failAzLogin = false
-  boolean failPreviewKeyVaultSecretWithForbidden = false
+  Set<String> forbiddenAzureConfigNames = [] as Set
 
   @Override
   @Before
@@ -51,8 +51,8 @@ class WithTeamSecretsTest extends BasePipelineTest {
         throw new RuntimeException('az login failed')
       }
       if (args.script.contains('keyvault secret show')) {
-        if (failPreviewKeyVaultSecretWithForbidden && args.script.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-preview'")) {
-          return '__HMCTS_KEYVAULT_FORBIDDEN__'
+        if (forbiddenAzureConfigNames.any { String azureConfigName -> args.script.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-${azureConfigName}'") }) {
+          return forbiddenSentinelFrom(args.script)
         }
         if (args.script.contains("--name 'second-secret'")) {
           return 'second-secret-value'
@@ -126,7 +126,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     binding.env.BUILD_AGENT_TYPE = 'civil-preview'
     binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
-    failPreviewKeyVaultSecretWithForbidden = true
+    forbiddenAzureConfigNames = ['preview'] as Set
     boolean bodyCalled = false
 
     script.call(config(), 'preview', 'civil') {
@@ -147,6 +147,71 @@ class WithTeamSecretsTest extends BasePipelineTest {
         it.contains("az keyvault secret show --vault-name 'civil-aat' --name 'case-document-am-api-s2s-secret'")
     }
     assertThat(echoCalls).anyMatch { it.contains('retrying with AAT Jenkins MI for DTSPO-30107 bootstrap') }
+  }
+
+  @Test
+  void 'preview environment agent does not fall back for non aat vaults'() {
+    binding.env.BUILD_AGENT_TYPE = 'civil-preview'
+    binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
+    forbiddenAzureConfigNames = ['preview'] as Set
+
+    assertThatThrownBy {
+      script.call(nonAatPreviewConfig(), 'preview', 'civil') {}
+    }.isInstanceOf(RuntimeException)
+      .hasMessageContaining('returned Forbidden and no bootstrap fallback applies')
+
+    assertThat(shellCalls*.script).noneMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }
+  }
+
+  @Test
+  void 'non preview environment agent does not fall back for aat vaults'() {
+    binding.env.BUILD_AGENT_TYPE = 'civil-aat'
+    binding.env.DEPLOYMENT_ENVIRONMENT = 'aat'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
+    forbiddenAzureConfigNames = ['aat'] as Set
+
+    assertThatThrownBy {
+      script.call(config(), 'aat', 'civil') {}
+    }.isInstanceOf(RuntimeException)
+      .hasMessageContaining('returned Forbidden and no bootstrap fallback applies')
+
+    assertThat(echoCalls).isEmpty()
+  }
+
+  @Test
+  void 'preview environment agent reports when aat fallback is also denied'() {
+    binding.env.BUILD_AGENT_TYPE = 'civil-preview'
+    binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
+    forbiddenAzureConfigNames = ['preview', 'aat'] as Set
+
+    assertThatThrownBy {
+      script.call(config(), 'preview', 'civil') {}
+    }.isInstanceOf(RuntimeException)
+      .hasMessageContaining('AAT Jenkins MI fallback was also denied')
+      .hasMessageContaining('Key Vault module bootstrap access')
+  }
+
+  @Test
+  void 'preview environment agent falls back once for multiple secrets in one aat vault'() {
+    binding.env.BUILD_AGENT_TYPE = 'civil-preview'
+    binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
+    forbiddenAzureConfigNames = ['preview'] as Set
+    boolean bodyCalled = false
+
+    script.call(multiSecretSingleVaultConfig(), 'preview', 'civil') {
+      bodyCalled = true
+      assertThat(binding.env.CASE_DOCUMENT_AM_API_S2S_SECRET).isEqualTo('case-document-secret')
+      assertThat(binding.env.SECOND_SECRET).isEqualTo('second-secret-value')
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(shellCalls*.script.findAll { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }).hasSize(1)
+    assertThat(echoCalls.findAll { it.contains('retrying with AAT Jenkins MI for DTSPO-30107 bootstrap') }).hasSize(1)
+    assertThat(withEnvCalls.toString()).contains('CASE_DOCUMENT_AM_API_S2S_SECRET=case-document-secret')
+    assertThat(withEnvCalls.toString()).contains('SECOND_SECRET=second-secret-value')
   }
 
   @Test
@@ -173,6 +238,17 @@ class WithTeamSecretsTest extends BasePipelineTest {
     ]
   }
 
+  private Map nonAatPreviewConfig() {
+    [
+      vaultSecrets: [
+        'civil-${env}': [
+          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'case-document-am-api-s2s-secret', envVariable: 'CASE_DOCUMENT_AM_API_S2S_SECRET']
+        ]
+      ],
+      vaultEnvironmentOverrides: ['preview': 'stg']
+    ]
+  }
+
   private Map multiVaultConfig() {
     [
       vaultSecrets: [
@@ -185,5 +261,23 @@ class WithTeamSecretsTest extends BasePipelineTest {
       ],
       vaultEnvironmentOverrides: ['preview': 'aat', 'dev': 'stg']
     ]
+  }
+
+  private Map multiSecretSingleVaultConfig() {
+    [
+      vaultSecrets: [
+        'civil-${env}': [
+          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'case-document-am-api-s2s-secret', envVariable: 'CASE_DOCUMENT_AM_API_S2S_SECRET'],
+          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'second-secret', envVariable: 'SECOND_SECRET']
+        ]
+      ],
+      vaultEnvironmentOverrides: ['preview': 'aat', 'dev': 'stg']
+    ]
+  }
+
+  private String forbiddenSentinelFrom(String script) {
+    def matcher = script =~ /echo '(__HMCTS_KEYVAULT_FORBIDDEN_[^']+)'/
+    assertThat(matcher.find()).isTrue()
+    return matcher.group(1)
   }
 }
