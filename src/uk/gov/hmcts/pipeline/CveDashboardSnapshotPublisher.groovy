@@ -77,23 +77,27 @@ class CveDashboardSnapshotPublisher implements Serializable {
       addGradleFindings(aggregate, report?.dependencies)
     }
 
-    aggregate.values()
-      .sort { it.cve }
-      .collect { entry ->
-        entry.suppressedPackages.removeAll(entry.activePackages)
-        def item = [
-          cve               : entry.cve,
-          severity          : entry.severity.toLowerCase(Locale.ROOT),
-          activePackages    : entry.activePackages.sort(),
-          suppressedPackages: entry.suppressedPackages.sort()
-        ]
+    def entries = new ArrayList(aggregate.values())
+    entries.sort { left, right -> left['cve'] <=> right['cve'] }
 
-        if (entry.score != null) {
-          item.score = String.format(Locale.US, '%.1f', entry.score as BigDecimal)
-        }
+    entries.collect { entry ->
+      def activePackages = new ArrayList(entry['activePackages'] ?: [])
+      def suppressedPackages = new ArrayList(entry['suppressedPackages'] ?: [])
+      suppressedPackages.removeAll(activePackages)
 
-        item
+      def item = [
+        cve               : entry['cve'],
+        severity          : entry['severity'].toLowerCase(Locale.ROOT),
+        activePackages    : activePackages.sort(),
+        suppressedPackages: suppressedPackages.sort()
+      ]
+
+      if (entry['score'] != null) {
+        item.score = String.format(Locale.US, '%.1f', entry['score'] as BigDecimal)
       }
+
+      item
+    }
   }
 
   private void addYarnFindings(Map aggregate, findings, boolean suppressed) {
