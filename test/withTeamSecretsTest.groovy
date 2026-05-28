@@ -13,6 +13,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
   List<String> echoCalls = []
   List<List<String>> withEnvCalls = []
   boolean failAzLogin = false
+  boolean failLegacyKeyVault = false
   Set<String> forbiddenAzureConfigNames = [] as Set
 
   @Override
@@ -26,7 +27,20 @@ class WithTeamSecretsTest extends BasePipelineTest {
 
     helper.registerAllowedMethod('withAzureKeyvault', [LinkedHashMap, Closure.class], { Map args, Closure body ->
       keyVaultCalls << args
-      body()
+      if (failLegacyKeyVault) {
+        throw new RuntimeException('legacy key vault failed')
+      }
+      Map previousValues = [:]
+      args.azureKeyVaultSecrets?.each { Map secret ->
+        String envVariable = secret.envVariable.toString()
+        previousValues[envVariable] = binding.env[envVariable]
+        binding.env[envVariable] = secret.name == 'second-secret' ? 'second-secret-value' : 'case-document-secret'
+      }
+      try {
+        body()
+      } finally {
+        previousValues.each { key, value -> binding.env[key] = value }
+      }
     })
     helper.registerAllowedMethod('withEnv', [List.class, Closure.class], { List<String> variables, Closure body ->
       withEnvCalls << variables
@@ -122,7 +136,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
   }
 
   @Test
-  void 'preview environment agent falls back to aat managed identity when aat vault read is forbidden'() {
+  void 'preview environment agent falls back to legacy key vault credentials when aat vault read fails'() {
     binding.env.BUILD_AGENT_TYPE = 'civil-preview'
     binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
@@ -135,18 +149,17 @@ class WithTeamSecretsTest extends BasePipelineTest {
     }
 
     assertThat(bodyCalled).isTrue()
-    assertThat(keyVaultCalls).isEmpty()
+    assertThat(keyVaultCalls).hasSize(1)
+    assertThat(keyVaultCalls[0].keyVaultURLOverride).isEqualTo('https://civil-aat.vault.azure.net/')
+    assertThat(keyVaultCalls[0].applicationIDOverride).isEqualTo('ptl-client-id')
+    assertThat(keyVaultCalls[0].applicationSecretOverride).isEqualTo('ptl-client-secret')
     assertThat(shellCalls*.script).anyMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-preview' az login --identity >/dev/null") }
-    assertThat(shellCalls*.script).anyMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity >/dev/null") }
     assertThat(shellCalls*.script).anyMatch {
       it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-preview'") &&
         it.contains("az keyvault secret show --vault-name 'civil-aat' --name 'case-document-am-api-s2s-secret'")
     }
-    assertThat(shellCalls*.script).anyMatch {
-      it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat'") &&
-        it.contains("az keyvault secret show --vault-name 'civil-aat' --name 'case-document-am-api-s2s-secret'")
-    }
-    assertThat(echoCalls).anyMatch { it.contains('retrying with AAT Jenkins MI') }
+    assertThat(shellCalls*.script).noneMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat'") }
+    assertThat(echoCalls).anyMatch { it.contains('retrying with legacy Key Vault credentials') }
   }
 
   @Test
@@ -161,7 +174,7 @@ class WithTeamSecretsTest extends BasePipelineTest {
     }.isInstanceOf(RuntimeException)
       .hasMessageContaining('az keyvault secret show failed')
 
-    assertThat(shellCalls*.script).noneMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }
+    assertThat(keyVaultCalls).isEmpty()
   }
 
   @Test
@@ -180,17 +193,17 @@ class WithTeamSecretsTest extends BasePipelineTest {
   }
 
   @Test
-  void 'preview environment agent reports when aat fallback is also denied'() {
+  void 'preview environment agent reports when legacy fallback is also denied'() {
     binding.env.BUILD_AGENT_TYPE = 'civil-preview'
     binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
-    forbiddenAzureConfigNames = ['preview', 'aat'] as Set
+    forbiddenAzureConfigNames = ['preview'] as Set
+    failLegacyKeyVault = true
 
     assertThatThrownBy {
       script.call(config(), 'preview', 'civil') {}
     }.isInstanceOf(RuntimeException)
-      .hasMessageContaining('AAT Jenkins MI retry also failed')
-      .hasMessageContaining('Check Key Vault access policies')
+      .hasMessageContaining('legacy Key Vault credentials retry also failed')
   }
 
   @Test
@@ -208,10 +221,9 @@ class WithTeamSecretsTest extends BasePipelineTest {
     }
 
     assertThat(bodyCalled).isTrue()
-    assertThat(shellCalls*.script.findAll { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat' az login --identity") }).hasSize(1)
-    assertThat(echoCalls.findAll { it.contains('retrying with AAT Jenkins MI') }).hasSize(1)
-    assertThat(withEnvCalls.toString()).contains('CASE_DOCUMENT_AM_API_S2S_SECRET=case-document-secret')
-    assertThat(withEnvCalls.toString()).contains('SECOND_SECRET=second-secret-value')
+    assertThat(keyVaultCalls).hasSize(1)
+    assertThat(shellCalls*.script).noneMatch { it.contains("AZURE_CONFIG_DIR='/opt/jenkins/.azure-aat'") }
+    assertThat(echoCalls.findAll { it.contains('retrying with legacy Key Vault credentials') }).hasSize(1)
   }
 
   @Test

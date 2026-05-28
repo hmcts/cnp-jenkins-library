@@ -60,42 +60,38 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
   String vaultName = vaultNameFromUrl(keyVaultUrl)
   String azureConfigName = AgentSelector.normaliseEnvironment(env.DEPLOYMENT_ENVIRONMENT)
   String azureConfigDir = "/opt/jenkins/.azure-${azureConfigName}"
-  String fallbackAzureConfigDir = "/opt/jenkins/.azure-aat"
+  boolean retryWithLegacyCredentials = shouldRetryWithLegacySecretReader(azureConfigName, vaultName)
 
   loginWithManagedIdentity(azureConfigDir)
-  boolean fallbackLoggedIn = false
 
-  List<String> secretEnvVars = secrets.collect { Map<String, Object> secret ->
-    String secretName = secret.name.toString()
-    String envVariable = secret.envVariable.toString()
-    boolean retryWithAat = shouldRetryWithAatSecretReader(azureConfigName, vaultName)
-    String secretValue
+  List<String> variables
+  try {
+    variables = secrets.collect { Map<String, Object> secret ->
+      String secretName = secret.name.toString()
+      String envVariable = secret.envVariable.toString()
+      String secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir).trim()
 
-    try {
-      secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir).trim()
-    } catch (Exception primaryError) {
-      if (!retryWithAat) {
-        throw primaryError
-      }
-
-      if (!fallbackLoggedIn) {
-        echo "Preview Jenkins MI cannot read ${vaultName}; retrying with AAT Jenkins MI"
-        loginWithManagedIdentity(fallbackAzureConfigDir)
-        fallbackLoggedIn = true
-      }
-
-      try {
-        secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir).trim()
-      } catch (Exception fallbackError) {
-        throw new RuntimeException("Preview Jenkins MI could not read ${vaultName}/${secretName}; AAT Jenkins MI retry also failed. Check Key Vault access policies.", fallbackError)
-      }
+      "${envVariable}=${secretValue}"
+    }
+  } catch (Exception primaryError) {
+    if (!retryWithLegacyCredentials) {
+      throw primaryError
     }
 
-    [envVariable: envVariable, value: secretValue]
-  }
-
-  List<String> variables = secretEnvVars.collect { Map<String, String> secret ->
-    "${secret.envVariable}=${secret.value}"
+    try {
+      echo "Preview Jenkins MI cannot read ${vaultName}; retrying with legacy Key Vault credentials"
+      withAzureKeyvault(
+        azureKeyVaultSecrets: secrets,
+        keyVaultURLOverride: keyVaultUrl,
+        applicationIDOverride: env.AZURE_CLIENT_ID,
+        applicationSecretOverride: env.AZURE_CLIENT_SECRET
+      ) {
+        body.call()
+      }
+    } catch (Exception fallbackError) {
+      throw new RuntimeException("Preview Jenkins MI could not read ${vaultName}; legacy Key Vault credentials retry also failed.", fallbackError)
+    }
+    return
   }
 
   // Team secrets are expected to be single-line values. If a future consumer
@@ -103,15 +99,6 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
   withEnv(variables) {
     body.call()
   }
-}
-
-private void loginWithManagedIdentity(String azureConfigDir) {
-  sh(
-    script: """
-      set +x
-      env AZURE_CONFIG_DIR='${shellQuote(azureConfigDir)}' az login --identity >/dev/null
-    """.stripIndent().trim()
-  )
 }
 
 private String readKeyVaultSecret(String vaultName, String secretName, String azureConfigDir) {
@@ -136,8 +123,17 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
   )
 }
 
-private boolean shouldRetryWithAatSecretReader(String azureConfigName, String vaultName) {
+private boolean shouldRetryWithLegacySecretReader(String azureConfigName, String vaultName) {
   return azureConfigName == 'preview' && vaultName ==~ /.*-aat$/
+}
+
+private void loginWithManagedIdentity(String azureConfigDir) {
+  sh(
+    script: """
+      set +x
+      env AZURE_CONFIG_DIR='${shellQuote(azureConfigDir)}' az login --identity >/dev/null
+    """.stripIndent().trim()
+  )
 }
 
 private String vaultNameFromUrl(String keyVaultUrl) {
