@@ -60,25 +60,28 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
   String vaultName = vaultNameFromUrl(keyVaultUrl)
   String azureConfigName = AgentSelector.normaliseEnvironment(env.DEPLOYMENT_ENVIRONMENT)
   String azureConfigDir = "/opt/jenkins/.azure-${azureConfigName}"
+  String fallbackAzureConfigDir = "/opt/jenkins/.azure-aat"
 
-  sh(
-    script: """
-      set +x
-      env AZURE_CONFIG_DIR='${shellQuote(azureConfigDir)}' az login --identity >/dev/null
-    """.stripIndent().trim()
-  )
+  loginWithManagedIdentity(azureConfigDir)
+  boolean fallbackLoggedIn = false
 
   List<String> secretEnvVars = secrets.collect { Map<String, Object> secret ->
     String secretName = secret.name.toString()
     String envVariable = secret.envVariable.toString()
-    String secretValue = sh(
-      label: "az keyvault secret show ${vaultName}/${secretName}",
-      script: """
-        set +x
-        env AZURE_CONFIG_DIR='${shellQuote(azureConfigDir)}' az keyvault secret show --vault-name '${shellQuote(vaultName)}' --name '${shellQuote(secretName)}' --query value -o tsv
-      """.stripIndent().trim(),
-      returnStdout: true
-    ).trim()
+    String secretValue = readKeyVaultSecret(vaultName, secretName, azureConfigDir, true).trim()
+
+    if (secretValue == keyVaultForbiddenSentinel() && shouldFallbackToAatSecretReader(azureConfigName, vaultName)) {
+      echo "Preview Jenkins MI cannot read ${vaultName}/${secretName}; retrying with AAT Jenkins MI for DTSPO-30107 bootstrap"
+      if (!fallbackLoggedIn) {
+        loginWithManagedIdentity(fallbackAzureConfigDir)
+        fallbackLoggedIn = true
+      }
+      secretValue = readKeyVaultSecret(vaultName, secretName, fallbackAzureConfigDir, false).trim()
+    }
+
+    if (secretValue == keyVaultForbiddenSentinel()) {
+      throw new RuntimeException("Key Vault secret ${vaultName}/${secretName} returned Forbidden and no bootstrap fallback applies")
+    }
 
     [envVariable: envVariable, value: secretValue]
   }
@@ -92,6 +95,51 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
   withEnv(variables) {
     body.call()
   }
+}
+
+private void loginWithManagedIdentity(String azureConfigDir) {
+  sh(
+    script: """
+      set +x
+      env AZURE_CONFIG_DIR='${shellQuote(azureConfigDir)}' az login --identity >/dev/null
+    """.stripIndent().trim()
+  )
+}
+
+private String readKeyVaultSecret(String vaultName, String secretName, String azureConfigDir, boolean returnForbiddenSentinel) {
+  sh(
+    label: "az keyvault secret show ${vaultName}/${secretName}",
+    script: """
+      set +x
+      error_file=\$(mktemp)
+      secret_value=\$(env AZURE_CONFIG_DIR='${shellQuote(azureConfigDir)}' az keyvault secret show --vault-name '${shellQuote(vaultName)}' --name '${shellQuote(secretName)}' --query value -o tsv 2>"\$error_file")
+      status=\$?
+
+      if [ "\$status" -ne 0 ]; then
+        if ${returnForbiddenSentinel ? 'grep -Eqi "Forbidden|AccessDenied" "$error_file"' : 'false'}; then
+          rm -f "\$error_file"
+          echo '${keyVaultForbiddenSentinel()}'
+          exit 0
+        fi
+
+        cat "\$error_file" >&2
+        rm -f "\$error_file"
+        exit "\$status"
+      fi
+
+      rm -f "\$error_file"
+      printf '%s' "\$secret_value"
+    """.stripIndent().trim(),
+    returnStdout: true
+  )
+}
+
+private boolean shouldFallbackToAatSecretReader(String azureConfigName, String vaultName) {
+  return azureConfigName == 'preview' && vaultName ==~ /.*-aat$/
+}
+
+private String keyVaultForbiddenSentinel() {
+  return '__HMCTS_KEYVAULT_FORBIDDEN__'
 }
 
 private String vaultNameFromUrl(String keyVaultUrl) {
