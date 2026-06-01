@@ -68,8 +68,6 @@ class MetricsPublisher implements Serializable {
     try {
       def actionClass = this.class.classLoader.loadClass('org.jenkinsci.plugins.workflow.libs.LibrariesAction')
       def action = currentBuild?.rawBuild?.getAction(actionClass)
-      def record = action?.libraries?.find { it.name == libraryName }
-      return record?.version
 
       // Try each name in order, return first match
       for (name in namesToTry) {
