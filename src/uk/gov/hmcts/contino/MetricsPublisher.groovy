@@ -41,6 +41,8 @@ class MetricsPublisher implements Serializable {
       job_url                      : env.JOB_URL,
       git_url                      : env.GIT_URL,
       git_commit                   : env.GIT_COMMIT,
+      shared_library_name          : 'Infrastructure',
+      shared_library_version       : resolveSharedLibraryVersion('Infrastructure'),
       current_build_number         : currentBuild.number,
       current_step_name            : currentStepName,
       current_build_result         : currentBuild.result,
@@ -56,6 +58,23 @@ class MetricsPublisher implements Serializable {
     ]
   }
 
+  private String resolveSharedLibraryVersion(String libraryName) {
+    // Optional override for local/unit testing
+    if (env?.SHARED_LIBRARY_VERSION) {
+      return env.SHARED_LIBRARY_VERSION
+    }
+
+    // Jenkins does not expose a standard env var for shared library version.
+    // Try reading loaded library metadata from the build at runtime.
+    try {
+      def actionClass = this.class.classLoader.loadClass('org.jenkinsci.plugins.workflow.libs.LibrariesAction')
+      def action = currentBuild?.rawBuild?.getAction(actionClass)
+      def record = action?.libraries?.find { it.name == libraryName }
+      return record?.version
+    } catch (ignored) {
+      return null
+    }
+  }
 
   def publish(eventName) {
     try {
