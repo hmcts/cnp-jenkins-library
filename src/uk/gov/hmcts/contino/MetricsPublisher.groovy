@@ -63,6 +63,9 @@ class MetricsPublisher implements Serializable {
     if (env?.SHARED_LIBRARY_VERSION) {
       return env.SHARED_LIBRARY_VERSION
     }
+    
+    // try different library names as it is possible for these to vary. Default is Infrastructure
+    def namesToTry = env?.SHARED_LIBRARY_NAME ? [env.SHARED_LIBRARY_NAME] : libraryNames.split(',').collect { it.trim() }
 
     // Jenkins does not expose a standard env var for shared library version.
     // Try reading loaded library metadata from the build at runtime.
@@ -71,6 +74,17 @@ class MetricsPublisher implements Serializable {
       def action = currentBuild?.rawBuild?.getAction(actionClass)
       def record = action?.libraries?.find { it.name == libraryName }
       return record?.version
+      
+      // Try each name in order, return first match
+      for (name in namesToTry) {
+        def record = action?.libraries?.find { it.name == name }
+        if (record?.version) {
+          return record.version
+        }
+      }
+      
+      // If no match found, return first loaded library as fallback
+      return action?.libraries?.first()?.version
     } catch (ignored) {
       return null
     }
