@@ -86,6 +86,11 @@ class MetricsPublisher implements Serializable {
       // silence errors
     }
 
+    // Fallback for pipeline tests
+    if (env?.SHARED_LIBRARY_VERSION) {
+      return [env?.SHARED_LIBRARY_NAME ?: namesToTry[0], env.SHARED_LIBRARY_VERSION]
+    }
+
       return [null, null]
   }
 
