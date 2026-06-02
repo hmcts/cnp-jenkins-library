@@ -22,6 +22,7 @@ class MetricsPublisher implements Serializable {
 
   private def collectMetrics(currentStepName) {
     def dateBuildScheduled = new Date(currentBuild.timeInMillis as long)
+    def (libName, libVersion) = resolveSharedLibrary()
 
     return [
       id                           : UUID.randomUUID().toString(),
@@ -41,6 +42,8 @@ class MetricsPublisher implements Serializable {
       job_url                      : env.JOB_URL,
       git_url                      : env.GIT_URL,
       git_commit                   : env.GIT_COMMIT,
+      shared_library_name          : libName,
+      shared_library_version       : libVersion,
       current_build_number         : currentBuild.number,
       current_step_name            : currentStepName,
       current_build_result         : currentBuild.result,
@@ -56,6 +59,40 @@ class MetricsPublisher implements Serializable {
     ]
   }
 
+  private List<String> resolveSharedLibrary() {    
+    // try different library names as it is possible for these to vary. Default is Infrastructure
+    def namesToTry = env?.SHARED_LIBRARY_NAME ? [env.SHARED_LIBRARY_NAME] :  ['Infrastructure', 'Pipeline', 'Tagged']
+
+    // Jenkins does not expose a standard env var for shared library version.
+    // Try reading loaded library metadata from the build at runtime.
+    try {
+      def actionClass = this.class.classLoader.loadClass('org.jenkinsci.plugins.workflow.libs.LibrariesAction')
+      def action = currentBuild?.rawBuild?.getAction(actionClass)
+
+      // Try each name in order, return first match
+      for (name in namesToTry) {
+        def record = action?.libraries?.find { it.name == name }
+        if (record?.version) {
+          return [record.name, record.version]
+        }
+      }
+      
+      // If no match found, return first loaded library as fallback
+      def firstLib = action?.libraries?.first()
+      if (firstLib) {
+        return [firstLib.name, firstLib.version]
+      }
+    } catch (ignored) {
+      // silence errors
+    }
+
+    // Fallback for pipeline tests
+    if (env?.SHARED_LIBRARY_VERSION) {
+      return [env?.SHARED_LIBRARY_NAME ?: namesToTry[0], env.SHARED_LIBRARY_VERSION]
+    }
+
+      return [null, null]
+  }
 
   def publish(eventName) {
     try {
