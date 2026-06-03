@@ -12,13 +12,13 @@ def call(params) {
 
   stageWithAgent("Fortify Scan", product) {
     withFortifySecrets(fortifyVaultName) {
-      warnError('Failure in Fortify Scan') {
+      warnError(message: 'Failure in Fortify Scan', stageResult: 'UNSTABLE') {
         pcr.callAround('fortify-scan') {
           builder.fortifyScan()
         }
       }
 
-      warnError('Failure in Fortify vulnerability report') {
+      warnError(message: 'Failure in Fortify vulnerability report', stageResult: 'UNSTABLE') {
         fortifyVulnerabilityReport()
       }
 

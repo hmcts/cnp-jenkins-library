@@ -56,6 +56,19 @@ class Kubectl {
     this.steps.sh(returnStatus: true, script: "kubectl delete job ${name} -n ${this.namespace}")
   }
 
+  def deleteJobsByReleasePrefix(String namespace, String releasePrefix) {
+    this.steps.sh(
+      returnStatus: true,
+      script: """
+        set +e
+        JOBS=\$(kubectl get jobs -n ${namespace} -o name 2>/dev/null | grep '^job.batch/${releasePrefix}-' || true)
+        if [ -n "\$JOBS" ]; then
+          echo "\$JOBS" | xargs -r kubectl delete -n ${namespace} --ignore-not-found=true --wait=false || true
+        fi
+      """
+    )
+  }
+
   def getServiceLoadbalancerIP(String name) {
     this.getServiceLoadbalancerIP(name, this.namespace)
   }
