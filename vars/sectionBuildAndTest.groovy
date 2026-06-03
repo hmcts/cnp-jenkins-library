@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
 
@@ -21,9 +22,13 @@ def call(params) {
   def projectBranch
   def imageRegistry
   boolean noSkipImgBuild = true
+  boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
+
+    // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
+    deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
@@ -212,7 +217,7 @@ def call(params) {
       }
     }
 
-    if (noSkipImgBuild) {
+    if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING
@@ -252,6 +257,7 @@ def call(params) {
       }
     }
   }
+  return deploymentEnabled
 }
 
 def withCveDashboardSecretsIfEnabled(AppPipelineConfig config, String product, String environment, Closure body) {

@@ -75,7 +75,7 @@ def call(type, String product, String component, Closure body) {
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
-          sectionBuildAndTest(
+          def deploymentEnabled = sectionBuildAndTest(
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
@@ -85,138 +85,9 @@ def call(type, String product, String component, Closure body) {
             component: component
           )
 
-          if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-            stage('Publish Helm chart') {
-              helmPublish(
-                appPipelineConfig: pipelineConfig,
-                subscription: subscription.nonProdName,
-                environment: environment.nonProdName,
-                product: product,
-                component: component
-              )
-            }
-
-            sectionPromoteBuildToStage(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              product: product,
-              component: component,
-              stage: DockerImage.DeploymentStage.PREVIEW,
-              environment: environment.nonProdName
-            )
-          }
-
-          onPR {
-            onTerraformChangeInPR {
-              // we always need a tf plan of aat (i.e. staging)
-              sectionDeployToEnvironment(
-                appPipelineConfig: pipelineConfig,
-                pipelineCallbacksRunner: callbacksRunner,
-                pipelineType: pipelineType,
-                subscription: subscription.nonProdName,
-                aksSubscription: aksSubscriptions.aat,
-                environment: environment.nonProdName,
-                product: product,
-                component: component,
-                tfPlanOnly: true
-              )
-
-              final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
-              def githubApi = new GithubAPI(this)
-              def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, master, or non-standards
-              def labelsCache = githubApi.refreshLabelCache()
-              def topicsCache = githubApi.refreshTopicCache()
-              def branchName = branch.branchName // e.g. PR-123
-              def base_envs = ["demo", "perftest", "ithc"]
-
-              println "labelsCache: ${labelsCache} \ntopicsCache: ${topicsCache}"
-              // check if the PR has the label not-plan-on-prod
-              boolean optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
-              // check if the PR has the topic 'not-plan-on-prod' if it can not find the label `not-plan-on-prod`
-              if (!optOutTfPlanOnProdFound) {
-                optOutTfPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
-              }
-              println "optOutTfPlanOnProdFound: " + optOutTfPlanOnProdFound.toString()
-
-              // set the base environment to prod if the target branch is not in the list of base_envs
-              // todo: need to find out if we need to deal with branches 'preview' and 'aat' for AksSubscriptions
-              def base_env_name = targetBranch
-              if (!base_envs.contains(targetBranch)) {
-                base_env_name = "prod"
-              }
-
-              println "${branchName} being merged into: ${targetBranch}" + " base_env_name: " + base_env_name
-
-
-              // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
-              if (!optOutTfPlanOnProdFound) {
-                println "Apply Terraform Plan against ${base_env_name}"
-                sectionDeployToEnvironment(
-                  appPipelineConfig: pipelineConfig,
-                  pipelineCallbacksRunner: callbacksRunner,
-                  pipelineType: pipelineType,
-                  subscription: subscription."${base_env_name}Name",
-                  aksSubscription: aksSubscriptions."${base_env_name}",
-                  environment: environment."${base_env_name}Name",
-                  product: product,
-                  component: component,
-                  tfPlanOnly: true
-                )
-              } else {
-                println "Skipping Terraform Plan against ${base_env_name} ... "
-              }
-            }
-
-            sectionDeployToAKS(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              aksSubscription: aksSubscriptions.preview,
-              environment: environment.previewName,
-              product: product,
-              component: component,
-            )
-
-          }
-
-          onMaster {
-
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              aksSubscription: aksSubscriptions.aat,
-              environment: environment.nonProdName,
-              product: product,
-              component: component,
-              tfPlanOnly: false
-            )
-
-            highLevelDataSetup(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              environment: environment.nonProdName,
-              product: product,
-            )
-
-            sectionDeployToAKS(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              aksSubscription: aksSubscriptions.aat,
-              environment: environment.nonProdName,
-              product: product,
-              component: component,
-            )
-
-            stageWithAgent('Publish Helm chart', product) {
-              callbacksRunner.callAround('Publish Helm chart') {
+          if (deploymentEnabled) {
+            if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+              stage('Publish Helm chart') {
                 helmPublish(
                   appPipelineConfig: pipelineConfig,
                   subscription: subscription.nonProdName,
@@ -225,234 +96,39 @@ def call(type, String product, String component, Closure body) {
                   component: component
                 )
               }
+
+              sectionPromoteBuildToStage(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.nonProdName,
+                product: product,
+                component: component,
+                stage: DockerImage.DeploymentStage.PREVIEW,
+                environment: environment.nonProdName
+              )
             }
 
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.prodName,
-              environment: environment.prodName,
-              product: product,
-              component: component,
-              aksSubscription: aksSubscriptions.prod,
-              tfPlanOnly: false
-            )
-
-            highLevelDataSetup(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              environment: environment.prodName,
-              product: product,
-            )
-
-            sectionPromoteBuildToStage(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.nonProdName,
-              product: product,
-              component: component,
-              stage: DockerImage.DeploymentStage.PROD,
-              environment: environment.nonProdName
-            )
-
-            sectionSyncBranchesWithMaster(
-              branchestoSync: pipelineConfig.branchesToSyncWithMaster,
-              product: product
-            )
-          }
-
-          onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-            highLevelDataSetup(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              environment: environmentName,
-              product: product,
-            )
-
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscriptionName,
-              environment: environmentName,
-              product: product,
-              component: component,
-              aksSubscription: aksSubscription,
-              tfPlanOnly: false
-            )
-
-          // Performance Test Pipeline: Setup -> Parallel Testing
-          if ((pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) && environmentName in pipelineConfig.performanceTestEnvironments) {
-
-            // Set aksUrl from TEST_URL for performance test stages
-            def aksUrl = env.TEST_URL
-
-            // Helper method to set test environment variables (only used within performance stages)
-            def testEnv = { String testUrl, block ->
-              //def testEnvName = new Environment(env).nonProdName
-              def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${environmentName}"]
-
-              withEnv(testEnvVariables) {
-                echo "Using TEST_URL: ${env.TEST_URL}"
-                echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
-                block.call()
-              }
+            handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
+            handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
+            onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+              handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
             }
 
-            def pcr = callbacksRunner
-
-            // Load performance test secrets once for all stages
-            def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/" //https://et-perftest.vault.azure.net/
-            def perfSecrets = [
-              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
-              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
-              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
-              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
-            ]
-            
-            withAzureKeyvault(
-              azureKeyVaultSecrets: perfSecrets,
-              keyVaultURLOverride: perfKeyVaultUrl
-            ) {
-
-              // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
-              // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
-              stageWithAgent("Dynatrace Performance Setup - ${environmentName}", product) {
-                testEnv(aksUrl) {
-                  try {
-                    pcr.callAround("dynatracePerformanceSetup:${environmentName}") {
-                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environmentName}") {
-                        dynatracePerformanceSetup([
-                          product: product,
-                          component: component,
-                          environment: environmentName,
-                          testUrl: env.TEST_URL,
-                          secrets: pipelineConfig.vaultSecrets,
-                          configPath: pipelineConfig.performanceTestConfigPath
-                        ])
-                      }
-                    }
-                  } catch (err) {
-                    echo "Dynatrace setup failed: ${err.message}"
-                    // Don't fail the build for setup issues, continue with tests
-                  }
-                }
-              }
-            
-            // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
-            def testStages = [:]
-            
-            if (pipelineConfig.performanceTestStages) {
-              testStages['Dynatrace Synthetic Tests'] = {
-                stageWithAgent("Dynatrace Synthetic Tests - ${environmentName}", product) {
-                  testEnv(aksUrl) {
-                    try {
-                      pcr.callAround("dynatraceSyntheticTest:${environmentName}") {
-                        timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environmentName}") {
-                          dynatraceSyntheticTest([
-                            product: product,
-                            component: component,
-                            environment: environmentName,
-                            testUrl: env.TEST_URL,
-                            secrets: pipelineConfig.vaultSecrets,
-                            configPath: pipelineConfig.performanceTestConfigPath,
-                            performanceTestStagesEnabled: pipelineConfig.performanceTestStages,
-                            gatlingLoadTestsEnabled: pipelineConfig.gatlingLoadTests
-                          ])
-                        }
-                      }
-                    } catch (err) {
-                      throw err
-                    }
-                  }
-                }
-              }
+            onPreview {
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.previewName,
+                environment: environment.previewName,
+                product: deploymentProduct,
+                component: component,
+                aksSubscription: aksSubscriptions.preview,
+                tfPlanOnly: false
+              )
             }
-            
-            if (pipelineConfig.gatlingLoadTests) {
-              testStages['Gatling Load Tests'] = {
-                stageWithAgent("Gatling Load Tests - ${environmentName}", product) {
-                  testEnv(aksUrl) {
-                    try {
-                      pcr.callAround("gatlingLoadTests:${environmentName}") {
-                        timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environmentName}") {
-                          gatlingExternalLoadTest([
-                            product: product,
-                            component: component,
-                            environment: environmentName,
-                            subscription: subscriptionName,
-                            gatlingRepo: pipelineConfig.gatlingRepo,
-                            gatlingBranch: pipelineConfig.gatlingBranch,
-                            gatlingSimulation: pipelineConfig.gatlingSimulation
-                          ])
-                        }
-                      }
-                    } catch (err) {
-                      throw err
-                    }
-                  }
-                }
-              }
-            }
-            
-              // Execute test stages
-              if (testStages.size() > 1) {
-                echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
-                parallel(testStages)
-              } else {
-                echo "Running single performance test stage..."
-                testStages.values().first().call()
-              }
-
-              // Stage 3: Site Reliability Guardian Evaluation (if enabled)
-              if (pipelineConfig.srgEvaluation) {
-                stageWithAgent("Site Reliability Guardian Evaluation - ${environmentName}", product) {
-                  testEnv(aksUrl) {
-                    try {
-                      pcr.callAround("srgEvaluation:${environmentName}") {
-                        evaluateDynatraceSRG([
-                          environment: environmentName,
-                          srgServiceName: pipelineConfig.srgServiceName,
-                          performanceTestStartTime: env.PERF_TEST_START_TIME,
-                          performanceTestEndTime: env.PERF_TEST_END_TIME,
-                          gatlingTestStartTime: env.GATLING_TEST_START_TIME,
-                          gatlingTestEndTime: env.GATLING_TEST_END_TIME,
-                          srgFailureBehavior: pipelineConfig.srgFailureBehavior,
-                          product: product,
-                          component: component
-                        ])
-                      }
-                    } catch (Exception e) {
-                      echo "SRG evaluation stage failed: ${e.message}"
-                      if (pipelineConfig.srgFailureBehavior == 'fail') {
-                        throw e
-                      }
-                    }
-                  }
-                }
-              }
-              
-            } // End withAzureKeyvault block
-          } // End performance Block
-          }
-
-          onPreview {
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.previewName,
-              environment: environment.previewName,
-              product: deploymentProduct,
-              component: component,
-              aksSubscription: aksSubscriptions.preview,
-              tfPlanOnly: false
-            )
-          }
+          } // end approvedDeploymentRepository
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'
@@ -479,4 +155,334 @@ def call(type, String product, String component, Closure body) {
       }
     }
   }
+}
+
+void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+    onPR {
+      onTerraformChangeInPR {
+        // we always need a tf plan of aat (i.e. staging)
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription.nonProdName,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment.nonProdName,
+          product: product,
+          component: component,
+          tfPlanOnly: true
+        )
+
+        final String LABEL_NO_TF_PLAN_ON_PROD = "not-plan-on-prod"
+        def githubApi = new GithubAPI(this)
+        def targetBranch = githubApi.refreshPRCache() // e.g. demo, perftest, ithc, master, or non-standards
+        def labelsCache = githubApi.refreshLabelCache()
+        def topicsCache = githubApi.refreshTopicCache()
+        def branchName = branch.branchName // e.g. PR-123
+        def base_envs = ["demo", "perftest", "ithc"]
+
+        println "labelsCache: ${labelsCache} \ntopicsCache: ${topicsCache}"
+        // check if the PR has the label not-plan-on-prod
+        boolean optOutTfPlanOnProdFound = githubApi.checkForLabel(branchName, LABEL_NO_TF_PLAN_ON_PROD)
+        // check if the PR has the topic 'not-plan-on-prod' if it can not find the label `not-plan-on-prod`
+        if (!optOutTfPlanOnProdFound) {
+          optOutTfPlanOnProdFound = githubApi.checkForTopic(LABEL_NO_TF_PLAN_ON_PROD)
+        }
+        println "optOutTfPlanOnProdFound: " + optOutTfPlanOnProdFound.toString()
+
+        // set the base environment to prod if the target branch is not in the list of base_envs
+        // todo: need to find out if we need to deal with branches 'preview' and 'aat' for AksSubscriptions
+        def base_env_name = targetBranch
+        if (!base_envs.contains(targetBranch)) {
+          base_env_name = "prod"
+        }
+
+        println "${branchName} being merged into: ${targetBranch}" + " base_env_name: " + base_env_name
+
+        // deploy to environment, and run terraform plan against prod if the label/topic LABEL_NO_TF_PLAN_ON_PROD not found
+        if (!optOutTfPlanOnProdFound) {
+          println "Apply Terraform Plan against ${base_env_name}"
+          sectionDeployToEnvironment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription."${base_env_name}Name",
+            aksSubscription: aksSubscriptions."${base_env_name}",
+            environment: environment."${base_env_name}Name",
+            product: product,
+            component: component,
+            tfPlanOnly: true
+          )
+        } else {
+          println "Skipping Terraform Plan against ${base_env_name} ... "
+        }
+      }
+
+      sectionDeployToAKS(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        pipelineType: pipelineType,
+        subscription: subscription.nonProdName,
+        aksSubscription: aksSubscriptions.preview,
+        environment: environment.previewName,
+        product: product,
+        component: component,
+      )
+    }
+}
+
+void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+    onMaster {
+      sectionDeployToEnvironment(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        pipelineType: pipelineType,
+        subscription: subscription.nonProdName,
+        aksSubscription: aksSubscriptions.aat,
+        environment: environment.nonProdName,
+        product: product,
+        component: component,
+        tfPlanOnly: false
+      )
+
+      highLevelDataSetup(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        builder: pipelineType.builder,
+        environment: environment.nonProdName,
+        product: product,
+      )
+
+      sectionDeployToAKS(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        pipelineType: pipelineType,
+        subscription: subscription.nonProdName,
+        aksSubscription: aksSubscriptions.aat,
+        environment: environment.nonProdName,
+        product: product,
+        component: component,
+      )
+
+      stageWithAgent('Publish Helm chart', product) {
+        callbacksRunner.callAround('Publish Helm chart') {
+          helmPublish(
+            appPipelineConfig: pipelineConfig,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
+        }
+      }
+
+      sectionDeployToEnvironment(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        pipelineType: pipelineType,
+        subscription: subscription.prodName,
+        environment: environment.prodName,
+        product: product,
+        component: component,
+        aksSubscription: aksSubscriptions.prod,
+        tfPlanOnly: false
+      )
+
+      highLevelDataSetup(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        builder: pipelineType.builder,
+        environment: environment.prodName,
+        product: product,
+      )
+
+      sectionPromoteBuildToStage(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        pipelineType: pipelineType,
+        subscription: subscription.nonProdName,
+        product: product,
+        component: component,
+        stage: DockerImage.DeploymentStage.PROD,
+        environment: environment.nonProdName
+      )
+
+      sectionSyncBranchesWithMaster(
+        branchestoSync: pipelineConfig.branchesToSyncWithMaster,
+        product: product
+      )
+    }
+}
+
+void handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+    highLevelDataSetup(
+      appPipelineConfig: pipelineConfig,
+      pipelineCallbacksRunner: callbacksRunner,
+      builder: pipelineType.builder,
+      environment: environmentName,
+      product: product,
+    )
+
+    sectionDeployToEnvironment(
+      appPipelineConfig: pipelineConfig,
+      pipelineCallbacksRunner: callbacksRunner,
+      pipelineType: pipelineType,
+      subscription: subscriptionName,
+      environment: environmentName,
+      product: product,
+      component: component,
+      aksSubscription: aksSubscription,
+      tfPlanOnly: false
+    )
+
+    if ((pipelineConfig.performanceTestStages || pipelineConfig.gatlingLoadTests) && environmentName in pipelineConfig.performanceTestEnvironments) {
+      runPerformanceTests(environmentName, aksSubscription, subscriptionName, pipelineConfig, callbacksRunner, product, component)
+    }
+}
+
+void runPerformanceTests(environmentName, aksSubscription, subscriptionName, pipelineConfig, callbacksRunner, product, component) {
+    // Set aksUrl from TEST_URL for performance test stages
+    def aksUrl = env.TEST_URL
+
+    // Helper method to set test environment variables (only used within performance stages)
+    def testEnv = { String testUrl, block ->
+      def testEnvVariables = ["TEST_URL=${testUrl}","ENVIRONMENT_NAME=${environmentName}"]
+
+      withEnv(testEnvVariables) {
+        echo "Using TEST_URL: ${env.TEST_URL}"
+        echo "Using ENVIRONMENT_NAME: ${env.ENVIRONMENT_NAME}"
+        block.call()
+      }
+    }
+
+    def pcr = callbacksRunner
+
+    // Load performance test secrets once for all stages
+    def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net/"
+    def perfSecrets = [
+      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
+      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
+      [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+    ]
+
+    withAzureKeyvault(
+      azureKeyVaultSecrets: perfSecrets,
+      keyVaultURLOverride: perfKeyVaultUrl
+    ) {
+      // Stage 1: Dynatrace Setup
+      // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
+      stageWithAgent("Dynatrace Performance Setup - ${environmentName}", product) {
+        testEnv(aksUrl) {
+          try {
+            pcr.callAround("dynatracePerformanceSetup:${environmentName}") {
+              timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environmentName}") {
+                dynatracePerformanceSetup([
+                  product: product,
+                  component: component,
+                  environment: environmentName,
+                  testUrl: env.TEST_URL,
+                  secrets: pipelineConfig.vaultSecrets,
+                  configPath: pipelineConfig.performanceTestConfigPath
+                ])
+              }
+            }
+          } catch (err) {
+            echo "Dynatrace setup failed: ${err.message}"
+          }
+        }
+      }
+
+      // Stage 2: Run performance tests in parallel or sequential
+      def testStages = [:]
+
+      if (pipelineConfig.performanceTestStages) {
+        testStages['Dynatrace Synthetic Tests'] = {
+          stageWithAgent("Dynatrace Synthetic Tests - ${environmentName}", product) {
+            testEnv(aksUrl) {
+              try {
+                pcr.callAround("dynatraceSyntheticTest:${environmentName}") {
+                  timeoutWithMsg(time: pipelineConfig.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environmentName}") {
+                    dynatraceSyntheticTest([
+                      product: product,
+                      component: component,
+                      environment: environmentName,
+                      testUrl: env.TEST_URL,
+                      secrets: pipelineConfig.vaultSecrets,
+                      configPath: pipelineConfig.performanceTestConfigPath,
+                      performanceTestStagesEnabled: pipelineConfig.performanceTestStages,
+                      gatlingLoadTestsEnabled: pipelineConfig.gatlingLoadTests
+                    ])
+                  }
+                }
+              } catch (err) {
+                throw err
+              }
+            }
+          }
+        }
+      }
+
+      if (pipelineConfig.gatlingLoadTests) {
+        testStages['Gatling Load Tests'] = {
+          stageWithAgent("Gatling Load Tests - ${environmentName}", product) {
+            testEnv(aksUrl) {
+              try {
+                pcr.callAround("gatlingLoadTests:${environmentName}") {
+                  timeoutWithMsg(time: pipelineConfig.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environmentName}") {
+                    gatlingExternalLoadTest([
+                      product: product,
+                      component: component,
+                      environment: environmentName,
+                      subscription: subscriptionName,
+                      gatlingRepo: pipelineConfig.gatlingRepo,
+                      gatlingBranch: pipelineConfig.gatlingBranch,
+                      gatlingSimulation: pipelineConfig.gatlingSimulation
+                    ])
+                  }
+                }
+              } catch (err) {
+                throw err
+              }
+            }
+          }
+        }
+      }
+
+      if (testStages.size() > 1) {
+        echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
+        parallel(testStages)
+      } else if (testStages.size() == 1) {
+        echo "Running single performance test stage..."
+        testStages.values().first().call()
+      }
+
+      // Stage 3: Site Reliability Guardian Evaluation (if enabled)
+      if (pipelineConfig.srgEvaluation) {
+        stageWithAgent("Site Reliability Guardian Evaluation - ${environmentName}", product) {
+          testEnv(aksUrl) {
+            try {
+              pcr.callAround("srgEvaluation:${environmentName}") {
+                evaluateDynatraceSRG([
+                  environment: environmentName,
+                  srgServiceName: pipelineConfig.srgServiceName,
+                  performanceTestStartTime: env.PERF_TEST_START_TIME,
+                  performanceTestEndTime: env.PERF_TEST_END_TIME,
+                  gatlingTestStartTime: env.GATLING_TEST_START_TIME,
+                  gatlingTestEndTime: env.GATLING_TEST_END_TIME,
+                  srgFailureBehavior: pipelineConfig.srgFailureBehavior,
+                  product: product,
+                  component: component
+                ])
+              }
+            } catch (Exception e) {
+              echo "SRG evaluation stage failed: ${e.message}"
+              if (pipelineConfig.srgFailureBehavior == 'fail') {
+                throw e
+              }
+            }
+          }
+        }
+      }
+    }
 }
