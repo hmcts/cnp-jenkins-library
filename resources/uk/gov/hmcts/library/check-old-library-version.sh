@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+old_library_found () {
+    echo "Old library version references found. Please update your Jenkinsfile to use the new library version."
+    exit 1
+}
+
+no_old_library_found () {
+    echo "No old library version references found. All clear!"
+    exit 0
+}
+
 OLD_LIBRARY_VERSION="${1}"  # Pattern of old library version to detect
 
 FOUND_REFERENCES=0
@@ -46,12 +56,4 @@ if [ $FOUND_REFERENCES -eq 1 ]; then
     old_library_found
 fi
 
-old_library_found() {
-    echo "Old library version references found. Please update your Jenkinsfile to use the new library version."
-    exit 1
-}
-
-no_old_library_found() {
-    echo "No old library version references found. All clear!"
-    exit 0
-}
+no_old_library_found
