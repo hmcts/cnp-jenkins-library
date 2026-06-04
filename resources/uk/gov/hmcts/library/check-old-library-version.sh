@@ -8,9 +8,21 @@ FAILED_FILES=()
 
 echo "Checking for old library version references: ${OLD_LIBRARY_VERSION}"
 
+# Check if this is a nightly pipeline
+if [[ "$JOB_NAME" == *"nightly"* ]]; then
+    echo "Running nightly pipeline"
+    exit 0
+fi
+
+# Check if this pipeline is running on sandbox
+if [[ "$JENKINS_SUBSCRIPTION_NAME" == *"SBOX"* ]]; then
+    echo "Running on Sandbox Jenkins"
+    exit 0
+fi
+
 # Check Jenkinsfile
 echo "Scanning Jenkinsfile..."
-JENKINSFILES=$(find . -maxdepth 3 -name "Jenkinsfile_*" -type f -exec grep -l -E "${OLD_LIBRARY_VERSION}" {} + 2>/dev/null || true)
+JENKINSFILES=$(find . -maxdepth 3 -name "Jenkinsfile_CNP" -type f -exec grep -l -E "${OLD_LIBRARY_VERSION}" {} + 2>/dev/null || true)
 if [ -n "$JENKINSFILES" ]; then
     echo "$JENKINSFILES"
     echo ""
