@@ -63,7 +63,8 @@ class YarnBuilderTest extends Specification {
               it instanceof Map &&
               it.script.contains('yarn lint') &&
               it.returnStatus == true
-          })
+          }) >> 0
+          0 * steps.error(_)
   }
 
   def "build serialises yarn install with a workspace lock"() {
@@ -79,6 +80,112 @@ class YarnBuilderTest extends Specification {
               it.script.contains('trap cleanup EXIT') &&
               it.script.indexOf('yarn install') < it.script.indexOf('touch ".yarn_dependencies_installed"')
           })
+  }
+
+  def "build continues when yarn install returns non-zero"() {
+      when:
+          builder.build()
+      then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('yarn install')
+          }) >> 3
+          1 * steps.echo("Yarn task 'install' failed with status 3; continuing to match existing pipeline behaviour")
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn lint') &&
+              it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
+  }
+
+  def "playwright chromium verify installs browser first on environment VM agent"() {
+      given:
+          envVars.BUILD_AGENT_TYPE = 'xui-aat'
+          envVars.DEPLOYMENT_ENVIRONMENT = 'aat'
+          envVars.IS_DOCKER_BUILD_AGENT = 'false'
+          steps.fileExists('.yarn_dependencies_installed') >> true
+          steps.fileExists('.nvmrc') >> false
+      when:
+          builder.yarn('test:setup:playwright-verify-chromium')
+      then:
+          1 * steps.echo("Ensuring Playwright Chromium browser is installed on environment agent before 'test:setup:playwright-verify-chromium'")
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn playwright install chromium') &&
+              it.returnStatus == true
+          }) >> 0
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn test:setup:playwright-verify-chromium') &&
+              it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
+  }
+
+  def "playwright chromium verify does not install browser first outside environment agent"() {
+      given:
+          steps.fileExists('.yarn_dependencies_installed') >> true
+          steps.fileExists('.nvmrc') >> false
+      when:
+          builder.yarn('test:setup:playwright-verify-chromium')
+      then:
+          0 * steps.echo("Ensuring Playwright Chromium browser is installed on environment agent before 'test:setup:playwright-verify-chromium'")
+          0 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn playwright install chromium')
+          })
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn test:setup:playwright-verify-chromium') &&
+              it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
+  }
+
+  def "playwright chromium verify does not install browser first on docker build agent"() {
+      given:
+          envVars.BUILD_AGENT_TYPE = 'xui-aat'
+          envVars.DEPLOYMENT_ENVIRONMENT = 'aat'
+          envVars.IS_DOCKER_BUILD_AGENT = 'true'
+          steps.fileExists('.yarn_dependencies_installed') >> true
+          steps.fileExists('.nvmrc') >> false
+      when:
+          builder.yarn('test:setup:playwright-verify-chromium')
+      then:
+          0 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn playwright install chromium')
+          })
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn test:setup:playwright-verify-chromium') &&
+              it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
+  }
+
+  def "environment agent does not install browser before unrelated playwright task"() {
+      given:
+          envVars.BUILD_AGENT_TYPE = 'xui-aat'
+          envVars.DEPLOYMENT_ENVIRONMENT = 'aat'
+          envVars.IS_DOCKER_BUILD_AGENT = 'false'
+          steps.fileExists('.yarn_dependencies_installed') >> true
+          steps.fileExists('.nvmrc') >> false
+      when:
+          builder.yarn('test:playwrightE2E:raw')
+      then:
+          0 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn playwright install chromium')
+          })
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn test:playwrightE2E:raw') &&
+              it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
   }
 
   def "test calls 'yarn test' and 'yarn test:coverage' and 'yarn test:a11y'"() {

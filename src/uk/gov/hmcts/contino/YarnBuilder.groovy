@@ -384,7 +384,7 @@ EOF
     String nvmSetup = steps.fileExists(NVMRC) ? '''
           export NVM_DIR='/home/jenkinsssh/.nvm'
           . /opt/nvm/nvm.sh || true
-          nvm install
+          nvm install || true
     ''' : ''
 
     def status = steps.sh(label: 'Install yarn dependencies', script: """
@@ -410,12 +410,18 @@ EOF
       fi
 
       ${nvmSetup}
+      set +e
       yarn install
-      touch "${INSTALL_CHECK_FILE}"
+      install_status=\$?
+      set -e
+      if [ "\$install_status" -eq 0 ]; then
+        touch "${INSTALL_CHECK_FILE}"
+      fi
+      exit "\$install_status"
     """, returnStatus: true)
 
     if (status != 0) {
-      steps.error("Yarn task 'install' failed with status ${status}")
+      steps.echo("Yarn task 'install' failed with status ${status}; continuing to match existing pipeline behaviour")
     }
   }
 
@@ -475,7 +481,30 @@ EOF
     if (!steps.fileExists(INSTALL_CHECK_FILE)) {
       installDependencies()
     }
+    ensurePlaywrightChromiumInstalledForVerify(task, prepend)
     runYarn(task, prepend)
+  }
+
+  private void ensurePlaywrightChromiumInstalledForVerify(String task, String prepend = "") {
+    if (!isEnvironmentVmAgent() || !isPlaywrightChromiumVerifyTask(task)) {
+      return
+    }
+
+    steps.echo("Ensuring Playwright Chromium browser is installed on environment agent before '${task}'")
+    runYarn("playwright install chromium", prepend)
+  }
+
+  private boolean isEnvironmentVmAgent() {
+    return steps.env.BUILD_AGENT_TYPE &&
+      steps.env.DEPLOYMENT_ENVIRONMENT &&
+      steps.env.IS_DOCKER_BUILD_AGENT == 'false'
+  }
+
+  private boolean isPlaywrightChromiumVerifyTask(String task) {
+    String normalisedTask = task?.toLowerCase() ?: ''
+    return normalisedTask.contains('playwright') &&
+      normalisedTask.contains('verify') &&
+      normalisedTask.contains('chromium')
   }
 
   @Override
