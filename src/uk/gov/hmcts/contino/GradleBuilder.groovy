@@ -64,6 +64,13 @@ class GradleBuilder extends AbstractBuilder {
     localSteps.writeFile(file: 'init.gradle', text: localSteps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
   }
 
+  private withAdoMavenPat(Closure body) {
+    def secrets = [
+      [ secretType: 'Secret', name: 'ado-maven-mirror-pat', version: '', envVariable: 'ADO_MAVEN_PAT' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) { body() }
+  }
+
   def test() {
     try {
       gradle("check")
@@ -272,7 +279,9 @@ EOF
       prepend += ' '
     }
     addInitScript()
-    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    withAdoMavenPat {
+      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    }
   }
 
   private String gradleWithOutput(String task) {
@@ -364,13 +373,26 @@ EOF
       // performance repo
       def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
       gradle(gatlingCommand)
-      this.localSteps.gatlingArchive()
+      archiveGatlingReports()
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +
           "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
       )
       super.executeGatling()
+    }
+  }
+
+  private void archiveGatlingReports() {
+    try {
+      this.localSteps.gatlingArchive()
+    } catch (Exception e) {
+      localSteps.echo("Gatling plugin archive step failed: ${e.class.simpleName}: ${e.message}")
+      localSteps.echo("Falling back to artifact archiving for Gatling reports")
+      localSteps.archiveArtifacts(
+        artifacts: "${localSteps.env.GATLING_REPORTS_PATH}/**/*",
+        allowEmptyArchive: true
+      )
     }
   }
 }

@@ -12,6 +12,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   call(type, product,component,environment,subscription,'',body)
@@ -55,6 +56,7 @@ def call(type, String product, String component, String environment, String subs
   }
 
   def deploymentTargetList = deploymentTargets.split(',') as List
+  boolean deploymentEnabled = false
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
@@ -68,6 +70,10 @@ def call(type, String product, String component, String environment, String subs
 
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
+
+        // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
+        deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
+        echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
       }
 
       stageWithAgent("Build", product) {
@@ -78,18 +84,20 @@ def call(type, String product, String component, String environment, String subs
         }
       }
 
-      sectionDeployToEnvironment(
-        appPipelineConfig: pipelineConfig,
-        pipelineCallbacksRunner: callbacksRunner,
-        pipelineType: pipelineType,
-        subscription: subscription,
-        aksSubscription: aksSubscriptions.aat,
-        environment: environment,
-        product: product,
-        component: component,
-        deploymentTargets: deploymentTargetList,
-        tfPlanOnly: false
-      )
+      if (deploymentEnabled) {
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment,
+          product: product,
+          component: component,
+          deploymentTargets: deploymentTargetList,
+          tfPlanOnly: false
+        )
+      }
     } catch (err) {
       currentBuild.result = "FAILURE"
 
