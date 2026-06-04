@@ -4,25 +4,25 @@ import java.time.LocalDate
 
 def call(String repoUrl = null) {
 
-    def acrDeprecationConfig = repoUrl ?
-        new DeprecationConfig(this).getDeprecationConfig(repoUrl).acr :
-        new DeprecationConfig(this).getDeprecationConfig().acr
+    def jenkinsLibraryDeprecationConfig = repoUrl ?
+        new DeprecationConfig(this).getDeprecationConfig(repoUrl).jenkinsLibrary :
+        new DeprecationConfig(this).getDeprecationConfig().jenkinsLibrary
 
-    writeFile file: 'check-old-acr-references.sh', text: libraryResource('uk/gov/hmcts/acr/check-old-acr-references.sh')
+    writeFile file: 'check-old-library-version.sh', text: libraryResource('uk/gov/hmcts/library/check-old-library-version.sh')
 
-    acrDeprecationConfig.each { configKey, deprecation ->
+    jenkinsLibraryDeprecationConfig.each { configKey, deprecation ->
         try {
             sh """
-            chmod +x check-old-acr-references.sh
-            ./check-old-acr-references.sh '${deprecation.pattern}'
+            chmod +x check-old-library-version.sh
+            ./check-old-library-version.sh '${deprecation.pattern}'
             """
         } catch(ignored) {
             WarningCollector.addPipelineWarning(
-                "old_acr_registry",
-                "Your code references the old Azure Container Registry domains (${deprecation.pattern}). Please update Dockerfiles, Helm charts and templates to use the new registries: *${deprecation.new_registries}*",
+                "old_library_version",
+                "Your code references the old library version (${deprecation.pattern}). Please update your Jenkinsfile to use the new library version: *${deprecation.version}*", 
                 LocalDate.parse(deprecation.date_deadline)
             )
         }
     }
-    sh 'rm -f check-old-acr-references.sh'
+    sh 'rm -f check-old-library-version.sh'
 }
