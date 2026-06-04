@@ -54,14 +54,30 @@ class YarnBuilderTest extends Specification {
       then:
           1 * steps.sh({
               it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
               it.script.contains('yarn install') &&
+              it.script.contains('touch ".yarn_dependencies_installed"') &&
               it.returnStatus == true
           })
-          1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
           1 * steps.sh({
               it instanceof Map &&
               it.script.contains('yarn lint') &&
               it.returnStatus == true
+          })
+  }
+
+  def "build serialises yarn install with a workspace lock"() {
+      when:
+          builder.build()
+      then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('lock_dir=".yarn_dependencies_installed.lock"') &&
+              it.script.contains('while ! mkdir "$lock_dir"') &&
+              it.script.contains('if [ -f ".yarn_dependencies_installed" ]; then') &&
+              it.script.contains('trap cleanup EXIT') &&
+              it.script.indexOf('yarn install') < it.script.indexOf('touch ".yarn_dependencies_installed"')
           })
   }
 

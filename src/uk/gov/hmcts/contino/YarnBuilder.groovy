@@ -378,6 +378,47 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private installDependencies() {
+    corepackEnable()
+
+    String nvmSetup = steps.fileExists(NVMRC) ? '''
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh || true
+          nvm install
+    ''' : ''
+
+    def status = steps.sh(label: 'Install yarn dependencies', script: """
+      set +x
+      set -e
+      export PATH=\$HOME/.local/bin:\$PATH
+
+      lock_dir="${INSTALL_CHECK_FILE}.lock"
+      while ! mkdir "\$lock_dir" 2>/dev/null; do
+        if [ -f "${INSTALL_CHECK_FILE}" ]; then
+          exit 0
+        fi
+        sleep 2
+      done
+
+      cleanup() {
+        rmdir "\$lock_dir" 2>/dev/null || true
+      }
+      trap cleanup EXIT
+
+      if [ -f "${INSTALL_CHECK_FILE}" ]; then
+        exit 0
+      fi
+
+      ${nvmSetup}
+      yarn install
+      touch "${INSTALL_CHECK_FILE}"
+    """, returnStatus: true)
+
+    if (status != 0) {
+      steps.error("Yarn task 'install' failed with status ${status}")
+    }
+  }
+
   private LocalDate node18ExpirationDate() {
     def date;
     switch (steps.env.PRODUCT) {
@@ -432,9 +473,7 @@ EOF
 
   def yarn(String task, String prepend = "") {
     if (!steps.fileExists(INSTALL_CHECK_FILE)) {
-      steps.sh("touch ${INSTALL_CHECK_FILE}")
-      corepackEnable()
-      runYarn("install")
+      installDependencies()
     }
     runYarn(task, prepend)
   }
