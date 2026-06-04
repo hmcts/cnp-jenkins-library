@@ -5,8 +5,8 @@ import java.time.LocalDate
 def call(String repoUrl = null) {
 
     def jenkinsLibraryDeprecationConfig = repoUrl ?
-        new DeprecationConfig(this).getDeprecationConfig(repoUrl).jenkinsLibrary :
-        new DeprecationConfig(this).getDeprecationConfig().jenkinsLibrary
+        new DeprecationConfig(this).getDeprecationConfig(repoUrl).jenkins :
+        new DeprecationConfig(this).getDeprecationConfig().jenkins
 
     writeFile file: 'check-old-library-version.sh', text: libraryResource('uk/gov/hmcts/library/check-old-library-version.sh')
 
