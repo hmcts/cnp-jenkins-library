@@ -43,7 +43,7 @@ fi
 if [ $FOUND_REFERENCES -eq 1 ]; then
     echo ""
     echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║  WARNING: Deprecated library version in use!      ║"
+    echo "║  WARNING: Deprecated library version in use!                   ║"
     echo "╚════════════════════════════════════════════════════════════════╝"
     echo ""
     echo "Files that need to be updated:"
