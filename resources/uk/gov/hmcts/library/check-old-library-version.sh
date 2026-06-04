@@ -10,13 +10,13 @@ echo "Checking for old library version references: ${OLD_LIBRARY_VERSION}"
 
 # Check if this is a nightly pipeline
 if [[ "$JOB_NAME" == *"nightly"* ]]; then
-    echo "Running nightly pipeline"
+    echo "Running nightly pipeline. No need to check for old library version."
     exit 0
 fi
 
 # Check if this pipeline is running on sandbox
 if [[ "$JENKINS_SUBSCRIPTION_NAME" == *"SBOX"* ]]; then
-    echo "Running on Sandbox Jenkins"
+    echo "Running on Sandbox Jenkins. No need to check for old library version."
     exit 0
 fi
 
