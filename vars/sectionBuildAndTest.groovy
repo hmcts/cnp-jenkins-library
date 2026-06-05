@@ -28,7 +28,7 @@ def call(params) {
     checkoutScm(pipelineCallbacksRunner: pcr)
 
     // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
-    deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
+    deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL) && !config.isJavaLibrary
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
@@ -215,7 +215,7 @@ def call(params) {
       }
     }
 
-    if (!config.isJavaLibrary && noSkipImgBuild && deploymentEnabled) {
+    if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING
