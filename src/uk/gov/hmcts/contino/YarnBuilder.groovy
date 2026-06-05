@@ -392,9 +392,30 @@ EOF
       set -e
       export PATH=\$HOME/.local/bin:\$PATH
 
+      dependencies_available() {
+        if [ -f ".pnp.cjs" ] || [ -f ".pnp.js" ]; then
+          return 0
+        fi
+
+        if [ -f ".yarnrc.yml" ]; then
+          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules' ".yarnrc.yml"; then
+            [ -f "node_modules/.yarn-state.yml" ] || [ -f ".yarn/install-state.gz" ]
+            return \$?
+          fi
+
+          return 1
+        fi
+
+        [ -d "node_modules" ]
+      }
+
+      install_marker_valid() {
+        [ -f "${INSTALL_CHECK_FILE}" ] && dependencies_available
+      }
+
       lock_dir="${INSTALL_CHECK_FILE}.lock"
       while ! mkdir "\$lock_dir" 2>/dev/null; do
-        if [ -f "${INSTALL_CHECK_FILE}" ]; then
+        if install_marker_valid; then
           exit 0
         fi
         sleep 2
@@ -405,9 +426,11 @@ EOF
       }
       trap cleanup EXIT
 
-      if [ -f "${INSTALL_CHECK_FILE}" ]; then
+      if install_marker_valid; then
         exit 0
       fi
+
+      rm -f "${INSTALL_CHECK_FILE}"
 
       ${nvmSetup}
       set +e
@@ -415,13 +438,27 @@ EOF
       install_status=\$?
       set -e
       if [ "\$install_status" -eq 0 ]; then
+        if ! dependencies_available; then
+          echo "Yarn install completed but dependency state is missing" >&2
+          exit 1
+        fi
+
         touch "${INSTALL_CHECK_FILE}"
+        exit 0
       fi
+
+      if dependencies_available; then
+        echo "Yarn install exited with status \$install_status; using existing dependency state"
+        touch "${INSTALL_CHECK_FILE}"
+        exit 0
+      fi
+
+      echo "Yarn install failed with status \$install_status and dependency state is missing" >&2
       exit "\$install_status"
     """, returnStatus: true)
 
     if (status != 0) {
-      steps.echo("Yarn task 'install' failed with status ${status}; continuing to match existing pipeline behaviour")
+      steps.error("Yarn dependency install failed with status ${status}")
     }
   }
 

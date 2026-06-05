@@ -227,6 +227,26 @@ class WithTeamSecretsTest extends BasePipelineTest {
   }
 
   @Test
+  void 'preview environment agent continues loading later vaults after legacy fallback'() {
+    binding.env.BUILD_AGENT_TYPE = 'civil-preview'
+    binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
+    forbiddenAzureConfigNames = ['preview'] as Set
+    boolean bodyCalled = false
+
+    script.call(multiVaultConfig(), 'preview', 'civil') {
+      bodyCalled = true
+      assertThat(binding.env.CASE_DOCUMENT_AM_API_S2S_SECRET).isEqualTo('case-document-secret')
+      assertThat(binding.env.SECOND_SECRET).isEqualTo('second-secret-value')
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(keyVaultCalls).hasSize(2)
+    assertThat(withEnvCalls.toString()).contains('CASE_DOCUMENT_AM_API_S2S_SECRET=case-document-secret')
+    assertThat(withEnvCalls.toString()).contains('SECOND_SECRET=second-secret-value')
+  }
+
+  @Test
   void 'environment agent secret loading propagates az login failures'() {
     binding.env.BUILD_AGENT_TYPE = 'civil-preview'
     binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
