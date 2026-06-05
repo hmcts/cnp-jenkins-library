@@ -383,9 +383,14 @@ EOF
     corepackEnable()
 
     String nvmSetup = steps.fileExists(NVMRC) ? '''
+          set +e
           export NVM_DIR='/home/jenkinsssh/.nvm'
-          . /opt/nvm/nvm.sh || true
-          nvm install || true
+          . /opt/nvm/nvm.sh
+          nvm_source_status=$?
+          nvm install
+          nvm_install_status=$?
+          set -e
+          echo "Yarn install checkpoint: nvm source status ${nvm_source_status}, nvm install status ${nvm_install_status}"
     ''' : ''
 
     def status = steps.sh(label: 'Install yarn dependencies', script: """
