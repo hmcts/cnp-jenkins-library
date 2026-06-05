@@ -826,7 +826,7 @@ withPipeline(type, product, component) {
 ```
 
 ## Java Library
-You need to add `isJavaLibrary()` method in `withPipeline` block to skip docker and service specific steps in the pipeline.
+You need to add `isJavaLibrary()` method in `withPipeline` block to skip deployments.
 
 ```groovy
 #!groovy
