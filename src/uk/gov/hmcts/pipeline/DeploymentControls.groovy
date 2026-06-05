@@ -32,6 +32,9 @@ class DeploymentControls {
   }
 
   boolean isDeployEnabled(String repository) {
+    if (steps.config.isJavaLibrary) {
+      return false
+    }
     def deploymentControls = getDeploymentControls()
     if (!deploymentControls.containsKey('repositories')) {
 
