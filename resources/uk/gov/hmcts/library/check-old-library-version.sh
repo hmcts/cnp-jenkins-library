@@ -32,7 +32,9 @@ fi
 
 # Check Jenkinsfile
 echo "Scanning Jenkinsfile..."
-JENKINSFILES=$(find . -maxdepth 3 -name "Jenkinsfile_CNP" -type f -exec grep -l -E "${OLD_LIBRARY_VERSION}" {} + 2>/dev/null || true)
+# Matches: @Library("Infrastructure"), @Library(Infrastructure), or @Library("Infrastructure@<branch>")
+LIBRARY_PATTERN='@Library\("?Infrastructure(@'"${OLD_LIBRARY_VERSION}"')?"?\)'
+JENKINSFILES=$(find . -maxdepth 1 -name "Jenkinsfile_CNP" -type f -exec grep -l -E "${LIBRARY_PATTERN}" {} + 2>/dev/null || true)
 if [ -n "$JENKINSFILES" ]; then
     FOUND_REFERENCES=1
     while IFS= read -r file; do
