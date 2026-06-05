@@ -382,9 +382,11 @@ EOF
     corepackEnable()
 
     String nvmSetup = steps.fileExists(NVMRC) ? '''
+          set +e
           export NVM_DIR='/home/jenkinsssh/.nvm'
-          . /opt/nvm/nvm.sh || true
-          nvm install || true
+          . /opt/nvm/nvm.sh
+          nvm install
+          set -e
     ''' : ''
 
     def status = steps.sh(label: 'Install yarn dependencies', script: """
@@ -392,9 +394,38 @@ EOF
       set -e
       export PATH=\$HOME/.local/bin:\$PATH
 
+      dependencies_available() {
+        if [ -f ".pnp.cjs" ] || [ -f ".pnp.js" ]; then
+          return 0
+        fi
+
+        if [ -f ".yarnrc.yml" ]; then
+          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules' ".yarnrc.yml"; then
+            [ -f "node_modules/.yarn-state.yml" ]
+            return \$?
+          fi
+
+          return 1
+        fi
+
+        [ -d "node_modules" ]
+      }
+
+      node_modules_populated() {
+        [ -d "node_modules" ] && [ -n "\$(find node_modules -mindepth 1 -maxdepth 1 -print -quit)" ]
+      }
+
+      dependencies_available_after_success() {
+        dependencies_available || node_modules_populated
+      }
+
+      install_marker_valid() {
+        [ -f "${INSTALL_CHECK_FILE}" ] && dependencies_available
+      }
+
       lock_dir="${INSTALL_CHECK_FILE}.lock"
       while ! mkdir "\$lock_dir" 2>/dev/null; do
-        if [ -f "${INSTALL_CHECK_FILE}" ]; then
+        if install_marker_valid; then
           exit 0
         fi
         sleep 2
@@ -405,23 +436,40 @@ EOF
       }
       trap cleanup EXIT
 
-      if [ -f "${INSTALL_CHECK_FILE}" ]; then
+      if install_marker_valid; then
         exit 0
       fi
 
+      rm -f "${INSTALL_CHECK_FILE}"
+
       ${nvmSetup}
+
       set +e
       yarn install
       install_status=\$?
       set -e
       if [ "\$install_status" -eq 0 ]; then
+        if ! dependencies_available_after_success; then
+          echo "Yarn install completed but dependency state is missing" >&2
+          exit 1
+        fi
+
         touch "${INSTALL_CHECK_FILE}"
+        exit 0
       fi
+
+      if dependencies_available; then
+        echo "Yarn install exited with status \$install_status; using existing dependency state"
+        touch "${INSTALL_CHECK_FILE}"
+        exit 0
+      fi
+
+      echo "Yarn install failed with status \$install_status and dependency state is missing" >&2
       exit "\$install_status"
     """, returnStatus: true)
 
     if (status != 0) {
-      steps.echo("Yarn task 'install' failed with status ${status}; continuing to match existing pipeline behaviour")
+      steps.error("Yarn dependency install failed with status ${status}")
     }
   }
 
@@ -478,33 +526,8 @@ EOF
   }
 
   def yarn(String task, String prepend = "") {
-    if (!steps.fileExists(INSTALL_CHECK_FILE)) {
-      installDependencies()
-    }
-    ensurePlaywrightChromiumInstalledForVerify(task, prepend)
+    installDependencies()
     runYarn(task, prepend)
-  }
-
-  private void ensurePlaywrightChromiumInstalledForVerify(String task, String prepend = "") {
-    if (!isEnvironmentVmAgent() || !isPlaywrightChromiumVerifyTask(task)) {
-      return
-    }
-
-    steps.echo("Ensuring Playwright Chromium browser is installed on environment agent before '${task}'")
-    runYarn("playwright install chromium", prepend)
-  }
-
-  private boolean isEnvironmentVmAgent() {
-    return steps.env.BUILD_AGENT_TYPE &&
-      steps.env.DEPLOYMENT_ENVIRONMENT &&
-      steps.env.IS_DOCKER_BUILD_AGENT == 'false'
-  }
-
-  private boolean isPlaywrightChromiumVerifyTask(String task) {
-    String normalisedTask = task?.toLowerCase() ?: ''
-    return normalisedTask.contains('playwright') &&
-      normalisedTask.contains('verify') &&
-      normalisedTask.contains('chromium')
   }
 
   @Override

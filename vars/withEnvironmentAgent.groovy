@@ -28,8 +28,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '**/.terraform/**',
     'node_modules/**',
     '**/node_modules/**',
-    '.yarn/cache/**',
-    '**/.yarn/cache/**',
+    '.yarn/install-state.gz',
+    '**/.yarn/install-state.gz',
     '.gradle/**',
     '**/.gradle/**'
   ].join(',')
@@ -55,9 +55,6 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     withEnvironmentContext(agentLabel, environment) {
       if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
         env.PATH = "$env.PATH:/usr/local/bin"
-      }
-      if (env.ENVIRONMENT_AGENT_DEBUG == "true") {
-        debugEnvironmentManagedIdentity(normalisedEnvironment, agentLabel)
       }
       boolean bodySucceeded = false
       try {

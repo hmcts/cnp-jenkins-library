@@ -80,18 +80,10 @@ private void withEnvironmentManagedIdentitySecrets(List<Map<String, Object>> sec
 
     try {
       echo "Preview Jenkins MI cannot read ${vaultName}; retrying with legacy Key Vault credentials"
-      withAzureKeyvault(
-        azureKeyVaultSecrets: secrets,
-        keyVaultURLOverride: keyVaultUrl,
-        applicationIDOverride: env.AZURE_CLIENT_ID,
-        applicationSecretOverride: env.AZURE_CLIENT_SECRET
-      ) {
-        body.call()
-      }
+      variables = readLegacyKeyVaultSecrets(secrets, keyVaultUrl)
     } catch (Exception fallbackError) {
-      throw new RuntimeException("Preview Jenkins MI could not read ${vaultName}; legacy Key Vault credentials retry also failed.", fallbackError)
+      throw new RuntimeException("Preview Jenkins MI could not read ${vaultName}; legacy Key Vault credentials retry also failed: ${fallbackError.message}", fallbackError)
     }
-    return
   }
 
   // Team secrets are expected to be single-line values. If a future consumer
@@ -121,6 +113,25 @@ private String readKeyVaultSecret(String vaultName, String secretName, String az
     """.stripIndent().trim(),
     returnStdout: true
   )
+}
+
+private List<String> readLegacyKeyVaultSecrets(List<Map<String, Object>> secrets, String keyVaultUrl) {
+  List<String> variables = []
+
+  withAzureKeyvault(
+    azureKeyVaultSecrets: secrets,
+    keyVaultURLOverride: keyVaultUrl,
+    applicationIDOverride: env.AZURE_CLIENT_ID,
+    applicationSecretOverride: env.AZURE_CLIENT_SECRET
+  ) {
+    variables = secrets.collect { Map<String, Object> secret ->
+      String envVariable = secret.envVariable.toString()
+
+      "${envVariable}=${env[envVariable] ?: ''}"
+    }
+  }
+
+  return variables
 }
 
 private boolean shouldRetryWithLegacySecretReader(String azureConfigName, String vaultName) {
