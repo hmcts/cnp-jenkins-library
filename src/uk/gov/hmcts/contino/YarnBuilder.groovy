@@ -392,6 +392,7 @@ EOF
       set +x
       set -e
       export PATH=\$HOME/.local/bin:\$PATH
+      echo "Yarn install checkpoint: preamble started"
 
       dependencies_available() {
         if [ -f ".pnp.cjs" ] || [ -f ".pnp.js" ]; then
@@ -422,13 +423,17 @@ EOF
         [ -f "${INSTALL_CHECK_FILE}" ] && dependencies_available
       }
 
+      echo "Yarn install checkpoint: acquiring install lock"
       lock_dir="${INSTALL_CHECK_FILE}.lock"
       while ! mkdir "\$lock_dir" 2>/dev/null; do
+        echo "Yarn install checkpoint: waiting for install lock"
         if install_marker_valid; then
+          echo "Yarn install checkpoint: dependency marker became valid while waiting"
           exit 0
         fi
         sleep 2
       done
+      echo "Yarn install checkpoint: install lock acquired"
 
       cleanup() {
         rmdir "\$lock_dir" 2>/dev/null || true
@@ -436,12 +441,15 @@ EOF
       trap cleanup EXIT
 
       if install_marker_valid; then
+        echo "Yarn install checkpoint: dependency marker already valid"
         exit 0
       fi
 
       rm -f "${INSTALL_CHECK_FILE}"
+      echo "Yarn install checkpoint: dependency marker removed"
 
       ${nvmSetup}
+      echo "Yarn install checkpoint: node setup completed"
 
       echo "Yarn install diagnostics:"
       echo "  node: \$(node --version 2>/dev/null || echo unavailable)"
