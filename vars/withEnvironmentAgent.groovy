@@ -28,8 +28,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '**/.terraform/**',
     'node_modules/**',
     '**/node_modules/**',
-    '.yarn/cache/**',
-    '**/.yarn/cache/**',
+    '.yarn/install-state.gz',
+    '**/.yarn/install-state.gz',
     '.gradle/**',
     '**/.gradle/**'
   ].join(',')

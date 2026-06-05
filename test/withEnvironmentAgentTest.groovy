@@ -124,7 +124,7 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
-  void 'switching environment agent excludes yarn install marker with yarn cache'() {
+  void 'switching environment agent preserves yarn cache but excludes install state'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
 
     script.call('preview', 'civil') {
@@ -133,7 +133,8 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
     assertThat(stashArgs).hasSize(2)
     stashArgs.each { Map args ->
       assertThat(args.excludes as String).contains('.yarn_dependencies_installed')
-      assertThat(args.excludes as String).contains('.yarn/cache/**')
+      assertThat(args.excludes as String).doesNotContain('.yarn/cache/**')
+      assertThat(args.excludes as String).contains('.yarn/install-state.gz')
     }
   }
 

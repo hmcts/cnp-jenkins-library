@@ -77,6 +77,8 @@ class YarnBuilderTest extends Specification {
               it.script.contains('lock_dir=".yarn_dependencies_installed.lock"') &&
               it.script.contains('while ! mkdir "$lock_dir"') &&
               it.script.contains('install_marker_valid()') &&
+              it.script.contains('dependencies_available_after_success()') &&
+              it.script.contains('node_modules_populated()') &&
               it.script.contains('if install_marker_valid; then') &&
               it.script.contains('trap cleanup EXIT') &&
               it.script.indexOf('yarn install') < it.script.indexOf('touch ".yarn_dependencies_installed"')
@@ -128,6 +130,12 @@ class YarnBuilderTest extends Specification {
       when:
           builder.yarn('test:setup:playwright-verify-chromium')
       then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('if install_marker_valid; then') &&
+              it.returnStatus == true
+          }) >> 0
           1 * steps.echo("Ensuring Playwright Chromium browser is installed on environment agent before 'test:setup:playwright-verify-chromium'")
           1 * steps.sh({
               it instanceof Map &&
@@ -149,6 +157,12 @@ class YarnBuilderTest extends Specification {
       when:
           builder.yarn('test:setup:playwright-verify-chromium')
       then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('if install_marker_valid; then') &&
+              it.returnStatus == true
+          }) >> 0
           0 * steps.echo("Ensuring Playwright Chromium browser is installed on environment agent before 'test:setup:playwright-verify-chromium'")
           0 * steps.sh({
               it instanceof Map &&
@@ -172,6 +186,12 @@ class YarnBuilderTest extends Specification {
       when:
           builder.yarn('test:setup:playwright-verify-chromium')
       then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('if install_marker_valid; then') &&
+              it.returnStatus == true
+          }) >> 0
           0 * steps.sh({
               it instanceof Map &&
               it.script.contains('yarn playwright install chromium')
@@ -194,6 +214,12 @@ class YarnBuilderTest extends Specification {
       when:
           builder.yarn('test:playwrightE2E:raw')
       then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('if install_marker_valid; then') &&
+              it.returnStatus == true
+          }) >> 0
           0 * steps.sh({
               it instanceof Map &&
               it.script.contains('yarn playwright install chromium')

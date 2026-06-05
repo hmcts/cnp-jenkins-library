@@ -379,6 +379,7 @@ EOF
   }
 
   private installDependencies() {
+    steps.echo("YarnBuilder installDependencies marker: DTSPO-30107-1e2c1188")
     corepackEnable()
 
     String nvmSetup = steps.fileExists(NVMRC) ? '''
@@ -399,7 +400,7 @@ EOF
 
         if [ -f ".yarnrc.yml" ]; then
           if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules' ".yarnrc.yml"; then
-            [ -f "node_modules/.yarn-state.yml" ] || [ -f ".yarn/install-state.gz" ]
+            [ -f "node_modules/.yarn-state.yml" ]
             return \$?
           fi
 
@@ -407,6 +408,14 @@ EOF
         fi
 
         [ -d "node_modules" ]
+      }
+
+      node_modules_populated() {
+        [ -d "node_modules" ] && [ -n "\$(find node_modules -mindepth 1 -maxdepth 1 -print -quit)" ]
+      }
+
+      dependencies_available_after_success() {
+        dependencies_available || node_modules_populated
       }
 
       install_marker_valid() {
@@ -433,12 +442,27 @@ EOF
       rm -f "${INSTALL_CHECK_FILE}"
 
       ${nvmSetup}
+
+      echo "Yarn install diagnostics:"
+      echo "  node: \$(node --version 2>/dev/null || echo unavailable)"
+      echo "  yarn: \$(yarn --version 2>/dev/null || echo unavailable)"
+      echo "  nodeLinker: \$(yarn config get nodeLinker 2>/dev/null || echo unavailable)"
+      echo "  cacheFolder: \$(yarn config get cacheFolder 2>/dev/null || echo unavailable)"
+      if [ -f ".yarnrc.yml" ]; then
+        sed -n '/^[[:space:]]*nodeLinker:/p;/^[[:space:]]*enableGlobalCache:/p;/^[[:space:]]*yarnPath:/p' ".yarnrc.yml"
+      fi
+      if [ -d ".yarn/cache" ]; then
+        echo "  yarn cache entries: \$(find .yarn/cache -type f | wc -l | tr -d ' ')"
+      else
+        echo "  yarn cache entries: 0"
+      fi
+
       set +e
       yarn install
       install_status=\$?
       set -e
       if [ "\$install_status" -eq 0 ]; then
-        if ! dependencies_available; then
+        if ! dependencies_available_after_success; then
           echo "Yarn install completed but dependency state is missing" >&2
           exit 1
         fi
@@ -515,9 +539,7 @@ EOF
   }
 
   def yarn(String task, String prepend = "") {
-    if (!steps.fileExists(INSTALL_CHECK_FILE)) {
-      installDependencies()
-    }
+    installDependencies()
     ensurePlaywrightChromiumInstalledForVerify(task, prepend)
     runYarn(task, prepend)
   }
