@@ -47,13 +47,55 @@ class AzPrivateDnsTest extends Specification {
 
     then:
     1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --query 'aRecords[].ipv4Address' -o tsv") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)}) >> { throw new RuntimeException('not found') }
+    1 * steps.sh({it.containsKey('script') &&
       it.get('script').contains("network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
     1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --query 'aRecords[].ipv4Address' -o tsv") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)}) >> ''
+    1 * steps.sh({it.containsKey('script') &&
       it.get('script').contains("network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${ip} --subscription ${subscription}") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
+  }
+
+  def "registerAzDns() should not add duplicate ip when new record set already contains target ip"() {
+    def recordName = "rn"
+    def ip = "4.3.2.1"
+
+    def zone = "service.core-compute-${ENVIRONMENT}.internal"
+    def resourceGroup = "core-infra-intsvc-rg"
+    def subscription = "DTS-CFTSBOX-INTSVC"
+    def ttl = 3600
+
+    when:
+      azPrivateDns = Spy(AzPrivateDns, constructorArgs:[steps, ENVIRONMENT, environmentDnsConfigEntry])
+      azPrivateDns.registerDns(recordName, ip)
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --query 'aRecords[].ipv4Address' -o tsv") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)}) >> { throw new RuntimeException('not found') }
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --query 'aRecords[].ipv4Address' -o tsv") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)}) >> ip
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'ttl=${ttl}'") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+    0 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("network private-dns record-set a add-record")})
   }
 
   def "registerAzDns() should use environment managed identity profile on environment agent"() {
@@ -80,11 +122,15 @@ class AzPrivateDnsTest extends Specification {
     1 * envAgentSteps.sh({it.containsKey('script') &&
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a show") &&
       it.containsKey('returnStdout') &&
-      it.get('returnStdout').equals(true)})
+      it.get('returnStdout').equals(true)}) >> { throw new RuntimeException('not found') }
     1 * envAgentSteps.sh({it.containsKey('script') &&
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a create") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
+    1 * envAgentSteps.sh({it.containsKey('script') &&
+      it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a show") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)}) >> ''
     1 * envAgentSteps.sh({it.containsKey('script') &&
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox az network private-dns record-set a add-record") &&
       it.containsKey('returnStdout') &&
