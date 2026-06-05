@@ -72,7 +72,7 @@ def call(type, String product, String component, String environment, String subs
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
 
         // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
-        deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
+        deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, pipelineConfig)
         echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
       }
 

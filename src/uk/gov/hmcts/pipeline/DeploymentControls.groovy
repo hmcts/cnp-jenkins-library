@@ -31,8 +31,10 @@ class DeploymentControls {
     return deploymentControls
   }
 
-  boolean isDeployEnabled(String repository) {
-    if (steps.config.isJavaLibrary) {
+  boolean isDeployEnabled(String repository, def pipelineConfig = null) {
+    boolean isJavaLibrary = pipelineConfig?.isJavaLibrary == true
+
+    if (isJavaLibrary) {
       return false
     }
     def deploymentControls = getDeploymentControls()
