@@ -2,7 +2,11 @@
 set -e
 
 old_library_found () {
+    echo ""
     echo "Old library version references found. Please update your Jenkinsfile to use the new library version."
+    echo "Required library version: ${NEW_LIBRARY_VERSION}"
+    echo "Deadline for updating: ${DEADLINE}"
+    echo ""
     exit 1
 }
 
@@ -12,6 +16,8 @@ no_old_library_found () {
 }
 
 OLD_LIBRARY_VERSION="${1}"  # Pattern of old library version to detect
+NEW_LIBRARY_VERSION="${2}"  # New library version to suggest in the warning message
+DEADLINE="${3}"             # Deadline for updating the library version
 
 FOUND_REFERENCES=0
 FAILED_FILES=()
