@@ -28,7 +28,7 @@ def call(String repoUrl = null) {
             try {
                 sh """
                 chmod +x check-old-library-version.sh
-                ./check-old-library-version.sh '${pattern}'
+                ./check-old-library-version.sh '${pattern}' '${deprecation.version}' '${deprecation.date_deadline}'
                 """
             } catch(ignored) {
                 WarningCollector.addPipelineWarning(
