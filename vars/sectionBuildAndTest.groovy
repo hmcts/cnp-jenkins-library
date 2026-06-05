@@ -215,7 +215,7 @@ def call(params) {
       }
     }
 
-    if (noSkipImgBuild && deploymentEnabled) {
+    if (!config.isJavaLibrary && noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING

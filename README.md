@@ -825,6 +825,19 @@ withPipeline(type, product, component) {
 }
 ```
 
+## Java Library
+You need to add `isJavaLibrary()` method in `withPipeline` block to skip docker and service specific steps in the pipeline.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  isJavaLibrary()
+}
+```
+
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
 
