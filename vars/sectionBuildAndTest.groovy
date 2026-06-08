@@ -51,7 +51,7 @@ def call(params) {
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
-        if (deploymentEnabled) {
+        if (config.deployableApp) {
           enforceChartVersionBumped product: product, component: component
           warnAboutAADIdentityPreviewHack product: product, component: component
         }
