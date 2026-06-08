@@ -32,7 +32,7 @@ class DeploymentControls {
   }
 
   boolean isDeployEnabled(String repository, def pipelineConfig = null) {
-    boolean isDeployableApp = pipelineConfig?.deployableApp == true
+    boolean isDeployableApp = pipelineConfig == null || pipelineConfig?.deployableApp == true
 
     if (!isDeployableApp) {
       return false
