@@ -88,8 +88,8 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.serviceApp = false
   }
 
-  void isJavaLibrary() {
-    config.isJavaLibrary = true
+  void nonDeployableApp() {
+    config.deployableApp = false
     nonServiceApp()
   }
 

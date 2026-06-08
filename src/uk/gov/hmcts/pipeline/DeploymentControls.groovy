@@ -32,9 +32,9 @@ class DeploymentControls {
   }
 
   boolean isDeployEnabled(String repository, def pipelineConfig = null) {
-    boolean isJavaLibrary = pipelineConfig?.isJavaLibrary == true
+    boolean isDeployableApp = pipelineConfig?.deployableApp == true
 
-    if (isJavaLibrary) {
+    if (!isDeployableApp) {
       return false
     }
     def deploymentControls = getDeploymentControls()

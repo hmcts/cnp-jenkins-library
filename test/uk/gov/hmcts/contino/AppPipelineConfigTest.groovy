@@ -33,7 +33,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
-      assertThat(pipelineConfig.isJavaLibrary).isFalse()
+      assertThat(pipelineConfig.deployableApp).isTrue()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
@@ -154,11 +154,11 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.serviceApp).isFalse()
   }
 
-  def "ensure is java library"() {
+  def "ensure is non deployable app"() {
     when:
-    dsl.isJavaLibrary()
+    dsl.nonDeployableApp()
     then:
-    assertThat(pipelineConfig.isJavaLibrary).isTrue()
+    assertThat(pipelineConfig.deployableApp).isFalse()
     assertThat(pipelineConfig.serviceApp).isFalse()
   }
 

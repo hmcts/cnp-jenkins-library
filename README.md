@@ -826,7 +826,7 @@ withPipeline(type, product, component) {
 ```
 
 ## Java Library
-You need to add `isJavaLibrary()` method in `withPipeline` block to skip deployments.
+You need to add `nonDeployableApp()` method in `withPipeline` block to skip deployments.
 
 ```groovy
 #!groovy
@@ -834,7 +834,7 @@ You need to add `isJavaLibrary()` method in `withPipeline` block to skip deploym
 @Library("Infrastructure")
 
 withPipeline(type, product, component) {
-  isJavaLibrary()
+  nonDeployableApp()
 }
 ```
 
