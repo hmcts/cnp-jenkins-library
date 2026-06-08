@@ -51,8 +51,10 @@ def call(params) {
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
-        enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
+        if (deploymentEnabled) {
+          enforceChartVersionBumped product: product, component: component
+          warnAboutAADIdentityPreviewHack product: product, component: component
+        }
       }
 
       // always build master and demo as we currently do not deploy an image there
