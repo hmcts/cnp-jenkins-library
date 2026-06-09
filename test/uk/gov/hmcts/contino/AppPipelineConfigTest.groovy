@@ -33,6 +33,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
+      assertThat(pipelineConfig.deployableApp).isTrue()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
@@ -150,6 +151,14 @@ class AppPipelineConfigTest extends Specification {
     when:
     dsl.nonServiceApp()
     then:
+    assertThat(pipelineConfig.serviceApp).isFalse()
+  }
+
+  def "ensure is non deployable app"() {
+    when:
+    dsl.nonDeployableApp()
+    then:
+    assertThat(pipelineConfig.deployableApp).isFalse()
     assertThat(pipelineConfig.serviceApp).isFalse()
   }
 
