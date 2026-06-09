@@ -220,8 +220,8 @@ def call(params) {
     }
 
     if (config.releaseOnMerge) {
-      stageWithAgent("Create release", product) {
-        onMaster {
+      onMaster {
+        stageWithAgent("Create release", product) {
           if (fileExists('build.gradle')) {
             String gradleVersion = gradleAPI.resolveGradleVersion()
             if (!gradleVersion) {
