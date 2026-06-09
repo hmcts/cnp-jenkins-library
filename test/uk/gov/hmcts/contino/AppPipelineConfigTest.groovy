@@ -34,6 +34,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
       assertThat(pipelineConfig.deployableApp).isTrue()
+      assertThat(pipelineConfig.releaseOnMerge).isFalse()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
@@ -160,6 +161,12 @@ class AppPipelineConfigTest extends Specification {
     then:
     assertThat(pipelineConfig.deployableApp).isFalse()
     assertThat(pipelineConfig.serviceApp).isFalse()
+  }
+  def "ensure release on merge"() {
+    when:
+    dsl.releaseOnMerge()
+    then:
+    assertThat(pipelineConfig.releaseOnMerge).isTrue()
   }
 
   def "ensure enable deploy to AKS Staging"() {
