@@ -31,7 +31,12 @@ class DeploymentControls {
     return deploymentControls
   }
 
-  boolean isDeployEnabled(String repository) {
+  boolean isDeployEnabled(String repository, def pipelineConfig = null) {
+    boolean isDeployableApp = pipelineConfig == null || pipelineConfig?.deployableApp == true
+
+    if (!isDeployableApp) {
+      return false
+    }
     def deploymentControls = getDeploymentControls()
     if (!deploymentControls.containsKey('repositories')) {
 

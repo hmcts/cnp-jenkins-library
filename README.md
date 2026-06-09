@@ -825,6 +825,19 @@ withPipeline(type, product, component) {
 }
 ```
 
+## Java Library
+You need to add `nonDeployableApp()` method in `withPipeline` block to skip deployments.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  nonDeployableApp()
+}
+```
+
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
 
