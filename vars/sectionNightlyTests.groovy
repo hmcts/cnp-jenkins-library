@@ -88,6 +88,62 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
 
       boolean doSecondRun = false
+      def Stage_PerformanceTest = 'Performance test'
+      def Stage_FailedTestReRun = 'Failed Test Rerun'
+
+      //First test run
+      stageWithAgent(Stage_PerformanceTest, product) {
+        warnError('Failure in performanceTest') {
+          pcr.callAround('PerformanceTest') {
+            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: Stage_PerformanceTest) {
+              //The following code attempts to run a test, on failure will set doSecondRun to true so that a test rerun can be attempted
+              //buildResult is marked as success so that it does not terminate the test
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                try {
+                  builder.performanceTest()
+                }
+                catch (e) {
+                  doSecondRun = true
+                  throw e
+                }
+                publishPerformanceReports(product: product, component: component, environment: environment.nonProdName, subscription: subscription, folder: "nightly")
+              }
+            }
+          }
+        }
+      }
+
+      //Failed test run test run
+      if ((doSecondRun == true) && (config.perfRerunOnFail == true) //&& (triggeredByTimer == true))
+      stageWithAgent(Stage_FailedTestReRun, product) {
+        warnError('Failure in performanceTest') {
+          pcr.callAround('PerformanceTest') {
+            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: Stage_FailedTestReRun) {
+              //The followung code attempts test rerun and marks buildResult as failure
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  builder.performanceTest()
+                }
+                publishPerformanceReports(product: product, component: component, environment: environment.nonProdName, subscription: subscription, folder: "nightly")
+              }
+            }
+          }
+        }
+
+      //Alerts wil become active if config.gatlingAlerts is set to true
+      if (config.perfGatlingAlerts == true)
+        performanceCheckIfTestFailed("${config.perfSlackChannel}")
+      }
+
+    /*
+    if (config.performanceTest) {
+
+      //Check if build started by chron job
+      def causes = currentBuild.rawBuild?.getCauses() ?: []
+      def triggeredByTimer = causes.any { cause ->
+        cause.getClass().getSimpleName() == "TimerTriggerCause"
+      }
+
+      boolean doSecondRun = false
       def stages = ['Performance test', 'Failed Test Rerun']
       for (int i = 0; i < 2; i++) {
         stageWithAgent(stages[i], product) {
@@ -129,14 +185,13 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           break
         else if (doSecondRun == false)
           break
-
       }
 
       //Alerts wil become active if config.gatlingAlerts is set to true
       if (config.perfGatlingAlerts == true)
         performanceCheckIfTestFailed("${config.perfSlackChannel}")
-
     }
+    */
 
     if (config.securityScan) {
       stageWithAgent('Security scan', product) {

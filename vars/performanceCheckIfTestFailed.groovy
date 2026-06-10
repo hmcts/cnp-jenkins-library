@@ -8,7 +8,85 @@
 
 def call(String user) {
 
-  def threshold1 = 3
+  if (currentBuild.result == 'FAILURE') {
+
+    //Constants
+    def final threshold_warning = 3
+    def final threshold_danger = 6
+    def final previousRunLimit = 5
+
+    //Get recent commits
+    def commits = sh(
+      script: "git log -n 1 --pretty=format:'%an | %ad | %s' --date=format:'%Y-%m-%d %H:%M:%S'",
+      returnStdout: true
+    ).trim()
+
+    //Create fail & pass list to display
+    //Count constant failures in a row
+    def resultList = []
+    def constantFailureStop = false
+    def constantFailureCount = 0
+    def previousBuild = currentBuild
+    while (previousBuild != null) {
+      if ((previousBuild.result == 'FAILURE')) {
+        resultList.add('Fail')
+        if (constantFailureStop == false) {
+          //Count constant failures whilst constantFailureStop is false
+          constantFailureCount++
+          buildDate = (new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss"))
+        }
+      } else {
+        resultList.add('Pass')
+        //Stop counting constant failures when value is set to true
+        constantFailureStop = true
+      }
+      previousBuild = previousBuild?.previousBuild
+    }
+
+    //Set colour for slack message
+    def colour = (constantFailureCount >= threshold_danger) ? "danger" : "warning"
+
+    //Extract actual test name from job name
+    def testName = "${env.JOB_NAME}".split("\\/")
+
+    //Build the body text
+    def body =
+      """
+---------------------------------------------
+*ALERT:* ${testName[1]} (<${env.BUILD_URL}|Build ${env.BUILD_NUMBER}>)
+---------------------------------------------
+This test has failed ${constantFailureCount} times in a row since ${buildDate}. Last ${previousRunsLimit} runs:
+ >New -> Old ${resultList[0..previousRunLimit - 1]}
+---------------------------------------------
+Last commit on this repo:
+ >${commits}
+---------------------------------------------
+"""
+
+    //Send slack message to channel or user
+    if (constantFailure >= threshold_warning)
+      sendSlackMessage("${user}", colour, "${body}")
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*def call(String user) {
+
+  def threshold = 3
   def threshold2 = 6
   def previousBuild = currentBuild
 
@@ -80,7 +158,7 @@ Last commit on this repo:
   }
 }
 
-
+*/
 
 
 
