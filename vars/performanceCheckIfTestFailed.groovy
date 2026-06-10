@@ -23,6 +23,7 @@ def call(String user) {
     //Create fail & pass list to display
     //Count constant failures in a row
     def resultList = []
+    def buildDate
     def constantFailureStop = false
     def constantFailureCount = 0
     def previousBuild = currentBuild
