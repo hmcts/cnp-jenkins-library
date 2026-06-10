@@ -114,7 +114,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
 
       //Failed test run test run
-      if ((doSecondRun == true) && (config.perfRerunOnFail == true) //&& (triggeredByTimer == true))
+      if ((doSecondRun == true) && (config.perfRerunOnFail == true)) //&& (triggeredByTimer == true))
       stageWithAgent(Stage_FailedTestReRun, product) {
         warnError('Failure in performanceTest') {
           pcr.callAround('PerformanceTest') {
