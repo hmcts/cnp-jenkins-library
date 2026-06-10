@@ -10,8 +10,8 @@ def call(String user) {
 
   if (currentBuild.result == 'FAILURE') {
 
-    def threshold_warning = 3
-    def threshold_danger = 6
+    def final threshold_warning = 3
+    def final threshold_danger = 6
     def previousRunLimit = 5
 
     //Get recent commits
@@ -55,7 +55,7 @@ def call(String user) {
 *ALERT:* ${testName[1]} (<${env.BUILD_URL}|Build ${env.BUILD_NUMBER}>)
 ---------------------------------------------
 This test has failed ${constantFailureCount} times in a row since ${buildDate}. Last ${previousRunsLimit} runs:
- >New -> Old ${resultList[0..previousRunLimit - 1]}
+ >New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
  >${commits}
