@@ -12,7 +12,7 @@ def call(String user) {
 
     def final threshold_warning = 3
     def final threshold_danger = 6
-    def previousRunsLimit = 5
+    def final previousRunsLimit = 5
 
     //Get recent commits
     def commits = sh(
