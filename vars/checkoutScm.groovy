@@ -33,6 +33,6 @@ def call(params) {
       echo "Unable to find git email Id for the user' ${err}'"
     }
     warnAboutRenovateConfig()
-    warnAboutOldLibraryVersion()
+    // warnAboutOldLibraryVersion()
   }
 }
