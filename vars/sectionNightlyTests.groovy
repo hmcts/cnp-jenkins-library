@@ -114,12 +114,12 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
 
       //Failed test run test run
-      if ((doSecondRun == true) && (config.perfRerunOnFail == true)) //&& (triggeredByTimer == true))
-      stageWithAgent(Stage_FailedTestReRun, product) {
-        warnError('Failure in performanceTest') {
-          pcr.callAround('PerformanceTest') {
-            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: Stage_FailedTestReRun) {
-              //The followung code attempts test rerun and marks buildResult as failure
+      if ((doSecondRun == true) && (config.perfRerunOnFail == true)) { //&& (triggeredByTimer == true))
+        stageWithAgent(Stage_FailedTestReRun, product) {
+          warnError('Failure in performanceTest') {
+            pcr.callAround('PerformanceTest') {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: Stage_FailedTestReRun) {
+                //The followung code attempts test rerun and marks buildResult as failure
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                   builder.performanceTest()
                 }
@@ -128,12 +128,13 @@ def call(pcr, config, pipelineType, String product, String component, String sub
             }
           }
         }
-
-      //Alerts wil become active if config.gatlingAlerts is set to true
-      if (config.perfGatlingAlerts == true)
-        performanceCheckIfTestFailed("${config.perfSlackChannel}")
       }
 
+      //Alerts wil become active if config.gatlingAlerts is set to true
+      if (config.perfGatlingAlerts == true) {
+        performanceCheckIfTestFailed("${config.perfSlackChannel}")
+      }
+    }
     /*
     if (config.performanceTest) {
 
