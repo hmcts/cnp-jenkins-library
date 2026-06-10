@@ -10,10 +10,9 @@ def call(String user) {
 
   if (currentBuild.result == 'FAILURE') {
 
-    //Constants
-    def final threshold_warning = 3
-    def final threshold_danger = 6
-    def final previousRunLimit = 5
+    def threshold_warning = 3
+    def threshold_danger = 6
+    def previousRunLimit = 5
 
     //Get recent commits
     def commits = sh(
