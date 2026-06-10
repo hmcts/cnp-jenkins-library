@@ -63,9 +63,10 @@ Last commit on this repo:
 """
 
     //Send slack message to channel or user
-    if (constantFailure >= threshold_warning)
+    if (constantFailureCount >= threshold_warning)
       sendSlackMessage("${user}", colour, "${body}")
-    }
+
+  }
 }
 
 
@@ -79,11 +80,10 @@ Last commit on this repo:
 
 
 
+/*
 
 
-
-
-/*def call(String user) {
+def call(String user) {
 
   def threshold = 3
   def threshold2 = 6
