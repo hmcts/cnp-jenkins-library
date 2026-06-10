@@ -101,9 +101,8 @@ def call(params) {
         }
       }
 
-      Closure dockerBuildBranch = null
       if (dockerFileExists) {
-        dockerBuildBranch = {
+        branches["Docker Build"] = {
           withAcrClient(subscription) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -202,7 +201,7 @@ def call(params) {
         }
       }
 
-      stageWithAgent("Static checks", product) {
+      stageWithAgent("Static checks / Container build", product) {
         when(noSkipImgBuild) {
           parallel branches
 
@@ -211,13 +210,6 @@ def call(params) {
           // and then upload them, if any are missing it will error:
           // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
           sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
-        }
-      }
-
-      if (noSkipImgBuild && dockerBuildBranch) {
-        // ACR packs the live workspace. Keep Docker build separate from parallel checks that can mutate dependency files.
-        stageWithAgent("Container build", product) {
-          dockerBuildBranch()
         }
       }
 
