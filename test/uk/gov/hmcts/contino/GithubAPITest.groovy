@@ -79,6 +79,21 @@ class GithubAPITest extends Specification {
 
   static def invalidResponse = ["status": 500]
 
+  static def latestCommitResponse = [
+    "status": 200,
+    "content": '''{
+        "sha": "abc123",
+        "commit": {
+          "author": {
+            "name": "Test User",
+            "email": "test@example.com",
+            "date": "2025-01-01T12:00:00Z"
+          },
+          "message": "Merge pull request #99 from hmcts/something\\n\\nRevert XYZ"
+        }
+    }'''
+  ]
+
   void setup() {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
@@ -280,5 +295,17 @@ class GithubAPITest extends Specification {
     then:
       assertThat(masterLabelExists).isFalse()
       assertThat(prLabelExists).isTrue()
+  }
+
+  def "getLatestCommitOnBranch returns parsed commit JSON"() {
+    given:
+      steps.httpRequest(_) >> latestCommitResponse
+  
+    when:
+      def commitJson = githubApi.getLatestCommitOnBranch("master")
+  
+    then:
+      assertThat(commitJson.sha).isEqualTo("abc123")
+      assertThat(commitJson.commit.message).isEqualTo("Merge pull request #99 from hmcts/something\n\nRevert XYZ")
   }
 }
