@@ -33,7 +33,7 @@ def call(String repoUrl = null) {
             } catch(ignored) {
                 WarningCollector.addPipelineWarning(
                     "old_library_version",
-                    "Your code references the old library version (${pattern}). Please update your Jenkinsfile to use the new library version: *${deprecation.version}*", 
+                    "Your Jenkinsfile references an old or unpinned Jenkins library version. Please update it to use the new library version: *${deprecation.version}*",
                     LocalDate.parse(deprecation.date_deadline)
                 )
             }
