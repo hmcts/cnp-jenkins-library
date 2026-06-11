@@ -93,6 +93,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     nonServiceApp()
   }
 
+  void releaseOnMerge() {
+    config.releaseOnMerge = true
+  }
+
   void overrideVaultEnvironments(Map<String, String> vaultOverrides) {
     config.vaultEnvironmentOverrides = vaultOverrides
   }
