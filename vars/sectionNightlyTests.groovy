@@ -89,33 +89,25 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         cause.getClass().getSimpleName() == "TimerTriggerCause"
       }
 
-      def applicableForRerun = false
-      def buildResultText = null
       boolean doSecondRun = false
       def stages = ['Performance test', 'Failed Test Rerun']
-
-      if ((config.perfRerunOnFail)) // && (triggeredByTimer))
-        applicableForRerun = true
-
       for (int i = 0; i < stages.size(); i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
-              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
-                if ((i == 0) && (applicableForRerun == true)) {
-                  buildResultText = 'SUCCESS'
-                } else {
-                    buildResultText = 'FAILURE'
-                }
-                catchError(buildResult: buildResultText, stageResult: 'FAILURE') {
-                  try {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                if ((i == 0) && (triggeredByTimer == true)) { //&& (config.perfRerunOnFail == true))
+                  catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    try {
                       builder.performanceTest()
-                  } catch (e) {
-                        if (applicableForRerun) {
-                          doSecondRun = true
-                          throw e
-                        }
                     }
+                    catch (e) {
+                      doSecondRun = true
+                      throw e
+                    }
+                  }
+                } else {
+                    builder.performanceTest()
                 }
 
                 publishPerformanceReports(
@@ -130,8 +122,12 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
 
-        //Kill second interation of loop if any of below conditions are false
-        if (doSecondRun == false)
+        //Rerun failed test if started by chron job
+        if (triggeredByTimer == false)
+          break
+        else if (config.perfRerunOnFail == false)
+          break
+        else if (doSecondRun == false)
           break
 
       }
