@@ -102,18 +102,20 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
-                if ((i == 0)) //&& (triggeredByTimer))
+                if ((i == 0) && (applicableForRerun == true)) {
                   buildResultText = 'SUCCESS'
-                else
-                  buildResultText = 'FAILURE'
+                } else {
+                    buildResultText = 'FAILURE'
+                }
                 catchError(buildResult: buildResultText, stageResult: 'FAILURE') {
                   try {
-                    builder.performanceTest()
+                      builder.performanceTest()
                   } catch (e) {
-                    if (applicableForRerun)
-                      doSecondRun = true
-                    throw e
-                  }
+                        if (applicableForRerun) {
+                          doSecondRun = true
+                          throw e
+                        }
+                    }
                 }
 
                 publishPerformanceReports(
