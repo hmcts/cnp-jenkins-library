@@ -62,7 +62,7 @@ dependencies {
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.36.0'
 
-  testRuntimeOnly 'org.objenesis:objenesis:3.3'
+  testRuntimeOnly 'org.objenesis:objenesis:3.4'
 }
 
 
