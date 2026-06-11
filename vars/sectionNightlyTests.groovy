@@ -93,17 +93,19 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       def buildResultText = null
       boolean doSecondRun = false
       def stages = ['Performance test', 'Failed Test Rerun']
+
+      if ((config.perfRerunOnFail)) // && (triggeredByTimer))
+        applicableForRerun = true
+
       for (int i = 0; i < stages.size(); i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
-                if ((i == 0) && (triggeredByTimer) && (config.perfRerunOnFail)) {
-                  applicableForRerun = true
+                if ((i == 0)) //&& (triggeredByTimer))
                   buildResultText = 'SUCCESS'
-                } else {
+                else
                   buildResultText = 'FAILURE'
-                }
                 catchError(buildResult: buildResultText, stageResult: 'FAILURE') {
                   try {
                     builder.performanceTest()
@@ -127,7 +129,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         }
 
         //Kill second interation of loop if any of below conditions are false
-        if ((triggeredByTimer == false) || (config.perfRerunOnFail == false) || (doSecondRun == false))
+        if (doSecondRun == false)
           break
 
       }
