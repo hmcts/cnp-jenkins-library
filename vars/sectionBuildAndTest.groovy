@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.GradleAPI
 import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
@@ -21,6 +22,7 @@ def call(params) {
   def dockerImage
   def projectBranch
   def imageRegistry
+  def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
   boolean deploymentEnabled = false
 
@@ -43,11 +45,11 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
-  
+
   stage('ACR Migration Check') {
     warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
   }
-  
+
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
@@ -217,6 +219,32 @@ def call(params) {
       }
     }
 
+    if (config.releaseOnMerge) {
+      onMaster {
+        stageWithAgent("Create release", product) {
+          if (fileExists('build.gradle')) {
+            String gradleVersion = gradleAPI.resolveGradleVersion()
+            if (!gradleVersion) {
+              echo('Skipping GitHub release creation: unable to resolve Gradle version')
+              return
+            }
+
+            GithubAPI githubAPI = new GithubAPI(this)
+            String project = githubAPI.currentProject()
+            String latestReleaseVersion = githubAPI.getLatestReleaseVersion(project)
+
+            if (latestReleaseVersion && gradleAPI.compareReleaseVersions(gradleVersion, latestReleaseVersion) <= 0) {
+              echo("Skipping GitHub release creation: ${gradleVersion} is not greater than latest release ${latestReleaseVersion}")
+              return
+            }
+
+            githubAPI.createGitHubRelease(project, gradleVersion, env.GIT_COMMIT)
+          }
+        }
+      }
+    }
+
+
     if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
@@ -259,3 +287,4 @@ def call(params) {
   }
   return deploymentEnabled
 }
+
