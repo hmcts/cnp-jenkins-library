@@ -579,7 +579,7 @@ Some tests may require additional configuration - copy this from your `Jenkinsfi
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
 ## Performance Testing extension for Smart Slack Alerts & Automatic Rerun on Fail
-Additional pareneters have been added to #enablePerformanceTest as follows:
+Additional parameters have been added to enablePerformanceTest as follows:
    enablePerformanceTest(timeout=30, perfGatlingAlerts=true, perfRerunOnFail=true)
      *perfGatlingAlerts will activate alerts to slack channel performance-alerts if a test fails more than 3 days in a row.
      *perfRerunOnFail will activate 1 rerun of a failed test which will start a new stage on the pipeline test.

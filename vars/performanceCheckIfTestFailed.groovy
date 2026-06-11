@@ -21,30 +21,30 @@ def call(String user) {
     ).trim()
 
     //Create fail & pass list to display
-    //Count constant failures in a row
+    //Count consecutive failures in a row
     def resultList = []
-    def buildDate
-    def constantFailureStop = false
-    def constantFailureCount = 0
+    def buildDate = null
+    def consecutiveFailureStop = false
+    def consecutiveFailureCount = 0
     def previousBuild = currentBuild
     while (previousBuild != null) {
       if ((previousBuild.result == 'FAILURE')) {
         resultList.add('Fail')
-        if (constantFailureStop == false) {
-          //Count constant failures whilst constantFailureStop is false
-          constantFailureCount++
+        if (consecutiveFailureStop == false) {
+          //Count consecutive failures whilst consecutiveFailureStop is false
+          consecutiveFailureCount++
           buildDate = (new Date("${previousBuild.getTimeInMillis()}".toLong()).format("yyyy-MM-dd HH:mm:ss"))
         }
       } else {
         resultList.add('Pass')
-        //Stop counting constant failures when value is set to true
-        constantFailureStop = true
+        //Stop counting consecutive failures when value is set to true
+        consecutiveFailureStop = true
       }
       previousBuild = previousBuild?.previousBuild
     }
 
     //Set colour for slack message
-    def colour = (constantFailureCount >= threshold_danger) ? "danger" : "warning"
+    def colour = (consecutiveFailureCount >= threshold_danger) ? "danger" : "warning"
 
     //Extract actual test name from job name
     def testName = "${env.JOB_NAME}".split("\\/")
@@ -55,7 +55,7 @@ def call(String user) {
 ---------------------------------------------
 *ALERT:* ${testName[1]} (<${env.BUILD_URL}|Build ${env.BUILD_NUMBER}>)
 ---------------------------------------------
-This test has failed ${constantFailureCount} times in a row since ${buildDate}. Last ${previousRunsLimit} runs:
+This test has failed ${consecutiveFailureCount} times in a row since ${buildDate}. Last ${previousRunsLimit} runs:
  >New -> Old ${resultList[0..previousRunsLimit - 1]}
 ---------------------------------------------
 Last commit on this repo:
@@ -64,7 +64,7 @@ Last commit on this repo:
 """
 
     //Send slack message to channel or user
-    if (constantFailureCount >= threshold_warning)
+    if (consecutiveFailureCount >= threshold_warning)
       sendSlackMessage("${user}", colour, "${body}")
 
   }
