@@ -123,7 +123,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         }
 
         //Rerun failed test if started by chron job
-        if ((triggeredByTimer == false) || (config.perfRerunOnFail == false) || (doSecondRun == false))
+        if (!(triggeredByTimer && config.perfRerunOnFail && doSecondRun)) {
           break
 
 
