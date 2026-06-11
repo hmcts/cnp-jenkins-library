@@ -13,7 +13,7 @@ def call(String product, String environment, String subscription, String compone
   call(product, environment, subscription, false, component, body)
 }
 def call(String product, String environment, String subscription, Boolean planOnly, Closure body) {
-  call(product, environment, subscription, planOnly, body)
+  call(product, environment, subscription, planOnly, null, body)
 }
 def call(String product, String environment, String subscription, Boolean planOnly, String component, Closure body) {
 
