@@ -15,8 +15,8 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
 
 ### Opinionated app pipeline
 
-This library contains a complete opinionated pipeline that can build, test and deploy Java
-and NodeJS applications. The pipeline contains the following stages:
+This library contains a complete opinionated pipeline that can build, test and deploy Java,
+NodeJS, Angular, Ruby and Python applications. The pipeline contains the following stages:
 
 * Checkout
 * Build
@@ -36,7 +36,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
-script and dependencies in source control. NodeJS apps must use Yarn.
+script and dependencies in source control. NodeJS apps must use Yarn. Python apps must use
+`uv` and define a Python version in a `.python-version` file or via `requires-python` in
+`pyproject.toml`. Dependencies must be declared in `pyproject.toml` (recommended) or `requirements.txt`.
 
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
@@ -46,7 +48,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular", "ruby" and "python"
 
 def product = "rhubarb"
 
@@ -173,15 +175,26 @@ this output will be transposed to Uppercase s2s_url => S2S_URL and can then be u
 
 #### Security Checks
 
-Calls `yarn test:nsp` so this command must be implemented in package.json
+The security check implementation varies by language:
+- **Java**: runs OWASP Dependency Check via Gradle
+- **NodeJS / Angular**: runs `yarn audit` with suppression support
+- **Ruby**: runs `bundle-audit`
+- **Python**: runs `pip-audit`, outputting a JSON report archived as `pip-audit-report.json`
+
+All reports are published to CosmosDB for centralised CVE tracking.
 
 #### Smoke tests
 
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
-This should, ideally, check the entire happy path of the application. Currently, the pipeline only supports Yarn to run smoketests and will call `yarn test:smoke`
-so this must be implemented as a command in package.json. The pipeline exposes the appropriate application URL in the
+This should, ideally, check the entire happy path of the application. The pipeline exposes the appropriate application URL in the
 `TEST_URL` environment variable and this should be used by the smoke tests you implement. The smoke test stage is
 called after each deployment to each environment.
+
+The smoke test implementation varies by language:
+- **Java**: `smoke` Gradle task, results published from `**/test-results/smoke/*.xml`
+- **NodeJS / Angular**: `yarn test:smoke`, results published from `smoke-output/**/*result.xml`
+- **Ruby**: `bundle exec rake test:smoke`
+- **Python**: `pytest tests/smoke`, results published from `smoke-output/results.xml`
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
 
@@ -306,7 +319,10 @@ withPipeline(type, product, component) {
 ```
 
 E2E tests require the appropriate task to be defined in your application's build configuration:
-- For Java: `e2eTest` task in build.gradle
+- **Java**: `e2eTest` task in `build.gradle`
+- **NodeJS / Angular**: `test:e2e` script in `package.json`
+- **Ruby**: `bundle exec rake test:e2e`
+- **Python**: `pytest tests/e2e` (tests located in `tests/e2e/`)
 
 The tests run after deployment to each environment (AAT and Production) on the master branch, after smoke tests and API gateway tests (if enabled).
 
