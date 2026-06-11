@@ -96,7 +96,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
-                if ((i == 0) && (triggeredByTimer == true)) { //&& (config.perfRerunOnFail == true))
+                if ((i == 0) && (config.perfRerunOnFail == true)) { //&& (triggeredByTimer == true)
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     try {
                       builder.performanceTest()
@@ -123,18 +123,15 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         }
 
         //Rerun failed test if started by chron job
-        if (triggeredByTimer == false)
+        if ((triggeredByTimer == false) || (config.perfRerunOnFail == false) || (doSecondRun == false))
           break
-        else if (config.perfRerunOnFail == false)
-          break
-        else if (doSecondRun == false)
-          break
+
 
       }
 
       //Alerts wil become active if config.gatlingAlerts is set to true
-      if (config.perfGatlingAlerts == true)
-        performanceCheckIfTestFailed("${config.perfSlackChannel}")
+      //if (config.perfGatlingAlerts == true)
+      //  performanceCheckIfTestFailed("${config.perfSlackChannel}")
 
     }
 
