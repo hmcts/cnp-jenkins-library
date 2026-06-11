@@ -215,7 +215,6 @@ def call(params) {
 
     if (config.onlyDeploy) {
       branches.remove("Unit tests and Sonar scan")
-      branches.remove("Tech Stack")
       branches.remove("Fortify scan")
     }
 
