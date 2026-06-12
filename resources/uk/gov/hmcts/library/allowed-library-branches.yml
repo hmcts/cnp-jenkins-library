@@ -5,3 +5,5 @@ branches:
     allowed: true
   - name: DTSPO-30107-jenkins-agents
     allowed: true
+  - name: 2.0.0
+    allowed: true
