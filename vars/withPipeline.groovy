@@ -132,7 +132,8 @@ def call(type, String product, String component, Closure body) {
                   tfPlanOnly: false
                 )
               }
-            } // end approvedDeploymentRepository
+            }
+          } // end approvedDeploymentRepository
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'
