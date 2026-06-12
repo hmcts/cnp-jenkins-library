@@ -96,6 +96,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
               timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                //First run uses a trick of setting buildresult to SUCCESS, so that a rerun can be attempted with jenkins build failing
                 if ((i == 0) && (config.perfRerunOnFail == true)) { //&& (triggeredByTimer == true)
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     try {
@@ -106,6 +107,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                       throw e
                     }
                   }
+                  //The below else block executes a test re-run and not triggered by timer - this doesn't need catch try block
                 } else {
                     builder.performanceTest()
                 }
@@ -122,16 +124,14 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
 
-        //Rerun failed test if started by chron job
-        if (!(triggeredByTimer && config.perfRerunOnFail && doSecondRun))
+        //Break out of loop and not to run second re-reun if any of the following conditions are satisfied.
+        if (!(config.perfRerunOnFail && doSecondRun)) //triggeredByTimer &&
           break
-
-
       }
 
       //Alerts wil become active if config.gatlingAlerts is set to true
-      //if (config.perfGatlingAlerts == true)
-      //  performanceCheckIfTestFailed("${config.perfSlackChannel}")
+      if (config.perfGatlingAlerts == true)
+        performanceCheckIfTestFailed("${config.perfSlackChannel}")
 
     }
 
