@@ -9,11 +9,12 @@ class LibraryBranchControls {
   }
 
   def getConfigFilePath() {
-    return "resources/uk/gov/hmcts/library/allowed-library-branches.yml"
+    return "uk/gov/hmcts/library/allowed-library-branches.yml"
   }
 
   def getLibraryBranchControls() {
-    libraryBranchControls = steps.readYaml(file: getConfigFilePath())
+    def yamlContent = steps.libraryResource(getConfigFilePath())
+    libraryBranchControls = steps.readYaml(text: yamlContent)
     return libraryBranchControls
   }
 
