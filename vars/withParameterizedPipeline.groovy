@@ -13,6 +13,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.DeploymentControls
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   call(type, product,component,environment,subscription,'',body)
@@ -57,65 +58,73 @@ def call(type, String product, String component, String environment, String subs
 
   def deploymentTargetList = deploymentTargets.split(',') as List
   boolean deploymentEnabled = false
+  boolean libraryBranchAllowed = false
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
-  node(agentType) {
-    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-    try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
+  libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
-      stageWithAgent('Checkout', product) {
-        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
+  if (libraryBranchAllowed) {
+    node(agentType) {
+      def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+      try {
+        dockerAgentSetup()
+        env.PATH = "$env.PATH:/usr/local/bin"
 
-        // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
-        deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, pipelineConfig)
-        echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
-      }
+        stageWithAgent('Checkout', product) {
+          checkoutScm(pipelineCallbacksRunner: callbacksRunner)
 
-      stageWithAgent("Build", product) {
-        builder.setupToolVersion()
+          // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
+          deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, pipelineConfig)
+          echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
+        }
 
-        callbacksRunner.callAround('build') {
-          builder.build()
+        stageWithAgent("Build", product) {
+          builder.setupToolVersion()
+
+          callbacksRunner.callAround('build') {
+            builder.build()
+          }
+        }
+
+        if (deploymentEnabled) {
+          sectionDeployToEnvironment(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            pipelineType: pipelineType,
+            subscription: subscription,
+            aksSubscription: aksSubscriptions.aat,
+            environment: environment,
+            product: product,
+            component: component,
+            deploymentTargets: deploymentTargetList,
+            tfPlanOnly: false
+          )
+        }
+      } catch (err) {
+        currentBuild.result = "FAILURE"
+
+        notifyBuildFailure channel: slackChannel
+
+        callbacksRunner.call('onFailure')
+        metricsPublisher.publish('Pipeline Failed')
+        throw err
+      } finally {
+        notifyPipelineDeprecations(slackChannel, metricsPublisher)
+        if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+          deleteDir()
         }
       }
 
-      if (deploymentEnabled) {
-        sectionDeployToEnvironment(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          pipelineType: pipelineType,
-          subscription: subscription,
-          aksSubscription: aksSubscriptions.aat,
-          environment: environment,
-          product: product,
-          component: component,
-          deploymentTargets: deploymentTargetList,
-          tfPlanOnly: false
-        )
-      }
-    } catch (err) {
-      currentBuild.result = "FAILURE"
+      notifyBuildFixed channel: slackChannel
 
-      notifyBuildFailure channel: slackChannel
-
-      callbacksRunner.call('onFailure')
-      metricsPublisher.publish('Pipeline Failed')
-      throw err
-    } finally {
-      notifyPipelineDeprecations(slackChannel, metricsPublisher)
-      if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-        deleteDir()
-      }
+      callbacksRunner.call('onSuccess')
+      metricsPublisher.publish('Pipeline Succeeded')
     }
-
-    notifyBuildFixed channel: slackChannel
-
-    callbacksRunner.call('onSuccess')
-    metricsPublisher.publish('Pipeline Succeeded')
+  } else {
+    echo "This branch of the Jenkins library is not allowed to be used. Please check the library branch controls configuration or contact the Platform Operations team if you believe this is an error."
+    return false
   }
 }
