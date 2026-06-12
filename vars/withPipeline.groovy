@@ -68,6 +68,8 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
@@ -76,8 +78,6 @@ def call(type, String product, String component, Closure body) {
           if (libraryBranchAllowed) {
             dockerAgentSetup()
             env.PATH = "$env.PATH:/usr/local/bin"
-
-            def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
             def deploymentEnabled = sectionBuildAndTest(
               appPipelineConfig: pipelineConfig,
