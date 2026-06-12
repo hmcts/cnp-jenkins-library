@@ -93,6 +93,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     nonServiceApp()
   }
 
+  void libraryBranchAllowed() {
+    config.libraryBranchAllowed = false
+  }
+
   void releaseOnMerge() {
     config.releaseOnMerge = true
   }
