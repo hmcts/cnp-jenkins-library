@@ -109,7 +109,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                   }
                   //The below else block executes a test re-run and not triggered by timer - this doesn't need catch try block
                 } else {
-                    builder.performanceTest()
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      builder.performanceTest()
+                    }
                 }
 
                 publishPerformanceReports(
