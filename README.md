@@ -840,6 +840,32 @@ withPipeline(type, product, component) {
 }
 ```
 
+## Non-Deployable App
+You need to add `nonDeployableApp()` method in `withPipeline` block to skip deployments.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  nonDeployableApp()
+}
+```
+
+## Release on merge
+You need to add `releaseOnMerge()` method in `withPipeline` to automatically trigger a release pipeline when changes are merged to master if the gradle version number has been updated.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  releaseOnMerge()
+}
+```
+
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
 

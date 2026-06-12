@@ -342,6 +342,73 @@ class GithubAPI {
     return checkForLabel(branchName, "dependencies")
   }
 
+  def getLatestReleaseVersion(String project) {
+    def credentialsId = resolveCredentialsId()
+    if (!credentialsId) {
+      this.steps.echo('Skipping latest release lookup: no GitHub credentials could be resolved')
+      return null
+    }
+
+    def response = this.steps.httpRequest(
+      httpMode: 'GET',
+      authentication: credentialsId,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/releases/latest",
+      consoleLogResponseBody: false,
+      validResponseCodes: '200,404'
+    )
+
+    if (response.status == 404) {
+      return null
+    }
+
+    def latestRelease = new JsonSlurperClassic().parseText(response.content)
+    String tagName = (latestRelease?.tag_name ?: '').toString().trim()
+    return normalizeVersion(tagName)
+  }
+
+  def createGitHubRelease(String project, String version, String targetCommitish = null) {
+    def credentialsId = resolveCredentialsId()
+    if (!credentialsId) {
+      this.steps.echo('Skipping release creation: no GitHub credentials could be resolved')
+      return null
+    }
+
+    String tagName = "v${version}"
+    String requestBody = JsonOutput.toJson([
+      tag_name: tagName,
+      target_commitish: targetCommitish ?: this.steps.env.GIT_COMMIT,
+      name: tagName,
+      body: "Automated release for ${version}",
+      draft: false,
+      prerelease: false,
+      generate_release_notes: true
+    ])
+
+    return this.steps.httpRequest(
+      httpMode: 'POST',
+      authentication: credentialsId,
+      acceptType: 'APPLICATION_JSON',
+      contentType: 'APPLICATION_JSON',
+      url: API_URL + "/${project}/releases",
+      requestBody: requestBody,
+      consoleLogResponseBody: true,
+      validResponseCodes: '201'
+    )
+  }
+
+  private String normalizeVersion(String version) {
+    String cleaned = (version ?: '').trim()
+    if (!cleaned) {
+      return ''
+    }
+
+    cleaned = cleaned.replaceFirst('^[vV]', '')
+    cleaned = cleaned.replaceFirst('[-+].*$', '')
+    return cleaned
+  }
+
   /**
    * Calls workflow to manually startup environment
    * @param workflowName
