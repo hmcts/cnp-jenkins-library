@@ -43,7 +43,49 @@ class LibraryBranchControls {
     return extractedReference
   }
 
-  boolean isBranchAllowed(String libraryBranch, def pipelineConfig = null) {
+  private String resolveLibraryBranch() {
+    def runtimeLibraryBranch = resolveLibraryBranchFromRuntime()
+    if (runtimeLibraryBranch) {
+      return runtimeLibraryBranch
+    }
+
+    if (steps?.env?.SHARED_LIBRARY_VERSION) {
+      return steps.env.SHARED_LIBRARY_VERSION
+    }
+
+    if (steps?.env?.SHARED_LIBRARY_NAME) {
+      return steps.env.SHARED_LIBRARY_NAME
+    }
+
+    return 'Infrastructure'
+  }
+
+  private String resolveLibraryBranchFromRuntime() {
+    try {
+      def actionClass = this.class.classLoader.loadClass('org.jenkinsci.plugins.workflow.libs.LibrariesAction')
+      def action = steps?.currentBuild?.rawBuild?.getAction(actionClass)
+      def envLibraryName = steps?.env?.SHARED_LIBRARY_NAME
+      def namesToTry = envLibraryName ? [envLibraryName] : ['Infrastructure', 'Pipeline', 'Tagged']
+
+      for (name in namesToTry) {
+        def record = action?.libraries?.find { it.name == name }
+        if (record?.version) {
+          return record.version
+        }
+      }
+
+      def firstLoadedLibrary = action?.libraries?.first()
+      if (firstLoadedLibrary?.version) {
+        return firstLoadedLibrary.version
+      }
+    } catch (ignored) {
+      // Runtime metadata lookup is best-effort; fallback handlers below remain in place.
+    }
+
+    return null
+  }
+
+  boolean isBranchAllowed(def pipelineConfig = null) {
 
     def libraryBranchControls = getLibraryBranchControls()
     if (!libraryBranchControls.containsKey('branches')) {
@@ -53,7 +95,7 @@ class LibraryBranchControls {
     }
 
     def configuredBranches = libraryBranchControls.get('branches')
-    def branchToCheck = extractLibraryBranch(libraryBranch)
+    def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
 
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
