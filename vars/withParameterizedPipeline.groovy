@@ -66,10 +66,10 @@ def call(type, String product, String component, String environment, String subs
 
   libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
-  if (libraryBranchAllowed) {
-    node(agentType) {
-      def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-      try {
+  node(agentType) {
+    def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+    try {
+      if (libraryBranchAllowed) {
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -103,25 +103,24 @@ def call(type, String product, String component, String environment, String subs
             tfPlanOnly: false
           )
         }
-      } catch (err) {
-        currentBuild.result = "FAILURE"
+    } catch (err) {
+      currentBuild.result = "FAILURE"
 
-        notifyBuildFailure channel: slackChannel
+      notifyBuildFailure channel: slackChannel
 
-        callbacksRunner.call('onFailure')
-        metricsPublisher.publish('Pipeline Failed')
-        throw err
-      } finally {
-        notifyPipelineDeprecations(slackChannel, metricsPublisher)
-        if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-          deleteDir()
-        }
+      callbacksRunner.call('onFailure')
+      metricsPublisher.publish('Pipeline Failed')
+      throw err
+    } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
+      if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+        deleteDir()
       }
-
-      notifyBuildFixed channel: slackChannel
-
-      callbacksRunner.call('onSuccess')
-      metricsPublisher.publish('Pipeline Succeeded')
     }
+
+    notifyBuildFixed channel: slackChannel
+
+    callbacksRunner.call('onSuccess')
+    metricsPublisher.publish('Pipeline Succeeded')
   }
 }
