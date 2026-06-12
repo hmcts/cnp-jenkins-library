@@ -3,8 +3,15 @@ set -e
 
 old_library_found () {
     echo ""
-    echo "Old library version references found. Please update your Jenkinsfile to use the new library version."
-    echo "Required library version: ${NEW_LIBRARY_VERSION}"
+    echo "Old library version references found."
+    echo "Update your Jenkinsfile to use: @Library(\"Infrastructure@${NEW_LIBRARY_VERSION}\")"
+    echo ""
+    echo "Before raising a PR, check the migration guide and rollout tracker."
+    echo "Some repositories also need Key Vault or PostgreSQL module changes as part of this migration."
+    echo ""
+    echo "Migration guide: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973509936/Jenkins+Library+Migration+Guide"
+    echo "Rollout tracker: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973305638/Migration+rollout+tracker"
+    echo ""
     echo "Deadline for updating: ${DEADLINE}"
     echo ""
     exit 1

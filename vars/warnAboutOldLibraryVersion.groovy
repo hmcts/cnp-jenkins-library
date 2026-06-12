@@ -33,7 +33,13 @@ def call(String repoUrl = null) {
             } catch(ignored) {
                 WarningCollector.addPipelineWarning(
                     "old_library_version",
-                    "Your Jenkinsfile references an old or unpinned Jenkins library version. Please update it to use the new library version: *${deprecation.version}*",
+                    """Your Jenkinsfile references an old or unpinned Jenkins library version.
+
+Update it to use *Infrastructure@${deprecation.version}*, then check the migration guide and rollout tracker before raising a PR. Some repositories also need Key Vault or PostgreSQL module changes as part of this migration.
+
+Migration guide: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973509936/Jenkins+Library+Migration+Guide
+
+Rollout tracker: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973305638/Migration+rollout+tracker""",
                     LocalDate.parse(deprecation.date_deadline)
                 )
             }
