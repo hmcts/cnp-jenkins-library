@@ -75,65 +75,69 @@ def call(type, String product, String component, Closure body) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
-          if (libraryBranchAllowed) {
-            dockerAgentSetup()
-            env.PATH = "$env.PATH:/usr/local/bin"
+          if (!libraryBranchAllowed) {
+            currentBuild.result = "FAILURE"
+            return
+          }
 
-            def deploymentEnabled = sectionBuildAndTest(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              builder: pipelineType.builder,
-              subscription: subscription.nonProdName,
-              environment: environment.nonProdName,
-              product: product,
-              component: component
-            )
+          dockerAgentSetup()
+          env.PATH = "$env.PATH:/usr/local/bin"
 
-            if (deploymentEnabled) {
-              if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-                stage('Publish Helm chart') {
-                  helmPublish(
-                    appPipelineConfig: pipelineConfig,
-                    subscription: subscription.nonProdName,
-                    environment: environment.nonProdName,
-                    product: product,
-                    component: component
-                  )
-                }
+          def deploymentEnabled = sectionBuildAndTest(
+            appPipelineConfig: pipelineConfig,
+            pipelineCallbacksRunner: callbacksRunner,
+            builder: pipelineType.builder,
+            subscription: subscription.nonProdName,
+            environment: environment.nonProdName,
+            product: product,
+            component: component
+          )
 
-                sectionPromoteBuildToStage(
+          if (deploymentEnabled) {
+            if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+              stage('Publish Helm chart') {
+                helmPublish(
                   appPipelineConfig: pipelineConfig,
-                  pipelineCallbacksRunner: callbacksRunner,
-                  pipelineType: pipelineType,
                   subscription: subscription.nonProdName,
+                  environment: environment.nonProdName,
                   product: product,
-                  component: component,
-                  stage: DockerImage.DeploymentStage.PREVIEW,
-                  environment: environment.nonProdName
+                  component: component
                 )
               }
 
-              handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
-              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
-              onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-                handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
-              }
+              sectionPromoteBuildToStage(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.nonProdName,
+                product: product,
+                component: component,
+                stage: DockerImage.DeploymentStage.PREVIEW,
+                environment: environment.nonProdName
+              )
+            }
 
-              onPreview {
-                sectionDeployToEnvironment(
-                  appPipelineConfig: pipelineConfig,
-                  pipelineCallbacksRunner: callbacksRunner,
-                  pipelineType: pipelineType,
-                  subscription: subscription.previewName,
-                  environment: environment.previewName,
-                  product: deploymentProduct,
-                  component: component,
-                  aksSubscription: aksSubscriptions.preview,
-                  tfPlanOnly: false
-                )
-              }
+            handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
+            handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
+            onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+              handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
+            }
+
+            onPreview {
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.previewName,
+                environment: environment.previewName,
+                product: deploymentProduct,
+                component: component,
+                aksSubscription: aksSubscriptions.preview,
+                tfPlanOnly: false
+              )
             }
           } // end approvedDeploymentRepository
+
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'
