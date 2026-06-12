@@ -115,7 +115,7 @@ class LibraryBranchControls {
       steps.echo """
         Library branch `${branchToCheck}` is not approved for use.
         Make sure to add your branch to:
-        - ${getConfigFilePath()} in hmcts/cnp-jenkins-library
+        - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
         ================================================================================
       """
