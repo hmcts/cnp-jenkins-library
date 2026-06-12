@@ -89,15 +89,15 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         cause.getClass().getSimpleName() == "TimerTriggerCause"
       }
 
-      boolean doSecondRun = false
+      boolean doSecondRun = false //This is set to true if first
       def stages = ['Performance test', 'Failed Test Rerun']
       for (int i = 0; i < stages.size(); i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
-              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
                 //First run uses a trick of setting buildresult to SUCCESS, so that a rerun can be attempted with jenkins build failing
-                if ((i == 0) && (config.perfRerunOnFail == true)) { //&& (triggeredByTimer == true)
+                if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     try {
                       builder.performanceTest()
@@ -107,7 +107,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                       throw e
                     }
                   }
-                  //The below else block executes a test re-run and not triggered by timer - this doesn't need catch try block
+                  //The below else block executes a test re-run and not triggered by timer
                 } else {
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                       builder.performanceTest()
@@ -127,7 +127,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         }
 
         //Break out of loop and not to run second re-reun if any of the following conditions are satisfied.
-        if (!(config.perfRerunOnFail && doSecondRun)) //triggeredByTimer &&
+        if (!(triggeredByTimer && config.perfRerunOnFail && doSecondRun))
           break
       }
 
