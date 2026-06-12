@@ -291,9 +291,6 @@ def call(params) {
       }
     }
     return deploymentEnabled && libraryBranchAllowed
-  } else {
-    echo "This branch of the Jenkins library is not allowed to be used. Please check the library branch controls configuration or contact the Platform Operations team if you believe this is an error."
-    return false
   }
 }
 

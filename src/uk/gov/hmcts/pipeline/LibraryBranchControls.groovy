@@ -91,7 +91,7 @@ class LibraryBranchControls {
     def libraryBranchControls = getLibraryBranchControls()
     if (!libraryBranchControls.containsKey('branches')) {
 
-      steps.echo "No 'branches' key found in deployment controls configuration. Deployment will be disabled by default. Contact Platform Operations team."
+      steps.echo "No 'branches' key found in deployment controls configuration. Deployment will be disabled by default."
       return false
     }
 
@@ -113,10 +113,10 @@ class LibraryBranchControls {
       '''
 
       steps.echo """
-        Library branch ${branchToCheck} is not approved for use.
+        Library branch `${branchToCheck}` is not approved for use.
         Make sure to add your branch to:
-        - ${getConfigFilePath()} in this repository
-        If you recently updated allowed branches and this is unexpected ensure you are using a new agent as this can be cached.
+        - ${getConfigFilePath()} in hmcts/cnp-jenkins-library
+        If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
         ================================================================================
       """
     }

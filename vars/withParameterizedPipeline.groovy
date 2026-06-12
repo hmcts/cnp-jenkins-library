@@ -123,8 +123,5 @@ def call(type, String product, String component, String environment, String subs
       callbacksRunner.call('onSuccess')
       metricsPublisher.publish('Pipeline Succeeded')
     }
-  } else {
-    echo "This branch of the Jenkins library is not allowed to be used. Please check the library branch controls configuration or contact the Platform Operations team if you believe this is an error."
-    return false
   }
 }
