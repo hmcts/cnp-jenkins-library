@@ -110,8 +110,37 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
-    helper.registerAllowedMethod("readYaml", [Map.class], { c ->
-      return c.get('text')
+    helper.registerAllowedMethod("readYaml", [Map.class], { Map c ->
+      def yamlText = c.get('text')
+      if (yamlText instanceof Map || yamlText instanceof List) {
+        return yamlText
+      }
+
+      if (!(yamlText instanceof String) || yamlText.trim().isEmpty()) {
+        return [:]
+      }
+
+      if (yamlText.contains('branches:')) {
+        def branches = []
+        def current = null
+
+        yamlText.eachLine { line ->
+          def nameMatch = (line =~ /^\s*-\s*name:\s*(.+)\s*$/)
+          if (nameMatch.matches()) {
+            current = [name: nameMatch[0][1].trim()]
+            branches << current
+          }
+
+          def allowedMatch = (line =~ /^\s*allowed:\s*(true|false)\s*$/)
+          if (allowedMatch.matches() && current != null) {
+            current.allowed = allowedMatch[0][1].toBoolean()
+          }
+        }
+
+        return [branches: branches]
+      }
+
+      return [:]
     })
     helper.registerAllowedMethod("libraryResource", [String.class], { resourcePath ->
       if (resourcePath == 'uk/gov/hmcts/library/allowed-library-branches.yml') {
