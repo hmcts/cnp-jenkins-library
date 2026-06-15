@@ -69,40 +69,44 @@ def call(type, String product, String component, String environment, String subs
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      if (libraryBranchAllowed) {
+      if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+      }
+
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
 
-        stageWithAgent('Checkout', product) {
-          checkoutScm(pipelineCallbacksRunner: callbacksRunner)
+      stageWithAgent('Checkout', product) {
+        checkoutScm(pipelineCallbacksRunner: callbacksRunner)
 
-          // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
-          deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, pipelineConfig)
-          echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
+        // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
+        deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, pipelineConfig)
+        echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
+      }
+
+      stageWithAgent("Build", product) {
+        builder.setupToolVersion()
+
+        callbacksRunner.callAround('build') {
+          builder.build()
         }
+      }
 
-        stageWithAgent("Build", product) {
-          builder.setupToolVersion()
-
-          callbacksRunner.callAround('build') {
-            builder.build()
-          }
-        }
-
-        if (deploymentEnabled) {
-          sectionDeployToEnvironment(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            pipelineType: pipelineType,
-            subscription: subscription,
-            aksSubscription: aksSubscriptions.aat,
-            environment: environment,
-            product: product,
-            component: component,
-            deploymentTargets: deploymentTargetList,
-            tfPlanOnly: false
-          )
-        }
+      if (deploymentEnabled) {
+        sectionDeployToEnvironment(
+          appPipelineConfig: pipelineConfig,
+          pipelineCallbacksRunner: callbacksRunner,
+          pipelineType: pipelineType,
+          subscription: subscription,
+          aksSubscription: aksSubscriptions.aat,
+          environment: environment,
+          product: product,
+          component: component,
+          deploymentTargets: deploymentTargetList,
+          tfPlanOnly: false
+        )
+      }
     } catch (err) {
       currentBuild.result = "FAILURE"
 
