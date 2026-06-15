@@ -7,3 +7,5 @@ branches:
     allowed: true
   - name: 2.0.0
     allowed: true
+  - name: DTSPO-00001
+    allowed: true
