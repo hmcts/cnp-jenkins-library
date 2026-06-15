@@ -113,6 +113,17 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("readYaml", [Map.class], { c ->
       return c.get('text')
     })
+    helper.registerAllowedMethod("libraryResource", [String.class], { resourcePath ->
+      if (resourcePath == 'uk/gov/hmcts/library/allowed-library-branches.yml') {
+        return '''branches:
+  - name: master
+    allowed: true
+  - name: main
+    allowed: true
+'''
+      }
+      return ''
+    })
     binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
   }
 }

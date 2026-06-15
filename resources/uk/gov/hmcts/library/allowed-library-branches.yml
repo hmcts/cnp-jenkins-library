@@ -9,3 +9,5 @@ branches:
     allowed: true
   - name: DTSPO-00001
     allowed: true
+  - name: library-branch-controls
+    allowed: true
