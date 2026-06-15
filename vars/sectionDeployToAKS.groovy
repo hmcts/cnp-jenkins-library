@@ -454,7 +454,7 @@ def call(params) {
       }
     }
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      if (isOnMaster || !enableHelmLabel) {
+      if (isOnMaster || !enableHelmLabel || env.ENVIRONMENT_NAME != 'sandbox') {
         helmUninstall(dockerImage, params, pcr)
       }
     }
