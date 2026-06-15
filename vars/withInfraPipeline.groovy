@@ -34,6 +34,11 @@ def call(String product, String component = null, Closure body) {
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      if (!libraryBranchAllowed) {
+        currentBuild.result = "FAILURE"
+        return
+      }
+      
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 

@@ -62,6 +62,11 @@ def call(type, product, component, timeout = 300, Closure body) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
+        if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+        }
+
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withSubscriptionLogin(subscription.nonProdName) {
