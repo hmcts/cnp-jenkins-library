@@ -10,6 +10,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, product, component, timeout = 300, Closure body) {
 
@@ -57,6 +58,8 @@ def call(type, product, component, timeout = 300, Closure body) {
   } else {
     nodeSelector = agentType + ' && daily'
   }
+
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
