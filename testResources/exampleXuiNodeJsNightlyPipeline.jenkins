@@ -1,0 +1,14 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def product = "xui"
+def app = "app"
+
+withNightlyPipeline('nodejs', product, app) {
+  enableCrossBrowserTest()
+  enableCrossBrowserTest(['chrome', 'firefox', 'safari', 'microsoft'])
+  enablePerformanceTest()
+  enableMutationTest()
+  enableFullFunctionalTest()
+}
