@@ -16,6 +16,7 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, String product, String component, Closure body) {
 
@@ -67,11 +68,18 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
+          if (!libraryBranchAllowed) {
+            currentBuild.result = "FAILURE"
+            return
+          }
+
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -129,6 +137,7 @@ def call(type, String product, String component, Closure body) {
               )
             }
           } // end approvedDeploymentRepository
+
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'
