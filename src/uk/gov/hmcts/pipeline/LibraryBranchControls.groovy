@@ -13,8 +13,14 @@ class LibraryBranchControls {
   }
 
   def getLibraryBranchControls() {
-    def yamlContent = steps.libraryResource(getConfigFilePath())
-    libraryBranchControls = steps.readYaml(text: yamlContent)
+    def response = steps.httpRequest(
+      consoleLogResponseBody: true,
+      authentication: steps.env.GIT_CREDENTIALS_ID,
+      timeout: 10,
+      url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/${getConfigFilePath()}",
+      validResponseCodes: '200'
+    )
+    libraryBranchControls = steps.readYaml(text: response.content)
     return libraryBranchControls
   }
 

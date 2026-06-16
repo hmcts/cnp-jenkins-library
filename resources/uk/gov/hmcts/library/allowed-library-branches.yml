@@ -13,3 +13,5 @@ branches:
     allowed: true
   - name: cve-dashboard
     allowed: true
+  - name: GatlingSmartAlerts
+    allowed: true

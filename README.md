@@ -1090,10 +1090,17 @@ This file calls a class named [TerraformInfraApprovals](https://github.com/hmcts
 
 This file will point to the repository which defines, in json syntax, which infrastructure resources and modules are approved for use at the [global](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/global.json) and [project](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/bulk-scan-shared-infrastructure.json) level.
 
+## Library Controls
+
+Whilst we transition to v2.0.0 of this library, controls have been added to allowlist branches of this library to be used within HMCTS.
+
+Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail.
+
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+ 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+ 3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
