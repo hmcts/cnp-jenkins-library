@@ -25,6 +25,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean serviceApp = true
   boolean deployableApp = true
   boolean releaseOnMerge = false
+  boolean libraryBranchAllowed = false
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
   Set<String> legacyDeploymentExemptions = []

@@ -34,6 +34,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
       assertThat(pipelineConfig.deployableApp).isTrue()
+      assertThat(pipelineConfig.libraryBranchAllowed).isFalse()
       assertThat(pipelineConfig.releaseOnMerge).isFalse()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()

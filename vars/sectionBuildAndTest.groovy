@@ -278,8 +278,8 @@ def call(params) {
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
           /*
-         * These instructions have to be kept in order
-         */
+        * These instructions have to be kept in order
+        */
           pcr.callAround('pact-consumer-tests') {
             builder.runConsumerTests(env.PACT_BROKER_URL, version)
           }
