@@ -82,7 +82,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
-      } else if (m.get('script')?.contains('curl -fsSL --retry 3 https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml')) {
+      } else if (m.get('script')?.contains('allowed-library-branches.yml')) {
         return '''branches:
   - name: master
     allowed: true
