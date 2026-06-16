@@ -11,3 +11,5 @@ branches:
     allowed: true
   - name: library-branch-controls
     allowed: true
+  - name: cve-dashboard
+    allowed: true
