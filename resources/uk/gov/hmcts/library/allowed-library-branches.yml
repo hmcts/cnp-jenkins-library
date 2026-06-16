@@ -1,0 +1,13 @@
+branches:
+  - name: master
+    allowed: true
+  - name: main
+    allowed: true
+  - name: DTSPO-30107-jenkins-agents
+    allowed: true
+  - name: 2.0.0
+    allowed: true
+  - name: DTSPO-00001
+    allowed: true
+  - name: library-branch-controls
+    allowed: true

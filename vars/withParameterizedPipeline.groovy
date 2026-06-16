@@ -13,6 +13,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.DeploymentControls
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   call(type, product,component,environment,subscription,'',body)
@@ -57,16 +58,24 @@ def call(type, String product, String component, String environment, String subs
 
   def deploymentTargetList = deploymentTargets.split(',') as List
   boolean deploymentEnabled = false
+  boolean libraryBranchAllowed = false
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
+      if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+      }
+
+        dockerAgentSetup()
+        env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
