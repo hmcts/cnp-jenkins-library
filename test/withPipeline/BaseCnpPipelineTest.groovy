@@ -82,6 +82,13 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
+      } else if (m.get('script')?.contains('allowed-library-branches.yml')) {
+        return '''branches:
+  - name: master
+    allowed: true
+  - name: main
+    allowed: true
+'''
       }  else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
           '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
@@ -110,8 +117,48 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
-    helper.registerAllowedMethod("readYaml", [Map.class], { c ->
-      return c.get('text')
+    helper.registerAllowedMethod("readYaml", [Map.class], { Map c ->
+      def yamlText = c.get('text')
+      if (yamlText instanceof Map || yamlText instanceof List) {
+        return yamlText
+      }
+
+      if (!(yamlText instanceof String) || yamlText.trim().isEmpty()) {
+        return [:]
+      }
+
+      if (yamlText.contains('branches:')) {
+        def branches = []
+        def current = null
+
+        yamlText.eachLine { line ->
+          def nameMatch = (line =~ /^\s*-\s*name:\s*(.+)\s*$/)
+          if (nameMatch.matches()) {
+            current = [name: nameMatch[0][1].trim()]
+            branches << current
+          }
+
+          def allowedMatch = (line =~ /^\s*allowed:\s*(true|false)\s*$/)
+          if (allowedMatch.matches() && current != null) {
+            current.allowed = allowedMatch[0][1].toBoolean()
+          }
+        }
+
+        return [branches: branches]
+      }
+
+      return [:]
+    })
+    helper.registerAllowedMethod("libraryResource", [String.class], { resourcePath ->
+      if (resourcePath == 'uk/gov/hmcts/library/allowed-library-branches.yml') {
+        return '''branches:
+  - name: master
+    allowed: true
+  - name: main
+    allowed: true
+'''
+      }
+      return ''
     })
     binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
   }

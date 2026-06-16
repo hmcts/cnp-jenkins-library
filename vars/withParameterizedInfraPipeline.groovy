@@ -4,6 +4,9 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
+
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
 def call(String product, String environment, String subscription, Closure body) {
   call(product, environment, subscription, false, null, body)
@@ -34,9 +37,16 @@ def call(String product, String environment, String subscription, Boolean planOn
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      if (!libraryBranchAllowed) {
+        currentBuild.result = "FAILURE"
+        return
+      }
+
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 
