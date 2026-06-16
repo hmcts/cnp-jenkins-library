@@ -25,6 +25,8 @@ def call(params) {
   def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
   boolean deploymentEnabled = false
+  def githubApi = new GithubAPI(this)
+  boolean skipChecks = githubApi.checkForLabel(env.BRANCH_NAME, "skip_checks")
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
@@ -72,34 +74,38 @@ def call(params) {
 
     def branches = [failFast: false]
     branches["Unit tests and Sonar scan"] = {
-//      pcr.callAround('test') {
-//        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-//          withAcrClient(subscription){
-//            acr.login()
-//            builder.test()
-//          }
-//        }
-//      }
-//
-//      pcr.callAround('sonarscan') {
-//        pluginActive('sonar') {
-//          withSonarQubeEnv("SonarQube") {
-//            builder.sonarScan()
-//          }
-//
-//          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-//            def qg = waitForQualityGate()
-//            if (qg.status != 'OK') {
-//              error "Pipeline aborted due to quality gate failure: ${qg.status}"
-//            }
-//          }
-//        }
-//      }
+      if(!skipChecks) {
+        pcr.callAround('test') {
+          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+            withAcrClient(subscription) {
+              acr.login()
+              builder.test()
+            }
+          }
+        }
+
+        pcr.callAround('sonarscan') {
+          pluginActive('sonar') {
+            withSonarQubeEnv("SonarQube") {
+              builder.sonarScan()
+            }
+
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+              def qg = waitForQualityGate()
+              if (qg.status != 'OK') {
+                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+              }
+            }
+          }
+        }
+      }
     }
     branches["Security Checks"] = {
-//      pcr.callAround('securitychecks') {
-//        builder.securityCheck()
-//      }
+      if(skipChecks) {
+        pcr.callAround('securitychecks') {
+          builder.securityCheck()
+        }
+      }
     }
     branches["Tech Stack"] = {
       pcr.callAround('techstack') {
