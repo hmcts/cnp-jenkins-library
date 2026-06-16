@@ -12,8 +12,15 @@ class LibraryBranchControls {
     return "uk/gov/hmcts/library/allowed-library-branches.yml"
   }
 
+  def getConfigRepoUrl() {
+    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/${getConfigFilePath()}"
+  }
+
   def getLibraryBranchControls() {
-    def yamlContent = steps.libraryResource(getConfigFilePath())
+    def yamlContent = steps.sh(
+      returnStdout: true,
+      script: "curl -fsSL --retry 3 ${getConfigRepoUrl()}"
+    ).trim()
     libraryBranchControls = steps.readYaml(text: yamlContent)
     return libraryBranchControls
   }

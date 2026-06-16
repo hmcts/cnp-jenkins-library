@@ -82,6 +82,13 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
+      } else if (m.get('script')?.contains('curl -fsSL --retry 3 https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml')) {
+        return '''branches:
+  - name: master
+    allowed: true
+  - name: main
+    allowed: true
+'''
       }  else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
           '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
