@@ -15,5 +15,3 @@ branches:
     allowed: true
   - name: GatlingSmartAlerts
     allowed: true
-  - name: library-controls-readme
-    allowed: true
