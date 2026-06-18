@@ -19,7 +19,10 @@ class PythonBuilder extends AbstractBuilder {
   }
 
   @Override
-  def build() {}
+  def build() {
+    addVersionInfo()
+    steps.sh('uv sync --locked --no-dev')
+  }
 
   @Override
   def fortifyScan() {}
@@ -68,7 +71,15 @@ class PythonBuilder extends AbstractBuilder {
   def securityCheck() {}
 
   @Override
-  def addVersionInfo() {}
+  def addVersionInfo() {
+    steps.sh('''tee version <<EOF
+version: $(grep '^version' pyproject.toml | sed 's/.*= *"//' | sed 's/".*//')
+number: ${BUILD_NUMBER}
+commit: $(git rev-parse HEAD)
+date: $(date)
+EOF
+''')
+  }
 
   @Override
   def setupToolVersion() {}
