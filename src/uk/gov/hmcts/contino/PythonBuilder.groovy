@@ -106,13 +106,13 @@ class PythonBuilder extends AbstractBuilder {
     }
   }
 
-  def prepareCVEReport(String pipAuditJSON) {
-    if (!pipAuditJSON || pipAuditJSON.trim().isEmpty()) {
+  def prepareCVEReport(String uvAuditJSON) {
+    if (!uvAuditJSON || uvAuditJSON.trim().isEmpty()) {
       return [vulnerabilities: []]
     }
 
     try {
-      def reportArray = new JsonSlurperClassic().parseText(pipAuditJSON)
+      def reportArray = new JsonSlurperClassic().parseText(uvAuditJSON)
       return [vulnerabilities: reportArray ?: []]
     } catch (Exception e) {
       return [vulnerabilities: []]
