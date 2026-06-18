@@ -46,4 +46,35 @@ class PythonBuilderTest extends Specification {
         it.contains('git rev-parse HEAD')
       })
   }
+
+  def "test calls 'uv run pytest tests/unit' and publishes JUnit XML"() {
+    when:
+      builder.test()
+    then:
+      1 * steps.sh({ it.contains('uv run pytest tests/unit') })
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/unit') })
+  }
+
+  def "smokeTest calls 'uv run pytest tests/smoke' and publishes JUnit XML"() {
+    when:
+      builder.smokeTest()
+    then:
+      1 * steps.sh({ it.contains('uv run pytest tests/smoke') })
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/smoke') })
+  }
+
+  def "functionalTest calls 'uv run pytest tests/functional' and publishes JUnit XML"() {
+    when:
+      builder.functionalTest()
+    then:
+      1 * steps.sh({ it.contains('uv run pytest tests/functional') })
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/functional') })
+  }
+
+  def "fullFunctionalTest delegates to functionalTest"() {
+    when:
+      builder.fullFunctionalTest()
+    then:
+      1 * steps.sh({ it.contains('uv run pytest tests/functional') })
+  }
 }

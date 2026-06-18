@@ -28,7 +28,13 @@ class PythonBuilder extends AbstractBuilder {
   def fortifyScan() {}
 
   @Override
-  def test() {}
+  def test() {
+    try {
+      steps.sh('uv run pytest tests/unit --junit-xml=test-results/unit/results.xml -v')
+    } finally {
+      steps.junit(allowEmptyResults: true, testResults: 'test-results/unit/*.xml')
+    }
+  }
 
   @Override
   def sonarScan() {}
@@ -37,10 +43,22 @@ class PythonBuilder extends AbstractBuilder {
   def highLevelDataSetup(String dataSetupEnvironment) {}
 
   @Override
-  def smokeTest() {}
+  def smokeTest() {
+    try {
+      steps.sh('uv run pytest tests/smoke --junit-xml=test-results/smoke/results.xml -v')
+    } finally {
+      steps.junit(allowEmptyResults: true, testResults: 'test-results/smoke/*.xml')
+    }
+  }
 
   @Override
-  def functionalTest() {}
+  def functionalTest() {
+    try {
+      steps.sh('uv run pytest tests/functional --junit-xml=test-results/functional/results.xml -v')
+    } finally {
+      steps.junit(allowEmptyResults: true, testResults: 'test-results/functional/*.xml')
+    }
+  }
 
   @Override
   def e2eTest() {
