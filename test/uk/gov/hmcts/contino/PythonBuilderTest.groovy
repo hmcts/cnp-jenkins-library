@@ -106,30 +106,30 @@ class PythonBuilderTest extends Specification {
       1 * steps.sh({ it.contains('sonar-scanner') })
   }
 
-  def "securityCheck calls pip-audit"() {
+  def "securityCheck calls uv audit"() {
     given:
-      steps.readFile('pip-audit-report.json') >> '[]'
+      steps.readFile('uv-audit-report.json') >> '[]'
     when:
       builder.securityCheck()
     then:
-      1 * steps.sh({ it.contains('pip-audit') })
+      1 * steps.sh({ it.contains('uv audit') })
   }
 
-  def "securityCheck publishes CVE report even when pip-audit finds vulnerabilities"() {
+  def "securityCheck publishes CVE report even when uv audit finds vulnerabilities"() {
     given:
-      steps.sh(_ as String) >> { throw new Exception('pip-audit exit 1') }
-      steps.readFile('pip-audit-report.json') >> '[]'
+      steps.sh(_ as String) >> { throw new Exception('uv audit exit 1') }
+      steps.readFile('uv-audit-report.json') >> '[]'
     when:
       builder.securityCheck()
     then:
       thrown(Exception)
-      1 * steps.readFile('pip-audit-report.json')
+      1 * steps.readFile('uv-audit-report.json')
   }
 
   def "securityCheck rethrows exception on failure"() {
     given:
-      steps.sh(_ as String) >> { throw new Exception('pip-audit failed') }
-      steps.readFile('pip-audit-report.json') >> '[]'
+      steps.sh(_ as String) >> { throw new Exception('uv audit failed') }
+      steps.readFile('uv-audit-report.json') >> '[]'
     when:
       builder.securityCheck()
     then:

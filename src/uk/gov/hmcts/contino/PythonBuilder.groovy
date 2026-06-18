@@ -98,9 +98,9 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def securityCheck() {
     try {
-      steps.sh('uv run pip-audit --format json -o pip-audit-report.json')
+      steps.sh('uv audit --output-format json > uv-audit-report.json')
     } finally {
-      String jsonReport = steps.readFile('pip-audit-report.json')
+      String jsonReport = steps.readFile('uv-audit-report.json')
       def parsedReport = prepareCVEReport(jsonReport)
       new CVEPublisher(steps).publishCVEReport('python', parsedReport)
     }
