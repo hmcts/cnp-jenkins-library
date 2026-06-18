@@ -139,12 +139,7 @@ EOF
     def deadline = pythonConfig?.date_deadline ? LocalDate.parse(pythonConfig.date_deadline) : null
 
     if (!steps.fileExists(PYTHON_VERSION_FILE)) {
-      def message = "A ${PYTHON_VERSION_FILE} file is missing. Add a ${PYTHON_VERSION_FILE} file specifying your Python version, e.g. '3.13'. See https://github.com/hmcts/fastapi-template for reference."
-      if (deadline) {
-        WarningCollector.addPipelineWarning('missing_python_version_file', message, deadline)
-      } else {
-        steps.echo("[Warning] ${message}")
-      }
+      steps.echo("[Warning] A ${PYTHON_VERSION_FILE} file is missing. Add a ${PYTHON_VERSION_FILE} file specifying your Python version, e.g. '3.13'.")
       return
     }
 
@@ -152,7 +147,7 @@ EOF
     String majorMinor = rawVersion.tokenize('.').take(2).join('.')
 
     if (!SUPPORTED_PYTHON_VERSIONS.contains(majorMinor)) {
-      def message = "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. See https://github.com/hmcts/fastapi-template for reference."
+      def message = "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file."
       if (deadline) {
         WarningCollector.addPipelineWarning('unsupported_python_version', message, deadline)
       } else {

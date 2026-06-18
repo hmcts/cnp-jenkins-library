@@ -172,14 +172,14 @@ class PythonBuilderTest extends Specification {
       WarningCollector.pipelineWarnings[0].warningKey == 'unsupported_python_version'
   }
 
-  def "setupToolVersion adds warning when .python-version file is missing"() {
+  def "setupToolVersion echoes warning when .python-version file is missing"() {
     given:
       steps.fileExists('.python-version') >> false
     when:
       builder.setupToolVersion()
     then:
-      WarningCollector.pipelineWarnings.size() == 1
-      WarningCollector.pipelineWarnings[0].warningKey == 'missing_python_version_file'
+      WarningCollector.pipelineWarnings.isEmpty()
+      1 * steps.echo({ it.contains('.python-version') && it.contains('[Warning]') })
   }
 
   def "setupToolVersion echoes warning (no WarningCollector) when no deprecation config and version unsupported"() {
