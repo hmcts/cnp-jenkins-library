@@ -1,4 +1,5 @@
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.PythonPipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
@@ -30,7 +31,8 @@ def call(type, String product, String component, Closure body) {
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
-    ruby: new RubyPipelineType(this, product, component)
+    ruby: new RubyPipelineType(this, product, component),
+    python: new PythonPipelineType(this, product, component)
   ]
 
   Subscription subscription = new Subscription(env)
