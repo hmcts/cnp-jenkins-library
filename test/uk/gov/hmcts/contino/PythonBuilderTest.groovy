@@ -115,9 +115,21 @@ class PythonBuilderTest extends Specification {
       1 * steps.sh({ it.contains('pip-audit') })
   }
 
+  def "securityCheck publishes CVE report even when pip-audit finds vulnerabilities"() {
+    given:
+      steps.sh(_ as String) >> { throw new Exception('pip-audit exit 1') }
+      steps.readFile('pip-audit-report.json') >> '[]'
+    when:
+      builder.securityCheck()
+    then:
+      thrown(Exception)
+      1 * steps.readFile('pip-audit-report.json')
+  }
+
   def "securityCheck rethrows exception on failure"() {
     given:
       steps.sh(_ as String) >> { throw new Exception('pip-audit failed') }
+      steps.readFile('pip-audit-report.json') >> '[]'
     when:
       builder.securityCheck()
     then:

@@ -99,12 +99,10 @@ class PythonBuilder extends AbstractBuilder {
   def securityCheck() {
     try {
       steps.sh('uv run pip-audit --format json -o pip-audit-report.json')
+    } finally {
       String jsonReport = steps.readFile('pip-audit-report.json')
       def parsedReport = prepareCVEReport(jsonReport)
       new CVEPublisher(steps).publishCVEReport('python', parsedReport)
-    } catch (Exception e) {
-      steps.echo("Security check failed: ${e.message}")
-      throw e
     }
   }
 
