@@ -37,7 +37,10 @@ class PythonBuilder extends AbstractBuilder {
   }
 
   @Override
-  def sonarScan() {}
+  def sonarScan() {
+    String properties = SonarProperties.get(steps)
+    steps.sh("sonar-scanner ${properties}")
+  }
 
   @Override
   def highLevelDataSetup(String dataSetupEnvironment) {}
@@ -86,7 +89,16 @@ class PythonBuilder extends AbstractBuilder {
   }
 
   @Override
-  def securityCheck() {}
+  def securityCheck() {
+    try {
+      steps.sh('uv run pip-audit --format json -o pip-audit-report.json')
+      def report = [dependencies: steps.readFile('pip-audit-report.json')]
+      new CVEPublisher(steps).publishCVEReport('python', report)
+    } catch (Exception e) {
+      steps.echo("Security check failed: ${e.message}")
+      throw e
+    }
+  }
 
   @Override
   def addVersionInfo() {

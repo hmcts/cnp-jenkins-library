@@ -98,4 +98,20 @@ class PythonBuilderTest extends Specification {
       1 * steps.sh({ it.contains('uv run pytest tests/functional') })
       1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/functional') })
   }
+
+  def "sonarScan calls sonar-scanner"() {
+    when:
+      builder.sonarScan()
+    then:
+      1 * steps.sh({ it.contains('sonar-scanner') })
+  }
+
+  def "securityCheck calls pip-audit"() {
+    given:
+      steps.readFile('pip-audit-report.json') >> '[]'
+    when:
+      builder.securityCheck()
+    then:
+      1 * steps.sh({ it.contains('pip-audit') })
+  }
 }
