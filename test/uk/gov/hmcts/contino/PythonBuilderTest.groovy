@@ -65,6 +65,16 @@ class PythonBuilderTest extends Specification {
       1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/unit') })
   }
 
+  def "smokeTest publishes JUnit XML even when pytest fails"() {
+    given:
+      steps.sh(_ as String) >> { throw new Exception('pytest failed') }
+    when:
+      builder.smokeTest()
+    then:
+      thrown(Exception)
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == false && it.testResults.contains('test-results/smoke') })
+  }
+
   def "smokeTest calls 'uv run pytest tests/smoke' and publishes JUnit XML"() {
     when:
       builder.smokeTest()
