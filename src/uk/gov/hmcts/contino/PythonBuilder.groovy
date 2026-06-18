@@ -127,5 +127,25 @@ EOF
   }
 
   @Override
-  def setupToolVersion() {}
+  def setupToolVersion() {
+    if (!steps.fileExists(PYTHON_VERSION_FILE)) {
+      WarningCollector.addPipelineWarning(
+        'missing_python_version_file',
+        "A ${PYTHON_VERSION_FILE} file is missing. Add a ${PYTHON_VERSION_FILE} file specifying your Python version, e.g. '3.13'. See https://github.com/hmcts/fastapi-template for reference.",
+        PYTHON_VERSION_DEADLINE
+      )
+      return
+    }
+
+    String rawVersion = steps.readFile(PYTHON_VERSION_FILE).trim()
+    String majorMinor = rawVersion.tokenize('.').take(2).join('.')
+
+    if (!SUPPORTED_PYTHON_VERSIONS.contains(majorMinor)) {
+      WarningCollector.addPipelineWarning(
+        'unsupported_python_version',
+        "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. See https://github.com/hmcts/fastapi-template for reference.",
+        PYTHON_VERSION_DEADLINE
+      )
+    }
+  }
 }

@@ -123,4 +123,45 @@ class PythonBuilderTest extends Specification {
     then:
       thrown(Exception)
   }
+
+  def "setupToolVersion adds no warning when .python-version contains supported version 3.13"() {
+    given:
+      steps.fileExists('.python-version') >> true
+      steps.readFile('.python-version') >> '3.13'
+    when:
+      builder.setupToolVersion()
+    then:
+      WarningCollector.pipelineWarnings.isEmpty()
+  }
+
+  def "setupToolVersion extracts major.minor from full patch version string 3.13.2"() {
+    given:
+      steps.fileExists('.python-version') >> true
+      steps.readFile('.python-version') >> '3.13.2'
+    when:
+      builder.setupToolVersion()
+    then:
+      WarningCollector.pipelineWarnings.isEmpty()
+  }
+
+  def "setupToolVersion adds warning when .python-version contains unsupported version"() {
+    given:
+      steps.fileExists('.python-version') >> true
+      steps.readFile('.python-version') >> '3.11'
+    when:
+      builder.setupToolVersion()
+    then:
+      WarningCollector.pipelineWarnings.size() == 1
+      WarningCollector.pipelineWarnings[0].warningKey == 'unsupported_python_version'
+  }
+
+  def "setupToolVersion adds warning when .python-version file is missing"() {
+    given:
+      steps.fileExists('.python-version') >> false
+    when:
+      builder.setupToolVersion()
+    then:
+      WarningCollector.pipelineWarnings.size() == 1
+      WarningCollector.pipelineWarnings[0].warningKey == 'missing_python_version_file'
+  }
 }
