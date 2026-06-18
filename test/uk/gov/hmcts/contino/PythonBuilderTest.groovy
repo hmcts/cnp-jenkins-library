@@ -39,6 +39,11 @@ class PythonBuilderTest extends Specification {
     when:
       builder.addVersionInfo()
     then:
-      1 * steps.sh({ it.contains('tee version') && it.contains('pyproject.toml') })
+      1 * steps.sh({
+        it.contains('tee version') &&
+        it.contains('pyproject.toml') &&
+        it.contains('BUILD_NUMBER') &&
+        it.contains('git rev-parse HEAD')
+      })
   }
 }

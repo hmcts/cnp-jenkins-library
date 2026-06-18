@@ -73,7 +73,7 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def addVersionInfo() {
     steps.sh('''tee version <<EOF
-version: $(grep '^version' pyproject.toml | sed 's/.*= *"//' | sed 's/".*//')
+version: $(grep -m 1 '^version' pyproject.toml | sed "s/.*= *//" | tr -d '"' | tr -d "'")
 number: ${BUILD_NUMBER}
 commit: $(git rev-parse HEAD)
 date: $(date)
