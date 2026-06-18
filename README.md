@@ -955,7 +955,7 @@ Java 11 is installed on the Jenkins agent.
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
 
 ### Python
-[uv](https://docs.astral.sh/uv/) is used for package management. Place a `.python-version` file at the root of your repo containing the Python version you want (e.g. `3.13`). The pipeline enforces the use of supported Python versions — currently `3.13`. The `.python-version` file is also read by uv and pyenv locally.
+[uv](https://docs.astral.sh/uv/) is used for package management. Place a `.python-version` file at the root of your repo containing the Python version you want (e.g. `3.13`). The pipeline enforces the use of supported Python versions — currently `3.13`. The `.python-version` file is also read by uv locally.
 
 ### Terraform
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
