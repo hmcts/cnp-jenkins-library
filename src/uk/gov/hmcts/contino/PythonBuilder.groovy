@@ -47,7 +47,7 @@ class PythonBuilder extends AbstractBuilder {
     try {
       steps.sh('uv run pytest tests/smoke --junit-xml=test-results/smoke/results.xml -v')
     } finally {
-      steps.junit(allowEmptyResults: true, testResults: 'test-results/smoke/*.xml')
+      steps.junit(allowEmptyResults: false, testResults: 'test-results/smoke/*.xml')
     }
   }
 

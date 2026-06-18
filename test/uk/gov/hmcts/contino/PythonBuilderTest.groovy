@@ -55,12 +55,22 @@ class PythonBuilderTest extends Specification {
       1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/unit') })
   }
 
+  def "test publishes JUnit XML even when pytest fails"() {
+    given:
+      steps.sh(_ as String) >> { throw new Exception('pytest failed') }
+    when:
+      builder.test()
+    then:
+      thrown(Exception)
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/unit') })
+  }
+
   def "smokeTest calls 'uv run pytest tests/smoke' and publishes JUnit XML"() {
     when:
       builder.smokeTest()
     then:
       1 * steps.sh({ it.contains('uv run pytest tests/smoke') })
-      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/smoke') })
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == false && it.testResults.contains('test-results/smoke') })
   }
 
   def "functionalTest calls 'uv run pytest tests/functional' and publishes JUnit XML"() {
@@ -76,5 +86,6 @@ class PythonBuilderTest extends Specification {
       builder.fullFunctionalTest()
     then:
       1 * steps.sh({ it.contains('uv run pytest tests/functional') })
+      1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/functional') })
   }
 }
