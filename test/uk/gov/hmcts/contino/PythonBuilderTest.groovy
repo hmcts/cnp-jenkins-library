@@ -164,4 +164,40 @@ class PythonBuilderTest extends Specification {
       WarningCollector.pipelineWarnings.size() == 1
       WarningCollector.pipelineWarnings[0].warningKey == 'missing_python_version_file'
   }
+
+  def "fortifyScan delegates to library FoD runner"() {
+    when:
+      builder.fortifyScan()
+    then:
+      1 * steps.fortifyOnDemandScan()
+      1 * steps.archiveArtifacts({ it instanceof Map && it.allowEmptyArchive == true && it.artifacts.contains('FortifyScanReport.html') })
+  }
+
+  def "e2eTest calls error with not implemented message"() {
+    when:
+      builder.e2eTest()
+    then:
+      1 * steps.error('Not implemented')
+  }
+
+  def "crossBrowserTest calls error with not implemented message"() {
+    when:
+      builder.crossBrowserTest()
+    then:
+      1 * steps.error('Not implemented')
+  }
+
+  def "mutationTest calls error with not implemented message"() {
+    when:
+      builder.mutationTest()
+    then:
+      1 * steps.error('Not implemented')
+  }
+
+  def "apiGatewayTest calls error with not implemented message"() {
+    when:
+      builder.apiGatewayTest()
+    then:
+      1 * steps.error('Not implemented')
+  }
 }

@@ -26,7 +26,13 @@ class PythonBuilder extends AbstractBuilder {
   }
 
   @Override
-  def fortifyScan() {}
+  def fortifyScan() {
+    try {
+      steps.fortifyOnDemandScan()
+    } finally {
+      steps.archiveArtifacts(allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*')
+    }
+  }
 
   @Override
   def test() {
