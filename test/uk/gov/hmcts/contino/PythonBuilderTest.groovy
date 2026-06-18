@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import spock.lang.Specification
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class PythonBuilderTest extends Specification {
@@ -11,14 +12,18 @@ class PythonBuilderTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    envVars = [BRANCH_NAME: 'master']
+    envVars = [BRANCH_NAME: 'master', GIT_URL: 'https://github.com/hmcts/test-repo']
     steps.getEnv() >> envVars
+    steps.httpRequest(_) >> [content: 'dummy']
+    steps.readYaml(_) >> [python: [python_version: [date_deadline: '2027-01-01']]]
     builder = new PythonBuilder(steps)
     WarningCollector.pipelineWarnings.clear()
+    DeprecationConfig.deprecationConfigInternal = null
   }
 
   def cleanup() {
     WarningCollector.pipelineWarnings.clear()
+    DeprecationConfig.deprecationConfigInternal = null
   }
 
   def "build calls 'uv sync --locked --no-dev'"() {

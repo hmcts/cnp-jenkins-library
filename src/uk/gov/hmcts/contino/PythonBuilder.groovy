@@ -2,6 +2,7 @@ package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
@@ -132,11 +133,17 @@ EOF
 
   @Override
   def setupToolVersion() {
+    def deprecationConfig = new DeprecationConfig(steps)
+    def repoUrl = steps.env.GIT_URL
+    def config = deprecationConfig.getDeprecationConfig(repoUrl)
+    def pythonConfig = config?.python?.python_version
+    def deadline = pythonConfig?.date_deadline ? LocalDate.parse(pythonConfig.date_deadline) : PYTHON_VERSION_DEADLINE
+
     if (!steps.fileExists(PYTHON_VERSION_FILE)) {
       WarningCollector.addPipelineWarning(
         'missing_python_version_file',
         "A ${PYTHON_VERSION_FILE} file is missing. Add a ${PYTHON_VERSION_FILE} file specifying your Python version, e.g. '3.13'. See https://github.com/hmcts/fastapi-template for reference.",
-        PYTHON_VERSION_DEADLINE
+        deadline
       )
       return
     }
@@ -147,8 +154,8 @@ EOF
     if (!SUPPORTED_PYTHON_VERSIONS.contains(majorMinor)) {
       WarningCollector.addPipelineWarning(
         'unsupported_python_version',
-        "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. ",
-        PYTHON_VERSION_DEADLINE
+        "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. See https://github.com/hmcts/fastapi-template for reference.",
+        deadline
       )
     }
   }
