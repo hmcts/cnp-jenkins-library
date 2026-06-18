@@ -182,6 +182,29 @@ class PythonBuilderTest extends Specification {
       WarningCollector.pipelineWarnings[0].warningKey == 'missing_python_version_file'
   }
 
+  def "setupToolVersion echoes warning (no WarningCollector) when no deprecation config and version unsupported"() {
+    given:
+      DeprecationConfig.deprecationConfigInternal = [:]
+      steps.fileExists('.python-version') >> true
+      steps.readFile('.python-version') >> '3.11'
+    when:
+      builder.setupToolVersion()
+    then:
+      WarningCollector.pipelineWarnings.isEmpty()
+      1 * steps.echo({ it.contains('3.11') && it.contains('[Warning]') })
+  }
+
+  def "setupToolVersion echoes warning (no WarningCollector) when no deprecation config and file missing"() {
+    given:
+      DeprecationConfig.deprecationConfigInternal = [:]
+      steps.fileExists('.python-version') >> false
+    when:
+      builder.setupToolVersion()
+    then:
+      WarningCollector.pipelineWarnings.isEmpty()
+      1 * steps.echo({ it.contains('.python-version') && it.contains('[Warning]') })
+  }
+
   def "fortifyScan delegates to library FoD runner"() {
     when:
       builder.fortifyScan()

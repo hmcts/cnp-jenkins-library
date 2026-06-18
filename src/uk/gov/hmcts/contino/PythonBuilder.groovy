@@ -11,7 +11,6 @@ class PythonBuilder extends AbstractBuilder {
 
   private static final String PYTHON_VERSION_FILE = '.python-version'
   private static final List<String> SUPPORTED_PYTHON_VERSIONS = ['3.13']
-  private static final LocalDate PYTHON_VERSION_DEADLINE = LocalDate.of(2027, 1, 1)
 
   def localSteps
 
@@ -137,14 +136,15 @@ EOF
     def repoUrl = steps.env.GIT_URL
     def config = deprecationConfig.getDeprecationConfig(repoUrl)
     def pythonConfig = config?.python?.python_version
-    def deadline = pythonConfig?.date_deadline ? LocalDate.parse(pythonConfig.date_deadline) : PYTHON_VERSION_DEADLINE
+    def deadline = pythonConfig?.date_deadline ? LocalDate.parse(pythonConfig.date_deadline) : null
 
     if (!steps.fileExists(PYTHON_VERSION_FILE)) {
-      WarningCollector.addPipelineWarning(
-        'missing_python_version_file',
-        "A ${PYTHON_VERSION_FILE} file is missing. Add a ${PYTHON_VERSION_FILE} file specifying your Python version, e.g. '3.13'. See https://github.com/hmcts/fastapi-template for reference.",
-        deadline
-      )
+      def message = "A ${PYTHON_VERSION_FILE} file is missing. Add a ${PYTHON_VERSION_FILE} file specifying your Python version, e.g. '3.13'. See https://github.com/hmcts/fastapi-template for reference."
+      if (deadline) {
+        WarningCollector.addPipelineWarning('missing_python_version_file', message, deadline)
+      } else {
+        steps.echo("[Warning] ${message}")
+      }
       return
     }
 
@@ -152,11 +152,12 @@ EOF
     String majorMinor = rawVersion.tokenize('.').take(2).join('.')
 
     if (!SUPPORTED_PYTHON_VERSIONS.contains(majorMinor)) {
-      WarningCollector.addPipelineWarning(
-        'unsupported_python_version',
-        "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. See https://github.com/hmcts/fastapi-template for reference.",
-        deadline
-      )
+      def message = "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. See https://github.com/hmcts/fastapi-template for reference."
+      if (deadline) {
+        WarningCollector.addPipelineWarning('unsupported_python_version', message, deadline)
+      } else {
+        steps.echo("[Warning] ${message}")
+      }
     }
   }
 }
