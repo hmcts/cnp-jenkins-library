@@ -147,7 +147,7 @@ EOF
     if (!SUPPORTED_PYTHON_VERSIONS.contains(majorMinor)) {
       WarningCollector.addPipelineWarning(
         'unsupported_python_version',
-        "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. See https://github.com/hmcts/fastapi-template for reference.",
+        "Python version '${majorMinor}' is not supported. Currently supported versions: ${SUPPORTED_PYTHON_VERSIONS.join(', ')}. Update your ${PYTHON_VERSION_FILE} file. ",
         PYTHON_VERSION_DEADLINE
       )
     }
