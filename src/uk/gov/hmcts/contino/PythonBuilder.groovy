@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.pipeline.CVEPublisher
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
@@ -92,11 +93,25 @@ class PythonBuilder extends AbstractBuilder {
   def securityCheck() {
     try {
       steps.sh('uv run pip-audit --format json -o pip-audit-report.json')
-      def report = [dependencies: steps.readFile('pip-audit-report.json')]
-      new CVEPublisher(steps).publishCVEReport('python', report)
+      String jsonReport = steps.readFile('pip-audit-report.json')
+      def parsedReport = prepareCVEReport(jsonReport)
+      new CVEPublisher(steps).publishCVEReport('python', parsedReport)
     } catch (Exception e) {
       steps.echo("Security check failed: ${e.message}")
       throw e
+    }
+  }
+
+  def prepareCVEReport(String pipAuditJSON) {
+    if (!pipAuditJSON || pipAuditJSON.trim().isEmpty()) {
+      return [vulnerabilities: []]
+    }
+
+    try {
+      def reportArray = new JsonSlurperClassic().parseText(pipAuditJSON)
+      return [vulnerabilities: reportArray ?: []]
+    } catch (Exception e) {
+      return [vulnerabilities: []]
     }
   }
 

@@ -114,4 +114,13 @@ class PythonBuilderTest extends Specification {
     then:
       1 * steps.sh({ it.contains('pip-audit') })
   }
+
+  def "securityCheck rethrows exception on failure"() {
+    given:
+      steps.sh(_ as String) >> { throw new Exception('pip-audit failed') }
+    when:
+      builder.securityCheck()
+    then:
+      thrown(Exception)
+  }
 }
