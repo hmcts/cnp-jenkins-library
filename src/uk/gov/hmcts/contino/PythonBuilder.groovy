@@ -22,7 +22,7 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def build() {
     addVersionInfo()
-    steps.sh('uv sync --locked --no-dev')
+    steps.sh('uv sync --locked --no-dev --link-mode=copy')
   }
 
   @Override
