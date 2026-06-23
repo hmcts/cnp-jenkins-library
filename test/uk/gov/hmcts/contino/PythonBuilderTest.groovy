@@ -26,11 +26,11 @@ class PythonBuilderTest extends Specification {
     DeprecationConfig.deprecationConfigInternal = null
   }
 
-  def "build calls 'uv sync --locked --no-dev'"() {
+  def "build calls 'uv sync --locked --link-mode=copy'"() {
     when:
       builder.build()
     then:
-      1 * steps.sh({ it.contains('uv sync --locked --no-dev') })
+      1 * steps.sh({ it.contains('uv sync --locked --link-mode=copy') })
   }
 
   def "build calls addVersionInfo"() {
@@ -113,22 +113,24 @@ class PythonBuilderTest extends Specification {
 
   def "securityCheck calls uv audit"() {
     given:
+      steps.fileExists('uv-audit-report.json') >> true
       steps.readFile('uv-audit-report.json') >> '[]'
     when:
       builder.securityCheck()
     then:
-      1 * steps.sh({ it.contains('uv audit') })
+      1 * steps.sh({ it instanceof Map && it.script.contains('uv audit') }) >> 0
   }
 
-  def "securityCheck publishes CVE report even when uv audit finds vulnerabilities"() {
+  def "securityCheck publishes CVE report and fails pipeline when vulnerabilities found"() {
     given:
-      steps.sh(_ as String) >> { throw new Exception('uv audit exit 1') }
+      steps.sh(_ as Map) >> 1
+      steps.fileExists('uv-audit-report.json') >> true
       steps.readFile('uv-audit-report.json') >> '[]'
     when:
       builder.securityCheck()
     then:
-      thrown(Exception)
       1 * steps.readFile('uv-audit-report.json')
+      1 * steps.error({ it.contains('uv-audit-report.json') })
   }
 
   def "securityCheck rethrows exception on failure"() {
