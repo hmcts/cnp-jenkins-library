@@ -99,8 +99,7 @@ class PythonBuilder extends AbstractBuilder {
   def securityCheck() {
     int exitCode
     try {
-      exitCode = steps.sh(script: 'uv audit', returnStatus: true)
-      steps.sh('uv audit --output-format json > uv-audit-report.json || true')
+      exitCode = steps.sh(script: 'uv audit --output-format json > uv-audit-report.json', returnStatus: true)
     } finally {
       if (steps.fileExists('uv-audit-report.json')) {
         steps.archiveArtifacts(artifacts: 'uv-audit-report.json')
@@ -110,7 +109,7 @@ class PythonBuilder extends AbstractBuilder {
       }
     }
     if (exitCode != 0) {
-      steps.error('Security vulnerabilities found in Python dependencies. See uv-audit-report.json for details.')
+      steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
     }
   }
 
