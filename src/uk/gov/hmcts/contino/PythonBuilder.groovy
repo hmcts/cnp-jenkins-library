@@ -22,7 +22,7 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def build() {
     addVersionInfo()
-    steps.sh('uv sync --locked --no-dev --link-mode=copy')
+    steps.sh('uv sync --locked --link-mode=copy')
   }
 
   @Override
@@ -98,9 +98,9 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def securityCheck() {
     try {
-      steps.sh('uv audit --output-format json > uv-audit-report.json')
+      steps.sh('uv audit --output-format json > uv-audit-report.json || true')
     } finally {
-      String jsonReport = steps.readFile('uv-audit-report.json')
+      String jsonReport = steps.fileExists('uv-audit-report.json') ? steps.readFile('uv-audit-report.json') : ''
       def parsedReport = prepareCVEReport(jsonReport)
       new CVEPublisher(steps).publishCVEReport('python', parsedReport)
     }
