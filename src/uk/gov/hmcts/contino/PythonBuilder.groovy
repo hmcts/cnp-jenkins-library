@@ -97,12 +97,20 @@ class PythonBuilder extends AbstractBuilder {
 
   @Override
   def securityCheck() {
+    int exitCode
     try {
+      exitCode = steps.sh(script: 'uv audit', returnStatus: true)
       steps.sh('uv audit --output-format json > uv-audit-report.json || true')
     } finally {
-      String jsonReport = steps.fileExists('uv-audit-report.json') ? steps.readFile('uv-audit-report.json') : ''
-      def parsedReport = prepareCVEReport(jsonReport)
-      new CVEPublisher(steps).publishCVEReport('python', parsedReport)
+      if (steps.fileExists('uv-audit-report.json')) {
+        steps.archiveArtifacts(artifacts: 'uv-audit-report.json')
+        String jsonReport = steps.readFile('uv-audit-report.json')
+        def parsedReport = prepareCVEReport(jsonReport)
+        new CVEPublisher(steps).publishCVEReport('python', parsedReport)
+      }
+    }
+    if (exitCode != 0) {
+      steps.error('Security vulnerabilities found in Python dependencies. See uv-audit-report.json for details.')
     }
   }
 
