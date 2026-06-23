@@ -37,7 +37,7 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def test() {
     try {
-      steps.sh('uv run pytest tests/unit --junit-xml=test-results/unit/results.xml -v')
+      steps.sh('uv run pytest tests/unit --junit-xml=test-results/unit/results.xml --cov=app --cov-report=xml -v')
     } finally {
       steps.junit(allowEmptyResults: true, testResults: 'test-results/unit/*.xml')
     }
