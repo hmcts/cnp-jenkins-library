@@ -15,8 +15,8 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
 
 ### Opinionated app pipeline
 
-This library contains a complete opinionated pipeline that can build, test and deploy Java
-and NodeJS applications. The pipeline contains the following stages:
+This library contains a complete opinionated pipeline that can build, test and deploy Java,
+NodeJS and Python applications. The pipeline contains the following stages:
 
 * Checkout
 * Build
@@ -36,7 +36,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
-script and dependencies in source control. NodeJS apps must use Yarn.
+script and dependencies in source control. NodeJS apps must use Yarn. Python apps must use
+[uv](https://docs.astral.sh/uv/) for package management and include a `.python-version` file
+at the root of the repository.
 
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
@@ -46,7 +48,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular" and "python"
 
 def product = "rhubarb"
 
@@ -951,6 +953,9 @@ Java 11 is installed on the Jenkins agent.
 
 ### Node.JS
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
+
+### Python
+[uv](https://docs.astral.sh/uv/) is used for package management. Place a `.python-version` file at the root of your repo containing the Python version you want (e.g. `3.13`). The pipeline enforces the use of supported Python versions — currently `3.13`. The `.python-version` file is also read by uv locally.
 
 ### Terraform
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
