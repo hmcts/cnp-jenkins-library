@@ -62,6 +62,7 @@ class PythonBuilderTest extends Specification {
 
   def "test publishes JUnit XML even when pytest fails"() {
     given:
+      steps.fileExists('.venv/pyvenv.cfg') >> true
       steps.sh(_ as String) >> { throw new Exception('pytest failed') }
     when:
       builder.test()
@@ -72,6 +73,7 @@ class PythonBuilderTest extends Specification {
 
   def "smokeTest publishes JUnit XML even when pytest fails"() {
     given:
+      steps.fileExists('.venv/pyvenv.cfg') >> true
       steps.sh(_ as String) >> { throw new Exception('pytest failed') }
     when:
       builder.smokeTest()
@@ -102,6 +104,24 @@ class PythonBuilderTest extends Specification {
     then:
       1 * steps.sh({ it.contains('uv run pytest tests/functional') })
       1 * steps.junit({ it instanceof Map && it.allowEmptyResults == true && it.testResults.contains('test-results/functional') })
+  }
+
+  def "test recreates .venv when pyvenv.cfg is missing"() {
+    given:
+      steps.fileExists('.venv/pyvenv.cfg') >> false
+    when:
+      builder.test()
+    then:
+      1 * steps.sh({ it.contains('uv sync --locked --link-mode=copy') })
+  }
+
+  def "test skips venv recreation when pyvenv.cfg exists"() {
+    given:
+      steps.fileExists('.venv/pyvenv.cfg') >> true
+    when:
+      builder.test()
+    then:
+      0 * steps.sh({ it == 'uv sync --locked --link-mode=copy' })
   }
 
   def "sonarScan calls sonar-scanner"() {

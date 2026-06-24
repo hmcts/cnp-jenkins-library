@@ -11,6 +11,7 @@ class PythonBuilder extends AbstractBuilder {
 
   private static final String PYTHON_VERSION_FILE = '.python-version'
   private static final List<String> SUPPORTED_PYTHON_VERSIONS = ['3.13']
+  private static final String VENV_CFG = '.venv/pyvenv.cfg'
 
   def localSteps
 
@@ -36,6 +37,7 @@ class PythonBuilder extends AbstractBuilder {
 
   @Override
   def test() {
+    ensureVenv()
     try {
       steps.sh('uv run pytest tests/unit --junit-xml=test-results/unit/results.xml --cov=app --cov-report=xml -v')
     } finally {
@@ -54,6 +56,7 @@ class PythonBuilder extends AbstractBuilder {
 
   @Override
   def smokeTest() {
+    ensureVenv()
     try {
       steps.sh('uv run pytest tests/smoke --junit-xml=test-results/smoke/results.xml -v')
     } finally {
@@ -63,6 +66,7 @@ class PythonBuilder extends AbstractBuilder {
 
   @Override
   def functionalTest() {
+    ensureVenv()
     try {
       steps.sh('uv run pytest tests/functional --junit-xml=test-results/functional/results.xml -v')
     } finally {
@@ -123,6 +127,13 @@ class PythonBuilder extends AbstractBuilder {
       return [vulnerabilities: reportArray ?: []]
     } catch (Exception e) {
       return [vulnerabilities: []]
+    }
+  }
+
+  private ensureVenv() {
+    if (!steps.fileExists(VENV_CFG)) {
+      steps.echo('Recreating .venv after agent hop')
+      steps.sh('uv sync --locked --link-mode=copy')
     }
   }
 

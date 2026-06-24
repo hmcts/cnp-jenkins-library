@@ -31,7 +31,9 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '.yarn/install-state.gz',
     '**/.yarn/install-state.gz',
     '.gradle/**',
-    '**/.gradle/**'
+    '**/.gradle/**',
+    '.venv/**',
+    '**/.venv/**'
   ].join(',')
   boolean updatedWorkspaceStashed = false
   String originalDir = pwd()
