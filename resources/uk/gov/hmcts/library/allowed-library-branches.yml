@@ -17,3 +17,5 @@ branches:
     allowed: true
   - name: feat/add-python-support
     allowed: true
+  - name: uv-audit-pretty-print
+    allowed: true
