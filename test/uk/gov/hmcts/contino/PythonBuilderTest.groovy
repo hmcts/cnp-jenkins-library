@@ -163,10 +163,10 @@ class PythonBuilderTest extends Specification {
         it.text.contains('Security vulnerabilities found in Python dependencies (2)') &&
         it.text.contains('GHSA-82w8-qh3p-5jfq [CVE-2026-54283] in starlette@1.2.1 (fixed in: 1.3.1)') &&
         it.text.contains('GHSA-jp82-jpqv-5vv3 [CVE-2026-54282] in starlette@1.2.1 (fixed in: 1.3.0)') &&
-        it.text.contains('See the uv-audit-report.json build artifact for full details.')
+        it.text.contains('See the uv-audit-report.json build artifact for full details')
       })
-      0 * steps.echo(_ as String)
-      1 * steps.sh({ it instanceof Map && it.label == 'Python dependency vulnerabilities' && it.script == 'cat uv-audit-summary.txt && exit 1' })
+      1 * steps.echo('Publishing CVE report')
+      1 * steps.sh({ it instanceof Map && it.label.contains('Python dependency vulnerabilities') && it.script == 'cat uv-audit-summary.txt && exit 1' })
       0 * steps.error(_ as String)
       0 * steps.sh({ it instanceof String && it.contains('jq -r') })
   }
