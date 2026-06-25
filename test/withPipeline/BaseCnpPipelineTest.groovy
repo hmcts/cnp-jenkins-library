@@ -27,7 +27,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true)] as MockJenkinsPlugin[]))])
     binding.setVariable("env", [
       BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
-      ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
+      ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_NAME: 'DTS-CFTPTL-INTSVC', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
       CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:'', GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'])
     binding.setVariable("docker", new MockDocker())
 
@@ -88,6 +88,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       }  else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
           '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
+      } else if (m.get('script').contains('account show') && m.get('script').contains('--query id')) {
+        return 'management-subscription-id'
       }
       else {
         return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +

@@ -20,6 +20,7 @@ class WithSubscriptionTest extends BasePipelineTest {
     binding.setVariable('env', [
       INFRA_VAULT_NAME: 'ptl',
       ARM_SUBSCRIPTION_ID: 'target-subscription-id',
+      JENKINS_SUBSCRIPTION_NAME: 'DTS-CFTPTL-INTSVC',
       JENKINS_SUBSCRIPTION_ID: 'jenkins-subscription-id'
     ])
     binding.setVariable('log', [
@@ -60,7 +61,7 @@ class WithSubscriptionTest extends BasePipelineTest {
     helper.registerAllowedMethod('sh', [Map.class], { Map args ->
       shellCalls << args
       String command = args.script
-      if (command.contains('account show --query id')) {
+      if (command.contains('account show') && command.contains('--query id')) {
         return 'management-subscription-id'
       }
       if (command.contains('identity show')) {
@@ -326,14 +327,15 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
-  void 'sandbox product flow uses empty management subscription when central Jenkins env vars are missing'() {
+  void 'sandbox product flow derives management subscription from Jenkins subscription name when id is missing'() {
     binding.env.remove('JENKINS_SUBSCRIPTION_ID')
-    binding.env.remove('JENKINS_AAD_OBJECT_ID')
 
     script.call('sbox', 'plum', 'sbox') {}
 
     assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
-    assertThat(shellCalls*.script).noneMatch { it.contains('account show --query id') }
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains("account show --subscription 'DTS-CFTPTL-INTSVC' --query id -o tsv")
+    }
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
         it.contains('identity show') &&
@@ -341,8 +343,26 @@ class WithSubscriptionTest extends BasePipelineTest {
         it.contains('jenkins-sbox-mi')
     }
     assertThat(withEnvVariables).contains(
-      'TF_VAR_mgmt_subscription_id=',
+      'TF_VAR_mgmt_subscription_id=management-subscription-id',
       'TF_VAR_jenkins_AAD_objectId=jenkins-object-id'
     )
+  }
+
+  @Test
+  void 'product flow fails clearly when management subscription cannot be resolved'() {
+    binding.env.remove('JENKINS_SUBSCRIPTION_ID')
+    binding.env.remove('JENKINS_SUBSCRIPTION_NAME')
+
+    Exception thrown = null
+
+    try {
+      script.call('sbox', 'plum', 'sbox') {}
+    } catch (Exception exception) {
+      thrown = exception
+    }
+
+    assertThat(thrown).isNotNull()
+    assertThat(thrown.message).contains('Unable to resolve management subscription id')
+    assertThat(withEnvVariables).doesNotContain('TF_VAR_mgmt_subscription_id=')
   }
 }

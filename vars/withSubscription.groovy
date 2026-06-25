@@ -36,9 +36,7 @@ def identityBasedLogin(String subscription, String product, String environment, 
           if (!product || usePtlJenkinsIdentity) {
             azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
           }
-          mgmtSubscriptionId = usePtlJenkinsIdentity || !product ?
-            azJenkins('account show --query id -o tsv') :
-            env.JENKINS_SUBSCRIPTION_ID ?: ''
+          mgmtSubscriptionId = resolveManagementSubscriptionId(azJenkins, usePtlJenkinsIdentity, product)
 
           String identityResourceGroupName = usePtlJenkinsIdentity || !product ?
             "managed-identities-${infraVaultName}-rg" :
@@ -114,6 +112,25 @@ boolean usePtlJenkinsIdentity(String product, String environment) {
     return true
   }
   return normalisedEnvironment == 'ptl'
+}
+
+String resolveManagementSubscriptionId(Closure azJenkins, boolean usePtlJenkinsIdentity, String product) {
+  String subscriptionId
+
+  if (usePtlJenkinsIdentity || !product) {
+    subscriptionId = azJenkins('account show --query id -o tsv')
+  } else if (env.JENKINS_SUBSCRIPTION_ID?.trim()) {
+    subscriptionId = env.JENKINS_SUBSCRIPTION_ID.trim()
+  } else if (env.JENKINS_SUBSCRIPTION_NAME?.trim()) {
+    log.warning "JENKINS_SUBSCRIPTION_ID is not set; deriving management subscription id from JENKINS_SUBSCRIPTION_NAME."
+    subscriptionId = azJenkins("account show --subscription '${env.JENKINS_SUBSCRIPTION_NAME}' --query id -o tsv")
+  }
+
+  if (!subscriptionId?.trim()) {
+    throw new Exception("Unable to resolve management subscription id. Set JENKINS_SUBSCRIPTION_ID or JENKINS_SUBSCRIPTION_NAME in Jenkins global environment variables.")
+  }
+
+  return subscriptionId.trim()
 }
 
 String targetIdentityEnvironment(String subscription, String environment) {
