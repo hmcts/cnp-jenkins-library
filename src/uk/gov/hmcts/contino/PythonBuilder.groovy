@@ -117,8 +117,9 @@ class PythonBuilder extends AbstractBuilder {
     if (vulns.isEmpty()) {
       steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
     }
-    formatCVELines(vulns).each { steps.echo it }
-    steps.echo 'See the uv-audit-report.json build artifact for full details.'
+    def details = formatCVELines(vulns).join('\n')
+    println("${details}\nSee the uv-audit-report.json build artifact for full details.")
+    steps.currentBuild.description = "Security vulnerabilities found in Python dependencies (${vulns.size()}):<br><pre>${details}</pre>"
     steps.error("Security vulnerabilities found in Python dependencies (${vulns.size()})")
   }
 
