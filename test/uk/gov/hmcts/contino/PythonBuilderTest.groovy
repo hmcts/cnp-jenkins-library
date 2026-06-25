@@ -133,6 +133,44 @@ class PythonBuilderTest extends Specification {
       1 * steps.error({ it.contains('uv-audit-report.json') })
   }
 
+  def "securityCheck logs vulnerabilities with clean output and fails pipeline when vulnerabilities found"() {
+    given:
+      steps.sh(_ as Map) >> 1
+      steps.fileExists('uv-audit-report.json') >> true
+      steps.readFile('uv-audit-report.json') >> '''{
+        "summary": {"vulnerabilities": 2},
+        "vulnerabilities": [
+          {
+            "id": "GHSA-82w8-qh3p-5jfq",
+            "aliases": ["CVE-2026-54283"],
+            "dependency": {"name": "starlette", "version": "1.2.1"},
+            "fix_versions": ["1.3.1"]
+          },
+          {
+            "id": "GHSA-jp82-jpqv-5vv3",
+            "aliases": ["CVE-2026-54282"],
+            "dependency": {"name": "starlette", "version": "1.2.1"},
+            "fix_versions": ["1.3.0"]
+          }
+        ]
+      }'''
+    when:
+      builder.securityCheck()
+    then:
+      1 * steps.writeFile({
+        it instanceof Map &&
+        it.file == 'uv-audit-summary.txt' &&
+        it.text.contains('Security vulnerabilities found in Python dependencies (2)') &&
+        it.text.contains('GHSA-82w8-qh3p-5jfq [CVE-2026-54283] in starlette@1.2.1 (fixed in: 1.3.1)') &&
+        it.text.contains('GHSA-jp82-jpqv-5vv3 [CVE-2026-54282] in starlette@1.2.1 (fixed in: 1.3.0)') &&
+        it.text.contains('See the uv-audit-report.json build artifact for full details.')
+      })
+      0 * steps.echo(_ as String)
+      1 * steps.sh({ it instanceof Map && it.label == 'Python dependency vulnerabilities' && it.script == 'cat uv-audit-summary.txt && exit 1' })
+      0 * steps.error(_ as String)
+      0 * steps.sh({ it instanceof String && it.contains('jq -r') })
+  }
+
   def "securityCheck rethrows exception on failure"() {
     given:
       steps.sh(_ as String) >> { throw new Exception('uv audit failed') }
