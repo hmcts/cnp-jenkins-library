@@ -98,19 +98,31 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def securityCheck() {
     int exitCode
+    def parsedReport = [vulnerabilities: []]
     try {
       exitCode = steps.sh(script: 'uv audit --output-format json > uv-audit-report.json', returnStatus: true)
     } finally {
       if (steps.fileExists('uv-audit-report.json')) {
         steps.archiveArtifacts(artifacts: 'uv-audit-report.json')
         String jsonReport = steps.readFile('uv-audit-report.json')
-        def parsedReport = prepareCVEReport(jsonReport)
+        parsedReport = prepareCVEReport(jsonReport)
         logCVEReport(parsedReport)
         new CVEPublisher(steps).publishCVEReport('python', parsedReport)
       }
     }
     if (exitCode != 0) {
-      steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
+      def vulns = parsedReport.vulnerabilities ?: []
+      def summary = vulns ? "Security vulnerabilities found in Python dependencies (${vulns.size()}):\n${formatCVELines(vulns).join('\n')}\nSee the uv-audit-report.json build artifact for full details." : 'Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.'
+      steps.error(summary)
+    }
+  }
+
+  def formatCVELines(vulns) {
+    vulns.collect { v ->
+      def fixed = (v.fix_versions ?: v.fixed_in ?: v.fixed ?: []) as List
+      def aliases = (v.aliases ?: []) as List
+      def aliasStr = aliases ? " [${aliases.join(', ')}]" : ''
+      "  - ${v.id ?: '?'}${aliasStr} in  ${v.package ?: '?'}@${v.installed ?: '?'}  (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
     }
   }
 
@@ -120,13 +132,8 @@ class PythonBuilder extends AbstractBuilder {
       steps.echo 'uv audit: no vulnerabilities found'
       return
     }
-    def lines = vulns.collect { v ->
-      def fixed = (v.fix_versions ?: v.fixed_in ?: v.fixed ?: []) as List
-      def aliases = (v.aliases ?: []) as List
-      def aliasStr = aliases ? " [${aliases.join(', ')}]" : ''
-      "  - ${v.id ?: '?'}${aliasStr} in  ${v.package ?: '?'}@${v.installed ?: '?'}  (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
-    }
-    steps.echo(["uv audit: found ${vulns.size()} vulnerabilities"] .plus(lines).join('\n'))
+    steps.echo "uv audit: found ${vulns.size()} vulnerabilities"
+    steps.echo(formatCVELines(vulns).join('\n'))
   }
 
   def prepareCVEReport(String uvAuditJSON) {
