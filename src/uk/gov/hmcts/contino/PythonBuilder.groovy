@@ -120,11 +120,13 @@ class PythonBuilder extends AbstractBuilder {
       steps.echo 'uv audit: no vulnerabilities found'
       return
     }
-    steps.echo "uv audit: found ${vulns.size()} vulnerabilities"
-    vulns.each { v ->
+    def lines = vulns.collect { v ->
       def fixed = (v.fix_versions ?: v.fixed_in ?: v.fixed ?: []) as List
-      steps.echo "  - ${v.id ?: '?'}  ${v.package ?: '?'}@${v.installed ?: '?'}  (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
+      def aliases = (v.aliases ?: []) as List
+      def aliasStr = aliases ? " [${aliases.join(', ')}]" : ''
+      "  - ${v.id ?: '?'}${aliasStr} in  ${v.package ?: '?'}@${v.installed ?: '?'}  (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
     }
+    steps.echo(["uv audit: found ${vulns.size()} vulnerabilities"] .plus(lines).join('\n'))
   }
 
   def prepareCVEReport(String uvAuditJSON) {
