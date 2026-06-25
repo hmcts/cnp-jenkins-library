@@ -106,15 +106,20 @@ class PythonBuilder extends AbstractBuilder {
         steps.archiveArtifacts(artifacts: 'uv-audit-report.json')
         String jsonReport = steps.readFile('uv-audit-report.json')
         parsedReport = prepareCVEReport(jsonReport)
-        logCVEReport(parsedReport)
         new CVEPublisher(steps).publishCVEReport('python', parsedReport)
       }
     }
-    if (exitCode != 0) {
-      def vulns = parsedReport.vulnerabilities ?: []
-      def summary = vulns ? "Security vulnerabilities found in Python dependencies (${vulns.size()}):\n${formatCVELines(vulns).join('\n')}\nSee the uv-audit-report.json build artifact for full details." : 'Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.'
-      steps.error(summary)
+    def vulns = parsedReport.vulnerabilities ?: []
+    if (exitCode == 0) {
+      steps.echo 'uv audit: no vulnerabilities found'
+      return
     }
+    if (vulns.isEmpty()) {
+      steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
+    }
+    // Print the details as a single block so they appear in the step's log, then fail with a short title.
+    // The failed step's expanded log in Blue Ocean shows everything printed in this script step.
+    steps.error("Security vulnerabilities found in Python dependencies (${vulns.size()})\n${formatCVELines(vulns).join('\n')}\nSee the uv-audit-report.json build artifact for full details.")
   }
 
   def formatCVELines(vulns) {
@@ -132,8 +137,7 @@ class PythonBuilder extends AbstractBuilder {
       steps.echo 'uv audit: no vulnerabilities found'
       return
     }
-    steps.echo "uv audit: found ${vulns.size()} vulnerabilities"
-    steps.echo(formatCVELines(vulns).join('\n'))
+    steps.echo("Security vulnerabilities found in Python dependencies (${vulns.size()})\n${formatCVELines(vulns).join('\n')}")
   }
 
   def prepareCVEReport(String uvAuditJSON) {
