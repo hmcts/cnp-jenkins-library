@@ -117,14 +117,10 @@ class PythonBuilder extends AbstractBuilder {
     if (vulns.isEmpty()) {
       steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
     }
-    def details = formatCVELines(vulns).join('\n') + '\nSee the uv-audit-report.json build artifact for full details.'
-    steps.sh(
-      label: "Security vulnerabilities found in Python dependencies (${vulns.size()})",
-      script: """cat <<'EOF'
-${details}
-EOF
-exit 1"""
-    )
+    steps.echo("Security vulnerabilities found in Python dependencies (${vulns.size()})")
+    formatCVELines(vulns).each { steps.echo(it) }
+    steps.echo('See the uv-audit-report.json build artifact for full details.')
+    steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
   }
 
   def formatCVELines(vulns) {
@@ -132,7 +128,7 @@ exit 1"""
       def fixed = (v.fix_versions ?: v.fixed_in ?: v.fixed ?: []) as List
       def aliases = (v.aliases ?: []) as List
       def aliasStr = aliases ? " [${aliases.join(', ')}]" : ''
-      "  - ${v.id ?: '?'}${aliasStr} in  ${v.package ?: '?'}@${v.installed ?: '?'}  (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
+      "  - ${v.id ?: '?'}${aliasStr} in ${v.package ?: '?'}@${v.installed ?: '?'} (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
     }
   }
 
