@@ -129,20 +129,21 @@ class PythonBuilder extends AbstractBuilder {
 
   def prepareCVEReport(String uvAuditJSON) {
     if (!uvAuditJSON?.trim()) {
+      steps.echo 'uv audit: report is empty'
       return [vulnerabilities: []]
     }
+    def parsed
     try {
-      def parsed = new JsonSlurperClassic().parseText(uvAuditJSON)
-      def vulns = (parsed instanceof Map ? parsed.results : parsed) ?: []
-      def flat = vulns.collectMany { entry ->
-        (entry.vulnerabilities ?: []).collect { v ->
-          v + [package: entry.package?.name, installed: entry.package?.version]
-        }
-      }
-      return [vulnerabilities: flat]
+      parsed = new JsonSlurperClassic().parseText(uvAuditJSON)
     } catch (Exception e) {
+      steps.echo "uv audit: failed to parse report (${e.message}). Raw output:\n${uvAuditJSON}"
       return [vulnerabilities: []]
     }
+    def vulns = (parsed instanceof Map ? parsed.vulnerabilities : parsed) ?: []
+    def flat = vulns.collect { v ->
+      v + [package: v.dependency?.name, installed: v.dependency?.version]
+    }
+    return [vulnerabilities: flat]
   }
 
   @Override

@@ -143,20 +143,19 @@ class PythonBuilderTest extends Specification {
       thrown(Exception)
   }
 
-  def "prepareCVEReport flattens OSV-formatted uv audit output"() {
+  def "prepareCVEReport flattens uv audit output"() {
     given:
-      def osvJson = '''{
-        "results": [
+      def uvJson = '''{
+        "vulnerabilities": [
           {
-            "package": {"name": "requests", "version": "2.20.0"},
-            "vulnerabilities": [
-              {"id": "GHSA-x84v-xcm2-53pg", "fix_versions": ["2.20.1"]}
-            ]
+            "id": "GHSA-x84v-xcm2-53pg",
+            "dependency": {"name": "requests", "version": "2.20.0"},
+            "fix_versions": ["2.20.1"]
           }
         ]
       }'''
     when:
-      def report = builder.prepareCVEReport(osvJson)
+      def report = builder.prepareCVEReport(uvJson)
     then:
       report.vulnerabilities.size() == 1
       report.vulnerabilities[0].id == 'GHSA-x84v-xcm2-53pg'
