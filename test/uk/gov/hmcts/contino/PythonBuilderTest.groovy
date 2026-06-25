@@ -143,6 +143,27 @@ class PythonBuilderTest extends Specification {
       thrown(Exception)
   }
 
+  def "prepareCVEReport flattens OSV-formatted uv audit output"() {
+    given:
+      def osvJson = '''{
+        "results": [
+          {
+            "package": {"name": "requests", "version": "2.20.0"},
+            "vulnerabilities": [
+              {"id": "GHSA-x84v-xcm2-53pg", "fix_versions": ["2.20.1"]}
+            ]
+          }
+        ]
+      }'''
+    when:
+      def report = builder.prepareCVEReport(osvJson)
+    then:
+      report.vulnerabilities.size() == 1
+      report.vulnerabilities[0].id == 'GHSA-x84v-xcm2-53pg'
+      report.vulnerabilities[0].package == 'requests'
+      report.vulnerabilities[0].installed == '2.20.0'
+  }
+
   def "setupToolVersion adds no warning when .python-version contains supported version 3.13"() {
     given:
       steps.fileExists('.python-version') >> true
