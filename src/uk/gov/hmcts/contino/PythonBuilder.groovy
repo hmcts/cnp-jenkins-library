@@ -102,32 +102,67 @@ class PythonBuilder extends AbstractBuilder {
   @Override
   def securityCheck() {
     int exitCode
+    def parsedReport = [vulnerabilities: []]
     try {
       exitCode = steps.sh(script: 'uv audit --output-format json > uv-audit-report.json', returnStatus: true)
     } finally {
       if (steps.fileExists('uv-audit-report.json')) {
         steps.archiveArtifacts(artifacts: 'uv-audit-report.json')
         String jsonReport = steps.readFile('uv-audit-report.json')
-        def parsedReport = prepareCVEReport(jsonReport)
+        parsedReport = prepareCVEReport(jsonReport)
         new CVEPublisher(steps).publishCVEReport('python', parsedReport)
       }
     }
-    if (exitCode != 0) {
+    def vulns = parsedReport.vulnerabilities ?: []
+    if (exitCode == 0) {
+      steps.echo 'uv audit: no vulnerabilities found'
+      return
+    }
+    if (vulns.isEmpty()) {
       steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
+    }
+    def details = ["Security vulnerabilities found in Python dependencies (${vulns.size()})"]
+    details.addAll(formatCVELines(vulns))
+    details.add('See the uv-audit-report.json build artifact for full details, or run uv audit --output-format json locally.')
+    steps.writeFile(file: 'uv-audit-summary.txt', text: "${details.join('\n')}\n")
+    steps.sh(label: 'Build Failed: Python dependency vulnerabilities', script: 'cat uv-audit-summary.txt && exit 1')
+  }
+
+  def formatCVELines(vulns) {
+    vulns.collect { v ->
+      def fixed = (v.fix_versions ?: v.fixed_in ?: v.fixed ?: []) as List
+      def aliases = (v.aliases ?: []) as List
+      def aliasStr = aliases ? " [${aliases.join(', ')}]" : ''
+      "  - ${v.id ?: '?'}${aliasStr} in ${v.package ?: '?'}@${v.installed ?: '?'} (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
     }
   }
 
-  def prepareCVEReport(String uvAuditJSON) {
-    if (!uvAuditJSON || uvAuditJSON.trim().isEmpty()) {
-      return [vulnerabilities: []]
+  def logCVEReport(parsedReport) {
+    def vulns = parsedReport.vulnerabilities ?: []
+    if (vulns.isEmpty()) {
+      steps.echo 'uv audit: no vulnerabilities found'
+      return
     }
+    formatCVELines(vulns).each { steps.echo it }
+  }
 
-    try {
-      def reportArray = new JsonSlurperClassic().parseText(uvAuditJSON)
-      return [vulnerabilities: reportArray ?: []]
-    } catch (Exception e) {
+  def prepareCVEReport(String uvAuditJSON) {
+    if (!uvAuditJSON?.trim()) {
+      steps.echo 'uv audit: report is empty'
       return [vulnerabilities: []]
     }
+    def parsed
+    try {
+      parsed = new JsonSlurperClassic().parseText(uvAuditJSON)
+    } catch (Exception e) {
+      steps.echo "uv audit: failed to parse report (${e.message}). Raw output:\n${uvAuditJSON}"
+      return [vulnerabilities: []]
+    }
+    def vulns = (parsed instanceof Map ? parsed.vulnerabilities : parsed) ?: []
+    def flat = vulns.collect { v ->
+      v + [package: v.dependency?.name, installed: v.dependency?.version]
+    }
+    return [vulnerabilities: flat]
   }
 
   private ensureVenv() {
