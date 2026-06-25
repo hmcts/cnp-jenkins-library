@@ -105,11 +105,25 @@ class PythonBuilder extends AbstractBuilder {
         steps.archiveArtifacts(artifacts: 'uv-audit-report.json')
         String jsonReport = steps.readFile('uv-audit-report.json')
         def parsedReport = prepareCVEReport(jsonReport)
+        logCVEReport(parsedReport)
         new CVEPublisher(steps).publishCVEReport('python', parsedReport)
       }
     }
     if (exitCode != 0) {
       steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
+    }
+  }
+
+  def logCVEReport(parsedReport) {
+    def vulns = parsedReport.vulnerabilities ?: []
+    if (vulns.isEmpty()) {
+      steps.echo 'uv audit: no vulnerabilities found'
+      return
+    }
+    steps.echo "uv audit: found ${vulns.size()} vulnerabilities"
+    vulns.each { v ->
+      def fixed = (v.fix_versions ?: v.fixed_in ?: v.fixed ?: []) as List
+      steps.echo "  - ${v.id ?: '?'}  ${v.package ?: '?'}@${v.installed ?: '?'}  (fixed in: ${fixed ? fixed.join(', ') : 'n/a'})"
     }
   }
 
