@@ -117,10 +117,11 @@ class PythonBuilder extends AbstractBuilder {
     if (vulns.isEmpty()) {
       steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
     }
-    steps.echo("Security vulnerabilities found in Python dependencies (${vulns.size()})")
-    formatCVELines(vulns).each { steps.echo(it) }
-    steps.echo('See the uv-audit-report.json build artifact for full details.')
-    steps.error('Security vulnerabilities found in Python dependencies. Review the uv-audit-report.json build artifact for details.')
+    def details = ["Security vulnerabilities found in Python dependencies (${vulns.size()})"]
+    details.addAll(formatCVELines(vulns))
+    details.add('See the uv-audit-report.json build artifact for full details.')
+    steps.writeFile(file: 'uv-audit-summary.txt', text: "${details.join('\n')}\n")
+    steps.sh(label: 'Python dependency vulnerabilities', script: 'cat uv-audit-summary.txt && exit 1')
   }
 
   def formatCVELines(vulns) {
