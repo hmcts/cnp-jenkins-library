@@ -21,5 +21,3 @@ branches:
     allowed: true
   - name: DTSPO-30107-jenkins-agents-2
     allowed: true
-  - name: poll_for_pods
-    allowed: true
