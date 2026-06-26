@@ -6,7 +6,7 @@ import groovy.json.JsonSlurperClassic
 
 /**
  * Helm chart management class.
- * 
+ *
  * Supports dual ACR publish mode for transitioning between registries.
  * When DUAL_ACR_PUBLISH_ENABLED is set to 'true', Helm charts will be
  * published to both primary and secondary ACR registries.
@@ -30,7 +30,7 @@ class Helm {
   def notFoundMessage = 'Not found'
   String registrySubscription
   def namespace
-  
+
   // Secondary ACR for dual publish mode
   def secondaryRegistryName
   def secondaryResourceGroup
@@ -50,7 +50,7 @@ class Helm {
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
     this.namespace = this.steps.env.TEAM_NAMESPACE
-    // NOTE: Do NOT initialize dual publish mode here - Jenkins CPS cannot call 
+    // NOTE: Do NOT initialize dual publish mode here - Jenkins CPS cannot call
     // CPS-transformed methods (steps.env, steps.echo) from constructors.
     // Dual publish mode is checked lazily via isDualPublishModeEnabled().
   }
@@ -58,12 +58,12 @@ class Helm {
   /**
    * Check if dual ACR publish mode is enabled.
    * Reads directly from environment variables each time to avoid CPS issues.
-   * 
+   *
    * @return true if dual publish is enabled and properly configured
    */
   private boolean isDualPublishModeEnabled() {
     def enabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
-    
+
     if (enabled) {
       // Load secondary registry details from environment if not already set
       if (!this.secondaryRegistryName) {
@@ -71,7 +71,7 @@ class Helm {
         this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
         this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
-      
+
       // Validate configuration
       if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
         return false
@@ -80,7 +80,7 @@ class Helm {
     }
     return false
   }
-  
+
   /**
    * Check if dual publish mode is enabled (public accessor for tests).
    */
@@ -112,17 +112,17 @@ class Helm {
    */
   private List<String> detectCrossRegistryDependencies() {
     def chartYamlPath = "${this.chartLocation}/Chart.yaml"
-    
+
     if (!steps.fileExists(chartYamlPath)) {
       return []
     }
-    
+
     try {
       def chartYaml = steps.readFile(chartYamlPath)
       def externalRegistries = [] as Set
-      
+
       steps.echo "Scanning Chart.yaml for OCI-based cross-registry dependencies..."
-      
+
       // Look for OCI repository references in dependencies
       // Example: repository: oci://hmctsprod.azurecr.io/helm
       // Handles: repository: 'oci://...' or repository: "oci://..." or repository: oci://...
@@ -138,7 +138,7 @@ class Helm {
           steps.echo('skipped - same as current registry')
         }
       }
-      
+
       return externalRegistries.toList()
     } catch (Exception e) {
       steps.echo "Warning: Could not parse Chart.yaml for cross-registry dependencies: ${e.message}"
@@ -149,12 +149,12 @@ class Helm {
   def authenticateAcr() {
     // Authenticate to current registry
     this.acr.az "acr login --name ${registryName}"
-    
+
     // Check if chart has dependencies from other ACR registries
     def externalRegistries = detectCrossRegistryDependencies()
-    
+
     steps.echo "Detected external registries: ${externalRegistries.size() > 0 ? externalRegistries.join(', ') : 'none'}"
-    
+
     if (externalRegistries) {
       steps.echo "Chart has dependencies from: ${externalRegistries.join(', ')}"
       externalRegistries.each { externalRegistry ->
@@ -162,7 +162,7 @@ class Helm {
         this.acr.az "acr login --name ${externalRegistry}"
       }
     }
-    
+
     // Also authenticate to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
       steps.echo "Authenticating to secondary ACR for dual publish: ${secondaryRegistryName}"
@@ -184,10 +184,10 @@ class Helm {
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
-    
+
     // Check and publish to primary registry
     def primaryResult = checkAndPublishToRegistry(registryName, version)
-    
+
     // Also publish to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
       this.steps.echo "Checking secondary ACR for chart: ${secondaryRegistryName}"
@@ -268,7 +268,7 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh('chmod +x aks-debug-info.sh')
-    
+
     boolean onPR = new ProjectBranch(this.steps.env.BRANCH_NAME).isPR()
     def optionsStr = (options + (onPR ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
