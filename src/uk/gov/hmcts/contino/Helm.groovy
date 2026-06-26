@@ -279,7 +279,7 @@ class Helm {
         """
         echo 'Waiting for initial pod creation...'
 
-        if timeout 60 kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -w 2>/dev/null | grep -m1 "Running\|Pending" > /dev/null; then
+        if timeout 60 kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -w 2>/dev/null | grep -m1 "Running\\|Pending" > /dev/null; then
           echo "Pods detected"
         else
           echo "No pods found matching selector - this chart may only contain jobs/cronjobs"
