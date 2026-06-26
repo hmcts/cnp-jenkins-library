@@ -105,7 +105,7 @@ def call(DockerImage dockerImage, Map params) {
     }
 
     def environmentTag = Environment.toTagName(environment)
-    
+
     def options = [
       "--set global.tenantId=${this.env.ARM_TENANT_ID} ",
       "--set global.environment=${helmOptionEnvironment} ",
@@ -135,6 +135,7 @@ def call(DockerImage dockerImage, Map params) {
     // // Helm throws error if trying to upgrade when there have only been failed deployments, or if the previous one is in a 'pending' status
     def deleted = false
     def releaseName = "${chartName}-${dockerImage.getImageTag()}"
+
     try {
       kubectl.deleteJobsByReleasePrefix(namespace, releaseName)
     } catch (sweepError) {
@@ -165,7 +166,9 @@ def call(DockerImage dockerImage, Map params) {
         }
         // Clean up the latest install/upgrade attempt
         helm.delete(dockerImage.getImageTag(), namespace)
-        sleep(attempts * 60)
+        if (!helm.waitForReleaseCleanup(releaseName, namespace, 60)) {
+          sleep(30)
+        }
         attempts++
         echo "Not ready to run install/upgrade [${upgradeError}]. Retrying(${attempts})..."
       }
