@@ -46,7 +46,7 @@ def executeClosure(Iterator<Map.Entry<String,List<Map<String,Object>>>> secretIt
 
   def productName = entry.key != '${vaultName}' ? entry.key : vaultName
 
-  String theKeyVaultUrl = "https://ektestkv2-${dependedEnv}.vault.azure.net/"
+  String theKeyVaultUrl = "https://${productName}-${dependedEnv}.vault.azure.net/"
 
   if (AgentSelector.isRunningOnEnvironmentAgent(env, null, product)) {
     withEnvironmentManagedIdentitySecrets(entry.value, theKeyVaultUrl) {
