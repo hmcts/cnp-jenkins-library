@@ -35,7 +35,7 @@ def call(params) {
     stageWithEnvironmentAgent("High Level Data Setup - ${environment}", product, environment) {
       def vaultName = !highLevelDataSetupKeyVaultName?.trim() ? product : highLevelDataSetupKeyVaultName
 
-      withDefinitionImportSecretsAndEnvVars(vaultName, environment, config.vaultEnvironmentOverrides){
+      withDefinitionImportSecretsAndEnvVars(vaultName, environment, config.vaultEnvironmentOverrides, product){
         pcr.callAround('highleveldatasetup') {
           builder.highLevelDataSetup(environment)
         }
