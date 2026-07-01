@@ -50,12 +50,14 @@ def call(type, product, component, timeout = 300, Closure body) {
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
 
-  if (agentType == "civil") {
+  if (agentType == "") {
+    nodeSelector = "daily"
+  } else if (agentType == "civil") {
     nodeSelector = agentType
   } else if (agentType == "xui") {
     nodeSelector = agentType
   } else {
-    nodeSelector = 'daily'
+    nodeSelector = agentType + ' && daily'
   }
 
   node(nodeSelector) {
