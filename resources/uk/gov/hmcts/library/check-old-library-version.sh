@@ -31,7 +31,7 @@ FAILED_FILES=()
 
 echo "Checking for old library version references: ${OLD_LIBRARY_VERSION}"
 
-if [[ "$JOB_NAME" == *"nightly"* ]]; then
+if [[ "${JOB_NAME,,}" == *"nightly"* ]]; then
     echo "Running nightly pipeline. No need to check for old library version."
     no_old_library_found
 fi
