@@ -117,9 +117,16 @@ class CveDashboardSnapshotPublisherTest extends Specification {
           ],
           [
             fileName                  : 'library-b.jar',
+            packages                  : [[id: 'pkg:maven/org.example/library-b@2.0.0?type=jar']],
             suppressedVulnerabilities: [
               [name: 'CVE-2026-2001', severity: 'LOW', cvssv2: [score: 4.3]],
               [name: 'CVE-2026-2002', severity: 'CRITICAL', cvssv3: [baseScore: 9.8]]
+            ]
+          ],
+          [
+            fileName       : 'library-without-package-id.jar',
+            vulnerabilities: [
+              [name: 'CVE-2026-2003', severity: 'HIGH', cvssv3: [baseScore: 8.1]]
             ]
           ]
         ]
@@ -139,18 +146,45 @@ class CveDashboardSnapshotPublisherTest extends Specification {
         [
           cve               : 'CVE-2026-2001',
           severity          : 'medium',
-          activePackages    : ['pkg:maven/org.example/library-a@1.0.0'],
-          suppressedPackages: ['library-b.jar'],
+          activePackages    : ['org.example:library-a'],
+          suppressedPackages: ['org.example:library-b'],
           score             : '6.1'
         ],
         [
           cve               : 'CVE-2026-2002',
           severity          : 'critical',
           activePackages    : [],
-          suppressedPackages: ['library-b.jar'],
+          suppressedPackages: ['org.example:library-b'],
           score             : '9.8'
         ]
       ]
+  }
+
+  def "publishes gradle coordinates when dependency-check already reports maven coordinates"() {
+    given:
+      def request
+      def report = [
+        dependencies: [
+          [
+            packages       : [[id: 'org.example:library-a']],
+            vulnerabilities: [
+              [name: 'CVE-2026-2001', severity: 'MEDIUM', cvssv3: [baseScore: 6.1]]
+            ]
+          ]
+        ]
+      ]
+
+    when:
+      publisher.publishSnapshot('java', report)
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> { LinkedHashMap args ->
+        request = args
+        [status: 200]
+      }
+
+      def payload = new JsonSlurperClassic().parseText(request.requestBody)
+      payload.items[0].activePackages == ['org.example:library-a']
   }
 
   def "removes packages from suppressed list when the same package is active"() {
@@ -269,5 +303,25 @@ class CveDashboardSnapshotPublisherTest extends Specification {
     then:
       1 * steps.httpRequest(_ as LinkedHashMap) >> { throw new RuntimeException('timeout') }
       1 * steps.echo({ it.contains("Unable to publish CVE dashboard snapshot") && it.contains("timeout") })
+  }
+
+  def "logs dashboard response body when request returns an error status"() {
+    when:
+      publisher.publishSnapshot('node', [
+        vulnerabilities: [[module_name: 'lodash', cves: ['CVE-2026-1001'], severity: 'high']]
+      ])
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> {
+        [
+          status : 400,
+          content: '{"error":{"code":"validation_error","errors":[{"field":"activePackages","message":"Enter Maven coordinates"}]}}'
+        ]
+      }
+      1 * steps.echo({
+        it.contains("Unable to publish CVE dashboard snapshot '400'") &&
+          it.contains('validation_error') &&
+          it.contains('Enter Maven coordinates')
+      })
   }
 }

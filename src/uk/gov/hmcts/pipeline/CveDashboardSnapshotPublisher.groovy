@@ -45,7 +45,8 @@ class CveDashboardSnapshotPublisher implements Serializable {
 
       Integer status = (response?.status ?: 0) as Integer
       if (status >= 400) {
-        steps.echo "Unable to publish CVE dashboard snapshot '${status}'"
+        String responseBody = trimValue(response?.content)
+        steps.echo "Unable to publish CVE dashboard snapshot '${status}'${responseBody ? " response: ${truncate(responseBody)}" : ''}"
       }
     } catch (err) {
       steps.echo "Unable to publish CVE dashboard snapshot '${err}'"
@@ -213,7 +214,36 @@ class CveDashboardSnapshotPublisher implements Serializable {
 
   private static String gradlePackageName(dependency) {
     def packageId = asList(dependency?.packages).find { trimValue(it?.id) }?.id
-    trimValue(packageId) ?: trimValue(dependency?.fileName)
+    mavenCoordinate(packageId)
+  }
+
+  private static String mavenCoordinate(value) {
+    String packageId = trimValue(value)
+    if (!packageId) {
+      return ''
+    }
+
+    if (packageId ==~ /^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$/) {
+      return packageId
+    }
+
+    def matcher = packageId =~ /^pkg:maven\/([^@?]+)/
+    if (!matcher.find()) {
+      return ''
+    }
+
+    def segments = matcher.group(1)
+      .split('/')
+      .collect { trimValue(it) }
+      .findAll { it }
+
+    if (segments.size() < 2) {
+      return ''
+    }
+
+    String artifact = segments.last()
+    String group = segments[0..-2].join('.')
+    "${group}:${artifact}"
   }
 
   private static BigDecimal highestScore(vulnerability) {
@@ -274,5 +304,9 @@ class CveDashboardSnapshotPublisher implements Serializable {
 
   private static String trimValue(value) {
     value == null ? '' : value.toString().trim()
+  }
+
+  private static String truncate(String value) {
+    value.length() > 4000 ? "${value.take(4000)}..." : value
   }
 }
