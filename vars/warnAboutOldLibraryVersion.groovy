@@ -43,7 +43,9 @@ Migration guide: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/197350993
 Rollout tracker: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973305638/Migration+rollout+tracker"""
                 LocalDate deprecationDate = LocalDate.parse(deprecation.date_deadline)
 
-                unstable("Old library version detected. Update to Infrastructure@${deprecation.version}.")
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    error("Old library version detected. Update to Infrastructure@${deprecation.version}.")
+                }
 
                 try {
                     WarningCollector.addPipelineWarning(
