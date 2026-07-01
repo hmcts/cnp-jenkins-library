@@ -7,6 +7,11 @@ import uk.gov.hmcts.pipeline.AgentSelector
  * @param body the body to execute after logged in
  */
 def call(String subscription, Closure body) {
+  if ((env.IS_NIGHTLY_PIPELINE ?: '').toString() == 'true') {
+    loginOnCurrentAgent(subscription, body)
+    return
+  }
+
   String targetEnvironment = AgentSelector.normaliseEnvironment(subscription)
   if (AgentSelector.isEnvironmentLikeSubscription(targetEnvironment)) {
     String product = env.PRODUCT ?: env.RAW_PRODUCT_NAME ?: ''

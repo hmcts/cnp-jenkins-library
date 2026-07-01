@@ -96,4 +96,19 @@ class WithSubscriptionLoginTest extends BasePipelineTest {
     assertThat(environmentAgentCalls).isEmpty()
     assertThat(shellScripts).anyMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-nonprod az login --identity') }
   }
+
+  @Test
+  void 'nightly pipeline login does not hop on env-like subscriptions'() {
+    binding.env.BUILD_AGENT_TYPE = 'daily'
+    binding.env.IS_NIGHTLY_PIPELINE = 'true'
+    boolean bodyCalled = false
+
+    script.call('stg') {
+      bodyCalled = true
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(environmentAgentCalls).isEmpty()
+    assertThat(shellScripts).anyMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-stg az login --identity') }
+  }
 }
