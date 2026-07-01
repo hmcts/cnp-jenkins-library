@@ -28,7 +28,7 @@ def identityBasedLogin(String subscription, String product, String environment, 
 
         boolean usePtlJenkinsIdentity = usePtlJenkinsIdentity(product, environment)
         String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
-        String managedIdentityResourceGroupEnvironment = AgentSelector.managedIdentityResourceGroupEnvironment(environment)
+        String managedIdentityResourceGroupEnvironment = managedIdentityResourceGroupEnvironment(environment)
         String jenkinsAzureConfigDir = product ? "/opt/jenkins/.azure-${usePtlJenkinsIdentity ? 'ptl' : subscription}" : '/opt/jenkins/.azure-jenkins'
         withJenkinsIdentity(product, environment) {
           Closure azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=${jenkinsAzureConfigDir} az $cmd", returnStdout: true).trim() }
@@ -141,4 +141,13 @@ String targetIdentityEnvironment(String subscription, String environment) {
     return AgentSelector.normaliseEnvironment(subscription)
   }
   return environment
+}
+
+String managedIdentityResourceGroupEnvironment(String environment) {
+  String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
+  boolean isSdsSandbox = normalisedEnvironment == 'sbox' &&
+    env.JENKINS_SUBSCRIPTION_NAME?.contains('SHAREDSERVICES')
+
+  // SDS sandbox UAMIs live in managed-identities-sbox-rg; CFT uses managed-identities-sandbox-rg.
+  return isSdsSandbox ? 'sbox' : AgentSelector.managedIdentityResourceGroupEnvironment(environment)
 }

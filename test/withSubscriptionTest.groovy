@@ -299,6 +299,32 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
+  void 'SDS sandbox product flow uses sbox managed identity resource group'() {
+    binding.env.INFRA_VAULT_NAME = 'ptlsbox'
+    binding.env.JENKINS_SUBSCRIPTION_NAME = 'DTS-SHAREDSERVICESPTL-SBOX'
+    boolean bodyCalled = false
+
+    script.call('sbox', 'toffee', 'sbox') {
+      bodyCalled = true
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(subscriptionLoginCalls).containsExactly([
+      subscription: 'sbox',
+      buildAgentType: 'ubuntu-sbox',
+      deploymentEnvironment: 'sbox'
+    ])
+    assertThat(environmentAgentCalls).containsExactly([environment: 'sbox', product: 'toffee', agentLabel: 'ubuntu-sbox'])
+    assertThat(shellCalls*.script).anyMatch {
+      it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
+        it.contains('identity show') &&
+        it.contains('managed-identities-sbox-rg') &&
+        it.contains('jenkins-sbox-mi')
+    }
+    assertThat(shellCalls*.script).noneMatch { it.contains('managed-identities-sandbox-rg') }
+  }
+
+  @Test
   void 'sandbox alias uses sandbox resource group but sbox identity name'() {
     boolean bodyCalled = false
 
