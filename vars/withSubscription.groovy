@@ -16,7 +16,8 @@ def call(String subscription, String product, String environment, Closure body) 
 
 def identityBasedLogin(String subscription, String product, String environment, Closure body) {
   ansiColor('xterm') {
-    def mgmtSubscriptionId
+    boolean usePtlJenkinsIdentity = usePtlJenkinsIdentity(product, environment)
+    def mgmtSubscriptionId = resolveManagementSubscriptionId(usePtlJenkinsIdentity, product)
     def jenkinsObjectId
 
     withTargetSubscriptionIdentity(subscription, product, environment) {
@@ -26,7 +27,6 @@ def identityBasedLogin(String subscription, String product, String environment, 
 
         log.warning "=== you are building with $subscription subscription credentials ==="
 
-        boolean usePtlJenkinsIdentity = usePtlJenkinsIdentity(product, environment)
         String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
         String managedIdentityResourceGroupEnvironment = managedIdentityResourceGroupEnvironment(environment)
         String jenkinsAzureConfigDir = product ? "/opt/jenkins/.azure-${usePtlJenkinsIdentity ? 'ptl' : subscription}" : '/opt/jenkins/.azure-jenkins'
@@ -36,7 +36,6 @@ def identityBasedLogin(String subscription, String product, String environment, 
           if (!product || usePtlJenkinsIdentity) {
             azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
           }
-          mgmtSubscriptionId = resolveManagementSubscriptionId(azJenkins, usePtlJenkinsIdentity, product)
 
           String identityResourceGroupName = usePtlJenkinsIdentity || !product ?
             "managed-identities-${infraVaultName}-rg" :
@@ -114,15 +113,23 @@ boolean usePtlJenkinsIdentity(String product, String environment) {
   return normalisedEnvironment == 'ptl'
 }
 
-String resolveManagementSubscriptionId(Closure azJenkins, boolean usePtlJenkinsIdentity, String product) {
+String resolveManagementSubscriptionId(boolean usePtlJenkinsIdentity, String product) {
   String subscriptionId
+  Closure azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
 
   if (usePtlJenkinsIdentity || !product) {
-    subscriptionId = azJenkins('account show --query id -o tsv')
+    if (env.JENKINS_SUBSCRIPTION_NAME?.trim()) {
+      azJenkins 'login --identity'
+      azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
+      subscriptionId = azJenkins('account show --query id -o tsv')
+    } else if (env.JENKINS_SUBSCRIPTION_ID?.trim()) {
+      subscriptionId = env.JENKINS_SUBSCRIPTION_ID.trim()
+    }
   } else if (env.JENKINS_SUBSCRIPTION_ID?.trim()) {
     subscriptionId = env.JENKINS_SUBSCRIPTION_ID.trim()
   } else if (env.JENKINS_SUBSCRIPTION_NAME?.trim()) {
     log.warning "JENKINS_SUBSCRIPTION_ID is not set; deriving management subscription id from JENKINS_SUBSCRIPTION_NAME."
+    azJenkins 'login --identity'
     subscriptionId = azJenkins("account show --subscription '${env.JENKINS_SUBSCRIPTION_NAME}' --query id -o tsv")
   }
 

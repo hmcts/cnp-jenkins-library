@@ -59,7 +59,10 @@ class WithSubscriptionTest extends BasePipelineTest {
         runEnvironmentAgent(environment, product, agentLabel, body)
     })
     helper.registerAllowedMethod('sh', [Map.class], { Map args ->
-      shellCalls << args
+      shellCalls << args + [
+        buildAgentType: binding.env.BUILD_AGENT_TYPE,
+        deploymentEnvironment: binding.env.DEPLOYMENT_ENVIRONMENT
+      ]
       String command = args.script
       if (command.contains('account show') && command.contains('--query id')) {
         return 'management-subscription-id'
@@ -359,9 +362,12 @@ class WithSubscriptionTest extends BasePipelineTest {
     script.call('sbox', 'plum', 'sbox') {}
 
     assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
-    assertThat(shellCalls*.script).anyMatch {
-      it.contains("account show --subscription 'DTS-CFTPTL-INTSVC' --query id -o tsv")
+    def managementLookup = shellCalls.find {
+      it.script.contains("account show --subscription 'DTS-CFTPTL-INTSVC' --query id -o tsv")
     }
+    assertThat(managementLookup).isNotNull()
+    assertThat(managementLookup['script'].toString()).contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins')
+    assertThat(managementLookup['buildAgentType']).isNull()
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
         it.contains('identity show') &&
