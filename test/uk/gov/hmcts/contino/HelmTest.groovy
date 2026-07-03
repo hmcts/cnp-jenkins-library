@@ -217,10 +217,121 @@ class HelmTest extends Specification {
     
     when:
     def testHelm = new Helm(testSteps, CHART)
-    
+
     then:
     testHelm.isDualPublishEnabled() == true
     testHelm.secondaryRegistryName == "hmctsold"
+  }
+
+  // ==================== Cross-registry dependency tests ====================
+
+  def "authenticateAcr() should rewrite external chart dependencies to the current registry in sandbox"() {
+    given:
+    def sandboxSteps = Mock(JenkinsStepMock.class)
+    sandboxSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "sbox",
+                         REGISTRY_NAME: "hmctssbox",
+                         REGISTRY_SUBSCRIPTION: "DTS-SHAREDSERVICES-SBOX",
+                         BRANCH_NAME: "PR-123"]
+    sandboxSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    sandboxSteps.readFile("${CHART_PATH}/Chart.yaml") >> "dependencies:\n  - name: base\n    repository: oci://hmctsprod.azurecr.io/helm\n"
+    def sandboxHelm = new Helm(sandboxSteps, CHART)
+    sandboxHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    sandboxHelm.authenticateAcr()
+
+    then:
+    1 * sandboxHelm.acr.az("acr login --name hmctssbox --subscription DTS-SHAREDSERVICES-SBOX")
+    1 * sandboxSteps.writeFile({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.text.contains("oci://hmctssbox.azurecr.io/helm") &&
+        !args.text.contains("hmctsprod")
+    })
+    0 * sandboxHelm.acr.az({ it.toString().contains("acr login --name hmctsprod") })
+    sandboxHelm.sandboxRewrittenRegistries == ['hmctsprod']
+  }
+
+  def "authenticateAcr() should use the configured subscription for external registries outside sandbox"() {
+    given:
+    def nonprodSteps = Mock(JenkinsStepMock.class)
+    nonprodSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "nonprod",
+                         REGISTRY_NAME: "hmctspublic",
+                         REGISTRY_SUBSCRIPTION: "DCD-CNP-DEV",
+                         EXTERNAL_ACR_SUBSCRIPTION_HMCTSPROD: "DCD-CNP-PROD",
+                         BRANCH_NAME: "PR-123"]
+    nonprodSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    nonprodSteps.readFile("${CHART_PATH}/Chart.yaml") >> "dependencies:\n  - name: base\n    repository: oci://hmctsprod.azurecr.io/helm\n"
+    def nonprodHelm = new Helm(nonprodSteps, CHART)
+    nonprodHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    nonprodHelm.authenticateAcr()
+
+    then:
+    1 * nonprodHelm.acr.az("acr login --name hmctspublic --subscription DCD-CNP-DEV")
+    1 * nonprodHelm.acr.az("acr login --name hmctsprod --subscription DCD-CNP-PROD")
+    0 * nonprodSteps.writeFile(_)
+  }
+
+  def "installOrUpgrade() should restore original chart metadata after sandbox dependency rewrite"() {
+    given:
+    def originalChartYaml = "dependencies:\n  - name: base\n    repository: oci://hmctsprod.azurecr.io/helm\n"
+    def sandboxSteps = Mock(JenkinsStepMock.class)
+    sandboxSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "sbox",
+                         REGISTRY_NAME: "hmctssbox",
+                         REGISTRY_SUBSCRIPTION: "DTS-SHAREDSERVICES-SBOX",
+                         BRANCH_NAME: "master"]
+    sandboxSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    sandboxSteps.readFile("${CHART_PATH}/Chart.yaml") >> originalChartYaml
+    def sandboxHelm = new Helm(sandboxSteps, CHART)
+    sandboxHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    sandboxHelm.authenticateAcr()
+    sandboxHelm.installOrUpgrade("staging", ["val1"], [])
+
+    then:
+    1 * sandboxSteps.writeFile({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.text.contains("oci://hmctssbox.azurecr.io/helm")
+    })
+    1 * sandboxSteps.writeFile({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.text == originalChartYaml
+    })
+    1 * sandboxSteps.sh("rm -f ${CHART_PATH}/Chart.lock")
+    sandboxHelm.rewrittenChartFileBackups.isEmpty()
+    sandboxHelm.rewriteGeneratedFiles.isEmpty()
+  }
+
+  def "dependencyUpdate() should explain sandbox rewrites when the update fails"() {
+    given:
+    def failingSteps = Mock(JenkinsStepMock.class)
+    failingSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "sbox",
+                         REGISTRY_NAME: "hmctssbox",
+                         BRANCH_NAME: "PR-123"]
+    failingSteps.sh(_) >> { throw new RuntimeException('pull access denied') }
+    def failingHelm = new Helm(failingSteps, CHART)
+    failingHelm.sandboxRewrittenRegistries = ['hmctsprod']
+
+    when:
+    failingHelm.dependencyUpdate()
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.message.contains('rewritten from hmctsprod to hmctssbox')
+    exception.message.contains('Publish the dependency charts to hmctssbox')
   }
 
 }
