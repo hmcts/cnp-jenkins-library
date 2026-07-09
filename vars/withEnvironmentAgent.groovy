@@ -32,6 +32,10 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '**/.yarn/install-state.gz',
     '.gradle/**',
     '**/.gradle/**',
+    'vendor/bundle/**',
+    '**/vendor/bundle/**',
+    '.bundle/cache/**',
+    '**/.bundle/cache/**',
     '.venv/**',
     '**/.venv/**'
   ].join(',')
