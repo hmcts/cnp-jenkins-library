@@ -326,8 +326,9 @@ EOF
         prepend += ' '
       }
 
-      if (steps.fileExists(NVMRC)) {
-        def status = steps.sh(script: """
+      withPuppeteerCache {
+        if (steps.fileExists(NVMRC)) {
+          def status = steps.sh(script: """
           set +ex
           export NVM_DIR='/home/jenkinsssh/.nvm'
           . /opt/nvm/nvm.sh || true
@@ -341,11 +342,11 @@ EOF
           fi
         """, returnStatus: true)
 
-        if (status != 0 && !task.contains('install')) {
-          steps.error("Yarn task '${task}' failed with status ${status}")
-        }
-      } else {
-        def status = steps.sh(script: """
+          if (status != 0 && !task.contains('install')) {
+            steps.error("Yarn task '${task}' failed with status ${status}")
+          }
+        } else {
+          def status = steps.sh(script: """
           export PATH=\$HOME/.local/bin:\$PATH
 
           if ${prepend.toBoolean()}; then
@@ -355,8 +356,9 @@ EOF
           fi
         """, returnStatus: true)
 
-        if (status != 0 && !task.contains('install')) {
-          steps.error("Yarn task '${task}' failed with status ${status}")
+          if (status != 0 && !task.contains('install')) {
+            steps.error("Yarn task '${task}' failed with status ${status}")
+          }
         }
       }
   }
@@ -365,7 +367,9 @@ EOF
     if (prepend && !prepend.endsWith(' ')) {
       prepend += ' '
     }
-    def status = steps.sh(script: """
+    def status
+    withPuppeteerCache {
+      status = steps.sh(script: """
       export PATH=\$HOME/.local/bin:\$PATH
 
       if ${prepend.toBoolean()}; then
@@ -374,6 +378,7 @@ EOF
         yarn ${task} 1> /dev/null 2> /dev/null
       fi
     """, returnStatus: true)
+    }
     steps.echo("yarnQuiet ${task} -> ${status}")
     return status == 0  // only a 0 return status is success
   }

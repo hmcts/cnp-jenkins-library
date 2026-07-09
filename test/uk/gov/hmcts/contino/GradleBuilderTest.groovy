@@ -15,13 +15,14 @@ class GradleBuilderTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    envVars = [BRANCH_NAME: 'master']
+    envVars = [BRANCH_NAME: 'master', WORKSPACE_TMP: '/tmp/jenkins-workspace']
     steps.getEnv() >> envVars
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
     // Pass the ADO_MAVEN_PAT withAzureKeyvault wrapper through to the closure body.
     steps.withAzureKeyvault(_, _) >> { args -> args[1].call() }
+    steps.withEnv(_, _) >> { args -> args[1].call() }
   }
 
   def "build calls 'gradle assemble'"() {
@@ -96,6 +97,13 @@ class GradleBuilderTest extends Specification {
       builder.smokeTest()
     then:
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('smoke') && it.contains('--rerun-tasks') })
+  }
+
+  def "gradle commands use a workspace puppeteer cache"() {
+    when:
+      builder.smokeTest()
+    then:
+      1 * steps.withEnv(['PUPPETEER_CACHE_DIR=/tmp/jenkins-workspace/puppeteer-cache'], _ as Closure)
   }
 
   def "functionalTest calls 'gradle functional' with '--rerun-tasks' flag"() {

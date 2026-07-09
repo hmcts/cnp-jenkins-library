@@ -236,7 +236,8 @@ class GradleBuilder extends AbstractBuilder {
   @Override
   def addVersionInfo() {
     addInitScript()
-    localSteps.sh '''
+    withPuppeteerCache {
+      localSteps.sh '''
 mkdir -p src/main/resources/META-INF
 
 tee src/main/resources/META-INF/build-info.properties <<EOF 2>/dev/null
@@ -247,6 +248,7 @@ build.date=$(date)
 EOF
 
 '''
+    }
   }
 
   def runProviderVerification(pactBrokerUrl, version, publish) {
@@ -280,13 +282,17 @@ EOF
     }
     addInitScript()
     withAdoMavenPat {
-      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+      withPuppeteerCache {
+        localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+      }
     }
   }
 
   private String gradleWithOutput(String task) {
     addInitScript()
-    localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+    withPuppeteerCache {
+      localSteps.sh(script: "./gradlew --no-daemon --init-script init.gradle ${task}", returnStdout: true).trim()
+    }
   }
 
   def fullFunctionalTest() {

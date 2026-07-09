@@ -38,11 +38,12 @@ class YarnBuilderTest extends Specification {
 
     def sampleCVEReport = new File(this.getClass().getClassLoader().getResource('yarn-audit-report-no-issues.txt').toURI()).text
     steps.readFile({ String path -> path != 'package.json' }) >> sampleCVEReport
-    envVars = [BRANCH_NAME: 'master']
+    envVars = [BRANCH_NAME: 'master', WORKSPACE_TMP: '/tmp/jenkins-workspace']
     steps.getEnv() >> envVars
     def closure
     steps.withCredentials(_, { it.call() }) >> { closure = it }
     steps.withSauceConnect(_, { it.call() }) >> { closure = it }
+    steps.withEnv(_, _) >> { args -> args[1].call() }
     steps.usernamePassword(_ as Map) >> [:]
 
     builder = new YarnBuilder(steps)
@@ -130,6 +131,13 @@ class YarnBuilderTest extends Specification {
           builder.smokeTest()
       then:
           1 * steps.sh({ it instanceof Map && it.script.contains('yarn test:smoke') && it.returnStatus == true })
+  }
+
+  def "yarn commands use a workspace puppeteer cache"() {
+      when:
+          builder.smokeTest()
+      then:
+          2 * steps.withEnv(['PUPPETEER_CACHE_DIR=/tmp/jenkins-workspace/puppeteer-cache'], _ as Closure)
   }
 
   def "functionalTest calls 'yarn test:functional'"() {

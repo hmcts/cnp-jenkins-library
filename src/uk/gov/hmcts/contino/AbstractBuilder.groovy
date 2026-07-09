@@ -12,6 +12,13 @@ abstract class AbstractBuilder implements Builder, Serializable {
     this.securitytest = new SecurityScan(this.steps)
   }
 
+  protected def withPuppeteerCache(Closure body) {
+    def cacheRoot = steps.env.WORKSPACE_TMP ?: steps.env.WORKSPACE ?: '.'
+    steps.withEnv(["PUPPETEER_CACHE_DIR=${cacheRoot}/puppeteer-cache"]) {
+      body()
+    }
+  }
+
   @Override
   def performanceTest() {
     executeGatling()
