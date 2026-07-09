@@ -18,7 +18,6 @@ class Helm {
   def steps
   def acr
   def docker
-  def helm = { cmd, name, options -> return this.steps.sh(label: "helm $cmd", script: "helm $cmd $name $options", returnStdout: true) }
 
   def subscription
   def subscriptionId
@@ -470,6 +469,10 @@ class Helm {
     def optionsStr = "${options == null ?  '' : options.join(' ')}"
     def valuesStr = (values == null ? '' : "${' -f ' + values.join(' -f ')}")
     helm command, name, "${valuesStr} ${optionsStr}"
+  }
+
+  private Object helm(String cmd, String name, String options) {
+    return this.steps.sh(label: "helm ${cmd}", script: "helm ${cmd} ${name} ${options}", returnStdout: true)
   }
 
 }
