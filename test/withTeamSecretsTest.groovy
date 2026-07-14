@@ -163,6 +163,24 @@ class WithTeamSecretsTest extends BasePipelineTest {
   }
 
   @Test
+  void 'preview environment agent falls back when aat is not the final vault name segment'() {
+    binding.env.BUILD_AGENT_TYPE = 'civil-preview'
+    binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-${environment}'
+    forbiddenAzureConfigNames = ['preview'] as Set
+    boolean bodyCalled = false
+
+    script.call(aatVaultWithSuffixConfig(), 'preview', 'civil') {
+      bodyCalled = true
+    }
+
+    assertThat(bodyCalled).isTrue()
+    assertThat(keyVaultCalls).hasSize(1)
+    assertThat(keyVaultCalls[0].keyVaultURLOverride).isEqualTo('https://fact-bstrap-aat-kv.vault.azure.net/')
+    assertThat(echoCalls).anyMatch { it.contains('retrying with legacy Key Vault credentials') }
+  }
+
+  @Test
   void 'preview environment agent does not fall back for non aat vaults'() {
     binding.env.BUILD_AGENT_TYPE = 'civil-preview'
     binding.env.DEPLOYMENT_ENVIRONMENT = 'preview'
@@ -278,6 +296,17 @@ class WithTeamSecretsTest extends BasePipelineTest {
         ]
       ],
       vaultEnvironmentOverrides: ['preview': 'stg']
+    ]
+  }
+
+  private Map aatVaultWithSuffixConfig() {
+    [
+      vaultSecrets: [
+        'fact-bstrap-${env}-kv': [
+          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'sso-test-admin-email', envVariable: 'SSO_TEST_ADMIN_EMAIL']
+        ]
+      ],
+      vaultEnvironmentOverrides: ['preview': 'aat', 'dev': 'stg']
     ]
   }
 
