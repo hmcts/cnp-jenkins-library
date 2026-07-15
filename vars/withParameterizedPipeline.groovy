@@ -4,6 +4,7 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.PipelineType
+import uk.gov.hmcts.contino.PythonPipelineType
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -13,6 +14,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.DeploymentControls
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   call(type, product,component,environment,subscription,'',body)
@@ -23,7 +25,8 @@ def call(type, String product, String component, String environment, String subs
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
-    ruby: new RubyPipelineType(this, product, component)
+    ruby: new RubyPipelineType(this, product, component),
+    python: new PythonPipelineType(this, product, component)
   ]
 
   PipelineType pipelineType
@@ -57,16 +60,24 @@ def call(type, String product, String component, String environment, String subs
 
   def deploymentTargetList = deploymentTargets.split(',') as List
   boolean deploymentEnabled = false
+  boolean libraryBranchAllowed = false
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
+      if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+      }
+
+        dockerAgentSetup()
+        env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)

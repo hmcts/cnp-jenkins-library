@@ -15,8 +15,8 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
 
 ### Opinionated app pipeline
 
-This library contains a complete opinionated pipeline that can build, test and deploy Java
-and NodeJS applications. The pipeline contains the following stages:
+This library contains a complete opinionated pipeline that can build, test and deploy Java,
+NodeJS and Python applications. The pipeline contains the following stages:
 
 * Checkout
 * Build
@@ -36,7 +36,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
-script and dependencies in source control. NodeJS apps must use Yarn.
+script and dependencies in source control. NodeJS apps must use Yarn. Python apps must use
+[uv](https://docs.astral.sh/uv/) for package management and include a `.python-version` file
+at the root of the repository.
 
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
@@ -46,7 +48,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular" and "python"
 
 def product = "rhubarb"
 
@@ -559,6 +561,9 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
+
+
+
 ## Enabling nightly checks on pull requests
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
@@ -575,6 +580,18 @@ Some tests may require additional configuration - copy this from your `Jenkinsfi
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
+## Performance Testing extension for Smart Slack Alerts & Automatic Rerun on Fail
+Additional parameters have been added to enablePerformanceTest as follows:
+- enablePerformanceTest(timeout=30, perfGatlingAlerts=true, perfRerunOnFail=true)
+- *perfGatlingAlerts will activate alerts to slack channel performance-alerts if a test fails more than 3 days in a row.
+- *perfRerunOnFail will activate 1 rerun of a failed test which will start a new stage on the pipeline test.
+
+The above features utilise 2 reusable functions:
+- performanceCheckIfTestFailed({Slack channel name}) - This alerts a slack channel of 3 or more fails in a row.
+- sendSlackMessage({user}, {colour}, {body})
+- *user is the slack channel
+- *colour can be warning or danger
+- *body is any text
 
 ## Performance Testing with Dynatrace and Gatling
 
@@ -937,6 +954,9 @@ Java 11 is installed on the Jenkins agent.
 ### Node.JS
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
 
+### Python
+[uv](https://docs.astral.sh/uv/) is used for package management. Place a `.python-version` file at the root of your repo containing the Python version you want (e.g. `3.13`). The pipeline enforces the use of supported Python versions — currently `3.13`. The `.python-version` file is also read by uv locally.
+
 ### Terraform
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
 
@@ -1090,10 +1110,17 @@ This file calls a class named [TerraformInfraApprovals](https://github.com/hmcts
 
 This file will point to the repository which defines, in json syntax, which infrastructure resources and modules are approved for use at the [global](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/global.json) and [project](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/bulk-scan-shared-infrastructure.json) level.
 
+## Library Controls
+
+Whilst we transition to v2.0.0 of this library, controls have been added to allowlist branches of this library to be used within HMCTS.
+
+Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail.
+
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+ 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+ 3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```

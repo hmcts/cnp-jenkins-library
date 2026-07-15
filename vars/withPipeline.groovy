@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.contino.PythonPipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -16,6 +17,7 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, String product, String component, Closure body) {
 
@@ -29,7 +31,8 @@ def call(type, String product, String component, Closure body) {
     java  : new SpringBootPipelineType(this, product, component),
     nodejs: new NodePipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
-    ruby: new RubyPipelineType(this, product, component)
+    ruby: new RubyPipelineType(this, product, component),
+    python: new PythonPipelineType(this, product, component)
   ]
 
   Subscription subscription = new Subscription(env)
@@ -67,11 +70,18 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
+          if (!libraryBranchAllowed) {
+            currentBuild.result = "FAILURE"
+            return
+          }
+
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -129,6 +139,7 @@ def call(type, String product, String component, Closure body) {
               )
             }
           } // end approvedDeploymentRepository
+
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'

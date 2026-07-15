@@ -25,17 +25,35 @@ def call(String repoUrl = null) {
         }
 
         patterns.each { pattern ->
-            try {
-                sh """
+            int status = sh(
+                script: """
                 chmod +x check-old-library-version.sh
                 ./check-old-library-version.sh '${pattern}' '${deprecation.version}' '${deprecation.date_deadline}'
-                """
-            } catch(ignored) {
-                WarningCollector.addPipelineWarning(
-                    "old_library_version",
-                    "Your code references the old library version (${pattern}). Please update your Jenkinsfile to use the new library version: *${deprecation.version}*", 
-                    LocalDate.parse(deprecation.date_deadline)
-                )
+                """,
+                returnStatus: true
+            )
+
+            if (status != 0) {
+                String warningMessage = """Your Jenkinsfile references an old or unpinned Jenkins library version.
+
+Update it to use *Infrastructure@${deprecation.version}*, then check the migration guide and rollout tracker before raising a PR. Some repositories also need Key Vault or PostgreSQL module changes as part of this migration.
+
+Migration guide: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973509936/Jenkins+Library+Migration+Guide
+
+Rollout tracker: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973305638/Migration+rollout+tracker"""
+                LocalDate deprecationDate = LocalDate.parse(deprecation.date_deadline)
+
+                "Old library version detected. Update to Infrastructure@${deprecation.version}."
+
+                try {
+                    WarningCollector.addPipelineWarning(
+                        "old_library_version",
+                        warningMessage,
+                        deprecationDate
+                    )
+                } catch (RuntimeException ignored) {
+                    echo "${warningMessage} This change is enforced from ${deprecationDate.format(WarningCollector.DATE_FORMATTER)}"
+                }
             }
         }
     }
