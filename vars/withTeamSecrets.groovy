@@ -135,7 +135,7 @@ private List<String> readLegacyKeyVaultSecrets(List<Map<String, Object>> secrets
 }
 
 private boolean shouldRetryWithLegacySecretReader(String azureConfigName, String vaultName) {
-  return azureConfigName == 'preview' && vaultName ==~ /.*-aat$/
+  return azureConfigName == 'preview' && vaultName.tokenize('-').contains('aat')
 }
 
 private void loginWithManagedIdentity(String azureConfigDir) {
