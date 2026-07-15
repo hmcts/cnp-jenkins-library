@@ -21,3 +21,9 @@ branches:
     allowed: true
   - name: DTSPO-30107-jenkins-agents-2
     allowed: true
+  - name: DTSPO-30107-jenkins-agents-3
+    allowed: true
+  - name: poll_for_helm
+    allowed: true
+  - name: DTSPO-33489/disable-sonar-scan
+    allowed: true
