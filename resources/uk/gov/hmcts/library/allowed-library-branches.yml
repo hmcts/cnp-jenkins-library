@@ -25,3 +25,5 @@ branches:
     allowed: true
   - name: poll_for_helm
     allowed: true
+  - name: DTSPO-33489/disable-sonar-scan
+    allowed: true
