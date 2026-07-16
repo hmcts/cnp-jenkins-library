@@ -465,6 +465,15 @@ EOF
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
 
+    def statusCodeJava25 = steps.sh(script: """
+      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(25)" {} + > /dev/null
+      """, returnStatus: true)
+    if (statusCodeJava25 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-25-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
     localSteps.sh "java -version"
     nagAboutOldNodeJSVersions()
   }
