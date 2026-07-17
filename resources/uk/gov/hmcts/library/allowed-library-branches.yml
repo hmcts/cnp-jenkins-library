@@ -27,3 +27,5 @@ branches:
     allowed: true
   - name: DTSPO-33489/disable-sonar-scan
     allowed: true
+  - name: DTSPO-31434-java-25
+    allowed: true
