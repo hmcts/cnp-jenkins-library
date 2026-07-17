@@ -16,7 +16,7 @@ interface JenkinsStepMock {
   String libraryResource(String)
   Object writeFile(Map)
   Object withCredentials(ArrayList, Closure)
-  Object withAzureKeyvault(ArrayList, Closure)
+  Object withAzureKeyvault(Object, Closure)
   Object httpRequest(LinkedHashMap)
 
   Object ansiColor(String, Closure)
@@ -37,5 +37,3 @@ interface JenkinsStepMock {
 
   void azureCosmosDBCreateDocument(LinkedHashMap)
 }
-
-

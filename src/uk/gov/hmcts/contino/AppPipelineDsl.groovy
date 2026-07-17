@@ -66,6 +66,25 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.securityScan = true
   }
 
+  void enableCveDashboardIngestion(String vaultName = "", List<String> publishingBranches = ["master"]) {
+    config.cveDashboardIngestion = true
+    config.cveDashboardVaultName = ""
+    config.cveDashboardIngestionBranches = normaliseCveDashboardBranches(publishingBranches)
+  }
+
+  void enableCveDashboardIngestion(List<String> publishingBranches) {
+    enableCveDashboardIngestion("", publishingBranches)
+  }
+
+  private static List<String> normaliseCveDashboardBranches(List<String> publishingBranches) {
+    def branches = (publishingBranches ?: [])
+      .collect { it?.toString()?.trim() }
+      .findAll { it }
+      .unique()
+
+    branches ?: ["master"]
+  }
+
   void enableFullFunctionalTest(int timeout = 30) {
     config.fullFunctionalTestTimeout = timeout
     config.fullFunctionalTest = true
