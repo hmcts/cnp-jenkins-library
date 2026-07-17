@@ -135,6 +135,8 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
       assertThat(args.excludes as String).contains('.yarn_dependencies_installed')
       assertThat(args.excludes as String).doesNotContain('.yarn/cache/**')
       assertThat(args.excludes as String).contains('.yarn/install-state.gz')
+      assertThat(args.excludes as String).contains('vendor/bundle/**')
+      assertThat(args.excludes as String).contains('.bundle/cache/**')
     }
   }
 
