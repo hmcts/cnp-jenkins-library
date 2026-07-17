@@ -1,5 +1,22 @@
 # Shared Jenkins Library for Code and Infrastructure pipelines
 
+## Table of Contents
+
+- [How is this used?](#how-is-this-used)
+- [Opinionated app pipeline](#opinionated-app-pipeline)
+- [Opinionated infrastructure pipeline](#opinionated-infrastructure-pipeline)
+- [Application specific infrastructure](#application-specific-infrastructure)
+- [Nightly pipeline](#nightly-pipeline)
+- [PR label behaviour](#pr-label-behaviour)
+- [Performance Testing with Dynatrace and Gatling](#performance-testing-with-dynatrace-and-gatling)
+- [Non-Deployable App](#non-deployable-app)
+- [Release on merge](#release-on-merge)
+- [Building and Testing](#building-and-testing)
+- [Tool versions](#tool-versions)
+- [Contract testing with Pact](#contract-testing-with-pact)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
 ## How is this used?
 Code in this library are loaded at runtime by Jenkins.
 Jenkins is already configured to point to this repository.
@@ -580,6 +597,41 @@ Some tests may require additional configuration - copy this from your `Jenkinsfi
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
+## PR label behaviour
+
+### `only_deploy`
+
+Add `only_deploy` to a PR when you want to deploy to preview quickly without running the full set of tests and checks.
+
+Behaviour:
+- Skips `Unit tests`, `Sonar scan`, `Fortify scan`, and `Pact tests`.
+- Leaves deployment in place by skipping Helm uninstall
+- Above tests must still pass to enable merge to master/main
+
+### `pr-values:<name>`
+
+Add labels in the format `pr-values:<name>` to include extra Helm values files during PR deployments.
+
+Behaviour:
+- For each matching label, the pipeline looks for:
+  - `charts/<product>-<component>/values.<name>.<environment>.template.yaml`
+- If found, it renders and includes that values file in the Helm install/upgrade for the PR deployment.
+
+Example:
+- Label: `pr-values:nightly`
+- File expected: `charts/product-component/values.nightly.preview.template.yaml`
+
+### PR labels
+The following labels do not require additional configuration and can be used to change pipeline behaviour.
+
+Label/Topic | Effect | Applies to
+--- | --- | ---
+`enable_keep_helm` | Keeps deployed Helm release/resources instead of uninstalling at end of PR run. | PR pipelines
+`only_deploy` | Skips tests and checks including unit, sonar, fortify, pact; keeps deployment up and intentionally fails to prevent merge. | PR pipelines
+`pr-values:<name>` | Includes `values.<name>.<environment>.template.yaml` in PR Helm deployment values when present. | PR pipelines
+`not-plan-on-prod` (label) | Skips extra Terraform plan against prod/base environment. | PR and infra PR pipelines
+`not-plan-on-prod` (repo topic) | Same as label above, applied repo-wide. | PR and infra PR pipelines
+
 ## Performance Testing extension for Smart Slack Alerts & Automatic Rerun on Fail
 Additional parameters have been added to enablePerformanceTest as follows:
 - enablePerformanceTest(timeout=30, perfGatlingAlerts=true, perfRerunOnFail=true)
@@ -856,7 +908,8 @@ withPipeline(type, product, component) {
 ```
 
 ## Release on merge
-You need to add `releaseOnMerge()` method in `withPipeline` to automatically trigger a release pipeline when changes are merged to master if the gradle version number has been updated.
+Add the `releaseOnMerge()` method in `withPipeline` to automatically create a GitHub Release on `master` if the gradle version number has been updated.
+
 
 ```groovy
 #!groovy
