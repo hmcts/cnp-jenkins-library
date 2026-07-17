@@ -465,8 +465,11 @@ EOF
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
 
+    // grep -q . guards against the `find -exec ... +` gotcha: with no build.gradle present
+    // find still exits 0, which would otherwise wrongly enter the Java 25 branch on pure
+    // yarn/frontend repos and fail at the temurin-25 lookup.
     def statusCodeJava25 = steps.sh(script: """
-      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(25)" {} + > /dev/null
+      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(25)" {} + | grep -q .
       """, returnStatus: true)
     if (statusCodeJava25 == 0) {
       def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-25-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
