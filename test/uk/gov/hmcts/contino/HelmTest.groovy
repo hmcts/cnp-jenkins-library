@@ -44,6 +44,17 @@ class HelmTest extends Specification {
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${SUBSCRIPTION}")})
   }
 
+  def "removeRepo() should use the registry environment variable without Groovy interpolation"() {
+    when:
+    helm.removeRepo()
+
+    then:
+    1 * steps.echo('Clear out helm repo before re-adding')
+    1 * steps.sh({it.get('label') == 'helm repo rm' &&
+      it.get('script') == 'helm repo rm "$REGISTRY_NAME" || echo "Helm repo may not exist on disk, skipping remove"' &&
+      !it.containsKey('env')})
+  }
+
   def "installOrUpgrade() on PR branch should execute without --wait flag and do manual wait"() {
     when:
     helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])
