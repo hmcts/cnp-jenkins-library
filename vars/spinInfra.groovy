@@ -153,14 +153,26 @@ def call(Map<String, ?> params) {
       }
       if (!config.tfPlanOnly) {
         stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
-          sh "terraform apply -auto-approve tfplan"
-          parseResult = null
-          try {
-            result = sh(script: "terraform output -json", returnStdout: true).trim()
-            parseResult = new JsonSlurperClassic().parseText(result)
-            log.info("returning parsed JSON terraform output: ${parseResult}")
-          } catch (err) {
-            log.info("terraform output command failed! ${err} Assuming there was no result...")
+          def maxAttempts = (config.terraformApplyRetry) ? (config.terraformApplyRetryCount ?: 2) : 1
+          def parseResult = null
+          for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+              sh "terraform apply -auto-approve tfplan"
+              try {
+                def result = sh(script: "terraform output -json", returnStdout: true).trim()
+                parseResult = new JsonSlurperClassic().parseText(result)
+                log.info("returning parsed JSON terraform output: ${parseResult}")
+              } catch (err) {
+                log.info("terraform output command failed! ${err} Assuming there was no result...")
+              }
+              break
+            } catch (applyErr) {
+              if (attempt < maxAttempts) {
+                echo "Terraform apply failed on attempt ${attempt} of ${maxAttempts}: ${applyErr}. Retrying..."
+              } else {
+                throw applyErr
+              }
+            }
           }
           return parseResult
         }
