@@ -1,5 +1,13 @@
+import com.cloudbees.groovy.cps.NonCPS
 import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor
 import uk.gov.hmcts.contino.Environment
+
+@NonCPS
+boolean isTriggeredByTimer() {
+  return currentBuild.rawBuild.getCauses().any {
+    it.getClass().getName().contains('TimerTriggerCause')
+  }
+}
 
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
@@ -84,10 +92,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     if (config.performanceTest) {
 
       //Check if build started by chron job
-      def causes = currentBuild.rawBuild?.getCauses() ?: []
-      def triggeredByTimer = causes.any { cause ->
-        cause.getClass().getSimpleName() == "TimerTriggerCause"
-      }
+      boolean triggeredByTimer = isTriggeredByTimer()
 
       boolean doSecondRun = false //This is set to true if first
       def stages = ['Performance test', 'Failed Test Rerun']
