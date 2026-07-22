@@ -9,6 +9,7 @@ interface JenkinsStepMock {
   HashMap getCurrentBuild()
 
   Object sh(String)
+  Object sleep(Integer seconds)
   Object echo(String)
   Object error(String)
   Object git(Map params)
