@@ -154,6 +154,10 @@ def call(type, String product, String component, Closure body) {
           throw err
         } finally {
           notifyPipelineDeprecations(slackChannel, metricsPublisher)
+          if (env.BUILD_ARCHIVE_JOB) {
+            archiveBuildOutputs()
+            queueBuildArchive(product: product, component: component)
+          }
           if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
             deleteDir()
           }

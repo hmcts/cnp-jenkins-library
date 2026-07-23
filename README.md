@@ -1177,3 +1177,45 @@ Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allow
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
+
+## Completed build archives
+
+The application pipeline can queue a separate Jenkins job to copy completed build
+records to Azure Blob Storage. This is disabled unless the global
+`BUILD_ARCHIVE_JOB` environment variable names the archive job.
+
+Before queuing the archive job, `withPipeline` adds common Gradle, Playwright,
+functional-test and pod-log outputs to the source build's Jenkins artifacts. The
+archive job must call `archiveCompletedBuild` with the parameters passed by
+`queueBuildArchive`:
+
+```groovy
+@Library('Infrastructure') _
+
+archiveCompletedBuild(
+  sourceBuildUrl: params.SOURCE_BUILD_URL,
+  sourceJobName: params.SOURCE_JOB_NAME,
+  sourceBuildNumber: params.SOURCE_BUILD_NUMBER,
+  sourceBuildResult: params.SOURCE_BUILD_RESULT,
+  sourceProduct: params.SOURCE_PRODUCT,
+  sourceComponent: params.SOURCE_COMPONENT
+)
+```
+
+The archive job waits for the source build to finish, then captures its complete
+console output, build metadata, test-result metadata and artifact ZIP. It uploads
+the resulting directory using the existing `azureBlobUpload` step.
+
+The following global environment variables configure the archive:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BUILD_ARCHIVE_JOB` | disabled | Full name of the archive Jenkins job |
+| `BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID` | required | Jenkins API credential |
+| `BUILD_ARCHIVE_JENKINS_API_URL` | `JENKINS_URL` | Optional controller-internal base URL |
+| `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `DCD-CFT-Sandbox` | Azure subscription |
+| `BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID` | `buildlog-storage-account` | Storage credential |
+| `BUILD_ARCHIVE_STORAGE_CONTAINER` | `jenkins-build-archive` | Blob container |
+| `BUILD_ARCHIVE_STORAGE_PREFIX` | `builds` | Path below the container |
+| `BUILD_ARCHIVE_AGENT` | any agent | Label used by the archive job |
+| `BUILD_ARCHIVE_LOCAL_ONLY` | `false` | Archive back to Jenkins instead of Azure for local testing |
