@@ -35,8 +35,8 @@ def call(type, product, component, timeout = 300, Closure body) {
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
+  callbacks.registerAfterAll { stage, stageDurationMillis ->
+    metricsPublisher.publish(stage, stageDurationMillis)
   }
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
