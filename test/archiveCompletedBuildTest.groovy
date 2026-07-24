@@ -124,6 +124,26 @@ class archiveCompletedBuildTest extends BasePipelineTest {
   }
 
   @Test
+  void uploadsToTheSandboxStorageSubscriptionByDefault() {
+    binding.getVariable('env').BUILD_ARCHIVE_LOCAL_ONLY = 'false'
+    binding.getVariable('env').BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID = 'jenkins-api'
+
+    script.call(
+      sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
+      sourceJobName: 'service/PR-1',
+      sourceBuildNumber: '4'
+    )
+
+    assertThat(uploads).hasSize(1)
+    assertThat(uploads[0]*.toString()).containsExactly(
+      'sandbox',
+      'buildlog-storage-account',
+      'completed-build_4_SUCCESS',
+      'jenkins-build-archive/builds/service/PR-1/completed-build_4_SUCCESS'
+    )
+  }
+
+  @Test
   void rejectsBuildUrlsOutsideTheConfiguredJenkins() {
     try {
       script.call(
@@ -137,5 +157,50 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     }
 
     throw new AssertionError('Expected an invalid build URL to be rejected')
+  }
+
+  @Test
+  void rejectsNonNumericBuildNumbers() {
+    assertInvalidBuildIdentity(
+      sourceBuildUrl: 'https://build.example/job/service/4/',
+      sourceJobName: 'service',
+      sourceBuildNumber: '../4',
+      expectedMessage: 'invalid Jenkins build number'
+    )
+  }
+
+  @Test
+  void rejectsBuildNumbersThatDoNotMatchTheBuildUrl() {
+    assertInvalidBuildIdentity(
+      sourceBuildUrl: 'https://build.example/job/service/4/',
+      sourceJobName: 'service',
+      sourceBuildNumber: '5',
+      expectedMessage: 'mismatched Jenkins build details'
+    )
+  }
+
+  @Test
+  void rejectsUnsafeJobPathSegments() {
+    assertInvalidBuildIdentity(
+      sourceBuildUrl: 'https://build.example/job/service/4/',
+      sourceJobName: '../service',
+      sourceBuildNumber: '4',
+      expectedMessage: 'invalid Jenkins job name'
+    )
+  }
+
+  private void assertInvalidBuildIdentity(Map params) {
+    try {
+      script.call(
+        sourceBuildUrl: params.sourceBuildUrl,
+        sourceJobName: params.sourceJobName,
+        sourceBuildNumber: params.sourceBuildNumber
+      )
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.message).contains(params.expectedMessage)
+      return
+    }
+
+    throw new AssertionError("Expected build archive validation to reject ${params}")
   }
 }

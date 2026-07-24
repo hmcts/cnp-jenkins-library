@@ -1215,7 +1215,7 @@ The following global environment variables configure the archive:
 | --- | --- | --- |
 | `BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID` | required | Jenkins API credential |
 | `BUILD_ARCHIVE_JENKINS_API_URL` | `JENKINS_URL` | Optional controller-internal base URL |
-| `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `DCD-CFT-Sandbox` | Azure subscription |
+| `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `sandbox` | Azure subscription alias |
 | `BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID` | `buildlog-storage-account` | Storage credential |
 | `BUILD_ARCHIVE_STORAGE_CONTAINER` | `jenkins-build-archive` | Blob container |
 | `BUILD_ARCHIVE_STORAGE_PREFIX` | `builds` | Path below the container |

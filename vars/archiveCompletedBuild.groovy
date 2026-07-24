@@ -10,9 +10,10 @@ def call(Map params = [:]) {
   }
 
   validateBuildUrl(sourceBuildUrl)
+  validateBuildIdentity(sourceBuildUrl, sourceJobName, sourceBuildNumber)
 
   def buildApiUrl = apiBuildUrl(sourceBuildUrl)
-  def storageSubscription = params.storageSubscription ?: env.BUILD_ARCHIVE_STORAGE_SUBSCRIPTION ?: 'DCD-CFT-Sandbox'
+  def storageSubscription = params.storageSubscription ?: env.BUILD_ARCHIVE_STORAGE_SUBSCRIPTION ?: 'sandbox'
   def storageCredentialsId = params.storageCredentialsId ?: env.BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID ?: 'buildlog-storage-account'
   def storageContainer = params.storageContainer ?: env.BUILD_ARCHIVE_STORAGE_CONTAINER ?: 'jenkins-build-archive'
   def storagePrefix = params.storagePrefix ?: env.BUILD_ARCHIVE_STORAGE_PREFIX ?: 'builds'
@@ -214,6 +215,22 @@ private void validateBuildUrl(String sourceBuildUrl) {
   def jenkinsUrl = env.JENKINS_URL
   if (!jenkinsUrl || !sourceBuildUrl.startsWith(jenkinsUrl) || !(sourceBuildUrl ==~ /https?:\/\/[^\/]+\/job\/.+\/\d+\/$/)) {
     error("Refusing to archive an invalid Jenkins build URL: ${sourceBuildUrl}")
+  }
+}
+
+private void validateBuildIdentity(String sourceBuildUrl, String sourceJobName, String sourceBuildNumber) {
+  if (!(sourceBuildNumber ==~ /\d+/)) {
+    error("Refusing to archive an invalid Jenkins build number: ${sourceBuildNumber}")
+  }
+
+  def buildNumberFromUrl = (sourceBuildUrl =~ /\/(\d+)\/$/)[0][1]
+  if (buildNumberFromUrl != sourceBuildNumber) {
+    error("Refusing to archive mismatched Jenkins build details")
+  }
+
+  def jobSegments = sourceJobName.split('/', -1)
+  if (jobSegments.any { segment -> !segment || segment in ['.', '..'] }) {
+    error("Refusing to archive an invalid Jenkins job name: ${sourceJobName}")
   }
 }
 
