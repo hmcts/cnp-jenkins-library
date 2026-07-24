@@ -1181,13 +1181,13 @@ Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allow
 ## Completed build archives
 
 The application pipeline can queue a separate Jenkins job to copy completed build
-records to Azure Blob Storage. This is disabled unless the global
-`BUILD_ARCHIVE_JOB` environment variable names the archive job.
+records to Azure Blob Storage for PR, master and nightly builds. Every build
+queues the root Jenkins job named `Archive Completed Builds`.
 
-Before queuing the archive job, `withPipeline` adds common Gradle, Playwright,
-functional-test and pod-log outputs to the source build's Jenkins artifacts. The
-archive job must call `archiveCompletedBuild` with the parameters passed by
-`queueBuildArchive`:
+Before queuing the archive job, the application and nightly pipelines add common
+Gradle, Playwright, functional-test and pod-log outputs to the source build's
+Jenkins artifacts. The archive job must call `archiveCompletedBuild` with the
+parameters passed by `queueBuildArchive`:
 
 ```groovy
 @Library('Infrastructure') _
@@ -1204,13 +1204,15 @@ archiveCompletedBuild(
 
 The archive job waits for the source build to finish, then captures its complete
 console output, build metadata, test-result metadata and artifact ZIP. It uploads
-the resulting directory using the existing `azureBlobUpload` step.
+the resulting directory using the existing `azureBlobUpload` step. Archive names
+include the final outcome and, when Jenkins reports one, the failed stage, for
+example `completed-build_42_SUCCESS` or
+`completed-build_43_FAILURE_Deploy_to_AKS`.
 
 The following global environment variables configure the archive:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `BUILD_ARCHIVE_JOB` | disabled | Full name of the archive Jenkins job |
 | `BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID` | required | Jenkins API credential |
 | `BUILD_ARCHIVE_JENKINS_API_URL` | `JENKINS_URL` | Optional controller-internal base URL |
 | `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `DCD-CFT-Sandbox` | Azure subscription |

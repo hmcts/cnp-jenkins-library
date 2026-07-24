@@ -12,6 +12,8 @@ class archiveCompletedBuildTest extends BasePipelineTest {
   def uploads = []
   def writes = [:]
   def metadataChecks = 0
+  def buildResult = 'SUCCESS'
+  def workflowStages = []
   def script
 
   @Override
@@ -41,7 +43,14 @@ class archiveCompletedBuildTest extends BasePipelineTest {
           status: 200,
           content: metadataChecks == 1
             ? '{"building":true}'
-            : '{"building":false,"result":"SUCCESS"}'
+            : """{"building":false,"result":"${buildResult}"}"""
+        ]
+      }
+
+      if (request.url.endsWith('/wfapi/describe')) {
+        return [
+          status: 200,
+          content: groovy.json.JsonOutput.toJson([stages: workflowStages])
         ]
       }
 
@@ -86,8 +95,32 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     assertThat(writes['build.json'].toString()).contains('"result":"SUCCESS"')
     assertThat(writes['archive-metadata.json'].sourceJobName).isEqualTo('service/PR-1')
     assertThat(writes['archive-metadata.json'].archivedAt).isEqualTo('2026-07-23T14:30:00Z')
-    assertThat(archived.artifacts.toString()).isEqualTo('completed-build-4/**')
+    assertThat(archived.artifacts.toString()).isEqualTo('completed-build_4_SUCCESS/**')
     assertThat(uploads).isEmpty()
+  }
+
+  @Test
+  void includesTheOutcomeAndFailedStageInTheArchiveName() {
+    buildResult = 'FAILURE'
+    workflowStages = [
+      [name: 'Build and test', status: 'SUCCESS'],
+      [name: 'Deploy to AKS / Preview', status: 'FAILED']
+    ]
+
+    script.call(
+      sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
+      sourceJobName: 'service/PR-1',
+      sourceBuildNumber: '4',
+      sourceBuildResult: 'SUCCESS',
+      sourceProduct: 'et',
+      sourceComponent: 'cos'
+    )
+
+    assertThat(archived.artifacts.toString())
+      .isEqualTo('completed-build_4_FAILURE_Deploy_to_AKS_Preview/**')
+    assertThat(writes['archive-metadata.json'].sourceBuildResult).isEqualTo('FAILURE')
+    assertThat(writes['archive-metadata.json'].failedStage).isEqualTo('Deploy to AKS / Preview')
+    assertThat(writes['workflow.json'].stages[1].status).isEqualTo('FAILED')
   }
 
   @Test

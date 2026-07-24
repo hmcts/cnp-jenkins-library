@@ -1,9 +1,5 @@
 def call(Map params = [:]) {
-  def archiveJob = env.BUILD_ARCHIVE_JOB
-
-  if (!archiveJob) {
-    return
-  }
+  def archiveJob = 'Archive Completed Builds'
 
   if (env.JOB_NAME == archiveJob) {
     echo "Skipping build archive trigger for the archive job itself"

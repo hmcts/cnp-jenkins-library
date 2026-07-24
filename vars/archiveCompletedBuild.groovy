@@ -16,16 +16,22 @@ def call(Map params = [:]) {
   def storageCredentialsId = params.storageCredentialsId ?: env.BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID ?: 'buildlog-storage-account'
   def storageContainer = params.storageContainer ?: env.BUILD_ARCHIVE_STORAGE_CONTAINER ?: 'jenkins-build-archive'
   def storagePrefix = params.storagePrefix ?: env.BUILD_ARCHIVE_STORAGE_PREFIX ?: 'builds'
-  def archiveDirectory = "completed-build-${sourceBuildNumber}"
-  def destination = "${storageContainer}/${storagePrefix}/${safeJobPath(sourceJobName)}/${sourceBuildNumber}"
 
   node(env.BUILD_ARCHIVE_AGENT ?: '') {
     try {
       deleteDir()
 
       def buildMetadata = waitForBuildCompletion(buildApiUrl, jenkinsCredentialsId)
+      def buildDetails = readJSON(text: buildMetadata)
+      def buildResult = (buildDetails.result ?: params.sourceBuildResult ?: 'UNKNOWN').toString().toUpperCase()
+      def workflowMetadata = buildResult == 'SUCCESS'
+        ? null
+        : getWorkflowMetadata(buildApiUrl, jenkinsCredentialsId)
+      def failedStage = findFailedStage(workflowMetadata)
+      def archiveName = archiveName(sourceBuildNumber, buildResult, failedStage)
+      def destination = "${storageContainer}/${storagePrefix}/${safeJobPath(sourceJobName)}/${archiveName}"
 
-      dir(archiveDirectory) {
+      dir(archiveName) {
         writeFile(file: 'build.json', text: buildMetadata)
 
         downloadRequired(
@@ -46,13 +52,22 @@ def call(Map params = [:]) {
           jenkinsCredentialsId
         )
 
+        if (workflowMetadata) {
+          writeJSON(
+            file: 'workflow.json',
+            json: workflowMetadata,
+            pretty: 2
+          )
+        }
+
         writeJSON(
           file: 'archive-metadata.json',
           json: [
             sourceBuildUrl: sourceBuildUrl,
             sourceJobName: sourceJobName,
             sourceBuildNumber: sourceBuildNumber,
-            sourceBuildResult: params.sourceBuildResult ?: '',
+            sourceBuildResult: buildResult,
+            failedStage: failedStage ?: '',
             sourceProduct: params.sourceProduct ?: '',
             sourceComponent: params.sourceComponent ?: '',
             archivedAt: sh(
@@ -67,14 +82,14 @@ def call(Map params = [:]) {
       if (localOnly) {
         archiveArtifacts(
           allowEmptyArchive: false,
-          artifacts: "${archiveDirectory}/**"
+          artifacts: "${archiveName}/**"
         )
         echo "Archived ${sourceJobName} #${sourceBuildNumber} in the local Jenkins archive"
       } else {
         azureBlobUpload(
           storageSubscription,
           storageCredentialsId,
-          archiveDirectory,
+          archiveName,
           destination
         )
         echo "Archived ${sourceJobName} #${sourceBuildNumber} to ${destination}"
@@ -83,6 +98,47 @@ def call(Map params = [:]) {
       deleteDir()
     }
   }
+}
+
+private Map getWorkflowMetadata(String sourceBuildUrl, String credentialsId) {
+  try {
+    def request = [
+      httpMode: 'GET',
+      quiet: true,
+      url: "${sourceBuildUrl}wfapi/describe",
+      validResponseCodes: '200,404'
+    ]
+    addAuthentication(request, credentialsId)
+    def response = httpRequest(request)
+
+    response.status == 200 ? readJSON(text: response.content) as Map : null
+  } catch (err) {
+    echo "Unable to determine failed build stage: ${err.message}"
+    null
+  }
+}
+
+private String findFailedStage(Map workflowMetadata) {
+  def failedStage = workflowMetadata?.stages?.find { stage ->
+    stage.status?.toString()?.toUpperCase() in ['FAILED', 'FAILURE', 'UNSTABLE', 'ABORTED']
+  }
+
+  failedStage?.name?.toString()
+}
+
+private String archiveName(String buildNumber, String buildResult, String failedStage) {
+  def parts = ['completed-build', safeFileNamePart(buildNumber), safeFileNamePart(buildResult)]
+  if (failedStage) {
+    parts << safeFileNamePart(failedStage)
+  }
+  parts.join('_')
+}
+
+private String safeFileNamePart(String value) {
+  value
+    .replaceAll(/[^A-Za-z0-9.-]+/, '_')
+    .replaceAll(/^_+|_+$/, '')
+    .take(100) ?: 'unknown'
 }
 
 private String waitForBuildCompletion(String sourceBuildUrl, String credentialsId) {

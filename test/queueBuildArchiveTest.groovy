@@ -14,7 +14,6 @@ class queueBuildArchiveTest extends BasePipelineTest {
   void setUp() {
     super.setUp()
     binding.setVariable('env', [
-      BUILD_ARCHIVE_JOB: 'platform/build-archive',
       BUILD_URL: 'https://build.example/job/service/job/PR-1/4/',
       JOB_NAME: 'service/PR-1',
       BUILD_NUMBER: '4'
@@ -30,7 +29,7 @@ class queueBuildArchiveTest extends BasePipelineTest {
   void queuesTheConfiguredArchiveJobWithoutWaiting() {
     script.call(product: 'et', component: 'cos')
 
-    assertThat(queuedBuild.job).isEqualTo('platform/build-archive')
+    assertThat(queuedBuild.job).isEqualTo('Archive Completed Builds')
     assertThat(queuedBuild.wait).isFalse()
     assertThat(queuedBuild.propagate).isFalse()
     assertThat(parameter('SOURCE_BUILD_URL')).isEqualTo('https://build.example/job/service/job/PR-1/4/')
@@ -39,15 +38,6 @@ class queueBuildArchiveTest extends BasePipelineTest {
     assertThat(parameter('SOURCE_BUILD_RESULT')).isEqualTo('FAILURE')
     assertThat(parameter('SOURCE_PRODUCT')).isEqualTo('et')
     assertThat(parameter('SOURCE_COMPONENT')).isEqualTo('cos')
-  }
-
-  @Test
-  void doesNothingWhenArchivingIsNotConfigured() {
-    binding.getVariable('env').BUILD_ARCHIVE_JOB = ''
-
-    script.call(product: 'et', component: 'cos')
-
-    assertThat(queuedBuild).isNull()
   }
 
   @Test
