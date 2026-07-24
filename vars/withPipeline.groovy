@@ -18,6 +18,7 @@ import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.LibraryBranchControls
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 def call(type, String product, String component, Closure body) {
 
@@ -140,6 +141,9 @@ def call(type, String product, String component, Closure body) {
             }
           } // end approvedDeploymentRepository
 
+        } catch (FlowInterruptedException err) {
+          currentBuild.result = err.result.toString()
+          throw err
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
             currentBuild.result = 'ABORTED'

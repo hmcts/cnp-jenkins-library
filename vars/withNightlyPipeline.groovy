@@ -12,6 +12,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.LibraryBranchControls
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 def call(type, product, component, timeout = 300, Closure body) {
 
@@ -84,6 +85,9 @@ def call(type, product, component, timeout = 300, Closure body) {
           }
         }
         assert  pipelineType!= null
+      } catch (FlowInterruptedException err) {
+        currentBuild.result = err.result.toString()
+        throw err
       } catch (err) {
         currentBuild.result = "FAILURE"
         notifyBuildFailure channel: slackChannel

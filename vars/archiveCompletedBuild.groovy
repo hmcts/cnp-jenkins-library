@@ -30,7 +30,7 @@ def call(Map params = [:]) {
         : getWorkflowMetadata(buildApiUrl, jenkinsCredentialsId)
       def failedStage = findFailedStage(workflowMetadata)
       def archiveName = archiveName(sourceBuildNumber, buildResult, failedStage)
-      def destination = "${storageContainer}/${storagePrefix}/${safeJobPath(sourceJobName)}/${archiveName}"
+      def destination = "${storageContainer}/${storagePrefix}/${safeJobPath(sourceJobName)}"
 
       dir(archiveName) {
         writeFile(file: 'build.json', text: buildMetadata)

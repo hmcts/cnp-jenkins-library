@@ -139,7 +139,7 @@ class archiveCompletedBuildTest extends BasePipelineTest {
       'sandbox',
       'buildlog-storage-account',
       'completed-build_4_SUCCESS',
-      'jenkins-build-archive/builds/service/PR-1/completed-build_4_SUCCESS'
+      'jenkins-build-archive/builds/service/PR-1'
     )
   }
 
