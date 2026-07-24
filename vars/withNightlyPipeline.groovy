@@ -93,8 +93,10 @@ def call(type, product, component, timeout = 300, Closure body) {
         throw err
       } finally {
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
-        archiveBuildOutputs()
-        queueBuildArchive(product: product, component: component)
+        if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+          archiveBuildOutputs()
+          queueBuildArchive(product: product, component: component)
+        }
         deleteDir()
       }
 

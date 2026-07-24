@@ -41,6 +41,15 @@ class queueBuildArchiveTest extends BasePipelineTest {
   }
 
   @Test
+  void ignoresSuccessfulBuilds() {
+    binding.getVariable('currentBuild').result = 'SUCCESS'
+
+    script.call(product: 'et', component: 'cos')
+
+    assertThat(queuedBuild).isNull()
+  }
+
+  @Test
   void doesNothingWhenTheBuildUrlIsUnavailable() {
     binding.getVariable('env').BUILD_URL = ''
 
