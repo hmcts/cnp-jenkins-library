@@ -1177,3 +1177,51 @@ Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allow
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
+
+## Completed build archives
+
+The application pipeline can queue a separate Jenkins job to copy failed build
+records to Azure Blob Storage for PR, master and nightly builds. Successful,
+unstable and aborted builds are ignored. Every failed build queues the root
+Jenkins job named `Archive Completed Builds` after any agent retries are
+exhausted.
+
+Before queuing the archive job, the application and nightly pipelines add common
+Gradle, Playwright, functional-test and pod-log outputs to the source build's
+Jenkins artifacts. The archive job must call `archiveCompletedBuild` with the
+parameters passed by `queueBuildArchive`:
+
+```groovy
+@Library('Infrastructure') _
+
+archiveCompletedBuild(
+  sourceBuildUrl: params.SOURCE_BUILD_URL,
+  sourceJobName: params.SOURCE_JOB_NAME,
+  sourceBuildNumber: params.SOURCE_BUILD_NUMBER,
+  sourceBuildResult: params.SOURCE_BUILD_RESULT,
+  sourceProduct: params.SOURCE_PRODUCT,
+  sourceComponent: params.SOURCE_COMPONENT
+)
+```
+
+The archive job waits for the source build to finish, then captures its complete
+console output, build metadata, test-result metadata and artifact ZIP. It uploads
+the resulting directory using the existing `azureBlobUpload` step. Archive names
+include the final outcome and, when Jenkins reports one, the failed stage, for
+example `completed-build_43_FAILURE_Deploy_to_AKS`.
+
+The following global environment variables configure the archive:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID` | required | Jenkins API credential |
+| `BUILD_ARCHIVE_JENKINS_API_URL` | `JENKINS_URL` | Optional controller-internal base URL |
+| `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `sandbox` | Azure subscription alias |
+| `BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID` | `buildlog-storage-account` | Storage credential |
+| `BUILD_ARCHIVE_STORAGE_CONTAINER` | `jenkins-build-archive` | Blob container |
+| `BUILD_ARCHIVE_STORAGE_PREFIX` | `builds` | Path below the container |
+| `BUILD_ARCHIVE_AGENT` | any agent | Label used by the archive job |
+| `BUILD_ARCHIVE_LOCAL_ONLY` | `false` | Archive back to Jenkins instead of Azure for local testing |
+| `BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES` | `300` | Maximum wait for the source build to finish |
+| `BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES` | `120` | Maximum time for capture and upload |
+| `BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS` | `1800` | Timeout for each Jenkins API request |
