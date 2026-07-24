@@ -1,3 +1,5 @@
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+
 def call() {
   try {
     archiveArtifacts(
@@ -14,6 +16,8 @@ def call() {
         'pods-logs-*/**'
       ].join(',')
     )
+  } catch (FlowInterruptedException err) {
+    throw err
   } catch (err) {
     echo "Unable to archive build outputs: ${err.message}"
   }

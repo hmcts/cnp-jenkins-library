@@ -1183,7 +1183,8 @@ Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allow
 The application pipeline can queue a separate Jenkins job to copy failed build
 records to Azure Blob Storage for PR, master and nightly builds. Successful,
 unstable and aborted builds are ignored. Every failed build queues the root
-Jenkins job named `Archive Completed Builds`.
+Jenkins job named `Archive Completed Builds` after any agent retries are
+exhausted.
 
 Before queuing the archive job, the application and nightly pipelines add common
 Gradle, Playwright, functional-test and pod-log outputs to the source build's
@@ -1221,3 +1222,6 @@ The following global environment variables configure the archive:
 | `BUILD_ARCHIVE_STORAGE_PREFIX` | `builds` | Path below the container |
 | `BUILD_ARCHIVE_AGENT` | any agent | Label used by the archive job |
 | `BUILD_ARCHIVE_LOCAL_ONLY` | `false` | Archive back to Jenkins instead of Azure for local testing |
+| `BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES` | `300` | Maximum wait for the source build to finish |
+| `BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES` | `120` | Maximum time for capture and upload |
+| `BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS` | `1800` | Timeout for each Jenkins API request |

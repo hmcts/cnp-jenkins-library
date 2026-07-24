@@ -1,4 +1,6 @@
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import hudson.model.Result
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.junit.Before
 import org.junit.Test
 import groovy.json.JsonSlurperClassic
@@ -9,11 +11,14 @@ class archiveCompletedBuildTest extends BasePipelineTest {
 
   def archived
   def downloads = []
+  def requests = []
+  def timeouts = []
   def uploads = []
   def writes = [:]
   def metadataChecks = 0
-  def buildResult = 'SUCCESS'
+  def buildResult = 'FAILURE'
   def workflowStages = []
+  def workflowFailure
   def script
 
   @Override
@@ -30,13 +35,17 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     helper.registerAllowedMethod('node', [String.class, Closure.class], { _, body -> body.call() })
     helper.registerAllowedMethod('deleteDir', [], {})
     helper.registerAllowedMethod('dir', [String.class, Closure.class], { _, body -> body.call() })
-    helper.registerAllowedMethod('timeout', [Map.class, Closure.class], { _, body -> body.call() })
+    helper.registerAllowedMethod('timeout', [Map.class, Closure.class], { options, body ->
+      timeouts << options
+      body.call()
+    })
     helper.registerAllowedMethod('waitUntil', [Map.class, Closure.class], { _, body ->
       while (!body.call()) {
         // Repeat until the mocked build reports completion.
       }
     })
     helper.registerAllowedMethod('httpRequest', [Map.class], { request ->
+      requests << request
       if (request.url.endsWith('/api/json') && !request.url.contains('testReport')) {
         metadataChecks++
         return [
@@ -48,6 +57,9 @@ class archiveCompletedBuildTest extends BasePipelineTest {
       }
 
       if (request.url.endsWith('/wfapi/describe')) {
+        if (workflowFailure) {
+          throw workflowFailure
+        }
         return [
           status: 200,
           content: groovy.json.JsonOutput.toJson([stages: workflowStages])
@@ -76,7 +88,11 @@ class archiveCompletedBuildTest extends BasePipelineTest {
   }
 
   @Test
-  void waitsForCompletionAndArchivesTheWholeBuildLocally() {
+  void streamsDownloadsAndAppliesConfiguredTimeouts() {
+    binding.getVariable('env').BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES = '301'
+    binding.getVariable('env').BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES = '121'
+    binding.getVariable('env').BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS = '1801'
+
     script.call(
       sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
       sourceJobName: 'service/PR-1',
@@ -92,10 +108,13 @@ class archiveCompletedBuildTest extends BasePipelineTest {
       'http://localhost:8080/job/service/job/PR-1/4/artifact/*zip*/archive.zip',
       'http://localhost:8080/job/service/job/PR-1/4/testReport/api/json'
     )
-    assertThat(writes['build.json'].toString()).contains('"result":"SUCCESS"')
+    assertThat(downloads*.responseHandle).containsOnly('NONE')
+    assertThat(requests*.timeout).containsOnly(1801)
+    assertThat(timeouts*.time).containsExactly(301, 121)
+    assertThat(writes['build.json'].toString()).contains('"result":"FAILURE"')
     assertThat(writes['archive-metadata.json'].sourceJobName).isEqualTo('service/PR-1')
     assertThat(writes['archive-metadata.json'].archivedAt).isEqualTo('2026-07-23T14:30:00Z')
-    assertThat(archived.artifacts.toString()).isEqualTo('completed-build_4_SUCCESS/**')
+    assertThat(archived.artifacts.toString()).isEqualTo('completed-build_4_FAILURE/**')
     assertThat(uploads).isEmpty()
   }
 
@@ -138,9 +157,43 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     assertThat(uploads[0]*.toString()).containsExactly(
       'sandbox',
       'buildlog-storage-account',
-      'completed-build_4_SUCCESS',
+      'completed-build_4_FAILURE',
       'jenkins-build-archive/builds/service/PR-1'
     )
+  }
+
+  @Test
+  void ignoresAnAbortedBuildAfterPollingItsFinalResult() {
+    buildResult = 'ABORTED'
+
+    script.call(
+      sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
+      sourceJobName: 'service/PR-1',
+      sourceBuildNumber: '4'
+    )
+
+    assertThat(downloads).isEmpty()
+    assertThat(uploads).isEmpty()
+    assertThat(archived).isNull()
+  }
+
+  @Test
+  void preservesAnInterruptionWhileReadingWorkflowMetadata() {
+    def interruption = new FlowInterruptedException(Result.ABORTED, true)
+    workflowFailure = interruption
+
+    try {
+      script.call(
+        sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
+        sourceJobName: 'service/PR-1',
+        sourceBuildNumber: '4'
+      )
+    } catch (FlowInterruptedException expected) {
+      assertThat(expected).isSameAs(interruption)
+      return
+    }
+
+    throw new AssertionError('Expected the workflow metadata interruption to propagate')
   }
 
   @Test

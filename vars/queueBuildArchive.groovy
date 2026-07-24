@@ -1,3 +1,5 @@
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+
 def call(Map params = [:]) {
   def archiveJob = '/Archive Completed Builds'
   def buildResult = currentBuild.result ?: currentBuild.currentResult ?: 'SUCCESS'
@@ -37,6 +39,8 @@ def call(Map params = [:]) {
     )
     env.BUILD_ARCHIVE_QUEUED = 'true'
     echo "Queued build archive for ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+  } catch (FlowInterruptedException err) {
+    throw err
   } catch (err) {
     echo "Unable to queue build archive: ${err.message}"
   }

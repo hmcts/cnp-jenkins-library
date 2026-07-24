@@ -1,3 +1,5 @@
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+
 def call(Map params = [:]) {
   def sourceBuildUrl = required(params, 'sourceBuildUrl')
   def sourceJobName = required(params, 'sourceJobName')
@@ -17,83 +19,99 @@ def call(Map params = [:]) {
   def storageCredentialsId = params.storageCredentialsId ?: env.BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID ?: 'buildlog-storage-account'
   def storageContainer = params.storageContainer ?: env.BUILD_ARCHIVE_STORAGE_CONTAINER ?: 'jenkins-build-archive'
   def storagePrefix = params.storagePrefix ?: env.BUILD_ARCHIVE_STORAGE_PREFIX ?: 'builds'
+  def waitTimeoutMinutes = configuredTimeout(env.BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES, 300, 'BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES')
+  def operationTimeoutMinutes = configuredTimeout(env.BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES, 120, 'BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES')
+  def httpTimeoutSeconds = configuredTimeout(env.BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS, 1800, 'BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS')
 
   node(env.BUILD_ARCHIVE_AGENT ?: '') {
     try {
       deleteDir()
 
-      def buildMetadata = waitForBuildCompletion(buildApiUrl, jenkinsCredentialsId)
+      def buildMetadata = waitForBuildCompletion(
+        buildApiUrl,
+        jenkinsCredentialsId,
+        waitTimeoutMinutes,
+        httpTimeoutSeconds
+      )
       def buildDetails = readJSON(text: buildMetadata)
       def buildResult = (buildDetails.result ?: params.sourceBuildResult ?: 'UNKNOWN').toString().toUpperCase()
-      def workflowMetadata = buildResult == 'SUCCESS'
-        ? null
-        : getWorkflowMetadata(buildApiUrl, jenkinsCredentialsId)
-      def failedStage = findFailedStage(workflowMetadata)
-      def archiveName = archiveName(sourceBuildNumber, buildResult, failedStage)
-      def destination = "${storageContainer}/${storagePrefix}/${safeJobPath(sourceJobName)}"
+      if (buildResult != 'FAILURE') {
+        echo "Skipping build archive because final result is ${buildResult}"
+        return
+      }
 
-      dir(archiveName) {
-        writeFile(file: 'build.json', text: buildMetadata)
+      timeout(time: operationTimeoutMinutes, unit: 'MINUTES') {
+        def workflowMetadata = getWorkflowMetadata(buildApiUrl, jenkinsCredentialsId, httpTimeoutSeconds)
+        def failedStage = findFailedStage(workflowMetadata)
+        def archiveName = archiveName(sourceBuildNumber, buildResult, failedStage)
+        def destination = "${storageContainer}/${storagePrefix}/${safeJobPath(sourceJobName)}"
 
-        downloadRequired(
-          "${buildApiUrl}consoleText",
-          'console.txt',
-          jenkinsCredentialsId
-        )
+        dir(archiveName) {
+          writeFile(file: 'build.json', text: buildMetadata)
 
-        downloadOptional(
-          "${buildApiUrl}artifact/*zip*/archive.zip",
-          'artifacts.zip',
-          jenkinsCredentialsId
-        )
+          downloadRequired(
+            "${buildApiUrl}consoleText",
+            'console.txt',
+            jenkinsCredentialsId,
+            httpTimeoutSeconds
+          )
 
-        downloadOptional(
-          "${buildApiUrl}testReport/api/json",
-          'test-results.json',
-          jenkinsCredentialsId
-        )
+          downloadOptional(
+            "${buildApiUrl}artifact/*zip*/archive.zip",
+            'artifacts.zip',
+            jenkinsCredentialsId,
+            httpTimeoutSeconds
+          )
 
-        if (workflowMetadata) {
+          downloadOptional(
+            "${buildApiUrl}testReport/api/json",
+            'test-results.json',
+            jenkinsCredentialsId,
+            httpTimeoutSeconds
+          )
+
+          if (workflowMetadata) {
+            writeJSON(
+              file: 'workflow.json',
+              json: workflowMetadata,
+              pretty: 2
+            )
+          }
+
           writeJSON(
-            file: 'workflow.json',
-            json: workflowMetadata,
+            file: 'archive-metadata.json',
+            json: [
+              sourceBuildUrl: sourceBuildUrl,
+              sourceJobName: sourceJobName,
+              sourceBuildNumber: sourceBuildNumber,
+              sourceBuildResult: buildResult,
+              failedStage: failedStage ?: '',
+              sourceProduct: params.sourceProduct ?: '',
+              sourceComponent: params.sourceComponent ?: '',
+              archivedAt: sh(
+                script: "date -u '+%Y-%m-%dT%H:%M:%SZ'",
+                returnStdout: true
+              ).trim()
+            ],
             pretty: 2
           )
         }
 
-        writeJSON(
-          file: 'archive-metadata.json',
-          json: [
-            sourceBuildUrl: sourceBuildUrl,
-            sourceJobName: sourceJobName,
-            sourceBuildNumber: sourceBuildNumber,
-            sourceBuildResult: buildResult,
-            failedStage: failedStage ?: '',
-            sourceProduct: params.sourceProduct ?: '',
-            sourceComponent: params.sourceComponent ?: '',
-            archivedAt: sh(
-              script: "date -u '+%Y-%m-%dT%H:%M:%SZ'",
-              returnStdout: true
-            ).trim()
-          ],
-          pretty: 2
-        )
-      }
-
-      if (localOnly) {
-        archiveArtifacts(
-          allowEmptyArchive: false,
-          artifacts: "${archiveName}/**"
-        )
-        echo "Archived ${sourceJobName} #${sourceBuildNumber} in the local Jenkins archive"
-      } else {
-        azureBlobUpload(
-          storageSubscription,
-          storageCredentialsId,
-          archiveName,
-          destination
-        )
-        echo "Archived ${sourceJobName} #${sourceBuildNumber} to ${destination}"
+        if (localOnly) {
+          archiveArtifacts(
+            allowEmptyArchive: false,
+            artifacts: "${archiveName}/**"
+          )
+          echo "Archived ${sourceJobName} #${sourceBuildNumber} in the local Jenkins archive"
+        } else {
+          azureBlobUpload(
+            storageSubscription,
+            storageCredentialsId,
+            archiveName,
+            destination
+          )
+          echo "Archived ${sourceJobName} #${sourceBuildNumber} to ${destination}"
+        }
       }
     } finally {
       deleteDir()
@@ -101,11 +119,12 @@ def call(Map params = [:]) {
   }
 }
 
-private Map getWorkflowMetadata(String sourceBuildUrl, String credentialsId) {
+private Map getWorkflowMetadata(String sourceBuildUrl, String credentialsId, int httpTimeoutSeconds) {
   try {
     def request = [
       httpMode: 'GET',
       quiet: true,
+      timeout: httpTimeoutSeconds,
       url: "${sourceBuildUrl}wfapi/describe",
       validResponseCodes: '200,404'
     ]
@@ -113,6 +132,8 @@ private Map getWorkflowMetadata(String sourceBuildUrl, String credentialsId) {
     def response = httpRequest(request)
 
     response.status == 200 ? readJSON(text: response.content) as Map : null
+  } catch (FlowInterruptedException err) {
+    throw err
   } catch (err) {
     echo "Unable to determine failed build stage: ${err.message}"
     null
@@ -142,14 +163,20 @@ private String safeFileNamePart(String value) {
     .take(100) ?: 'unknown'
 }
 
-private String waitForBuildCompletion(String sourceBuildUrl, String credentialsId) {
+private String waitForBuildCompletion(
+  String sourceBuildUrl,
+  String credentialsId,
+  int waitTimeoutMinutes,
+  int httpTimeoutSeconds
+) {
   def completedBuildMetadata = null
 
-  timeout(time: 30, unit: 'MINUTES') {
+  timeout(time: waitTimeoutMinutes, unit: 'MINUTES') {
     waitUntil(initialRecurrencePeriod: 5000) {
       def request = [
         httpMode: 'GET',
         quiet: true,
+        timeout: httpTimeoutSeconds,
         url: "${sourceBuildUrl}api/json",
         validResponseCodes: '200'
       ]
@@ -169,11 +196,13 @@ private String waitForBuildCompletion(String sourceBuildUrl, String credentialsI
   completedBuildMetadata
 }
 
-private void downloadRequired(String url, String outputFile, String credentialsId) {
+private void downloadRequired(String url, String outputFile, String credentialsId, int httpTimeoutSeconds) {
   def request = [
     httpMode: 'GET',
     outputFile: outputFile,
     quiet: true,
+    responseHandle: 'NONE',
+    timeout: httpTimeoutSeconds,
     url: url,
     validResponseCodes: '200'
   ]
@@ -181,11 +210,13 @@ private void downloadRequired(String url, String outputFile, String credentialsI
   httpRequest(request)
 }
 
-private void downloadOptional(String url, String outputFile, String credentialsId) {
+private void downloadOptional(String url, String outputFile, String credentialsId, int httpTimeoutSeconds) {
   def request = [
     httpMode: 'GET',
     outputFile: outputFile,
     quiet: true,
+    responseHandle: 'NONE',
+    timeout: httpTimeoutSeconds,
     url: url,
     validResponseCodes: '200,404'
   ]
@@ -201,6 +232,14 @@ private void addAuthentication(Map request, String credentialsId) {
   if (credentialsId) {
     request.authentication = credentialsId
   }
+}
+
+private int configuredTimeout(def value, int defaultValue, String variableName) {
+  def configuredValue = value ?: defaultValue.toString()
+  if (!(configuredValue.toString() ==~ /\d+/) || configuredValue.toString().toInteger() < 1) {
+    error("${variableName} must be a positive integer")
+  }
+  configuredValue.toString().toInteger()
 }
 
 private String required(Map params, String name) {

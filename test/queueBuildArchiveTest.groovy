@@ -1,4 +1,6 @@
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import hudson.model.Result
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.junit.Before
 import org.junit.Test
 
@@ -8,6 +10,7 @@ class queueBuildArchiveTest extends BasePipelineTest {
 
   def queuedBuild
   def queuedBuildCount = 0
+  def buildFailure
   def script
 
   @Override
@@ -22,6 +25,9 @@ class queueBuildArchiveTest extends BasePipelineTest {
     binding.setVariable('currentBuild', [result: 'FAILURE'])
     helper.registerAllowedMethod('string', [Map.class], { it })
     helper.registerAllowedMethod('build', [Map.class], {
+      if (buildFailure) {
+        throw buildFailure
+      }
       queuedBuild = it
       queuedBuildCount++
     })
@@ -78,6 +84,21 @@ class queueBuildArchiveTest extends BasePipelineTest {
     script.call(product: 'et', component: 'cos')
 
     assertThat(queuedBuild).isNull()
+  }
+
+  @Test
+  void preservesAnInterruptionWhileQueuingTheArchive() {
+    def interruption = new FlowInterruptedException(Result.ABORTED, true)
+    buildFailure = interruption
+
+    try {
+      script.call(product: 'et', component: 'cos')
+    } catch (FlowInterruptedException expected) {
+      assertThat(expected).isSameAs(interruption)
+      return
+    }
+
+    throw new AssertionError('Expected the queue interruption to propagate')
   }
 
   private String parameter(String name) {
