@@ -223,7 +223,9 @@ private void validateBuildIdentity(String sourceBuildUrl, String sourceJobName, 
     error("Refusing to archive an invalid Jenkins build number: ${sourceBuildNumber}")
   }
 
-  def buildNumberFromUrl = (sourceBuildUrl =~ /\/(\d+)\/$/)[0][1]
+  def relativeBuildUrl = sourceBuildUrl.substring(env.JENKINS_URL.length())
+  def buildUrlParts = relativeBuildUrl =~ /^job\/(.+)\/(\d+)\/$/
+  def buildNumberFromUrl = buildUrlParts[0][2]
   if (buildNumberFromUrl != sourceBuildNumber) {
     error("Refusing to archive mismatched Jenkins build details")
   }
@@ -231,6 +233,14 @@ private void validateBuildIdentity(String sourceBuildUrl, String sourceJobName, 
   def jobSegments = sourceJobName.split('/', -1)
   if (jobSegments.any { segment -> !segment || segment in ['.', '..'] }) {
     error("Refusing to archive an invalid Jenkins job name: ${sourceJobName}")
+  }
+
+  def jobNameFromUrl = buildUrlParts[0][1]
+    .split('/job/', -1)
+    .collect { segment -> new URI("https://jenkins.invalid/${segment}").path.substring(1) }
+    .join('/')
+  if (jobNameFromUrl != sourceJobName) {
+    error("Refusing to archive mismatched Jenkins build details")
   }
 }
 

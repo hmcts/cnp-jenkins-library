@@ -180,6 +180,16 @@ class archiveCompletedBuildTest extends BasePipelineTest {
   }
 
   @Test
+  void rejectsJobNamesThatDoNotMatchTheBuildUrl() {
+    assertInvalidBuildIdentity(
+      sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
+      sourceJobName: 'different-service/PR-1',
+      sourceBuildNumber: '4',
+      expectedMessage: 'mismatched Jenkins build details'
+    )
+  }
+
+  @Test
   void rejectsUnsafeJobPathSegments() {
     assertInvalidBuildIdentity(
       sourceBuildUrl: 'https://build.example/job/service/4/',
