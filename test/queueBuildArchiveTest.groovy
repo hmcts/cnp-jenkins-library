@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat
 class queueBuildArchiveTest extends BasePipelineTest {
 
   def queuedBuild
+  def queuedBuildCount = 0
   def script
 
   @Override
@@ -20,7 +21,10 @@ class queueBuildArchiveTest extends BasePipelineTest {
     ])
     binding.setVariable('currentBuild', [result: 'FAILURE'])
     helper.registerAllowedMethod('string', [Map.class], { it })
-    helper.registerAllowedMethod('build', [Map.class], { queuedBuild = it })
+    helper.registerAllowedMethod('build', [Map.class], {
+      queuedBuild = it
+      queuedBuildCount++
+    })
     helper.registerAllowedMethod('echo', [String.class], {})
     script = loadScript('vars/queueBuildArchive.groovy')
   }
@@ -29,7 +33,7 @@ class queueBuildArchiveTest extends BasePipelineTest {
   void queuesTheConfiguredArchiveJobWithoutWaiting() {
     script.call(product: 'et', component: 'cos')
 
-    assertThat(queuedBuild.job).isEqualTo('Archive Completed Builds')
+    assertThat(queuedBuild.job).isEqualTo('/Archive Completed Builds')
     assertThat(queuedBuild.wait).isFalse()
     assertThat(queuedBuild.propagate).isFalse()
     assertThat(parameter('SOURCE_BUILD_URL')).isEqualTo('https://build.example/job/service/job/PR-1/4/')
@@ -38,6 +42,24 @@ class queueBuildArchiveTest extends BasePipelineTest {
     assertThat(parameter('SOURCE_BUILD_RESULT')).isEqualTo('FAILURE')
     assertThat(parameter('SOURCE_PRODUCT')).isEqualTo('et')
     assertThat(parameter('SOURCE_COMPONENT')).isEqualTo('cos')
+    assertThat(binding.getVariable('env').BUILD_ARCHIVE_QUEUED).isEqualTo('true')
+  }
+
+  @Test
+  void queuesOnlyOnceWhenCalledForMultipleRetryAttempts() {
+    script.call(product: 'et', component: 'cos')
+    script.call(product: 'et', component: 'cos')
+
+    assertThat(queuedBuildCount).isEqualTo(1)
+  }
+
+  @Test
+  void doesNotQueueFromTheArchiveJobItself() {
+    binding.getVariable('env').JOB_NAME = 'Archive Completed Builds'
+
+    script.call(product: 'et', component: 'cos')
+
+    assertThat(queuedBuild).isNull()
   }
 
   @Test

@@ -1,12 +1,17 @@
 def call(Map params = [:]) {
-  def archiveJob = 'Archive Completed Builds'
+  def archiveJob = '/Archive Completed Builds'
   def buildResult = currentBuild.result ?: currentBuild.currentResult ?: 'SUCCESS'
 
   if (buildResult != 'FAILURE') {
     return
   }
 
-  if (env.JOB_NAME == archiveJob) {
+  if (env.BUILD_ARCHIVE_QUEUED == 'true') {
+    echo "Skipping duplicate build archive trigger"
+    return
+  }
+
+  if (env.JOB_NAME == archiveJob.substring(1)) {
     echo "Skipping build archive trigger for the archive job itself"
     return
   }
@@ -30,6 +35,7 @@ def call(Map params = [:]) {
         string(name: 'SOURCE_COMPONENT', value: params.component ?: '')
       ]
     )
+    env.BUILD_ARCHIVE_QUEUED = 'true'
     echo "Queued build archive for ${env.JOB_NAME} #${env.BUILD_NUMBER}"
   } catch (err) {
     echo "Unable to queue build archive: ${err.message}"
