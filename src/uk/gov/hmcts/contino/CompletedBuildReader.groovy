@@ -108,6 +108,7 @@ class CompletedBuildReader implements Serializable {
     ]
   }
 
+  @NonCPS
   private static boolean hasNoArgMethod(def target, String methodName) {
     target.getClass().getMethods().any { method ->
       method.name == methodName && method.parameterCount == 0
