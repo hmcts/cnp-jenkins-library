@@ -1,24 +1,20 @@
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import hudson.FilePath
 import hudson.model.Result
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.junit.Before
 import org.junit.Test
-import groovy.json.JsonSlurperClassic
 
 import static org.assertj.core.api.Assertions.assertThat
 
 class archiveCompletedBuildTest extends BasePipelineTest {
 
   def archived
-  def downloads = []
-  def requests = []
   def timeouts = []
   def uploads = []
   def writes = [:]
-  def metadataChecks = 0
-  def buildResult = 'FAILURE'
-  def workflowStages = []
-  def workflowFailure
+  def buildReader
+  def workspace
   def script
 
   @Override
@@ -27,14 +23,17 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     super.setUp()
     binding.setVariable('env', [
       JENKINS_URL: 'https://build.example/',
-      BUILD_ARCHIVE_JENKINS_API_URL: 'http://localhost:8080/',
       BUILD_ARCHIVE_LOCAL_ONLY: 'true',
       BUILD_ARCHIVE_AGENT: ''
     ])
 
+    buildReader = new FakeCompletedBuildReader()
+    workspace = new FilePath(new File('build/archive-test-workspace'))
+
     helper.registerAllowedMethod('node', [String.class, Closure.class], { _, body -> body.call() })
     helper.registerAllowedMethod('deleteDir', [], {})
     helper.registerAllowedMethod('dir', [String.class, Closure.class], { _, body -> body.call() })
+    helper.registerAllowedMethod('getContext', [Class.class], { workspace })
     helper.registerAllowedMethod('timeout', [Map.class, Closure.class], { options, body ->
       timeouts << options
       body.call()
@@ -44,35 +43,6 @@ class archiveCompletedBuildTest extends BasePipelineTest {
         // Repeat until the mocked build reports completion.
       }
     })
-    helper.registerAllowedMethod('httpRequest', [Map.class], { request ->
-      requests << request
-      if (request.url.endsWith('/api/json') && !request.url.contains('testReport')) {
-        metadataChecks++
-        return [
-          status: 200,
-          content: metadataChecks == 1
-            ? '{"building":true}'
-            : """{"building":false,"result":"${buildResult}"}"""
-        ]
-      }
-
-      if (request.url.endsWith('/wfapi/describe')) {
-        if (workflowFailure) {
-          throw workflowFailure
-        }
-        return [
-          status: 200,
-          content: groovy.json.JsonOutput.toJson([stages: workflowStages])
-        ]
-      }
-
-      downloads << request
-      return [status: 200, content: '']
-    })
-    helper.registerAllowedMethod('readJSON', [Map.class], {
-      new JsonSlurperClassic().parseText(it.text)
-    })
-    helper.registerAllowedMethod('writeFile', [Map.class], { writes[it.file] = it.text })
     helper.registerAllowedMethod('writeJSON', [Map.class], { writes[it.file] = it.json })
     helper.registerAllowedMethod('archiveArtifacts', [Map.class], { archived = it })
     helper.registerAllowedMethod('azureBlobUpload', [String.class, String.class, String.class, String.class], {
@@ -88,42 +58,12 @@ class archiveCompletedBuildTest extends BasePipelineTest {
   }
 
   @Test
-  void streamsDownloadsAndAppliesConfiguredTimeouts() {
+  void copiesCompletedBuildOutputsWithoutAnApiCredential() {
     binding.getVariable('env').BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES = '301'
     binding.getVariable('env').BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES = '121'
-    binding.getVariable('env').BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS = '1801'
-
-    script.call(
-      sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
-      sourceJobName: 'service/PR-1',
-      sourceBuildNumber: '4',
-      sourceBuildResult: 'SUCCESS',
-      sourceProduct: 'et',
-      sourceComponent: 'cos'
-    )
-
-    assertThat(metadataChecks).isEqualTo(2)
-    assertThat(downloads*.url).containsExactlyInAnyOrder(
-      'http://localhost:8080/job/service/job/PR-1/4/consoleText',
-      'http://localhost:8080/job/service/job/PR-1/4/artifact/*zip*/archive.zip',
-      'http://localhost:8080/job/service/job/PR-1/4/testReport/api/json'
-    )
-    assertThat(downloads*.responseHandle).containsOnly('NONE')
-    assertThat(requests*.timeout).containsOnly(1801)
-    assertThat(timeouts*.time).containsExactly(301, 121)
-    assertThat(writes['build.json'].toString()).contains('"result":"FAILURE"')
-    assertThat(writes['archive-metadata.json'].sourceJobName).isEqualTo('service/PR-1')
-    assertThat(writes['archive-metadata.json'].archivedAt).isEqualTo('2026-07-23T14:30:00Z')
-    assertThat(archived.artifacts.toString()).isEqualTo('completed-build_4_FAILURE/**')
-    assertThat(uploads).isEmpty()
-  }
-
-  @Test
-  void includesTheOutcomeAndFailedStageInTheArchiveName() {
-    buildResult = 'FAILURE'
-    workflowStages = [
-      [name: 'Build and test', status: 'SUCCESS'],
-      [name: 'Deploy to AKS / Preview', status: 'FAILED']
+    buildReader.snapshots = [
+      [building: true],
+      completedBuild()
     ]
 
     script.call(
@@ -132,25 +72,37 @@ class archiveCompletedBuildTest extends BasePipelineTest {
       sourceBuildNumber: '4',
       sourceBuildResult: 'SUCCESS',
       sourceProduct: 'et',
-      sourceComponent: 'cos'
+      sourceComponent: 'cos',
+      buildReader: buildReader
     )
 
+    assertThat(buildReader.snapshotRequests).containsExactly(
+      ['service/PR-1', 4],
+      ['service/PR-1', 4]
+    )
+    assertThat(buildReader.copyRequests).hasSize(1)
+    assertThat(buildReader.copyRequests[0].take(2)).containsExactly('service/PR-1', 4)
+    assertThat(timeouts*.time).containsExactly(301, 121)
+    assertThat(writes['build.json'].result).isEqualTo('FAILURE')
+    assertThat(writes['build.json']).doesNotContainKeys('workflow', 'tests')
+    assertThat(writes['test-results.json'].failCount).isEqualTo(2)
+    assertThat(writes['archive-metadata.json'].sourceJobName).isEqualTo('service/PR-1')
+    assertThat(writes['archive-metadata.json'].archivedAt).isEqualTo('2026-07-23T14:30:00Z')
     assertThat(archived.artifacts.toString())
       .isEqualTo('completed-build_4_FAILURE_Deploy_to_AKS_Preview/**')
-    assertThat(writes['archive-metadata.json'].sourceBuildResult).isEqualTo('FAILURE')
-    assertThat(writes['archive-metadata.json'].failedStage).isEqualTo('Deploy to AKS / Preview')
-    assertThat(writes['workflow.json'].stages[1].status).isEqualTo('FAILED')
+    assertThat(uploads).isEmpty()
   }
 
   @Test
   void uploadsToTheSandboxStorageSubscriptionByDefault() {
     binding.getVariable('env').BUILD_ARCHIVE_LOCAL_ONLY = 'false'
-    binding.getVariable('env').BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID = 'jenkins-api'
+    buildReader.snapshots = [completedBuild(workflow: null, tests: null)]
 
     script.call(
       sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
       sourceJobName: 'service/PR-1',
-      sourceBuildNumber: '4'
+      sourceBuildNumber: '4',
+      buildReader: buildReader
     )
 
     assertThat(uploads).hasSize(1)
@@ -163,37 +115,39 @@ class archiveCompletedBuildTest extends BasePipelineTest {
   }
 
   @Test
-  void ignoresAnAbortedBuildAfterPollingItsFinalResult() {
-    buildResult = 'ABORTED'
+  void ignoresAnAbortedBuildAfterReadingItsFinalResult() {
+    buildReader.snapshots = [completedBuild(result: 'ABORTED')]
 
     script.call(
       sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
       sourceJobName: 'service/PR-1',
-      sourceBuildNumber: '4'
+      sourceBuildNumber: '4',
+      buildReader: buildReader
     )
 
-    assertThat(downloads).isEmpty()
+    assertThat(buildReader.copyRequests).isEmpty()
     assertThat(uploads).isEmpty()
     assertThat(archived).isNull()
   }
 
   @Test
-  void preservesAnInterruptionWhileReadingWorkflowMetadata() {
+  void preservesAnInterruptionWhileReadingTheCompletedBuild() {
     def interruption = new FlowInterruptedException(Result.ABORTED, true)
-    workflowFailure = interruption
+    buildReader.failure = interruption
 
     try {
       script.call(
         sourceBuildUrl: 'https://build.example/job/service/job/PR-1/4/',
         sourceJobName: 'service/PR-1',
-        sourceBuildNumber: '4'
+        sourceBuildNumber: '4',
+        buildReader: buildReader
       )
     } catch (FlowInterruptedException expected) {
       assertThat(expected).isSameAs(interruption)
       return
     }
 
-    throw new AssertionError('Expected the workflow metadata interruption to propagate')
+    throw new AssertionError('Expected the completed build interruption to propagate')
   }
 
   @Test
@@ -202,7 +156,8 @@ class archiveCompletedBuildTest extends BasePipelineTest {
       script.call(
         sourceBuildUrl: 'https://malicious.example/job/service/4/',
         sourceJobName: 'service',
-        sourceBuildNumber: '4'
+        sourceBuildNumber: '4',
+        buildReader: buildReader
       )
     } catch (IllegalArgumentException expected) {
       assertThat(expected.message).contains('invalid Jenkins build URL')
@@ -252,12 +207,39 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     )
   }
 
+  private static Map completedBuild(Map overrides = [:]) {
+    [
+      building: false,
+      result: 'FAILURE',
+      number: 4,
+      url: 'job/service/job/PR-1/4/',
+      displayName: '#4',
+      fullDisplayName: 'service/PR-1 #4',
+      timestamp: 1785240000000,
+      duration: 5000,
+      estimatedDuration: 4000,
+      workflow: [
+        stages: [
+          [name: 'Build and test', status: 'SUCCESS'],
+          [name: 'Deploy to AKS / Preview', status: 'FAILED']
+        ]
+      ],
+      tests: [
+        totalCount: 10,
+        failCount: 2,
+        skipCount: 1,
+        passCount: 7
+      ]
+    ] + overrides
+  }
+
   private void assertInvalidBuildIdentity(Map params) {
     try {
       script.call(
         sourceBuildUrl: params.sourceBuildUrl,
         sourceJobName: params.sourceJobName,
-        sourceBuildNumber: params.sourceBuildNumber
+        sourceBuildNumber: params.sourceBuildNumber,
+        buildReader: buildReader
       )
     } catch (IllegalArgumentException expected) {
       assertThat(expected.message).contains(params.expectedMessage)
@@ -265,5 +247,27 @@ class archiveCompletedBuildTest extends BasePipelineTest {
     }
 
     throw new AssertionError("Expected build archive validation to reject ${params}")
+  }
+}
+
+class FakeCompletedBuildReader implements Serializable {
+
+  private static final long serialVersionUID = 1L
+
+  List<Map> snapshots = []
+  List snapshotRequests = []
+  List copyRequests = []
+  Throwable failure
+
+  Map snapshot(String jobName, int buildNumber) {
+    snapshotRequests << [jobName, buildNumber]
+    if (failure) {
+      throw failure
+    }
+    snapshots.remove(0)
+  }
+
+  void copyOutputs(String jobName, int buildNumber, FilePath workspace) {
+    copyRequests << [jobName, buildNumber, workspace]
   }
 }

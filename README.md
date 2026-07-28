@@ -1204,18 +1204,18 @@ archiveCompletedBuild(
 )
 ```
 
-The archive job waits for the source build to finish, then captures its complete
-console output, build metadata, test-result metadata and artifact ZIP. It uploads
-the resulting directory using the existing `azureBlobUpload` step. Archive names
-include the final outcome and, when Jenkins reports one, the failed stage, for
-example `completed-build_43_FAILURE_Deploy_to_AKS`.
+The archive job waits for the source build to finish, then reads it directly
+from the same Jenkins controller. It captures the complete console output,
+build metadata, test-result metadata and artifact ZIP without a separate
+Jenkins API credential. It uploads the resulting directory using the existing
+`azureBlobUpload` step. Archive names include the final outcome and, when
+Jenkins reports one, the failed stage, for example
+`completed-build_43_FAILURE_Deploy_to_AKS`.
 
 The following global environment variables configure the archive:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `BUILD_ARCHIVE_JENKINS_CREDENTIALS_ID` | required | Jenkins API credential |
-| `BUILD_ARCHIVE_JENKINS_API_URL` | `JENKINS_URL` | Optional controller-internal base URL |
 | `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `sandbox` | Azure subscription alias |
 | `BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID` | `buildlog-storage-account` | Storage credential |
 | `BUILD_ARCHIVE_STORAGE_CONTAINER` | `jenkins-build-archive` | Blob container |
@@ -1224,4 +1224,3 @@ The following global environment variables configure the archive:
 | `BUILD_ARCHIVE_LOCAL_ONLY` | `false` | Archive back to Jenkins instead of Azure for local testing |
 | `BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES` | `300` | Maximum wait for the source build to finish |
 | `BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES` | `120` | Maximum time for capture and upload |
-| `BUILD_ARCHIVE_HTTP_TIMEOUT_SECONDS` | `1800` | Timeout for each Jenkins API request |

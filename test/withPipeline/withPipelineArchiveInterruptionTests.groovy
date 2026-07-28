@@ -1,10 +1,9 @@
 package withPipeline
 
-import groovy.mock.interceptor.StubFor
 import hudson.model.Result
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import org.junit.Before
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
 
 import static org.assertj.core.api.Assertions.assertThat
 
@@ -13,7 +12,10 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
 
   withPipelineArchiveInterruptionTests() {
     super("master", jenkinsFile)
+  }
 
+  @Before
+  void registerArchiveInterruptionSteps() {
     helper.registerAllowedMethod("retry", [LinkedHashMap, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("node", [String, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("timeout", [Map, Closure], { _, body -> body.call() })
@@ -22,16 +24,16 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
   @Test
   void doesNotArchiveAnInterruptedApplicationPipeline() {
     def interruption = new FlowInterruptedException(Result.ABORTED, true)
-    def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(1) {
-      throw interruption
-    }
+    helper.registerAllowedMethod("sh", [Map], { options ->
+      if (options.script.startsWith('grep -F "JavaLanguageVersion')) {
+        throw interruption
+      }
+      return options.returnStatus ? 1 : ''
+    })
 
     def caughtInterruption = null
     try {
-      stubBuilder.use {
-        runScript("testResources/$jenkinsFile")
-      }
+      runScript("testResources/$jenkinsFile")
     } catch (FlowInterruptedException expected) {
       caughtInterruption = expected
     }
@@ -68,15 +70,15 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
     binding.getVariable('env').JOB_NAME = 'service/PR-1'
     binding.getVariable('env').BUILD_NUMBER = '4'
 
-    def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(2) {
-      throw failure
-    }
+    helper.registerAllowedMethod("sh", [Map], { options ->
+      if (options.script.startsWith('grep -F "JavaLanguageVersion')) {
+        throw failure
+      }
+      return options.returnStatus ? 1 : ''
+    })
 
     try {
-      stubBuilder.use {
-        runScript("testResources/$jenkinsFile")
-      }
+      runScript("testResources/$jenkinsFile")
     } catch (RuntimeException expected) {
       assertThat(expected).isSameAs(failure)
     }
