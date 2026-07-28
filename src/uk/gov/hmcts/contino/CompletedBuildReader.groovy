@@ -88,9 +88,9 @@ class CompletedBuildReader implements Serializable {
   static Map testMetadata(def build) {
     def action = build.getAllActions().find { candidate ->
       candidate != null &&
-        candidate.metaClass.respondsTo(candidate, 'getFailCount') &&
-        candidate.metaClass.respondsTo(candidate, 'getSkipCount') &&
-        candidate.metaClass.respondsTo(candidate, 'getTotalCount')
+        hasNoArgMethod(candidate, 'getFailCount') &&
+        hasNoArgMethod(candidate, 'getSkipCount') &&
+        hasNoArgMethod(candidate, 'getTotalCount')
     }
     if (action == null) {
       return null
@@ -106,6 +106,12 @@ class CompletedBuildReader implements Serializable {
       skipCount: skipCount,
       passCount: totalCount - failCount - skipCount
     ]
+  }
+
+  private static boolean hasNoArgMethod(def target, String methodName) {
+    target.getClass().getMethods().any { method ->
+      method.name == methodName && method.parameterCount == 0
+    }
   }
 
   @NonCPS
