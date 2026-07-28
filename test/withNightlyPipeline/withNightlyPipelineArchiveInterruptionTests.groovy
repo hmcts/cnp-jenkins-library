@@ -1,11 +1,9 @@
 package withNightlyPipeline
 
-import groovy.mock.interceptor.StubFor
 import hudson.model.Result
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.junit.Before
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
 import withPipeline.BaseCnpPipelineTest
 
 import static org.assertj.core.api.Assertions.assertThat
@@ -26,16 +24,16 @@ class withNightlyPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
   @Test
   void doesNotArchiveAnInterruptedNightlyPipeline() {
     def interruption = new FlowInterruptedException(Result.ABORTED, true)
-    def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(1) {
-      throw interruption
-    }
+    helper.registerAllowedMethod("sh", [Map], { options ->
+      if (options.script.startsWith('grep -F "JavaLanguageVersion')) {
+        throw interruption
+      }
+      return options.returnStatus ? 1 : ''
+    })
 
     def caughtInterruption = null
     try {
-      stubBuilder.use {
-        runScript("testResources/$jenkinsFile")
-      }
+      runScript("testResources/$jenkinsFile")
     } catch (FlowInterruptedException expected) {
       caughtInterruption = expected
     }
