@@ -72,7 +72,7 @@ class CompletedBuildReader implements Serializable {
 
   @NonCPS
   private static void copyArtifacts(def build, FilePath target) {
-    if (!build.hasArtifact()) {
+    if (!build.getHasArtifacts()) {
       return
     }
 
