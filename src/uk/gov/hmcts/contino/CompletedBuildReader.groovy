@@ -85,9 +85,10 @@ class CompletedBuildReader implements Serializable {
   }
 
   @NonCPS
-  private static Map testMetadata(def build) {
+  static Map testMetadata(def build) {
     def action = build.getAllActions().find { candidate ->
-      candidate.metaClass.respondsTo(candidate, 'getFailCount') &&
+      candidate != null &&
+        candidate.metaClass.respondsTo(candidate, 'getFailCount') &&
         candidate.metaClass.respondsTo(candidate, 'getSkipCount') &&
         candidate.metaClass.respondsTo(candidate, 'getTotalCount')
     }
