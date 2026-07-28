@@ -3,6 +3,7 @@ package withPipeline
 import groovy.mock.interceptor.StubFor
 import hudson.model.Result
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import org.junit.Before
 import org.junit.Test
 import uk.gov.hmcts.contino.GradleBuilder
 
@@ -13,7 +14,10 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
 
   withPipelineArchiveInterruptionTests() {
     super("master", jenkinsFile)
+  }
 
+  @Before
+  void registerArchiveInterruptionSteps() {
     helper.registerAllowedMethod("retry", [LinkedHashMap, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("node", [String, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("timeout", [Map, Closure], { _, body -> body.call() })
