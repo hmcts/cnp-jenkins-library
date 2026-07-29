@@ -1,4 +1,13 @@
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.Environment
+
+@NonCPS
+boolean isTriggeredByTimer() {
+  def causes = currentBuild.rawBuild?.getCauses() ?: []
+  return causes.any {
+    it.getClass().getName().contains('TimerTriggerCause')
+  }
+}
 
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
@@ -82,10 +91,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     if (config.performanceTest) {
 
       //Check if build started by chron job
-      def causes = currentBuild.rawBuild?.getCauses() ?: []
-      def triggeredByTimer = causes.any { cause ->
-        cause.getClass().getSimpleName() == "TimerTriggerCause"
-      }
+      boolean triggeredByTimer = isTriggeredByTimer()
 
       boolean doSecondRun = false
       def stages = ['Performance test', 'Failed Test Rerun']
