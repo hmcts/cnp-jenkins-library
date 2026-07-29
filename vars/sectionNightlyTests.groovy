@@ -4,7 +4,8 @@ import uk.gov.hmcts.contino.Environment
 
 @NonCPS
 boolean isTriggeredByTimer() {
-  return currentBuild.rawBuild.getCauses().any {
+  def causes = currentBuild.rawBuild?.getCauses() ?: []
+  return causes.any {
     it.getClass().getName().contains('TimerTriggerCause')
   }
 }
