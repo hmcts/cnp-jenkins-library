@@ -291,18 +291,18 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
   }
 
-  def "set ACR ownership mode should warn and ignore app override"() {
+  def "set ACR ownership mode should not be callable from app DSL"() {
     when:
       dsl.setAcrOwnershipMode('audit')
     then:
-      1 * steps.echo({ String message -> message.contains('centrally managed') })
+      thrown(MissingMethodException)
   }
 
-  def "set ACR ownership allow list should warn and ignore app override"() {
+  def "set ACR ownership allow list should not be callable from app DSL"() {
     when:
       dsl.setAcrOwnershipAllowList(['recipes/frontend'])
     then:
-      1 * steps.echo({ String message -> message.contains('centrally managed') })
+      thrown(MissingMethodException)
   }
 
   def "set approved Jenkins config repos"() {
