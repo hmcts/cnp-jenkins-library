@@ -180,4 +180,31 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.idamTestUserPassword = params.password
     config.idamTestUserRoles = params.roles ?: []
   }
+
+  void setAcrOwnershipMode(String mode) {
+    steps.echo("Warning: setAcrOwnershipMode('${mode}') ignored. ACR ownership mode is centrally managed.")
+  }
+
+  void setAcrOwnershipAllowList(List<String> repositories) {
+    steps.echo("Warning: setAcrOwnershipAllowList ignored. ACR allow list is centrally managed.")
+  }
+
+  void setApprovedJenkinsConfigRepos(List<String> repositories) {
+    config.approvedJenkinsConfigRepos = normalizeList(repositories)
+  }
+
+  void enableUnapprovedConfigRepoWarnings(boolean enabled = true) {
+    config.warnOnUnapprovedJenkinsConfigRepo = enabled
+  }
+
+  private List<String> normalizeList(List<String> values) {
+    if (!values) {
+      return []
+    }
+
+    return values
+      .findAll { it != null }
+      .collect { it.trim() }
+      .findAll { !it.isEmpty() }
+  }
 }
