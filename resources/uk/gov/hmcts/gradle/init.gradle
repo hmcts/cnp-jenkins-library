@@ -65,4 +65,8 @@ allprojects {
       }
     }
   }
+  
+    task printVersionInit {
+        doLast { println project.version }
+    }
 }
