@@ -24,10 +24,6 @@ settingsEvaluated { settings ->
             }
         }
     }
-
-    task printVersionInit {
-        doLast { println project.version }
-    }
 }
 
 allprojects {
@@ -69,4 +65,8 @@ allprojects {
       }
     }
   }
+
+    task printVersionInit {
+        doLast { println project.version }
+    }
 }
