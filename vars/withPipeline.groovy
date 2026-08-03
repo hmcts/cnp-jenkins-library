@@ -121,18 +121,19 @@ def call(type, String product, String component, Closure body) {
               handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
             }
 
-          onPreview {
-            sectionDeployToEnvironment(
-              appPipelineConfig: pipelineConfig,
-              pipelineCallbacksRunner: callbacksRunner,
-              pipelineType: pipelineType,
-              subscription: subscription.previewName,
-              environment: environment.previewName,
-              product: deploymentProduct,
-              component: component,
-              aksSubscription: aksSubscriptions.preview,
-              tfPlanOnly: false
-            )
+            onPreview {
+              sectionDeployToEnvironment(
+                appPipelineConfig: pipelineConfig,
+                pipelineCallbacksRunner: callbacksRunner,
+                pipelineType: pipelineType,
+                subscription: subscription.previewName,
+                environment: environment.previewName,
+                product: deploymentProduct,
+                component: component,
+                aksSubscription: aksSubscriptions.preview,
+                tfPlanOnly: false
+              )
+            }
           } // end approvedDeploymentRepository
         } catch (err) {
           if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
