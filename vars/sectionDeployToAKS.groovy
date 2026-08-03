@@ -99,12 +99,12 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
-      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
+      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Consumer Can I Deploy", product) {
           builder.runConsumerCanIDeploy()
         }
       }
-      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
+      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Provider Verification", product) {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
@@ -462,9 +462,17 @@ def call(params) {
         }
       }
     }
-    def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-    if (isOnMaster || !enableHelmLabel) {
-      helmUninstall(dockerImage, params, pcr)
+    if (config.onlyDeploy) {
+      stageWithAgent('Deployment only pipeline', product) {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          throw new RuntimeException("\"Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge")
+        }
+      }
+    } else {
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      if (isOnMaster || !enableHelmLabel) {
+        helmUninstall(dockerImage, params, pcr)
+      }
     }
   }
 }
