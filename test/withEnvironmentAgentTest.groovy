@@ -139,6 +139,20 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'switching environment agent excludes gradle build output from stashes'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    script.call('preview', 'civil') {
+    }
+
+    assertThat(stashArgs).hasSize(2)
+    stashArgs.each { Map args ->
+      assertThat(args.excludes as String).contains('build/**')
+      assertThat(args.excludes as String).contains('**/build/**')
+    }
+  }
+
+  @Test
   void 'failing environment agent body skips workspace propagation back'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.ORIGINAL_REMOTE_URL = 'https://github.com/HMCTS/civil-service.git'

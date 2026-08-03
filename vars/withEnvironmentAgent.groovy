@@ -33,7 +33,9 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '.gradle/**',
     '**/.gradle/**',
     '.venv/**',
-    '**/.venv/**'
+    '**/.venv/**',
+    '**build/**',
+    '**/build/**'
   ].join(',')
   boolean updatedWorkspaceStashed = false
   String originalDir = pwd()
