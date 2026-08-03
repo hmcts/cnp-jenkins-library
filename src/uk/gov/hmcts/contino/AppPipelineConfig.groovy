@@ -34,6 +34,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
+  boolean buildCache = false
   boolean skipHighLevelDataSetupProd = false
 
   int crossBrowserTestTimeout
