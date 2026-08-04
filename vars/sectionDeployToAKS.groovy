@@ -78,36 +78,37 @@ def call(params) {
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
-    stageWithEnvironmentAgentAndSecrets("AKS deploy - ${environment}", config, product, environment) {
-      pcr.callAround('akschartsinstall') {
-        withAksClient(subscription, environment, product) {
-          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
-            onPR {
-              deploymentNumber = githubCreateDeployment()
-            }
-            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-            log.info("Using AKS environment: ${params.environment}")
-            warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
-            params.imageName = dockerImageTaggedName
-            aksUrl = helmInstall(dockerImage, params)
-            log.info("deployed component URL: ${aksUrl}")
-            onPR {
-              githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+    withEnvironmentAgent(environment, product) {
+      stageWithEnvironmentAgentAndSecrets("AKS deploy - ${environment}", config, product, environment) {
+        pcr.callAround('akschartsinstall') {
+          withAksClient(subscription, environment, product) {
+            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
+              onPR {
+                deploymentNumber = githubCreateDeployment()
+              }
+              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+              log.info("Using AKS environment: ${params.environment}")
+              warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
+              params.imageName = dockerImageTaggedName
+              aksUrl = helmInstall(dockerImage, params)
+              log.info("deployed component URL: ${aksUrl}")
+              onPR {
+                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
+              }
             }
           }
         }
       }
-    }
-    onPR {
-      highLevelDataSetup(
-        appPipelineConfig: config,
-        pipelineCallbacksRunner: pcr,
-        builder: builder,
-        environment: environment,
-        product: product,
-      )
-    }
-    withSubscriptionLogin(subscription) {
+      onPR {
+        highLevelDataSetup(
+          appPipelineConfig: config,
+          pipelineCallbacksRunner: pcr,
+          builder: builder,
+          environment: environment,
+          product: product,
+        )
+      }
+      withSubscriptionLogin(subscription) {
       if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Consumer Can I Deploy", product) {
           builder.runConsumerCanIDeploy()
