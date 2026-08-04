@@ -26,8 +26,17 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
   }
 }
 
+def shouldSkipWorkspaceStashForStage(AppPipelineConfig config, String stageKey) {
+  return config.skipWorkspaceStashStages?.contains(stageKey)
+}
+
 def stageWithEnvironmentAgentAndSecrets(String stageName, AppPipelineConfig config, String product, String environment, Closure body) {
-  stageWithEnvironmentAgent(stageName, product, environment) {
+  stageWithEnvironmentAgentAndSecrets(stageName, config, product, environment, null, body)
+}
+
+def stageWithEnvironmentAgentAndSecrets(String stageName, AppPipelineConfig config, String product, String environment, String stageKey, Closure body) {
+  def skipStash = stageKey ? shouldSkipWorkspaceStashForStage(config, stageKey) : false
+  stageWithEnvironmentAgent(stageName, product, environment, skipStash) {
     // Fetch team secrets after the node hop so Key Vault auth/env injection runs on the target environment agent.
     withTeamSecrets(config, environment, product) {
       body.call()
@@ -142,7 +151,7 @@ def call(params) {
         
         onFunctionalTestEnvironment(environment) {
           if (testLabels.contains('enable_full_functional_tests')) {
-            stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
+            stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment, 'fullFunctionalTest') {
               testEnv(aksUrl) {
                 def passed = true
                 try {
@@ -163,7 +172,7 @@ def call(params) {
               }
             }
           } else {
-            stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
+            stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment, 'functionalTest') {
               testEnv(aksUrl) {
                 def passed = true
                 try {

@@ -571,6 +571,17 @@ It is possible to trigger optional full functional tests, performance tests, for
 - `enable_fortify_scan`
 - `enable_security_scan`
 
+If you want to skip workspace stash/unstash for optional environment-agent stages (for example `functionalTest`), add this to your `Jenkinsfile_CNP` or `Jenkinsfile_nightly`:
+
+```groovy
+withPipeline(type, product, component) {
+  disableWorkspaceStashForStages('functionalTest')
+}
+```
+
+You can pass multiple stage keys, for example `disableWorkspaceStashForStages('functionalTest', 'fullFunctionalTest')`.
+If you do not call this method (or call it without stage keys), stash/unstash behavior is unchanged.
+
 #### If you add a label for a test which is not configured within your application, the build will fail.
 
 Some tests may require additional configuration - copy this from your `Jenkinsfile_nightly` to your `Jenkinsfile_CNP`.

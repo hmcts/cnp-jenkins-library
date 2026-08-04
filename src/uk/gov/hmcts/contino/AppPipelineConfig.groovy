@@ -38,6 +38,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean dockerTestBuild = false
   boolean onlyDeploy = false
   boolean skipHighLevelDataSetupProd = false
+  Set<String> skipWorkspaceStashStages = []
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15
