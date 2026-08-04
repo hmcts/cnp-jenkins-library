@@ -472,6 +472,7 @@ def call(params) {
         }
       }
     }
+  }
     if (config.onlyDeploy) {
       stageWithAgent('Deployment only pipeline', product) {
         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
