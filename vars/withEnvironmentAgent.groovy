@@ -88,11 +88,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
 
   // Preserve generated files from env-agent stages for later stages that restash
   // from the original workspace, while still avoiding expensive dependency dirs.
-  // Clear first: Docker/root-owned files left on the original agent (e.g. CCD xlsx)
-  // cause AccessDeniedException when unstash tries to overwrite them.
   if (updatedWorkspaceStashed) {
     inOriginalWorkspace {
-      deleteDir()
       unstash updatedStashName
     }
   }
