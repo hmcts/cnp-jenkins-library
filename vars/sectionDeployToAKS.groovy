@@ -100,12 +100,12 @@ def call(params) {
     }
     withSubscriptionLogin(subscription) {
       if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
-        stageWithAgent("Pact Consumer Can I Deploy", product) {
+        stageWithEnvironmentAgent("Pact Consumer Can I Deploy", product, environment) {
           builder.runConsumerCanIDeploy()
         }
       }
       if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
-        stageWithAgent("Pact Provider Verification", product) {
+        stageWithEnvironmentAgent("Pact Provider Verification", product, environment) {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
