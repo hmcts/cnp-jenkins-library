@@ -38,13 +38,13 @@ def call(config, Closure body) {
       defaultBranch: 'master',
       caches: [
         arbitraryFileCache(
-          path: '.gradle-user-home/caches',
+          path: '.gradle-user-home/caches/modules-2/files-2.1',
           cacheName: 'gradle-dependencies',
           cacheValidityDecidingFile: 'gradle/wrapper/gradle-wrapper.properties',
           compressionMethod: 'TARGZ_BEST_SPEED'
         ),
         arbitraryFileCache(
-          path: '.gradle-user-home/wrapper',
+          path: '.gradle-user-home/wrapper/dists',
           cacheName: 'gradle-wrapper',
           cacheValidityDecidingFile: 'gradle/wrapper/gradle-wrapper.properties',
           compressionMethod: 'TARGZ_BEST_SPEED'

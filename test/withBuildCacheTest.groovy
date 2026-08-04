@@ -45,7 +45,10 @@ class withBuildCacheTest extends BasePipelineTest {
 
     assertThat(called).isTrue()
     assertThat(binding.getVariable('env').GRADLE_USER_HOME.toString()).isEqualTo('/workspace/.gradle-user-home')
-    assertThat(cacheCalls[0].caches*.path).containsExactly('.gradle-user-home/caches', '.gradle-user-home/wrapper')
+    assertThat(cacheCalls[0].caches*.path).containsExactly(
+      '.gradle-user-home/caches/modules-2/files-2.1',
+      '.gradle-user-home/wrapper/dists'
+    )
   }
 
   @Test
