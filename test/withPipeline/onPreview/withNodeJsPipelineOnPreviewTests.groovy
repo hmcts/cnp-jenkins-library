@@ -34,5 +34,7 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
+
+    assert binding.env.DEPLOYMENT_ENVIRONMENT == 'preview'
   }
 }

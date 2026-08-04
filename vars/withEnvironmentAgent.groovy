@@ -14,7 +14,7 @@ def call(String environment, String product, String agentLabelOverride, Closure 
   }
 
   String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
-  if (agentLabel == env.BUILD_AGENT_TYPE) {
+  if (AgentSelector.isRunningOnEnvironmentAgent(env, environment, product)) {
     withEnvironmentContext(agentLabel, environment, body)
     return
   }

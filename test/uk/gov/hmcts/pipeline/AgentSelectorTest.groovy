@@ -187,6 +187,8 @@ class AgentSelectorTest extends Specification {
     [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'civil-preview', PRODUCT: 'civil']      | null        | ''       | false
     [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'civil-preview',
       ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL: 'civil-${environment}']                             | 'preview'   | 'civil'  | true
+    [DEPLOYMENT_ENVIRONMENT: 'preview', NODE_LABELS: 'linux xui-preview docker',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_XUI: 'xui-${environment}']                                | 'preview'   | 'xui'    | true
     [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'ubuntu-aat']                           | 'preview'   | ''       | false
     [BUILD_AGENT_TYPE: 'ubuntu-preview']                                                          | null        | ''       | false
   }

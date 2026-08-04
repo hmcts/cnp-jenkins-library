@@ -16,7 +16,7 @@ def call(String subscription, Closure body) {
   if (AgentSelector.isEnvironmentLikeSubscription(targetEnvironment)) {
     String product = env.PRODUCT ?: env.RAW_PRODUCT_NAME ?: ''
     String agentLabel = AgentSelector.labelForEnvironment(targetEnvironment, env, product) ?: "ubuntu-${targetEnvironment}"
-    if (env.BUILD_AGENT_TYPE != agentLabel) {
+    if (!AgentSelector.currentAgentMatchesLabel(env, agentLabel)) {
       withEnvironmentAgent(targetEnvironment, product, agentLabel) {
         loginOnCurrentAgent(subscription, body)
       }
