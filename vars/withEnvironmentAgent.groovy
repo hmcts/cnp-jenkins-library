@@ -6,6 +6,11 @@ def call(String environment, String product, Closure body) {
 }
 
 def call(String environment, String product, boolean skipStash, Closure body) {
+  if (!skipStash) {
+    call(environment, product, (String) null, body)
+    return
+  }
+
   String agentLabel = AgentSelector.labelForEnvironment(environment, env, product)
   if (!agentLabel || agentLabel == env.BUILD_AGENT_TYPE) {
     body()

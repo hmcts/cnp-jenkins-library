@@ -191,4 +191,28 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
     assertThat(nodeLabels).containsExactly('civil-preview')
     assertThat(shellScripts).isEmpty()
   }
+
+  @Test
+  void 'boolean overload with skipStash false preserves workspace stash behavior'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    script.call('preview', 'civil', false) {
+    }
+
+    assertThat(nodeLabels).containsExactly('civil-preview')
+    assertThat(stashNames).hasSize(2)
+    assertThat(unstashNames).containsExactly(stashNames[0], stashNames[1])
+  }
+
+  @Test
+  void 'boolean overload with skipStash true skips workspace stash behavior'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    script.call('preview', 'civil', true) {
+    }
+
+    assertThat(nodeLabels).containsExactly('civil-preview')
+    assertThat(stashNames).isEmpty()
+    assertThat(unstashNames).isEmpty()
+  }
 }
