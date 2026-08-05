@@ -107,6 +107,30 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironmentWithoutProductFallback('dev', envVars)).isEqualTo('ubuntu-dev')
   }
 
+  def "labelForEnvironmentWithoutProductFallback should still honor explicit environment overrides"() {
+    given:
+    def envVars = [
+      ENVIRONMENT_AGENT_LABEL_DEV: 'shared-dev-pool',
+      PRODUCT: 'toffee',
+      PRODUCT_AGENT_LABEL: 'toffee-vm'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironmentWithoutProductFallback('dev', envVars)).isEqualTo('shared-dev-pool')
+  }
+
+  def "labelForEnvironment should still use product-specific labels when configured"() {
+    given:
+    def envVars = [
+      PRODUCT: 'xui',
+      PRODUCT_AGENT_LABEL: 'xui-preview',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'ubuntu-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironment('preview', envVars)).isEqualTo('xui-preview')
+  }
+
   def "labelForEnvironment should allow product argument to drive product-specific lookup"() {
     given:
     def envVars = [

@@ -69,7 +69,10 @@ def call(type, String product, String component, Closure body) {
   String primaryEnvironment = branch.isPR() ? environment.previewName : environment.nonProdName
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
+  String agentType = env.PRODUCT_AGENT_LABEL ?
+    AgentSelector.labelForEnvironment(primaryEnvironment, env, product) :
+    AgentSelector.labelForEnvironmentWithoutProductFallback(primaryEnvironment, env)
+  agentType = agentType ?: env.BUILD_AGENT_TYPE
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
