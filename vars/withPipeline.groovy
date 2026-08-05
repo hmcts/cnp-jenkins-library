@@ -66,7 +66,8 @@ def call(type, String product, String component, Closure body) {
   }
 
   Environment environment = new Environment(env)
-  String primaryEnvironment = branch.isPR() ? environment.previewName : environment.nonProdName
+  boolean isPullRequestBuild = branch.isPR() || !!env.CHANGE_ID
+  String primaryEnvironment = isPullRequestBuild ? environment.previewName : environment.nonProdName
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.PRODUCT_AGENT_LABEL ?
