@@ -25,3 +25,5 @@ branches:
     allowed: true
   - name: archive-complete-build-results
     allowed: true
+  - name: performance-stages-updatev5
+    allowed: true
