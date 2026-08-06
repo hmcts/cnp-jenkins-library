@@ -74,6 +74,22 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'matching current node label avoids reallocating node when build agent type has drifted'() {
+    binding.env.BUILD_AGENT_TYPE = ''
+    binding.env.NODE_LABELS = 'linux civil-preview docker'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    def environmentInsideBody
+
+    script.call('preview', 'civil') {
+      environmentInsideBody = binding.env.DEPLOYMENT_ENVIRONMENT
+    }
+
+    assertThat(nodeLabels).isEmpty()
+    assertThat(environmentInsideBody).isEqualTo('preview')
+  }
+
+  @Test
   void 'switching environment agent restores minimal git metadata after unstash'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.ORIGINAL_REMOTE_URL = 'https://github.com/HMCTS/civil-service.git'

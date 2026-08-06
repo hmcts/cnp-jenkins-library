@@ -66,19 +66,20 @@ def call(type, String product, String component, Closure body) {
   }
 
   Environment environment = new Environment(env)
+  String primaryEnvironment = branch.isPR() ? environment.previewName : environment.nonProdName
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = AgentSelector.labelForEnvironment(environment.nonProdName, env, product) ?: env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
 
   retry(conditions: [agent()], count: 2) {
     node(agentType) {
       timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
         def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
         try {
-          echo "Using ${agentType} as primary pipeline agent for ${environment.nonProdName}"
+          echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
           // These values also drive withEnvironmentAgent's no-op path and Az.az()'s env MI config-dir selection.
           env.BUILD_AGENT_TYPE = agentType
-          env.DEPLOYMENT_ENVIRONMENT = environment.nonProdName
+          env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
           dockerAgentSetup()
           env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -87,7 +88,7 @@ def call(type, String product, String component, Closure body) {
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
             subscription: subscription.nonProdName,
-            environment: environment.nonProdName,
+            environment: primaryEnvironment,
             product: product,
             component: component
           )

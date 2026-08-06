@@ -23,7 +23,25 @@ class AgentSelector implements Serializable {
       return false
     }
 
-    return envValue(envVars, 'BUILD_AGENT_TYPE') == labelForEnvironment(currentEnvironment, envVars, product)
+    return currentAgentMatchesLabel(envVars, labelForEnvironment(currentEnvironment, envVars, product))
+  }
+
+  static boolean currentAgentMatchesLabel(Object envVars, String expectedLabel) {
+    if (!expectedLabel) {
+      return false
+    }
+
+    if (envValue(envVars, 'BUILD_AGENT_TYPE') == expectedLabel) {
+      return true
+    }
+
+    if (envValue(envVars, 'NODE_NAME') == expectedLabel) {
+      return true
+    }
+
+    return envValue(envVars, 'NODE_LABELS')
+      .tokenize(' ')
+      .contains(expectedLabel)
   }
 
   private static String selectLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback) {
