@@ -25,7 +25,10 @@ branches:
     allowed: true
   - name: archive-complete-build-results
     allowed: true
+<<<<<<< HEAD
   - name: feat/DTSPO-33498/fix-cause-serialization
     allowed: true
   - name: fix-owasp
     allowed: true
+=======
+>>>>>>> 074eb3cb (adding the new path for dependencyCheckReport)
