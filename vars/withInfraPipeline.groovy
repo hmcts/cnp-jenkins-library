@@ -8,6 +8,8 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.pipeline.LibraryBranchControls
+
 
 def call(String product, String component = null, Closure body) {
 
@@ -31,9 +33,16 @@ def call(String product, String component = null, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      if (!libraryBranchAllowed) {
+        currentBuild.result = "FAILURE"
+        return
+      }
+
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 

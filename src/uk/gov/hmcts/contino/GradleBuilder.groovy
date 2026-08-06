@@ -64,6 +64,13 @@ class GradleBuilder extends AbstractBuilder {
     localSteps.writeFile(file: 'init.gradle', text: localSteps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
   }
 
+  private withAdoMavenPat(Closure body) {
+    def secrets = [
+      [ secretType: 'Secret', name: 'ado-maven-mirror-pat', version: '', envVariable: 'ADO_MAVEN_PAT' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) { body() }
+  }
+
   def test() {
     try {
       gradle("check")
@@ -272,7 +279,9 @@ EOF
       prepend += ' '
     }
     addInitScript()
-    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    withAdoMavenPat {
+      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    }
   }
 
   private String gradleWithOutput(String task) {
@@ -328,6 +337,13 @@ EOF
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
 
+    def statusCodeJava25 = steps.sh script: 'grep -F "JavaLanguageVersion.of(25)" build.gradle', returnStatus: true
+    if (statusCodeJava25 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-25-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
     // Workaround jacocoTestReport issue https://github.com/gradle/gradle/issues/18508#issuecomment-1049998305
     steps.env.GRADLE_OPTS = "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED"
     gradle("--version") // ensure wrapper has been downloaded
@@ -364,13 +380,26 @@ EOF
       // performance repo
       def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
       gradle(gatlingCommand)
-      this.localSteps.gatlingArchive()
+      archiveGatlingReports()
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +
           "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
       )
       super.executeGatling()
+    }
+  }
+
+  private void archiveGatlingReports() {
+    try {
+      this.localSteps.gatlingArchive()
+    } catch (Exception e) {
+      localSteps.echo("Gatling plugin archive step failed: ${e.class.simpleName}: ${e.message}")
+      localSteps.echo("Falling back to artifact archiving for Gatling reports")
+      localSteps.archiveArtifacts(
+        artifacts: "${localSteps.env.GATLING_REPORTS_PATH}/**/*",
+        allowEmptyArchive: true
+      )
     }
   }
 }

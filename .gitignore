@@ -12,3 +12,5 @@ bin
 
 # ASDF
 .tool-versions
+
+docs/superpowers/

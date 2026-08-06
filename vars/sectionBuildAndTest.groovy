@@ -6,6 +6,8 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.GradleAPI
+import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
 
@@ -20,10 +22,15 @@ def call(params) {
   def dockerImage
   def projectBranch
   def imageRegistry
+  def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
+  boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
+
+    // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
+    deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, config)
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
@@ -38,16 +45,18 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
-  
+
   stage('ACR Migration Check') {
     warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
   }
-  
+
   onPathToLive {
     stageWithAgent("Build", product) {
       onPR {
-        enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
+        if (config.deployableApp) {
+          enforceChartVersionBumped product: product, component: component
+          warnAboutAADIdentityPreviewHack product: product, component: component
+        }
       }
 
       // always build master and demo as we currently do not deploy an image there
@@ -174,6 +183,12 @@ def call(params) {
           }
         }
       }
+      echo 'Checking for only_deploy label to determine if we should skip build and tests'
+      def onlyDeployLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'only_deploy')
+      if (onlyDeployLabels.contains('only_deploy')) {
+        echo 'only_deploy label found, skipping build and tests'
+        config.onlyDeploy = true
+      }
     }
 
     if (config.fortifyScan && branches["Fortify scan"] == null) {
@@ -198,6 +213,11 @@ def call(params) {
       }
     }
 
+    if (config.onlyDeploy) {
+      branches.remove("Unit tests and Sonar scan")
+      branches.remove("Fortify scan")
+    }
+
     stageWithAgent("Static checks / Container build", product) {
       when(noSkipImgBuild) {
         parallel branches
@@ -210,7 +230,33 @@ def call(params) {
       }
     }
 
-    if (noSkipImgBuild) {
+    if (config.releaseOnMerge) {
+      onMaster {
+        stageWithAgent("Create release", product) {
+          if (fileExists('build.gradle')) {
+            String gradleVersion = gradleAPI.resolveGradleVersion()
+            if (!gradleVersion) {
+              echo('Skipping GitHub release creation: unable to resolve Gradle version')
+              return
+            }
+
+            GithubAPI githubAPI = new GithubAPI(this)
+            String project = githubAPI.currentProject()
+            String latestReleaseVersion = githubAPI.getLatestReleaseVersion(project)
+
+            if (latestReleaseVersion && gradleAPI.compareReleaseVersions(gradleVersion, latestReleaseVersion) <= 0) {
+              echo("Skipping GitHub release creation: ${gradleVersion} is not greater than latest release ${latestReleaseVersion}")
+              return
+            }
+
+            githubAPI.createGitHubRelease(project, gradleVersion, env.GIT_COMMIT)
+          }
+        }
+      }
+    }
+
+
+    if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING
@@ -229,7 +275,7 @@ def call(params) {
       }
     }
 
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
@@ -241,8 +287,8 @@ def call(params) {
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
           /*
-         * These instructions have to be kept in order
-         */
+        * These instructions have to be kept in order
+        */
           pcr.callAround('pact-consumer-tests') {
             builder.runConsumerTests(env.PACT_BROKER_URL, version)
           }
@@ -250,4 +296,6 @@ def call(params) {
       }
     }
   }
+  return deploymentEnabled
 }
+

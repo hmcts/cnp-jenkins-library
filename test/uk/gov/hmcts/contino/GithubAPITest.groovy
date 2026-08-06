@@ -79,6 +79,16 @@ class GithubAPITest extends Specification {
 
   static def invalidResponse = ["status": 500]
 
+  static def latestReleaseResponse = ["status": 200, "content": '''{
+      "tag_name": "v1.2.3"
+    }''']
+
+  static def latestReleaseNotFoundResponse = ["status": 404, "content": '']
+
+  static def releaseCreatedResponse = ["status": 201, "content": '''{
+      "id": 1
+    }''']
+
   void setup() {
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [CHANGE_URL: "https://github.com/hmcts/some-project/pull/68",
@@ -280,5 +290,44 @@ class GithubAPITest extends Specification {
     then:
       assertThat(masterLabelExists).isFalse()
       assertThat(prLabelExists).isTrue()
+  }
+
+  def "getLatestReleaseVersion normalizes release tag"() {
+    given:
+      steps.httpRequest(_) >> latestReleaseResponse
+
+    when:
+      def version = githubApi.getLatestReleaseVersion('hmcts/some-project')
+
+    then:
+      assertThat(version).isEqualTo('1.2.3')
+  }
+
+  def "getLatestReleaseVersion returns null on 404"() {
+    given:
+      steps.httpRequest(_) >> latestReleaseNotFoundResponse
+
+    when:
+      def version = githubApi.getLatestReleaseVersion('hmcts/some-project')
+
+    then:
+      assertThat(version).isNull()
+  }
+
+  def "createGitHubRelease calls GitHub releases endpoint with expected payload"() {
+    given:
+      steps.httpRequest({ Map request ->
+        request.httpMode == 'POST' &&
+          request.url == 'https://api.github.com/repos/hmcts/some-project/releases' &&
+          request.requestBody.contains('"tag_name":"v1.2.4"') &&
+          request.requestBody.contains('"target_commitish":"abcdef1"') &&
+          request.requestBody.contains('"generate_release_notes":true')
+      }) >> releaseCreatedResponse
+
+    when:
+      def response = githubApi.createGitHubRelease('hmcts/some-project', '1.2.4', 'abcdef1')
+
+    then:
+      assertThat(response.status).isEqualTo(201)
   }
 }

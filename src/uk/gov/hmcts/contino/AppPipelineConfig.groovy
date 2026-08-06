@@ -20,6 +20,9 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean e2eTest = false
   boolean securityScan = false
   boolean serviceApp = true
+  boolean deployableApp = true
+  boolean releaseOnMerge = false
+  boolean libraryBranchAllowed = false
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
   Set<String> legacyDeploymentExemptions = []
@@ -34,6 +37,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
+  boolean onlyDeploy = false
   boolean skipHighLevelDataSetupProd = false
 
   int crossBrowserTestTimeout

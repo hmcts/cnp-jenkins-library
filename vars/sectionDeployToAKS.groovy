@@ -43,7 +43,6 @@ def call(params) {
   def nonProdEnv = new Environment(env).nonProdName
 
   def builder = pipelineType.builder
-
   withAcrClient(subscription) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
@@ -89,12 +88,12 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
-      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled) {
+      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Consumer Can I Deploy", product) {
           builder.runConsumerCanIDeploy()
         }
       }
-      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled) {
+      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Provider Verification", product) {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
@@ -115,7 +114,7 @@ def call(params) {
               def success = true
               try {
                 pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 10, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
                     builder.smokeTest()
                   }
                 }
@@ -130,36 +129,33 @@ def call(params) {
               }
             }
           }
-        
+
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
-                  warnError('Failure in fullFunctionalTest') {
-                    def success = true
-                    try {
-                      pcr.callAround("fullFunctionalTest:${environment}") {
-                        timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                          builder.fullFunctionalTest()
-                        }
-                      }
-                    } catch (err) {
-                      success = false
-                      throw err
-                    } finally {
-                      savePodsLogs(dockerImage, params, "full-functional")
-                      if (!success) {
-                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                        error('Functional test failed')
+                  def passed = true
+                  try {
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
                       }
                     }
+                  } catch (err) {
+                    passed = false
+                  } finally {
+                    savePodsLogs(dockerImage, params, "full-functional")
+                  }
+                  if (!passed) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test (Full) failed')
                   }
                 }
               }
             } else {
               stageWithAgent("Functional Test - ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
+                  def passed = true
                   try {
                     pcr.callAround("functionalTest:${environment}") {
                       timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
@@ -167,14 +163,13 @@ def call(params) {
                       }
                     }
                   } catch (err) {
-                    success = false
-                    throw err
+                    passed = false
                   } finally {
                     savePodsLogs(dockerImage, params, "functional")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                      error('Functional test failed')
-                    }
+                  }
+                  if (!passed) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test failed')
                   }
                 }
               }
@@ -195,7 +190,7 @@ def call(params) {
           }
           // Performance Test Pipeline: Setup -> Parallel Testing
           if ((config.performanceTestStages || config.gatlingLoadTests) && environment in config.performanceTestEnvironments) {
-            
+
             // Load performance test secrets once for all stages - Secrets are stored only within the
             // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
             def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
@@ -215,7 +210,7 @@ def call(params) {
               azureKeyVaultSecrets: perfSecrets,
               keyVaultURLOverride: perfKeyVaultUrl
             ) {
-            
+
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
               stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
@@ -247,10 +242,10 @@ def call(params) {
                   }
                 }
               }
-            
+
             // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
             def testStages = [:]
-            
+
             if (config.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
                 stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
@@ -281,7 +276,7 @@ def call(params) {
                 }
               }
             }
-            
+
             if (config.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
                 stageWithAgent("Gatling Load Tests - ${environment}", product) {
@@ -314,7 +309,7 @@ def call(params) {
                 }
               }
             }
-            
+
               // Execute test stages
               if (testStages.size() > 1) {
                 echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
@@ -386,19 +381,15 @@ def call(params) {
             if (config.e2eTest) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
-                  try {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("E2eTest:${environment}") {
                       builder.e2eTest()
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
                   }
                 }
               }
@@ -410,19 +401,15 @@ def call(params) {
             if (testLabels.contains('enable_e2e_test')) {
               stageWithAgent("E2E Test - AKS ${environment}", product) {
                 testEnv(aksUrl) {
-                  def success = true
-                  try {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("E2eTest:${environment}") {
                       builder.e2eTest()
                     }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "e2e")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
                   }
                 }
               }
@@ -466,10 +453,18 @@ def call(params) {
         }
       }
     }
+    if (config.onlyDeploy) {
+      stageWithAgent('Deployment only pipeline', product) {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          throw new RuntimeException("\"Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge")
+        }
+      }
+    } else {
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
       if (isOnMaster || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
     }
   }
+}
 

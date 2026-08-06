@@ -35,6 +35,8 @@ def uninstallRelease(dockerImage, Map params) {
       helm.delete(dockerImage.getImageTag(), namespace)
       echo "Uninstalled release for ${dockerImage.getImageTag()}"
     }
+    def releaseName = "${chartName}-${dockerImage.getImageTag()}"
+    kubectl.deleteJobsByReleasePrefix(namespace, releaseName)
   } catch (ignored) {
       echo "Unable to uninstall this helm release."
   }

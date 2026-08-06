@@ -1,5 +1,22 @@
 # Shared Jenkins Library for Code and Infrastructure pipelines
 
+## Table of Contents
+
+- [How is this used?](#how-is-this-used)
+- [Opinionated app pipeline](#opinionated-app-pipeline)
+- [Opinionated infrastructure pipeline](#opinionated-infrastructure-pipeline)
+- [Application specific infrastructure](#application-specific-infrastructure)
+- [Nightly pipeline](#nightly-pipeline)
+- [PR label behaviour](#pr-label-behaviour)
+- [Performance Testing with Dynatrace and Gatling](#performance-testing-with-dynatrace-and-gatling)
+- [Non-Deployable App](#non-deployable-app)
+- [Release on merge](#release-on-merge)
+- [Building and Testing](#building-and-testing)
+- [Tool versions](#tool-versions)
+- [Contract testing with Pact](#contract-testing-with-pact)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
 ## How is this used?
 Code in this library are loaded at runtime by Jenkins.
 Jenkins is already configured to point to this repository.
@@ -15,8 +32,8 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
 
 ### Opinionated app pipeline
 
-This library contains a complete opinionated pipeline that can build, test and deploy Java
-and NodeJS applications. The pipeline contains the following stages:
+This library contains a complete opinionated pipeline that can build, test and deploy Java,
+NodeJS and Python applications. The pipeline contains the following stages:
 
 * Checkout
 * Build
@@ -36,7 +53,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
-script and dependencies in source control. NodeJS apps must use Yarn.
+script and dependencies in source control. NodeJS apps must use Yarn. Python apps must use
+[uv](https://docs.astral.sh/uv/) for package management and include a `.python-version` file
+at the root of the repository.
 
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
@@ -46,7 +65,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular" and "python"
 
 def product = "rhubarb"
 
@@ -559,6 +578,9 @@ withNightlyPipeline(type, product, component) {
   }
 }
 ```
+
+
+
 ## Enabling nightly checks on pull requests
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
@@ -575,6 +597,53 @@ Some tests may require additional configuration - copy this from your `Jenkinsfi
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
+## PR label behaviour
+
+### `only_deploy`
+
+Add `only_deploy` to a PR when you want to deploy to preview quickly without running the full set of tests and checks.
+
+Behaviour:
+- Skips `Unit tests`, `Sonar scan`, `Fortify scan`, and `Pact tests`.
+- Leaves deployment in place by skipping Helm uninstall
+- Above tests must still pass to enable merge to master/main
+
+### `pr-values:<name>`
+
+Add labels in the format `pr-values:<name>` to include extra Helm values files during PR deployments.
+
+Behaviour:
+- For each matching label, the pipeline looks for:
+  - `charts/<product>-<component>/values.<name>.<environment>.template.yaml`
+- If found, it renders and includes that values file in the Helm install/upgrade for the PR deployment.
+
+Example:
+- Label: `pr-values:nightly`
+- File expected: `charts/product-component/values.nightly.preview.template.yaml`
+
+### PR labels
+The following labels do not require additional configuration and can be used to change pipeline behaviour.
+
+Label/Topic | Effect | Applies to
+--- | --- | ---
+`enable_keep_helm` | Keeps deployed Helm release/resources instead of uninstalling at end of PR run. | PR pipelines
+`only_deploy` | Skips tests and checks including unit, sonar, fortify, pact; keeps deployment up and intentionally fails to prevent merge. | PR pipelines
+`pr-values:<name>` | Includes `values.<name>.<environment>.template.yaml` in PR Helm deployment values when present. | PR pipelines
+`not-plan-on-prod` (label) | Skips extra Terraform plan against prod/base environment. | PR and infra PR pipelines
+`not-plan-on-prod` (repo topic) | Same as label above, applied repo-wide. | PR and infra PR pipelines
+
+## Performance Testing extension for Smart Slack Alerts & Automatic Rerun on Fail
+Additional parameters have been added to enablePerformanceTest as follows:
+- enablePerformanceTest(timeout=30, perfGatlingAlerts=true, perfRerunOnFail=true)
+- *perfGatlingAlerts will activate alerts to slack channel performance-alerts if a test fails more than 3 days in a row.
+- *perfRerunOnFail will activate 1 rerun of a failed test which will start a new stage on the pipeline test.
+
+The above features utilise 2 reusable functions:
+- performanceCheckIfTestFailed({Slack channel name}) - This alerts a slack channel of 3 or more fails in a row.
+- sendSlackMessage({user}, {colour}, {body})
+- *user is the slack channel
+- *colour can be warning or danger
+- *body is any text
 
 ## Performance Testing with Dynatrace and Gatling
 
@@ -825,6 +894,33 @@ withPipeline(type, product, component) {
 }
 ```
 
+## Non-Deployable App
+You need to add `nonDeployableApp()` method in `withPipeline` block to skip deployments.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  nonDeployableApp()
+}
+```
+
+## Release on merge
+Add the `releaseOnMerge()` method in `withPipeline` to automatically create a GitHub Release on `master` if the gradle version number has been updated.
+
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  releaseOnMerge()
+}
+```
+
 ## Building and Testing
 This is a Groovy project, and gradle is used to build and test.
 
@@ -910,6 +1006,9 @@ Java 11 is installed on the Jenkins agent.
 
 ### Node.JS
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
+
+### Python
+[uv](https://docs.astral.sh/uv/) is used for package management. Place a `.python-version` file at the root of your repo containing the Python version you want (e.g. `3.13`). The pipeline enforces the use of supported Python versions — currently `3.13`. The `.python-version` file is also read by uv locally.
 
 ### Terraform
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
@@ -1064,10 +1163,64 @@ This file calls a class named [TerraformInfraApprovals](https://github.com/hmcts
 
 This file will point to the repository which defines, in json syntax, which infrastructure resources and modules are approved for use at the [global](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/global.json) and [project](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/bulk-scan-shared-infrastructure.json) level.
 
+## Library Controls
+
+Whilst we transition to v2.0.0 of this library, controls have been added to allowlist branches of this library to be used within HMCTS.
+
+Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail.
+
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+ 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+ 3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
+
+## Completed build archives
+
+The application pipeline can queue a separate Jenkins job to copy failed build
+records to Azure Blob Storage for PR, master and nightly builds. Successful,
+unstable and aborted builds are ignored. Every failed build queues the root
+Jenkins job named `Archive Completed Builds` after any agent retries are
+exhausted.
+
+Before queuing the archive job, the application and nightly pipelines add common
+Gradle, Playwright, functional-test and pod-log outputs to the source build's
+Jenkins artifacts. The archive job must call `archiveCompletedBuild` with the
+parameters passed by `queueBuildArchive`:
+
+```groovy
+@Library('Infrastructure') _
+
+archiveCompletedBuild(
+  sourceBuildUrl: params.SOURCE_BUILD_URL,
+  sourceJobName: params.SOURCE_JOB_NAME,
+  sourceBuildNumber: params.SOURCE_BUILD_NUMBER,
+  sourceBuildResult: params.SOURCE_BUILD_RESULT,
+  sourceProduct: params.SOURCE_PRODUCT,
+  sourceComponent: params.SOURCE_COMPONENT
+)
+```
+
+The archive job waits for the source build to finish, then reads it directly
+from the same Jenkins controller. It captures the complete console output,
+build metadata, test-result metadata and artifact ZIP without a separate
+Jenkins API credential. It uploads the resulting directory using the existing
+`azureBlobUpload` step. Archive names include the final outcome and, when
+Jenkins reports one, the failed stage, for example
+`completed-build_43_FAILURE_Deploy_to_AKS`.
+
+The following global environment variables configure the archive:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `sandbox` | Azure subscription alias |
+| `BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID` | `buildlog-storage-account` | Storage credential |
+| `BUILD_ARCHIVE_STORAGE_CONTAINER` | `jenkins-build-archive` | Blob container |
+| `BUILD_ARCHIVE_STORAGE_PREFIX` | `builds` | Path below the container |
+| `BUILD_ARCHIVE_AGENT` | any agent | Label used by the archive job |
+| `BUILD_ARCHIVE_LOCAL_ONLY` | `false` | Archive back to Jenkins instead of Azure for local testing |
+| `BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES` | `300` | Maximum wait for the source build to finish |
+| `BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES` | `120` | Maximum time for capture and upload |
