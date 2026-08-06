@@ -25,3 +25,5 @@ branches:
     allowed: true
   - name: archive-complete-build-results
     allowed: true
+  - name: feat/DTSPO-33498/fix-cause-serialization
+    allowed: true
