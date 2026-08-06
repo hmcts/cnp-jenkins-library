@@ -26,17 +26,8 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
   }
 }
 
-def shouldSkipWorkspaceStashForStage(AppPipelineConfig config, String stageKey) {
-  return config.skipWorkspaceStashStages?.contains(stageKey)
-}
-
-def stageWithEnvironmentAgentAndSecrets(String stageName, AppPipelineConfig config, String product, String environment, Closure body) {
-  stageWithEnvironmentAgentAndSecrets(stageName, config, product, environment, null, body)
-}
-
 def stageWithEnvironmentAgentAndSecrets(String stageName, AppPipelineConfig config, String product, String environment, String stageKey, Closure body) {
-  def skipStash = stageKey ? shouldSkipWorkspaceStashForStage(config, stageKey) : false
-  stageWithEnvironmentAgent(stageName, product, environment, skipStash) {
+  stageWithEnvironmentAgent(stageName, product, environment) {
     // Fetch team secrets after the node hop so Key Vault auth/env injection runs on the target environment agent.
     withTeamSecrets(config, environment, product) {
       body.call()
@@ -110,12 +101,12 @@ def call(params) {
       }
       withSubscriptionLogin(subscription) {
       if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
-        stageWithAgent("Pact Consumer Can I Deploy", product) {
+        stageWithEnvironmentAgent("Pact Consumer Can I Deploy", product, environment) {
           builder.runConsumerCanIDeploy()
         }
       }
       if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
-        stageWithAgent("Pact Provider Verification", product) {
+        stageWithEnvironmentAgent("Pact Provider Verification", product, environment) {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
@@ -152,7 +143,7 @@ def call(params) {
         
         onFunctionalTestEnvironment(environment) {
           if (testLabels.contains('enable_full_functional_tests')) {
-            stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment, 'fullFunctionalTest') {
+            stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
               testEnv(aksUrl) {
                 def passed = true
                 try {
@@ -173,7 +164,7 @@ def call(params) {
               }
             }
           } else {
-            stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment, 'functionalTest') {
+            stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
               testEnv(aksUrl) {
                 def passed = true
                 try {

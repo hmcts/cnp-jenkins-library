@@ -5,28 +5,6 @@ def call(String environment, String product, Closure body) {
   call(environment, product, null, body)
 }
 
-def call(String environment, String product, boolean skipStash, Closure body) {
-  if (!skipStash) {
-    call(environment, product, (String) null, body)
-    return
-  }
-
-  String agentLabel = AgentSelector.labelForEnvironment(environment, env, product)
-  if (!agentLabel || agentLabel == env.BUILD_AGENT_TYPE) {
-    body()
-    return
-  }
-  echo "Using ${agentLabel} agent for ${environment}"
-  node(agentLabel) {
-    withEnvironmentContext(agentLabel, environment) {
-      if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
-        env.PATH = "$env.PATH:/usr/local/bin"
-      }
-      body()
-    }
-  }
-}
-
 def call(String environment, String product, String agentLabelOverride, Closure body) {
   String agentLabel = agentLabelOverride ?: AgentSelector.labelForEnvironment(environment, env, product)
   // Idempotency guard: nested calls should no-op once already running on the target agent.

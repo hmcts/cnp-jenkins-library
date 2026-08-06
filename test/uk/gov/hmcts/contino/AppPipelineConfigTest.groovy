@@ -110,20 +110,6 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.fullFunctionalTestTimeout).isEqualTo(30)
   }
 
-  def "ensure disable workspace stash with no stage names is a no-op"() {
-    when:
-      dsl.disableWorkspaceStashForStages()
-    then:
-      assertThat(pipelineConfig.skipWorkspaceStashStages).isEmpty()
-  }
-
-  def "ensure disable workspace stash can be configured for multiple stage names"() {
-    when:
-      dsl.disableWorkspaceStashForStages('functionalTest', 'fullFunctionalTest')
-    then:
-      assertThat(pipelineConfig.skipWorkspaceStashStages).containsExactlyInAnyOrder('functionalTest', 'fullFunctionalTest')
-  }
-
   def "ensure enable mutation test"() {
     when:
       dsl.enableMutationTest()

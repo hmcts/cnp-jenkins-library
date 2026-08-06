@@ -137,9 +137,7 @@ def call(Map<String, ?> params) {
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
-        if (!config.tfPlanOnly) {
-          stash name: terraformPlanStashName, includes: 'tfplan'
-        }
+        stash name: terraformPlanStashName, includes: 'tfplan'
 
 
         onPR {
@@ -162,9 +160,7 @@ def call(Map<String, ?> params) {
       if (!config.tfPlanOnly) {
         stageWithEnvironmentAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
           terraformInit()
-          if (!fileExists('tfplan')) {
-            unstash terraformPlanStashName
-          }
+          unstash terraformPlanStashName
           sh "terraform apply -auto-approve tfplan"
           def parseResult = null
           try {

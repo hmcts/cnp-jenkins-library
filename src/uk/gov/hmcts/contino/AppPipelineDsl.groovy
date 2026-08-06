@@ -180,26 +180,4 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.idamTestUserPassword = params.password
     config.idamTestUserRoles = params.roles ?: []
   }
-
-  void disableWorkspaceStashForStages(String... stageNames) {
-    if (!stageNames || stageNames.length == 0) {
-      return
-    }
-    applyWorkspaceStashStageOverrides(stageNames.toList())
-  }
-
-  void disableWorkspaceStashForStages(List<String> stageNames) {
-    if (!stageNames) {
-      return
-    }
-    applyWorkspaceStashStageOverrides(stageNames)
-  }
-
-  private void applyWorkspaceStashStageOverrides(List<String> stageNames) {
-    stageNames
-      .findAll { it != null }
-      .collect { it.trim() }
-      .findAll { !it.isEmpty() }
-      .each { config.skipWorkspaceStashStages.add(it) }
-  }
 }
