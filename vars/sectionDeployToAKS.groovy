@@ -104,355 +104,358 @@ def call(params) {
         builder.runConsumerCanIDeploy()
       }
     }
-    if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
-      stageWithEnvironmentAgent("Pact Provider Verification", product, environment) {
-        def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-        def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
+        stageWithEnvironmentAgent("Pact Provider Verification", product, environment) {
+          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-        env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-        env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
-        env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-        env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
-        pcr.callAround('pact-provider-verification') {
-          builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
-        }
-      }
-    }
-    if (config.serviceApp) {
-      stageWithEnvironmentAgentAndSecrets("Smoke Test - AKS ${environment}", config, product, environment) {
-        testEnv(aksUrl) {
-          def success = true
-          try {
-            pcr.callAround("smoketest:${environment}") {
-              timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                builder.smokeTest()
-              }
-            }
-          } catch (err) {
-            success = false
-            throw err
-          } finally {
-            savePodsLogs(dockerImage, params, "smoke")
-            if (!success) {
-              clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-            }
+          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
+          pcr.callAround('pact-provider-verification') {
+            builder.runProviderVerification(env.PACT_BROKER_URL, version, isOnMaster)
           }
         }
       }
-      
-      onFunctionalTestEnvironment(environment) {
-        if (testLabels.contains('enable_full_functional_tests')) {
-          stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
-            testEnv(aksUrl) {
-              def passed = true
-              try {
-                pcr.callAround("fullFunctionalTest:${environment}") {
-                  timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                    builder.fullFunctionalTest()
-                  }
-                }
-              } catch (err) {
-                passed = false
-              } finally {
-                savePodsLogs(dockerImage, params, "full-functional")
-              }
-              if (!passed) {
-                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                error('Functional test (Full) failed')
-              }
-            }
-          }
-        } else {
-          stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              def passed = true
-              try {
-                pcr.callAround("functionalTest:${environment}") {
-                  timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                    builder.functionalTest()
-                  }
-                }
-              } catch (err) {
-                passed = false
-              } finally {
-                savePodsLogs(dockerImage, params, "functional")
-              }
-              if (!passed) {
-                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                error('Functional test failed')
-              }
-            }
-          }
-        }
-      }
-
-      if (config.performanceTest) {
-        stageWithEnvironmentAgentAndSecrets("Performance Test - ${environment}", config, product, environment) {
-          testEnv(aksUrl) {
-            pcr.callAround("performanceTest:${environment}") {
-              timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
-                builder.performanceTest()
-                publishPerformanceReports(params)
-              }
-            }
-          }
-        }
-      }
-      // Performance Test Pipeline: Setup -> Parallel Testing
-      if ((config.performanceTestStages || config.gatlingLoadTests) && environment in config.performanceTestEnvironments) {
-
-        // Load performance test secrets once for all stages - Secrets are stored only within the
-        // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
-        def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
-        def perfSecrets = [
-          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
-          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
-          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
-          [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
-        ]
-
-        // Add IDAM test support URL secret if IDAM test user is enabled
-        if (config.idamTestUser) {
-          perfSecrets << [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'idam-test-support-url', version: '', envVariable: 'IDAM_TEST_SUPPORT_URL']
-        }
-
-        withAzureKeyvault(
-          azureKeyVaultSecrets: perfSecrets,
-          keyVaultURLOverride: perfKeyVaultUrl
-        ) {
-
-          // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
-          // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
-          stageWithEnvironmentAgentAndSecrets("Dynatrace Performance Setup - ${environment}", config, product, environment) {
+      if (config.serviceApp) {
+        withTeamSecrets(config, environment) {
+          stageWithEnvironmentAgentAndSecrets("Smoke Test - AKS ${environment}", config, product, environment) {
             testEnv(aksUrl) {
               def success = true
               try {
-                pcr.callAround("dynatracePerformanceSetup:${environment}") {
-                  timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
-                    dynatracePerformanceSetup([
-                      product: product,
-                      component: component,
-                      environment: environment,
-                      configPath: config.performanceTestConfigPath,
-                      idamTestUserEnabled: config.idamTestUser,
-                      idamTestUserEmail: config.idamTestUserEmail,
-                      idamTestUserForename: config.idamTestUserForename,
-                      idamTestUserSurname: config.idamTestUserSurname,
-                      idamTestUserPassword: config.idamTestUserPassword,
-                      idamTestUserRoles: config.idamTestUserRoles
-                    ])
+                pcr.callAround("smoketest:${environment}") {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                    builder.smokeTest()
                   }
                 }
               } catch (err) {
                 success = false
-                echo "Dynatrace setup failed: ${err.message}"
-                // Don't fail the build for setup issues, continue with tests
+                throw err
               } finally {
-                savePodsLogs(dockerImage, params, "dynatrace-setup")
-              }
-            }
-          }
-
-          // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
-          def testStages = [:]
-
-          if (config.performanceTestStages) {
-            testStages['Dynatrace Synthetic Tests'] = {
-              stageWithEnvironmentAgentAndSecrets("Dynatrace Synthetic Tests - ${environment}", config, product, environment) {
-                testEnv(aksUrl) {
-                  def success = true
-                  try {
-                    pcr.callAround("dynatraceSyntheticTest:${environment}") {
-                      timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
-                        dynatraceSyntheticTest([
-                          product: product,
-                          component: component,
-                          environment: environment,
-                          performanceTestStagesEnabled: config.performanceTestStages,
-                          gatlingLoadTestsEnabled: config.gatlingLoadTests
-                        ])
-                      }
-                    }
-                  } catch (err) {
-                    success = false
-                    throw err
-                  } finally {
-                    savePodsLogs(dockerImage, params, "dynatrace-synthetic")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
-                  }
+                savePodsLogs(dockerImage, params, "smoke")
+                if (!success) {
+                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                 }
               }
             }
           }
-
-          if (config.gatlingLoadTests) {
-            testStages['Gatling Load Tests'] = {
-              stageWithEnvironmentAgentAndSecrets("Gatling Load Tests - ${environment}", config, product, environment) {
+    
+          onFunctionalTestEnvironment(environment) {
+            if (testLabels.contains('enable_full_functional_tests')) {
+              stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
                 testEnv(aksUrl) {
-                  def success = true
+                  def passed = true
                   try {
-                    pcr.callAround("gatlingLoadTests:${environment}") {
-                      timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
-                        gatlingExternalLoadTest([
-                          product: product,
-                          component: component,
-                          environment: environment,
-                          subscription: subscription,
-                          gatlingRepo: config.gatlingRepo,
-                          gatlingBranch: config.gatlingBranch,
-                          gatlingSimulation: config.gatlingSimulation
-                        ])
+                    pcr.callAround("fullFunctionalTest:${environment}") {
+                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                        builder.fullFunctionalTest()
                       }
                     }
                   } catch (err) {
-                    success = false
-                    throw err
+                    passed = false
                   } finally {
-                    savePodsLogs(dockerImage, params, "gatling-load-tests")
-                    if (!success) {
-                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    }
+                    savePodsLogs(dockerImage, params, "full-functional")
                   }
-                }
-              }
-            }
-          }
-
-          // Execute test stages
-          if (testStages.size() > 1) {
-            echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
-            parallel(testStages)
-          } else {
-            echo "Running single performance test stage..."
-            testStages.values().first().call()
-          }
-
-          // Stage 3: Site Reliability Guardian Evaluation (if enabled)
-          if (config.srgEvaluation) {
-            stageWithEnvironmentAgentAndSecrets("Site Reliability Guardian Evaluation - ${environment}", config, product, environment) {
-              testEnv(aksUrl) {
-                try {
-                  pcr.callAround("srgEvaluation:${environment}") {
-                    evaluateDynatraceSRG([
-                      environment: environment,
-                      srgServiceName: config.srgServiceName,
-                      performanceTestStartTime: env.PERF_TEST_START_TIME,
-                      performanceTestEndTime: env.PERF_TEST_END_TIME,
-                      gatlingTestStartTime: env.GATLING_TEST_START_TIME,
-                      gatlingTestEndTime: env.GATLING_TEST_END_TIME,
-                      srgFailureBehavior: config.srgFailureBehavior,
-                      product: product,
-                      component: component
-                    ])
-                  }
-                } catch (Exception e) {
-                  echo "SRG evaluation stage failed: ${e.message}"
-                  if (config.srgFailureBehavior == 'fail') {
+                  if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    throw e
+                    error('Functional test (Full) failed')
                   }
                 }
               }
-            }
-          }
-        } // End withAzureKeyvault block
-      } // End if (config.performanceTestStages || config.gatlingLoadTests)
-
-      onMaster {
-        if (config.crossBrowserTest) {
-          stageWithEnvironmentAgentAndSecrets("CrossBrowser Test - AKS ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              pcr.callAround("crossBrowserTest:${environment}") {
-                builder.crossBrowserTest()
-              }
-            }
-          }
-        }
-        if (config.mutationTest) {
-          stageWithEnvironmentAgentAndSecrets("Mutation Test - AKS ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              pcr.callAround("mutationTest:${environment}") {
-                builder.mutationTest()
-              }
-            }
-          }
-        }
-        if (config.fullFunctionalTest) {
-          stageWithEnvironmentAgentAndSecrets("FullFunctional Test - AKS ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              pcr.callAround("fullFunctionalTest:${environment}") {
-                builder.fullFunctionalTest()
-              }
-            }
-          }
-        }
-        if (config.e2eTest) {
-          stageWithEnvironmentAgentAndSecrets("E2E Test - AKS ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                pcr.callAround("E2eTest:${environment}") {
-                  builder.e2eTest()
-                }
-              }
-              savePodsLogs(dockerImage, params, "e2e")
-              if (passed == false) {
-                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                error('E2E test failed')
-              }
-            }
-          }
-        }
-      }
-
-      // E2E Tests:
-      onPR {
-        if (testLabels.contains('enable_e2e_test')) {
-          stageWithEnvironmentAgentAndSecrets("E2E Test - AKS ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                pcr.callAround("E2eTest:${environment}") {
-                  builder.e2eTest()
-                }
-              }
-              savePodsLogs(dockerImage, params, "e2e")
-              if (passed == false) {
-                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                error('E2E test failed')
-              }
-            }
-          }
-        }
-      }
-
-      // Performance Tests:
-      onPR {
-        if (testLabels.contains('enable_performance_test')) {
-          stageWithEnvironmentAgentAndSecrets("Performance test", config, product, environment) {
-            warnError('Failure in performanceTest') {
-              pcr.callAround('PerformanceTest') {
-                timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+            } else {
+              stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  def passed = true
                   try {
-                    builder.performanceTest()
+                    pcr.callAround("functionalTest:${environment}") {
+                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                        builder.functionalTest()
+                      }
+                    }
+                  } catch (err) {
+                    passed = false
                   } finally {
-                    savePodsLogs(dockerImage, params, "performance")
+                    savePodsLogs(dockerImage, params, "functional")
+                  }
+                  if (!passed) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('Functional test failed')
                   }
                 }
               }
             }
           }
-        }
-        if (testLabels.contains('enable_security_scan')) {
-          stageWithEnvironmentAgentAndSecrets('Security scan', config, product, environment) {
-            testEnv(aksUrl) {
-              warnError('Failure in securityScan') {
-                env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
-                env.ALERT_FILTERS = config.securityScanAlertFilters
-                env.SCAN_TYPE = config.securityScanType
-                pcr.callAround('securityScan') {
-                  timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-                    builder.securityScan()
+
+          if (config.performanceTest) {
+            stageWithEnvironmentAgentAndSecrets("Performance Test - ${environment}", config, product, environment) {
+              testEnv(aksUrl) {
+                pcr.callAround("performanceTest:${environment}") {
+                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
+                    builder.performanceTest()
+                    publishPerformanceReports(params)
+                  }
+                }
+              }
+            }
+          }
+          // Performance Test Pipeline: Setup -> Parallel Testing
+          if ((config.performanceTestStages || config.gatlingLoadTests) && environment in config.performanceTestEnvironments) {
+
+            // Load performance test secrets once for all stages - Secrets are stored only within the
+            // rpe-shared-perftest KV for all environments (they are DT API keys and not env specific)
+            def perfKeyVaultUrl = "https://rpe-shared-perftest.vault.azure.net"   //https://et-perftest.vault.azure.net/
+            def perfSecrets = [
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-monitor-token', version: '', envVariable: 'PERF_SYNTHETIC_MONITOR_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-metrics-token', version: '', envVariable: 'PERF_METRICS_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-event-token', version: '', envVariable: 'PERF_EVENT_TOKEN'],
+              [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'perf-synthetic-update-token', version: '', envVariable: 'PERF_SYNTHETIC_UPDATE_TOKEN']
+            ]
+
+            // Add IDAM test support URL secret if IDAM test user is enabled
+            if (config.idamTestUser) {
+              perfSecrets << [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: 'idam-test-support-url', version: '', envVariable: 'IDAM_TEST_SUPPORT_URL']
+            }
+
+            withAzureKeyvault(
+              azureKeyVaultSecrets: perfSecrets,
+              keyVaultURLOverride: perfKeyVaultUrl
+            ) {
+
+              // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
+              // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
+              stageWithEnvironmentAgentAndSecrets("Dynatrace Performance Setup - ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  def success = true
+                  try {
+                    pcr.callAround("dynatracePerformanceSetup:${environment}") {
+                      timeoutWithMsg(time: 5, unit: 'MINUTES', action: "Dynatrace Performance Setup - ${environment}") {
+                        dynatracePerformanceSetup([
+                          product: product,
+                          component: component,
+                          environment: environment,
+                          configPath: config.performanceTestConfigPath,
+                          idamTestUserEnabled: config.idamTestUser,
+                          idamTestUserEmail: config.idamTestUserEmail,
+                          idamTestUserForename: config.idamTestUserForename,
+                          idamTestUserSurname: config.idamTestUserSurname,
+                          idamTestUserPassword: config.idamTestUserPassword,
+                          idamTestUserRoles: config.idamTestUserRoles
+                        ])
+                      }
+                    }
+                  } catch (err) {
+                    success = false
+                    echo "Dynatrace setup failed: ${err.message}"
+                    // Don't fail the build for setup issues, continue with tests
+                  } finally {
+                    savePodsLogs(dockerImage, params, "dynatrace-setup")
+                  }
+                }
+              }
+
+            // Stage 2: Run performance tests in parallel (if both enabled) or sequential (if only one enabled)
+            def testStages = [:]
+
+            if (config.performanceTestStages) {
+              testStages['Dynatrace Synthetic Tests'] = {
+                stageWithEnvironmentAgentAndSecrets("Dynatrace Synthetic Tests - ${environment}", config, product, environment) {
+                  testEnv(aksUrl) {
+                    def success = true
+                    try {
+                      pcr.callAround("dynatraceSyntheticTest:${environment}") {
+                        timeoutWithMsg(time: config.performanceTestStagesTimeout, unit: 'MINUTES', action: "Dynatrace Synthetic Tests - ${environment}") {
+                          dynatraceSyntheticTest([
+                            product: product,
+                            component: component,
+                            environment: environment,
+                            performanceTestStagesEnabled: config.performanceTestStages,
+                            gatlingLoadTestsEnabled: config.gatlingLoadTests
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      success = false
+                      throw err
+                    } finally {
+                      savePodsLogs(dockerImage, params, "dynatrace-synthetic")
+                      if (!success) {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            if (config.gatlingLoadTests) {
+              testStages['Gatling Load Tests'] = {
+                stageWithEnvironmentAgentAndSecrets("Gatling Load Tests - ${environment}", config, product, environment) {
+                  testEnv(aksUrl) {
+                    def success = true
+                    try {
+                      pcr.callAround("gatlingLoadTests:${environment}") {
+                        timeoutWithMsg(time: config.gatlingLoadTestTimeout, unit: 'MINUTES', action: "Gatling Load Tests - ${environment}") {
+                          gatlingExternalLoadTest([
+                            product: product,
+                            component: component,
+                            environment: environment,
+                            subscription: subscription,
+                            gatlingRepo: config.gatlingRepo,
+                            gatlingBranch: config.gatlingBranch,
+                            gatlingSimulation: config.gatlingSimulation
+                          ])
+                        }
+                      }
+                    } catch (err) {
+                      success = false
+                      throw err
+                    } finally {
+                      savePodsLogs(dockerImage, params, "gatling-load-tests")
+                      if (!success) {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+              // Execute test stages
+              if (testStages.size() > 1) {
+                echo "Running Dynatrace Synthetic Tests and Gatling Load Tests in parallel..."
+                parallel(testStages)
+              } else {
+                echo "Running single performance test stage..."
+                testStages.values().first().call()
+              }
+
+              // Stage 3: Site Reliability Guardian Evaluation (if enabled)
+              if (config.srgEvaluation) {
+                stageWithEnvironmentAgentAndSecrets("Site Reliability Guardian Evaluation - ${environment}", config, product, environment) {
+                  testEnv(aksUrl) {
+                    try {
+                      pcr.callAround("srgEvaluation:${environment}") {
+                        evaluateDynatraceSRG([
+                          environment: environment,
+                          srgServiceName: config.srgServiceName,
+                          performanceTestStartTime: env.PERF_TEST_START_TIME,
+                          performanceTestEndTime: env.PERF_TEST_END_TIME,
+                          gatlingTestStartTime: env.GATLING_TEST_START_TIME,
+                          gatlingTestEndTime: env.GATLING_TEST_END_TIME,
+                          srgFailureBehavior: config.srgFailureBehavior,
+                          product: product,
+                          component: component
+                        ])
+                      }
+                    } catch (Exception e) {
+                      echo "SRG evaluation stage failed: ${e.message}"
+                      if (config.srgFailureBehavior == 'fail') {
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                        throw e
+                      }
+                    }
+                  }
+                }
+              }
+            } // End withAzureKeyvault block
+          } // End if (config.performanceTestStages || config.gatlingLoadTests)
+
+          onMaster {
+            if (config.crossBrowserTest) {
+              stageWithEnvironmentAgentAndSecrets("CrossBrowser Test - AKS ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  pcr.callAround("crossBrowserTest:${environment}") {
+                    builder.crossBrowserTest()
+                  }
+                }
+              }
+            }
+            if (config.mutationTest) {
+              stageWithEnvironmentAgentAndSecrets("Mutation Test - AKS ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  pcr.callAround("mutationTest:${environment}") {
+                    builder.mutationTest()
+                  }
+                }
+              }
+            }
+            if (config.fullFunctionalTest) {
+              stageWithEnvironmentAgentAndSecrets("FullFunctional Test - AKS ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  pcr.callAround("fullFunctionalTest:${environment}") {
+                    builder.fullFunctionalTest()
+                  }
+                }
+              }
+            }
+            if (config.e2eTest) {
+              stageWithEnvironmentAgentAndSecrets("E2E Test - AKS ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("E2eTest:${environment}") {
+                      builder.e2eTest()
+                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
+                  }
+                }
+              }
+            }
+          }
+
+          // E2E Tests:
+          onPR {
+            if (testLabels.contains('enable_e2e_test')) {
+              stageWithEnvironmentAgentAndSecrets("E2E Test - AKS ${environment}", config, product, environment) {
+                testEnv(aksUrl) {
+                  def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    pcr.callAround("E2eTest:${environment}") {
+                      builder.e2eTest()
+                    }
+                  }
+                  savePodsLogs(dockerImage, params, "e2e")
+                  if (passed == false) {
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                    error('E2E test failed')
+                  }
+                }
+              }
+            }
+          }
+
+          // Performance Tests:
+          onPR {
+            if (testLabels.contains('enable_performance_test')) {
+              stageWithEnvironmentAgentAndSecrets("Performance test", config, product, environment) {
+                warnError('Failure in performanceTest') {
+                  pcr.callAround('PerformanceTest') {
+                    timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+                      try {
+                        builder.performanceTest()
+                      } finally {
+                        savePodsLogs(dockerImage, params, "performance")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            if (testLabels.contains('enable_security_scan')) {
+              stageWithEnvironmentAgentAndSecrets('Security scan', config, product, environment) {
+                testEnv(aksUrl) {
+                  warnError('Failure in securityScan') {
+                    env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+                    env.ALERT_FILTERS = config.securityScanAlertFilters
+                    env.SCAN_TYPE = config.securityScanType
+                    pcr.callAround('securityScan') {
+                      timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+                        builder.securityScan()
+                      }
+                    }
                   }
                 }
               }
@@ -461,17 +464,17 @@ def call(params) {
         }
       }
     }
-  }
-  if (config.onlyDeploy) {
-    stageWithAgent('Deployment only pipeline', product) {
-      catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-        throw new RuntimeException("\"Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge")
+    if (config.onlyDeploy) {
+      stageWithAgent('Deployment only pipeline', product) {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          throw new RuntimeException("\"Deployment only pipeline - skipping helm uninstall to keep application deployed and failing build to prevent merge")
+        }
       }
-    }
-  } else {
-    def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-    if (isOnMaster || !enableHelmLabel) {
-      helmUninstall(dockerImage, params, pcr)
+    } else {
+      def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+      if (isOnMaster || !enableHelmLabel) {
+        helmUninstall(dockerImage, params, pcr)
+      }
     }
   }
 }
