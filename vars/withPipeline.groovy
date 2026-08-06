@@ -229,7 +229,7 @@ void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pip
         appPipelineConfig: pipelineConfig,
         pipelineCallbacksRunner: callbacksRunner,
         pipelineType: pipelineType,
-        subscription: subscription.nonProdName,
+        subscription: subscription.previewName,
         aksSubscription: aksSubscriptions.preview,
         environment: environment.previewName,
         product: product,
