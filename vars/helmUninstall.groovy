@@ -1,13 +1,12 @@
 import uk.gov.hmcts.contino.Kubectl
 import uk.gov.hmcts.contino.Helm
-import uk.gov.hmcts.pipeline.AgentSelector
 
 def call(dockerImage, Map params, pcr) {
   try {
     stageWithEnvironmentAgent("Uninstall Helm Release - ${params.environment}", params.product, params.environment) {
-          pcr.callAround("helmReleaseUninstall:${params.environment}") {
-            withAksClient(params.subscription, params.environment, params.product) {
-              uninstallRelease(dockerImage, params)
+      pcr.callAround("helmReleaseUninstall:${params.environment}") {
+        withAksClient(params.subscription, params.environment, params.product) {
+          uninstallRelease(dockerImage, params)
         }
       }
     }
