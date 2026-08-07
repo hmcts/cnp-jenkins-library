@@ -33,6 +33,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean highLevelDataSetup = false
   boolean fortifyScan = false
   boolean clearHelmReleaseOnFailure = true
+  boolean enableHelmOnMaster = false
   String fortifyVaultName
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
