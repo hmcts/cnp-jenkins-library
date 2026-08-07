@@ -17,10 +17,10 @@ def call(String subscription, String product, String environment, Closure body) 
 def identityBasedLogin(String subscription, String product, String environment, Closure body) {
   ansiColor('xterm') {
     boolean usePtlJenkinsIdentity = usePtlJenkinsIdentity(product, environment)
-    def mgmtSubscriptionId = resolveManagementSubscriptionId(usePtlJenkinsIdentity, product)
     def jenkinsObjectId
 
     withTargetSubscriptionIdentity(subscription, product, environment) {
+      def mgmtSubscriptionId = resolveManagementSubscriptionId(usePtlJenkinsIdentity, product)
       withSubscriptionLogin(subscription) {
         def infraVaultName = env.INFRA_VAULT_NAME
         log.info "Using $infraVaultName"
