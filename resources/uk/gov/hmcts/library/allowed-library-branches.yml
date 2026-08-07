@@ -29,3 +29,5 @@ branches:
     allowed: true
   - name: performance-stages-updatev5
     allowed: true
+  - name: fix-owasp
+    allowed: true
