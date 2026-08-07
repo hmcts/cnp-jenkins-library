@@ -87,7 +87,12 @@ def withTargetSubscriptionIdentity(String subscription, String product, String e
       String agentLabel = AgentSelector.labelForEnvironment(targetEnvironment, env, product) ?: "ubuntu-${targetEnvironment}"
       withEnvironmentAgent(targetEnvironment, product, agentLabel, body)
     } else {
-      withEnvironmentAgent(targetEnvironment, product, body)
+      String agentLabel = AgentSelector.labelForEnvironmentWithoutProductAgentFallback(targetEnvironment, env, product)
+      if (!agentLabel) {
+        String normalisedTargetEnvironment = AgentSelector.normaliseEnvironment(targetEnvironment)
+        agentLabel = normalisedTargetEnvironment ? "ubuntu-${normalisedTargetEnvironment}" : ''
+      }
+      withEnvironmentAgent(targetEnvironment, product, agentLabel, body)
     }
   } else {
     body.call()

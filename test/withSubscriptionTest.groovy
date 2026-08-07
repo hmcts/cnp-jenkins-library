@@ -251,6 +251,8 @@ class WithSubscriptionTest extends BasePipelineTest {
   void 'CFT-style subscription falls back to environment agent routing'() {
     boolean bodyCalled = false
 
+    binding.env.PRODUCT_AGENT_LABEL = 'civil-stg'
+
     script.call('nonprod', 'civil', 'aat') {
       bodyCalled = true
     }
