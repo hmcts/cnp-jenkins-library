@@ -237,24 +237,8 @@ class DynatraceClient implements Serializable {
             } else {
               steps.echo "Request ${i + 1}: skipping - not a preview URL: ${oldUrl}"
             }
-          //   json.script.requests[i].url = oldUrl.replaceAll('(?<=https?://)[^/]+', hostname)
-          //   steps.echo "Request ${i + 1}: ${oldUrl} -> ${json.script.requests[i].url}"
-            } 
+          } 
         }
-      // if (steps.env.TEST_URL && steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP") && enabled) {
-      //   // When enabling HTTP synthetics, replace PREVIEW with hostname
-      //   steps.echo "Enabling HTTP synthetic - replacing PREVIEW with TEST_URL: ${steps.env.TEST_URL}"
-      //   def hostname = steps.env.TEST_URL.replaceAll('^https?://', '').split('/')[0]
-      //   steps.echo "Extracted hostname: ${hostname}"
-
-      //   // Replace PREVIEW in all request URLs
-      //   for (int i = 0; i < json.script.requests.size(); i++) {
-      //     if (json.script.requests[i].url) {
-      //       def oldUrl = json.script.requests[i].url
-      //       json.script.requests[i].url = json.script.requests[i].url.replace("PREVIEW", hostname)
-      //       steps.echo "Request ${i + 1}: ${oldUrl} -> ${json.script.requests[i].url}"
-      //     }
-      //   }
       } else if (steps.env.TEST_URL && !steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP")) {
         // For BROWSER synthetics: update events array
         if (json.script?.events) {
