@@ -241,7 +241,6 @@ class DynatraceClient implements Serializable {
           //   steps.echo "Request ${i + 1}: ${oldUrl} -> ${json.script.requests[i].url}"
             } 
         }
-      }
       // if (steps.env.TEST_URL && steps.env.DT_SYNTHETIC_TEST_ID.startsWith("HTTP") && enabled) {
       //   // When enabling HTTP synthetics, replace PREVIEW with hostname
       //   steps.echo "Enabling HTTP synthetic - replacing PREVIEW with TEST_URL: ${steps.env.TEST_URL}"
