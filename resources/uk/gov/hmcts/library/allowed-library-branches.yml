@@ -27,3 +27,7 @@ branches:
     allowed: true
   - name: feat/DTSPO-33498/fix-cause-serialization
     allowed: true
+  - name: DTSPO-34002
+    allowed: true
+  - name: allow-performanceUpdate-branch
+    allowed: true
