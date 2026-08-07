@@ -94,11 +94,11 @@ def call(type, String product, String component, Closure body) {
           )
           if (deploymentEnabled) {
             if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-              stageWithEnvironmentAgent('Publish Helm chart', product, environment.nonProdName) {
+              stageWithEnvironmentAgent('Publish Helm chart', product, environment.previewName) {
                 helmPublish(
                   appPipelineConfig: pipelineConfig,
-                  subscription: subscription.nonProdName,
-                  environment: environment.nonProdName,
+                  subscription: subscription.previewName,
+                  environment: environment.previewName,
                   product: product,
                   component: component
                 )
@@ -108,11 +108,11 @@ def call(type, String product, String component, Closure body) {
                 appPipelineConfig: pipelineConfig,
                 pipelineCallbacksRunner: callbacksRunner,
                 pipelineType: pipelineType,
-                subscription: subscription.nonProdName,
+                subscription: subscription.previewName,
                 product: product,
                 component: component,
                 stage: DockerImage.DeploymentStage.PREVIEW,
-                environment: environment.nonProdName
+                environment: environment.previewName
               )
             }
 
