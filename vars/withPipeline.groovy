@@ -88,7 +88,7 @@ def call(type, String product, String component, Closure body) {
             appPipelineConfig: pipelineConfig,
             pipelineCallbacksRunner: callbacksRunner,
             builder: pipelineType.builder,
-            subscription: branch.isPR() ? subscription.previewName : subscription.nonProdName,
+            subscription: branch.isPR() ? subscription.previewName : (autoDeployTarget?.subscriptionName ?: subscription.nonProdName),
             environment: primaryEnvironment,
             product: product,
             component: component
