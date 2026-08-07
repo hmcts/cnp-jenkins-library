@@ -119,27 +119,16 @@ boolean usePtlJenkinsIdentity(String product, String environment) {
 }
 
 String resolveManagementSubscriptionId(boolean usePtlJenkinsIdentity, String product) {
-  String subscriptionId
-  Closure azJenkins = { cmd -> return sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins az $cmd", returnStdout: true).trim() }
-
-  if (usePtlJenkinsIdentity || !product) {
-    if (env.JENKINS_SUBSCRIPTION_NAME?.trim()) {
-      azJenkins 'login --identity'
-      azJenkins "account set --subscription ${env.JENKINS_SUBSCRIPTION_NAME}"
-      subscriptionId = azJenkins('account show --query id -o tsv')
-    } else if (env.JENKINS_SUBSCRIPTION_ID?.trim()) {
-      subscriptionId = env.JENKINS_SUBSCRIPTION_ID.trim()
-    }
-  } else if (env.JENKINS_SUBSCRIPTION_ID?.trim()) {
-    subscriptionId = env.JENKINS_SUBSCRIPTION_ID.trim()
-  } else if (env.JENKINS_SUBSCRIPTION_NAME?.trim()) {
-    log.warning "JENKINS_SUBSCRIPTION_ID is not set; deriving management subscription id from JENKINS_SUBSCRIPTION_NAME."
-    azJenkins 'login --identity'
-    subscriptionId = azJenkins("account show --subscription '${env.JENKINS_SUBSCRIPTION_NAME}' --query id -o tsv")
+  String subscriptionId = env.JENKINS_SUBSCRIPTION_ID?.trim()
+  if (!subscriptionId && env.JENKINS_SUBSCRIPTION_NAME?.trim()) {
+    log.warning "JENKINS_SUBSCRIPTION_NAME is set but JENKINS_SUBSCRIPTION_ID is not. Falling back to ARM_SUBSCRIPTION_ID for management subscription id."
+  }
+  if (!subscriptionId) {
+    subscriptionId = env.ARM_SUBSCRIPTION_ID?.trim()
   }
 
   if (!subscriptionId?.trim()) {
-    throw new Exception("Unable to resolve management subscription id. Set JENKINS_SUBSCRIPTION_ID or JENKINS_SUBSCRIPTION_NAME in Jenkins global environment variables.")
+    throw new Exception("Unable to resolve management subscription id. Set JENKINS_SUBSCRIPTION_ID or ARM_SUBSCRIPTION_ID in Jenkins global environment variables.")
   }
 
   return subscriptionId.trim()
