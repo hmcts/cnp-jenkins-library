@@ -66,7 +66,8 @@ def call(type, String product, String component, Closure body) {
   }
 
   Environment environment = new Environment(env)
-  String primaryEnvironment = branch.isPR() ? environment.previewName : environment.nonProdName
+  def autoDeployTarget = autoDeployEnvironment()
+  String primaryEnvironment = branch.isPR() ? environment.previewName : (autoDeployTarget?.environmentName ?: environment.nonProdName)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
