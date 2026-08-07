@@ -175,6 +175,15 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    def dependencyCheckHtmlCandidates = [
+      'build/reports/dependency-check/dependency-check-report.html',
+      'build/reports/dependency-check-report.html'
+    ]
+    def dependencyCheckJsonCandidates = [
+      'build/reports/dependency-check/dependency-check-report.json',
+      'build/reports/dependency-check-report.json'
+    ]
+
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
@@ -185,8 +194,18 @@ class GradleBuilder extends AbstractBuilder {
       try {
         gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
-        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
-        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
+        def dependencyCheckHtml = dependencyCheckHtmlCandidates.find { localSteps.fileExists(it) }
+        if (dependencyCheckHtml) {
+          localSteps.archiveArtifacts dependencyCheckHtml
+        } else {
+          localSteps.echo "No Dependency-Check HTML report found in expected locations: ${dependencyCheckHtmlCandidates.join(', ')}"
+        }
+
+        def dependencyCheckJson = dependencyCheckJsonCandidates.find { localSteps.fileExists(it) }
+        String dependencyReport = dependencyCheckJson ? localSteps.readFile(dependencyCheckJson) : ''
+        if (!dependencyCheckJson) {
+          localSteps.echo "No Dependency-Check JSON report found in expected locations: ${dependencyCheckJsonCandidates.join(', ')}"
+        }
 
         def cveReport = prepareCVEReport(dependencyReport)
 
