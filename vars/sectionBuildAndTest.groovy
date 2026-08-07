@@ -29,14 +29,6 @@ def call(params) {
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
-    onPathToLive {
-      onPR {
-        if (config.deployableApp) {
-          enforceChartVersionBumped product: product, component: component
-          warnAboutAADIdentityPreviewHack product: product, component: component
-        }
-      }
-    }
 
     // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
     deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL)
@@ -62,6 +54,13 @@ def call(params) {
   onPathToLive {
     withEnvironmentAgent(environment, product) {
       stageWithAgent("Build", product) {
+        onPR {
+          if (config.deployableApp) {
+            enforceChartVersionBumped product: product, component: component
+            warnAboutAADIdentityPreviewHack product: product, component: component
+          }
+        }
+        
         // always build master and demo as we currently do not deploy an image there
         boolean envSub = autoDeployEnvironment() != null
         when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
