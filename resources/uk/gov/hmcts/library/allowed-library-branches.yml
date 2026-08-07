@@ -31,5 +31,5 @@ branches:
     allowed: true
   - name: fix-owasp
     allowed: true
-  - name: performance-stages-updatev5
+  - name: Enable-helm-on-staging
     allowed: true
