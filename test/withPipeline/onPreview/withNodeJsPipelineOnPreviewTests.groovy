@@ -2,7 +2,6 @@ package withPipeline.onPreview
 
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import static org.junit.Assert.assertEquals
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
@@ -36,6 +35,6 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       runScript("testResources/$jenkinsFile")
     }
 
-    assertEquals('preview', binding.env.DEPLOYMENT_ENVIRONMENT)
+    stubBuilder.expect.verify()
   }
 }
