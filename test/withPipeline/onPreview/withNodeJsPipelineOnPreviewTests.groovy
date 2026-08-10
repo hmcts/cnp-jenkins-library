@@ -2,6 +2,7 @@ package withPipeline.onPreview
 
 import groovy.mock.interceptor.StubFor
 import org.junit.Test
+import static org.junit.Assert.assertEquals
 import uk.gov.hmcts.contino.YarnBuilder
 import withPipeline.BaseCnpPipelineTest
 
@@ -10,8 +11,6 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
   withNodeJsPipelineOnPreviewTests() {
     super("PR-999", jenkinsFile)
-    binding.env.ARM_SUBSCRIPTION_ID = 'target-subscription-id'
-    binding.env.JENKINS_SUBSCRIPTION_ID = 'jenkins-subscription-id'
   }
 
   @Test
@@ -37,6 +36,6 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       runScript("testResources/$jenkinsFile")
     }
 
-    assert binding.env.DEPLOYMENT_ENVIRONMENT == 'preview'
+    assertEquals('preview', binding.env.DEPLOYMENT_ENVIRONMENT)
   }
 }
