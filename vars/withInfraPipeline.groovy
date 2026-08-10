@@ -8,6 +8,7 @@ import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.ProjectBranch
+import uk.gov.hmcts.pipeline.AgentSelector
 
 def call(String product, String component = null, Closure body) {
 
@@ -29,11 +30,17 @@ def call(String product, String component = null, Closure body) {
   body.call() // register pipeline config
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  def autoDeployTarget = autoDeployEnvironment()
+  String primaryEnvironment = autoDeployTarget?.environmentName ?: environment.nonProdName
+
+  String agentType = AgentSelector.labelForEnvironmentWithoutProductFallback(primaryEnvironment, env) ?: env.BUILD_AGENT_TYPE
 
   node(agentType) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
+      env.BUILD_AGENT_TYPE = agentType
+      env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
       dockerAgentSetup()
       env.PATH = "$env.PATH:/usr/local/bin"
 

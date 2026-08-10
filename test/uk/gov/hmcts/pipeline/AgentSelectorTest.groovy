@@ -107,6 +107,31 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironmentWithoutProductFallback('dev', envVars)).isEqualTo('ubuntu-dev')
   }
 
+  def "labelForEnvironmentWithoutProductAgentFallback should keep product env template"() {
+    given:
+    def envVars = [
+      PRODUCT: 'xui',
+      PRODUCT_AGENT_LABEL: 'xui-stg',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_XUI: 'xui-${environment}',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'ubuntu-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironmentWithoutProductAgentFallback('demo', envVars, 'xui')).isEqualTo('xui-demo')
+  }
+
+  def "labelForEnvironmentWithoutProductAgentFallback should avoid product agent fallback"() {
+    given:
+    def envVars = [
+      PRODUCT: 'xui',
+      PRODUCT_AGENT_LABEL: 'xui-stg',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'ubuntu-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironmentWithoutProductAgentFallback('demo', envVars, 'xui')).isEqualTo('ubuntu-demo')
+  }
+
   def "labelForEnvironment should allow product argument to drive product-specific lookup"() {
     given:
     def envVars = [
