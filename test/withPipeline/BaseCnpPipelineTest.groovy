@@ -27,7 +27,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true)] as MockJenkinsPlugin[]))])
     binding.setVariable("env", [
       BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
-      ARM_SUBSCRIPTION_ID: 'target-subscription-id', JENKINS_SUBSCRIPTION_ID: 'jenkins-subscription-id', JENKINS_SUBSCRIPTION_NAME: 'DTS-CFTPTL-INTSVC', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
+      ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_NAME: 'DTS-CFTPTL-INTSVC', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
       CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:'', GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'])
     binding.setVariable("docker", new MockDocker())
 
