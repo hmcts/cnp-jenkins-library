@@ -10,6 +10,8 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
   withNodeJsPipelineOnPreviewTests() {
     super("PR-999", jenkinsFile)
+    binding.env.ARM_SUBSCRIPTION_ID = 'target-subscription-id'
+    binding.env.JENKINS_SUBSCRIPTION_ID = 'jenkins-subscription-id'
   }
 
   @Test
