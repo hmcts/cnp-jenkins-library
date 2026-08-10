@@ -26,7 +26,6 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
       smokeTest(0) {} //preview-staging
       e2eTest(0) {}
       functionalTest(0) {}
-      asBoolean() { return true }
     }
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
