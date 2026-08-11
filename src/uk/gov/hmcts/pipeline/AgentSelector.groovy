@@ -6,11 +6,15 @@ class AgentSelector implements Serializable {
   private static final Set<String> ENVIRONMENT_LIKE_SUBSCRIPTIONS = ['dev', 'stg', 'prod', 'sbox'] as Set
 
   static String labelForEnvironment(String environment, Object envVars = [:], String product = '') {
-    return selectLabelForEnvironment(environment, envVars, product, true)
+    return selectLabelForEnvironment(environment, envVars, product, true, true)
   }
 
   static String labelForEnvironmentWithoutProductFallback(String environment, Object envVars = [:]) {
-    return selectLabelForEnvironment(environment, envVars, '', false)
+    return selectLabelForEnvironment(environment, envVars, '', false, false)
+  }
+
+  static String labelForEnvironmentWithoutProductAgentFallback(String environment, Object envVars = [:], String product = '') {
+    return selectLabelForEnvironment(environment, envVars, product, true, false)
   }
 
   static boolean isEnvironmentLikeSubscription(String subscription) {
@@ -23,10 +27,28 @@ class AgentSelector implements Serializable {
       return false
     }
 
-    return envValue(envVars, 'BUILD_AGENT_TYPE') == labelForEnvironment(currentEnvironment, envVars, product)
+    return currentAgentMatchesLabel(envVars, labelForEnvironment(currentEnvironment, envVars, product))
   }
 
-  private static String selectLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback) {
+  static boolean currentAgentMatchesLabel(Object envVars, String expectedLabel) {
+    if (!expectedLabel) {
+      return false
+    }
+
+    if (envValue(envVars, 'BUILD_AGENT_TYPE') == expectedLabel) {
+      return true
+    }
+
+    if (envValue(envVars, 'NODE_NAME') == expectedLabel) {
+      return true
+    }
+
+    return envValue(envVars, 'NODE_LABELS')
+      .tokenize(' ')
+      .contains(expectedLabel)
+  }
+
+  private static String selectLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback, boolean allowProductAgentLabelFallback) {
     String normalisedEnvironment = normaliseEnvironment(environment)
     if (!normalisedEnvironment) {
       return ''
@@ -48,9 +70,11 @@ class AgentSelector implements Serializable {
         return renderLabel(productLabelTemplate, normalisedEnvironment)
       }
 
-      String productAgentLabel = envValue(envVars, 'PRODUCT_AGENT_LABEL')
-      if (productAgentLabel) {
-        return productAgentLabel
+      if (allowProductAgentLabelFallback) {
+        String productAgentLabel = envValue(envVars, 'PRODUCT_AGENT_LABEL')
+        if (productAgentLabel) {
+          return productAgentLabel
+        }
       }
     }
 

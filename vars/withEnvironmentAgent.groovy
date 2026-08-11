@@ -14,7 +14,7 @@ def call(String environment, String product, String agentLabelOverride, Closure 
   }
 
   String normalisedEnvironment = AgentSelector.normaliseEnvironment(environment)
-  if (agentLabel == env.BUILD_AGENT_TYPE) {
+  if (AgentSelector.currentAgentMatchesLabel(env, agentLabel)) {
     withEnvironmentContext(agentLabel, environment, body)
     return
   }
@@ -33,7 +33,9 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '.gradle/**',
     '**/.gradle/**',
     '.venv/**',
-    '**/.venv/**'
+    '**/.venv/**',
+    '**build/**',
+    '**/build/**'
   ].join(',')
   boolean updatedWorkspaceStashed = false
   String originalDir = pwd()

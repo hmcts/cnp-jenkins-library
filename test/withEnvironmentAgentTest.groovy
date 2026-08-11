@@ -74,6 +74,22 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'matching current node label avoids reallocating node when build agent type has drifted'() {
+    binding.env.BUILD_AGENT_TYPE = ''
+    binding.env.NODE_LABELS = 'linux civil-preview docker'
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    def environmentInsideBody
+
+    script.call('preview', 'civil') {
+      environmentInsideBody = binding.env.DEPLOYMENT_ENVIRONMENT
+    }
+
+    assertThat(nodeLabels).isEmpty()
+    assertThat(environmentInsideBody).isEqualTo('preview')
+  }
+
+  @Test
   void 'switching environment agent restores minimal git metadata after unstash'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.ORIGINAL_REMOTE_URL = 'https://github.com/HMCTS/civil-service.git'
@@ -111,6 +127,24 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'forced agent label reallocates when currently on product fallback agent'() {
+    binding.env.PRODUCT_AGENT_LABEL = 'toffee-stg'
+    binding.env.BUILD_AGENT_TYPE = 'toffee-stg'
+
+    def environmentInsideBody
+    def buildAgentTypeInsideBody
+
+    script.call('demo', 'toffee', 'toffee-demo') {
+      environmentInsideBody = binding.env.DEPLOYMENT_ENVIRONMENT
+      buildAgentTypeInsideBody = binding.env.BUILD_AGENT_TYPE
+    }
+
+    assertThat(nodeLabels).containsExactly('toffee-demo')
+    assertThat(environmentInsideBody).isEqualTo('demo')
+    assertThat(buildAgentTypeInsideBody).isEqualTo('toffee-demo')
+  }
+
+  @Test
   void 'switching environment agent propagates generated files back to original workspace'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.ORIGINAL_REMOTE_URL = 'https://github.com/HMCTS/civil-service.git'
@@ -135,6 +169,20 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
       assertThat(args.excludes as String).contains('.yarn_dependencies_installed')
       assertThat(args.excludes as String).doesNotContain('.yarn/cache/**')
       assertThat(args.excludes as String).contains('.yarn/install-state.gz')
+    }
+  }
+
+  @Test
+  void 'switching environment agent excludes gradle build output from stashes'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+
+    script.call('preview', 'civil') {
+    }
+
+    assertThat(stashArgs).hasSize(2)
+    stashArgs.each { Map args ->
+      assertThat(args.excludes as String).contains('build/**')
+      assertThat(args.excludes as String).contains('**/build/**')
     }
   }
 

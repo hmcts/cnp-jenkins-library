@@ -107,6 +107,31 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironmentWithoutProductFallback('dev', envVars)).isEqualTo('ubuntu-dev')
   }
 
+  def "labelForEnvironmentWithoutProductAgentFallback should keep product env template"() {
+    given:
+    def envVars = [
+      PRODUCT: 'xui',
+      PRODUCT_AGENT_LABEL: 'xui-stg',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_XUI: 'xui-${environment}',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'ubuntu-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironmentWithoutProductAgentFallback('demo', envVars, 'xui')).isEqualTo('xui-demo')
+  }
+
+  def "labelForEnvironmentWithoutProductAgentFallback should avoid product agent fallback"() {
+    given:
+    def envVars = [
+      PRODUCT: 'xui',
+      PRODUCT_AGENT_LABEL: 'xui-stg',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE: 'ubuntu-${environment}'
+    ]
+
+    expect:
+    assertThat(AgentSelector.labelForEnvironmentWithoutProductAgentFallback('demo', envVars, 'xui')).isEqualTo('ubuntu-demo')
+  }
+
   def "labelForEnvironment should allow product argument to drive product-specific lookup"() {
     given:
     def envVars = [
@@ -187,6 +212,8 @@ class AgentSelectorTest extends Specification {
     [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'civil-preview', PRODUCT: 'civil']      | null        | ''       | false
     [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'civil-preview',
       ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL: 'civil-${environment}']                             | 'preview'   | 'civil'  | true
+    [DEPLOYMENT_ENVIRONMENT: 'preview', NODE_LABELS: 'linux xui-preview docker',
+      ENVIRONMENT_AGENT_LABEL_TEMPLATE_XUI: 'xui-${environment}']                                | 'preview'   | 'xui'    | true
     [DEPLOYMENT_ENVIRONMENT: 'preview', BUILD_AGENT_TYPE: 'ubuntu-aat']                           | 'preview'   | ''       | false
     [BUILD_AGENT_TYPE: 'ubuntu-preview']                                                          | null        | ''       | false
   }

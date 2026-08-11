@@ -14,3 +14,5 @@ bin
 .tool-versions
 
 docs/superpowers/
+
+graphify-out/**
