@@ -147,6 +147,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dockerTestBuild = true
   }
 
+  void enableBuildCache() {
+    config.buildCache = true
+  }
+
   void enablePerformanceTestStages(Map params = [:]) {
     config.performanceTestStages = true
     config.performanceTestStagesTimeout = params.timeout ?: 15
