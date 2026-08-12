@@ -33,3 +33,5 @@ branches:
     allowed: true
   - name: Enable-helm-on-staging
     allowed: true
+  - name: feature/remove-state
+    allowed: true
