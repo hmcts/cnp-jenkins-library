@@ -114,7 +114,7 @@ def call(Map<String, ?> params) {
             -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
             -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
           # Remove the specific resource from state
-          terraform state rm azurerm_storage_container.document_container
+   
         """
 
         warnAboutOldTfAzureProvider(config.environment, config.product, builtFrom)
