@@ -88,8 +88,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     allowed: true
   - name: main
     allowed: true
-  - name: feature/remove-state
-    allowed: true
 '''
       }  else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
