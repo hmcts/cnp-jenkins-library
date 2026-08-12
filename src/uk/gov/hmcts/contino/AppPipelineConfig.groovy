@@ -12,6 +12,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String securityScanCookieIgnoreList
 
   boolean performanceTest = false
+  String performanceSimulation
   boolean apiGatewayTest = false
   boolean crossBrowserTest = false
   List<String> parallelCrossBrowsers = []
@@ -57,7 +58,6 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   int performanceTestStagesTimeout
   String performanceTestConfigPath
   List<String> performanceTestEnvironments = ['preview', 'aat', 'perftest']
-
 
   // Site Reliability Guardian configuration
   boolean srgEvaluation = false

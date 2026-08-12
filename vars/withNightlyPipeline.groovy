@@ -40,9 +40,25 @@ def call(type, product, component, timeout = 300, Closure body) {
     metricsPublisher.publish(stage)
   }
 
+  // Add new input params
+  properties([
+    parameters([
+      string(
+        name: 'SIMULATION',
+        defaultValue: '',
+        description: 'Gatling simulation to run'
+      )
+    ])
+  ])
+
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register callbacks
+
+  // Override simulation from Jenkins UI param if provided
+  if (pipelineConfig.performanceTest) {
+    pipelineConfig.performanceSimulation = params?.SIMULATION?.trim() ?: null
+  }
 
   dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
@@ -63,18 +79,6 @@ def call(type, product, component, timeout = 300, Closure body) {
   }
 
   def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
-
-  // Add new input params
-  properties([
-    parameters([
-      string(
-        name: 'SIMULATION',
-        defaultValue: '',
-        description: 'Gatling simulation to run'
-      )
-      // ...add your other params here
-    ])
-  ])
 
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
