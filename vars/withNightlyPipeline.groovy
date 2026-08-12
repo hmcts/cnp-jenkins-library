@@ -64,6 +64,18 @@ def call(type, product, component, timeout = 300, Closure body) {
 
   def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
+  // Add new input params
+  properties([
+    parameters([
+      string(
+        name: 'SIMULATION',
+        defaultValue: '',
+        description: 'Gatling simulation to run'
+      )
+      // ...add your other params here
+    ])
+  ])
+
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
