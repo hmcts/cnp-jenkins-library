@@ -53,8 +53,8 @@ def call(params) {
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   GithubAPI gitHubAPI = new GithubAPI(this)
-  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, '_')
-  boolean HelmLabel = testLabels.contains('_keep_helm')
+  def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+  boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithAgent("AKS deploy - ${environment}", product) {
@@ -88,7 +88,7 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
-      if (config.pactBrokerd && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
+      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
         stageWithAgent("Pact Consumer Can I Deploy", product) {
           builder.runConsumerCanIDeploy()
         }
