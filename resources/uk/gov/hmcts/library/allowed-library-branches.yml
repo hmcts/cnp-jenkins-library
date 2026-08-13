@@ -35,5 +35,3 @@ branches:
     allowed: true
   - name: feature/remove-state
     allowed: true
-  - name: fix/DTSPO-32609
-    allowed: true
