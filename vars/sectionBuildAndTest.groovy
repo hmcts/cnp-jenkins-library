@@ -275,7 +275,7 @@ def call(params) {
       }
     }
 
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild && !config.onlyDeploy) {
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
