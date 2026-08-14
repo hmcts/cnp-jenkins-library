@@ -461,11 +461,10 @@ def call(params) {
       }
     } else {
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      println "Helm uninstall: isOnMaster=${isOnMaster}, enableHelmOnMaster=${config.enableHelmOnMaster}, enableHelmLabel=${enableHelmLabel}"
+      echo "Helm uninstall: isOnMaster=${isOnMaster}, enableHelmOnMaster=${config.enableHelmOnMaster}, enableHelmLabel=${enableHelmLabel}"
       if ((isOnMaster && !config.enableHelmOnMaster) || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
     }
   }
 }
-
