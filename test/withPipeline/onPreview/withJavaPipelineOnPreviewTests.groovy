@@ -42,6 +42,8 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
     def functionalIndex = stageIndex('Functional Test - preview')
 
     assertThat(secretIndexes).hasSize(2)
+    assertThat(smokeIndex).isNotNegative()
+    assertThat(functionalIndex).isNotNegative()
     assertThat(secretIndexes.last()).isLessThan(smokeIndex)
     assertThat(smokeIndex).isLessThan(functionalIndex)
   }
@@ -58,6 +60,8 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
     def functionalIndex = stageIndex('Functional Test - preview')
 
     assertThat(secretIndexes).hasSize(2)
+    assertThat(smokeIndex).isNotNegative()
+    assertThat(functionalIndex).isNotNegative()
     assertThat(smokeIndex).isLessThan(secretIndexes.last())
     assertThat(secretIndexes.last()).isLessThan(functionalIndex)
   }
