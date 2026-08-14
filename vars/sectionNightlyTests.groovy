@@ -123,7 +123,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                 publishPerformanceReports(
                   product: product,
                   component: component,
-                  environment: environment.nonProdName,
+                  environment: environment.perftestName,
                   subscription: subscription,
                   folder: "nightly"
                 )
