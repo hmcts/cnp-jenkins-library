@@ -630,6 +630,11 @@ class Acr extends Az {
     } catch (noTagsError) {
     } // Do nothing -> return false
 
+    if (product == "labs") {
+      localSteps.echo "This is a labs application, ignoring missing tags"
+      tagFound = true
+    }
+
     return tagFound
   }
 
