@@ -333,7 +333,15 @@ The tests run after deployment to each environment (AAT and Production) on the m
 
 - By default your Helm resources are uninstalled to free up resources on the cluster.
 - You can keep these resources by adding the **enable_keep_helm** label on your PR.
-- If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
+- If you want to keep the resources after a successful master build, you can add the below flag to Jenkinsfile_CNP
+  ```
+  withPipeline(type, product, component) {
+  ...
+    enableHelmOnMaster()
+  ...
+  }
+  ```
+- If you also want to keep the resources after a failed master build, you can add the below flag to Jenkinsfile_CNP
   ```
   withPipeline(type, product, component) {
   ...
