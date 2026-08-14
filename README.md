@@ -204,6 +204,17 @@ called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
 
+If a smoke test only uses `TEST_URL` and does not require the secrets configured by `loadVaultSecrets`, it can avoid loading them for that stage:
+
+```groovy
+withPipeline(type, product, component) {
+  loadVaultSecrets(secrets)
+  disableSmokeTestSecrets()
+}
+```
+
+The configured secrets remain available to deployment, functional and other test stages.
+
 #### Docker test build for continuous functional and smoke tests
 
 An application can configure running continuous smoke/functional tests on java app deployments managed through flux.

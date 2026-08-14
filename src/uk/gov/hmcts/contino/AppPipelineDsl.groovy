@@ -88,6 +88,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.serviceApp = false
   }
 
+  void disableSmokeTestSecrets() {
+    config.smokeTestSecrets = false
+  }
+
   void nonDeployableApp() {
     config.deployableApp = false
     nonServiceApp()
