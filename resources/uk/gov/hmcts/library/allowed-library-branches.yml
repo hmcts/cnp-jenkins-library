@@ -35,3 +35,5 @@ branches:
     allowed: true
   - name: feature/remove-state
     allowed: true
+  - name: acr-migration-check-graceful-failure
+    allowed: true
