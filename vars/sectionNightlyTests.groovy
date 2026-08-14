@@ -106,7 +106,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                 if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     try {
-                      builder.performanceTest()
+                      builder.performanceTest(config.perfGatlingArgs ?: null)
                     }
                     catch (e) {
                       doSecondRun = true
@@ -116,7 +116,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                   //The below else block executes a test re-run and not triggered by timer
                 } else {
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      builder.performanceTest()
+                      builder.performanceTest(config.perfGatlingArgs ?: null)
                     }
                 }
 

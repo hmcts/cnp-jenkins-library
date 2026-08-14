@@ -51,6 +51,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean perfGatlingAlerts = false
   boolean perfRerunOnFail = false
   String perfSlackChannel = "#performance-alerts"
+  String perfGatlingArgs
 
   // Performance test stages configuration
   boolean performanceTestStages = false
