@@ -19,7 +19,19 @@ def call(params) {
     def scmVars
     if (branch) {
       echo "Requested checkout branch: ${branch}"
-      // branch-specific checkout will go here
+      def remote = scm.userRemoteConfigs[0]
+
+      scmVars = checkout([
+        $class: 'GitSCM',
+        branches: [[name: branch]],
+        extensions: scm.extensions,
+        userRemoteConfigs: [[
+          credentialsId: remote.credentialsId,
+          name: remote.name,
+          refspec: "+refs/heads/${branch}:refs/remotes/origin/${branch}",
+          url: remote.url
+        ]]
+      ])
     } else {
       scmVars = checkout scm
     }
