@@ -18,21 +18,18 @@ def call(params) {
 
     def scmVars
     if (branch) {
-      echo "Requested checkout branch: ${branch}"
+      echo "Checking out branch: ${branch}"
+
       def remote = scm.userRemoteConfigs[0]
 
-      echo "SCM extensions: ${scm.extensions}"
-      scmVars = checkout([
-        $class: 'GitSCM',
+      scmVars = checkout scmGit(
         branches: [[name: branch]],
-        extensions: scm.extensions,
         userRemoteConfigs: [[
           credentialsId: remote.credentialsId,
-          name: remote.name,
           refspec: "+refs/heads/${branch}:refs/remotes/origin/${branch}",
           url: remote.url
         ]]
-      ])
+      )
     } else {
       scmVars = checkout scm
     }
