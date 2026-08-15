@@ -24,6 +24,12 @@ def call(params) {
 
       scmVars = checkout scmGit(
         branches: [[name: branch]],
+        extensions: [
+          cloneOption(
+            honorRefspec: true,
+            noTags: true
+          )
+        ],
         userRemoteConfigs: [[
           credentialsId: remote.credentialsId,
           refspec: "+refs/heads/${branch}:refs/remotes/origin/${branch}",
