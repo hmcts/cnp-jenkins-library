@@ -15,8 +15,8 @@ def call(params) {
   pcr.callAround('checkout') {
     deleteDir()
 
-    echo "SCM class: ${scm.getClass().name}"
-    echo "SCM: ${scm}"
+    echo "SCM branches: ${scm.branches}"
+    echo "SCM remotes: ${scm.userRemoteConfigs}"
 
     def scmVars = checkout scm
     if (scmVars) {
