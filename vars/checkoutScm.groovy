@@ -11,14 +11,19 @@ def call() {
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
+  def branch = params.branch
 
   pcr.callAround('checkout') {
     deleteDir()
 
-    echo "SCM branches: ${scm.branches}"
-    echo "SCM remotes: ${scm.userRemoteConfigs}"
+    def scmVars
+    if (branch) {
+      echo "Requested checkout branch: ${branch}"
+      // branch-specific checkout will go here
+    } else {
+      scmVars = checkout scm
+    }
 
-    def scmVars = checkout scm
     if (scmVars) {
       env.GIT_COMMIT = scmVars.GIT_COMMIT
       env.GIT_URL = scmVars.GIT_URL

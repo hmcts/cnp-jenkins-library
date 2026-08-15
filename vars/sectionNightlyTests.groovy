@@ -18,7 +18,10 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     def builder = pipelineType.builder
 
     stageWithAgent('Checkout', product) {
-      checkoutScm(pipelineCallbacksRunner: pcr)
+      checkoutScm(
+        pipelineCallbacksRunner: pcr,
+        branch: config.checkoutBranch
+      )
     }
 
     stageWithAgent("Build", product) {
