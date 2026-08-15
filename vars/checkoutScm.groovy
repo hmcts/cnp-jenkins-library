@@ -21,6 +21,7 @@ def call(params) {
       echo "Requested checkout branch: ${branch}"
       def remote = scm.userRemoteConfigs[0]
 
+      echo "SCM extensions: ${scm.extensions}"
       scmVars = checkout([
         $class: 'GitSCM',
         branches: [[name: branch]],
