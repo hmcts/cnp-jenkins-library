@@ -14,6 +14,10 @@ def call(params) {
 
   pcr.callAround('checkout') {
     deleteDir()
+
+    echo "SCM class: ${scm.getClass().name}"
+    echo "SCM: ${scm}"
+
     def scmVars = checkout scm
     if (scmVars) {
       env.GIT_COMMIT = scmVars.GIT_COMMIT
