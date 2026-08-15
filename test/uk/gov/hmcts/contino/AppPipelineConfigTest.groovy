@@ -63,6 +63,14 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
   }
 
+  def "ensure checkout branch can be set"() {
+    when:
+    dsl.checkoutBranch("custom-branch")
+
+    then:
+    assertThat(pipelineConfig.checkoutBranch).isEqualTo("custom-branch")
+  }
+
   def "ensure enable e2e test"() {
     when:
     dsl.enableE2eTest()

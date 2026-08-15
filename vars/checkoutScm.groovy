@@ -11,7 +11,7 @@ def call() {
 
 def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
-  def branch = params.branch
+  String branch = params.branch
 
   pcr.callAround('checkout') {
     deleteDir()
