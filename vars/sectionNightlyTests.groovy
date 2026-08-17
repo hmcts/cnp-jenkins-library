@@ -44,7 +44,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     if (config.fortifyScan) {
       fortifyScan(
         pipelineCallbacksRunner: pcr,
-        fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+        fortifyVaultName: config.fortifyVaultName ?: "${product}-kv-${environment.nonProdName}",
         builder: builder,
         product: product,
       )
