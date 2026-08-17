@@ -622,18 +622,17 @@ class Acr extends Az {
       localSteps.echo "Warning: matching '${tag}' tag for ${repository}"
     }
 
+    boolean isLabs = repository?.startsWith('labs/')
+
     def tagFound = false
     try {
       def tags = this.az "acr repository show-tags -n ${registryName} --subscription ${registrySubscription} --repository ${repository}"
       tagFound = tags.contains(tag.replace("\n", ""))
-      // steps.echo "Current tags: ${tags}. Is ${tag} available? ... ${tagFound}"
-    } catch (noTagsError) {
+    } catch (Exception noTagsError) {
+      if (isLabs) {
+        localSteps.echo "This is a labs application, ignoring missing tags for ${repository}: ${noTagsError.message}"
+      }
     } // Do nothing -> return false
-
-    if (product == "labs") {
-      localSteps.echo "This is a labs application, ignoring missing tags"
-      tagFound = true
-    }
 
     return tagFound
   }
