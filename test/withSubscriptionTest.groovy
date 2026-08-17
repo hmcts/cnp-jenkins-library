@@ -251,6 +251,8 @@ class WithSubscriptionTest extends BasePipelineTest {
   void 'CFT-style subscription falls back to environment agent routing'() {
     boolean bodyCalled = false
 
+    binding.env.PRODUCT_AGENT_LABEL = 'civil-stg'
+
     script.call('nonprod', 'civil', 'aat') {
       bodyCalled = true
     }
@@ -356,18 +358,12 @@ class WithSubscriptionTest extends BasePipelineTest {
   }
 
   @Test
-  void 'sandbox product flow derives management subscription from Jenkins subscription name when id is missing'() {
+  void 'sandbox product flow falls back to ARM subscription id when Jenkins subscription id is missing'() {
     binding.env.remove('JENKINS_SUBSCRIPTION_ID')
 
     script.call('sbox', 'plum', 'sbox') {}
 
     assertThat(shellCalls*.script).noneMatch { it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-ptl') }
-    def managementLookup = shellCalls.find {
-      it.script.contains("account show --subscription 'DTS-CFTPTL-INTSVC' --query id -o tsv")
-    }
-    assertThat(managementLookup).isNotNull()
-    assertThat(managementLookup['script'].toString()).contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-jenkins')
-    assertThat(managementLookup['buildAgentType']).isNull()
     assertThat(shellCalls*.script).anyMatch {
       it.contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-sbox') &&
         it.contains('identity show') &&
@@ -375,7 +371,7 @@ class WithSubscriptionTest extends BasePipelineTest {
         it.contains('jenkins-sbox-mi')
     }
     assertThat(withEnvVariables).contains(
-      'TF_VAR_mgmt_subscription_id=management-subscription-id',
+      'TF_VAR_mgmt_subscription_id=target-subscription-id',
       'TF_VAR_jenkins_AAD_objectId=jenkins-object-id'
     )
   }
@@ -384,6 +380,7 @@ class WithSubscriptionTest extends BasePipelineTest {
   void 'product flow fails clearly when management subscription cannot be resolved'() {
     binding.env.remove('JENKINS_SUBSCRIPTION_ID')
     binding.env.remove('JENKINS_SUBSCRIPTION_NAME')
+    binding.env.remove('ARM_SUBSCRIPTION_ID')
 
     Exception thrown = null
 

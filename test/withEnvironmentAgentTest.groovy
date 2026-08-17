@@ -127,6 +127,24 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'forced agent label reallocates when currently on product fallback agent'() {
+    binding.env.PRODUCT_AGENT_LABEL = 'toffee-stg'
+    binding.env.BUILD_AGENT_TYPE = 'toffee-stg'
+
+    def environmentInsideBody
+    def buildAgentTypeInsideBody
+
+    script.call('demo', 'toffee', 'toffee-demo') {
+      environmentInsideBody = binding.env.DEPLOYMENT_ENVIRONMENT
+      buildAgentTypeInsideBody = binding.env.BUILD_AGENT_TYPE
+    }
+
+    assertThat(nodeLabels).containsExactly('toffee-demo')
+    assertThat(environmentInsideBody).isEqualTo('demo')
+    assertThat(buildAgentTypeInsideBody).isEqualTo('toffee-demo')
+  }
+
+  @Test
   void 'switching environment agent propagates generated files back to original workspace'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.ORIGINAL_REMOTE_URL = 'https://github.com/HMCTS/civil-service.git'
