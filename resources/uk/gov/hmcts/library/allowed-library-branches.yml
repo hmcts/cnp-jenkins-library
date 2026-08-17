@@ -31,9 +31,13 @@ branches:
     allowed: true
   - name: performance-stages-updatev5
     allowed: true
+  - name: gatling-configuration
+    allowed: true
   - name: fix-owasp
     allowed: true
   - name: Enable-helm-on-staging
     allowed: true
   - name: feature/remove-state
+    allowed: true
+  - name: acr-migration-check-graceful-failure
     allowed: true
