@@ -106,4 +106,14 @@ class DockerImageTest extends Specification {
       assertThat(serviceName).isEqualTo('custard-back-end-pr-47')
   }
 
+  def "getShortName for nightly stage should return the nightly tag with commit label"() {
+    when:
+      acr.getHostname() >> REGISTRY_HOST
+      dockerImage = new DockerImage(PRODUCT, COMPONENT, acr, 'nightly', COMMIT, LAST_COMMIT_TIMESTAMP)
+      def name = dockerImage.getShortName(DockerImage.DeploymentStage.NIGHTLY)
+
+    then:
+      assertThat(name).isEqualTo('custard/back-end:nightly-379c53a-20210601133228')
+  }
+
 }

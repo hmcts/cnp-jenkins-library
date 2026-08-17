@@ -13,6 +13,9 @@ boolean isTriggeredByTimer() {
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
   Environment environment = new Environment(env)
+  String testEnvironment = environment.nonProdName
+  String testSubscription = subscription
+  def nightlyDeployment
 
   withTeamSecrets(config, environment.nonProdName) {
     def builder = pipelineType.builder
@@ -50,149 +53,175 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       )
     }
 
-    if (config.crossBrowserTest) {
-      stageWithAgent("Cross browser tests", product) {
+    String originalTestUrl = env.TEST_URL
+    String originalAksTestUrl = env.AKS_TEST_URL
+    String originalEnvironmentName = env.ENVIRONMENT_NAME
+
+    try {
+      if (config.nightlyDeployment) {
+        nightlyDeployment = sectionDeployNightlyInstance(
+          pipelineCallbacksRunner: pcr,
+          appPipelineConfig: config,
+          pipelineType: pipelineType,
+          product: product,
+          component: component
+        )
+        testEnvironment = nightlyDeployment.environment
+        testSubscription = nightlyDeployment.subscription
+        env.TEST_URL = nightlyDeployment.url
+        env.AKS_TEST_URL = nightlyDeployment.url
+        env.ENVIRONMENT_NAME = nightlyDeployment.environment
+      }
+
+      withTeamSecrets(config, testEnvironment) {
+        runNightlyTestStages(pcr, config, builder, product, component, testEnvironment, testSubscription)
+      }
+    } finally {
+      if (nightlyDeployment && !config.keepNightlyDeployment) {
+        helmUninstall(nightlyDeployment.dockerImage, nightlyDeployment.deployParams, pcr)
+      }
+      env.TEST_URL = originalTestUrl ?: ''
+      env.AKS_TEST_URL = originalAksTestUrl ?: ''
+      env.ENVIRONMENT_NAME = originalEnvironmentName ?: ''
+    }
+  }
+}
+
+def runNightlyTestStages(pcr, config, builder, String product, String component, String testEnvironment, String testSubscription) {
+  if (config.crossBrowserTest) {
+    stageWithAgent("Cross browser tests", product) {
+      warnError('Failure in crossBrowserTest') {
+        pcr.callAround('crossBrowserTest') {
+          timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
+            builder.crossBrowserTest()
+          }
+        }
+      }
+    }
+  }
+
+  if (config.parallelCrossBrowsers) {
+    Set<String> browsers = config.parallelCrossBrowsers.toSet()
+    Map crossBrowserStages = [:]
+    browsers.each { browser ->
+      crossBrowserStages.put(browser.capitalize(), {
         warnError('Failure in crossBrowserTest') {
           pcr.callAround('crossBrowserTest') {
             timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-              builder.crossBrowserTest()
+              builder.crossBrowserTest(browser)
             }
           }
         }
+      })
+    }
+    stageWithAgent('Cross browser tests', product) {
+      parallel(crossBrowserStages)
+    }
+  }
+
+  if (config.e2eTest) {
+    stageWithAgent("End to End test", product) {
+      pcr.callAround('E2eTest') {
+        builder.e2eTest()
       }
     }
+  }
 
-    if (config.parallelCrossBrowsers) {
-      Set<String> browsers = config.parallelCrossBrowsers.toSet()
-      Map crossBrowserStages = [:]
-      browsers.each { browser ->
-        crossBrowserStages.put(browser.capitalize(), {
-          warnError('Failure in crossBrowserTest') {
-            pcr.callAround('crossBrowserTest') {
-              timeoutWithMsg(time: config.crossBrowserTestTimeout, unit: 'MINUTES', action: 'Cross browser test') {
-                builder.crossBrowserTest(browser)
-              }
-            }
-          }
-        })
-      }
-      stageWithAgent('Cross browser tests', product) {
-        parallel(crossBrowserStages)
-      }
-    }
+  if (config.performanceTest) {
+    boolean triggeredByTimer = isTriggeredByTimer()
+    boolean doSecondRun = false
+    def stages = ['Performance test', 'Failed Test Rerun']
 
-    if (config.e2eTest) {
-      stageWithAgent("End to End test", product) {
-        pcr.callAround('E2eTest') {
-          builder.e2eTest()
-        }
-      }
-    }
-
-
-    if (config.performanceTest) {
-
-      //Check if build started by chron job
-      boolean triggeredByTimer = isTriggeredByTimer()
-
-      boolean doSecondRun = false //This is set to true if first
-      def stages = ['Performance test', 'Failed Test Rerun']
-      for (int i = 0; i < stages.size(); i++) {
-        stageWithAgent(stages[i], product) {
-          warnError('Failure in performanceTest') {
-            pcr.callAround('PerformanceTest') {
-              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
-                //First run uses a trick of setting buildresult to SUCCESS, so that a rerun can be attempted with jenkins build failing
-                if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
-                  catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    try {
-                      builder.performanceTest()
-                    }
-                    catch (e) {
-                      doSecondRun = true
-                      throw e
-                    }
+    for (int i = 0; i < stages.size(); i++) {
+      stageWithAgent(stages[i], product) {
+        warnError('Failure in performanceTest') {
+          pcr.callAround('PerformanceTest') {
+            timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
+              if ((i == 0) && triggeredByTimer && config.perfRerunOnFail) {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                  try {
+                    builder.performanceTest()
+                  } catch (e) {
+                    doSecondRun = true
+                    throw e
                   }
-                  //The below else block executes a test re-run and not triggered by timer
-                } else {
-                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                      builder.performanceTest()
-                    }
                 }
-
-                publishPerformanceReports(
-                  product: product,
-                  component: component,
-                  environment: environment.nonProdName,
-                  subscription: subscription,
-                  folder: "nightly"
-                )
+              } else {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  builder.performanceTest()
+                }
               }
-            }
-          }
-        }
 
-        //Break out of loop and not to run second re-reun if any of the following conditions are satisfied.
-        if (!(triggeredByTimer && config.perfRerunOnFail && doSecondRun))
-          break
-      }
-
-      //Alerts wil become active if config.gatlingAlerts is set to true
-      if (config.perfGatlingAlerts == true)
-        performanceCheckIfTestFailed("${config.perfSlackChannel}")
-
-    }
-
-
-    if (config.securityScan) {
-      stageWithAgent('Security scan', product) {
-        warnError('Failure in securityScan') {
-          env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
-          env.ALERT_FILTERS = config.securityScanAlertFilters
-          env.SCAN_TYPE = config.securityScanType
-          pcr.callAround('securityScan') {
-            timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
-              builder.securityScan()
+              publishPerformanceReports(
+                product: product,
+                component: component,
+                environment: testEnvironment,
+                subscription: testSubscription,
+                folder: "nightly"
+              )
             }
           }
         }
       }
+
+      if (!(triggeredByTimer && config.perfRerunOnFail && doSecondRun)) {
+        break
+      }
     }
 
-    if (config.mutationTest) {
-      stageWithAgent('Mutation tests', product) {
-        warnError('Failure in mutationTest') {
-          pcr.callAround('mutationTest') {
-            timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
-              builder.mutationTest()
-            }
+    if (config.perfGatlingAlerts == true) {
+      performanceCheckIfTestFailed("${config.perfSlackChannel}")
+    }
+  }
+
+  if (config.securityScan) {
+    stageWithAgent('Security scan', product) {
+      warnError('Failure in securityScan') {
+        env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
+        env.ALERT_FILTERS = config.securityScanAlertFilters
+        env.SCAN_TYPE = config.securityScanType
+        pcr.callAround('securityScan') {
+          timeout(time: config.securityScanTimeout, unit: 'MINUTES') {
+            builder.securityScan()
           }
         }
       }
     }
+  }
 
-    highLevelDataSetup(
-      appPipelineConfig: config,
-      pipelineCallbacksRunner: pcr,
-      builder: builder,
-      environment: environment.nonProdName,
-      product: product,
-    )
-
-    if (config.fullFunctionalTest) {
-      stageWithAgent('Full functional tests', product) {
-        warnError('Failure in fullFunctionalTest') {
-          pcr.callAround('fullFunctionalTest') {
-            timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-              builder.fullFunctionalTest()
-            }
+  if (config.mutationTest) {
+    stageWithAgent('Mutation tests', product) {
+      warnError('Failure in mutationTest') {
+        pcr.callAround('mutationTest') {
+          timeoutWithMsg(time: config.mutationTestTimeout, unit: 'MINUTES', action: 'Mutation test') {
+            builder.mutationTest()
           }
         }
       }
     }
+  }
 
-    if (currentBuild.result == "UNSTABLE" || currentBuild.result == "FAILURE") {
-      error "At least one stage failed, check the logs to see why"
+  highLevelDataSetup(
+    appPipelineConfig: config,
+    pipelineCallbacksRunner: pcr,
+    builder: builder,
+    environment: testEnvironment,
+    product: product,
+  )
+
+  if (config.fullFunctionalTest) {
+    stageWithAgent('Full functional tests', product) {
+      warnError('Failure in fullFunctionalTest') {
+        pcr.callAround('fullFunctionalTest') {
+          timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+            builder.fullFunctionalTest()
+          }
+        }
+      }
     }
+  }
+
+  if (currentBuild.result == "UNSTABLE" || currentBuild.result == "FAILURE") {
+    error "At least one stage failed, check the logs to see why"
   }
 }

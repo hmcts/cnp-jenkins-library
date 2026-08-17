@@ -478,6 +478,26 @@ withNightlyPipeline(type, product, component) {
 }
 ```
 
+To deploy an isolated AKS instance for the nightly run before the optional test stages execute, add `deployNightlyInstance()`.
+By default this deploys to the preview AKS environment using `values.aat.template.yaml`, a `nightly` Helm release/image tag, and removes it at the end of the build.
+This is opt-in; without `deployNightlyInstance()`, the nightly pipeline keeps the existing behaviour and does not deploy an instance.
+
+```
+withNightlyPipeline(type, product, component) {
+  deployNightlyInstance()
+  enableFullFunctionalTest()
+  enableSecurityScan()
+}
+```
+
+You can override the target environment, Helm values environment, release/image tag, or keep the deployment after the build:
+
+```
+withNightlyPipeline(type, product, component) {
+  deployNightlyInstance(environment: 'preview', valuesEnvironment: 'aat', imageTag: 'nightly', keepDeployment: true)
+}
+```
+
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
 You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.

@@ -147,6 +147,23 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.fortifyVaultName = fortifyVaultName
   }
 
+  void deployNightlyInstance(Map<String, Object> params = [:]) {
+    def deploymentEnvironment = params.environment ?: 'preview'
+    config.nightlyDeployment = true
+    config.nightlyDeploymentEnvironment = deploymentEnvironment
+    config.nightlyDeploymentValuesEnvironment = params.valuesEnvironment ?: defaultNightlyValuesEnvironment(deploymentEnvironment)
+    config.nightlyDeploymentImageTag = params.imageTag ?: 'nightly'
+    config.keepNightlyDeployment = params.keepDeployment ?: false
+  }
+
+  void enableNightlyDeployment(Map<String, Object> params = [:]) {
+    deployNightlyInstance(params)
+  }
+
+  private String defaultNightlyValuesEnvironment(String deploymentEnvironment) {
+    deploymentEnvironment in ['preview', 'nonprod'] ? 'aat' : deploymentEnvironment
+  }
+
   void enableDockerTestBuild() {
     config.dockerTestBuild = true
   }

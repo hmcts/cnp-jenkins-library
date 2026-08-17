@@ -40,6 +40,11 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
+      assertThat(pipelineConfig.nightlyDeployment).isFalse()
+      assertThat(pipelineConfig.keepNightlyDeployment).isFalse()
+      assertThat(pipelineConfig.nightlyDeploymentEnvironment).isEqualTo("preview")
+      assertThat(pipelineConfig.nightlyDeploymentValuesEnvironment).isEqualTo("aat")
+      assertThat(pipelineConfig.nightlyDeploymentImageTag).isEqualTo("nightly")
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -230,6 +235,28 @@ class AppPipelineConfigTest extends Specification {
     then:
     assertThat(pipelineConfig.fortifyScan).isTrue()
     assertThat(pipelineConfig.fortifyVaultName).isEqualTo("fortifyVaultName")
+  }
+
+  def "ensure deploy nightly instance can be set"() {
+    when:
+      dsl.deployNightlyInstance(environment: 'aat', valuesEnvironment: 'aat', imageTag: 'nightly-pr-123', keepDeployment: true)
+    then:
+      assertThat(pipelineConfig.nightlyDeployment).isTrue()
+      assertThat(pipelineConfig.nightlyDeploymentEnvironment).isEqualTo("aat")
+      assertThat(pipelineConfig.nightlyDeploymentValuesEnvironment).isEqualTo("aat")
+      assertThat(pipelineConfig.nightlyDeploymentImageTag).isEqualTo("nightly-pr-123")
+      assertThat(pipelineConfig.keepNightlyDeployment).isTrue()
+  }
+
+  def "ensure enable nightly deployment aliases deploy nightly instance"() {
+    when:
+      dsl.enableNightlyDeployment()
+    then:
+      assertThat(pipelineConfig.nightlyDeployment).isTrue()
+      assertThat(pipelineConfig.nightlyDeploymentEnvironment).isEqualTo("preview")
+      assertThat(pipelineConfig.nightlyDeploymentValuesEnvironment).isEqualTo("aat")
+      assertThat(pipelineConfig.nightlyDeploymentImageTag).isEqualTo("nightly")
+      assertThat(pipelineConfig.keepNightlyDeployment).isFalse()
   }
 
   def "ensure enable slack notifications"() {
