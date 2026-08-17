@@ -19,29 +19,33 @@ def call(Map params) {
   def target = resolveTarget(config.nightlyDeploymentEnvironment, subscription, environment, aksSubscriptions)
   String imageTag = config.nightlyDeploymentImageTag
   def dockerImage
+  def acr
 
-  stageWithAgent("Nightly Docker Build", product) {
-    if (!fileExists('Dockerfile')) {
-      throw new RuntimeException("Nightly deployment requires a Dockerfile")
-    }
+  withAcrClient(target.subscription) {
+    def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+    acr = new Acr(this, target.subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+    dockerImage = new DockerImage(product, component, acr, imageTag, env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+  }
 
-    withAcrClient(target.subscription) {
-      def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-      def acr = new Acr(this, target.subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-      dockerImage = new DockerImage(product, component, acr, imageTag, env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+  if (fileExists('Dockerfile')) {
+    stageWithAgent("Nightly Docker Build", product) {
+      withAcrClient(target.subscription) {
 
-      pcr.callAround('nightlydockerbuild') {
-        timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Nightly Docker Build') {
-          if (fileExists('acb.tpl.yaml')) {
-            acr.runWithTemplate('acb.tpl.yaml', dockerImage)
-          } else {
-            acr.build(dockerImage)
+        pcr.callAround('nightlydockerbuild') {
+          timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Nightly Docker Build') {
+            if (fileExists('acb.tpl.yaml')) {
+              acr.runWithTemplate('acb.tpl.yaml', dockerImage)
+            } else {
+              acr.build(dockerImage)
+            }
+            acr.retagForStage(DockerImage.DeploymentStage.NIGHTLY, dockerImage)
+            acr.purgeOldTags(DockerImage.DeploymentStage.NIGHTLY, dockerImage)
           }
-          acr.retagForStage(DockerImage.DeploymentStage.NIGHTLY, dockerImage)
-          acr.purgeOldTags(DockerImage.DeploymentStage.NIGHTLY, dockerImage)
         }
       }
     }
+  } else {
+    echo "No Dockerfile found, skipping Nightly Docker Build and deploying Helm chart with existing images"
   }
 
   def deployParams = [
