@@ -135,6 +135,7 @@ def call(params) {
               stageWithAgent('Functional test (Full)', product) {
                 testEnv(aksUrl) {
                   def passed = true
+                  def failureReason = null
                   try {
                     pcr.callAround("fullFunctionalTest:${environment}") {
                       timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
@@ -143,12 +144,13 @@ def call(params) {
                     }
                   } catch (err) {
                     passed = false
+                    failureReason = err?.message ?: err?.toString()
                   } finally {
                     savePodsLogs(dockerImage, params, "full-functional")
                   }
                   if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    error('Functional test (Full) failed')
+                    error("Functional test (Full) failed${failureReason ? ": ${failureReason}" : ''}")
                   }
                 }
               }
@@ -156,6 +158,7 @@ def call(params) {
               stageWithAgent("Functional Test - ${environment}", product) {
                 testEnv(aksUrl) {
                   def passed = true
+                  def failureReason = null
                   try {
                     pcr.callAround("functionalTest:${environment}") {
                       timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
@@ -164,12 +167,13 @@ def call(params) {
                     }
                   } catch (err) {
                     passed = false
+                    failureReason = err?.message ?: err?.toString()
                   } finally {
                     savePodsLogs(dockerImage, params, "functional")
                   }
                   if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    error('Functional test failed')
+                    error("Functional test failed${failureReason ? ": ${failureReason}" : ''}")
                   }
                 }
               }
