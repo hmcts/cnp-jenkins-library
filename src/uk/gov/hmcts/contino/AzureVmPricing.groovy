@@ -8,7 +8,7 @@ import java.net.URLEncoder
 class AzureVmPricing implements Serializable {
 
   static final String IMDS_URL =
-    'http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01'
+    'http://169.254.169.254/metadata/instance/compute?api-version=2023-07-01'
   static final String PRICES_URL =
     'https://prices.azure.com/api/retail/prices'
 
