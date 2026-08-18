@@ -41,3 +41,5 @@ branches:
     allowed: true
   - name: acr-migration-check-graceful-failure
     allowed: true
+  - name: feat/stage-cost-metrics
+    allowed: true
