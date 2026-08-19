@@ -46,9 +46,8 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       def vaultName = config.fortifyVaultName ?: "${product}-kv-${environment.nonProdName}"
       def vaultNameWithoutKv = "${product}-${environment.nonProdName}"
       
-      // You could check existence here if you have a function to check vault existence
-      // For now, use a config flag to determine
-      def finalVaultName = config.useVaultWithoutKv ? vaultNameWithoutKv : vaultName
+      // Check if vaultName contains "-kv1-" and use alternative if needed
+      def finalVaultName = (vaultName.contains("-kv1-") || config.useVaultWithoutKv) ? vaultNameWithoutKv : vaultName
       
       fortifyScan(
         pipelineCallbacksRunner: pcr,
