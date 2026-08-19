@@ -33,6 +33,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
+      assertThat(pipelineConfig.smokeTestSecrets).isTrue()
       assertThat(pipelineConfig.deployableApp).isTrue()
       assertThat(pipelineConfig.releaseOnMerge).isFalse()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
@@ -61,6 +62,13 @@ class AppPipelineConfigTest extends Specification {
       dsl.loadVaultSecrets(secrets)
     then:
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
+  }
+
+  def "disable smoke test secrets"() {
+    when:
+      dsl.disableSmokeTestSecrets()
+    then:
+      assertThat(pipelineConfig.smokeTestSecrets).isFalse()
   }
 
   def "ensure enable e2e test"() {
