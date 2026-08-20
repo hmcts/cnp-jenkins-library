@@ -45,8 +45,8 @@ def call(type, String product, String component, String environment, String subs
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
+  callbacks.registerAfterAll { stage, durationMs ->
+    metricsPublisher.publish(stage, durationMs)
   }
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
