@@ -128,6 +128,32 @@ class HelmTest extends Specification {
     })
   }
 
+  def "waitForReleaseCleanup() should return true when release disappears before timeout"() {
+    when:
+    def cleaned = helm.waitForReleaseCleanup("${CHART}-pr-1", "cnp", 15)
+
+    then:
+    cleaned
+    3 * steps.sh({it.containsKey('returnStatus') &&
+      it.get('returnStatus').equals(true) &&
+      it.get('script').contains("helm status ${CHART}-pr-1 -n cnp >/dev/null 2>&1")
+    }) >>> [0, 0, 1]
+    2 * steps.sleep(5)
+  }
+
+  def "waitForReleaseCleanup() should return false after timeout"() {
+    when:
+    def cleaned = helm.waitForReleaseCleanup("${CHART}-pr-1", "cnp", 10)
+
+    then:
+    !cleaned
+    2 * steps.sh({it.containsKey('returnStatus') &&
+      it.get('returnStatus').equals(true) &&
+      it.get('script').contains("helm status ${CHART}-pr-1 -n cnp >/dev/null 2>&1")
+    }) >> 0
+    2 * steps.sleep(5)
+  }
+
   def "history() should execute with the correct chart and options"() {
     when:
     helm.history("pr-1", "default")

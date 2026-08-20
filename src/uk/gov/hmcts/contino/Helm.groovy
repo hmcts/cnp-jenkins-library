@@ -314,6 +314,22 @@ class Helm {
     this.execute('uninstall', "${this.chartName}-${imageTag}", null, ["--namespace ${namespace}"])
   }
 
+  boolean waitForReleaseCleanup(String releaseName, String namespace, int timeoutSeconds = 60) {
+    int elapsed = 0
+    int interval = 5
+
+    while (elapsed < timeoutSeconds) {
+      def status = this.steps.sh(returnStatus: true, script: "helm status ${releaseName} -n ${namespace} >/dev/null 2>&1")
+      if (status != 0) {
+        return true
+      }
+      this.steps.sleep(interval)
+      elapsed += interval
+    }
+
+    false
+  }
+
   def exists(String imageTag, String namespace) {
     def deployments = this.execute('list', '', null, ['--all', '-q', "--namespace ${namespace}"])
     return deployments != null && deployments.toString().contains("${this.chartName}-${imageTag}")
