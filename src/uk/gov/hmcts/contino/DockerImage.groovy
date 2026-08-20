@@ -11,6 +11,7 @@ class DockerImage {
     PR('pr'),
     STAGING('staging'),
     PREVIEW('preview'),
+    NIGHTLY('nightly'),
     PROD('prod', "5d", 5),
     LATEST('latest')
 
