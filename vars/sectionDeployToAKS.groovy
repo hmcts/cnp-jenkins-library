@@ -26,7 +26,7 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
   }
 }
 
-def stageWithEnvironmentAgentAndSecrets(String stageName, AppPipelineConfig config, String product, String environment, Closure body) {
+def stageWithEnvironmentAgentAndSecrets(String stageName, config, String product, String environment, Closure body) {
   stageWithEnvironmentAgent(stageName, product, environment) {
     // Fetch team secrets after the node hop so Key Vault auth/env injection runs on the target environment agent.
     withTeamSecrets(config, environment, product) {
@@ -119,28 +119,36 @@ def call(params) {
         }
       }
       if (config.serviceApp) {
-        withTeamSecrets(config, environment) {
-          stageWithEnvironmentAgentAndSecrets("Smoke Test - AKS ${environment}", config, product, environment) {
-            testEnv(aksUrl) {
-              def success = true
-              try {
-                pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                    builder.smokeTest()
-                  }
+        def smokeTestStage = {
+          testEnv(aksUrl) {
+            def success = true
+            try {
+              pcr.callAround("smoketest:${environment}") {
+                timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  builder.smokeTest()
                 }
-              } catch (err) {
-                success = false
-                throw err
-              } finally {
-                savePodsLogs(dockerImage, params, "smoke")
-                if (!success) {
-                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                }
+              }
+            } catch (err) {
+              success = false
+              throw err
+            } finally {
+              savePodsLogs(dockerImage, params, "smoke")
+              if (!success) {
+                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
               }
             }
           }
-    
+        }
+
+        if (!config.smokeTestSecrets) {
+          stageWithEnvironmentAgent("Smoke Test - AKS ${environment}", product, environment, smokeTestStage)
+        }
+
+        withTeamSecrets(config, environment) {
+          if (config.smokeTestSecrets) {
+            stageWithEnvironmentAgentAndSecrets("Smoke Test - AKS ${environment}", config, product, environment, smokeTestStage)
+          }
+
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
               stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
