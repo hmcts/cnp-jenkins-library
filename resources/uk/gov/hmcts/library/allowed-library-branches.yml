@@ -43,3 +43,5 @@ branches:
     allowed: true
   - name: feat/stage-cost-metrics
     allowed: true
+  - name: DTSPO-33915-kubeconform-jenkins
+    allowed: true
