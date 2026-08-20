@@ -63,7 +63,11 @@ def call(type, String product, String component, String environment, String subs
   boolean libraryBranchAllowed = false
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
-  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  def teamConfig = new TeamConfig(
+    this,
+    pipelineConfig.approvedJenkinsConfigRepos,
+    pipelineConfig.warnOnUnapprovedJenkinsConfigRepo
+  ).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
   libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
