@@ -22,8 +22,8 @@ def call(String product, String component = null, Closure body) {
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
   def branch = new ProjectBranch(env.BRANCH_NAME)
 
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
+  callbacks.registerAfterAll { stage, stageDurationMillis ->
+    metricsPublisher.publish(stage, stageDurationMillis)
   }
 
   def dsl = new InfraPipelineDsl(this, callbacks, pipelineConfig)
