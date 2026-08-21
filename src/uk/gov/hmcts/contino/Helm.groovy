@@ -14,6 +14,9 @@ import groovy.json.JsonSlurperClassic
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = 'charts'
+  // Pinned kubeconform release version used by kubeconform().
+  // Check https://github.com/yannh/kubeconform/releases for newer versions before bumping.
+  public static final String KUBECONFORM_VERSION = 'v0.6.7'
   def steps
   def acr
   def docker
@@ -181,6 +184,7 @@ class Helm {
     authenticateAcr()
     dependencyUpdate()
     lint(values)
+    kubeconform(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -254,6 +258,42 @@ class Helm {
 
   def lint(List<String> values) {
     this.execute('lint', this.chartLocation, values, null)
+  }
+
+  /**
+   * Validate the fully-rendered chart manifests against the Kubernetes API schema
+   * using kubeconform, catching type violations and invalid manifests at publish
+   * time rather than at deployment time.
+   *
+   * @param values
+   *   list of values files to render the chart with
+   * @param k8sVersion
+   *   Kubernetes API schema version to validate against, defaults to the current
+   *   cluster version
+   */
+  def kubeconform(List<String> values, String k8sVersion = '1.35.0') {
+    this.steps.sh(
+      label: 'install kubeconform',
+      script: """
+        curl -sSL https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz \\
+          | tar xz -C /tmp/
+      """
+    )
+
+    def valuesStr = (values == null ? '' : "${' -f ' + values.join(' -f ')}")
+
+    this.steps.sh(
+      label: 'kubeconform schema validation',
+      script: """
+        helm template ${this.chartName} ${this.chartLocation} ${valuesStr} \\
+          | /tmp/kubeconform \\
+              -strict \\
+              -summary \\
+              -kubernetes-version ${k8sVersion} \\
+              -schema-location default \\
+              -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+      """
+    )
   }
 
   def installOrUpgrade(String imageTag, List<String> values, List<String> options) {

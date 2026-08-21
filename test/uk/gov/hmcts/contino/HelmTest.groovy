@@ -44,6 +44,71 @@ class HelmTest extends Specification {
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${SUBSCRIPTION}")})
   }
 
+  // ==================== kubeconform() Tests ====================
+
+  def "kubeconform() installs the pinned kubeconform binary version"() {
+    when:
+    helm.kubeconform(["values.yaml"])
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'install kubeconform' &&
+      it.get('script').contains("https://github.com/yannh/kubeconform/releases/download/${Helm.KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz") &&
+      it.get('script').contains('tar xz -C /tmp/')
+    })
+  }
+
+  def "kubeconform() runs helm template piped to kubeconform with strict validation flags and default k8s version"() {
+    when:
+    helm.kubeconform(["values.yaml"])
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation' &&
+      it.get('script').contains("helm template ${CHART} ${CHART_PATH}") &&
+      it.get('script').contains('| /tmp/kubeconform') &&
+      it.get('script').contains('-strict') &&
+      it.get('script').contains('-summary') &&
+      it.get('script').contains('-kubernetes-version 1.35.0') &&
+      it.get('script').contains('-schema-location default') &&
+      it.get('script').contains("-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'")
+    })
+  }
+
+  def "kubeconform() passes a custom k8sVersion through to kubeconform"() {
+    when:
+    helm.kubeconform(["values.yaml"], "1.30.0")
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation' &&
+      it.get('script').contains('-kubernetes-version 1.30.0') &&
+      !it.get('script').contains('-kubernetes-version 1.35.0')
+    })
+  }
+
+  def "kubeconform() passes multiple values files through as helm -f flags"() {
+    when:
+    helm.kubeconform(["val1", "val2"])
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation' &&
+      it.get('script').contains("helm template ${CHART} ${CHART_PATH}  -f val1 -f val2")
+    })
+  }
+
+  def "kubeconform() with no values files omits -f flags from the helm template call"() {
+    when:
+    helm.kubeconform(null)
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation' &&
+      !it.get('script').contains('-f ')
+    })
+  }
+
   def "installOrUpgrade() on PR branch should execute without --wait flag and do manual wait"() {
     when:
     helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])
