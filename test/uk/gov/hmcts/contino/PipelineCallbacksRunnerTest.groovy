@@ -57,6 +57,23 @@ class PipelineCallBacksRunnerTest extends Specification {
       assertThat(text.toString()).isEqualTo('checkoutafterAllbuildafterAll')
   }
 
+  def "ensure stage duration is passed into afterAll callback when accepted"() {
+    given:
+      PipelineCallbacksConfig config = new PipelineCallbacksConfig()
+      def capturedDuration = null
+      config.registerAfterAll() { stage, stageDurationMillis ->
+        capturedDuration = stageDurationMillis
+      }
+      PipelineCallbacksRunner pcr = new PipelineCallbacksRunner(config)
+    when:
+      pcr.callAround('build') {
+        sleep(5)
+      }
+    then:
+      capturedDuration != null
+      capturedDuration >= 0
+  }
+
   def "ensure that callbacks with different names are not called" () {
     given:
       PipelineCallbacksConfig config = new PipelineCallbacksConfig()
