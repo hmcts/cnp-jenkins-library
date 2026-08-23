@@ -95,6 +95,15 @@ class LibraryBranchControls {
   boolean isBranchAllowed(def pipelineConfig = null) {
 
     def libraryBranchControls = getLibraryBranchControls()
+
+    def jobPath = steps?.currentBuild?.fullProjectName ?: steps?.env?.JOB_NAME
+    def exemptJobs = libraryBranchControls?.get('exemptJobs')
+
+    if (jobPath && exemptJobs?.any { jobPath.startsWith(it) }) {
+      steps.echo "Job `${jobPath}` is excluded from branch restrictions"
+      return true
+    }
+
     if (!libraryBranchControls.containsKey('branches')) {
 
       steps.echo "No 'branches' key found in deployment controls configuration. Deployment will be disabled by default."
