@@ -138,6 +138,20 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "retagForStage() should promote nightly from the mutable nightly base tag"() {
+    when:
+      dockerImage.getImageTag() >> 'nightly'
+      dockerImage.getShortName(DockerImage.DeploymentStage.NIGHTLY) >> "${IMAGE_REPO}:nightly-abcdefg"
+      dockerImage.getBaseTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_REPO}:nightly"
+      acr.retagForStage(DockerImage.DeploymentStage.NIGHTLY, dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --subscription ${REGISTRY_SUBSCRIPTION} --source ${REGISTRY_NAME}.azurecr.io/${IMAGE_REPO}:nightly -t ${IMAGE_REPO}:nightly-abcdefg") &&
+                    it.containsKey('returnStdout') &&
+                    it.get('returnStdout').equals(true)})
+  }
+
   def "hasTag should return false in case of error"() {
     when:
       dockerImage.getTag() >> IMAGE_TAG
