@@ -8,6 +8,8 @@ import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.GradleAPI
 import uk.gov.hmcts.pipeline.DeploymentControls
+import uk.gov.hmcts.pipeline.AcrOwnershipGate
+import uk.gov.hmcts.pipeline.AcrOwnershipPolicyConfig
 
 def call(params) {
 
@@ -23,8 +25,35 @@ def call(params) {
   def projectBranch
   def imageRegistry
   def gradleAPI = new GradleAPI(this)
+  def ownershipGate = new AcrOwnershipGate()
+  def ownershipPolicyConfig = new AcrOwnershipPolicyConfig(
+    this,
+    config.approvedJenkinsConfigRepos,
+    config.warnOnUnapprovedJenkinsConfigRepo
+  )
+  def ownershipPolicy = ownershipPolicyConfig.getOwnershipPolicy(product)
   boolean noSkipImgBuild = true
   boolean deploymentEnabled = false
+
+  if (ownershipPolicy.warningMessage) {
+    echo(ownershipPolicy.warningMessage)
+  }
+
+  def evaluateAcrOwnership = { String repositoryName ->
+    def decision = ownershipGate.evaluate(
+      ownershipPolicy.mode,
+      product,
+      component,
+      repositoryName,
+      ownershipPolicy.allowList
+    )
+
+    echo(ownershipGate.logLine(decision))
+
+    if (ownershipGate.shouldBlock(decision)) {
+      error("ACR ownership gate denied write operation for repository '${repositoryName}' (reasonCode=${decision.reasonCode})")
+    }
+  }
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
@@ -126,6 +155,7 @@ def call(params) {
                       """
               }
               def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+              evaluateAcrOwnership(dockerImage.getRepositoryName())
               if (fileExists(acbTemplateFilePath)) {
                 acr.runWithTemplate(acbTemplateFilePath, dockerImage)
               } else {
@@ -151,6 +181,7 @@ def call(params) {
                   writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
                 }
                 def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+                evaluateAcrOwnership(dockerImageTest.getRepositoryName())
                 acr.build(dockerImageTest, " -f ${dockerfileTest}")
               }
             }
@@ -268,6 +299,7 @@ def call(params) {
             deploymentStage = DockerImage.DeploymentStage.PR
           }
           withAcrClient(subscription) {
+            evaluateAcrOwnership(dockerImage.getRepositoryName())
             acr.retagForStage(deploymentStage, dockerImage)
             acr.purgeOldTags(deploymentStage, dockerImage)
           }

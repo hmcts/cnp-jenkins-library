@@ -19,6 +19,7 @@ class TeamConfigTest extends Specification {
                                      "bulk-scan":["team":"Software Engineering","namespace":"rpe","registry":"hmctsprivate","agent":"k8s-agent","slack": ["contact_channel":"#rpe-builds", "build_notices_channel":"#rpe-builds" ], "tags": ["application":"bulk-scan"]]]]
 
   void setup() {
+    TeamConfig.teamConfigMap = null
     steps = Mock(JenkinsStepMock.class)
     steps.readYaml([text: response.content]) >> response.content
     steps.httpRequest(_) >> response
@@ -285,6 +286,31 @@ class TeamConfigTest extends Specification {
 
     then:
     thrown RuntimeException
+  }
+
+  def "getTeamNamesMap() should warn when JENKINS_CONFIG_REPO is unapproved"() {
+    given:
+    steps.env >> [JENKINS_CONFIG_REPO: 'custom-config-repo']
+
+    when:
+    teamConfig.getTeamNamesMap()
+
+    then:
+    1 * steps.echo({ String message ->
+      message.contains("JENKINS_CONFIG_REPO 'custom-config-repo'")
+    })
+  }
+
+  def "getTeamNamesMap() should not warn when JENKINS_CONFIG_REPO is approved"() {
+    given:
+    def approvedRepoConfig = new TeamConfig(steps, ['custom-config-repo'], true)
+    steps.env >> [JENKINS_CONFIG_REPO: 'custom-config-repo']
+
+    when:
+    approvedRepoConfig.getTeamNamesMap()
+
+    then:
+    0 * steps.echo(_)
   }
 
 }
