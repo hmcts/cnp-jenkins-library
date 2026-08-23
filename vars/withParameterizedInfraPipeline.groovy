@@ -26,8 +26,8 @@ def call(String product, String environment, String subscription, Boolean planOn
   def callbacks = new PipelineCallbacksConfig()
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
+  callbacks.registerAfterAll { stage, durationMs ->
+    metricsPublisher.publish(stage, durationMs)
   }
 
   def dsl = new InfraPipelineDsl(this, callbacks, pipelineConfig)
