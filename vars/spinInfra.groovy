@@ -64,9 +64,11 @@ def call(Map<String, ?> params) {
         if (Environment.toTagName(config.environment) == "sandbox") {
           tags = tags + [expiresAfter: config.expires]
         }
-        
+
         if (Environment.toTagName(config.environment) != "production") {
-          tags = tags + [autoShutdown: "true"]
+          if (!tags.containsKey('autoShutdown')) {
+            tags = tags + [autoShutdown: "true"]
+          }
         }
 
         if (Environment.toTagName(config.environment) == "sandbox" &&
