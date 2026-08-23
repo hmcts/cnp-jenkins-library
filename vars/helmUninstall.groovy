@@ -3,13 +3,14 @@ import uk.gov.hmcts.contino.Helm
 
 def call(dockerImage, Map params, pcr) {
   try {
-    stageWithAgent("Uninstall Helm Release - ${params.environment}", params.product) {
-      pcr.callAround("helmReleaseUninstall:${params.environment}") {
-        withAksClient(params.subscription, params.environment, params.product) {
-          uninstallRelease(dockerImage, params)
-        }
-      }
-    }
+    echo "test"
+    // stageWithAgent("Uninstall Helm Release - ${params.environment}", params.product) {
+    //   pcr.callAround("helmReleaseUninstall:${params.environment}") {
+    //     withAksClient(params.subscription, params.environment, params.product) {
+    //       uninstallRelease(dockerImage, params)
+    //     }
+    //   }
+    // }
   } catch (ignored) {
     echo "Unable to uninstall this helm release."
   }
