@@ -55,8 +55,7 @@ def call(params) {
           }
         }
         if (subscription != 'sandbox' && subscription != 'sbox') {
-          def fluxReconcileEnvironment = DockerImage.DeploymentStage.PROD == deploymentStage ? 'ptl' : environment
-          reconcileFluxImageRepository product: product, component: component, environment: fluxReconcileEnvironment
+          reconcileFluxImageRepository product: product, component: component, environment: 'ptl'
         }
       }
     }
