@@ -46,18 +46,6 @@ class HelmTest extends Specification {
 
   // ==================== kubeconform() Tests ====================
 
-  def "kubeconform() installs the pinned kubeconform binary version"() {
-    when:
-    helm.kubeconform(["values.yaml"])
-
-    then:
-    1 * steps.sh({it.containsKey('label') &&
-      it.get('label') == 'install kubeconform' &&
-      it.get('script').contains("https://github.com/yannh/kubeconform/releases/download/${Helm.KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz") &&
-      it.get('script').contains('tar xz -C /tmp/')
-    })
-  }
-
   def "kubeconform() runs helm template piped to kubeconform with strict validation flags and default k8s version"() {
     when:
     helm.kubeconform(["values.yaml"])
@@ -66,7 +54,7 @@ class HelmTest extends Specification {
     1 * steps.sh({it.containsKey('label') &&
       it.get('label') == 'kubeconform schema validation' &&
       it.get('script').contains("helm template ${CHART} ${CHART_PATH}") &&
-      it.get('script').contains('| /tmp/kubeconform') &&
+      it.get('script').contains('| kubeconform') &&
       it.get('script').contains('-strict') &&
       it.get('script').contains('-summary') &&
       it.get('script').contains('-kubernetes-version 1.35.0') &&
