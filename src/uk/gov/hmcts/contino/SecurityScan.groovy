@@ -15,23 +15,35 @@ class SecurityScan implements Serializable {
     def execute() {
         try {
             this.steps.withDocker(OWASP_ZAP_IMAGE, OWASP_ZAP_ARGS) {
-                this.steps.sh '''
-                    chmod +x security.sh
-                    ./security.sh
-                    '''
+                try {
+                    this.steps.sh '''
+                        chmod +x security.sh
+                        ./security.sh
+                        '''
+                } finally {
+                    restoreWorkspaceOwnership()
+                }
             }
             this.steps.sh '''
                 wget https://raw.githubusercontent.com/hmcts/zap-glue/master/jq_pattern -O ${WORKSPACE}/jq_pattern
                 jq -f ${WORKSPACE}/jq_pattern ${WORKSPACE}/report.json > ${WORKSPACE}/output.json
                 '''
             this.steps.withDocker(GLUEIMAGE, GLUE_ARGS) {
-                this.steps.sh '''
-                    cd /glue
-                    ruby /glue/bin/glue -t Dynamic -T /tmp/output.json -f json --finding-file-path /tmp/audit.json --mapping-file /glue/zaproxy_mapping.json -z
-                    '''
+                try {
+                    this.steps.sh '''
+                        cd /glue
+                        ruby /glue/bin/glue -t Dynamic -T /tmp/output.json -f json --finding-file-path /tmp/audit.json --mapping-file /glue/zaproxy_mapping.json -z
+                        '''
+                } finally {
+                    restoreWorkspaceOwnership()
+                }
             }
         } finally {
             steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/**.*'
         }
+    }
+
+    private void restoreWorkspaceOwnership() {
+        this.steps.sh '''chown -R "$(stat -c '%u:%g' .)" . || echo "WARNING: could not restore workspace ownership"'''
     }
 }
