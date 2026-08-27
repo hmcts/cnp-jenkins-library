@@ -47,6 +47,7 @@ def call(type, product, component, timeout = 300, Closure body) {
     currentBuild.result = "FAILURE"
   }
 
+  String primaryEnvironment = branch.isPR() ? environment.previewName : (autoDeployTarget?.environmentName ?: environment.nonProdName)
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector
