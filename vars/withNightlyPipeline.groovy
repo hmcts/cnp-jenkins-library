@@ -47,18 +47,8 @@ def call(type, product, component, timeout = 300, Closure body) {
   }
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector
-
-  if (agentType == "") {
-    nodeSelector = "daily"
-  } else if (agentType == "civil") {
-    nodeSelector = agentType
-  } else if (agentType == "xui") {
-    nodeSelector = agentType
-  } else {
-    nodeSelector = agentType + ' && daily'
-  }
 
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
