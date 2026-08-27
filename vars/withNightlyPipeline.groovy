@@ -11,6 +11,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.AgentSelector
 
 def call(type, product, component, timeout = 300, Closure body) {
 
