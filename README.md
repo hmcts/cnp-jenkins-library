@@ -220,9 +220,9 @@ This can be used to import data required for the application.
 The most common example is importing a CCD definition, but data requirements of a similar nature can be included using the same functionality.
 Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
 
-By adding `enableHighLevelDataSetup()` to the Jenkinsfile, `High Level Data Setup` stages will be added to the pipeline.
+Configure high-level data setup by passing the environments where it should run to `enableHighLevelDataSetup`.
 
-```
+```groovy
 #!groovy
 
 @Library("Infrastructure")
@@ -232,10 +232,21 @@ def product = "rhubarb"
 def component = "recipe-backend"
 
 withPipeline(type, product, component) {
-  enableHighLevelDataSetup()
+  enableHighLevelDataSetup(['PR', 'STAGING', 'AAT', 'PROD'])
 }
 
 ```
+
+The supported environments are:
+
+Environment | Execution
+--- | ---
+`PR` | After the AKS install on a pull request
+`STAGING` | Immediately after the AAT AKS install on master
+`AAT` | After the functional/ dynamic tests pass on master
+`PROD` | During the production deployment on master
+
+For example, `enableHighLevelDataSetup(['STAGING', 'AAT', 'PROD'])` runs setup twice during the master AAT deployment: once after AKS install and once after the complete AKS deployment section. A custom key vault can be supplied as the second argument: `enableHighLevelDataSetup(['STAGING', 'AAT'], 'custom-key-vault')`.
 
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 
@@ -247,10 +258,10 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
-If your service is not yet built on prod, you can disable prod HighLevelDataSetup by setting `skipHighLevelDataSetupProd` flag to `true`.
+To skip production setup, omit `PROD` from the environment list:
 
-```
-  enableHighLevelDataSetup("", true)
+```groovy
+enableHighLevelDataSetup(['PR', 'STAGING', 'AAT'])
 ```
 
 #### Extending the opinionated pipeline
@@ -267,15 +278,16 @@ Conditions are:
 
 Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-and-environment-mapping)
 
- * checkout
- * build
- * test
- * securitychecks
- * sonarscan
- * deploy:ENV
- * smoketest:ENV
- * functionalTest:ENV
- * buildinfra:ENV
+* checkout
+* build
+* test
+* securitychecks
+* sonarscan
+* deploy:ENV
+* smoketest:ENV
+* functionalTest:ENV
+* buildinfra:ENV
+* highleveldatasetup:ENV
 
 E.g.
 
@@ -299,8 +311,8 @@ withPipeline(type, product, component) {
 If your service contains an API (in Azure Api Management Service), you need to implement
 tests for that API. For the pipeline to run those tests, do the following:
 
- - define `apiGateway` task (gradle/yarn) in you application
- - from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
+- define `apiGateway` task (gradle/yarn) in you application
+- from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
 
   ```
   withPipeline(type, product, component) {
@@ -431,8 +443,8 @@ Conditions are:
 
 Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name:
 
- * checkout
- * buildinfra:ENV
+* checkout
+* buildinfra:ENV
 
 E.g.
 
@@ -890,7 +902,7 @@ You need to add `nonServiceApp()` method in `withPipeline` block to skip service
 @Library("Infrastructure")
 
 withPipeline(type, product, component) {
-    nonServiceApp()
+  nonServiceApp()
 }
 ```
 
@@ -1171,9 +1183,9 @@ Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allow
 
 ## Contributing
 
- 1. Use the Github pull requests to make change
- 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
- 3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+1. Use the Github pull requests to make change
+2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```

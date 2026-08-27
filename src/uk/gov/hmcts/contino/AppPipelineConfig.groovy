@@ -31,6 +31,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean pactConsumerTestsEnabled = false
   boolean pactConsumerCanIDeployEnabled = false
   boolean highLevelDataSetup = false
+  Set<String> highLevelDataSetupEnvironments = null
   boolean fortifyScan = false
   boolean clearHelmReleaseOnFailure = true
   String fortifyVaultName

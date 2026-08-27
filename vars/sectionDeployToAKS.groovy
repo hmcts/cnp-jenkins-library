@@ -78,14 +78,27 @@ def call(params) {
         }
       }
     }
+    onMaster {
+      if (config.highLevelDataSetupEnvironments?.contains('STAGING')) {
+        highLevelDataSetup(
+          appPipelineConfig: config,
+          pipelineCallbacksRunner: pcr,
+          builder: builder,
+          environment: environment,
+          product: product,
+        )
+      }
+    }
     onPR {
-      highLevelDataSetup(
-        appPipelineConfig: config,
-        pipelineCallbacksRunner: pcr,
-        builder: builder,
-        environment: environment,
-        product: product,
-      )
+      if (config.highLevelDataSetupEnvironments == null || config.highLevelDataSetupEnvironments.contains('PR')) {
+        highLevelDataSetup(
+          appPipelineConfig: config,
+          pipelineCallbacksRunner: pcr,
+          builder: builder,
+          environment: environment,
+          product: product,
+        )
+      }
     }
     withSubscriptionLogin(subscription) {
       if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
@@ -467,4 +480,3 @@ def call(params) {
     }
   }
 }
-

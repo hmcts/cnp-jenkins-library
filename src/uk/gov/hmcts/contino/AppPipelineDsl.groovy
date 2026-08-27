@@ -132,9 +132,30 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableHighLevelDataSetup(String highLevelDataSetupKeyvaultName = "", boolean skipHighLevelDataSetupProd = false) {
+    WarningCollector.addPipelineWarning(
+      'deprecated_high_level_data_setup_legacy_configuration',
+      "The legacy enableHighLevelDataSetup configuration is deprecated. Pass an explicit list of environments, for example enableHighLevelDataSetup(['PR', 'STAGING', 'AAT', 'PROD']).",
+      LocalDate.of(2026, 10, 17)
+    )
     config.highLevelDataSetup = true
     config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
     config.skipHighLevelDataSetupProd = skipHighLevelDataSetupProd
+    config.highLevelDataSetupEnvironments = null
+  }
+
+  void enableHighLevelDataSetup(List<String> environments, String highLevelDataSetupKeyvaultName = "") {
+    def supportedEnvironments = ['PR', 'STAGING', 'AAT', 'PROD'] as Set
+    def configuredEnvironments = environments.collect { it?.trim()?.toUpperCase() } as Set
+    def invalidEnvironments = configuredEnvironments - supportedEnvironments
+
+    if (invalidEnvironments) {
+      throw new IllegalArgumentException("Unsupported high-level data setup environments: ${invalidEnvironments}")
+    }
+
+    config.highLevelDataSetup = true
+    config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
+    config.skipHighLevelDataSetupProd = false
+    config.highLevelDataSetupEnvironments = configuredEnvironments
   }
 
 
