@@ -12,6 +12,7 @@ import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.AgentSelector
+import uk.gov.hmcts.contino.Environment
 
 def call(type, product, component, timeout = 300, Closure body) {
 
@@ -46,7 +47,7 @@ def call(type, product, component, timeout = 300, Closure body) {
   dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
-  
+
   Environment environment = new Environment(env)
   String primaryEnvironment = environment.nonProdName
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
