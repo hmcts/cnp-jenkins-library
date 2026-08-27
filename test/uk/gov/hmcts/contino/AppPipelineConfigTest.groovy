@@ -1,6 +1,9 @@
 package uk.gov.hmcts.contino
 
 import spock.lang.Specification
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
 
 import static org.assertj.core.api.Assertions.assertThat
 
@@ -12,12 +15,17 @@ class AppPipelineConfigTest extends Specification {
   def steps
 
   def setup() {
+    WarningCollector.pipelineWarnings.clear()
     pipelineConfig = new AppPipelineConfig()
     callbacks = new PipelineCallbacksConfig()
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [ : ]
     dsl = new AppPipelineDsl(steps, callbacks, pipelineConfig)
 
+  }
+
+  def cleanup() {
+    WarningCollector.pipelineWarnings.clear()
   }
 
   def "ensure defaults"() {
@@ -190,6 +198,16 @@ class AppPipelineConfigTest extends Specification {
         then:
         assertThat(pipelineConfig.highLevelDataSetup).isTrue()
         assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo("")
+        assertThat(pipelineConfig.highLevelDataSetupEnvironments).isNull()
+    }
+
+    def "warn that legacy high level data setup configuration is deprecated"() {
+      when:
+      dsl.enableHighLevelDataSetup()
+      then:
+      assertThat(WarningCollector.pipelineWarnings).hasSize(1)
+      assertThat(WarningCollector.pipelineWarnings[0].warningKey).isEqualTo('deprecated_high_level_data_setup_legacy_configuration')
+      assertThat(WarningCollector.pipelineWarnings[0].deprecationDate).isEqualTo(LocalDate.of(2026, 10, 17))
     }
 
     def "ensure enable high level data setup with highLevelDataSetupKeyVaultName"() {
@@ -207,6 +225,24 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.highLevelDataSetup).isTrue()
       assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo("")
       assertThat(pipelineConfig.skipHighLevelDataSetupProd).isEqualTo(true)
+    }
+
+    def "ensure enable high level data setup for configured environments"() {
+      when:
+      dsl.enableHighLevelDataSetup(['pr', ' staging ', 'AAT', 'PROD'], 'custom-key-vault')
+      then:
+      assertThat(pipelineConfig.highLevelDataSetup).isTrue()
+      assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo('custom-key-vault')
+      assertThat(pipelineConfig.highLevelDataSetupEnvironments).containsExactlyInAnyOrder('PR', 'STAGING', 'AAT', 'PROD')
+      assertThat(WarningCollector.pipelineWarnings).isEmpty()
+    }
+
+    def "reject unsupported high level data setup environments"() {
+      when:
+      dsl.enableHighLevelDataSetup(['PR', 'DEMO'])
+      then:
+      def exception = thrown(IllegalArgumentException)
+      assertThat(exception.message).contains('DEMO')
     }
 
     def "ensure enable fortify scan without fortifyVaultName"() {
