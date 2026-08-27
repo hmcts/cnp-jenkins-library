@@ -46,7 +46,8 @@ def call(type, product, component, timeout = 300, Closure body) {
   dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
   }
-
+  
+  Environment environment = new Environment(env)
   String primaryEnvironment = environment.nonProdName
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
