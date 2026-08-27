@@ -52,9 +52,8 @@ def call(type, product, component, timeout = 300, Closure body) {
   String primaryEnvironment = environment.nonProdName
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
-  String nodeSelector
 
-  node(nodeSelector) {
+  node(agentType) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
