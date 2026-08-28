@@ -57,6 +57,7 @@ class HelmTest extends Specification {
       it.get('script').contains('| kubeconform') &&
       it.get('script').contains('-strict') &&
       it.get('script').contains('-summary') &&
+      it.get('script').contains('-ignore-missing-schemas') &&
       it.get('script').contains('-kubernetes-version 1.35.0') &&
       it.get('script').contains('-schema-location default') &&
       it.get('script').contains("-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'")

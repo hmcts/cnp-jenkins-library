@@ -235,6 +235,7 @@ class Helm {
   def publishToGitIfNotExists(List<String> values) {
     authenticateAcr()
     lint(values)
+    kubeconform(values)
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -266,6 +267,11 @@ class Helm {
    * on PATH, its version is pinned and managed in the jenkins-packer agent provisioning
    * script.
    *
+   * -ignore-missing-schemas is set deliberately. This step runs on every chart publish
+   * across CFT, so a CRD that is absent from the datreeio catalogue, or a transient
+   * failure reaching raw.githubusercontent.com, would otherwise hard-fail unrelated
+   * builds. Resources whose schemas do resolve are still validated under -strict.
+   *
    * @param values
    *   list of values files to render the chart with
    * @param k8sVersion
@@ -282,6 +288,7 @@ class Helm {
           | kubeconform \\
               -strict \\
               -summary \\
+              -ignore-missing-schemas \\
               -kubernetes-version ${k8sVersion} \\
               -schema-location default \\
               -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
