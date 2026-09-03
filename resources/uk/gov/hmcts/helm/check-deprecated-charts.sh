@@ -10,8 +10,16 @@ function ver {
     printf "%03d%03d%03d%03d" $(echo "$clean_version" | tr '.' ' '); 
 }
 
-CURRENT_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | grep "^${DEPRECATED_CHART_NAME}" | awk '{ print $2}' | sed "s/~//g" | grep -v -E '\-(alpha|beta)' | head -1)
-if [[ -n $CURRENT_VERSION ]] && [ $(ver $CURRENT_VERSION) -lt $(ver ${DEPRECATED_CHART_VERSION}) ]; then
-    echo "$deprecation chart $CURRENT_VERSION is deprecated, please upgrade to at least ${DEPRECATED_CHART_VERSION}"
+CURRENT_VERSION=$(helm dependency ls charts/${CHART_DIRECTORY}/ | awk -v chart="${DEPRECATED_CHART_NAME}" '
+    function is_hmcts_repository(repository) {
+        return repository == "@hmctspublic" ||
+            repository ~ /^oci:\/\/(hmctspublic|hmctsprod|hmctssbox)\.azurecr\.io\/helm\/?$/ ||
+            repository ~ /^https:\/\/hmctspublic\.azurecr\.io\/helm\/v1\/repo\/?$/
+    }
+    $1 == chart && is_hmcts_repository($3) { print $2 }
+' | sed "s/~//g" | head -1)
+CURRENT_VERSION_CORE=${CURRENT_VERSION%%-*}
+if [[ -n $CURRENT_VERSION ]] && { [[ $CURRENT_VERSION =~ -(alpha|beta|rc)([.-]|$) ]] || [ $(ver $CURRENT_VERSION_CORE) -lt $(ver ${DEPRECATED_CHART_VERSION}) ]; }; then
+    echo "${DEPRECATED_CHART_NAME} chart $CURRENT_VERSION is deprecated, please upgrade to at least ${DEPRECATED_CHART_VERSION}"
     exit 1
 fi
