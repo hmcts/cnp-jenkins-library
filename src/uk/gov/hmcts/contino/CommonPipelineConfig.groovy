@@ -7,6 +7,4 @@ class CommonPipelineConfig implements Serializable {
 
   String expiryDate
 
-  Boolean alwaysTerraformPlanOnPR = false
-
 }
