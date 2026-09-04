@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Docker
 import groovy.json.JsonSlurperClassic
@@ -181,6 +182,7 @@ class Helm {
     authenticateAcr()
     dependencyUpdate()
     lint(values)
+    kubeconform()
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -234,6 +236,7 @@ class Helm {
   def publishToGitIfNotExists(List<String> values) {
     authenticateAcr()
     lint(values)
+    kubeconform()
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -254,6 +257,65 @@ class Helm {
 
   def lint(List<String> values) {
     this.execute('lint', this.chartLocation, values, null)
+  }
+
+  /**
+   * Validate the fully-rendered chart manifests against the Kubernetes API schema
+   * using kubeconform, catching type violations and invalid manifests at publish
+   * time rather than at deployment time.
+   *
+   * kubeconform is baked into the Jenkins agent image and is expected to already be
+   * on PATH, its version is pinned and managed in the jenkins-packer agent provisioning
+   * script.
+   *
+   * The base values and each documented environment values template are validated
+   * separately. Environment templates are applied as overlays on the base values,
+   * matching how Helm consumes them during deployment.
+   *
+   * -ignore-missing-schemas is set deliberately because the default schema registry
+   * does not include all custom resources used by HMCTS. Resources whose schemas do
+   * resolve are still validated under -strict.
+   *
+   * @param k8sVersion
+   *   Kubernetes API schema version to validate against, defaults to the current
+   *   cluster version
+   */
+  def kubeconform(String k8sVersion = '1.35.0') {
+    def baseValues = "${this.chartLocation}/values.yaml"
+    List<Map<String, String>> environmentTemplates = []
+    for (def template : this.steps.findFiles(glob: "${this.chartLocation}/values.*.template.yaml")) {
+      String templateName = template.name as String
+      if (templateName ==~ /values\.[^.]+\.template\.yaml/) {
+        environmentTemplates.add([name: templateName, path: template.path as String])
+      }
+    }
+    environmentTemplates = sortTemplatesByPath(environmentTemplates)
+
+    validateWithKubeconform([baseValues], k8sVersion, 'base values')
+    for (def template : environmentTemplates) {
+      validateWithKubeconform([baseValues, template.path], k8sVersion, template.name)
+    }
+  }
+
+  @NonCPS
+  private static List<Map<String, String>> sortTemplatesByPath(List<Map<String, String>> templates) {
+    templates.sort(false) { left, right -> left.path <=> right.path }
+  }
+
+  private void validateWithKubeconform(List<String> values, String k8sVersion, String valuesName) {
+    def valuesStr = "${' -f ' + values.join(' -f ')}"
+    this.steps.sh(
+      label: "kubeconform schema validation (${valuesName})",
+      script: """
+        helm template ${this.chartName} ${this.chartLocation} ${valuesStr} \\
+          | kubeconform \\
+              -strict \\
+              -summary \\
+              -ignore-missing-schemas \\
+              -kubernetes-version ${k8sVersion} \\
+              -schema-location default
+      """
+    )
   }
 
   def installOrUpgrade(String imageTag, List<String> values, List<String> options) {
