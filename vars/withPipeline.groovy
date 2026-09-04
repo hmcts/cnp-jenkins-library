@@ -167,7 +167,7 @@ def call(type, String product, String component, Closure body) {
 
 void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component) {
     onPR {
-      onTerraformChangeInPR(pipelineConfig) {
+      onTerraformChangeInPR {
         // we always need a tf plan of aat (i.e. staging)
         sectionDeployToEnvironment(
           appPipelineConfig: pipelineConfig,
