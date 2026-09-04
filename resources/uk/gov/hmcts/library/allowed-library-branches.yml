@@ -17,3 +17,31 @@ branches:
     allowed: true
   - name: feat/add-python-support
     allowed: true
+  - name: uv-audit-pretty-print
+    allowed: true
+  - name: DTSPO-30107-jenkins-agents-2
+    allowed: true
+  - name: poll_for_helm
+    allowed: true
+  - name: archive-complete-build-results
+    allowed: true
+  - name: feature/optional-smoke-test-secrets
+    allowed: true
+  - name: feat/DTSPO-33498/fix-cause-serialization
+    allowed: true
+  - name: performance-stages-updatev5
+    allowed: true
+  - name: gatling-configuration
+    allowed: true
+  - name: fix-owasp
+    allowed: true
+  - name: Enable-helm-on-staging
+    allowed: true
+  - name: feature/remove-state
+    allowed: true
+  - name: acr-migration-check-graceful-failure
+    allowed: true
+  - name: feat/stage-cost-metrics
+    allowed: true
+  - name: DTSPO-33915-kubeconform-jenkins
+    allowed: true
