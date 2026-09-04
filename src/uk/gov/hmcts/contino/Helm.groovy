@@ -181,7 +181,7 @@ class Helm {
     authenticateAcr()
     dependencyUpdate()
     lint(values)
-    kubeconform(values)
+    kubeconform()
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -235,7 +235,7 @@ class Helm {
   def publishToGitIfNotExists(List<String> values) {
     authenticateAcr()
     lint(values)
-    kubeconform(values)
+    kubeconform()
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -267,22 +267,34 @@ class Helm {
    * on PATH, its version is pinned and managed in the jenkins-packer agent provisioning
    * script.
    *
-   * -ignore-missing-schemas is set deliberately. This step runs on every chart publish
-   * across CFT, so a CRD that is absent from the datreeio catalogue, or a transient
-   * failure reaching raw.githubusercontent.com, would otherwise hard-fail unrelated
-   * builds. Resources whose schemas do resolve are still validated under -strict.
+   * The base values and each documented environment values template are validated
+   * separately. Environment templates are applied as overlays on the base values,
+   * matching how Helm consumes them during deployment.
    *
-   * @param values
-   *   list of values files to render the chart with
+   * -ignore-missing-schemas is set deliberately because the default schema registry
+   * does not include all custom resources used by HMCTS. Resources whose schemas do
+   * resolve are still validated under -strict.
+   *
    * @param k8sVersion
    *   Kubernetes API schema version to validate against, defaults to the current
    *   cluster version
    */
-  def kubeconform(List<String> values, String k8sVersion = '1.35.0') {
-    def valuesStr = (values == null ? '' : "${' -f ' + values.join(' -f ')}")
+  def kubeconform(String k8sVersion = '1.35.0') {
+    def baseValues = "${this.chartLocation}/values.yaml"
+    def environmentTemplates = this.steps.findFiles(glob: "${this.chartLocation}/values.*.template.yaml")
+      .findAll { it.name ==~ /values\.[^.]+\.template\.yaml/ }
+      .sort { it.path }
 
+    validateWithKubeconform([baseValues], k8sVersion, 'base values')
+    environmentTemplates.each { template ->
+      validateWithKubeconform([baseValues, template.path], k8sVersion, template.name)
+    }
+  }
+
+  private void validateWithKubeconform(List<String> values, String k8sVersion, String valuesName) {
+    def valuesStr = "${' -f ' + values.join(' -f ')}"
     this.steps.sh(
-      label: 'kubeconform schema validation',
+      label: "kubeconform schema validation (${valuesName})",
       script: """
         helm template ${this.chartName} ${this.chartLocation} ${valuesStr} \\
           | kubeconform \\
@@ -290,8 +302,7 @@ class Helm {
               -summary \\
               -ignore-missing-schemas \\
               -kubernetes-version ${k8sVersion} \\
-              -schema-location default \\
-              -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+              -schema-location default
       """
     )
   }

@@ -46,56 +46,84 @@ class HelmTest extends Specification {
 
   // ==================== kubeconform() Tests ====================
 
-  def "kubeconform() runs helm template piped to kubeconform with strict validation flags and default k8s version"() {
+  def "kubeconform() validates base values with strict validation flags and default k8s version"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
+
     when:
-    helm.kubeconform(["values.yaml"])
+    helm.kubeconform()
 
     then:
     1 * steps.sh({it.containsKey('label') &&
-      it.get('label') == 'kubeconform schema validation' &&
+      it.get('label') == 'kubeconform schema validation (base values)' &&
       it.get('script').contains("helm template ${CHART} ${CHART_PATH}") &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml") &&
       it.get('script').contains('| kubeconform') &&
       it.get('script').contains('-strict') &&
       it.get('script').contains('-summary') &&
       it.get('script').contains('-ignore-missing-schemas') &&
       it.get('script').contains('-kubernetes-version 1.35.0') &&
       it.get('script').contains('-schema-location default') &&
-      it.get('script').contains("-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'")
+      !it.get('script').contains('datreeio')
     })
   }
 
   def "kubeconform() passes a custom k8sVersion through to kubeconform"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
+
     when:
-    helm.kubeconform(["values.yaml"], "1.30.0")
+    helm.kubeconform("1.30.0")
 
     then:
     1 * steps.sh({it.containsKey('label') &&
-      it.get('label') == 'kubeconform schema validation' &&
+      it.get('label') == 'kubeconform schema validation (base values)' &&
       it.get('script').contains('-kubernetes-version 1.30.0') &&
       !it.get('script').contains('-kubernetes-version 1.35.0')
     })
   }
 
-  def "kubeconform() passes multiple values files through as helm -f flags"() {
+  def "kubeconform() validates each documented environment template separately with base values"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
+      [name: 'values.preview.template.yaml', path: "${CHART_PATH}/values.preview.template.yaml"],
+      [name: 'values.aat.template.yaml', path: "${CHART_PATH}/values.aat.template.yaml"]
+    ]
+
     when:
-    helm.kubeconform(["val1", "val2"])
+    helm.kubeconform()
 
     then:
-    1 * steps.sh({it.containsKey('label') &&
-      it.get('label') == 'kubeconform schema validation' &&
-      it.get('script').contains("helm template ${CHART} ${CHART_PATH}  -f val1 -f val2")
+    1 * steps.sh({it.get('label') == 'kubeconform schema validation (base values)' &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml") &&
+      !it.get('script').contains('.template.yaml')
+    })
+    1 * steps.sh({it.get('label') == 'kubeconform schema validation (values.aat.template.yaml)' &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml -f ${CHART_PATH}/values.aat.template.yaml") &&
+      !it.get('script').contains('values.preview.template.yaml')
+    })
+    1 * steps.sh({it.get('label') == 'kubeconform schema validation (values.preview.template.yaml)' &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml -f ${CHART_PATH}/values.preview.template.yaml") &&
+      !it.get('script').contains('values.aat.template.yaml')
     })
   }
 
-  def "kubeconform() with no values files omits -f flags from the helm template call"() {
+  def "kubeconform() ignores undocumented multi-part values templates"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
+      [name: 'values.enableWA.preview.template.yaml', path: "${CHART_PATH}/values.enableWA.preview.template.yaml"],
+      [name: 'values.ccd.preview.template.yaml', path: "${CHART_PATH}/values.ccd.preview.template.yaml"]
+    ]
+
     when:
-    helm.kubeconform(null)
+    helm.kubeconform()
 
     then:
     1 * steps.sh({it.containsKey('label') &&
-      it.get('label') == 'kubeconform schema validation' &&
-      !it.get('script').contains('-f ')
+      it.get('label') == 'kubeconform schema validation (base values)' &&
+      !it.get('script').contains('.template.yaml')
     })
+    0 * steps.sh({it.get('label').contains('.template.yaml')})
   }
 
   def "installOrUpgrade() on PR branch should execute without --wait flag and do manual wait"() {
