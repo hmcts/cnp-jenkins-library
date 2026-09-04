@@ -40,6 +40,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean buildCache = false
   boolean onlyDeploy = false
   boolean skipHighLevelDataSetupProd = false
+  boolean alwaysTerraformPlanOnPR = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15
