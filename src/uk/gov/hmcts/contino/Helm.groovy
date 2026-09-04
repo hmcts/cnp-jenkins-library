@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Docker
 import groovy.json.JsonSlurperClassic
@@ -281,14 +282,24 @@ class Helm {
    */
   def kubeconform(String k8sVersion = '1.35.0') {
     def baseValues = "${this.chartLocation}/values.yaml"
-    def environmentTemplates = this.steps.findFiles(glob: "${this.chartLocation}/values.*.template.yaml")
-      .findAll { it.name ==~ /values\.[^.]+\.template\.yaml/ }
-      .sort { it.path }
+    List<Map<String, String>> environmentTemplates = []
+    for (def template : this.steps.findFiles(glob: "${this.chartLocation}/values.*.template.yaml")) {
+      String templateName = template.name as String
+      if (templateName ==~ /values\.[^.]+\.template\.yaml/) {
+        environmentTemplates.add([name: templateName, path: template.path as String])
+      }
+    }
+    environmentTemplates = sortTemplatesByPath(environmentTemplates)
 
     validateWithKubeconform([baseValues], k8sVersion, 'base values')
-    environmentTemplates.each { template ->
+    for (def template : environmentTemplates) {
       validateWithKubeconform([baseValues, template.path], k8sVersion, template.name)
     }
+  }
+
+  @NonCPS
+  private static List<Map<String, String>> sortTemplatesByPath(List<Map<String, String>> templates) {
+    templates.sort(false) { left, right -> left.path <=> right.path }
   }
 
   private void validateWithKubeconform(List<String> values, String k8sVersion, String valuesName) {

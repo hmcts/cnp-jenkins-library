@@ -108,6 +108,26 @@ class HelmTest extends Specification {
     })
   }
 
+  def "kubeconform() validates environment templates in path order"() {
+    given:
+    def validationLabels = []
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
+      [name: 'values.preview.template.yaml', path: "${CHART_PATH}/values.preview.template.yaml"],
+      [name: 'values.aat.template.yaml', path: "${CHART_PATH}/values.aat.template.yaml"]
+    ]
+    steps.sh(_) >> { Map arguments -> validationLabels.add(arguments.label) }
+
+    when:
+    helm.kubeconform()
+
+    then:
+    validationLabels == [
+      'kubeconform schema validation (base values)',
+      'kubeconform schema validation (values.aat.template.yaml)',
+      'kubeconform schema validation (values.preview.template.yaml)'
+    ]
+  }
+
   def "kubeconform() ignores undocumented multi-part values templates"() {
     given:
     steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
