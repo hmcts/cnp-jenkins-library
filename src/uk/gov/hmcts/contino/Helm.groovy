@@ -294,11 +294,26 @@ class Helm {
            exit 1
         fi
 
-        echo 'Waiting for pods to be scheduled and ready...'
-        kubectl wait --for=condition=ready pod \\
-          -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
-          -n ${this.namespace} \\
-          --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
+        echo 'Waiting for rollout to complete...'
+        DEADLINE=\$(( \$(date +%s) + 1220 ))
+        RESOURCES=\$(kubectl get deploy,sts -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName} -o name 2>/dev/null || true)
+
+        if [ -z "\$RESOURCES" ]; then
+          echo "No deployments or statefulsets found for ${releaseName} - skipping rollout wait"
+        else
+          for RESOURCE in \$RESOURCES; do
+            REMAINING=\$(( \$DEADLINE - \$(date +%s) ))
+            if [ "\$REMAINING" -le 0 ]; then
+              echo "Deadline reached before rollout completed"
+              ./aks-debug-info.sh ${releaseName} ${this.namespace}
+              exit 1
+            fi
+            kubectl rollout status "\$RESOURCE" -n ${this.namespace} --timeout=\${REMAINING}s || {
+              ./aks-debug-info.sh ${releaseName} ${this.namespace}
+              exit 1
+            }
+          done
+        fi
         """)
     } else {
       this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr} || ./aks-debug-info.sh ${releaseName} ${this.namespace}")
