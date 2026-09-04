@@ -13,6 +13,8 @@ def call(Closure block) {
       sh 'rm check-infrastructure-files-changed.sh'
       if (infraFolderHasChanges == 1) {
         return block.call()
+      } else if (alwaysTerraformPlanOnPR(true)) {
+          return block.call()
       }
     }
   }

@@ -59,4 +59,8 @@ abstract class CommonPipelineDsl implements Serializable {
   void expires(String expiresAfter) {
     config.expiryDate = expiresAfter
   }
+
+  void alwaysTerraformPlanOnPR(boolean always) {
+    callbacks.registerAlwaysTerraformPlanOnPR(always)
+  }
 }
