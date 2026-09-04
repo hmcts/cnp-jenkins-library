@@ -73,10 +73,15 @@ EOF
 }
 trap cleanup EXIT
 
-client_id="\${FORTIFY_USER_NAME:-}"
-client_secret="\${FORTIFY_PASSWORD:-}"
+# Prefer real FoD OAuth API Key/Secret Key (FORTIFY_OAUTH_CLIENT_ID/CLIENT_SECRET, from the
+# 'fortify-on-demand-oauth' Jenkins credential). FORTIFY_USER_NAME/PASSWORD are SSC-style
+# tenant\\username + PAT credentials used by the Basic-Auth Gradle/Yarn fortifyScan tasks and
+# are NOT valid OAuth client_credentials - using them here caused 401s for repos without a
+# repo-level fortifyScan task (they fall back to this library runner with no other creds).
+client_id="\${FORTIFY_OAUTH_CLIENT_ID:-\${FORTIFY_USER_NAME:-}}"
+client_secret="\${FORTIFY_OAUTH_CLIENT_SECRET:-\${FORTIFY_PASSWORD:-}}"
 if [ -z "$client_id" ] || [ -z "$client_secret" ]; then
-  error='missing FoD credentials (expected FORTIFY_USER_NAME/FORTIFY_PASSWORD from Jenkins credentials binding)'
+  error='missing FoD OAuth credentials (expected FORTIFY_OAUTH_CLIENT_ID/FORTIFY_OAUTH_CLIENT_SECRET from Jenkins credentials binding)'
   echo "Fortify: $error"
   exit 1
 fi
