@@ -60,7 +60,7 @@ abstract class CommonPipelineDsl implements Serializable {
     config.expiryDate = expiresAfter
   }
 
-  void alwaysTerraformPlanOnPR(boolean always) {
-    callbacks.registerAlwaysTerraformPlanOnPR(always)
+  void alwaysTerraformPlanOnPR() {
+   config.alwaysTerraformPlanOnPR = false
   }
 }
