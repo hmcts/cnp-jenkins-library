@@ -61,6 +61,6 @@ abstract class CommonPipelineDsl implements Serializable {
   }
 
   void alwaysTerraformPlanOnPR(boolean always = true) {
-    config.registerAlwaysTerraformPlanOnPR = always
+    config.alwaysTerraformPlanOnPR = always
   }
 }
