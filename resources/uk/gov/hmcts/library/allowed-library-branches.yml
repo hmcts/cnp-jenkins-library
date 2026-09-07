@@ -47,3 +47,5 @@ branches:
     allowed: true
   - name: DTSPO-33915-kubeconform-jenkins
     allowed: true
+  - name: highleveldatasetupstaging
+    allowed: true
