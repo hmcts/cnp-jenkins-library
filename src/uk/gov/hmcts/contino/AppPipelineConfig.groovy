@@ -20,6 +20,7 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean e2eTest = false
   boolean securityScan = false
   boolean serviceApp = true
+  boolean smokeTestSecrets = true
   boolean deployableApp = true
   boolean releaseOnMerge = false
   boolean libraryBranchAllowed = false

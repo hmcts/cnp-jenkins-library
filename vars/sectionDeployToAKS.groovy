@@ -121,7 +121,7 @@ def call(params) {
         }
       }
       if (config.serviceApp) {
-        withTeamSecrets(config, environment) {
+        def smokeTestStage = {
           stageWithAgent("Smoke Test - AKS ${environment}", product) {
             testEnv(aksUrl) {
               def success = true
@@ -141,6 +141,16 @@ def call(params) {
                 }
               }
             }
+          }
+        }
+
+        if (!config.smokeTestSecrets) {
+          smokeTestStage.call()
+        }
+
+        withTeamSecrets(config, environment) {
+          if (config.smokeTestSecrets) {
+            smokeTestStage.call()
           }
 
           onFunctionalTestEnvironment(environment) {
