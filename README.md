@@ -231,8 +231,6 @@ This can be used to import data required for the application.
 The most common example is importing a CCD definition, but data requirements of a similar nature can be included using the same functionality.
 Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
 
-Enable the existing high-level data setup stages with `enableHighLevelDataSetup()`. This preserves the standard setup stages for PR, AAT, PROD, `demo`, `ithc`, and `perftest`.
-
 ```groovy
 #!groovy
 
@@ -258,22 +256,11 @@ withPipeline(type, product, component) {
 
 A custom key vault can be supplied to either method, for example `enableHighLevelDataSetup('custom-key-vault')` or `enableHighLevelDataSetupForStaging('custom-key-vault')`. The legacy method also accepts a second boolean argument to skip production setup: `enableHighLevelDataSetup('', true)`.
 
-The setup stages are:
-
-Environment | Execution
---- | ---
-`PR` | After the AKS install on a pull request
-`AAT` | After the functional/ dynamic tests pass on master
-`PROD` | During the production deployment on master
-`STAGING` | Immediately after the AAT AKS install on master when explicitly enabled
-
-STAGING setup uses the same high-level data setup callback and includes the environment name in the callback key (`highleveldatasetup:staging`).
-
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 
 Branch | HighDataSetup Stage
 --- | ---
-`master` | `aat` then `prod`
+`master` | `staging` (optional), aat` then `prod`
 `PR` | `aat`
 `perftest` | `perftest`
 `demo` | `demo`
