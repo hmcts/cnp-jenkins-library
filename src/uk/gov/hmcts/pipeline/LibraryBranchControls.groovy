@@ -93,6 +93,10 @@ class LibraryBranchControls {
   }
 
   boolean isBranchAllowed(def pipelineConfig = null) {
+    if (steps?.env?.SKIP_LIBRARY_BRANCH_CHECK?.trim()?.toLowerCase() == 'true') {
+      steps.echo 'Skipping library branch allowlist validation because SKIP_LIBRARY_BRANCH_CHECK=true.'
+      return true
+    }
 
     def libraryBranchControls = getLibraryBranchControls()
     if (!libraryBranchControls.containsKey('branches')) {
