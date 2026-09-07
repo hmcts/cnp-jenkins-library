@@ -231,7 +231,7 @@ This can be used to import data required for the application.
 The most common example is importing a CCD definition, but data requirements of a similar nature can be included using the same functionality.
 Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
 
-Configure high-level data setup by passing the environments where it should run to `enableHighLevelDataSetup`.
+Enable the existing high-level data setup stages with `enableHighLevelDataSetup()`. This preserves the standard setup stages for PR, AAT, PROD, `demo`, `ithc`, and `perftest`.
 
 ```groovy
 #!groovy
@@ -243,21 +243,31 @@ def product = "rhubarb"
 def component = "recipe-backend"
 
 withPipeline(type, product, component) {
-  enableHighLevelDataSetup(['PR', 'STAGING', 'AAT', 'PROD'])
+  enableHighLevelDataSetup()
 }
 
 ```
 
-The supported environments are:
+To also run high-level data setup immediately after the AAT AKS install on `master`, opt in to STAGING explicitly:
+
+```groovy
+withPipeline(type, product, component) {
+  enableHighLevelDataSetupForStaging()
+}
+```
+
+A custom key vault can be supplied to either method, for example `enableHighLevelDataSetup('custom-key-vault')` or `enableHighLevelDataSetupForStaging('custom-key-vault')`. The legacy method also accepts a second boolean argument to skip production setup: `enableHighLevelDataSetup('', true)`.
+
+The setup stages are:
 
 Environment | Execution
 --- | ---
 `PR` | After the AKS install on a pull request
-`STAGING` | Immediately after the AAT AKS install on master
 `AAT` | After the functional/ dynamic tests pass on master
 `PROD` | During the production deployment on master
+`STAGING` | Immediately after the AAT AKS install on master when explicitly enabled
 
-For example, `enableHighLevelDataSetup(['STAGING', 'AAT', 'PROD'])` runs setup twice during the master AAT deployment: once after AKS install and once after the complete AKS deployment section. A custom key vault can be supplied as the second argument: `enableHighLevelDataSetup(['STAGING', 'AAT'], 'custom-key-vault')`.
+STAGING setup uses the same high-level data setup callback and includes the environment name in the callback key (`highleveldatasetup:staging`).
 
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 
@@ -269,10 +279,10 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
-To skip production setup, omit `PROD` from the environment list:
+To skip production setup while retaining the other legacy stages:
 
 ```groovy
-enableHighLevelDataSetup(['PR', 'STAGING', 'AAT'])
+enableHighLevelDataSetup('', true)
 ```
 
 #### Extending the opinionated pipeline
