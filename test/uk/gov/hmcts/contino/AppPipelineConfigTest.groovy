@@ -241,7 +241,7 @@ class AppPipelineConfigTest extends Specification {
       then:
       assertThat(pipelineConfig.highLevelDataSetup).isTrue()
       assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo('custom-key-vault')
-      assertThat(pipelineConfig.highLevelDataSetupEnvironments).containsExactlyInAnyOrder('PR', 'STAGING', 'AAT', 'PROD')
+      assertThat(pipelineConfig.highLevelDataSetupEnvironments).containsExactlyInAnyOrder(HighLevelDataSetupEnvironment.values())
       assertThat(WarningCollector.pipelineWarnings).isEmpty()
     }
 

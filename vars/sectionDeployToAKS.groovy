@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.HighLevelDataSetupEnvironment
 import uk.gov.hmcts.contino.Builder
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -79,7 +80,7 @@ def call(params) {
       }
     }
     onMaster {
-      if (config.highLevelDataSetupEnvironments?.contains('STAGING')) {
+      if (config.highLevelDataSetupEnvironments?.contains(HighLevelDataSetupEnvironment.STAGING)) {
         highLevelDataSetup(
           appPipelineConfig: config,
           pipelineCallbacksRunner: pcr,
@@ -90,7 +91,7 @@ def call(params) {
       }
     }
     onPR {
-      if (config.highLevelDataSetupEnvironments == null || config.highLevelDataSetupEnvironments.contains('PR')) {
+      if (config.highLevelDataSetupEnvironments == null || config.highLevelDataSetupEnvironments.contains(HighLevelDataSetupEnvironment.PR)) {
         highLevelDataSetup(
           appPipelineConfig: config,
           pipelineCallbacksRunner: pcr,

@@ -148,7 +148,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableHighLevelDataSetup(List<String> environments, String highLevelDataSetupKeyvaultName = "") {
-    def supportedEnvironments = ['PR', 'STAGING', 'AAT', 'PROD'] as Set
+    def supportedEnvironments = HighLevelDataSetupEnvironment.values()*.name() as Set
     def configuredEnvironments = environments.collect { it?.trim()?.toUpperCase() } as Set
     def invalidEnvironments = configuredEnvironments - supportedEnvironments
 
@@ -159,7 +159,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.highLevelDataSetup = true
     config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
     config.skipHighLevelDataSetupProd = false
-    config.highLevelDataSetupEnvironments = configuredEnvironments
+    config.highLevelDataSetupEnvironments = configuredEnvironments.collect { HighLevelDataSetupEnvironment.valueOf(it) } as Set<HighLevelDataSetupEnvironment>
   }
 
 

@@ -1,3 +1,4 @@
+import uk.gov.hmcts.contino.HighLevelDataSetupEnvironment
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
@@ -295,7 +296,7 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
         component: component,
       )
 
-      if (pipelineConfig.highLevelDataSetupEnvironments?.contains('AAT')) {
+      if (pipelineConfig.highLevelDataSetupEnvironments?.contains(HighLevelDataSetupEnvironment.AAT)) {
         highLevelDataSetup(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
@@ -329,7 +330,7 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
         tfPlanOnly: false
       )
 
-      if (pipelineConfig.highLevelDataSetupEnvironments == null || pipelineConfig.highLevelDataSetupEnvironments.contains('PROD')) {
+      if (pipelineConfig.highLevelDataSetupEnvironments == null || pipelineConfig.highLevelDataSetupEnvironments.contains(HighLevelDataSetupEnvironment.PROD)) {
         highLevelDataSetup(
           appPipelineConfig: pipelineConfig,
           pipelineCallbacksRunner: callbacksRunner,
