@@ -11,6 +11,8 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.AgentSelector
+import uk.gov.hmcts.contino.Environment
 
 def call(type, product, component, timeout = 300, Closure body) {
 
@@ -46,18 +48,20 @@ def call(type, product, component, timeout = 300, Closure body) {
     currentBuild.result = "FAILURE"
   }
 
+  Environment environment = new Environment(env)
+  String primaryEnvironment = environment.nonProdName
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector
-
+  
   if (agentType == "") {
-    nodeSelector = "daily"
+    nodeSelector = "nightly"
   } else if (agentType == "civil") {
     nodeSelector = agentType
   } else if (agentType == "xui") {
     nodeSelector = agentType
   } else {
-    nodeSelector = agentType + ' && daily'
+    nodeSelector = agentType + ' && nightly'
   }
 
   node(nodeSelector) {
