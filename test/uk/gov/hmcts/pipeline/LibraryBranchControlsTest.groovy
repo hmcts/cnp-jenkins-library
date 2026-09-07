@@ -8,9 +8,9 @@ class LibraryBranchControlsTest extends Specification {
   def steps = Mock(JenkinsStepMock)
   def controls = new LibraryBranchControls(steps)
 
-  def "skip flag bypasses the allowlist"() {
+  def "sandbox Jenkins bypasses the allowlist"() {
     given:
-    steps.env >> [SKIP_LIBRARY_BRANCH_CHECK: 'true', SHARED_LIBRARY_VERSION: 'test-branch']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'sandbox', SHARED_LIBRARY_VERSION: 'test-branch']
 
     when:
     def allowed = controls.isBranchAllowed()
@@ -21,9 +21,9 @@ class LibraryBranchControlsTest extends Specification {
   }
 
   @Unroll
-  def "skip flag #skipCheck keeps allowlist enforcement enabled"() {
+  def "production subscription #subscription keeps allowlist enforcement enabled"() {
     given:
-    steps.env >> [SKIP_LIBRARY_BRANCH_CHECK: skipCheck, SHARED_LIBRARY_VERSION: 'test-branch']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: subscription, SHARED_LIBRARY_VERSION: 'test-branch']
 
     when:
     def allowed = controls.isBranchAllowed()
@@ -34,6 +34,6 @@ class LibraryBranchControlsTest extends Specification {
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
 
     where:
-    skipCheck << [null, 'false']
+    subscription << [null, 'prod']
   }
 }
