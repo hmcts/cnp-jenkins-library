@@ -55,13 +55,13 @@ def call(type, product, component, timeout = 300, Closure body) {
   String nodeSelector
   
   if (agentType == "") {
-    nodeSelector = "daily"
+    nodeSelector = "nightly"
   } else if (agentType == "civil") {
     nodeSelector = agentType
   } else if (agentType == "xui") {
     nodeSelector = agentType
   } else {
-    nodeSelector = agentType + ' && daily'
+    nodeSelector = agentType + ' && nightly'
   }
 
   node(nodeSelector) {
