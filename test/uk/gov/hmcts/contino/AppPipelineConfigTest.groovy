@@ -227,10 +227,10 @@ class AppPipelineConfigTest extends Specification {
 
     def "ensure enable high level data setup for staging"() {
       when:
-      dsl.enableHighLevelDataSetupForStaging('custom-key-vault')
+      dsl.enableHighLevelDataSetup()
+      dsl.enableHighLevelDataSetupForStaging()
       then:
       assertThat(pipelineConfig.highLevelDataSetup).isTrue()
-      assertThat(pipelineConfig.highLevelDataSetupKeyVaultName).isEqualTo('custom-key-vault')
       assertThat(pipelineConfig.highLevelDataSetupForStaging).isTrue()
     }
 

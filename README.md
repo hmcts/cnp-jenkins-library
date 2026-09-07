@@ -250,11 +250,14 @@ To also run high-level data setup immediately after the AAT AKS install on `mast
 
 ```groovy
 withPipeline(type, product, component) {
+  enableHighLevelDataSetup()
   enableHighLevelDataSetupForStaging()
 }
 ```
 
-A custom key vault can be supplied to either method, for example `enableHighLevelDataSetup('custom-key-vault')` or `enableHighLevelDataSetupForStaging('custom-key-vault')`. The legacy method also accepts a second boolean argument to skip production setup: `enableHighLevelDataSetup('', true)`.
+The STAGING setup uses the AAT environment for secrets and data setup, but its callback stage is named `highleveldatasetup:staging` so it remains distinct from `highleveldatasetup:aat`.
+
+A custom key vault can be supplied to `enableHighLevelDataSetup('custom-key-vault')`. The legacy method also accepts a second boolean argument to skip production setup: `enableHighLevelDataSetup('', true)`.
 
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 

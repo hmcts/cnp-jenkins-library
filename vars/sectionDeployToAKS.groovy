@@ -85,6 +85,7 @@ def call(params) {
           pipelineCallbacksRunner: pcr,
           builder: builder,
           environment: environment,
+          callbackEnvironment: 'staging',
           product: product,
         )
       }

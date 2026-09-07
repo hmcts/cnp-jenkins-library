@@ -137,9 +137,7 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.skipHighLevelDataSetupProd = skipHighLevelDataSetupProd
   }
 
-  void enableHighLevelDataSetupForStaging(String highLevelDataSetupKeyvaultName = "") {
-    config.highLevelDataSetup = true
-    config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
+  void enableHighLevelDataSetupForStaging() {
     config.highLevelDataSetupForStaging = true
   }
 
