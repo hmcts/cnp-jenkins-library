@@ -1,4 +1,3 @@
-import uk.gov.hmcts.contino.HighLevelDataSetupEnvironment
 import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
@@ -275,15 +274,13 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
         tfPlanOnly: false
       )
 
-      if (pipelineConfig.highLevelDataSetupEnvironments == null) {
-        highLevelDataSetup(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          builder: pipelineType.builder,
-          environment: environment.nonProdName,
-          product: product,
-        )
-      }
+      highLevelDataSetup(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        builder: pipelineType.builder,
+        environment: environment.nonProdName,
+        product: product,
+      )
 
       sectionDeployToAKS(
         appPipelineConfig: pipelineConfig,
@@ -295,16 +292,6 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
         product: product,
         component: component,
       )
-
-      if (pipelineConfig.highLevelDataSetupEnvironments?.contains(HighLevelDataSetupEnvironment.AAT)) {
-        highLevelDataSetup(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          builder: pipelineType.builder,
-          environment: environment.nonProdName,
-          product: product,
-        )
-      }
 
       stageWithAgent('Publish Helm chart', product) {
         callbacksRunner.callAround('Publish Helm chart') {
@@ -330,15 +317,13 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
         tfPlanOnly: false
       )
 
-      if (pipelineConfig.highLevelDataSetupEnvironments == null || pipelineConfig.highLevelDataSetupEnvironments.contains(HighLevelDataSetupEnvironment.PROD)) {
-        highLevelDataSetup(
-          appPipelineConfig: pipelineConfig,
-          pipelineCallbacksRunner: callbacksRunner,
-          builder: pipelineType.builder,
-          environment: environment.prodName,
-          product: product,
-        )
-      }
+      highLevelDataSetup(
+        appPipelineConfig: pipelineConfig,
+        pipelineCallbacksRunner: callbacksRunner,
+        builder: pipelineType.builder,
+        environment: environment.prodName,
+        product: product,
+      )
 
       sectionPromoteBuildToStage(
         appPipelineConfig: pipelineConfig,

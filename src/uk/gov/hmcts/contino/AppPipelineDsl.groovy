@@ -1,9 +1,5 @@
 package uk.gov.hmcts.contino
 
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-
-import java.time.LocalDate
-
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   def final config
   def final steps
@@ -136,35 +132,15 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
   void enableHighLevelDataSetup(String highLevelDataSetupKeyvaultName = "", boolean skipHighLevelDataSetupProd = false) {
-    WarningCollector.addPipelineWarning(
-      'deprecated_high_level_data_setup_legacy_configuration',
-      "The legacy enableHighLevelDataSetup configuration is deprecated. Pass an explicit list of environments, for example enableHighLevelDataSetup(['PR', 'STAGING', 'AAT', 'PROD']).",
-      LocalDate.of(2026, 10, 17)
-    )
     config.highLevelDataSetup = true
     config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
     config.skipHighLevelDataSetupProd = skipHighLevelDataSetupProd
-    config.highLevelDataSetupEnvironments = null
   }
 
-  void enableHighLevelDataSetup(List<String> environments, String highLevelDataSetupKeyvaultName = "") {
-    def supportedEnvironments = [
-      HighLevelDataSetupEnvironment.PR.name(),
-      HighLevelDataSetupEnvironment.STAGING.name(),
-      HighLevelDataSetupEnvironment.AAT.name(),
-      HighLevelDataSetupEnvironment.PROD.name()
-    ] as Set
-    def configuredEnvironments = environments.collect { it?.trim()?.toUpperCase() } as Set
-    def invalidEnvironments = configuredEnvironments - supportedEnvironments
-
-    if (invalidEnvironments) {
-      throw new IllegalArgumentException("Unsupported high-level data setup environments: ${invalidEnvironments}")
-    }
-
+  void enableHighLevelDataSetupForStaging(String highLevelDataSetupKeyvaultName = "") {
     config.highLevelDataSetup = true
     config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
-    config.skipHighLevelDataSetupProd = false
-    config.highLevelDataSetupEnvironments = configuredEnvironments.collect { HighLevelDataSetupEnvironment.valueOf(it) } as Set<HighLevelDataSetupEnvironment>
+    config.highLevelDataSetupForStaging = true
   }
 
 
