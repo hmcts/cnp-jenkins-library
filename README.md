@@ -257,7 +257,7 @@ withPipeline(type, product, component) {
 
 The STAGING setup uses the AAT environment for secrets and data setup, but its callback stage is named `highleveldatasetup:staging` so it remains distinct from `highleveldatasetup:aat`.
 
-A custom key vault can be supplied to `enableHighLevelDataSetup('custom-key-vault')`. The legacy method also accepts a second boolean argument to skip production setup: `enableHighLevelDataSetup('', true)`.
+A custom key vault can be supplied to `enableHighLevelDataSetup('custom-key-vault')`.
 
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 
@@ -269,8 +269,7 @@ Branch | HighDataSetup Stage
 `demo` | `demo`
 `ithc` | `ithc`
 
-To skip production setup while retaining the other legacy stages:
-
+If your service is not yet built on prod, you can disable prod HighLevelDataSetup by setting `skipHighLevelDataSetupProd` flag to `true`.
 ```groovy
 enableHighLevelDataSetup('', true)
 ```

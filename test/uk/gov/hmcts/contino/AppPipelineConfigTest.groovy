@@ -1,9 +1,6 @@
 package uk.gov.hmcts.contino
 
 import spock.lang.Specification
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-
-import java.time.LocalDate
 
 import static org.assertj.core.api.Assertions.assertThat
 
@@ -15,17 +12,12 @@ class AppPipelineConfigTest extends Specification {
   def steps
 
   def setup() {
-    WarningCollector.pipelineWarnings.clear()
     pipelineConfig = new AppPipelineConfig()
     callbacks = new PipelineCallbacksConfig()
     steps = Mock(JenkinsStepMock.class)
     steps.env >> [ : ]
     dsl = new AppPipelineDsl(steps, callbacks, pipelineConfig)
 
-  }
-
-  def cleanup() {
-    WarningCollector.pipelineWarnings.clear()
   }
 
   def "ensure defaults"() {
