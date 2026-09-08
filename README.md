@@ -59,6 +59,16 @@ withPipeline(type, product, component) {
 }
 ```
 
+#### Build dependency caching
+
+Use a tagged version of the Infrastructure library (`2.7.0` or later), then opt in to caching Gradle and Yarn dependencies during the Build stage:
+
+```groovy
+withPipeline(type, product, component) {
+  enableBuildCache()
+}
+```
+
 #### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
