@@ -168,14 +168,18 @@ def call(params) {
             deleteDir()
             checkout scm
             withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
-              warnError('Failure in Fortify Scan') {
-                pcr.callAround('fortify-scan') {
-                  builder.fortifyScan()
+              // The library FoD scan runner (fallback when the repo has no fortifyScan task/script)
+              // needs the real OAuth client_id/secret, not just the vault username/password.
+              withFortifyOAuthSecrets {
+                warnError('Failure in Fortify Scan') {
+                  pcr.callAround('fortify-scan') {
+                    builder.fortifyScan()
+                  }
                 }
-              }
 
-              warnError('Failure in Fortify vulnerability report') {
-                fortifyVulnerabilityReport()
+                warnError('Failure in Fortify vulnerability report') {
+                  fortifyVulnerabilityReport()
+                }
               }
 
               archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
