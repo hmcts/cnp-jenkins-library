@@ -52,6 +52,23 @@ class withBuildCacheTest extends BasePipelineTest {
   }
 
   @Test
+  void 'caches yarn and Gradle dependencies together'() {
+    files.addAll(['yarn.lock', 'gradlew'])
+    boolean called = false
+
+    script.call([buildCache: true]) { called = true }
+
+    assertThat(called).isTrue()
+    assertThat(cacheCalls).hasSize(1)
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly(
+      'yarn-node-modules',
+      'yarn-pnp',
+      'gradle-dependencies',
+      'gradle-wrapper'
+    )
+  }
+
+  @Test
   void 'does not call the plugin when caching is disabled'() {
     boolean called = false
 
