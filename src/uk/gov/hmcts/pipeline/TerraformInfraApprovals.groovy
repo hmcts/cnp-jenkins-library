@@ -74,17 +74,9 @@ class TerraformInfraApprovals {
   }
 
   boolean hasCachedInfraApprovals() {
-    try {
-      if (infraApprovals) {
-        return infraApprovals.every {
-          def f = new File(it)
-          f.bytes.length > 0
-        }
-      }
-    } catch(e) {
-      this.steps.sh("echo 'WARNING: ${e.message}'")
-    }  // Do nothing, just return false
-    return false
+    return infraApprovals && infraApprovals.every { approvalFile ->
+      this.steps.fileExists(approvalFile)
+    }
   }
 
 }
