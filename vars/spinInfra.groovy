@@ -50,9 +50,13 @@ def call(Map<String, ?> params) {
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
   }
 
-  stage('Check Terraform approvals') {
-    approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
-      stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
+  stage("Terraform Plan/Apply - ${environmentDeploymentTarget}") {
+    stage('Check Terraform approvals') {
+      approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
+      }
+    }
+
+    stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
     Closure terraformInit = {
       sh """
@@ -175,7 +179,6 @@ def call(Map<String, ?> params) {
           }
         } else
           log.warning "Skipping apply due to tfPlanOnly flag set"
-      }
     }
   }
 }
