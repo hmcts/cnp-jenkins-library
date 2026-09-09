@@ -34,8 +34,9 @@ def call(String product, String component = null, Closure body) {
   String primaryEnvironment = autoDeployTarget?.environmentName ?: environment.nonProdName
 
   String agentType = AgentSelector.labelForEnvironmentWithoutProductFallback(primaryEnvironment, env) ?: env.BUILD_AGENT_TYPE
+  String nodeSelector = agentType ? "${agentType} && !nightly" : '!nightly'
 
-  node(agentType) {
+  node(nodeSelector) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
       echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"

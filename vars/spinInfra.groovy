@@ -50,7 +50,12 @@ def call(Map<String, ?> params) {
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
   }
 
-  approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
+  stage("Terraform Plan/Apply - ${environmentDeploymentTarget}") {
+    stage('Check Terraform approvals') {
+      approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
+      }
+    }
+
     stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
     Closure terraformInit = {
@@ -63,8 +68,8 @@ def call(Map<String, ?> params) {
       """
     }
 
-    lock("${config.productName}-${environmentDeploymentTarget}") {
-      stageWithEnvironmentAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
+      lock("${config.productName}-${environmentDeploymentTarget}") {
+        stageWithEnvironmentAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
@@ -157,8 +162,8 @@ def call(Map<String, ?> params) {
           }
         }
       }
-      if (!config.tfPlanOnly) {
-        stageWithEnvironmentAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
+        if (!config.tfPlanOnly) {
+          stageWithEnvironmentAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
           terraformInit()
           unstash terraformPlanStashName
           sh "terraform apply -auto-approve tfplan"
@@ -171,9 +176,9 @@ def call(Map<String, ?> params) {
             log.info("terraform output command failed! ${err} Assuming there was no result...")
           }
           return parseResult
-        }
-      } else
-        log.warning "Skipping apply due to tfPlanOnly flag set"
+          }
+        } else
+          log.warning "Skipping apply due to tfPlanOnly flag set"
     }
   }
 }
