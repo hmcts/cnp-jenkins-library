@@ -165,6 +165,44 @@ class AcrTest extends Specification {
       it.get('returnStdout').equals(true)})
   }
 
+  def "purgeOldTags() should not fail the build when the purge command errors"() {
+    given:
+      dockerImage.getImageTag() >> IMAGE_TAG
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      steps.sh({it.containsKey('script') && it.get('script').contains("acr purge")}) >> {
+        throw new RuntimeException("acr.BaseClient#DeleteAcrTag: StatusCode=500")
+      }
+
+    when:
+      acr.purgeOldTags(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+      notThrown(Exception)
+      1 * steps.echo({it.contains("could not purge old tags matching '${IMAGE_REPO}:^prod-.*'")})
+  }
+
+  def "purgeOldTags() should rethrow when the build is interrupted"() {
+    given:
+      dockerImage.getImageTag() >> IMAGE_TAG
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      steps.sh({it.containsKey('script') && it.get('script').contains("acr purge")}) >> {
+        throw new FlowInterruptedException("aborted")
+      }
+
+    when:
+      acr.purgeOldTags(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+      thrown(FlowInterruptedException)
+      0 * steps.echo({it.contains("could not purge old tags")})
+  }
+
+  static class FlowInterruptedException extends RuntimeException {
+    FlowInterruptedException(String message) {
+      super(message)
+    }
+  }
+
   def "run() should detect cross-registry pulls and use task-based execution"() {
     given:
       def identityJson = '{"userAssignedIdentities":{"/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi":{"clientId":"client-id-123"}}}'

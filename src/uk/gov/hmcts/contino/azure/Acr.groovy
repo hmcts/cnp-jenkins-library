@@ -638,12 +638,27 @@ class Acr extends Az {
     String filterPattern = dockerImage.getRepositoryName().concat(":^").concat(purgeTag).concat("-.*")
     
     // Purge from primary registry
-    this.az "acr run --registry ${registryName} --subscription ${registrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
+    purgeTagsFromRegistry(registryName, registrySubscription, filterPattern, stage)
     
     // Also purge from secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
       localSteps.echo "Purging old tags from secondary ACR: ${secondaryRegistryName}"
-      this.az "acr run --registry ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
+      purgeTagsFromRegistry(secondaryRegistryName, secondaryRegistrySubscription, filterPattern, stage)
     }
+  }
+
+  private void purgeTagsFromRegistry(String targetRegistryName, String targetRegistrySubscription, String filterPattern, stage) {
+    try {
+      this.az "acr run --registry ${targetRegistryName} --subscription ${targetRegistrySubscription} --cmd \"acr purge --filter ${filterPattern} --ago ${stage.purgeAgo} --keep ${stage.purgeKeep} --untagged --concurrency 5\" /dev/null"
+    } catch (purgeError) {
+      if (isBuildInterruption(purgeError)) {
+        throw purgeError
+      }
+      localSteps.echo "Warning: could not purge old tags matching '${filterPattern}' from ACR '${targetRegistryName}'. Cause: ${purgeError.message}"
+    }
+  }
+
+  private static boolean isBuildInterruption(Throwable error) {
+    return error instanceof InterruptedException || error.class.name.endsWith('FlowInterruptedException')
   }
 }
