@@ -89,6 +89,21 @@ class HelmTest extends Specification {
     })
   }
 
+  def "kubeconform() propagates schema validation failures"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
+    steps.sh({ it.get('label') == 'kubeconform schema validation (base values)' }) >> {
+      throw new RuntimeException('kubeconform schema validation failed')
+    }
+
+    when:
+    helm.kubeconform()
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.message == 'kubeconform schema validation failed'
+  }
+
   def "kubeconform() passes a custom k8sVersion through to kubeconform"() {
     given:
     steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
