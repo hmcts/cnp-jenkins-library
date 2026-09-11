@@ -1,9 +1,5 @@
 package uk.gov.hmcts.contino
 
-import uk.gov.hmcts.pipeline.deprecation.WarningCollector
-
-import java.time.LocalDate
-
 class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   def final config
   def final steps
@@ -139,6 +135,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.highLevelDataSetup = true
     config.highLevelDataSetupKeyVaultName = highLevelDataSetupKeyvaultName
     config.skipHighLevelDataSetupProd = skipHighLevelDataSetupProd
+  }
+
+  void enableHighLevelDataSetupForStaging() {
+    config.highLevelDataSetupForStaging = true
   }
 
 
