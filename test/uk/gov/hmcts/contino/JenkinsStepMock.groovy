@@ -11,6 +11,7 @@ interface JenkinsStepMock {
   Object sh(String)
   Object echo(String)
   Object error(String)
+  Object[] findFiles(Map params)
   Object git(Map params)
   Object tool(HashMap)
   String libraryResource(String)
