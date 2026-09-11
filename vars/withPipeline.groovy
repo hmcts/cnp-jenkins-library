@@ -68,7 +68,11 @@ def call(type, String product, String component, Closure body) {
 
   Environment environment = new Environment(env)
 
-  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  def teamConfig = new TeamConfig(
+    this,
+    pipelineConfig.approvedJenkinsConfigRepos,
+    pipelineConfig.warnOnUnapprovedJenkinsConfigRepo
+  ).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
 
   def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
