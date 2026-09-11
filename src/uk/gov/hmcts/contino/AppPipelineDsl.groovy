@@ -126,6 +126,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.clearHelmReleaseOnFailure = false;
   }
 
+  void enableHelmOnMaster() {
+    config.enableHelmOnMaster = true;
+  }
+
   enum PactRoles { CONSUMER, PROVIDER, CONSUMER_DEPLOY_CHECK}
 
   void enablePactAs(List<PactRoles> roles) {
@@ -145,6 +149,23 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   void enableFortifyScan(String fortifyVaultName = "") {
     config.fortifyScan = true
     config.fortifyVaultName = fortifyVaultName
+  }
+
+  void deployNightlyInstance(Map<String, Object> params = [:]) {
+    def deploymentEnvironment = params.environment ?: 'preview'
+    config.nightlyDeployment = true
+    config.nightlyDeploymentEnvironment = deploymentEnvironment
+    config.nightlyDeploymentValuesEnvironment = params.valuesEnvironment ?: defaultNightlyValuesEnvironment(deploymentEnvironment)
+    config.nightlyDeploymentImageTag = params.imageTag ?: 'nightly'
+    config.keepNightlyDeployment = params.keepDeployment ?: false
+  }
+
+  void enableNightlyDeployment(Map<String, Object> params = [:]) {
+    deployNightlyInstance(params)
+  }
+
+  private String defaultNightlyValuesEnvironment(String deploymentEnvironment) {
+    deploymentEnvironment in ['preview', 'nonprod'] ? 'aat' : deploymentEnvironment
   }
 
   void enableDockerTestBuild() {

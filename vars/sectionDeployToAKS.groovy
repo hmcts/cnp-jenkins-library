@@ -26,6 +26,10 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
   }
 }
 
+boolean shouldUninstallHelmRelease(boolean isOnMaster, boolean enableHelmOnMaster, boolean enableHelmLabel) {
+  return isOnMaster ? !enableHelmOnMaster : !enableHelmLabel
+}
+
 def call(params) {
   def pcr = params.pipelineCallbacksRunner
   def config = params.appPipelineConfig
@@ -471,7 +475,9 @@ def call(params) {
       }
     } else {
       def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
-      if (isOnMaster || !enableHelmLabel) {
+      def shouldUninstallHelm = shouldUninstallHelmRelease(isOnMaster, config.enableHelmOnMaster, enableHelmLabel)
+      echo "Helm uninstall: isOnMaster=${isOnMaster}, enableHelmOnMaster=${config.enableHelmOnMaster}, enableHelmLabel=${enableHelmLabel}, shouldUninstallHelm=${shouldUninstallHelm}"
+      if (shouldUninstallHelm) {
         helmUninstall(dockerImage, params, pcr)
       }
     }

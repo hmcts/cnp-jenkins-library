@@ -16,7 +16,8 @@ def call(DockerImage dockerImage, Map params) {
 
   def subscription = params.subscription
   def environment = params.environment
-  def helmOptionEnvironment = params.environment
+  def valuesEnvironment = params.valuesEnvironment ?: params.environment
+  def helmOptionEnvironment = params.helmOptionEnvironment ?: valuesEnvironment
   def product = params.product
   def component = params.component
   AppPipelineConfig config = params.appPipelineConfig
@@ -74,8 +75,8 @@ def call(DockerImage dockerImage, Map params) {
     values << defaultValues
 
     // environment specific values is optional
-    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${environment}.template.yaml"
-    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${environment}.yaml"
+    def valuesEnvTemplate = "${helmResourcesDir}/${chartName}/values.${valuesEnvironment}.template.yaml"
+    def valuesEnv = "${helmResourcesDir}/${chartName}/values.${valuesEnvironment}.yaml"
     if (fileExists(valuesEnvTemplate)) {
       sh "envsubst < ${valuesEnvTemplate} > ${valuesEnv}"
       values << valuesEnv
@@ -85,8 +86,8 @@ def call(DockerImage dockerImage, Map params) {
       def githubApi = new GithubAPI(this)
       for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, "pr-values") ) {
         def prLabel = label.minus("pr-values:").replaceAll("\\s","")
-        def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.template.yaml"
-        def valuesLabelEnv = "${helmResourcesDir}/${chartName}/values.${prLabel}.${environment}.yaml"
+        def valuesLabelTemplate = "${helmResourcesDir}/${chartName}/values.${prLabel}.${valuesEnvironment}.template.yaml"
+        def valuesLabelEnv = "${helmResourcesDir}/${chartName}/values.${prLabel}.${valuesEnvironment}.yaml"
         if (fileExists(valuesLabelTemplate)) {
           sh "envsubst < ${valuesLabelTemplate} > ${valuesLabelEnv}"
           values << valuesLabelEnv
@@ -94,7 +95,7 @@ def call(DockerImage dockerImage, Map params) {
       }
     }
 
-    def requirementsEnv = "${helmResourcesDir}/${chartName}/requirements.${environment}.yaml"
+    def requirementsEnv = "${helmResourcesDir}/${chartName}/requirements.${valuesEnvironment}.yaml"
     def requirements = "${helmResourcesDir}/${chartName}/requirements.yaml"
     if (fileExists(requirementsEnv)) {
       sh "envsubst < ${requirementsEnv} > ${requirements}"
