@@ -21,6 +21,10 @@ class MetricsPublisher implements Serializable {
   }
 
   private def collectMetrics(currentStepName) {
+    return collectMetrics(currentStepName, null)
+  }
+
+  private def collectMetrics(currentStepName, stageDurationMillis) {
     def dateBuildScheduled = new Date(currentBuild.timeInMillis as long)
     def (libName, libVersion) = resolveSharedLibrary()
 
@@ -53,6 +57,7 @@ class MetricsPublisher implements Serializable {
       current_build_scheduled_time : dateBuildScheduled?.format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
       current_build_duration       : currentBuild.duration,
       current_build_duration_string: currentBuild.durationString,
+      current_stage_duration       : stageDurationMillis,
       current_build_previous_build : currentBuild.previousBuild?.number,
       current_build_absolute_url   : currentBuild.absoluteUrl,
       stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
@@ -95,9 +100,13 @@ class MetricsPublisher implements Serializable {
   }
 
   def publish(eventName) {
+    publish(eventName, null)
+  }
+
+  def publish(eventName, stageDurationMillis) {
     try {
       def database = cosmosDbTargetResolver.databaseName()
-      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName))
+      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName, stageDurationMillis))
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
     }
