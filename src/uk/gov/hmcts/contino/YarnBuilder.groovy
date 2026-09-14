@@ -184,8 +184,14 @@ class YarnBuilder extends AbstractBuilder {
       }
     } finally {
       steps.sh """
-        cat yarn-audit-result-formatted | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-        cat yarn-audit-result-formatted | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
+        if [ -s yarn-audit-result-formatted ] && jq empty yarn-audit-result-formatted >/dev/null 2>&1; then
+          jq -c '. | {type: "auditSummary", data: .metadata}' yarn-audit-result-formatted > yarn-audit-issues-result-summary
+          jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-result-formatted > yarn-audit-issues-advisories
+        else
+          echo 'Yarn audit report was not produced; skipping CVE report formatting.'
+          : > yarn-audit-issues-result-summary
+          : > yarn-audit-issues-advisories
+        fi
         cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
       """
       String issues = steps.readFile('yarn-audit-issues-result')

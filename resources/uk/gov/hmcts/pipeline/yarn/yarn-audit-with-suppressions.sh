@@ -167,7 +167,11 @@ else
   check_audit_file_format yarn-audit-result
   if [ "$OLD_AUDIT_FORMAT" -eq 0 ]; then
     echo "Formatting Yarn Audit report from 4.x to Yarn 3.x audit format and enriching with GitHub Advisory data"
-    cat yarn-audit-result | node "${src_dir}/transform-v4-to-v3-audit.cjs" > yarn-audit-result-formatted
+    node "${src_dir}/transform-v4-to-v3-audit.cjs" < yarn-audit-result > yarn-audit-result-formatted
+    if ! jq empty yarn-audit-result-formatted >/dev/null 2>&1; then
+      echo "Yarn audit formatter produced invalid JSON; aborting audit processing." >&2
+      exit 1
+    fi
   else
     cp yarn-audit-result yarn-audit-result-formatted
   fi
@@ -183,7 +187,7 @@ else
   if [ -f yarn-audit-known-issues ]; then
     check_file_valid_json yarn-audit-known-issues
     # Convert JSON array into sorted list of suppressed issues
-    cat yarn-audit-known-issues | node "${src_dir}/transform-v4-to-v3-audit.cjs" > yarn-audit-known-issues-formatted
+    node "${src_dir}/transform-v4-to-v3-audit.cjs" < yarn-audit-known-issues > yarn-audit-known-issues-formatted
     jq -cr '.advisories | to_entries[].value' yarn-audit-known-issues-formatted \
               | sort > sorted-yarn-audit-known-issues
 
@@ -205,7 +209,7 @@ if [ ! -f yarn-audit-known-issues ]; then
 else
   # Test for old format of yarn-audit-known-issues
   if [ "$YARN_VERSION" == "4" ]; then
-    cat yarn-audit-known-issues | node "${src_dir}/transform-v4-to-v3-audit.cjs" > yarn-audit-known-issues-formatted
+    node "${src_dir}/transform-v4-to-v3-audit.cjs" < yarn-audit-known-issues > yarn-audit-known-issues-formatted
   else
     cp yarn-audit-known-issues yarn-audit-known-issues-formatted
   fi

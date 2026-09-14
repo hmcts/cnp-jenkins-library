@@ -110,4 +110,10 @@ async function getGitHubAdvisory(htmlUrl) {
   }
 }
 
-main().catch(console.log);
+main().catch((error) => {
+  // Keep stdout reserved for the JSON report consumed by jq. Jenkins captures
+  // this stream into yarn-audit-result-formatted, so diagnostics must go to
+  // stderr or they corrupt the report and hide the original failure.
+  console.error('Yarn audit transformation failed:', error);
+  process.exitCode = 1;
+});
