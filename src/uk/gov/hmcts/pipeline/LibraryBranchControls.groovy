@@ -93,6 +93,10 @@ class LibraryBranchControls {
   }
 
   boolean isBranchAllowed(def pipelineConfig = null) {
+    if (steps?.env?.PROD_SUBSCRIPTION_NAME == 'sandbox') {
+      steps.echo 'Skipping library branch allowlist validation on sandbox Jenkins.'
+      return true
+    }
 
     def libraryBranchControls = getLibraryBranchControls()
     if (!libraryBranchControls.containsKey('branches')) {
