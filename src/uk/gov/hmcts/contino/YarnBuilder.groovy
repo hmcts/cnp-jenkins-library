@@ -160,6 +160,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    Exception auditFailure = null
     try {
       steps.sh """
         set +ex
@@ -182,27 +183,49 @@ class YarnBuilder extends AbstractBuilder {
           ./yarn-audit-with-suppressions.sh
         """
       }
+    } catch (Exception failure) {
+      auditFailure = failure
+      throw failure
     } finally {
-      steps.sh """
-        if [ -s yarn-audit-result-formatted ] && jq empty yarn-audit-result-formatted >/dev/null 2>&1; then
-          jq -c '. | {type: "auditSummary", data: .metadata}' yarn-audit-result-formatted > yarn-audit-issues-result-summary
-          jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-result-formatted > yarn-audit-issues-advisories
-        else
-          echo 'Yarn audit report was not produced; skipping CVE report formatting.'
-          : > yarn-audit-issues-result-summary
-          : > yarn-audit-issues-advisories
-        fi
-        cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
-      """
-      String issues = steps.readFile('yarn-audit-issues-result')
-      String knownIssues = null
-      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
-        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+      try {
+        publishAuditReport()
+      } catch (Exception failure) {
+        if (auditFailure == null) {
+          throw failure
+        }
+        steps.echo 'CVE report finalisation failed; preserving the original audit failure.'
       }
-      def cveReport = prepareCVEReport(issues, knownIssues)
-      new CVEPublisher(steps)
-        .publishCVEReport('node', cveReport)
     }
+  }
+
+  private void publishAuditReport() {
+    steps.sh """
+      if [ -s yarn-audit-result-formatted ] && jq -e -s '
+        length == 1 and (.[0] |
+          type == "object" and
+          (.metadata | type == "object") and
+          (.advisories | type == "object" and all(.[]; type == "object")))
+      ' yarn-audit-result-formatted >/dev/null 2>&1; then
+        jq -c '. | {type: "auditSummary", data: .metadata}' yarn-audit-result-formatted > yarn-audit-issues-result-summary
+        jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-result-formatted > yarn-audit-issues-advisories
+      else
+        echo 'Yarn audit report is unavailable or invalid; skipping CVE report publication.'
+        : > yarn-audit-issues-result-summary
+        : > yarn-audit-issues-advisories
+      fi
+      cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
+    """
+    String issues = steps.readFile('yarn-audit-issues-result')
+    if (!issues?.trim()) {
+      throw new IllegalStateException('Yarn audit report is unavailable or invalid; CVE report was not published.')
+    }
+    String knownIssues = null
+    if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+      knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+    }
+    def cveReport = prepareCVEReport(issues, knownIssues)
+    new CVEPublisher(steps)
+      .publishCVEReport('node', cveReport)
   }
 
   @Override

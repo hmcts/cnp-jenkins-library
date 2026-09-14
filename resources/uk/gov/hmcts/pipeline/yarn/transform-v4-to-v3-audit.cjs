@@ -13,7 +13,7 @@ async function main() {
 
   const advisories = await Promise.all(v3json.map(getAdvisory));
   const yarnLock = fs.readFileSync('yarn.lock', 'utf8');
-  const numDependencies = yarnLock.match(/resolution: "/g).length;
+  const numDependencies = (yarnLock.match(/resolution: "/g) || []).length;
   const advisoriesById = advisories.reduce((acc, advisory) => {
     acc[advisory.id] = advisory;
     return acc;

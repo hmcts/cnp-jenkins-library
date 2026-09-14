@@ -33,6 +33,9 @@
 # Exit script on error
 set -e
 
+# Never publish a report left behind by an earlier audit attempt.
+rm -f yarn-audit-result-formatted
+
 src_dir="."
 # Auto-detect src_dir only if user provides "local" argument
 if [ "$1" == "local" ]; then
@@ -150,18 +153,23 @@ if [ "$YARN_VERSION" != "4" ]; then
   yarn_audit_command="yarn npm audit --all --environment production --json"
 fi
 
+yarn_audit_status=0
 if [ "$today" -gt "$exclude_until" ]; then
   # run yarn audit command
-  $yarn_audit_command > yarn-audit-result || true
+  $yarn_audit_command > yarn-audit-result || yarn_audit_status=$?
 else
   # add "--ignore 1096460" to the yarn audit command
   echo "Excluding CVE-2023-4949 (advisory 1096460) until $exclude_until"
-  $yarn_audit_command --ignore 1096460 > yarn-audit-result || true
+  $yarn_audit_command --ignore 1096460 > yarn-audit-result || yarn_audit_status=$?
 fi
 
 if [ ! -s yarn-audit-result ]; then
-  echo "yarn audit returned no results, assuming no vulnerabilities found"
-  FOUND_VULNERABILITIES=0
+  if [ "$yarn_audit_status" -ne 0 ]; then
+    echo "yarn audit failed with exit code $yarn_audit_status and produced no report." >&2
+    exit "$yarn_audit_status"
+  fi
+  echo "yarn audit succeeded with no vulnerabilities; generating an empty advisory report"
+  node "${src_dir}/transform-v4-to-v3-audit.cjs" < yarn-audit-result > yarn-audit-result-formatted
 else
   check_file_valid_json yarn-audit-result
   check_audit_file_format yarn-audit-result
