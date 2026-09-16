@@ -7,8 +7,6 @@ branches:
     allowed: true
   - name: DTSPO-30107-jenkins-agents
     allowed: true
-  - name: 2.0.0
-    allowed: true
   - name: DTSPO-00001
     allowed: true
   - name: library-branch-controls
@@ -20,10 +18,6 @@ branches:
   - name: feat/add-python-support
     allowed: true
   - name: uv-audit-pretty-print
-    allowed: true
-  - name: DTSPO-30107-jenkins-agents-2
-    allowed: true
-  - name: DTSPO-30107-jenkins-agents-3
     allowed: true
   - name: poll_for_helm
     allowed: true
