@@ -10,6 +10,8 @@ def call(params) {
   def expires = params.expires ?: LocalDate.now().plusDays(14)
   def pcr = params.pipelineCallbacksRunner
   def businessArea = env.BUSINESS_AREA_TAG
+  def terraformApplyRetry = params.terraformApplyRetry ?: false
+  def terraformApplyRetryCount = params.terraformApplyRetryCount ?: 2
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
@@ -30,7 +32,9 @@ def call(params) {
               expires: expires,
               environment: environment,
               tfPlanOnly: planOnly,
-              subscription: subscription
+              subscription: subscription,
+              terraformApplyRetry: terraformApplyRetry,
+              terraformApplyRetryCount: terraformApplyRetryCount
              )
         }
       }
