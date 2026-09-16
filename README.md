@@ -231,9 +231,7 @@ This can be used to import data required for the application.
 The most common example is importing a CCD definition, but data requirements of a similar nature can be included using the same functionality.
 Smoke and functional tests in non-production environments will run after the import allowing automated regression testing of the change.
 
-By adding `enableHighLevelDataSetup()` to the Jenkinsfile, `High Level Data Setup` stages will be added to the pipeline.
-
-```
+```groovy
 #!groovy
 
 @Library("Infrastructure")
@@ -248,20 +246,32 @@ withPipeline(type, product, component) {
 
 ```
 
+To also run high-level data setup immediately after the AAT AKS install on `master`, opt in to STAGING explicitly:
+
+```groovy
+withPipeline(type, product, component) {
+  enableHighLevelDataSetup()
+  enableHighLevelDataSetupForStaging()
+}
+```
+
+The STAGING setup uses the AAT environment for secrets and data setup, but its callback stage is named `highleveldatasetup:staging` so it remains distinct from `highleveldatasetup:aat`.
+
+A custom key vault can be supplied to `enableHighLevelDataSetup('custom-key-vault')`.
+
 The opinionated pipeline uses the following branch mapping to import definition files to different environments.
 
 Branch | HighDataSetup Stage
 --- | ---
-`master` | `aat` then `prod`
+`master` | `staging` (optional), aat` then `prod`
 `PR` | `aat`
 `perftest` | `perftest`
 `demo` | `demo`
 `ithc` | `ithc`
 
 If your service is not yet built on prod, you can disable prod HighLevelDataSetup by setting `skipHighLevelDataSetupProd` flag to `true`.
-
-```
-  enableHighLevelDataSetup("", true)
+```groovy
+enableHighLevelDataSetup('', true)
 ```
 
 #### Extending the opinionated pipeline
@@ -278,15 +288,16 @@ Conditions are:
 
 Valid values for the `stage` variable are as follows where `ENV` must be replaced by the [short environment name](#branch-and-environment-mapping)
 
- * checkout
- * build
- * test
- * securitychecks
- * sonarscan
- * deploy:ENV
- * smoketest:ENV
- * functionalTest:ENV
- * buildinfra:ENV
+* checkout
+* build
+* test
+* securitychecks
+* sonarscan
+* deploy:ENV
+* smoketest:ENV
+* functionalTest:ENV
+* buildinfra:ENV
+* highleveldatasetup:ENV
 
 E.g.
 
@@ -310,8 +321,8 @@ withPipeline(type, product, component) {
 If your service contains an API (in Azure Api Management Service), you need to implement
 tests for that API. For the pipeline to run those tests, do the following:
 
- - define `apiGateway` task (gradle/yarn) in you application
- - from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
+- define `apiGateway` task (gradle/yarn) in you application
+- from your Jenkinsfile_CNP/Jenkinsfile_parameterized instruct the pipeline to run that gradle task:
 
   ```
   withPipeline(type, product, component) {
@@ -442,8 +453,8 @@ Conditions are:
 
 Valid values for the `stage` variable are as follows where `ENV` should be replaced by the short environment name:
 
- * checkout
- * buildinfra:ENV
+* checkout
+* buildinfra:ENV
 
 E.g.
 
@@ -901,7 +912,7 @@ You need to add `nonServiceApp()` method in `withPipeline` block to skip service
 @Library("Infrastructure")
 
 withPipeline(type, product, component) {
-    nonServiceApp()
+  nonServiceApp()
 }
 ```
 
@@ -1182,9 +1193,9 @@ Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allow
 
 ## Contributing
 
- 1. Use the Github pull requests to make change
- 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
- 3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+1. Use the Github pull requests to make change
+2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```

@@ -78,6 +78,18 @@ def call(params) {
         }
       }
     }
+    onMaster {
+      if (config.highLevelDataSetupForStaging) {
+        highLevelDataSetup(
+          appPipelineConfig: config,
+          pipelineCallbacksRunner: pcr,
+          builder: builder,
+          environment: environment,
+          callbackEnvironment: 'staging',
+          product: product,
+        )
+      }
+    }
     onPR {
       highLevelDataSetup(
         appPipelineConfig: config,
