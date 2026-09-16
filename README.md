@@ -344,7 +344,15 @@ The tests run after deployment to each environment (AAT and Production) on the m
 
 - By default your Helm resources are uninstalled to free up resources on the cluster.
 - You can keep these resources by adding the **enable_keep_helm** label on your PR.
-- If you want to keep the resources for master build, you can add the below flag to Jenkinsfile_CNP
+- If you want to keep the resources after a successful master build, you can add the below flag to Jenkinsfile_CNP
+  ```
+  withPipeline(type, product, component) {
+  ...
+    enableHelmOnMaster()
+  ...
+  }
+  ```
+- If you also want to keep the resources after a failed master build, you can add the below flag to Jenkinsfile_CNP
   ```
   withPipeline(type, product, component) {
   ...
@@ -478,6 +486,26 @@ withNightlyPipeline(type, product, component) {
   // add this!
   enableCrossBrowserTest()
   enableFortifyScan()
+}
+```
+
+To deploy an isolated AKS instance for the nightly run before the optional test stages execute, add `deployNightlyInstance()`.
+By default this deploys to the preview AKS environment using `values.aat.template.yaml`, a `nightly` Helm release/image tag, and removes it at the end of the build.
+This is opt-in; without `deployNightlyInstance()`, the nightly pipeline keeps the existing behaviour and does not deploy an instance.
+
+```
+withNightlyPipeline(type, product, component) {
+  deployNightlyInstance()
+  enableFullFunctionalTest()
+  enableSecurityScan()
+}
+```
+
+You can override the target environment, Helm values environment, release/image tag, or keep the deployment after the build:
+
+```
+withNightlyPipeline(type, product, component) {
+  deployNightlyInstance(environment: 'preview', valuesEnvironment: 'aat', imageTag: 'nightly', keepDeployment: true)
 }
 ```
 

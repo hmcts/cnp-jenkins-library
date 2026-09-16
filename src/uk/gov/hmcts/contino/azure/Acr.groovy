@@ -586,7 +586,7 @@ class Acr extends Az {
   def retagForStage(stage, dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
     // Non master branch builds like preview are tagged with the base tag
-    def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
+    def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || stage == DockerImage.DeploymentStage.NIGHTLY || dockerImage.imageTag == 'staging')
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
     
     // Retag in primary registry
