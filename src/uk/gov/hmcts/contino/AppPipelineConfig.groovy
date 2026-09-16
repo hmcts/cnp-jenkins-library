@@ -1,6 +1,9 @@
 package uk.gov.hmcts.contino
 
 class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
+  List<String> approvedJenkinsConfigRepos = ['cnp-jenkins-config']
+  boolean warnOnUnapprovedJenkinsConfigRepo = true
+
   Map<String, List<Map<String, Object>>> vaultSecrets = [:]
   Map<String, String> vaultEnvironmentOverrides = ['preview':'aat', 'dev':'stg']
   String vaultName

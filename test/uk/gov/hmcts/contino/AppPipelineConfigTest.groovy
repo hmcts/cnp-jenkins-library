@@ -41,6 +41,8 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
+      assertThat(pipelineConfig.approvedJenkinsConfigRepos).isEqualTo(['cnp-jenkins-config'])
+      assertThat(pipelineConfig.warnOnUnapprovedJenkinsConfigRepo).isTrue()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -295,6 +297,34 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isTrue()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isTrue()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
+  }
+
+  def "set ACR ownership mode should not be callable from app DSL"() {
+    when:
+      dsl.setAcrOwnershipMode('audit')
+    then:
+      thrown(MissingMethodException)
+  }
+
+  def "set ACR ownership allow list should not be callable from app DSL"() {
+    when:
+      dsl.setAcrOwnershipAllowList(['recipes/frontend'])
+    then:
+      thrown(MissingMethodException)
+  }
+
+  def "set approved Jenkins config repos"() {
+    when:
+      dsl.setApprovedJenkinsConfigRepos(['cnp-jenkins-config', ' custom-config '])
+    then:
+      assertThat(pipelineConfig.approvedJenkinsConfigRepos).isEqualTo(['cnp-jenkins-config', 'custom-config'])
+  }
+
+  def "toggle unapproved config repo warnings"() {
+    when:
+      dsl.enableUnapprovedConfigRepoWarnings(false)
+    then:
+      assertThat(pipelineConfig.warnOnUnapprovedJenkinsConfigRepo).isFalse()
   }
 
 }

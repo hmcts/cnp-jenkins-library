@@ -3,6 +3,8 @@ package uk.gov.hmcts.pipeline
 class TeamConfig {
 
   def steps
+  List<String> approvedJenkinsConfigRepos
+  boolean warnOnUnapprovedJenkinsConfigRepo
   static final String DEFAULT_TEAM_NAME = 'pleaseTagMe'
   static final String NAMESPACE_KEY = "namespace"
   static final String CONTACT_SLACK_CHANNEL_KEY = "contact_channel"
@@ -15,10 +17,13 @@ class TeamConfig {
   static final String DOCKER_AGENT_LABEL = "k8s-agent"
   static final String CONTAINER_AGENT = "inbound-agent"
   static final String REGISTRY_KEY = "registry"
+  static final String DEFAULT_JENKINS_CONFIG_REPO = "cnp-jenkins-config"
   static def teamConfigMap
 
-  TeamConfig(steps){
+  TeamConfig(steps, List<String> approvedJenkinsConfigRepos = [DEFAULT_JENKINS_CONFIG_REPO], boolean warnOnUnapprovedJenkinsConfigRepo = true){
     this.steps = steps
+    this.approvedJenkinsConfigRepos = approvedJenkinsConfigRepos ?: [DEFAULT_JENKINS_CONFIG_REPO]
+    this.warnOnUnapprovedJenkinsConfigRepo = warnOnUnapprovedJenkinsConfigRepo
   }
 
   def setTeamConfigEnv(String product){
@@ -40,7 +45,8 @@ class TeamConfig {
 
   def getTeamNamesMap() {
     if (teamConfigMap ==null ){
-      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: DEFAULT_JENKINS_CONFIG_REPO
+      warnIfRepoUnapproved(repo)
 
       def response = steps.httpRequest(
         consoleLogResponseBody: true,
@@ -51,6 +57,16 @@ class TeamConfig {
       teamConfigMap = steps.readYaml (text: response.content)
     }
     return teamConfigMap
+  }
+
+  void warnIfRepoUnapproved(String repo) {
+    if (!warnOnUnapprovedJenkinsConfigRepo) {
+      return
+    }
+
+    if (!(approvedJenkinsConfigRepos ?: []).contains(repo)) {
+      steps.echo("Warning: JENKINS_CONFIG_REPO '${repo}' is not in approved list ${approvedJenkinsConfigRepos}")
+    }
   }
 
 
@@ -73,7 +89,7 @@ class TeamConfig {
       product = getRawProductName(product)
     }
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(NAMESPACE_KEY)) {
-      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: DEFAULT_JENKINS_CONFIG_REPO
 
       steps.error ("Product ${product} does not belong to any team. "
           + "Please create a PR to update TeamConfig in ${repo}.")
@@ -87,7 +103,7 @@ class TeamConfig {
   def getDefaultTeamSlackChannel(String product, String key) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(SLACK_KEY) || !teamNames.get(product).get(SLACK_KEY).get(key)) {
-      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: DEFAULT_JENKINS_CONFIG_REPO
 
       steps.error ("${key} is not configured for Product ${product} ."
           + "Please create a PR to update team-config.yml in ${repo}.")
@@ -138,7 +154,7 @@ class TeamConfig {
   String getApplicationTag(String product) {
     def teamNames = getTeamNamesMap()
     if (!teamNames.containsKey(product) || !teamNames.get(product).get(TAGS_KEY) || !teamNames.get(product).get(TAGS_KEY).get(APPLICATION_KEY)) {
-      def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
+      def repo = steps.env.JENKINS_CONFIG_REPO ?: DEFAULT_JENKINS_CONFIG_REPO
 
       steps.error ("${APPLICATION_KEY} tag is not configured for Product ${product} ."
         + "Please create a PR to update team-config.yml in ${repo}.")

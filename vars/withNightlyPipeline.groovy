@@ -48,7 +48,11 @@ def call(type, product, component, timeout = 300, Closure body) {
     currentBuild.result = "FAILURE"
   }
 
-  def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
+  def teamConfig = new TeamConfig(
+    this,
+    pipelineConfig.approvedJenkinsConfigRepos,
+    pipelineConfig.warnOnUnapprovedJenkinsConfigRepo
+  ).setTeamConfigEnv(product)
   String agentType = env.BUILD_AGENT_TYPE
   String nodeSelector
 
