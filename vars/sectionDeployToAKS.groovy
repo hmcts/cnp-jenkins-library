@@ -26,6 +26,15 @@ def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config
   }
 }
 
+def stageWithEnvironmentAgentAndSecrets(String stageName, config, String product, String environment, Closure body) {
+  stageWithEnvironmentAgent(stageName, product, environment) {
+    // Fetch team secrets after the node hop so Key Vault auth/env injection runs on the target environment agent.
+    withTeamSecrets(config, environment, product) {
+      body.call()
+    }
+  }
+}
+
 def call(params) {
   def pcr = params.pipelineCallbacksRunner
   def config = params.appPipelineConfig
@@ -41,12 +50,14 @@ def call(params) {
   def imageRegistry
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   def nonProdEnv = new Environment(env).nonProdName
+  def dockerImageTaggedName
 
   def builder = pipelineType.builder
   withAcrClient(subscription) {
     imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
     acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
     dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+    dockerImageTaggedName = dockerImage.getTaggedName()
   }
 
   def deploymentNamespace = projectBranch.deploymentNamespace()
@@ -57,22 +68,21 @@ def call(params) {
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
-    stageWithAgent("AKS deploy - ${environment}", product) {
-      withTeamSecrets(config, environment) {
-        pcr.callAround('akschartsinstall') {
-          withAksClient(subscription, environment, product) {
-            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
-              onPR {
-                deploymentNumber = githubCreateDeployment()
-              }
-              params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
-              log.info("Using AKS environment: ${params.environment}")
-              warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
-              aksUrl = helmInstall(dockerImage, params)
-              log.info("deployed component URL: ${aksUrl}")
-              onPR {
-                githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
-              }
+    stageWithEnvironmentAgentAndSecrets("AKS deploy - ${environment}", config, product, environment) {
+      pcr.callAround('akschartsinstall') {
+        withAksClient(subscription, environment, product) {
+          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Install Charts to AKS') {
+            onPR {
+              deploymentNumber = githubCreateDeployment()
+            }
+            params.environment = params.environment.replace('idam-', '') // hack to workaround incorrect idam environment value
+            log.info("Using AKS environment: ${params.environment}")
+            warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
+            params.imageName = dockerImageTaggedName
+            aksUrl = helmInstall(dockerImage, params)
+            log.info("deployed component URL: ${aksUrl}")
+            onPR {
+              githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
             }
           }
         }
@@ -88,13 +98,13 @@ def call(params) {
       )
     }
     withSubscriptionLogin(subscription) {
-      if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
-        stageWithAgent("Pact Consumer Can I Deploy", product) {
-          builder.runConsumerCanIDeploy()
-        }
+    if (config.pactBrokerEnabled && config.pactConsumerCanIDeployEnabled && !config.onlyDeploy) {
+      stageWithEnvironmentAgent("Pact Consumer Can I Deploy", product, environment) {
+        builder.runConsumerCanIDeploy()
       }
+    }
       if (config.pactBrokerEnabled && config.pactProviderVerificationsEnabled && !config.onlyDeploy) {
-        stageWithAgent("Pact Provider Verification", product) {
+        stageWithEnvironmentAgent("Pact Provider Verification", product, environment) {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
           def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
@@ -109,40 +119,38 @@ def call(params) {
       }
       if (config.serviceApp) {
         def smokeTestStage = {
-          stageWithAgent("Smoke Test - AKS ${environment}", product) {
-            testEnv(aksUrl) {
-              def success = true
-              try {
-                pcr.callAround("smoketest:${environment}") {
-                  timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
-                    builder.smokeTest()
-                  }
+          testEnv(aksUrl) {
+            def success = true
+            try {
+              pcr.callAround("smoketest:${environment}") {
+                timeoutWithMsg(time: 120, unit: 'MINUTES', action: 'Smoke Test - AKS') {
+                  builder.smokeTest()
                 }
-              } catch (err) {
-                success = false
-                throw err
-              } finally {
-                savePodsLogs(dockerImage, params, "smoke")
-                if (!success) {
-                  clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                }
+              }
+            } catch (err) {
+              success = false
+              throw err
+            } finally {
+              savePodsLogs(dockerImage, params, "smoke")
+              if (!success) {
+                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
               }
             }
           }
         }
 
         if (!config.smokeTestSecrets) {
-          smokeTestStage.call()
+          stageWithEnvironmentAgent("Smoke Test - AKS ${environment}", product, environment, smokeTestStage)
         }
 
         withTeamSecrets(config, environment) {
           if (config.smokeTestSecrets) {
-            smokeTestStage.call()
+            stageWithEnvironmentAgentAndSecrets("Smoke Test - AKS ${environment}", config, product, environment, smokeTestStage)
           }
 
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
-              stageWithAgent('Functional test (Full)', product) {
+              stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
                 testEnv(aksUrl) {
                   def passed = true
                   try {
@@ -163,7 +171,7 @@ def call(params) {
                 }
               }
             } else {
-              stageWithAgent("Functional Test - ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   def passed = true
                   try {
@@ -187,7 +195,7 @@ def call(params) {
           }
 
           if (config.performanceTest) {
-            stageWithAgent("Performance Test - ${environment}", product) {
+            stageWithEnvironmentAgentAndSecrets("Performance Test - ${environment}", config, product, environment) {
               testEnv(aksUrl) {
                 pcr.callAround("performanceTest:${environment}") {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
@@ -223,7 +231,7 @@ def call(params) {
 
               // Stage 1: Dynatrace Setup - Post build info, events, and metrics first
               // Run setup for any performance testing (synthetic or gatling) to ensure DT events/metrics are sent
-              stageWithAgent("Dynatrace Performance Setup - ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("Dynatrace Performance Setup - ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   def success = true
                   try {
@@ -258,7 +266,7 @@ def call(params) {
 
             if (config.performanceTestStages) {
               testStages['Dynatrace Synthetic Tests'] = {
-                stageWithAgent("Dynatrace Synthetic Tests - ${environment}", product) {
+                stageWithEnvironmentAgentAndSecrets("Dynatrace Synthetic Tests - ${environment}", config, product, environment) {
                   testEnv(aksUrl) {
                     def success = true
                     try {
@@ -289,7 +297,7 @@ def call(params) {
 
             if (config.gatlingLoadTests) {
               testStages['Gatling Load Tests'] = {
-                stageWithAgent("Gatling Load Tests - ${environment}", product) {
+                stageWithEnvironmentAgentAndSecrets("Gatling Load Tests - ${environment}", config, product, environment) {
                   testEnv(aksUrl) {
                     def success = true
                     try {
@@ -331,7 +339,7 @@ def call(params) {
 
               // Stage 3: Site Reliability Guardian Evaluation (if enabled)
               if (config.srgEvaluation) {
-                stageWithAgent("Site Reliability Guardian Evaluation - ${environment}", product) {
+                stageWithEnvironmentAgentAndSecrets("Site Reliability Guardian Evaluation - ${environment}", config, product, environment) {
                   testEnv(aksUrl) {
                     try {
                       pcr.callAround("srgEvaluation:${environment}") {
@@ -362,7 +370,7 @@ def call(params) {
 
           onMaster {
             if (config.crossBrowserTest) {
-              stageWithAgent("CrossBrowser Test - AKS ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("CrossBrowser Test - AKS ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   pcr.callAround("crossBrowserTest:${environment}") {
                     builder.crossBrowserTest()
@@ -371,7 +379,7 @@ def call(params) {
               }
             }
             if (config.mutationTest) {
-              stageWithAgent("Mutation Test - AKS ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("Mutation Test - AKS ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   pcr.callAround("mutationTest:${environment}") {
                     builder.mutationTest()
@@ -380,7 +388,7 @@ def call(params) {
               }
             }
             if (config.fullFunctionalTest) {
-              stageWithAgent("FullFunctional Test - AKS ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("FullFunctional Test - AKS ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   pcr.callAround("fullFunctionalTest:${environment}") {
                     builder.fullFunctionalTest()
@@ -389,7 +397,7 @@ def call(params) {
               }
             }
             if (config.e2eTest) {
-              stageWithAgent("E2E Test - AKS ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("E2E Test - AKS ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("E2eTest:${environment}") {
@@ -406,10 +414,10 @@ def call(params) {
             }
           }
 
-//          E2E Tests:
+          // E2E Tests:
           onPR {
             if (testLabels.contains('enable_e2e_test')) {
-              stageWithAgent("E2E Test - AKS ${environment}", product) {
+              stageWithEnvironmentAgentAndSecrets("E2E Test - AKS ${environment}", config, product, environment) {
                 testEnv(aksUrl) {
                   def passed = catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     pcr.callAround("E2eTest:${environment}") {
@@ -426,10 +434,10 @@ def call(params) {
             }
           }
 
-//          Performance Tests:
+          // Performance Tests:
           onPR {
             if (testLabels.contains('enable_performance_test')) {
-              stageWithAgent("Performance test", product) {
+              stageWithEnvironmentAgentAndSecrets("Performance test", config, product, environment) {
                 warnError('Failure in performanceTest') {
                   pcr.callAround('PerformanceTest') {
                     timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
@@ -444,8 +452,8 @@ def call(params) {
               }
             }
             if (testLabels.contains('enable_security_scan')) {
-              testEnv(aksUrl) {
-                stageWithAgent('Security scan', product) {
+              stageWithEnvironmentAgentAndSecrets('Security scan', config, product, environment) {
+                testEnv(aksUrl) {
                   warnError('Failure in securityScan') {
                     env.ZAP_URL_EXCLUSIONS = config.securityScanUrlExclusions
                     env.ALERT_FILTERS = config.securityScanAlertFilters

@@ -13,6 +13,8 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.LibraryBranchControls
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import uk.gov.hmcts.pipeline.AgentSelector
+import uk.gov.hmcts.contino.Environment
 
 def call(type, product, component, timeout = 300, Closure body) {
 
@@ -48,10 +50,12 @@ def call(type, product, component, timeout = 300, Closure body) {
     currentBuild.result = "FAILURE"
   }
 
+  Environment environment = new Environment(env)
+  String primaryEnvironment = environment.nonProdName
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector
-
+  
   if (agentType == "") {
     nodeSelector = "nightly"
   } else if (agentType == "civil") {
@@ -75,13 +79,15 @@ def call(type, product, component, timeout = 300, Closure body) {
 
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
-        withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
-          onMaster {
-            sectionSyncBranchesWithMaster(
-              branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
-              product: product
-            )
+        withEnv(['IS_NIGHTLY_PIPELINE=true']) {
+          withSubscriptionLogin(subscription.nonProdName) {
+            sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
+            onMaster {
+              sectionSyncBranchesWithMaster(
+                branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
+                product: product
+              )
+            }
           }
         }
         assert  pipelineType!= null

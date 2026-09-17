@@ -58,4 +58,3 @@ class GradleAPI {
     return cleaned
   }
 }
-

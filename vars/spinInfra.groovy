@@ -35,6 +35,7 @@ def call(Map<String, ?> params) {
   def productName = config.component
   def changeUrl = config.changeUrl
   def environmentDeploymentTarget = params.environment
+  String terraformPlanStashName = "tfplan-${config.productName}-${environmentDeploymentTarget}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}".replaceAll(/[^A-Za-z0-9_.-]/, '-')
   def teamName
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(
@@ -49,11 +50,26 @@ def call(Map<String, ?> params) {
     throw new Exception("There is no SUBSCRIPTION_NAME environment variable, are you running inside a withSubscription block?")
   }
 
-  approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
+  stage("Terraform Plan/Apply - ${environmentDeploymentTarget}") {
+    stage('Check Terraform approvals') {
+      approvedTerraformInfrastructure(config.environment, config.product, metricsPublisher) {
+      }
+    }
+
     stateStoreInit(config.environment, config.subscription, config.deploymentTarget)
 
-    lock("${config.productName}-${environmentDeploymentTarget}") {
-      stageWithAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product) {
+    Closure terraformInit = {
+      sh """
+        terraform init -reconfigure \
+          -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
+          -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
+          -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
+          -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
+      """
+    }
+
+      lock("${config.productName}-${environmentDeploymentTarget}") {
+        stageWithEnvironmentAgent("Plan ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
 
         teamName = env.TEAM_NAME
         def contactSlackChannel = env.CONTACT_SLACK_CHANNEL
@@ -107,15 +123,7 @@ def call(Map<String, ?> params) {
           checkTerraformFormat()
         }
 
-        sh """
-          terraform init -reconfigure \
-            -backend-config "storage_account_name=${env.STORE_sa_name_template}${config.subscription}" \
-            -backend-config "container_name=${env.STORE_sa_container_name_template}${environmentDeploymentTarget}" \
-            -backend-config "resource_group_name=${env.STORE_rg_name_template}-${config.subscription}" \
-            -backend-config "key=${config.productName}/${environmentDeploymentTarget}/terraform.tfstate"
-          # Remove the specific resource from state
-          #terraform state rm azurerm_storage_container.document_container
-        """
+        terraformInit()
 
         warnAboutOldTfAzureProvider(config.environment, config.product, builtFrom)
         warnAboutDeprecatedPostgres()
@@ -134,6 +142,7 @@ def call(Map<String, ?> params) {
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
+        stash name: terraformPlanStashName, includes: 'tfplan'
 
 
         onPR {
@@ -153,21 +162,23 @@ def call(Map<String, ?> params) {
           }
         }
       }
-      if (!config.tfPlanOnly) {
-        stageWithAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product) {
+        if (!config.tfPlanOnly) {
+          stageWithEnvironmentAgent("Apply ${config.productName} in ${environmentDeploymentTarget}", config.product, config.environment) {
+          terraformInit()
+          unstash terraformPlanStashName
           sh "terraform apply -auto-approve tfplan"
-          parseResult = null
+          def parseResult = null
           try {
-            result = sh(script: "terraform output -json", returnStdout: true).trim()
+            def result = sh(script: "terraform output -json", returnStdout: true).trim()
             parseResult = new JsonSlurperClassic().parseText(result)
             log.info("returning parsed JSON terraform output: ${parseResult}")
           } catch (err) {
             log.info("terraform output command failed! ${err} Assuming there was no result...")
           }
           return parseResult
-        }
-      } else
-        log.warning "Skipping apply due to tfPlanOnly flag set"
+          }
+        } else
+          log.warning "Skipping apply due to tfPlanOnly flag set"
     }
   }
 }

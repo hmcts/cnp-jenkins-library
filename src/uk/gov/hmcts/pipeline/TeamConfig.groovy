@@ -22,9 +22,10 @@ class TeamConfig {
   }
 
   def setTeamConfigEnv(String product){
+    def rawProductName = getRawProductName(product)
     def teamNames = getTeamNamesMap()
     this.steps.env.TEAM_NAME = getName(product)
-    this.steps.env.RAW_PRODUCT_NAME = getRawProductName(product)
+    this.steps.env.RAW_PRODUCT_NAME = rawProductName
     this.steps.env.TEAM_NAMESPACE = getNameSpace(product)
     this.steps.env.BUILD_NOTICES_SLACK_CHANNEL = getBuildNoticesSlackChannel(product)
     this.steps.env.CONTACT_SLACK_CHANNEL = getContactSlackChannel(product)
@@ -34,6 +35,7 @@ class TeamConfig {
 
     def buildAgentType = getBuildAgentType(product)
     this.steps.env.BUILD_AGENT_TYPE = buildAgentType
+    this.steps.env.PRODUCT_AGENT_LABEL = isDockerBuildAgent(buildAgentType) ? "" : buildAgentType
     this.steps.env.IS_DOCKER_BUILD_AGENT = isDockerBuildAgent(buildAgentType)
     this.steps.env.BUILD_AGENT_CONTAINER = getBuildAgentContainer(buildAgentType)
   }

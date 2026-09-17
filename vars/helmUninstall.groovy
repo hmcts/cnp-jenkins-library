@@ -3,7 +3,7 @@ import uk.gov.hmcts.contino.Helm
 
 def call(dockerImage, Map params, pcr) {
   try {
-    stageWithAgent("Uninstall Helm Release - ${params.environment}", params.product) {
+    stageWithEnvironmentAgent("Uninstall Helm Release - ${params.environment}", params.product, params.environment) {
       pcr.callAround("helmReleaseUninstall:${params.environment}") {
         withAksClient(params.subscription, params.environment, params.product) {
           uninstallRelease(dockerImage, params)

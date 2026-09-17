@@ -76,6 +76,16 @@ withPipeline(type, product, component) {
 }
 ```
 
+#### Build dependency caching
+
+Use a tagged version of the Infrastructure library (`2.7.0` or later), then opt in to caching Gradle and Yarn dependencies during the Build stage:
+
+```groovy
+withPipeline(type, product, component) {
+  enableBuildCache()
+}
+```
+
 #### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
@@ -395,6 +405,7 @@ These parameters include:
 | --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
 | expires | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
+| alwaysTerraformPlanOnPR | Always run a terraform plan, even if no terraform code changes detected |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
@@ -412,6 +423,7 @@ withInfraPipeline(product, component) {
 
   enableSlackNotifications('#my-team-builds')
   expires(expiresAfter)
+  alwaysTerraformPlanOnPR()
 
 }
 ```
@@ -427,6 +439,12 @@ For resources that must remain permanently, specify a value of `"3000-01-01"`
 ```
 def expiresAfter = "3000-01-01"
 ```
+
+`alwaysTerraformPlanOnPR` is designed to force terraform plan to run when targeting the AAT/Prod environment environment on a pull request.
+
+By default, terraform plan will only run if changes are made to the terraform code.
+
+This value forces a terraform plan on every run. This will add up to a minute to pipeline runtime but it will help detect terraform changes that might result from non-terraform code related changes such as library version changes or changes made manually to Azure resources in the portal.
 
 #### Extending the opinionated infratructure pipeline
 
@@ -919,8 +937,7 @@ withPipeline(type, product, component) {
 ```
 
 ## Release on merge
-Add the `releaseOnMerge()` method in `withPipeline` to automatically create a GitHub Release on `master` if the gradle version number has been updated.
-
+You need to add `releaseOnMerge()` method in `withPipeline` to automatically trigger a release pipeline when changes are merged to master if the gradle version number has been updated.
 
 ```groovy
 #!groovy

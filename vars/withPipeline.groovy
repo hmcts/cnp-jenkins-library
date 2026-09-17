@@ -14,6 +14,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
+import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
@@ -67,24 +68,29 @@ def call(type, String product, String component, Closure body) {
   }
 
   Environment environment = new Environment(env)
+  def autoDeployTarget = autoDeployEnvironment()
+  String primaryEnvironment = branch.isPR() ? environment.previewName : (autoDeployTarget?.environmentName ?: environment.nonProdName)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
-
+  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
+  String nodeSelector = agentType ? "${agentType} && !nightly" : '!nightly'
   def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
   def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
 
   try {
     retry(conditions: [agent()], count: 2) {
-      node(agentType) {
+      node(nodeSelector) {
         timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
           def attemptFailed = false
+          if (!libraryBranchAllowed) {
+            currentBuild.result = "FAILURE"
+            return
+          }
           try {
-            if (!libraryBranchAllowed) {
-              currentBuild.result = "FAILURE"
-              return
-            }
-
+            echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
+            // These values also drive withEnvironmentAgent's no-op path and Az.az()'s env MI config-dir selection.
+            env.BUILD_AGENT_TYPE = agentType
+            env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
             dockerAgentSetup()
             env.PATH = "$env.PATH:/usr/local/bin"
 
@@ -92,19 +98,19 @@ def call(type, String product, String component, Closure body) {
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
               builder: pipelineType.builder,
-              subscription: subscription.nonProdName,
-              environment: environment.nonProdName,
+              subscription: branch.isPR() ? subscription.previewName : (autoDeployTarget?.subscriptionName ?: subscription.nonProdName),
+              environment: primaryEnvironment,
               product: product,
               component: component
             )
 
             if (deploymentEnabled) {
               if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-                stage('Publish Helm chart') {
+                stageWithEnvironmentAgent('Publish Helm chart', product, environment.previewName) {
                   helmPublish(
                     appPipelineConfig: pipelineConfig,
-                    subscription: subscription.nonProdName,
-                    environment: environment.nonProdName,
+                    subscription: subscription.previewName,
+                    environment: environment.previewName,
                     product: product,
                     component: component
                   )
@@ -114,11 +120,11 @@ def call(type, String product, String component, Closure body) {
                   appPipelineConfig: pipelineConfig,
                   pipelineCallbacksRunner: callbacksRunner,
                   pipelineType: pipelineType,
-                  subscription: subscription.nonProdName,
+                  subscription: subscription.previewName,
                   product: product,
                   component: component,
                   stage: DockerImage.DeploymentStage.PREVIEW,
-                  environment: environment.nonProdName
+                  environment: environment.previewName
                 )
               }
 
@@ -142,7 +148,6 @@ def call(type, String product, String component, Closure body) {
                 )
               }
             } // end approvedDeploymentRepository
-
           } catch (FlowInterruptedException err) {
             throw err
           } catch (err) {
@@ -162,7 +167,6 @@ def call(type, String product, String component, Closure body) {
               deleteDir()
             }
           }
-
           notifyBuildFixed channel: slackChannel
 
           callbacksRunner.call('onSuccess')
@@ -180,15 +184,15 @@ def call(type, String product, String component, Closure body) {
     callbacksRunner.call('onFailure')
     throw err
   } finally {
-    if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
-      queueBuildArchive(product: product, component: component)
-    }
+      if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+        queueBuildArchive(product: product, component: component)
+      }
   }
 }
 
 void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component) {
     onPR {
-      onTerraformChangeInPR {
+      onTerraformChangeInPR(pipelineConfig) {
         // we always need a tf plan of aat (i.e. staging)
         sectionDeployToEnvironment(
           appPipelineConfig: pipelineConfig,
@@ -251,7 +255,7 @@ void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pip
         appPipelineConfig: pipelineConfig,
         pipelineCallbacksRunner: callbacksRunner,
         pipelineType: pipelineType,
-        subscription: subscription.nonProdName,
+        subscription: subscription.previewName,
         aksSubscription: aksSubscriptions.preview,
         environment: environment.previewName,
         product: product,

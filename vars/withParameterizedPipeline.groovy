@@ -12,6 +12,7 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.AKSSubscriptions
+import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.DeploymentControls
 import uk.gov.hmcts.pipeline.LibraryBranchControls
@@ -64,27 +65,30 @@ def call(type, String product, String component, String environment, String subs
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
-
+  def autoDeployTarget = autoDeployEnvironment()
+  String primaryEnvironment = autoDeployTarget?.environmentName ?: environment
+  String agentType = AgentSelector.labelForEnvironmentWithoutProductFallback(primaryEnvironment, env) ?: env.BUILD_AGENT_TYPE
+  String nodeSelector = agentType ? "${agentType} && !nightly" : '!nightly'
   libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
-  node(agentType) {
+  node(nodeSelector) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
       if (!libraryBranchAllowed) {
           currentBuild.result = "FAILURE"
           return
       }
-
-        dockerAgentSetup()
-        env.PATH = "$env.PATH:/usr/local/bin"
+      echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
+      env.BUILD_AGENT_TYPE = agentType
+      env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
+      dockerAgentSetup()
+      env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
         checkoutScm(pipelineCallbacksRunner: callbacksRunner)
-
         // This needs to run after checkoutScm because env.GIT_URL is populated post-checkout.
         deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, pipelineConfig)
-        echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"
+        echo "Deployment Enabled status: '${deploymentEnabled}' for repository ${env.GIT_URL}"      
       }
 
       stageWithAgent("Build", product) {
