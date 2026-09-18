@@ -342,7 +342,7 @@ class GithubAPI {
     return checkForLabel(branchName, "dependencies")
   }
 
-def getLatestReleaseVersion(String project) {
+  def getLatestReleaseVersion(String project) {
     def credentialsId = resolveCredentialsId()
     if (!credentialsId) {
       this.steps.echo('Skipping latest release lookup: no GitHub credentials could be resolved')

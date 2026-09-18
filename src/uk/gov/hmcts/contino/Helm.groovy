@@ -8,7 +8,7 @@ import groovy.json.JsonSlurperClassic
 
 /**
  * Helm chart management class.
- * 
+ *
  * Supports dual ACR publish mode for transitioning between registries.
  * When DUAL_ACR_PUBLISH_ENABLED is set to 'true', Helm charts will be
  * published to both primary and secondary ACR registries.
@@ -32,7 +32,7 @@ class Helm {
   def notFoundMessage = 'Not found'
   String registrySubscription
   def namespace
-  
+
   // Secondary ACR for dual publish mode
   def secondaryRegistryName
   def secondaryResourceGroup
@@ -61,7 +61,7 @@ class Helm {
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
     this.namespace = this.steps.env.TEAM_NAMESPACE
-    // NOTE: Do NOT initialize dual publish mode here - Jenkins CPS cannot call 
+    // NOTE: Do NOT initialize dual publish mode here - Jenkins CPS cannot call
     // CPS-transformed methods (steps.env, steps.echo) from constructors.
     // Dual publish mode is checked lazily via isDualPublishModeEnabled().
   }
@@ -69,12 +69,12 @@ class Helm {
   /**
    * Check if dual ACR publish mode is enabled.
    * Reads directly from environment variables each time to avoid CPS issues.
-   * 
+   *
    * @return true if dual publish is enabled and properly configured
    */
   private boolean isDualPublishModeEnabled() {
     def enabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
-    
+
     if (enabled) {
       // Load secondary registry details from environment if not already set
       if (!this.secondaryRegistryName) {
@@ -82,7 +82,7 @@ class Helm {
         this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
         this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
       }
-      
+
       // Validate configuration
       if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
         return false
@@ -91,7 +91,7 @@ class Helm {
     }
     return false
   }
-  
+
   /**
    * Check if dual publish mode is enabled (public accessor for tests).
    */
@@ -123,17 +123,17 @@ class Helm {
    */
   private List<String> detectCrossRegistryDependencies() {
     def chartYamlPath = "${this.chartLocation}/Chart.yaml"
-    
+
     if (!steps.fileExists(chartYamlPath)) {
       return []
     }
-    
+
     try {
       def chartYaml = steps.readFile(chartYamlPath)
       def externalRegistries = [] as Set
-      
+
       steps.echo "Scanning Chart.yaml for OCI-based cross-registry dependencies..."
-      
+
       // Look for OCI repository references in dependencies
       // Example: repository: oci://hmctsprod.azurecr.io/helm
       // Handles: repository: 'oci://...' or repository: "oci://..." or repository: oci://...
@@ -149,7 +149,7 @@ class Helm {
           steps.echo('skipped - same as current registry')
         }
       }
-      
+
       return externalRegistries.toList()
     } catch (Exception e) {
       steps.echo "Warning: Could not parse Chart.yaml for cross-registry dependencies: ${e.message}"
@@ -436,7 +436,7 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh('chmod +x aks-debug-info.sh')
-    
+
     boolean onPR = new ProjectBranch(this.steps.env.BRANCH_NAME).isPR()
     def optionsStr = (options + (onPR ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
@@ -445,13 +445,12 @@ class Helm {
       this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
       this.steps.sh(label: 'wait for install', script:
         """
-        echo 'Waiting 30s for initial pod creation...'
-        sleep 30
+        echo 'Waiting for initial pod creation...'
 
-        POD_COUNT=\$(kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' --no-headers 2>/dev/null | wc -l)
-
-        if [ "\$POD_COUNT" -eq 0 ]; then
-          echo "ℹ️  No pods found matching selector - this chart may only contain jobs/cronjobs"
+        if timeout 60 kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -w 2>/dev/null | grep -m1 "Running\\|Pending" > /dev/null; then
+          echo "Pods detected"
+        else
+          echo "No pods found matching selector - this chart may only contain jobs/cronjobs"
           exit 0
         fi
 

@@ -46,11 +46,11 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
-  
+
   stage('ACR Migration Check') {
     warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
   }
-  
+
   onPathToLive {
     withEnvironmentAgent(environment, product) {
       stageWithAgent("Build", product) {
@@ -263,27 +263,27 @@ def call(params) {
       }
     }
 
-      if (noSkipImgBuild && deploymentEnabled) {
-        stageWithAgent("Promote Docker Image", product) {
-          if (dockerFileExists) {
-            def deploymentStage = DockerImage.DeploymentStage.STAGING
-            def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-            if (isOnPreview) {
-              deploymentStage = DockerImage.DeploymentStage.PREVIEW
-            }
-            onPR {
-              deploymentStage = DockerImage.DeploymentStage.PR
-            }
-            withAcrClient(subscription) {
-              acr.retagForStage(deploymentStage, dockerImage)
-              acr.purgeOldTags(deploymentStage, dockerImage)
-            }
+    if (noSkipImgBuild && deploymentEnabled) {
+      stageWithAgent("Promote Docker Image", product) {
+        if (dockerFileExists) {
+          def deploymentStage = DockerImage.DeploymentStage.STAGING
+          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
+          if (isOnPreview) {
+            deploymentStage = DockerImage.DeploymentStage.PREVIEW
+          }
+          onPR {
+            deploymentStage = DockerImage.DeploymentStage.PR
+          }
+          withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
           }
         }
       }
     }
+  }
 
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild && !config.onlyDeploy) {
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
@@ -295,8 +295,8 @@ def call(params) {
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
           /*
-         * These instructions have to be kept in order
-         */
+        * These instructions have to be kept in order
+        */
           pcr.callAround('pact-consumer-tests') {
             builder.runConsumerTests(env.PACT_BROKER_URL, version)
           }
@@ -306,3 +306,4 @@ def call(params) {
   }
   return deploymentEnabled
 }
+

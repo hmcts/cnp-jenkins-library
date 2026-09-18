@@ -15,6 +15,7 @@ import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.DeploymentControls
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 
 def call(type, String product, String component, String environment, String subscription, Closure body) {
   call(type, product,component,environment,subscription,'',body)
@@ -60,6 +61,7 @@ def call(type, String product, String component, String environment, String subs
 
   def deploymentTargetList = deploymentTargets.split(',') as List
   boolean deploymentEnabled = false
+  boolean libraryBranchAllowed = false
   AKSSubscriptions aksSubscriptions = new AKSSubscriptions(this)
 
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
@@ -67,10 +69,15 @@ def call(type, String product, String component, String environment, String subs
   String primaryEnvironment = autoDeployTarget?.environmentName ?: environment
   String agentType = AgentSelector.labelForEnvironmentWithoutProductFallback(primaryEnvironment, env) ?: env.BUILD_AGENT_TYPE
   String nodeSelector = agentType ? "${agentType} && !nightly" : '!nightly'
+  libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
   node(nodeSelector) {
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
+      if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+      }
       echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
       env.BUILD_AGENT_TYPE = agentType
       env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
