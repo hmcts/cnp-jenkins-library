@@ -11,6 +11,8 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.contino.Environment
 
@@ -64,10 +66,17 @@ def call(type, product, component, timeout = 300, Closure body) {
     nodeSelector = agentType + ' && nightly'
   }
 
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
+        if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+        }
+
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
         withEnv(['IS_NIGHTLY_PIPELINE=true']) {
@@ -82,6 +91,9 @@ def call(type, product, component, timeout = 300, Closure body) {
           }
         }
         assert  pipelineType!= null
+      } catch (FlowInterruptedException err) {
+        currentBuild.result = err.result.toString()
+        throw err
       } catch (err) {
         currentBuild.result = "FAILURE"
         notifyBuildFailure channel: slackChannel
@@ -91,6 +103,10 @@ def call(type, product, component, timeout = 300, Closure body) {
         throw err
       } finally {
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
+        if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+          archiveBuildOutputs()
+          queueBuildArchive(product: product, component: component)
+        }
         deleteDir()
       }
 

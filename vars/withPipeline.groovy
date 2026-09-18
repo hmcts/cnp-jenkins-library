@@ -18,6 +18,8 @@ import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 def call(type, String product, String component, Closure body) {
 
@@ -72,97 +74,119 @@ def call(type, String product, String component, Closure body) {
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
   String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector = agentType ? "${agentType} && !nightly" : '!nightly'
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
+  def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
 
-  retry(conditions: [agent()], count: 2) {
-    node(nodeSelector) {
-      timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
-        def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
-        try {
-          echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
-          // These values also drive withEnvironmentAgent's no-op path and Az.az()'s env MI config-dir selection.
-          env.BUILD_AGENT_TYPE = agentType
-          env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
-          dockerAgentSetup()
-          env.PATH = "$env.PATH:/usr/local/bin"
+  try {
+    retry(conditions: [agent()], count: 2) {
+      node(nodeSelector) {
+        timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
+          def attemptFailed = false
+          if (!libraryBranchAllowed) {
+            currentBuild.result = "FAILURE"
+            return
+          }
+          try {
+            echo "Using ${agentType} as primary pipeline agent for ${primaryEnvironment}"
+            // These values also drive withEnvironmentAgent's no-op path and Az.az()'s env MI config-dir selection.
+            env.BUILD_AGENT_TYPE = agentType
+            env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
+            dockerAgentSetup()
+            env.PATH = "$env.PATH:/usr/local/bin"
 
-          def deploymentEnabled = sectionBuildAndTest(
-            appPipelineConfig: pipelineConfig,
-            pipelineCallbacksRunner: callbacksRunner,
-            builder: pipelineType.builder,
-            subscription: branch.isPR() ? subscription.previewName : (autoDeployTarget?.subscriptionName ?: subscription.nonProdName),
-            environment: primaryEnvironment,
-            product: product,
-            component: component
-          )
-          if (deploymentEnabled) {
-            if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-              stageWithEnvironmentAgent('Publish Helm chart', product, environment.previewName) {
-                helmPublish(
+            def deploymentEnabled = sectionBuildAndTest(
+              appPipelineConfig: pipelineConfig,
+              pipelineCallbacksRunner: callbacksRunner,
+              builder: pipelineType.builder,
+              subscription: branch.isPR() ? subscription.previewName : (autoDeployTarget?.subscriptionName ?: subscription.nonProdName),
+              environment: primaryEnvironment,
+              product: product,
+              component: component
+            )
+
+            if (deploymentEnabled) {
+              if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+                stageWithEnvironmentAgent('Publish Helm chart', product, environment.previewName) {
+                  helmPublish(
+                    appPipelineConfig: pipelineConfig,
+                    subscription: subscription.previewName,
+                    environment: environment.previewName,
+                    product: product,
+                    component: component
+                  )
+                }
+
+                sectionPromoteBuildToStage(
                   appPipelineConfig: pipelineConfig,
+                  pipelineCallbacksRunner: callbacksRunner,
+                  pipelineType: pipelineType,
                   subscription: subscription.previewName,
-                  environment: environment.previewName,
                   product: product,
-                  component: component
+                  component: component,
+                  stage: DockerImage.DeploymentStage.PREVIEW,
+                  environment: environment.previewName
                 )
               }
 
-              sectionPromoteBuildToStage(
-                appPipelineConfig: pipelineConfig,
-                pipelineCallbacksRunner: callbacksRunner,
-                pipelineType: pipelineType,
-                subscription: subscription.previewName,
-                product: product,
-                component: component,
-                stage: DockerImage.DeploymentStage.PREVIEW,
-                environment: environment.previewName
-              )
-            }
+              handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
+              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
+              onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
+                handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
+              }
 
-            handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
-            handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
-            onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
-              handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
+              onPreview {
+                sectionDeployToEnvironment(
+                  appPipelineConfig: pipelineConfig,
+                  pipelineCallbacksRunner: callbacksRunner,
+                  pipelineType: pipelineType,
+                  subscription: subscription.previewName,
+                  environment: environment.previewName,
+                  product: deploymentProduct,
+                  component: component,
+                  aksSubscription: aksSubscriptions.preview,
+                  tfPlanOnly: false
+                )
+              }
+            } // end approvedDeploymentRepository
+          } catch (FlowInterruptedException err) {
+            throw err
+          } catch (err) {
+            if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
+              currentBuild.result = 'ABORTED'
+              metricsPublisher.publish(err.message)
+              return
             }
+            attemptFailed = true
+            throw err
+          } finally {
+            notifyPipelineDeprecations(slackChannel, metricsPublisher)
+            if (attemptFailed || (currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+              archiveBuildOutputs()
+            }
+            if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
+              deleteDir()
+            }
+          }
+          notifyBuildFixed channel: slackChannel
 
-            onPreview {
-              sectionDeployToEnvironment(
-                appPipelineConfig: pipelineConfig,
-                pipelineCallbacksRunner: callbacksRunner,
-                pipelineType: pipelineType,
-                subscription: subscription.previewName,
-                environment: environment.previewName,
-                product: deploymentProduct,
-                component: component,
-                aksSubscription: aksSubscriptions.preview,
-                tfPlanOnly: false
-              )
-            }
-          } // end approvedDeploymentRepository
-        } catch (err) {
-          if (err.message != null && err.message.startsWith('AUTO_ABORT')) {
-            currentBuild.result = 'ABORTED'
-            metricsPublisher.publish(err.message)
-            return
-          } else {
-            currentBuild.result = "FAILURE"
-            notifyBuildFailure channel: slackChannel
-            metricsPublisher.publish('Pipeline Failed')
-          }
-          callbacksRunner.call('onFailure')
-          throw err
-        } finally {
-          notifyPipelineDeprecations(slackChannel, metricsPublisher)
-          if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
-            deleteDir()
-          }
+          callbacksRunner.call('onSuccess')
+          metricsPublisher.publish('Pipeline Succeeded')
         }
-
-        notifyBuildFixed channel: slackChannel
-
-        callbacksRunner.call('onSuccess')
-        metricsPublisher.publish('Pipeline Succeeded')
       }
     }
+  } catch (FlowInterruptedException err) {
+    currentBuild.result = err.result.toString()
+    throw err
+  } catch (err) {
+    currentBuild.result = "FAILURE"
+    notifyBuildFailure channel: slackChannel
+    metricsPublisher.publish('Pipeline Failed')
+    callbacksRunner.call('onFailure')
+    throw err
+  } finally {
+      if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+        queueBuildArchive(product: product, component: component)
+      }
   }
 }
 
