@@ -3,7 +3,7 @@
 ## Table of Contents
 
 - [How is this used?](#how-is-this-used)
-- [Library versioning and 2.x](#library-versioning-and-2x)
+- [Library versioning](#library-versioning)
   - [Environment specific agents](#environment-specific-agents)
   - [Versioning](#versioning)
   - [Automated updates](#automated-updates)
@@ -36,11 +36,11 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
   @Library('Infrastructure')
 ```
 
-## Library versioning and 2.x
+## Library versioning
 
-2.x is the default version of this library. `@Library('Infrastructure')` with no version pin resolves to whatever branch your Jenkins instance is configured to track — normally `master` — which is now 2.x, so most pipelines pick it up without any change to their Jenkinsfile.
+Always pin this library to a released version in your Jenkinsfile. `@Library('Infrastructure')` with no version resolves to the `master` branch, which moves as new features land — an unpinned pipeline can break without any change on your side. See [Versioning](#versioning) for how to pin.
 
-The headline change in 2.x is **environment-specific agents and managed identities**. This replaces the previous model, where a single shared identity was implicitly available to any pipeline stage on any agent, regardless of which environment it was targeting or what kind of work it was doing.
+The most significant recent change is **environment-specific agents and managed identities**. This replaces the previous model, where a single shared identity was implicitly available to any pipeline stage on any agent, regardless of which environment it was targeting or what kind of work it was doing.
 
 ### Environment specific agents
 
@@ -48,7 +48,7 @@ Azure work is now routed to agents scoped to the relevant environment, which aut
 
 In practice:
 
-- The opinionated pipelines place their own stages on the correct agent automatically. `withPipeline` and `withInfraPipeline` start on the agent for the branch's primary target environment (`preview` for a PR build, `aat` for `master`, or the branch's own environment for `demo`/`perftest`/`ithc`), and deployment/infrastructure stages hop onto the agent for whichever environment they're deploying to. `withNightlyPipeline` runs entirely on the AAT agent, since that's the only environment it targets.
+- The opinionated pipelines (`withPipeline`, `withInfraPipeline`, `withNightlyPipeline`) place their own stages on the correct agent automatically, starting on the agent for the branch's target environment (`preview` for a PR build, `aat` for `master`, or the branch's own environment for `demo`/`perftest`/`ithc`). Deployment/infrastructure stages hop onto the agent for whichever environment they're deploying to.
 - A stage scheduled onto one environment's agent authenticates as that environment's identity. A stage deploying to AAT runs on, and authenticates as, the AAT identity — not a broad identity that can also reach production.
 - Agent labels default to `ubuntu-<environment>`. This can be overridden per environment, or per product for the app pipeline (`withInfraPipeline` honours environment-level overrides only), if your team needs a different agent pool — check with plat ops before doing this.
 
@@ -65,7 +65,7 @@ withSubscription(subscription, product, params.ENVIRONMENT) {
 }
 ```
 
-If the environment (or product) can't be resolved, `withSubscription` falls back to the shared Jenkins identity rather than the target environment's — typically on an `ubuntu-ptl` agent, which is what you'll see in the build log. That's the legacy path — pass both explicitly so your pipeline gets environment-scoped scheduling and identity.
+If the environment (or product) can't be resolved, `withSubscription` currently falls back to the shared Jenkins identity rather than the target environment's — typically on an `ubuntu-ptl` agent, which is what you'll see in the build log. **This fallback will be removed**, and pipelines still relying on it will start failing. Pass both explicitly now.
 
 ### Versioning
 
@@ -75,9 +75,9 @@ The library is consumed via the standard Jenkins Shared Library mechanism:
 @Library('Infrastructure') _
 ```
 
-With no version pin, this resolves to your Jenkins instance's configured default branch — normally `master`, which is now 2.x.
+With no version pin, this resolves to the `master` branch. Don't rely on that — `master` moves as features land, and your pipeline can break without any change on your side.
 
-Teams are encouraged to pin an explicit release tag instead. Pinning means a change to the library cannot alter your pipeline until you merge a version bump:
+Pin an explicit release tag instead. Pinning means a change to the library cannot alter your pipeline until you merge a version bump:
 
 ```groovy
 @Library('Infrastructure@2.8.0') _
