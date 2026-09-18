@@ -16,7 +16,8 @@ class EnvironmentDnsConfigTest extends Specification {
           "ttl"          : 300, "active": true, "consulActive": true,
           "environments" : [
             ["name": "sandbox", "ttl": 3600],
-            ["name": "idam-sandbox", "consulActive": false]
+            ["name": "idam-sandbox", "consulActive": false],
+            ["name": "crime-idam-sandbox", "consulActive": false]
           ],
           "resourceGroup": "core-infra-intsvc-rg"],
         [
@@ -67,4 +68,27 @@ class EnvironmentDnsConfigTest extends Specification {
     assertThat(idamSbox).isNull()
   }
 
+  def "getEntry() should return a correctly configured entry for a known environment"() {
+    def environment = 'crime-idam-sandbox'
+
+    when:
+    def idamSandbox = environmentDnsConfig.getEntry(environment, 'crime-idam', 'api')
+
+    then:
+    assertThat(idamSandbox.environment).isEqualTo(environment)
+    assertThat(idamSandbox.subscription).isEqualTo("DTS-CFTSBOX-INTSVC")
+    assertThat(idamSandbox.resourceGroup).isEqualTo("core-infra-intsvc-rg")
+    assertThat(idamSandbox.ttl).isEqualTo(300)
+    assertThat(idamSandbox.zone).isEqualTo("crime-idam-sandbox.platform.hmcts.net")
+  }
+
+  def "getEntry() should return null for an unknown environment"() {
+    def environment = 'crime-idam-sbox'
+
+    when:
+    def idamSbox = environmentDnsConfig.getEntry(environment, 'crime-idam', 'api')
+
+    then:
+    assertThat(idamSbox).isNull()
+  }
 }
