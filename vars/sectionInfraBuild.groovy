@@ -13,25 +13,25 @@ def call(params) {
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
-    withSubscription(subscription) {
+    withSubscription(subscription, product, environment) {
       pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
-          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox 
-           if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
+          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox
+          if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
             withAksClient(subscription, environment, product) {
               startEnvironmentIfRequired params
             }
-           }
+          }
 
           // build environment infrastructure once
-           return spinInfra(
-              product: product,
-              component: component,
-              expires: expires,
-              environment: environment,
-              tfPlanOnly: planOnly,
-              subscription: subscription
-             )
+          return spinInfra(
+            product: product,
+            component: component,
+            expires: expires,
+            environment: environment,
+            tfPlanOnly: planOnly,
+            subscription: subscription
+          )
         }
       }
     }
