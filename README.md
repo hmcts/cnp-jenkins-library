@@ -78,11 +78,12 @@ withPipeline(type, product, component) {
 
 #### Build dependency caching
 
-Use a tagged version of the Infrastructure library (`2.7.0` or later), then opt in to caching Gradle and Yarn dependencies during the Build stage:
+Dependency caching is enabled by default for Gradle and Yarn during the Build stage in the library version `2.9.0` or later.
 
+It can be disabled with:
 ```groovy
 withPipeline(type, product, component) {
-  enableBuildCache()
+  disableBuildCache()
 }
 ```
 

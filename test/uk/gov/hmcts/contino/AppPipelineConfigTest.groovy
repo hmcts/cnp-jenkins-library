@@ -41,7 +41,7 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
-      assertThat(pipelineConfig.buildCache).isFalse()
+      assertThat(pipelineConfig.buildCache).isTrue()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -243,12 +243,12 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.slackChannel).isEqualTo(slackChannel)
     assertThat(steps.env.BUILD_NOTICE_SLACK_CHANNEL).isEqualTo(slackChannel)
   }
-
-  def "ensure enable build cache"() {
+  
+  def "ensure disable build cache"() {
     when:
-      dsl.enableBuildCache()
+      dsl.disableBuildCache()
     then:
-      assertThat(pipelineConfig.buildCache).isTrue()
+      assertThat(pipelineConfig.buildCache).isFalse()
   }
 
   def "ensure enable pact broker deployment check"() {
