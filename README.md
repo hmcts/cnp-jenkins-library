@@ -65,8 +65,6 @@ withSubscription(subscription, product, params.ENVIRONMENT) {
 }
 ```
 
-If the environment (or product) can't be resolved, `withSubscription` currently falls back to the shared Jenkins identity rather than the target environment's — typically on an `ubuntu-ptl` agent, which is what you'll see in the build log. **This fallback will be removed**, and pipelines still relying on it will start failing. Pass both explicitly now.
-
 ### Versioning
 
 The library is consumed via the standard Jenkins Shared Library mechanism:
