@@ -81,7 +81,7 @@ Pin an explicit release tag instead. Pinning means a change to the library canno
 @Library('Infrastructure@2.8.0') _
 ```
 
-Released versions are tagged on this repository — see the [tags list](https://github.com/hmcts/cnp-jenkins-library/tags). Existing tags up to `2.8.0` have no prefix; new releases from the automated release process (see [Changelogs](#changelogs)) are tagged `vX.Y.Z`, e.g. `@Library('Infrastructure@v2.9.0')`. You do not need to raise the bumps yourself — see [Automated updates](#automated-updates).
+Released versions are tagged on this repository — see the [tags list](https://github.com/hmcts/cnp-jenkins-library/tags). Existing tags up to `2.8.0` have no prefix; new releases from the automated release process (see [Changelogs](#changelogs)) are tagged `X.Y.Z`, e.g. `@Library('Infrastructure@2.9.0')`. You do not need to raise the bumps yourself — see [Automated updates](#automated-updates).
 
 You can also point at a branch while testing a change to the library itself:
 
@@ -109,7 +109,7 @@ If your repository is configured for Renovate to manage Jenkins Shared Library v
 
 Every push to `master` drafts (or updates) a GitHub Release using [Release Drafter](https://github.com/release-drafter/release-drafter). Release notes are compiled automatically from the titles and labels of the pull requests merged since the last release, grouped into categories (breaking changes, features, fixes, dependency updates, documentation, maintenance).
 
-Nothing is tagged on push. `CHANGELOG.md` is updated from the draft's notes on each push to `master` that resolves a new version, ahead of any tag being cut. A maintainer publishes the draft release separately, when a version is ready to cut — publishing is what creates the `vX.Y.Z` tag that pipelines can pin to.
+Nothing is tagged on push. `CHANGELOG.md` is updated from the draft's notes on each push to `master` that resolves a new version, ahead of any tag being cut. A maintainer publishes the draft release separately, when a version is ready to cut — publishing is what creates the `X.Y.Z` tag that pipelines can pin to.
 
 **If you consume the library:** check the [releases page](https://github.com/hmcts/cnp-jenkins-library/releases) before taking a version bump. Breaking changes are called out in their own section of the notes.
 
