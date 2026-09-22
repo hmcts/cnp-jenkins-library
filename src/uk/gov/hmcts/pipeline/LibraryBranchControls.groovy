@@ -1,4 +1,5 @@
 package uk.gov.hmcts.pipeline
+import groovy.json.JsonSlurperClassic
 
 class LibraryBranchControls {
   def steps
@@ -22,6 +23,37 @@ class LibraryBranchControls {
     )
     libraryBranchControls = steps.readYaml(text: response.content)
     return libraryBranchControls
+  }
+
+  def getLibraryTags() {
+    def response = steps.httpRequest(
+      consoleLogResponseBody: true,
+      authentication: steps.env.GIT_CREDENTIALS_ID,
+      timeout: 10,
+      url: "https://api.github.com/repos/hmcts/cnp-jenkins-library/tags",
+      validResponseCodes: '200'
+    )
+
+    def responseContent = response?.content
+    if (!responseContent) {
+      steps.echo 'No library tags found in the response from GitHub.'
+      return []
+    }
+    try {
+      def tagsJson = new JsonSlurperClassic().parseText(responseContent)
+      if (!(tagsJson instanceof List)) {
+        steps.echo 'Library tags JSON from GitHub is not a list.'
+        return []
+      }
+      return tagsJson
+        .findAll { tagEntry -> tagEntry instanceof Map }
+        .collect { tagEntry -> tagEntry.name }
+        .findAll { it ==~ /\d+\.\d+\.\d+/ }
+
+    } catch (ignored) {
+      steps.echo 'Failed to parse library tags JSON from GitHub.'
+      return []
+    }
   }
 
   private String extractLibraryBranch(String libraryReference) {
@@ -106,12 +138,16 @@ class LibraryBranchControls {
     }
 
     def configuredBranches = libraryBranchControls.get('branches')
+    def libraryTags = getLibraryTags()
     def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
 
-    def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
-    def branchAllowed = branchEntry && branchEntry['allowed'] == true
 
-    if (!branchAllowed) {
+    def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
+    def tagEntry = libraryTags.find { it.equalsIgnoreCase(branchToCheck) }
+    def branchAllowed = branchEntry && branchEntry['allowed'] == true
+    def branchOrTagAllowed = branchAllowed || tagEntry != null
+
+    if (!branchOrTagAllowed) {
       steps.echo '''
        ================================================================================
        ____      ____  _       _______     ____  _____  _____  ____  _____   ______
@@ -121,16 +157,16 @@ class LibraryBranchControls {
            \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
            \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
       '''
-
       steps.echo """
-        Library branch `${branchToCheck}` is not approved for use.
-        Make sure to add your branch to:
+        Library branch/tag: `${branchToCheck}` is not approved for use.
+        If you are using a branch, make sure to add it to:
         - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
+        If a version tag is being used, ensure it exists in the repository and follows semantic versioning (e.g. 1.2.3).
         ================================================================================
       """
     }
 
-    return branchEntry && branchEntry['allowed'] == true
+    return branchOrTagAllowed
   }
 }

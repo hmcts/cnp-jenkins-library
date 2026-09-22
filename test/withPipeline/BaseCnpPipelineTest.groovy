@@ -116,13 +116,11 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml') {
         return DeprecationConfigTest.response
       } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml') {
-        return ['content': '''branches:
-  - name: master
-    allowed: true
-''']
+        return LibraryBranchAllowlistTest.response
+      } else if (m.get('url') == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags') {
+        return LibraryTagsTest.response
       } else {
-        return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
-          '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
+        return DefaultHttpResponseTest.response
       }
     })
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
