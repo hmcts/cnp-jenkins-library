@@ -41,10 +41,11 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
     def smokeIndex = stageIndex('Smoke Test - AKS preview')
     def functionalIndex = stageIndex('Functional Test - preview')
 
-    assertThat(secretIndexes).hasSize(2)
+    assertThat(secretIndexes).hasSize(4)
     assertThat(smokeIndex).isNotNegative()
     assertThat(functionalIndex).isNotNegative()
-    assertThat(secretIndexes.last()).isLessThan(smokeIndex)
+    assertThat(secretIndexes[1]).isLessThan(smokeIndex)
+    assertThat(secretIndexes).anyMatch { it > smokeIndex && it < functionalIndex }
     assertThat(smokeIndex).isLessThan(functionalIndex)
   }
 
@@ -59,11 +60,12 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
     def smokeIndex = stageIndex('Smoke Test - AKS preview')
     def functionalIndex = stageIndex('Functional Test - preview')
 
-    assertThat(secretIndexes).hasSize(2)
+    assertThat(secretIndexes).hasSize(3)
     assertThat(smokeIndex).isNotNegative()
     assertThat(functionalIndex).isNotNegative()
-    assertThat(smokeIndex).isLessThan(secretIndexes.last())
-    assertThat(secretIndexes.last()).isLessThan(functionalIndex)
+    assertThat(smokeIndex).isLessThan(secretIndexes[1])
+    assertThat(secretIndexes[1]).isLessThan(functionalIndex)
+    assertThat(smokeIndex).isLessThan(functionalIndex)
   }
 
   private StubFor javaBuilderStub() {
@@ -91,7 +93,7 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   private List<Integer> teamSecretIndexes() {
     (0..<helper.callStack.size()).findAll { index ->
       def call = helper.callStack[index]
-      call.methodName == 'withAzureKeyvault' && callArgsToString(call).contains('example-secret')
+      call.methodName == 'withTeamSecrets'
     }
   }
 
