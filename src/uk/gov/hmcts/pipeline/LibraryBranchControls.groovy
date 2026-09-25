@@ -1,5 +1,6 @@
 package uk.gov.hmcts.pipeline
 import groovy.json.JsonSlurperClassic
+import groovy.json.JsonException
 
 class LibraryBranchControls {
   def steps
@@ -50,7 +51,7 @@ class LibraryBranchControls {
         .collect { tagEntry -> tagEntry.name }
         .findAll { it ==~ /\d+\.\d+\.\d+/ }
 
-    } catch (ignored) {
+    } catch (JsonException ignored) {
       steps.echo 'Failed to parse library tags JSON from GitHub.'
       return []
     }
@@ -145,7 +146,15 @@ class LibraryBranchControls {
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
     def tagEntry = libraryTags.find { it.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
-    def branchOrTagAllowed = branchAllowed || tagEntry != null
+    def tagAllowed = tagEntry != null
+
+    if (branchAllowed) {
+      steps.echo "Library branch `${branchToCheck}` is allowed."
+    } else if (tagAllowed) {
+      steps.echo "Library tag `${branchToCheck}` is allowed."
+    }
+
+    def branchOrTagAllowed = branchAllowed || tagAllowed
 
     if (!branchOrTagAllowed) {
       steps.echo '''
@@ -162,7 +171,9 @@ class LibraryBranchControls {
         If you are using a branch, make sure to add it to:
         - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
-        If a version tag is being used, ensure it exists in the repository and follows semantic versioning (e.g. 1.2.3).
+        ----
+        If a release version tag is being used, this could indicate an issue with the library code or that the tag does not exist or cannot be retrieved from the repository or does not conform to semantic versioning (e.g. 1.2.3).
+        Please check with the Platform Operations team for guidance.
         ================================================================================
       """
     }
