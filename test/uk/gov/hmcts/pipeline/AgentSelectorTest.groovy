@@ -27,11 +27,14 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.labelForEnvironment(environment)).isEqualTo(label)
 
     where:
-    environment    | label
-    'idam-aat'     | 'ubuntu-aat'
-    'idam-preview' | 'ubuntu-preview'
-    'packer-prod'  | 'ubuntu-prod'
-    'vault-demo'   | 'ubuntu-demo'
+    environment          | label
+    'idam-aat'           | 'ubuntu-aat'
+    'idam-preview'       | 'ubuntu-preview'
+    'packer-prod'        | 'ubuntu-prod'
+    'vault-demo'         | 'ubuntu-demo'
+    'crime-idam-aat'     | 'ubuntu-aat'
+    'crime-idam-preview' | 'ubuntu-preview'
+    'crime-idam-sandbox' | 'ubuntu-sbox'
   }
 
   def "managedIdentityResourceGroupEnvironment should use sandbox resource group while stripping prefixes"() {
@@ -39,14 +42,16 @@ class AgentSelectorTest extends Specification {
     assertThat(AgentSelector.managedIdentityResourceGroupEnvironment(environment)).isEqualTo(resourceGroupEnvironment)
 
     where:
-    environment      | resourceGroupEnvironment
-    'sbox'           | 'sandbox'
-    'sandbox'        | 'sandbox'
-    'idam-sandbox'   | 'sandbox'
-    'vault-sbox'     | 'sandbox'
-    'packer-prod'    | 'prod'
-    null             | null
-    ''               | ''
+    environment          | resourceGroupEnvironment
+    'sbox'               | 'sandbox'
+    'sandbox'            | 'sandbox'
+    'idam-sandbox'       | 'sandbox'
+    'crime-idam-sandbox' | 'sandbox'
+    'crime-idam-prod'    | 'prod'
+    'vault-sbox'         | 'sandbox'
+    'packer-prod'        | 'prod'
+    null                 | null
+    ''                   | ''
   }
 
   def "labelForEnvironment should use environment-specific override first"() {
