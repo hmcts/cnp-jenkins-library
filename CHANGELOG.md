@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.10.1] - 2026-09-25
+
+
+
+## [2.10.0] - 2026-09-24
+
+## :rocket: Features
+
+- feat: DTSPO-35143 add nagger for deprecated terraform module branches @manohar-hmcts (#1550)
+
+## [2.9.2] - 2026-09-24
+
+
+
+## [2.9.1] - 2026-09-22
+
+
+
 ## [2.9.0] - 2026-09-21
 
 - Feature/release drafter changelog from agents @gunnertwin (#1549)
