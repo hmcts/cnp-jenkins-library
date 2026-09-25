@@ -469,6 +469,29 @@ The tests run after deployment to each environment (AAT and Production) on the m
 
 Please note that Pod logs are saved as artefacts in Jenkins before the Helm release is cleared.
 
+#### Preview-only chart dependencies
+
+Helm bundles every dependency into the published chart, including ones that are disabled by default. If your chart depends on other charts only so that a preview can deploy them alongside it, list them in the `hmcts.github.io/skip-publish` annotation and they are left out of the chart published to ACR and `hmcts-charts`:
+
+```yaml
+annotations:
+  hmcts.github.io/skip-publish: ccd-core, ccd-definition-store-api
+dependencies:
+  - name: java
+    version: 5.3.0
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+  - name: ccd-core
+    version: 9.3.0
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+    condition: ccd-core.enabled
+  - name: ccd-definition-store-api
+    version: 1.6.31
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+    condition: ccd-core.enabled
+```
+
+Use a dependency's alias if it has one, otherwise its name. Preview deploys are unaffected. The publish fails if an entry matches no dependency.
+
 ### Opinionated infrastructure pipeline
 
 For infrastructure-only repositories e.g. "shared infrastructure" the library provides an opinionated infrastructure pipeline which will build Terraform files in the root of the repository.
