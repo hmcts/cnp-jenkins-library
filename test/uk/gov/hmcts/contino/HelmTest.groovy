@@ -427,6 +427,157 @@ class HelmTest extends Specification {
     sandboxHelm.rewriteGeneratedFiles.isEmpty()
   }
 
+  // ==================== preview dependency removal Tests ====================
+
+  static Map chartWithPreviewDependencies(String annotation) {
+    [
+      apiVersion : 'v2',
+      name       : CHART,
+      version    : '1.0.0',
+      annotations: annotation == null ? [:] : [(Helm.PREVIEW_DEPENDENCIES_ANNOTATION): annotation],
+      dependencies: [
+        [name: 'java', version: '5.3.0', repository: 'oci://hmctsprod.azurecr.io/helm'],
+        [name: 'ccd-core', version: '9.3.0', repository: 'oci://hmctsprod.azurecr.io/helm', condition: 'ccd-core.enabled'],
+        [name: 'servicebus', version: '1.2.2', repository: 'oci://hmctsprod.azurecr.io/helm'],
+        [name: 'servicebus', alias: 'hmcsb', version: '1.2.2', repository: 'oci://hmctsprod.azurecr.io/helm'],
+      ]
+    ]
+  }
+
+  def previewSteps(Map chart) {
+    def publishSteps = Mock(JenkinsStepMock.class)
+    publishSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "nonprod",
+                         REGISTRY_NAME: "hmctsprod",
+                         BRANCH_NAME: "master"]
+    publishSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    publishSteps.fileExists("${CHART_PATH}/Chart.lock") >> true
+    publishSteps.readFile("${CHART_PATH}/Chart.yaml") >> "original chart yaml"
+    publishSteps.readFile("${CHART_PATH}/Chart.lock") >> "original chart lock"
+    publishSteps.readYaml([file: "${CHART_PATH}/Chart.yaml".toString()]) >> chart
+    publishSteps
+  }
+
+  def "removePreviewDependencies() removes the annotated dependencies from Chart.yaml"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core'))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    def removed = publishHelm.removePreviewDependencies()
+
+    then:
+    removed
+    1 * publishSteps.writeYaml({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.overwrite == true &&
+        args.data.dependencies*.name == ['java', 'servicebus', 'servicebus']
+    })
+  }
+
+  def "removePreviewDependencies() matches an aliased dependency by its alias"() {
+    given:
+    def chart = chartWithPreviewDependencies('hmcsb')
+    def expected = chart.dependencies.take(3)
+    def publishSteps = previewSteps(chart)
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+
+    then:
+    1 * publishSteps.writeYaml({ Map args -> args.data.dependencies == expected })
+  }
+
+  def "removePreviewDependencies() accepts a comma separated list with whitespace"() {
+    given:
+    def chart = chartWithPreviewDependencies(' ccd-core , hmcsb, ')
+    def expected = [chart.dependencies[0], chart.dependencies[2]]
+    def publishSteps = previewSteps(chart)
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+
+    then:
+    1 * publishSteps.writeYaml({ Map args -> args.data.dependencies == expected })
+  }
+
+  def "removePreviewDependencies() leaves a chart without the annotation untouched"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies(null))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    def removed = publishHelm.removePreviewDependencies()
+
+    then:
+    !removed
+    0 * publishSteps.writeYaml(_)
+    publishHelm.rewrittenChartFileBackups.isEmpty()
+    publishHelm.rewriteGeneratedFiles.isEmpty()
+  }
+
+  def "removePreviewDependencies() fails when an annotated dependency does not exist"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core, ccd'))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.message.contains('lists ccd,')
+    0 * publishSteps.writeYaml(_)
+  }
+
+  def "restoreChartDependencyFiles() puts back Chart.yaml and Chart.lock after removing preview dependencies"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core'))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+    publishHelm.restoreChartDependencyFiles()
+
+    then:
+    1 * publishSteps.writeFile([file: "${CHART_PATH}/Chart.yaml".toString(), text: "original chart yaml"])
+    1 * publishSteps.writeFile([file: "${CHART_PATH}/Chart.lock".toString(), text: "original chart lock"])
+    publishHelm.rewrittenChartFileBackups.isEmpty()
+  }
+
+  def "publishIfNotExists() removes preview dependencies before resolving and packaging the chart"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core'))
+    publishSteps.sh(_) >> { args ->
+      def script = args[0] instanceof Map ? args[0].script : args[0]
+      if (script.toString().contains('helm pull')) {
+        throw new RuntimeException('not found')
+      }
+      script.toString().contains('helm inspect chart') ? '1.0.0' : ''
+    }
+    publishSteps.findFiles(_) >> []
+    def publishHelm = new Helm(publishSteps, CHART)
+    publishHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    publishHelm.publishIfNotExists(["values.yaml"])
+
+    then:
+    1 * publishSteps.writeYaml({ Map args -> !args.data.dependencies*.name.contains('ccd-core') })
+
+    then:
+    1 * publishSteps.sh({ it instanceof Map && it.script.contains("helm dependency update ${CHART_PATH}") })
+
+    then:
+    1 * publishSteps.sh({ it.toString().contains("helm package ${CHART_PATH}") })
+
+    then:
+    1 * publishSteps.writeFile([file: "${CHART_PATH}/Chart.yaml".toString(), text: "original chart yaml"])
+  }
+
   def "dependencyUpdate() should explain sandbox rewrites when the update fails"() {
     given:
     def failingSteps = Mock(JenkinsStepMock.class)
