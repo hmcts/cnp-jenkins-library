@@ -434,7 +434,7 @@ class HelmTest extends Specification {
       apiVersion : 'v2',
       name       : CHART,
       version    : '1.0.0',
-      annotations: annotation == null ? [:] : [(Helm.PREVIEW_DEPENDENCIES_ANNOTATION): annotation],
+      annotations: annotation == null ? [:] : [(Helm.SKIP_PUBLISH_ANNOTATION): annotation],
       dependencies: [
         [name: 'java', version: '5.3.0', repository: 'oci://hmctsprod.azurecr.io/helm'],
         [name: 'ccd-core', version: '9.3.0', repository: 'oci://hmctsprod.azurecr.io/helm', condition: 'ccd-core.enabled'],

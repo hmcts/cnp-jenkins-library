@@ -471,11 +471,11 @@ Please note that Pod logs are saved as artefacts in Jenkins before the Helm rele
 
 #### Preview-only chart dependencies
 
-Helm bundles every dependency into the published chart, including ones that are disabled by default. If your chart depends on other charts only so that a preview can deploy them alongside it, list them in the `hmcts.github.io/preview-dependencies` annotation and they are left out of the chart published to ACR and `hmcts-charts`:
+Helm bundles every dependency into the published chart, including ones that are disabled by default. If your chart depends on other charts only so that a preview can deploy them alongside it, list them in the `hmcts.github.io/skip-publish` annotation and they are left out of the chart published to ACR and `hmcts-charts`:
 
 ```yaml
 annotations:
-  hmcts.github.io/preview-dependencies: ccd-core, ccd-definition-store-api
+  hmcts.github.io/skip-publish: ccd-core, ccd-definition-store-api
 dependencies:
   - name: java
     version: 5.3.0

@@ -16,7 +16,7 @@ import groovy.json.JsonSlurperClassic
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = 'charts'
-  public static final String PREVIEW_DEPENDENCIES_ANNOTATION = 'hmcts.github.io/preview-dependencies'
+  public static final String SKIP_PUBLISH_ANNOTATION = 'hmcts.github.io/skip-publish'
   def steps
   def acr
   def docker
@@ -248,7 +248,7 @@ class Helm {
   }
 
   /**
-   * Remove the dependencies a chart lists in its preview dependencies annotation, so the published
+   * Remove the dependencies a chart lists in its skip-publish annotation, so the published
    * chart does not bundle the stack a preview deploys around it. Entries are matched against a
    * dependency's alias if it has one, otherwise its name, and an entry that matches nothing fails
    * the publish rather than silently publishing the full stack.
@@ -271,7 +271,7 @@ class Helm {
 
     List<String> unmatched = unmatchedDependencyNames(chart, previewDependencies)
     if (unmatched) {
-      throw new RuntimeException("${PREVIEW_DEPENDENCIES_ANNOTATION} in ${chartYamlPath} lists ${unmatched.join(', ')}, " +
+      throw new RuntimeException("${SKIP_PUBLISH_ANNOTATION} in ${chartYamlPath} lists ${unmatched.join(', ')}, " +
         "which does not match the alias or name of any dependency")
     }
 
@@ -279,13 +279,13 @@ class Helm {
     chart.dependencies = withoutDependencies(chart, previewDependencies)
     steps.writeYaml(file: chartYamlPath, data: chart, overwrite: true)
 
-    steps.echo "Removed preview dependencies ${previewDependencies.join(', ')} from ${this.chartName} before publishing"
+    steps.echo "Removed ${SKIP_PUBLISH_ANNOTATION} dependencies ${previewDependencies.join(', ')} from ${this.chartName} before publishing"
     return true
   }
 
   @NonCPS
   private static List<String> previewDependencyNames(Map chart) {
-    String listed = chart?.annotations?.get(PREVIEW_DEPENDENCIES_ANNOTATION)
+    String listed = chart?.annotations?.get(SKIP_PUBLISH_ANNOTATION)
     if (!listed) {
       return []
     }
