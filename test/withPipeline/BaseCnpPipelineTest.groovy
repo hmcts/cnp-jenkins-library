@@ -105,25 +105,20 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
 
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
-      if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
-        return TeamConfigTest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml') {
-        return EnvironmentApprovalsTest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml') {
-        return EnvironmentDnsConfigTest.response
-      } else if (m.get('url').startsWith("https://api.github.com/repos") && m.get('url').endsWith("/labels")) {
+      def url = m.get('url')
+      if (url?.toString()?.startsWith("https://api.github.com/repos") && url?.toString()?.endsWith("/labels")) {
         return GithubAPITest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml') {
-        return DeprecationConfigTest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml') {
-        return ['content': '''branches:
-  - name: master
-    allowed: true
-''']
-      } else {
-        return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
-          '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }
+
+      def responsesByUrl = [
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml': TeamConfigTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml': EnvironmentApprovalsTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml': EnvironmentDnsConfigTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml': DeprecationConfigTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml': LibraryBranchAllowlistTest.response,
+        'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags': LibraryTagsTest.response
+      ]
+      return responsesByUrl.get(url?.toString(), DefaultHttpResponseTest.response)
     })
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
