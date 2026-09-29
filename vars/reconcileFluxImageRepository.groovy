@@ -19,7 +19,8 @@ def call(Map<String, String> params) {
       sh """
       export AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName}
       az login --identity > /dev/null
-      az aks get-credentials --resource-group ${env.PTL_AKS_RESOURCE_GROUP} --name ${env.PTL_AKS_CLUSTER_NAME} --subscription ${env.AKS_PTL_SUBSCRIPTION_NAME} -a --overwrite-existing > /dev/null
+      az aks get-credentials --resource-group ${env.PTL_AKS_RESOURCE_GROUP} --name ${env.PTL_AKS_CLUSTER_NAME} --subscription ${env.AKS_PTL_SUBSCRIPTION_NAME} --overwrite-existing > /dev/null
+      kubelogin convert-kubeconfig -l msi
       chmod +x reconcile-flux-image-repository.sh
       ./reconcile-flux-image-repository.sh $product $component
       """

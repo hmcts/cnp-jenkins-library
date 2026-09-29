@@ -49,6 +49,8 @@ class ReconcileFluxImageRepositoryTest extends BasePipelineTest {
       assertThat(environmentAgentCalls).isEmpty()
       assertThat(shellCalls[0].script).contains('AZURE_CONFIG_DIR=/opt/jenkins/.azure-stg')
       assertThat(shellCalls[0].script).contains('az aks get-credentials --resource-group ptl-rg --name ptl-aks --subscription ptl-sub')
+      assertThat(shellCalls[0].script).doesNotContain(' -a ')
+      assertThat(shellCalls[0].script).contains('kubelogin convert-kubeconfig -l msi')
   }
 
   @Test
