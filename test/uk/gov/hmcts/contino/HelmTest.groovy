@@ -211,8 +211,10 @@ class HelmTest extends Specification {
       it.get('script').contains('timeout 60 kubectl get pods -n cnp -l app.kubernetes.io/instance=my-chart-pr-1,' + "'!job-name'" + ' -w 2>/dev/null | grep -m1 "Running\\|Pending" > /dev/null') &&
       it.get('script').contains('No pods found matching selector - this chart may only contain jobs/cronjobs') &&
       it.get('script').contains("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError") &&
-      it.get('script').contains("Waiting for pods to be scheduled and ready...") &&
-      it.get('script').contains("kubectl wait --for=condition=ready pod") &&
+      it.get('script').contains("Waiting for workloads to roll out...") &&
+      it.get('script').contains("timeout 1220 kubectl rollout status deployment,statefulset,daemonset") &&
+      it.get('script').contains("-l app.kubernetes.io/instance=my-chart-pr-1 ") &&
+      !it.get('script').contains("kubectl wait --for=condition=ready pod") &&
       it.get('script').contains("--timeout=1220s")
     })
     1 * steps.sh('rm aks-debug-info.sh')
