@@ -309,6 +309,9 @@ def withCveDashboardSecretsIfEnabled(AppPipelineConfig config, String product, S
   }
 
   def dashboardEnvironment = environment?.trim()
+  if (dashboardEnvironment == 'preview') {
+    dashboardEnvironment = 'aat'
+  }
   def secrets = [
     [secretType: 'Secret', name: 'cve-dashboard-cve-intake-api-key', version: '', envVariable: 'CVE_DASHBOARD_API_KEY']
   ]

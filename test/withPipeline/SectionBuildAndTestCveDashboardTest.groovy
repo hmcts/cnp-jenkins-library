@@ -67,6 +67,25 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       ]
   }
 
+  def "uses the AAT CVE dashboard for an allowed preview build"() {
+    given:
+      binding.env.BRANCH_NAME = 'PR-3046'
+      def config = new AppPipelineConfig(
+        cveDashboardIngestion: true,
+        cveDashboardIngestionBranches: ['master', 'PR-3046']
+      )
+
+    when:
+      script.withCveDashboardSecretsIfEnabled(config, 'ccd', 'preview') {}
+
+    then:
+      keyVaultArguments.keyVaultURLOverride == 'https://ccd-aat.vault.azure.net/'
+      withEnvArguments == [
+        'CVE_DASHBOARD_URL=https://cve-dashboard.aat.platform.hmcts.net',
+        'CVE_DASHBOARD_PUBLISH_BRANCHES=master,PR-3046'
+      ]
+  }
+
   def "ignores explicit CVE dashboard vault when configured"() {
     given:
       def config = new AppPipelineConfig(cveDashboardIngestion: true, cveDashboardVaultName: 'shared-cve-dashboard')
