@@ -9,6 +9,8 @@ branches:
     allowed: true
   - name: "2.9.1"
     allowed: true
+  - name: "2.10.0"
+    allowed: true
   - name: DTSPO-30107-jenkins-agents
     allowed: true
   - name: DTSPO-00001
