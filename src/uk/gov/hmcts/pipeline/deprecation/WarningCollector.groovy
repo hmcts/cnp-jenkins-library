@@ -46,7 +46,7 @@ class WarningCollector implements Serializable {
     for (pipelineWarning in pipelineWarnings) {
       String message = pipelineWarning.deprecationDate
         ? pipelineWarning.warningMessage.concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate))
-        : pipelineWarning.warningMessage.concat(" This configuration is not recommended.")
+        : pipelineWarning.warningMessage.concat(" This configuration does not have a deprecation date but it is not recommended.")
       slackMessage.addSection(message)
     }
     return slackMessage

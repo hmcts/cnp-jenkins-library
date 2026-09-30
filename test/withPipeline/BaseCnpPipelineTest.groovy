@@ -101,7 +101,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       }  else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
           '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
-      } else if (m.get('script')?.contains('check-old-library-version.sh')) {
+      } else if (m.get('script')?.contains('check-library-version.sh')) {
         return 0
       } else if (m.get('script').contains('account show') && m.get('script').contains('--query id')) {
         return 'management-subscription-id'
@@ -175,6 +175,9 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
   - name: main
     allowed: true
 '''
+      }
+      if (resourcePath == 'uk/gov/hmcts/pipeline/warning-banner.txt') {
+        return 'warning banner'
       }
       return ''
     })

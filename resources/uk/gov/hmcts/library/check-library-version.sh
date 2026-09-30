@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+PINNED_VERSION_RECOMMENDATION="Check for the latest release at https://github.com/hmcts/cnp-jenkins-library/releases, then update your Jenkinsfile to use a fixed library version."
+WARNING_BANNER_FILE="warning-banner.txt"
+
+warning_banner () {
+    cat "${WARNING_BANNER_FILE}"
+}
+
 old_library_found () {
     echo ""
     echo "Old library version references found."
@@ -22,14 +29,23 @@ unpinned_library_found () {
     echo "Unpinned Infrastructure library reference found."
     echo "This Jenkinsfile is using @Library(\"Infrastructure\") and is therefore tracking the default branch (master), not a fixed library version."
     echo "This means your pipeline could break unexpectedly when upstream changes are made to the library."
-    echo "Update your Jenkinsfile to use: @Library(\"Infrastructure@${NEW_LIBRARY_VERSION}\")"
+    echo "${PINNED_VERSION_RECOMMENDATION}"
     echo ""
     echo ""
     exit 1
 }
 
-no_old_library_found () {
-    echo "No old library version references found. All clear!"
+allowed_branch_library_found () {
+    echo ""
+    echo "Allowed Infrastructure library branch reference found."
+    echo "This Jenkinsfile is using @Library(\"Infrastructure@${CUSTOM_LIBRARY_VERSION}\") instead of a fixed library version."
+    echo "${PINNED_VERSION_RECOMMENDATION}"
+    echo ""
+    exit 1
+}
+
+no_custom_library_found () {
+    echo "No old or custom library version references found. All clear!"
     exit 0
 }
 
@@ -51,6 +67,7 @@ warn_for_found_references () {
 
     if [ $FOUND_REFERENCES -eq 1 ]; then
         echo ""
+        warning_banner
         echo "WARNING: ${warning}"
         echo ""
         echo "Files that need to be updated:"
@@ -63,38 +80,50 @@ warn_for_found_references () {
     fi
 }
 
-OLD_LIBRARY_VERSION="${1}"  # Pattern of old library version to detect
-NEW_LIBRARY_VERSION="${2}"  # New library version to suggest in the warning message
-DEADLINE="${3}"             # Deadline for updating the library version
-WARNING_MODE="${4:-deprecation}"
+WARNING_MODE="${1:-deprecation}" # warning mode - can be 'unpinned', 'branch', or 'deprecation'
+CUSTOM_LIBRARY_VERSION="${2:-}"  # Version or branch to detect, can be empty when detecting for unpinned libraries
+NEW_LIBRARY_VERSION="${3:-}"     # New library version to suggest in the warning message, can be empty for unpinned or branch warnings
+DEADLINE="${4:-}"                # Deadline for updating the library version, can be empty for unpinned or branch warnings
 
 FOUND_REFERENCES=0
 FAILED_FILES=()
 
-echo "Checking for old library version references: ${OLD_LIBRARY_VERSION}"
+if [[ "${WARNING_MODE}" == "unpinned" ]]; then
+    echo "Checking for unpinned Infrastructure library references."
+else
+    echo "Checking for '${WARNING_MODE}' Infrastructure library references: '${CUSTOM_LIBRARY_VERSION}'"
+fi
 
 if [[ "${JOB_NAME,,}" == *"nightly"* ]]; then
     echo "Running nightly pipeline. No need to check for old library version."
-    no_old_library_found
+    no_custom_library_found
 fi
 
 if [[ "$JENKINS_SUBSCRIPTION_NAME" == *"SBOX"* ]]; then
     echo "Running on Sandbox Jenkins. No need to check for old library version."
-    no_old_library_found
+    no_custom_library_found
 fi
 
 echo "Scanning Jenkinsfile..."
+
 if [[ "${WARNING_MODE}" == "unpinned" ]]; then
     LIBRARY_PATTERN='@Library\("?Infrastructure"?\)'
     scan_jenkinsfiles "${LIBRARY_PATTERN}"
     warn_for_found_references "Unpinned Infrastructure library in use!" unpinned_library_found
-    no_old_library_found
+    no_custom_library_found
 fi
 
-# versions will have dots in them so escape those so they are not accidentally poisoning regex
-ESCAPED_OLD_LIBRARY_VERSION="${OLD_LIBRARY_VERSION//./\\.}"
-LIBRARY_PATTERN='@Library\("?Infrastructure@'"${ESCAPED_OLD_LIBRARY_VERSION}"'"?\)'
+if [[ "${WARNING_MODE}" == "branch" ]]; then
+    LIBRARY_PATTERN='@Library\("?Infrastructure@'"${CUSTOM_LIBRARY_VERSION}"'"?\)'
+    scan_jenkinsfiles "${LIBRARY_PATTERN}"
+    warn_for_found_references "Allowed Infrastructure library branch in use!" allowed_branch_library_found
+    no_custom_library_found
+fi
+
+# Versions have dots, so escape them before matching the regex.
+ESCAPED_CUSTOM_LIBRARY_VERSION="${CUSTOM_LIBRARY_VERSION//./\\.}"
+LIBRARY_PATTERN='@Library\("?Infrastructure@'"${ESCAPED_CUSTOM_LIBRARY_VERSION}"'"?\)'
 scan_jenkinsfiles "${LIBRARY_PATTERN}"
 warn_for_found_references "Deprecated library version in use!" old_library_found
 
-no_old_library_found
+no_custom_library_found
