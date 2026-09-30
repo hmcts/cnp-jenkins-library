@@ -91,7 +91,7 @@ class WarningCollectorTest extends Specification {
 
     String expectedMessage = "Test deprecation. This configuration will stop working by ${nextDayFormattedDate} ( tomorrow )\n\n" +
       "Another test deprecation. This configuration will stop working by ${nextWeekFormattedDate} ( in 7 days )\n\n" +
-      "No date test. This configuration is not recommended."
+      "No date test. This configuration does not have a deprecation date but it is not recommended."
     // Collect all messages from SlackBlockMessage object for testing
     String actualMessage = message.blocks.collect { it.text.text }.join("\n\n")
 
@@ -110,7 +110,7 @@ class WarningCollectorTest extends Specification {
     noExceptionThrown()
     assertThat(WarningCollector.pipelineWarnings).hasSize(1)
     assertThat(WarningCollector.pipelineWarnings.first().deprecationDate).isNull()
-    assertThat(actualMessage).isEqualTo("Test warning without a due date. This configuration is not recommended.")
+    assertThat(actualMessage).isEqualTo("Test warning without a due date. This configuration does not have a deprecation date but it is not recommended.")
   }
 
 }

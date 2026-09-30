@@ -28,11 +28,7 @@ def buildAndAddWarning(int status, String warningKey, List<List<String>> paragra
     String warningMessage = paragraphs.collect { it.join(' ') }.join('\n\n')
     LocalDate deprecationDate = deprecationDeadline ? LocalDate.parse(deprecationDeadline) : null
 
-    try {
-        WarningCollector.addPipelineWarning(warningKey, warningMessage, deprecationDate)
-    } catch (RuntimeException ignored) {
-        echo "${warningMessage} This change is enforced from ${deprecationDate.format(WarningCollector.DATE_FORMATTER)}"
-    }
+    WarningCollector.addPipelineWarning(warningKey, warningMessage, deprecationDate)
 }
 
 def checkUnpinnedLibrary() {
