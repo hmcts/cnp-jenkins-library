@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.10.2] - 2026-09-30
+
+## :bug: Bug Fixes
+
+- fix: wait on workload rollouts, not a pod snapshot, on PR deploys @jasonpaige (#1565)
+
 ## [2.10.1] - 2026-09-25
 
 

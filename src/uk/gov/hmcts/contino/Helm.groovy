@@ -533,9 +533,14 @@ class Helm {
            exit 1
         fi
 
-        echo 'Waiting for pods to be scheduled and ready...'
-        kubectl wait --for=condition=ready pod \\
-          -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
+        # Wait on the release's workloads, not a snapshot of its pods. A pod-level
+        # wait resolves its pod list once, so a pod from the previous revision that
+        # the rollout replaces mid-wait is waited on until the timeout. Rollout
+        # status follows each workload's current revision instead. The outer
+        # timeout caps the total, because --timeout applies to each workload.
+        echo 'Waiting for workloads to roll out...'
+        timeout 1220 kubectl rollout status deployment,statefulset,daemonset \\
+          -l app.kubernetes.io/instance=${releaseName} \\
           -n ${this.namespace} \\
           --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
         """)
