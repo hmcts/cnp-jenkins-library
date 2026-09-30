@@ -10,6 +10,32 @@ def call(String repoUrl = null) {
 
     writeFile file: 'check-old-library-version.sh', text: libraryResource('uk/gov/hmcts/library/check-old-library-version.sh')
 
+    int unpinnedStatus = sh(
+        script: """
+        chmod +x check-old-library-version.sh
+        ./check-old-library-version.sh 'Infrastructure' 'master' '2099-12-31' 'unpinned'
+        """,
+        returnStatus: true
+    )
+
+    if (unpinnedStatus != 0) {
+        String warningMessage = """Your Jenkinsfile is tracking the default branch for Infrastructure via @Library(\"Infrastructure\").
+
+This means the pipeline is following the repository's default branch (master), not a fixed library version,
+so it can change unexpectedly when upstream library updates are merged. Update it to use a fixed version such as *Infrastructure@X.Y.Z* to keep the pipeline stable."""
+        LocalDate warningDate = LocalDate.now().plusYears(1)
+
+        try {
+            WarningCollector.addPipelineWarning(
+                "unpinned_infrastructure_library",
+                warningMessage,
+                warningDate
+            )
+        } catch (RuntimeException ignored) {
+            echo "${warningMessage} This check is enforced from ${warningDate.format(WarningCollector.DATE_FORMATTER)}"
+        }
+    }
+
     jenkinsLibraryDeprecationConfig.each { configKey, deprecation ->
         def patterns = []
         if (deprecation.pattern instanceof Collection) {

@@ -35,7 +35,7 @@ class SlackBlockMessage {
         ])
     }
 
-    // Adds a header block with plain text, guaranteed at first position of message
+    // Adds a header block with plain text, guaranteed at first position of message, followed immediately by a divider
     void addFirstHeader(String text) {
         this.blocks.add(0, [
             type: "header",
@@ -44,7 +44,9 @@ class SlackBlockMessage {
                 text: text,
             ]
         ])
-        addDivider()
+        this.blocks.add(1, [
+            type: "divider"
+        ])
     }
 
     void addDivider() {
