@@ -172,7 +172,7 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
             script.call()
             fail('Expected an expired deprecated library version to fail the pipeline')
         } catch (RuntimeException expected) {
-            assertThat(expected.message).contains('Your Jenkinsfile references an old or unpinned Jenkins library version.')
+            assertThat(expected.message).contains('Your Jenkinsfile references a deprecated Jenkins library version.')
         }
 
         then:
@@ -243,7 +243,7 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
             script.call()
             fail('Expected an expired deprecated library version to fail the pipeline')
         } catch (RuntimeException expected) {
-            assertThat(expected.message).contains('Your Jenkinsfile references an old or unpinned Jenkins library version.')
+            assertThat(expected.message).contains('Your Jenkinsfile references a deprecated Jenkins library version.')
         }
 
         then:
@@ -263,7 +263,7 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
                 'https://github.com/hmcts/cnp-jenkins-library/releases, then switch to a fixed library version. Pinned versions ' +
                 'receive the latest library features and reduce the chance of upstream changes unexpectedly breaking your pipeline. ' +
                 'Renovate can automatically update pinned library versions for you.',
-            'Your Jenkinsfile references an old or unpinned Jenkins library version.\n\n' +
+            'Your Jenkinsfile references a deprecated Jenkins library version.\n\n' +
                 'Update it to use *Infrastructure@2.0.0*, then check the migration guide and rollout tracker before raising a PR. ' +
                 'Some repositories also need Key Vault or PostgreSQL module changes as part of this migration.\n\n' +
                 'Migration guide: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973509936/Jenkins+Library+Migration+Guide\n\n' +

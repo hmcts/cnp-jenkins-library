@@ -146,7 +146,7 @@ def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {
                 status,
                     "old_library_version",
                     [
-                        ['Your Jenkinsfile references an old or unpinned Jenkins library version.'],
+                        ['Your Jenkinsfile references a deprecated Jenkins library version.'],
                         [
                             "Update it to use *Infrastructure@${deprecation.version}*, then check the",
                             'migration guide and rollout tracker before raising a PR. Some repositories',

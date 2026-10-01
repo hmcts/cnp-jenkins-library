@@ -45,7 +45,7 @@ allowed_branch_library_found () {
 }
 
 no_custom_library_found () {
-    echo "No old or custom library version references found. All clear!"
+    echo "No old references found. All clear!"
     exit 0
 }
 
