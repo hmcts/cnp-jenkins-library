@@ -16,6 +16,8 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     def script
     Map<String, Integer> statuses = [unpinned: 0, branch: 0, deprecation: 0]
     List<Map> libraryBranches = [[name: 'master', allowed: true]]
+    def deprecationPatterns = '1.0.0'
+    String deprecationDeadline = LocalDate.now().minusDays(1).toString()
     List<String> shellCommands = []
 
     @Override
@@ -42,9 +44,9 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
             return [
                 jenkins: [
                     legacyVersion: [
-                        pattern: '1.0.0',
+                        pattern: deprecationPatterns,
                         version: '2.0.0',
-                        date_deadline: LocalDate.now().minusDays(1).toString()
+                        date_deadline: deprecationDeadline
                     ]
                 ]
             ]
@@ -149,6 +151,59 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
 
         then:
         assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly('old_library_version')
+        assertThat(shellCommands).contains('rm -f check-library-version.sh', 'rm -f warning-banner.txt')
+    }
+
+    @Test
+    void 'custom version check adds an old library warning without failing before its deadline'() {
+        given:
+        statuses.deprecation = 1
+        deprecationDeadline = LocalDate.now().plusDays(1).toString()
+
+        when:
+        script.call()
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly('old_library_version')
+        assertThat(WarningCollector.pipelineWarnings.first().deprecationDate)
+            .isEqualTo(LocalDate.parse(deprecationDeadline))
+    }
+
+    @Test
+    void 'custom version check adds a warning for each allowed branch detected'() {
+        given:
+        libraryBranches = [
+            [name: 'master', allowed: true],
+            [name: 'feature/one', allowed: true],
+            [name: 'feature/two', allowed: true]
+        ]
+        statuses.branch = 1
+
+        when:
+        script.call()
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly(
+            'allowed_infrastructure_library_branch',
+            'allowed_infrastructure_library_branch'
+        )
+        assertThat(WarningCollector.pipelineWarnings[0].warningMessage).contains('*feature/one*.')
+        assertThat(WarningCollector.pipelineWarnings[1].warningMessage).contains('*feature/two*.')
+    }
+
+    @Test
+    void 'custom version check adds a warning for each deprecated pattern detected before its deadline'() {
+        given:
+        deprecationPatterns = ['1.0.0', '1.1.0']
+        deprecationDeadline = LocalDate.now().plusDays(1).toString()
+        statuses.deprecation = 1
+
+        when:
+        script.call()
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly('old_library_version', 'old_library_version')
+        assertThat(shellCommands.findAll { it.contains("'deprecation'") }).hasSize(2)
     }
 
     @Test

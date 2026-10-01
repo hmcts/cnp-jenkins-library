@@ -13,12 +13,14 @@ def call(String repoUrl = null) {
     writeFile file: 'check-library-version.sh', text: libraryResource('uk/gov/hmcts/library/check-library-version.sh')
     writeFile file: 'warning-banner.txt', text: libraryResource(WarningBanner.RESOURCE_PATH)
 
-    checkUnpinnedLibrary()
-    checkAllowedLibraryBranches()
-    checkOldLibraryVersions(jenkinsLibraryDeprecationConfig)
-
-    sh 'rm -f check-library-version.sh'
-    sh 'rm -f warning-banner.txt'
+    try {
+        checkUnpinnedLibrary()
+        checkAllowedLibraryBranches()
+        checkOldLibraryVersions(jenkinsLibraryDeprecationConfig)
+    } finally {
+        sh 'rm -f check-library-version.sh'
+        sh 'rm -f warning-banner.txt'
+    }
 }
 
 def buildAndAddWarning(int status, String warningKey, List<List<String>> paragraphs, String deprecationDeadline = null) {

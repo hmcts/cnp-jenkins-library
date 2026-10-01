@@ -84,6 +84,7 @@ WARNING_MODE="${1:-deprecation}" # warning mode - can be 'unpinned', 'branch', o
 CUSTOM_LIBRARY_VERSION="${2:-}"  # Version or branch to detect, can be empty when detecting for unpinned libraries
 NEW_LIBRARY_VERSION="${3:-}"     # New library version to suggest in the warning message, can be empty for unpinned or branch warnings
 DEADLINE="${4:-}"                # Deadline for updating the library version, can be empty for unpinned or branch warnings
+ESCAPED_CUSTOM_LIBRARY_VERSION=$(printf '%s' "${CUSTOM_LIBRARY_VERSION}" | sed 's/[][\\.^$*+?(){}|]/\\&/g')
 
 FOUND_REFERENCES=0
 FAILED_FILES=()
@@ -94,7 +95,8 @@ else
     echo "Checking for '${WARNING_MODE}' Infrastructure library references: '${CUSTOM_LIBRARY_VERSION}'"
 fi
 
-if [[ "${JOB_NAME,,}" == *"nightly"* ]]; then
+JOB_NAME_LOWERCASE=$(printf '%s' "${JOB_NAME}" | tr '[:upper:]' '[:lower:]')
+if [[ "${JOB_NAME_LOWERCASE}" == *"nightly"* ]]; then
     echo "Running nightly pipeline. No need to check for old library version."
     no_custom_library_found
 fi
@@ -107,22 +109,20 @@ fi
 echo "Scanning Jenkinsfile..."
 
 if [[ "${WARNING_MODE}" == "unpinned" ]]; then
-    LIBRARY_PATTERN='@Library\("?Infrastructure"?\)'
+    LIBRARY_PATTERN="@Library\\([\"']?Infrastructure[\"']?\\)"
     scan_jenkinsfiles "${LIBRARY_PATTERN}"
     warn_for_found_references "Unpinned Infrastructure library in use!" unpinned_library_found
     no_custom_library_found
 fi
 
 if [[ "${WARNING_MODE}" == "branch" ]]; then
-    LIBRARY_PATTERN='@Library\("?Infrastructure@'"${CUSTOM_LIBRARY_VERSION}"'"?\)'
+    LIBRARY_PATTERN="@Library\\([\"']?Infrastructure@${ESCAPED_CUSTOM_LIBRARY_VERSION}[\"']?\\)"
     scan_jenkinsfiles "${LIBRARY_PATTERN}"
     warn_for_found_references "Allowed Infrastructure library branch in use!" allowed_branch_library_found
     no_custom_library_found
 fi
 
-# Versions have dots, so escape them before matching the regex.
-ESCAPED_CUSTOM_LIBRARY_VERSION="${CUSTOM_LIBRARY_VERSION//./\\.}"
-LIBRARY_PATTERN='@Library\("?Infrastructure@'"${ESCAPED_CUSTOM_LIBRARY_VERSION}"'"?\)'
+LIBRARY_PATTERN="@Library\\([\"']?Infrastructure@${ESCAPED_CUSTOM_LIBRARY_VERSION}[\"']?\\)"
 scan_jenkinsfiles "${LIBRARY_PATTERN}"
 warn_for_found_references "Deprecated library version in use!" old_library_found
 
