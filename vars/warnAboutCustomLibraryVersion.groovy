@@ -5,6 +5,9 @@ import uk.gov.hmcts.pipeline.WarningBanner
 import java.time.LocalDate
 
 def call(String repoUrl = null) {
+    if (shouldSkipChecks()) {
+        return
+    }
 
     def jenkinsLibraryDeprecationConfig = repoUrl ?
         new DeprecationConfig(this).getDeprecationConfig(repoUrl).jenkins :
@@ -21,6 +24,22 @@ def call(String repoUrl = null) {
         sh 'rm -f check-library-version.sh'
         sh 'rm -f warning-banner.txt'
     }
+}
+
+def shouldSkipChecks() {
+    String jobName = env.JOB_NAME?.toLowerCase()
+    if (jobName?.contains('nightly')) {
+        echo 'Skipping custom library version checks for nightly jobs.'
+        return true
+    }
+
+    String subscriptionName = env.JENKINS_SUBSCRIPTION_NAME?.toLowerCase()
+    if (subscriptionName?.contains('sbox') || subscriptionName?.contains('sandbox')) {
+        echo 'Skipping custom library version checks on Sandbox Jenkins.'
+        return true
+    }
+
+    return false
 }
 
 def buildAndAddWarning(int status, String warningKey, List<List<String>> paragraphs, String deprecationDeadline = null) {

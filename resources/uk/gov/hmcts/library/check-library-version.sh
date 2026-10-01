@@ -95,17 +95,6 @@ else
     echo "Checking for '${WARNING_MODE}' Infrastructure library references: '${CUSTOM_LIBRARY_VERSION}'"
 fi
 
-JOB_NAME_LOWERCASE=$(printf '%s' "${JOB_NAME}" | tr '[:upper:]' '[:lower:]')
-if [[ "${JOB_NAME_LOWERCASE}" == *"nightly"* ]]; then
-    echo "Running nightly pipeline. No need to check for old library version."
-    no_custom_library_found
-fi
-
-if [[ "$JENKINS_SUBSCRIPTION_NAME" == *"SBOX"* ]]; then
-    echo "Running on Sandbox Jenkins. No need to check for old library version."
-    no_custom_library_found
-fi
-
 echo "Scanning Jenkinsfile..."
 
 if [[ "${WARNING_MODE}" == "unpinned" ]]; then

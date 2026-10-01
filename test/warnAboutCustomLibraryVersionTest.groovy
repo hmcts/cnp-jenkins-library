@@ -97,6 +97,32 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     }
 
     @Test
+    void 'custom version check skips all helper scripts for nightly jobs'() {
+        given:
+        binding.getVariable('env').JOB_NAME = 'SERVICE-NIGHTLY'
+
+        when:
+        script.call()
+
+        then:
+        assertThat(shellCommands).isEmpty()
+        assertThat(WarningCollector.pipelineWarnings).isEmpty()
+    }
+
+    @Test
+    void 'custom version check skips all helper scripts for SBOX and sandbox subscriptions'() {
+        expect:
+        ['SBOX-TEST', 'sandbox-test'].each { subscriptionName ->
+            binding.getVariable('env').JENKINS_SUBSCRIPTION_NAME = subscriptionName
+
+            script.call()
+
+            assertThat(shellCommands).isEmpty()
+            assertThat(WarningCollector.pipelineWarnings).isEmpty()
+        }
+    }
+
+    @Test
     void 'custom version check adds only the unpinned warning when an unpinned library is detected'() {
         given:
         statuses.unpinned = 1

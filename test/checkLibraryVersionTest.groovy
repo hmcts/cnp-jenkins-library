@@ -20,8 +20,6 @@ class checkLibraryVersionTest {
         ProcessBuilder processBuilder = new ProcessBuilder(['bash', script.path] + arguments)
         processBuilder.directory(testWorkspace)
         processBuilder.redirectErrorStream(true)
-        processBuilder.environment().remove('JOB_NAME')
-        processBuilder.environment().remove('JENKINS_SUBSCRIPTION_NAME')
         processBuilder.environment().putAll(environment)
 
         Process process = processBuilder.start()
@@ -95,16 +93,4 @@ class checkLibraryVersionTest {
         assertThat(matchingResult.exitCode).isEqualTo(1)
     }
 
-    @Test
-    void 'skips matching references for nightly and Sandbox jobs'() {
-        when:
-        Map nightlyResult = runCheck(['unpinned'], [Jenkinsfile: '@Library("Infrastructure")'], [JOB_NAME: 'service-nightly'])
-        Map sandboxResult = runCheck(['unpinned'], [Jenkinsfile: '@Library("Infrastructure")'], [JENKINS_SUBSCRIPTION_NAME: 'SBOX-TEST'])
-
-        then:
-        assertThat(nightlyResult.exitCode).isZero()
-        assertThat(nightlyResult.output).contains('Running nightly pipeline')
-        assertThat(sandboxResult.exitCode).isZero()
-        assertThat(sandboxResult.output).contains('Running on Sandbox Jenkins')
-    }
 }
