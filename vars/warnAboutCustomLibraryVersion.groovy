@@ -18,6 +18,7 @@ def call(String repoUrl = null) {
     checkOldLibraryVersions(jenkinsLibraryDeprecationConfig)
 
     sh 'rm -f check-library-version.sh'
+    sh 'rm -f warning-banner.txt'
 }
 
 def buildAndAddWarning(int status, String warningKey, List<List<String>> paragraphs, String deprecationDeadline = null) {

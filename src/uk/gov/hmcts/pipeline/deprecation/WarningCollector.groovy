@@ -13,10 +13,11 @@ class WarningCollector implements Serializable {
   static slackMessage = new SlackBlockMessage()
 
   static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate = null) {
+    pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
+
     if (deprecationDate?.isBefore(LocalDate.now())){
       throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format(DATE_FORMATTER)} ")
     }
-    pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
   }
 
   static String getMessageByDays(LocalDate deprecationDate) {

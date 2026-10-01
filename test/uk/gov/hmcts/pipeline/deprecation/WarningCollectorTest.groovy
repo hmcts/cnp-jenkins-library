@@ -112,5 +112,4 @@ class WarningCollectorTest extends Specification {
     assertThat(WarningCollector.pipelineWarnings.first().deprecationDate).isNull()
     assertThat(actualMessage).isEqualTo("Test warning without a due date. This configuration does not have a deprecation date but it is not recommended.")
   }
-
 }
