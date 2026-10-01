@@ -11,7 +11,7 @@ class AzPrivateDnsTest extends Specification {
   def environmentDnsConfigEntry
   def response = ["content": ["subscriptions":
                           [["name": "DTS-CFTSBOX-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 300, "active": true,
-                            "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox"]],
+                            "environments": [["name": "sandbox", "ttl": 3600], ["name": "idam-sandbox"], ["name": "crime-idam-sandbox"]],
                             "resourceGroup": "core-infra-intsvc-rg"],
                            ["name": "DTS-CFTPTL-INTSVC", "zoneTemplate": 'service.core-compute-${environment}.internal', "ttl": 3600, "active": false,
                             "environments": [["name": "prod", "ttl": 2400], ["name": "idam-prod"]],
