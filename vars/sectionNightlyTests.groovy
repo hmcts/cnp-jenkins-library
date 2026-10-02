@@ -34,7 +34,9 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       warnError('Failure in DependencyCheckNightly') {
         pcr.callAround('DependencyCheckNightly') {
           timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'Dependency check') {
-            builder.securityCheck()
+            withCveDashboardSecretsIfEnabled(config, product, environment.nonProdName) {
+              builder.securityCheck()
+            }
           }
         }
       }
