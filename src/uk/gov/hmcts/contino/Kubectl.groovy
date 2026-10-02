@@ -109,10 +109,30 @@ class Kubectl {
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
     def azureConfigName = resolveAzureConfigName()
-    if (usesEnvironmentManagedIdentity()) {
-      this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName} az login --identity", returnStdout: true)
+    boolean usesManagedIdentity = usesEnvironmentManagedIdentity()
+    String azureConfigDir = "AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName}"
+
+    if (usesManagedIdentity) {
+      this.steps.echo("Kubectl.login(): authenticating via environment agent's managed identity (${azureConfigDir})")
+      this.steps.sh(script: "env ${azureConfigDir} az login --identity", returnStdout: true)
+    } else {
+      this.steps.echo("Kubectl.login(): not running on a recognised environment agent")
     }
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a --overwrite-existing ", returnStdout: true)
+
+    try {
+      this.steps.sh(script: "env ${azureConfigDir} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} --overwrite-existing ", returnStdout: true)
+    } catch (e) {
+      this.steps.echo("Kubectl.login(): 'az aks get-credentials' failed for cluster ${this.clusterName} (usesManagedIdentity=${usesManagedIdentity}). " +
+        (usesManagedIdentity ?
+          "Check the agent's managed identity has the AKS 'Cluster User'/'Cluster Admin' Azure role on this cluster." :
+          "This agent isn't matched to an environment MI, so az cli must already be logged in before calling login() - check the calling pipeline authenticates first (e.g. via withSubscription())."))
+      throw e
+    }
+
+    if (usesManagedIdentity) {
+      // local accounts are disabled, so the kubeconfig needs converting to fetch tokens via the agent's managed identity
+      this.steps.sh(script: "env ${azureConfigDir} kubelogin convert-kubeconfig -l msi", returnStdout: true)
+    }
   }
 
   private String resolveAzureConfigName() {
