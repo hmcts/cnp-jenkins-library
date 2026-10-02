@@ -30,6 +30,8 @@ class CveDashboardSnapshotPublisher implements Serializable {
       def payload = buildPayload(codeBaseType, report)
       def endpoint = "${dashboardUrl.replaceAll('/+$', '')}/api/cves/snapshots"
       def requestId = payload.sourceRunId ?: UUID.randomUUID().toString()
+      String requestBody = JsonOutput.toJson(payload)
+      steps.echo "CVE dashboard snapshot request (${requestId}): ${requestBody.replace(apiKey, '*****')}"
       def response = steps.httpRequest(
         httpMode: 'POST',
         acceptType: 'APPLICATION_JSON',
@@ -39,11 +41,14 @@ class CveDashboardSnapshotPublisher implements Serializable {
           [name: 'X-API-Key', value: apiKey, maskValue: true],
           [name: 'X-Request-Id', value: requestId]
         ],
-        requestBody: JsonOutput.toJson(payload),
+        requestBody: requestBody,
+        consoleLogResponseBody: false,
         validResponseCodes: '100:599'
       )
 
       Integer status = (response?.status ?: 0) as Integer
+      String responseBody = trimValue(response?.content) ?: '<empty>'
+      steps.echo "CVE dashboard snapshot response (${requestId}), status ${status}: ${responseBody.replace(apiKey, '*****')}"
       if (status >= 400) {
         steps.echo "Unable to publish CVE dashboard snapshot '${status}'"
       }
