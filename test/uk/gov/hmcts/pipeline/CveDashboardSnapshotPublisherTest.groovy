@@ -117,6 +117,7 @@ class CveDashboardSnapshotPublisherTest extends Specification {
           ],
           [
             fileName                  : 'library-b.jar',
+            packages                  : [[id: 'pkg:maven/org.example/library-b@2.0.0']],
             suppressedVulnerabilities: [
               [name: 'CVE-2026-2001', severity: 'LOW', cvssv2: [score: 4.3]],
               [name: 'CVE-2026-2002', severity: 'CRITICAL', cvssv3: [baseScore: 9.8]]
@@ -139,18 +140,143 @@ class CveDashboardSnapshotPublisherTest extends Specification {
         [
           cve               : 'CVE-2026-2001',
           severity          : 'medium',
-          activePackages    : ['pkg:maven/org.example/library-a@1.0.0'],
-          suppressedPackages: ['library-b.jar'],
+          activePackages    : ['org.example:library-a'],
+          suppressedPackages: ['org.example:library-b'],
           score             : '6.1'
         ],
         [
           cve               : 'CVE-2026-2002',
           severity          : 'critical',
           activePackages    : [],
-          suppressedPackages: ['library-b.jar'],
+          suppressedPackages: ['org.example:library-b'],
           score             : '9.8'
         ]
       ]
+  }
+
+  def "normalizes Maven package identifiers without versions"() {
+    when:
+      def payload = publisher.buildPayload('java', [dependencies: [[
+        packages: [[id: 'pkg:npm/unrelated@1.0.0'], [id: packageId]],
+        vulnerabilities: [[name: 'CVE-2026-2001', severity: 'HIGH']]
+      ]]])
+
+    then:
+      payload.items[0].activePackages == ['org.example:library-a']
+
+    where:
+      packageId << [
+        'pkg:maven/org.example/library-a@1.0.0',
+        'pkg:maven/org.example/library-a@1.0.0?type=jar#subpath',
+        'pkg:maven/org.example/library-a',
+        'pkg:maven/org%2Eexample/library%2Da@1.0.0',
+        'org.example:library-a'
+      ]
+  }
+
+  def "deduplicates Java package versions and gives active findings precedence"() {
+    when:
+      def payload = publisher.buildPayload('java', [dependencies: [
+        [packages: [[id: 'pkg:maven/org.example/library-a@1.0']],
+         vulnerabilities: [[name: 'CVE-2026-2001', severity: 'MEDIUM', cvssv3: [baseScore: 6.1]]]],
+        [packages: [[id: 'pkg:maven/org.example/library-a@2.0']],
+         vulnerabilities: [[name: 'CVE-2026-2001', severity: 'HIGH', cvssv3: [baseScore: 7.8]]]],
+        [packages: [[id: 'pkg:maven/org.example/library-a@3.0']],
+         suppressedVulnerabilities: [[name: 'CVE-2026-2001', severity: 'LOW']]],
+        [packages: [[id: 'pkg:maven/org.example/library-b@1.0']],
+         suppressedVulnerabilities: [[name: 'CVE-2026-2001', severity: 'LOW']]]
+      ]])
+
+    then:
+      payload.items == [[
+        cve: 'CVE-2026-2001', severity: 'high', score: '7.8',
+        activePackages: ['org.example:library-a'], suppressedPackages: ['org.example:library-b']
+      ]]
+  }
+
+  def "resolves Java coordinates from matching Gradle or POM evidence"() {
+    when:
+      def payload = publisher.buildPayload('java', [dependencies: [[
+        fileName: 'library-a.jar',
+        evidenceCollected: [
+          vendorEvidence: [[source: source, name: 'groupid', value: 'org.example']],
+          productEvidence: [[source: source, name: 'artifactid', value: 'library-a']]
+        ],
+        suppressedVulnerabilities: [[name: 'CVE-2026-2001', severity: 'HIGH']]
+      ]]])
+
+    then:
+      payload.items[0].suppressedPackages == ['org.example:library-a']
+
+    where:
+      source << ['gradle', 'pom']
+  }
+
+  def "prefers Gradle coordinates over conflicting POM evidence"() {
+    when:
+      def payload = publisher.buildPayload('java', [dependencies: [[
+        evidenceCollected: [
+          vendorEvidence: [
+            [source: 'gradle', name: 'groupid', value: 'org.example'],
+            [source: 'pom', name: 'groupid', value: 'org.parent']
+          ],
+          productEvidence: [
+            [source: 'gradle', name: 'artifactid', value: 'library-a'],
+            [source: 'pom', name: 'artifactid', value: 'parent']
+          ]
+        ],
+        vulnerabilities: [[name: 'CVE-2026-2001', severity: 'HIGH']]
+      ]]])
+
+    then:
+      payload.items[0].activePackages == ['org.example:library-a']
+  }
+
+  def "does not publish a partial Java snapshot when coordinates cannot be resolved"() {
+    given:
+      def findings = [[name: 'CVE-2026-2002', severity: 'HIGH']]
+      def unresolved = [fileName: 'unresolved.jar', packages: [[id: packageId]], evidenceCollected: evidence]
+      unresolved[findingType] = findings
+
+    when:
+      publisher.publishSnapshot('java', [dependencies: [
+        [packages: [[id: 'pkg:maven/org.example/library-a@1.0']],
+         vulnerabilities: [[name: 'CVE-2026-2001', severity: 'HIGH']]],
+        unresolved
+      ]])
+
+    then:
+      0 * steps.httpRequest(_)
+      1 * steps.echo({
+        it.contains('Cannot resolve Maven coordinates') && it.contains('unresolved.jar') &&
+          it.contains('refusing to publish an incomplete snapshot')
+      })
+
+    where:
+      findingType                 | packageId                                | evidence
+      'vulnerabilities'           | ''                                       | [:]
+      'suppressedVulnerabilities' | 'pkg:npm/unrelated@1.0'                   | [:]
+      'vulnerabilities'           | 'pkg:maven/org%ZZexample/library-a@1.0'   | [:]
+      'vulnerabilities'           | ''                                       | [vendorEvidence: [[source: 'gradle', name: 'groupid', value: 'org.example']], productEvidence: [[source: 'pom', name: 'artifactid', value: 'library-a']]]
+      'suppressedVulnerabilities' | ''                                       | [vendorEvidence: [[source: 'pom', name: 'groupid', value: 'org.example'], [source: 'pom', name: 'groupid', value: 'org.other']], productEvidence: [[source: 'pom', name: 'artifactid', value: 'library-a']]]
+  }
+
+  def "publishes an empty Java snapshot when unresolved dependencies have no CVEs"() {
+    given:
+      def request
+
+    when:
+      publisher.publishSnapshot('java', [dependencies: [
+        [fileName: 'clean.jar'],
+        [fileName: 'non-cve.jar', vulnerabilities: [[name: 'GHSA-xxxx-yyyy-zzzz']]]
+      ]])
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> { LinkedHashMap args ->
+        request = args
+        [status: 200]
+      }
+      new JsonSlurperClassic().parseText(request.requestBody).items == []
   }
 
   def "removes packages from suppressed list when the same package is active"() {
