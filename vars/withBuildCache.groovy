@@ -7,6 +7,7 @@ def call(config, Closure body) {
   }
 
   def caches = []
+  boolean cypressProject = false
 
   if (fileExists('yarn.lock')) {
     caches.addAll([
@@ -24,6 +25,18 @@ def call(config, Closure body) {
         compressionMethod: 'TARGZ_BEST_SPEED'
       )
     ])
+
+    cypressProject = usesCypress()
+    if (cypressProject) {
+      caches.add(
+        arbitraryFileCache(
+          path: "${env.HOME}/.cache/Cypress".toString(),
+          cacheName: 'cypress-binary',
+          cacheValidityDecidingFile: 'yarn.lock,package.json,.yarnrc.yml',
+          compressionMethod: 'TARGZ_BEST_SPEED'
+        )
+      )
+    }
   }
 
   if (fileExists('gradlew')) {
@@ -50,6 +63,21 @@ def call(config, Closure body) {
       defaultBranch: 'master',
       caches: caches
     ) {
+      if (cypressProject && fileExists('node_modules/.bin/cypress')) {
+        String nvmSetup = fileExists('.nvmrc') ? '''
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh
+          nvm install
+        ''' : ''
+        sh(
+          label: 'Install Cypress binary',
+          script: """
+            set -e
+            ${nvmSetup}
+            node_modules/.bin/cypress install
+          """.stripIndent()
+        )
+      }
       body()
     }
     return
@@ -57,4 +85,14 @@ def call(config, Closure body) {
 
   echo 'Build cache enabled, but no supported lock or wrapper file was found'
   body()
+}
+
+private boolean usesCypress() {
+  if (!fileExists('package.json')) {
+    return false
+  }
+
+  def packageJson = readJSON(file: 'package.json')
+  return packageJson.dependencies?.containsKey('cypress') ||
+    packageJson.devDependencies?.containsKey('cypress')
 }
