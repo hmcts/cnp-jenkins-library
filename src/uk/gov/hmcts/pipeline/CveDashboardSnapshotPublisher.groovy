@@ -1,8 +1,10 @@
 package uk.gov.hmcts.pipeline
 
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonOutput
 
 import java.net.URI
+import java.net.URLDecoder
 import java.util.Locale
 
 class CveDashboardSnapshotPublisher implements Serializable {
@@ -83,7 +85,7 @@ class CveDashboardSnapshotPublisher implements Serializable {
     }
 
     def entries = new ArrayList(aggregate.values())
-    entries.sort { left, right -> left['cve'] <=> right['cve'] }
+    sortCveEntries(entries)
 
     entries.collect { entry ->
       def activePackages = new ArrayList(entry['activePackages'] ?: [])
@@ -105,6 +107,11 @@ class CveDashboardSnapshotPublisher implements Serializable {
     }
   }
 
+  @NonCPS
+  private static void sortCveEntries(List entries) {
+    entries.sort { left, right -> left['cve'] <=> right['cve'] }
+  }
+
   private void addYarnFindings(Map aggregate, findings, boolean suppressed) {
     asList(findings).each { finding ->
       String packageName = trimValue(finding?.module_name)
@@ -116,7 +123,18 @@ class CveDashboardSnapshotPublisher implements Serializable {
 
   private void addGradleFindings(Map aggregate, dependencies) {
     asList(dependencies).each { dependency ->
+      def findings = asList(dependency?.vulnerabilities) + asList(dependency?.suppressedVulnerabilities)
+      if (!findings.any { isRealCve(trimValue(it?.name).toUpperCase(Locale.ROOT)) }) {
+        return
+      }
+
       String packageName = gradlePackageName(dependency)
+      if (!packageName) {
+        throw new IllegalArgumentException(
+          "Cannot resolve Maven coordinates for dependency '${trimValue(dependency?.fileName) ?: '<unknown>'}'; " +
+            'refusing to publish an incomplete snapshot'
+        )
+      }
 
       asList(dependency?.vulnerabilities).each { vulnerability ->
         addFinding(
@@ -217,8 +235,51 @@ class CveDashboardSnapshotPublisher implements Serializable {
   }
 
   private static String gradlePackageName(dependency) {
-    def packageId = asList(dependency?.packages).find { trimValue(it?.id) }?.id
-    trimValue(packageId) ?: trimValue(dependency?.fileName)
+    def coordinate = asList(dependency?.packages)
+      .collect { mavenCoordinate(trimValue(it?.id)) }
+      .find { it }
+    if (coordinate) {
+      return coordinate
+    }
+
+    def evidence = asList(dependency?.evidenceCollected?.vendorEvidence) +
+      asList(dependency?.evidenceCollected?.productEvidence)
+    for (String source : ['gradle', 'pom']) {
+      def sourceEvidence = evidence.findAll { trimValue(it?.source).equalsIgnoreCase(source) }
+      def groupIds = sourceEvidence.findAll { trimValue(it?.name).equalsIgnoreCase('groupid') }
+        .collect { trimValue(it?.value) }.findAll { it }.unique()
+      def artifactIds = sourceEvidence.findAll { trimValue(it?.name).equalsIgnoreCase('artifactid') }
+        .collect { trimValue(it?.value) }.findAll { it }.unique()
+      if (groupIds.size() == 1 && artifactIds.size() == 1) {
+        coordinate = mavenCoordinate("${groupIds.first()}:${artifactIds.first()}".toString())
+        if (coordinate) {
+          return coordinate
+        }
+      }
+    }
+
+    ''
+  }
+
+  @NonCPS
+  private static String mavenCoordinate(String packageId) {
+    if (packageId ==~ /^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$/) {
+      return packageId
+    }
+
+    def packageUrl = packageId =~ /^pkg:maven\/([^\/@?#]+)\/([^\/@?#]+)(?:@[^?#]+)?(?:\?[^#]*)?(?:#.*)?$/
+    if (!packageUrl.matches()) {
+      return ''
+    }
+
+    try {
+      String groupId = URLDecoder.decode(packageUrl[0][1], 'UTF-8')
+      String artifactId = URLDecoder.decode(packageUrl[0][2], 'UTF-8')
+      String coordinate = "${groupId}:${artifactId}"
+      return coordinate ==~ /^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$/ ? coordinate : ''
+    } catch (IllegalArgumentException ignored) {
+      return ''
+    }
   }
 
   private static BigDecimal highestScore(vulnerability) {

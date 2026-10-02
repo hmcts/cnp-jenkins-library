@@ -63,6 +63,8 @@ dependencies {
   testImplementation group: 'net.javacrumbs.json-unit', name: 'json-unit-fluent', version: '2.36.0'
 
   testRuntimeOnly 'org.objenesis:objenesis:3.3'
+  // CpsTransformer requires this optional dependency when compiling pipeline regression tests.
+  testRuntimeOnly 'org.kohsuke:groovy-sandbox:1.33'
 }
 
 
