@@ -323,8 +323,6 @@ enableCveDashboardIngestion(['master', 'release/1.x'])
 
 Branches outside the allow-list still run security checks and still keep the existing Cosmos publishing behaviour, but they do not update the dashboard's current repository snapshot. The dashboard URL and API key are exported as `CVE_DASHBOARD_URL` and `CVE_DASHBOARD_API_KEY` for the security-check stage only. Dashboard request failures are logged without failing the build.
 
-Snapshot publishing logs the JSON request payload and the response body with the same request ID, plus the response status. This includes validation details when the dashboard rejects a snapshot. The API key header is masked, and occurrences of the API key in logged payloads are redacted.
-
 #### Smoke tests
 
 To check that the app is working as intended you should implement smoke tests which call your app and check that the appropriate response is received.
