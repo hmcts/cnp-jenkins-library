@@ -1,10 +1,8 @@
-package withPipeline
-
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import spock.lang.Specification
 import uk.gov.hmcts.contino.AppPipelineConfig
 
-class SectionBuildAndTestCveDashboardTest extends Specification {
+class WithCveDashboardSecretsIfEnabledTest extends Specification {
 
   def helper
   def binding
@@ -26,7 +24,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       keyVaultArguments = args
       body.call()
     })
-    script = pipelineTest.loadScript('vars/sectionBuildAndTest.groovy')
+    script = pipelineTest.loadScript('vars/withCveDashboardSecretsIfEnabled.groovy')
   }
 
   def "does not load CVE dashboard secrets when ingestion is disabled"() {
@@ -35,7 +33,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       def config = new AppPipelineConfig()
 
     when:
-      script.withCveDashboardSecretsIfEnabled(config, 'ccd', 'aat') {
+      script.call(config, 'ccd', 'aat') {
         called = true
       }
 
@@ -51,7 +49,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       def config = new AppPipelineConfig(cveDashboardIngestion: true)
 
     when:
-      script.withCveDashboardSecretsIfEnabled(config, 'ccd', 'prod') {
+      script.call(config, 'ccd', 'prod') {
         called = true
       }
 
@@ -72,7 +70,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       def config = new AppPipelineConfig(cveDashboardIngestion: true, cveDashboardVaultName: 'shared-cve-dashboard')
 
     when:
-      script.withCveDashboardSecretsIfEnabled(config, 'ccd', 'aat') {}
+      script.call(config, 'ccd', 'aat') {}
 
     then:
       keyVaultArguments.keyVaultURLOverride == 'https://ccd-aat.vault.azure.net/'
@@ -85,7 +83,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       def config = new AppPipelineConfig(cveDashboardIngestion: true)
 
     when:
-      script.withCveDashboardSecretsIfEnabled(config, 'ccd', 'aat') {
+      script.call(config, 'ccd', 'aat') {
         called = true
       }
 
@@ -104,7 +102,7 @@ class SectionBuildAndTestCveDashboardTest extends Specification {
       )
 
     when:
-      script.withCveDashboardSecretsIfEnabled(config, 'ccd', 'aat') {}
+      script.call(config, 'ccd', 'aat') {}
 
     then:
       keyVaultArguments.keyVaultURLOverride == 'https://ccd-aat.vault.azure.net/'
