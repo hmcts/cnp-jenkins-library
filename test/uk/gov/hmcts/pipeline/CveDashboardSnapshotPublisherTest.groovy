@@ -270,4 +270,70 @@ class CveDashboardSnapshotPublisherTest extends Specification {
       1 * steps.httpRequest(_ as LinkedHashMap) >> { throw new RuntimeException('timeout') }
       1 * steps.echo({ it.contains("Unable to publish CVE dashboard snapshot") && it.contains("timeout") })
   }
+
+  def "logs request and response payloads with the request ID"() {
+    given:
+      def request
+      String requestLog
+      def requestId = envVars.BUILD_TAG
+
+    when:
+      publisher.publishSnapshot('node', [
+        vulnerabilities: [[module_name: 'lodash', cves: ['CVE-2026-1001'], severity: 'high']]
+      ])
+
+    then:
+      1 * steps.echo({ it.startsWith("CVE dashboard snapshot request (${requestId}): ") }) >> { args ->
+        requestLog = args[0].toString()
+      }
+      1 * steps.httpRequest(_ as LinkedHashMap) >> { LinkedHashMap args ->
+        request = args
+        [status: status, content: responseBody]
+      }
+      1 * steps.echo("CVE dashboard snapshot response (${requestId}), status ${status}: ${responseBody}")
+      (status >= 400 ? 1 : 0) * steps.echo("Unable to publish CVE dashboard snapshot '${status}'")
+
+      requestLog == "CVE dashboard snapshot request (${requestId}): ${request.requestBody}"
+      !requestLog.contains(envVars.CVE_DASHBOARD_API_KEY)
+      request.consoleLogResponseBody == false
+      request.customHeaders.find { it.name == 'X-API-Key' }.maskValue
+
+    where:
+      status | responseBody
+      200    | '{"summary":{"total":1}}'
+      400    | '{"error":{"code":"validation_error","errors":[{"field":"suppressedPackages","message":"Enter Maven coordinates"}]}}'
+      500    | 'Internal server error'
+  }
+
+  def "logs an empty response body explicitly"() {
+    when:
+      publisher.publishSnapshot('node', [vulnerabilities: []])
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> [status: 204]
+      1 * steps.echo("CVE dashboard snapshot response (${envVars.BUILD_TAG}), status 204: <empty>")
+  }
+
+  def "redacts the API key if it appears in logged payloads"() {
+    given:
+      envVars.TEAM_NAME = envVars.CVE_DASHBOARD_API_KEY
+      def request
+
+    when:
+      publisher.publishSnapshot('node', [vulnerabilities: []])
+
+    then:
+      1 * steps.httpRequest(_ as LinkedHashMap) >> { LinkedHashMap args ->
+        request = args
+        [status: 400, content: "Rejected ${envVars.CVE_DASHBOARD_API_KEY}"]
+      }
+      1 * steps.echo({
+        it.startsWith('CVE dashboard snapshot request (') &&
+          it.contains('"team":"*****"') && !it.contains(envVars.CVE_DASHBOARD_API_KEY)
+      })
+      1 * steps.echo("CVE dashboard snapshot response (${envVars.BUILD_TAG}), status 400: Rejected *****")
+      1 * steps.echo("Unable to publish CVE dashboard snapshot '400'")
+
+      new JsonSlurperClassic().parseText(request.requestBody).team == envVars.TEAM_NAME
+  }
 }
