@@ -11,6 +11,7 @@ repositories {
 }
 
 test {
+  inputs.files(fileTree('resources/uk/gov/hmcts/pipeline/yarn'))
   systemProperty 'groovy.grape.enable', 'false'
 
   reports {
