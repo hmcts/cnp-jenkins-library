@@ -28,10 +28,6 @@ def call(String repoUrl = null) {
 
 def shouldSkipChecks() {
     String jobName = env.JOB_NAME?.toLowerCase()
-    if (jobName?.contains('nightly')) {
-        echo 'Skipping custom library version checks for nightly jobs.'
-        return true
-    }
 
     String subscriptionName = env.JENKINS_SUBSCRIPTION_NAME?.toLowerCase()
     if (subscriptionName?.contains('sbox') || subscriptionName?.contains('sandbox')) {
@@ -148,17 +144,7 @@ def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {
                     [
                         ['Your Jenkinsfile references a deprecated Jenkins library version.'],
                         [
-                            "Update it to use *Infrastructure@${deprecation.version}*, then check the",
-                            'migration guide and rollout tracker before raising a PR. Some repositories',
-                            'also need Key Vault or PostgreSQL module changes as part of this migration.'
-                        ],
-                        [
-                            'Migration guide:',
-                            'https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973509936/Jenkins+Library+Migration+Guide'
-                        ],
-                        [
-                            'Rollout tracker:',
-                            'https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973305638/Migration+rollout+tracker'
+                            "Update it to use *Infrastructure@${deprecation.version}*",
                         ]
                     ],
                     deprecation.date_deadline

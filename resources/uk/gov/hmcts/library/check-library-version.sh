@@ -13,13 +13,8 @@ old_library_found () {
     echo "Old library version references found."
     echo "Update your Jenkinsfile to use: @Library(\"Infrastructure@${NEW_LIBRARY_VERSION}\")"
     echo ""
-    echo "Before raising a PR, check the migration guide and rollout tracker."
-    echo "Some repositories also need Key Vault or PostgreSQL module changes as part of this migration."
-    echo ""
-    echo "Migration guide: https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/277283079/Jenkins+Library+Migration+Guide"
-    echo "Rollout tracker: https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/277283023/Migration+rollout+tracker"
-    echo ""
     echo "Deadline for updating: ${DEADLINE}"
+    echo "Once the deadline passes, this library version will no longer be supported and the pipeline will fail."
     echo ""
     exit 1
 }
@@ -52,7 +47,7 @@ no_custom_library_found () {
 scan_jenkinsfiles () {
     local library_pattern="$1"
 
-    JENKINSFILES=$(find . -maxdepth 1 \( -name "Jenkinsfile" -o -name "Jenkinsfile_CNP" \) -type f -exec grep -l -E "${library_pattern}" {} + 2>/dev/null || true)
+    JENKINSFILES=$(find . -maxdepth 1 \( -name "Jenkinsfile" -o -name "Jenkinsfile_CNP" -o -name "Jenkinsfile_nightly" \) -type f -exec grep -l -E "${library_pattern}" {} + 2>/dev/null || true)
     if [ -n "$JENKINSFILES" ]; then
         FOUND_REFERENCES=1
         while IFS= read -r file; do

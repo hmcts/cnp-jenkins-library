@@ -97,16 +97,18 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'custom version check skips all helper scripts for nightly jobs'() {
+    void 'custom version check runs for nightly jobs'() {
         given:
         binding.getVariable('env').JOB_NAME = 'SERVICE-NIGHTLY'
+        statuses.unpinned = 1
 
         when:
         script.call()
 
         then:
-        assertThat(shellCommands).isEmpty()
-        assertThat(WarningCollector.pipelineWarnings).isEmpty()
+        assertThat(shellCommands.findAll { it.contains("'unpinned'") }).hasSize(1)
+        assertThat(WarningCollector.pipelineWarnings*.warningKey)
+            .containsExactly('unpinned_infrastructure_library')
     }
 
     @Test
@@ -264,10 +266,7 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
                 'receive the latest library features and reduce the chance of upstream changes unexpectedly breaking your pipeline. ' +
                 'Renovate can automatically update pinned library versions for you.',
             'Your Jenkinsfile references a deprecated Jenkins library version.\n\n' +
-                'Update it to use *Infrastructure@2.0.0*, then check the migration guide and rollout tracker before raising a PR. ' +
-                'Some repositories also need Key Vault or PostgreSQL module changes as part of this migration.\n\n' +
-                'Migration guide: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973509936/Jenkins+Library+Migration+Guide\n\n' +
-                'Rollout tracker: https://tools.hmcts.net/confluence/spaces/DTSPO/pages/1973305638/Migration+rollout+tracker'
+                'Update it to use *Infrastructure@2.0.0*'
         )
     }
 
