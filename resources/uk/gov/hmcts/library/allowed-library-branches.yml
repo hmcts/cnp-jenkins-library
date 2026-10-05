@@ -1,6 +1,8 @@
 branches:
   - name: master
     allowed: true
+  - name: fix/library-branch-validation-rate-limit
+    allowed: true
   - name: DTSPO-35113/master
     allowed: true
   - name: main
