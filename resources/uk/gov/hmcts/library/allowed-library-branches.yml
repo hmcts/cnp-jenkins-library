@@ -51,6 +51,3 @@ branches:
     allowed: true
   - name: highleveldatasetupstaging
     allowed: true
-  # Temporary: validate the Cypress binary cache in darts-portal#2540.
-  - name: fix/cache-cypress-binary
-    allowed: true
