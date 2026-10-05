@@ -1,10 +1,15 @@
 package uk.gov.hmcts.pipeline
 
+import jenkins.scm.api.SCMSource
 import spock.lang.Specification
+import spock.util.mop.ConfineMetaClassChanges
 import spock.lang.Unroll
 import uk.gov.hmcts.contino.JenkinsStepMock
 
 class LibraryBranchControlsTest extends Specification {
+  static final String ALLOWLIST_URL = 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
+  static final String TAG_REF_URL = 'https://api.github.com/repos/hmcts/cnp-jenkins-library/git/ref/tags/'
+
   def steps = Mock(JenkinsStepMock)
   def controls = new LibraryBranchControls(steps)
 
@@ -23,136 +28,118 @@ class LibraryBranchControlsTest extends Specification {
   @Unroll
   def "production subscription #subscription does not allow non-whitelisted branches"() {
     given:
-    steps.env >> [PROD_SUBSCRIPTION_NAME: subscription, SHARED_LIBRARY_VERSION: 'test-branch']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: subscription, SHARED_LIBRARY_VERSION: 'test-branch', GIT_CREDENTIALS_ID: 'creds']
 
     when:
     def allowed = controls.isBranchAllowed()
 
     then:
     !allowed
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
-    }) >> [content: 'allowlist']
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '[]']
-
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    0 * steps.httpRequest({ it.url.startsWith(TAG_REF_URL) })
 
     where:
     subscription << [null, 'prod']
   }
 
-  def "production subscription allows a whitelisted branch"() {
+  @Unroll
+  def "production subscription #subscription allows a whitelisted branch without querying GitHub tags"() {
     given:
-    steps.env >> [PROD_SUBSCRIPTION_NAME: subscription, SHARED_LIBRARY_VERSION: 'allowed-branch']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: subscription, SHARED_LIBRARY_VERSION: 'allowed-branch', GIT_CREDENTIALS_ID: 'creds']
 
     when:
     def allowed = controls.isBranchAllowed()
 
     then:
     allowed
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
-    }) >> [content: 'allowlist']
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '[]']
-
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'allowed-branch', allowed: true]]]
+    0 * steps.httpRequest({ it.url.startsWith(TAG_REF_URL) })
 
     where:
     subscription << [null, 'prod']
   }
 
-  def "production subscription allows an existing and semantically versioned tag"() {
+  def "allowlisted release tag does not query GitHub tags"() {
     given:
-    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: '2.9.0']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: '2.9.0', GIT_CREDENTIALS_ID: 'creds']
 
     when:
     def allowed = controls.isBranchAllowed()
 
     then:
     allowed
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
-    }) >> [content: 'allowlist']
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '[{"name": "2.9.0"},{"name":"2.1.0"}]']
-
-    1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: '2.9.0', allowed: true]]]
+    0 * steps.httpRequest({ it.url.startsWith(TAG_REF_URL) })
   }
 
-  def "production subscription does not allow a tag that does not exist on GitHub"() {
+  @Unroll
+  def "non-allowlisted release tag is allowed only when GitHub returns #status"() {
     given:
-    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: '22.0.0']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: '2.11.1', GIT_CREDENTIALS_ID: 'creds']
+
+    when:
+    def allowed = controls.isBranchAllowed()
+
+    then:
+    allowed == (status == 200)
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    1 * steps.httpRequest({ it.url == TAG_REF_URL + '2.11.1' && it.authentication == 'creds' }) >> [status: status]
+
+    where:
+    status << [200, 404]
+  }
+
+  def "a non-semver reference is not looked up as a tag"() {
+    given:
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'nonsemvertag', GIT_CREDENTIALS_ID: 'creds']
 
     when:
     def allowed = controls.isBranchAllowed()
 
     then:
     !allowed
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
-    }) >> [content: 'allowlist']
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '[{"name": "22.1.0"},{"name":"22.0.1"}]']
-    
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    0 * steps.httpRequest({ it.url.startsWith(TAG_REF_URL) })
   }
 
-  def "production subscription does not allow an existing tag that does not follow semantic versioning"() {
+  def "release tag is not looked up anonymously when no credential can be resolved"() {
     given:
-    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'nonsemvertag']
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: '2.11.1']
 
     when:
     def allowed = controls.isBranchAllowed()
 
     then:
     !allowed
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
-    }) >> [content: 'allowlist']
-
-    1 * steps.httpRequest({ request ->
-      request.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '[{"name": "nonsemvertag"}]']
-    
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    0 * steps.httpRequest({ it.url.startsWith(TAG_REF_URL) })
   }
 
-  def "malformed and unparsable library tag JSON is treated as no tags"() {
+  @ConfineMetaClassChanges(SCMSource.SourceByItem)
+  def "release tag lookup resolves the SCM credential before checkout has set GIT_CREDENTIALS_ID"() {
     given:
-    steps.env >> [GIT_CREDENTIALS_ID: 'test-git-credentials']
+    def env = [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: '2.11.1']
+    def job = new Object()
+    // Stands in for the job's GitHubSCMSource; only credentialsId is read.
+    def scmSource = [credentialsId: 'scm-creds']
+    SCMSource.SourceByItem.metaClass.static.findSource = { Object item -> item.is(job) ? scmSource : null }
+    steps.env >> env
+    steps.currentBuild >> [rawBuild: [parent: job]]
 
-    1 * steps.httpRequest({
-      it.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '{not-valid-json']
+    when:
+    def allowed = controls.isBranchAllowed()
 
-    expect:
-    controls.getLibraryTags() == []
-  }
-
-  def "library tag JSON with the wrong shape is treated as no tags"() {
-    given:
-    steps.env >> [GIT_CREDENTIALS_ID: 'test-git-credentials']
-
-    1 * steps.httpRequest({
-      it.url == 'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags'
-    }) >> [content: '{"name":"2.9.0"}']
-
-    expect:
-    controls.getLibraryTags() == []
+    then:
+    allowed
+    env.GIT_CREDENTIALS_ID == 'scm-creds'
+    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    1 * steps.httpRequest({ it.url == TAG_REF_URL + '2.11.1' && it.authentication == 'scm-creds' }) >> [status: 200]
   }
 }

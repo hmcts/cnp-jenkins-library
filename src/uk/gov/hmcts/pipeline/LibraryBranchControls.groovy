@@ -1,6 +1,5 @@
 package uk.gov.hmcts.pipeline
-import groovy.json.JsonSlurperClassic
-import groovy.json.JsonException
+import uk.gov.hmcts.contino.GithubAPI
 
 class LibraryBranchControls {
   def steps
@@ -24,37 +23,6 @@ class LibraryBranchControls {
     )
     libraryBranchControls = steps.readYaml(text: response.content)
     return libraryBranchControls
-  }
-
-  def getLibraryTags() {
-    def response = steps.httpRequest(
-      consoleLogResponseBody: true,
-      authentication: steps.env.GIT_CREDENTIALS_ID,
-      timeout: 10,
-      url: "https://api.github.com/repos/hmcts/cnp-jenkins-library/tags",
-      validResponseCodes: '200'
-    )
-
-    def responseContent = response?.content
-    if (!responseContent) {
-      steps.echo 'No library tags found in the response from GitHub.'
-      return []
-    }
-    try {
-      def tagsJson = new JsonSlurperClassic().parseText(responseContent)
-      if (!(tagsJson instanceof List)) {
-        steps.echo 'Library tags JSON from GitHub is not a list.'
-        return []
-      }
-      return tagsJson
-        .findAll { tagEntry -> tagEntry instanceof Map }
-        .collect { tagEntry -> tagEntry.name }
-        .findAll { it ==~ /\d+\.\d+\.\d+/ }
-
-    } catch (JsonException ignored) {
-      steps.echo 'Failed to parse library tags JSON from GitHub.'
-      return []
-    }
   }
 
   private String extractLibraryBranch(String libraryReference) {
@@ -139,14 +107,13 @@ class LibraryBranchControls {
     }
 
     def configuredBranches = libraryBranchControls.get('branches')
-    def libraryTags = getLibraryTags()
     def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
 
-
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
-    def tagEntry = libraryTags.find { it.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
-    def tagAllowed = tagEntry != null
+    // Only call GitHub for non-allowlisted release tags. GithubAPI resolves the SCM credential, as checkout hasn't run yet.
+    def tagAllowed = !branchAllowed && branchToCheck ==~ /\d+\.\d+\.\d+/ &&
+      new GithubAPI(steps).tagExists('hmcts/cnp-jenkins-library', branchToCheck)
 
     if (branchAllowed) {
       steps.echo "Library branch `${branchToCheck}` is allowed."

@@ -115,8 +115,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
         'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml': EnvironmentApprovalsTest.response,
         'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml': EnvironmentDnsConfigTest.response,
         'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml': DeprecationConfigTest.response,
-        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml': LibraryBranchAllowlistTest.response,
-        'https://api.github.com/repos/hmcts/cnp-jenkins-library/tags': LibraryTagsTest.response
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml': LibraryBranchAllowlistTest.response
       ]
       return responsesByUrl.get(url?.toString(), DefaultHttpResponseTest.response)
     })
