@@ -124,15 +124,7 @@ class LibraryBranchControls {
     def branchOrTagAllowed = branchAllowed || tagAllowed
 
     if (!branchOrTagAllowed) {
-      steps.echo '''
-       ================================================================================
-       ____      ____  _       _______     ____  _____  _____  ____  _____   ______
-       |_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  |
-         \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_|
-         \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____
-           \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
-           \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
-      '''
+      steps.echo WarningBanner.get(steps)
       steps.echo """
         Library branch/tag: `${branchToCheck}` is not approved for use.
         If you are using a branch, make sure to add it to:
