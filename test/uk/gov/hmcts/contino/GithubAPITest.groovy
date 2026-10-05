@@ -337,6 +337,20 @@ class GithubAPITest extends Specification {
       null   | false
   }
 
+  def "tagExists reports missing GitHub credentials and skips the request"() {
+    given:
+      def unauthenticatedSteps = Mock(JenkinsStepMock)
+      unauthenticatedSteps.env >> [:]
+
+    when:
+      def exists = new GithubAPI(unauthenticatedSteps).tagExists('hmcts/some-project', '1.2.3')
+
+    then:
+      !exists
+      1 * unauthenticatedSteps.echo({ it.contains('Unable to verify tag `1.2.3` in `hmcts/some-project`: no GitHub credentials could be resolved.') })
+      0 * unauthenticatedSteps.httpRequest(_)
+  }
+
   def "tagExists re-throws build aborts instead of treating them as a missing tag"() {
     given:
       // A concrete class, because a Mock of JenkinsStepMock wraps checked exceptions in UndeclaredThrowableException.

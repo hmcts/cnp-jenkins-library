@@ -373,6 +373,7 @@ class GithubAPI {
   boolean tagExists(String project, String tag) {
     def credentialsId = resolveCredentialsId()
     if (!credentialsId) {
+      this.steps.echo("Unable to verify tag `${tag}` in `${project}`: no GitHub credentials could be resolved.")
       return false
     }
     try {
