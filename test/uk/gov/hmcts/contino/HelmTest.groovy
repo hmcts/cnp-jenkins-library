@@ -44,6 +44,144 @@ class HelmTest extends Specification {
       it.get('script').contains("env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${SUBSCRIPTION}")})
   }
 
+  def "authenticateAcr() should login to the current registry using the registry subscription"() {
+    given:
+    def testSteps = Mock(JenkinsStepMock.class)
+    testSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                      AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                      TEAM_NAMESPACE: "cnp",
+                      SUBSCRIPTION_NAME: "${SUBSCRIPTION}",
+                      REGISTRY_NAME: "hmctsprod",
+                      REGISTRY_SUBSCRIPTION: "DCD-CNP-PROD",
+                      BRANCH_NAME: "PR-123"]
+    testSteps.fileExists("${CHART_PATH}/Chart.yaml") >> false
+    def testHelm = new Helm(testSteps, CHART)
+    testHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    testHelm.authenticateAcr()
+
+    then:
+    1 * testHelm.acr.az("acr login --name hmctsprod --subscription DCD-CNP-PROD")
+  }
+
+  // ==================== kubeconform() Tests ====================
+
+  def "kubeconform() validates base values with strict validation flags and default k8s version"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
+
+    when:
+    helm.kubeconform()
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation (base values)' &&
+      it.get('script').contains("helm template ${CHART} ${CHART_PATH}") &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml") &&
+      it.get('script').contains('| kubeconform') &&
+      it.get('script').contains('-strict') &&
+      it.get('script').contains('-summary') &&
+      it.get('script').contains('-ignore-missing-schemas') &&
+      it.get('script').contains('-kubernetes-version 1.35.0') &&
+      it.get('script').contains('-schema-location default') &&
+      !it.get('script').contains('datreeio')
+    })
+  }
+
+  def "kubeconform() propagates schema validation failures"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
+    steps.sh({ it.get('label') == 'kubeconform schema validation (base values)' }) >> {
+      throw new RuntimeException('kubeconform schema validation failed')
+    }
+
+    when:
+    helm.kubeconform()
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.message == 'kubeconform schema validation failed'
+  }
+
+  def "kubeconform() passes a custom k8sVersion through to kubeconform"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> []
+
+    when:
+    helm.kubeconform("1.30.0")
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation (base values)' &&
+      it.get('script').contains('-kubernetes-version 1.30.0') &&
+      !it.get('script').contains('-kubernetes-version 1.35.0')
+    })
+  }
+
+  def "kubeconform() validates each documented environment template separately with base values"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
+      [name: 'values.preview.template.yaml', path: "${CHART_PATH}/values.preview.template.yaml"],
+      [name: 'values.aat.template.yaml', path: "${CHART_PATH}/values.aat.template.yaml"]
+    ]
+
+    when:
+    helm.kubeconform()
+
+    then:
+    1 * steps.sh({it.get('label') == 'kubeconform schema validation (base values)' &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml") &&
+      !it.get('script').contains('.template.yaml')
+    })
+    1 * steps.sh({it.get('label') == 'kubeconform schema validation (values.aat.template.yaml)' &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml -f ${CHART_PATH}/values.aat.template.yaml") &&
+      !it.get('script').contains('values.preview.template.yaml')
+    })
+    1 * steps.sh({it.get('label') == 'kubeconform schema validation (values.preview.template.yaml)' &&
+      it.get('script').contains("-f ${CHART_PATH}/values.yaml -f ${CHART_PATH}/values.preview.template.yaml") &&
+      !it.get('script').contains('values.aat.template.yaml')
+    })
+  }
+
+  def "kubeconform() validates environment templates in path order"() {
+    given:
+    def validationLabels = []
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
+      [name: 'values.preview.template.yaml', path: "${CHART_PATH}/values.preview.template.yaml"],
+      [name: 'values.aat.template.yaml', path: "${CHART_PATH}/values.aat.template.yaml"]
+    ]
+    steps.sh(_) >> { Map arguments -> validationLabels.add(arguments.label) }
+
+    when:
+    helm.kubeconform()
+
+    then:
+    validationLabels == [
+      'kubeconform schema validation (base values)',
+      'kubeconform schema validation (values.aat.template.yaml)',
+      'kubeconform schema validation (values.preview.template.yaml)'
+    ]
+  }
+
+  def "kubeconform() ignores undocumented multi-part values templates"() {
+    given:
+    steps.findFiles([glob: "${CHART_PATH}/values.*.template.yaml"]) >> [
+      [name: 'values.enableWA.preview.template.yaml', path: "${CHART_PATH}/values.enableWA.preview.template.yaml"],
+      [name: 'values.ccd.preview.template.yaml', path: "${CHART_PATH}/values.ccd.preview.template.yaml"]
+    ]
+
+    when:
+    helm.kubeconform()
+
+    then:
+    1 * steps.sh({it.containsKey('label') &&
+      it.get('label') == 'kubeconform schema validation (base values)' &&
+      !it.get('script').contains('.template.yaml')
+    })
+    0 * steps.sh({it.get('label').contains('.template.yaml')})
+  }
+
   def "installOrUpgrade() on PR branch should execute without --wait flag and do manual wait"() {
     when:
     helm.installOrUpgrade("pr-1", ["val1", "val2"], ["--namespace cnp"])
@@ -73,8 +211,10 @@ class HelmTest extends Specification {
       it.get('script').contains('timeout 60 kubectl get pods -n cnp -l app.kubernetes.io/instance=my-chart-pr-1,' + "'!job-name'" + ' -w 2>/dev/null | grep -m1 "Running\\|Pending" > /dev/null') &&
       it.get('script').contains('No pods found matching selector - this chart may only contain jobs/cronjobs') &&
       it.get('script').contains("ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError") &&
-      it.get('script').contains("Waiting for pods to be scheduled and ready...") &&
-      it.get('script').contains("kubectl wait --for=condition=ready pod") &&
+      it.get('script').contains("Waiting for workloads to roll out...") &&
+      it.get('script').contains("timeout 1220 kubectl rollout status deployment,statefulset,daemonset") &&
+      it.get('script').contains("-l app.kubernetes.io/instance=my-chart-pr-1 ") &&
+      !it.get('script').contains("kubectl wait --for=condition=ready pod") &&
       it.get('script').contains("--timeout=1220s")
     })
     1 * steps.sh('rm aks-debug-info.sh')
@@ -197,6 +337,268 @@ class HelmTest extends Specification {
     then:
     testHelm.isDualPublishEnabled() == true
     testHelm.secondaryRegistryName == "hmctsold"
+  }
+
+  // ==================== Cross-registry dependency tests ====================
+
+  def "authenticateAcr() should rewrite external chart dependencies to the current registry in sandbox"() {
+    given:
+    def sandboxSteps = Mock(JenkinsStepMock.class)
+    sandboxSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "sbox",
+                         REGISTRY_NAME: "hmctssbox",
+                         REGISTRY_SUBSCRIPTION: "DTS-SHAREDSERVICES-SBOX",
+                         BRANCH_NAME: "PR-123"]
+    sandboxSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    sandboxSteps.readFile("${CHART_PATH}/Chart.yaml") >> "dependencies:\n  - name: base\n    repository: oci://hmctsprod.azurecr.io/helm\n"
+    def sandboxHelm = new Helm(sandboxSteps, CHART)
+    sandboxHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    sandboxHelm.authenticateAcr()
+
+    then:
+    1 * sandboxHelm.acr.az("acr login --name hmctssbox --subscription DTS-SHAREDSERVICES-SBOX")
+    1 * sandboxSteps.writeFile({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.text.contains("oci://hmctssbox.azurecr.io/helm") &&
+        !args.text.contains("hmctsprod")
+    })
+    0 * sandboxHelm.acr.az({ it.toString().contains("acr login --name hmctsprod") })
+    sandboxHelm.sandboxRewrittenRegistries == ['hmctsprod']
+  }
+
+  def "authenticateAcr() should use the configured subscription for external registries outside sandbox"() {
+    given:
+    def nonprodSteps = Mock(JenkinsStepMock.class)
+    nonprodSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "nonprod",
+                         REGISTRY_NAME: "hmctspublic",
+                         REGISTRY_SUBSCRIPTION: "DCD-CNP-DEV",
+                         EXTERNAL_ACR_SUBSCRIPTION_HMCTSPROD: "DCD-CNP-PROD",
+                         BRANCH_NAME: "PR-123"]
+    nonprodSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    nonprodSteps.readFile("${CHART_PATH}/Chart.yaml") >> "dependencies:\n  - name: base\n    repository: oci://hmctsprod.azurecr.io/helm\n"
+    def nonprodHelm = new Helm(nonprodSteps, CHART)
+    nonprodHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    nonprodHelm.authenticateAcr()
+
+    then:
+    1 * nonprodHelm.acr.az("acr login --name hmctspublic --subscription DCD-CNP-DEV")
+    1 * nonprodHelm.acr.az("acr login --name hmctsprod --subscription DCD-CNP-PROD")
+    0 * nonprodSteps.writeFile(_)
+  }
+
+  def "installOrUpgrade() should restore original chart metadata after sandbox dependency rewrite"() {
+    given:
+    def originalChartYaml = "dependencies:\n  - name: base\n    repository: oci://hmctsprod.azurecr.io/helm\n"
+    def sandboxSteps = Mock(JenkinsStepMock.class)
+    sandboxSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         AKS_CLUSTER_NAME: "cnp-aks-cluster",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "sbox",
+                         REGISTRY_NAME: "hmctssbox",
+                         REGISTRY_SUBSCRIPTION: "DTS-SHAREDSERVICES-SBOX",
+                         BRANCH_NAME: "master"]
+    sandboxSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    sandboxSteps.readFile("${CHART_PATH}/Chart.yaml") >> originalChartYaml
+    def sandboxHelm = new Helm(sandboxSteps, CHART)
+    sandboxHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    sandboxHelm.authenticateAcr()
+    sandboxHelm.installOrUpgrade("staging", ["val1"], [])
+
+    then:
+    1 * sandboxSteps.writeFile({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.text.contains("oci://hmctssbox.azurecr.io/helm")
+    })
+    1 * sandboxSteps.writeFile({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.text == originalChartYaml
+    })
+    1 * sandboxSteps.sh("rm -f ${CHART_PATH}/Chart.lock")
+    sandboxHelm.rewrittenChartFileBackups.isEmpty()
+    sandboxHelm.rewriteGeneratedFiles.isEmpty()
+  }
+
+  // ==================== preview dependency removal Tests ====================
+
+  static Map chartWithPreviewDependencies(String annotation) {
+    [
+      apiVersion : 'v2',
+      name       : CHART,
+      version    : '1.0.0',
+      annotations: annotation == null ? [:] : [(Helm.SKIP_PUBLISH_ANNOTATION): annotation],
+      dependencies: [
+        [name: 'java', version: '5.3.0', repository: 'oci://hmctsprod.azurecr.io/helm'],
+        [name: 'ccd-core', version: '9.3.0', repository: 'oci://hmctsprod.azurecr.io/helm', condition: 'ccd-core.enabled'],
+        [name: 'servicebus', version: '1.2.2', repository: 'oci://hmctsprod.azurecr.io/helm'],
+        [name: 'servicebus', alias: 'hmcsb', version: '1.2.2', repository: 'oci://hmctsprod.azurecr.io/helm'],
+      ]
+    ]
+  }
+
+  def previewSteps(Map chart) {
+    def publishSteps = Mock(JenkinsStepMock.class)
+    publishSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "nonprod",
+                         REGISTRY_NAME: "hmctsprod",
+                         BRANCH_NAME: "master"]
+    publishSteps.fileExists("${CHART_PATH}/Chart.yaml") >> true
+    publishSteps.fileExists("${CHART_PATH}/Chart.lock") >> true
+    publishSteps.readFile("${CHART_PATH}/Chart.yaml") >> "original chart yaml"
+    publishSteps.readFile("${CHART_PATH}/Chart.lock") >> "original chart lock"
+    publishSteps.readYaml([file: "${CHART_PATH}/Chart.yaml".toString()]) >> chart
+    publishSteps
+  }
+
+  def "removePreviewDependencies() removes the annotated dependencies from Chart.yaml"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core'))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    def removed = publishHelm.removePreviewDependencies()
+
+    then:
+    removed
+    1 * publishSteps.writeYaml({ Map args ->
+      args.file == "${CHART_PATH}/Chart.yaml" &&
+        args.overwrite == true &&
+        args.data.dependencies*.name == ['java', 'servicebus', 'servicebus']
+    })
+  }
+
+  def "removePreviewDependencies() matches an aliased dependency by its alias"() {
+    given:
+    def chart = chartWithPreviewDependencies('hmcsb')
+    def expected = chart.dependencies.take(3)
+    def publishSteps = previewSteps(chart)
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+
+    then:
+    1 * publishSteps.writeYaml({ Map args -> args.data.dependencies == expected })
+  }
+
+  def "removePreviewDependencies() accepts a comma separated list with whitespace"() {
+    given:
+    def chart = chartWithPreviewDependencies(' ccd-core , hmcsb, ')
+    def expected = [chart.dependencies[0], chart.dependencies[2]]
+    def publishSteps = previewSteps(chart)
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+
+    then:
+    1 * publishSteps.writeYaml({ Map args -> args.data.dependencies == expected })
+  }
+
+  def "removePreviewDependencies() leaves a chart without the annotation untouched"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies(null))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    def removed = publishHelm.removePreviewDependencies()
+
+    then:
+    !removed
+    0 * publishSteps.writeYaml(_)
+    publishHelm.rewrittenChartFileBackups.isEmpty()
+    publishHelm.rewriteGeneratedFiles.isEmpty()
+  }
+
+  def "removePreviewDependencies() fails when an annotated dependency does not exist"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core, ccd'))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.message.contains('lists ccd,')
+    0 * publishSteps.writeYaml(_)
+  }
+
+  def "restoreChartDependencyFiles() puts back Chart.yaml and Chart.lock after removing preview dependencies"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core'))
+    def publishHelm = new Helm(publishSteps, CHART)
+
+    when:
+    publishHelm.removePreviewDependencies()
+    publishHelm.restoreChartDependencyFiles()
+
+    then:
+    1 * publishSteps.writeFile([file: "${CHART_PATH}/Chart.yaml".toString(), text: "original chart yaml"])
+    1 * publishSteps.writeFile([file: "${CHART_PATH}/Chart.lock".toString(), text: "original chart lock"])
+    publishHelm.rewrittenChartFileBackups.isEmpty()
+  }
+
+  def "publishIfNotExists() removes preview dependencies before resolving and packaging the chart"() {
+    given:
+    def publishSteps = previewSteps(chartWithPreviewDependencies('ccd-core'))
+    publishSteps.sh(_) >> { args ->
+      def script = args[0] instanceof Map ? args[0].script : args[0]
+      if (script.toString().contains('helm pull')) {
+        throw new RuntimeException('not found')
+      }
+      script.toString().contains('helm inspect chart') ? '1.0.0' : ''
+    }
+    publishSteps.findFiles(_) >> []
+    def publishHelm = new Helm(publishSteps, CHART)
+    publishHelm.acr = Mock(uk.gov.hmcts.contino.azure.Acr)
+
+    when:
+    publishHelm.publishIfNotExists(["values.yaml"])
+
+    then:
+    1 * publishSteps.writeYaml({ Map args -> !args.data.dependencies*.name.contains('ccd-core') })
+
+    then:
+    1 * publishSteps.sh({ it instanceof Map && it.script.contains("helm dependency update ${CHART_PATH}") })
+
+    then:
+    1 * publishSteps.sh({ it.toString().contains("helm package ${CHART_PATH}") })
+
+    then:
+    1 * publishSteps.writeFile([file: "${CHART_PATH}/Chart.yaml".toString(), text: "original chart yaml"])
+  }
+
+  def "dependencyUpdate() should explain sandbox rewrites when the update fails"() {
+    given:
+    def failingSteps = Mock(JenkinsStepMock.class)
+    failingSteps.env >> [AKS_RESOURCE_GROUP: "cnp-aks-rg",
+                         TEAM_NAMESPACE: "cnp",
+                         SUBSCRIPTION_NAME: "sbox",
+                         REGISTRY_NAME: "hmctssbox",
+                         BRANCH_NAME: "PR-123"]
+    failingSteps.sh(_) >> { throw new RuntimeException('pull access denied') }
+    def failingHelm = new Helm(failingSteps, CHART)
+    failingHelm.sandboxRewrittenRegistries = ['hmctsprod']
+
+    when:
+    failingHelm.dependencyUpdate()
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.message.contains('rewritten from hmctsprod to hmctssbox')
+    exception.message.contains('Publish the dependency charts to hmctssbox')
   }
 
 }

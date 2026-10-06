@@ -378,6 +378,101 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
+  private installDependencies() {
+    corepackEnable()
+
+    String nvmSetup = steps.fileExists(NVMRC) ? '''
+          set +e
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh
+          nvm install
+          set -e
+    ''' : ''
+
+    def status = steps.sh(label: 'Install yarn dependencies', script: """
+      set +x
+      set -e
+      export PATH=\$HOME/.local/bin:\$PATH
+
+      dependencies_available() {
+        if [ -f ".pnp.cjs" ] || [ -f ".pnp.js" ]; then
+          return 0
+        fi
+
+        if [ -f ".yarnrc.yml" ]; then
+          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules' ".yarnrc.yml"; then
+            [ -f "node_modules/.yarn-state.yml" ]
+            return \$?
+          fi
+
+          return 1
+        fi
+
+        [ -d "node_modules" ]
+      }
+
+      node_modules_populated() {
+        [ -d "node_modules" ] && [ -n "\$(find node_modules -mindepth 1 -maxdepth 1 -print -quit)" ]
+      }
+
+      dependencies_available_after_success() {
+        dependencies_available || node_modules_populated
+      }
+
+      install_marker_valid() {
+        [ -f "${INSTALL_CHECK_FILE}" ] && dependencies_available
+      }
+
+      lock_dir="${INSTALL_CHECK_FILE}.lock"
+      while ! mkdir "\$lock_dir" 2>/dev/null; do
+        if install_marker_valid; then
+          exit 0
+        fi
+        sleep 2
+      done
+
+      cleanup() {
+        rmdir "\$lock_dir" 2>/dev/null || true
+      }
+      trap cleanup EXIT
+
+      if install_marker_valid; then
+        exit 0
+      fi
+
+      rm -f "${INSTALL_CHECK_FILE}"
+
+      ${nvmSetup}
+
+      set +e
+      yarn install
+      install_status=\$?
+      set -e
+      if [ "\$install_status" -eq 0 ]; then
+        if ! dependencies_available_after_success; then
+          echo "Yarn install completed but dependency state is missing" >&2
+          exit 1
+        fi
+
+        touch "${INSTALL_CHECK_FILE}"
+        exit 0
+      fi
+
+      if dependencies_available; then
+        echo "Yarn install exited with status \$install_status; using existing dependency state"
+        touch "${INSTALL_CHECK_FILE}"
+        exit 0
+      fi
+
+      echo "Yarn install failed with status \$install_status and dependency state is missing" >&2
+      exit "\$install_status"
+    """, returnStatus: true)
+
+    if (status != 0) {
+      steps.error("Yarn dependency install failed with status ${status}")
+    }
+  }
+
   private LocalDate node18ExpirationDate() {
     def date;
     switch (steps.env.PRODUCT) {
@@ -431,11 +526,7 @@ EOF
   }
 
   def yarn(String task, String prepend = "") {
-    if (!steps.fileExists(INSTALL_CHECK_FILE)) {
-      steps.sh("touch ${INSTALL_CHECK_FILE}")
-      corepackEnable()
-      runYarn("install")
-    }
+    installDependencies()
     runYarn(task, prepend)
   }
 

@@ -54,15 +54,70 @@ class YarnBuilderTest extends Specification {
       then:
           1 * steps.sh({
               it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
               it.script.contains('yarn install') &&
+              it.script.contains('touch ".yarn_dependencies_installed"') &&
               it.returnStatus == true
-          })
-          1 * steps.sh({ it.contains('touch .yarn_dependencies_installed') })
+          }) >> 0
           1 * steps.sh({
               it instanceof Map &&
               it.script.contains('yarn lint') &&
               it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
+  }
+
+  def "build serialises yarn install with a workspace lock"() {
+      when:
+          builder.build()
+      then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('lock_dir=".yarn_dependencies_installed.lock"') &&
+              it.script.contains('while ! mkdir "$lock_dir"') &&
+              it.script.contains('install_marker_valid()') &&
+              it.script.contains('dependencies_available_after_success()') &&
+              it.script.contains('node_modules_populated()') &&
+              it.script.contains('if install_marker_valid; then') &&
+              it.script.contains('trap cleanup EXIT') &&
+              it.script.indexOf('yarn install') < it.script.indexOf('touch ".yarn_dependencies_installed"')
           })
+  }
+
+  def "build allows existing dependency state when yarn install returns non-zero"() {
+      when:
+          builder.build()
+      then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('yarn install') &&
+              it.script.contains('Yarn install exited with status $install_status; using existing dependency state')
+          }) >> 0
+          1 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn lint') &&
+              it.returnStatus == true
+          }) >> 0
+          0 * steps.error(_)
+  }
+
+  def "build fails when yarn install returns non-zero without dependency state"() {
+      when:
+          builder.build()
+      then:
+          1 * steps.sh({
+              it instanceof Map &&
+              it.label == 'Install yarn dependencies' &&
+              it.script.contains('Yarn install failed with status $install_status and dependency state is missing')
+          }) >> 3
+          1 * steps.error("Yarn dependency install failed with status 3") >> { throw new RuntimeException('install failed') }
+          0 * steps.sh({
+              it instanceof Map &&
+              it.script.contains('yarn lint')
+          })
+          thrown(RuntimeException)
   }
 
   def "test calls 'yarn test' and 'yarn test:coverage' and 'yarn test:a11y'"() {

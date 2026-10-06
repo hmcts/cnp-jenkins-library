@@ -3,6 +3,8 @@ package withPipeline
 import com.lesfurets.jenkins.unit.BasePipelineTest
 import uk.gov.hmcts.contino.EnvironmentDnsConfigTest
 import uk.gov.hmcts.pipeline.DeprecationConfigTest
+import uk.gov.hmcts.pipeline.SlackBlockMessage
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import uk.gov.hmcts.contino.MockDocker
 import uk.gov.hmcts.contino.MockJenkins
 import uk.gov.hmcts.contino.MockJenkinsPlugin
@@ -20,6 +22,10 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
   BaseCnpPipelineTest(String branchName, String jenkinsFile) {
     super.setUp()
 
+    // static across the JVM, so reset to avoid leaking warnings between test methods
+    WarningCollector.pipelineWarnings.clear()
+    WarningCollector.slackMessage = new SlackBlockMessage()
+
     // get the 'project' directory
     def projectDir = (new File(this.getClass().getClassLoader().getResource(jenkinsFile).toURI())).parentFile.parentFile.parentFile.parentFile
 
@@ -27,7 +33,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     binding.setVariable("Jenkins", [instance: new MockJenkins(new MockJenkinsPluginManager([new MockJenkinsPlugin('sonar', true)] as MockJenkinsPlugin[]))])
     binding.setVariable("env", [
       BRANCH_NAME : branchName, TEST_URL: '', SUBSCRIPTION_NAME: '', ARM_CLIENT_ID: '', ARM_CLIENT_SECRET: '', ARM_TENANT_ID: '',
-      ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
+      ARM_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_ID: '', JENKINS_SUBSCRIPTION_NAME: 'DTS-CFTPTL-INTSVC', STORE_rg_name_template: '', STORE_sa_name_template: '', STORE_sa_container_name_template: '',
       CHANGE_URL:'', CHANGE_BRANCH:'', BEARER_TOKEN:'', CHANGE_TITLE:'', GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'])
     binding.setVariable("docker", new MockDocker())
 
@@ -43,6 +49,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("ws", [Closure.class], { body -> body.call() })
     helper.registerAllowedMethod("ws", [String.class, Closure.class], { String path, Closure body -> body.call() })
     helper.registerAllowedMethod("checkout", [Object.class], { _ -> return [GIT_COMMIT: 'abcdefgh', GIT_URL: 'https://github.com/hmcts/cnp-plum-recipes-service.git'] })
+    helper.registerAllowedMethod("pwd", [], { -> 'localPath' })
     helper.registerAllowedMethod("deleteDir", [], {})
     helper.registerAllowedMethod("deleteDir",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("dir",  [String], { body ->
@@ -52,7 +59,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return []
     })
 
-    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], null)
+    helper.registerAllowedMethod("withEnv", [List.class, Closure.class], { List variables, Closure body -> body.call() })
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
@@ -71,6 +78,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("azureCosmosDBCreateDocument", [LinkedHashMap], null)
     helper.registerAllowedMethod("retry", [LinkedHashMap, Closure.class], {})
     helper.registerAllowedMethod("agent", [], {})
+    helper.registerAllowedMethod("stash", [LinkedHashMap.class], {})
+    helper.registerAllowedMethod("unstash", [String.class], {})
     helper.registerAllowedMethod("withAzureKeyvault", [List.class, Closure.class], { secrets, body ->
       body.call()
     })
@@ -92,6 +101,10 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       }  else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
           '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
+      } else if (m.get('script')?.contains('check-library-version.sh')) {
+        return 0
+      } else if (m.get('script').contains('account show') && m.get('script').contains('--query id')) {
+        return 'management-subscription-id'
       }
       else {
         return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
@@ -100,25 +113,19 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
 
     helper.registerAllowedMethod("httpRequest", [LinkedHashMap.class], { m ->
-      if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml') {
-        return TeamConfigTest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml') {
-        return EnvironmentApprovalsTest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml') {
-        return EnvironmentDnsConfigTest.response
-      } else if (m.get('url').startsWith("https://api.github.com/repos") && m.get('url').endsWith("/labels")) {
+      def url = m.get('url')
+      if (url?.toString()?.startsWith("https://api.github.com/repos") && url?.toString()?.endsWith("/labels")) {
         return GithubAPITest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml') {
-        return DeprecationConfigTest.response
-      } else if (m.get('url') == 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml') {
-        return ['content': '''branches:
-  - name: master
-    allowed: true
-''']
-      } else {
-        return ['content': '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +
-          '"azure_client_secret": "fake_secret","azure_tenant_id": "fake_tenant_id"}']
       }
+
+      def responsesByUrl = [
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/team-config.yml': TeamConfigTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml': EnvironmentApprovalsTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml': EnvironmentDnsConfigTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml': DeprecationConfigTest.response,
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml': LibraryBranchAllowlistTest.response
+      ]
+      return responsesByUrl.get(url?.toString(), DefaultHttpResponseTest.response)
     })
     helper.registerAllowedMethod("milestone",  [Integer, Closure.class], {})
     helper.registerAllowedMethod("lock", [LinkedHashMap.class, Closure.class], null)
@@ -162,6 +169,9 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
   - name: main
     allowed: true
 '''
+      }
+      if (resourcePath == 'uk/gov/hmcts/pipeline/warning-banner.txt') {
+        return 'warning banner'
       }
       return ''
     })

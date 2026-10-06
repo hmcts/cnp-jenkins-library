@@ -17,16 +17,15 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(YarnBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
-      build(1) {}
-      test(1) {}
-      securityCheck(1) {}
-      techStackMaintenance(1) {}
-      sonarScan(1) {}
-      smokeTest(1) {} //preview-staging
-      e2eTest(1) {}
-      functionalTest(1) {}
-      asBoolean() { return true }
+      setupToolVersion(0) {}
+      build(0) {}
+      test(0) {}
+      securityCheck(0) {}
+      techStackMaintenance(0) {}
+      sonarScan(0) {}
+      smokeTest(0) {} //preview-staging
+      e2eTest(0) {}
+      functionalTest(0) {}
     }
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
@@ -34,5 +33,7 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
+
+    stubBuilder.expect.verify()
   }
 }

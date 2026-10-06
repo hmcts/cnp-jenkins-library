@@ -30,6 +30,7 @@ def call(params) {
       echo "Skipping high level data setup for prod environment"
       return
     }
+
     def highLevelDataSetupKeyVaultName = config.highLevelDataSetupKeyVaultName
 
     stageWithEnvironmentAgent("High Level Data Setup - ${environment}", product, environment) {
