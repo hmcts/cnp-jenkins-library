@@ -12,14 +12,18 @@ def call(params) {
 
   stageWithAgent("Fortify Scan", product) {
     withFortifySecrets(fortifyVaultName) {
-      warnError(message: 'Failure in Fortify Scan', stageResult: 'UNSTABLE') {
-        pcr.callAround('fortify-scan') {
-          builder.fortifyScan()
+      // The library FoD scan runner (fallback when the repo has no fortifyScan task/script)
+      // needs the real OAuth client_id/secret, not just the vault username/password.
+      withFortifyOAuthSecrets {
+        warnError(message: 'Failure in Fortify Scan', stageResult: 'UNSTABLE') {
+          pcr.callAround('fortify-scan') {
+            builder.fortifyScan()
+          }
         }
-      }
 
-      warnError(message: 'Failure in Fortify vulnerability report', stageResult: 'UNSTABLE') {
-        fortifyVulnerabilityReport()
+        warnError(message: 'Failure in Fortify vulnerability report', stageResult: 'UNSTABLE') {
+          fortifyVulnerabilityReport()
+        }
       }
 
       archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'

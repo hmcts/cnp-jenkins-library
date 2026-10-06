@@ -1,0 +1,9 @@
+on:
+  pull_request:
+    types: [opened, edited, synchronize, labeled, unlabeled]
+
+jobs:
+  label-check:
+    uses: hmcts/cnp-githubactions-library/.github/workflows/label-check.yaml@main
+    permissions:
+      pull-requests: write

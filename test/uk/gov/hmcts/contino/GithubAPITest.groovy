@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import hudson.model.Result
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import spock.lang.Specification
 import static org.assertj.core.api.Assertions.assertThat
 
@@ -314,6 +316,55 @@ class GithubAPITest extends Specification {
       assertThat(version).isNull()
   }
 
+  def "tagExists returns true only for an existing tag and false when GitHub fails"() {
+    given:
+      steps.httpRequest({ Map request ->
+        request.url == 'https://api.github.com/repos/hmcts/some-project/git/ref/tags/1.2.3' &&
+          request.authentication == 'test-app-id' &&
+          request.validResponseCodes == '200,404'
+      }) >> {
+        if (!status) throw new RuntimeException('403 rate limit exceeded')
+        [status: status]
+      }
+
+    expect:
+      githubApi.tagExists('hmcts/some-project', '1.2.3') == exists
+
+    where:
+      status | exists
+      200    | true
+      404    | false
+      null   | false
+  }
+
+  def "tagExists reports missing GitHub credentials and skips the request"() {
+    given:
+      def unauthenticatedSteps = Mock(JenkinsStepMock)
+      unauthenticatedSteps.env >> [:]
+
+    when:
+      def exists = new GithubAPI(unauthenticatedSteps).tagExists('hmcts/some-project', '1.2.3')
+
+    then:
+      !exists
+      1 * unauthenticatedSteps.echo({ it.contains('Unable to verify tag `1.2.3` in `hmcts/some-project`: no GitHub credentials could be resolved.') })
+      0 * unauthenticatedSteps.httpRequest(_)
+  }
+
+  def "tagExists re-throws build aborts instead of treating them as a missing tag"() {
+    given:
+      // A concrete class, because a Mock of JenkinsStepMock wraps checked exceptions in UndeclaredThrowableException.
+      def abort = new FlowInterruptedException(Result.ABORTED)
+      def abortingSteps = new AbortingSteps(abort)
+
+    when:
+      new GithubAPI(abortingSteps).tagExists('hmcts/some-project', '1.2.3')
+
+    then:
+      def error = thrown(FlowInterruptedException)
+      error.is(abort)
+  }
+
   def "createGitHubRelease calls GitHub releases endpoint with expected payload"() {
     given:
       steps.httpRequest({ Map request ->
@@ -329,5 +380,20 @@ class GithubAPITest extends Specification {
 
     then:
       assertThat(response.status).isEqualTo(201)
+  }
+}
+
+class AbortingSteps {
+  def env = [GIT_CREDENTIALS_ID: 'test-app-id']
+  private final FlowInterruptedException abort
+
+  AbortingSteps(FlowInterruptedException abort) {
+    this.abort = abort
+  }
+
+  def echo(String message) { }
+
+  def httpRequest(Map request) {
+    throw abort
   }
 }

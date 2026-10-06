@@ -8,6 +8,8 @@ class withInfraPipelineOnDemoTests extends BaseCnpPipelineTest {
 
   withInfraPipelineOnDemoTests() {
     super("demo", jenkinsFile)
+    binding.env.ARM_SUBSCRIPTION_ID = 'target-subscription-id'
+    binding.env.JENKINS_SUBSCRIPTION_ID = 'jenkins-subscription-id'
   }
 
   @Test

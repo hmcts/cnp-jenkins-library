@@ -10,7 +10,6 @@ class TerraformInfraApprovalsTest extends Specification {
   def steps
   def infraApprovals
   def approvalsFileName
-  def approvalsFile
   static def response = ["content":
   """{
       "resources": [
@@ -28,23 +27,13 @@ class TerraformInfraApprovalsTest extends Specification {
     steps.httpRequest(_) >> response
     steps.env >> [SUBSCRIPTION_NAME: 'aat', GIT_URL: 'https://github.com/hmcts/some-project']
     approvalsFileName = "terraform-infra-approvals.json"
-    approvalsFile = new File(approvalsFileName)
-    if (approvalsFile.exists()) {
-      approvalsFile.delete()
-    }
     infraApprovals = new TerraformInfraApprovals(steps)
-  }
-
-  void cleanup() {
-    if (approvalsFile.exists()) {
-      approvalsFile.delete()
-    }
   }
 
   def "isApproved() should return true when subscription is sandbox"() {
     infraApprovals.subscription = 'sandbox'
     def tfInfraPath = '.'
-    approvalsFile << response.content
+    steps.fileExists(_) >> true
     when:
     def approved = infraApprovals.isApproved(tfInfraPath)
 
@@ -54,7 +43,7 @@ class TerraformInfraApprovalsTest extends Specification {
 
   def "isApproved() should return true when a terraform approvals list doesn't exist"() {
     def tfInfraPath = '.'
-    approvalsFile << ""
+    steps.fileExists(_) >> false
     when:
     def approved = infraApprovals.isApproved(tfInfraPath)
 
@@ -63,8 +52,8 @@ class TerraformInfraApprovalsTest extends Specification {
   }
 
   def "hasCachedInfraApprovals() should return true when a terraform approvals list exists"() {
-    approvalsFile << response.content
     TerraformInfraApprovals.infraApprovals.add(approvalsFileName)
+    steps.fileExists(approvalsFileName) >> true
     when:
     def cached = infraApprovals.hasCachedInfraApprovals()
 
@@ -73,8 +62,8 @@ class TerraformInfraApprovalsTest extends Specification {
   }
 
   def "hasCachedInfraApprovals() should return false when a terraform approvals list doesn't exist"() {
-    approvalsFile << ""
     TerraformInfraApprovals.infraApprovals.add(approvalsFileName)
+    steps.fileExists(approvalsFileName) >> false
     when:
     def cached = infraApprovals.hasCachedInfraApprovals()
 

@@ -24,7 +24,7 @@ def call(DockerImage dockerImage, Map params) {
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
   def namespace = env.TEAM_NAMESPACE
 
-  def imageName = dockerImage.getTaggedName()
+  def imageName = params.imageName ?: dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
 
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)

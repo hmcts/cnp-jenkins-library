@@ -1,0 +1,45 @@
+name-template: '$RESOLVED_VERSION'
+tag-template: '$RESOLVED_VERSION'
+
+version-resolver:
+  major:
+    labels:
+      - breaking-change
+  minor:
+    labels:
+      - enhancement
+  patch:
+    labels:
+      - bug
+      - dependencies
+      - documentation
+      - chore
+  default: patch
+
+categories:
+  - title: ':boom: Breaking Changes'
+    labels:
+      - breaking-change
+  - title: ':rocket: Features'
+    labels:
+      - enhancement
+  - title: ':bug: Bug Fixes'
+    labels:
+      - bug
+  - title: ':package: Dependency Updates'
+    labels:
+      - dependencies
+  - title: ':books: Documentation'
+    labels:
+      - documentation
+  - title: ':wrench: Maintenance'
+    labels:
+      - chore
+
+exclude-labels:
+  - skip-changelog
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+template: |
+  $CHANGES

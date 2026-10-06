@@ -1,4 +1,5 @@
 package uk.gov.hmcts.pipeline
+import uk.gov.hmcts.contino.GithubAPI
 
 class LibraryBranchControls {
   def steps
@@ -110,27 +111,32 @@ class LibraryBranchControls {
 
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
+    // Only call GitHub for non-allowlisted release tags. GithubAPI resolves the SCM credential, as checkout hasn't run yet.
+    def tagAllowed = !branchAllowed && branchToCheck ==~ /\d+\.\d+\.\d+/ &&
+      new GithubAPI(steps).tagExists('hmcts/cnp-jenkins-library', branchToCheck)
 
-    if (!branchAllowed) {
-      steps.echo '''
-       ================================================================================
-       ____      ____  _       _______     ____  _____  _____  ____  _____   ______
-       |_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  |
-         \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_|
-         \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____
-           \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
-           \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
-      '''
+    if (branchAllowed) {
+      steps.echo "Library branch `${branchToCheck}` is allowed."
+    } else if (tagAllowed) {
+      steps.echo "Library tag `${branchToCheck}` is allowed."
+    }
 
+    def branchOrTagAllowed = branchAllowed || tagAllowed
+
+    if (!branchOrTagAllowed) {
+      steps.echo WarningBanner.get(steps)
       steps.echo """
-        Library branch `${branchToCheck}` is not approved for use.
-        Make sure to add your branch to:
+        Library branch/tag: `${branchToCheck}` is not approved for use.
+        If you are using a branch, make sure to add it to:
         - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
+        ----
+        If a release version tag is being used, this could indicate an issue with the library code or that the tag does not exist or cannot be retrieved from the repository or does not conform to semantic versioning (e.g. 1.2.3).
+        Please check with the Platform Operations team for guidance.
         ================================================================================
       """
     }
 
-    return branchEntry && branchEntry['allowed'] == true
+    return branchOrTagAllowed
   }
 }
