@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.12.0] - 2026-10-05
+
+## :rocket: Features
+
+- feat: DTSPO-35207 Warn about unpinned, branch and to be deprecated versions, fail on deprecated versions @dawidstrozak (#1567)
+
+## [2.11.2] - 2026-10-05
+
+## :wrench: Maintenance
+
+- Remove Cypress cache test branch allowlist @gunnertwin (#1570)
+
+## [2.11.1] - 2026-10-02
+
+## :wrench: Maintenance
+
+- Temporarily allow Cypress cache test branch @gunnertwin (#1569)
+
+## [2.11.0] - 2026-09-30
+
+## :rocket: Features
+
+- feat: DTSPO-35187 support crime-idam environments in the versioned library @manohar-hmcts (#1561)
+
+## :bug: Bug Fixes
+
+- fix: wait on workload rollouts, not a pod snapshot, on PR deploys @jasonpaige (#1565)
+
+## [2.10.2] - 2026-09-30
+
+## :bug: Bug Fixes
+
+- fix: wait on workload rollouts, not a pod snapshot, on PR deploys @jasonpaige (#1565)
+
 ## [2.10.1] - 2026-09-25
 
 
