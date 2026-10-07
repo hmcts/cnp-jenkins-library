@@ -405,7 +405,7 @@ def call(params) {
                     }
                   }
                   savePodsLogs(dockerImage, params, "e2e")
-                  if (passed == false) {
+                  if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     error('E2E test failed')
                   }
@@ -425,7 +425,7 @@ def call(params) {
                     }
                   }
                   savePodsLogs(dockerImage, params, "e2e")
-                  if (passed == false) {
+                  if (!passed) {
                     clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     error('E2E test failed')
                   }
