@@ -3,7 +3,6 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurperClassic
 import jenkins.scm.api.SCMSource
-import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 class GithubAPI {
 
@@ -367,28 +366,6 @@ class GithubAPI {
     def latestRelease = new JsonSlurperClassic().parseText(response.content)
     String tagName = (latestRelease?.tag_name ?: '').toString().trim()
     return normalizeVersion(tagName)
-  }
-
-  // Never queries anonymously: the shared anonymous rate limit is easily exhausted by Jenkins.
-  boolean tagExists(String project, String tag) {
-    def credentialsId = resolveCredentialsId()
-    if (!credentialsId) {
-      this.steps.echo("Unable to verify tag `${tag}` in `${project}`: no GitHub credentials could be resolved.")
-      return false
-    }
-    try {
-      return this.steps.httpRequest(
-        authentication: credentialsId,
-        timeout: 10,
-        url: API_URL + "/${project}/git/ref/tags/${tag}",
-        validResponseCodes: '200,404'
-      ).status == 200
-    } catch (FlowInterruptedException err) {
-      throw err
-    } catch (err) {
-      this.steps.echo("Unable to verify tag `${tag}` with GitHub: ${err.message}")
-      return false
-    }
   }
 
   def createGitHubRelease(String project, String version, String targetCommitish = null) {
