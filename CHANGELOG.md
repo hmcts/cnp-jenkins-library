@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [2.10.1] - 2026-09-25
 
-
+- fix: DTSPO-35207 always allow release version tags @dawidstrozak (#1558)
 
 ## [2.10.0] - 2026-09-24
 
