@@ -28,10 +28,19 @@ class MetricsPublisherTests extends Specification {
   def "Executes without throwing uncaught errors"() {
     when:
     def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver)
-    metricsPublisher.publish()
+    metricsPublisher.publish('some-event')
 
     then:
     notThrown()
+  }
+
+  def "collects stage duration metrics when provided"() {
+    when:
+    def metricsPublisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver)
+    def metricsMap = metricsPublisher.collectMetrics('current stepName', 12345)
+
+    then:
+    assertThat(metricsMap).contains(entry("current_stage_duration", 12345))
   }
 
   def "collects build metrics"() {
