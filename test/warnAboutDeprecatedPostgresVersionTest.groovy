@@ -6,12 +6,14 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 import static org.assertj.core.api.Assertions.assertThat
+import static org.junit.Assert.fail
 
 class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
 
     def script
     String plannedPostgresResources = ''
     String deprecationDeadline = '2026-11-12'
+    List<String> shellCommands = []
 
     @Override
     @Before
@@ -37,8 +39,12 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
         })
         helper.registerAllowedMethod('libraryResource', [String.class], { 'script body' })
         helper.registerAllowedMethod('writeFile', [Map.class], {})
-        helper.registerAllowedMethod('sh', [String.class], { 0 })
+        helper.registerAllowedMethod('sh', [String.class], { String command ->
+            shellCommands << command
+            0
+        })
         helper.registerAllowedMethod('sh', [Map.class], { Map arguments ->
+            shellCommands << arguments.script
             if (arguments.returnStdout) {
                 return plannedPostgresResources
             }
@@ -74,14 +80,23 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
             .contains('14')
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     void 'fails once the deprecation deadline has passed for an affected plan'() {
         given:
         plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
         deprecationDeadline = '2020-01-01'
 
         when:
-        script.call()
+        try {
+          script.call()
+          fail('Expected an expired PostgreSQL version to fail the pipeline')
+        } catch (RuntimeException expected) {
+          assertThat(expected.message).contains('PostgreSQL 14 and below are deprecated')
+        }
 
+        then:
+        assertThat(WarningCollector.pipelineWarnings*.warningKey)
+          .containsExactly('deprecated_postgresql_version')
+        assertThat(shellCommands).contains('rm -f check-deprecated-postgres-version.sh')
     }
 }
