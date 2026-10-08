@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.12.2] - 2026-10-07
+
+## :bug: Bug Fixes
+
+- fix:avoid topic lookup for choosing metrics database @adusumillipraveen (#1575)
+
+## [2.12.1] - 2026-10-07
+
+## :bug: Bug Fixes
+
+- fix: Temporarily disable shared-library tag verification @gunnertwin (#1574)
+
 ## [2.12.0] - 2026-10-05
 
 ## :rocket: Features
