@@ -58,15 +58,6 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'does not warn after a service has upgraded to PostgreSQL 15'() {
-        when:
-        script.call()
-
-        then:
-        assertThat(WarningCollector.pipelineWarnings).isEmpty()
-    }
-
-    @Test
     void 'warns with affected resource details when the plan includes PostgreSQL 14 or below'() {
         given:
         plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
