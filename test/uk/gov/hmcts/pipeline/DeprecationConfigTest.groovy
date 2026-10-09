@@ -13,7 +13,8 @@ class DeprecationConfigTest {
         "helm"     : ["java": ["version": "5.2.0", "date_deadline": "2024-06-30"]],
         "gradle"   : ["java-logging": ["version": "6.0.1", "date_deadline": "2023-10-28"]],
         "npm"      : ["angular/core": ["version": "15", "date_deadline": "2024-03-25"]],
-        "python"   : ["python_version": ["date_deadline": "2027-01-01"]]
+        "python"   : ["python_version": ["date_deadline": "2027-01-01"]],
+        "database" : ["postgresql": ["version": "16", "date_deadline": "2026-11-12", "message": "PostgreSQL 15 and below are deprecated. Please upgrade to PostgreSQL 16 or later."]]
       ]
   ]
 }
