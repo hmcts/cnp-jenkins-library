@@ -124,7 +124,7 @@ class Kubectl {
     } catch (e) {
       this.steps.echo("Kubectl.login(): 'az aks get-credentials' failed for cluster ${this.clusterName} (usesManagedIdentity=${usesManagedIdentity}). " +
         (usesManagedIdentity ?
-          "Check the agent's managed identity has the AKS 'Cluster User'/'Cluster Admin' Azure role on this cluster." :
+          "Check the agent's managed identity has the AKS 'Cluster User' Azure role (or another role granting listClusterUserCredential) on this cluster." :
           "This agent isn't matched to an environment MI, so az cli must already be logged in before calling login() - check the calling pipeline authenticates first (e.g. via withSubscription())."))
       throw e
     }
