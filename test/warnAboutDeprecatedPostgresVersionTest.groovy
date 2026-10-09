@@ -13,6 +13,7 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
     def script
     String plannedPostgresResources = ''
     String deprecationDeadline = '2026-11-12'
+    String deprecationMessage = 'PostgreSQL 15 and below are deprecated. Please upgrade to PostgreSQL 16 or later.'
     List<String> shellCommands = []
 
     @Override
@@ -30,9 +31,9 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
             [
                 database: [
                     postgresql: [
-                        version: '15',
+                        version: '16',
                         date_deadline: deprecationDeadline,
-                        message: 'PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later.'
+                        message: deprecationMessage
                     ]
                 ]
             ]
@@ -64,9 +65,9 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'warns with affected resource details when the plan includes PostgreSQL 14 or below'() {
+    void 'warns with affected resource details when the plan includes PostgreSQL 15 or below'() {
         given:
-        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
+        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t15'
 
         when:
         script.call()
@@ -75,9 +76,9 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
         assertThat(WarningCollector.pipelineWarnings).hasSize(1)
         assertThat(WarningCollector.pipelineWarnings.first().warningKey).isEqualTo('deprecated_postgresql_version')
         assertThat(WarningCollector.pipelineWarnings.first().warningMessage)
-            .contains('PostgreSQL 14 and below are deprecated')
+            .contains('PostgreSQL 15 and below are deprecated')
             .contains('module.database.azurerm_postgresql_flexible_server.this')
-            .contains('14')
+            .contains('15')
     }
 
     @Test
@@ -91,7 +92,7 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
           script.call()
           fail('Expected an expired PostgreSQL version to fail the pipeline')
         } catch (RuntimeException expected) {
-          assertThat(expected.message).contains('PostgreSQL 14 and below are deprecated')
+          assertThat(expected.message).contains('PostgreSQL 15 and below are deprecated')
         }
 
         then:
