@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.12.3] - 2026-10-12
+
+## :package: Dependency Updates
+
+- deps: Fix Kubectl login for local\_account\_disabled AKS clusters @JakeM-Kainos (#1566)
+
 ## [2.12.2] - 2026-10-07
 
 ## :bug: Bug Fixes
