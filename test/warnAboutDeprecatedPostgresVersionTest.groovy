@@ -5,6 +5,8 @@ import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.SlackBlockMessage
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
+import java.time.LocalDate
+
 import static org.assertj.core.api.Assertions.assertThat
 import static org.junit.Assert.fail
 
@@ -12,8 +14,8 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
 
     def script
     String plannedPostgresResources = ''
-    String deprecationDeadline = '2026-11-12'
-    String deprecationMessage = 'PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later.'
+    String deprecationDeadline = '2026-10-11'
+    String deprecationMessage = 'PostgreSQL 16 and below are deprecated. Please upgrade to PostgreSQL 17 or later.'
     List<String> shellCommands = []
 
     @Override
@@ -31,7 +33,7 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
             [
                 database: [
                     postgresql: [
-                        version: '15',
+                        version: '17',
                         date_deadline: deprecationDeadline,
                         message: deprecationMessage
                     ]
@@ -65,9 +67,10 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'warns with affected resource details when the plan includes PostgreSQL 14 or below'() {
+    void 'warns with affected resource details before the deadline for PostgreSQL 16 or below'() {
         given:
-        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
+        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t16'
+        deprecationDeadline = LocalDate.now().plusDays(1).toString()
 
         when:
         script.call()
@@ -76,23 +79,22 @@ class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
         assertThat(WarningCollector.pipelineWarnings).hasSize(1)
         assertThat(WarningCollector.pipelineWarnings.first().warningKey).isEqualTo('deprecated_postgresql_version')
         assertThat(WarningCollector.pipelineWarnings.first().warningMessage)
-            .contains('PostgreSQL 14 and below are deprecated')
+            .contains('PostgreSQL 16 and below are deprecated')
             .contains('module.database.azurerm_postgresql_flexible_server.this')
-            .contains('14')
+            .contains('16')
     }
 
     @Test
     void 'fails once the deprecation deadline has passed for an affected plan'() {
         given:
-        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
-        deprecationDeadline = '2020-01-01'
+        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t16'
 
         when:
         try {
           script.call()
           fail('Expected an expired PostgreSQL version to fail the pipeline')
         } catch (RuntimeException expected) {
-          assertThat(expected.message).contains('PostgreSQL 14 and below are deprecated')
+          assertThat(expected.message).contains('PostgreSQL 16 and below are deprecated')
         }
 
         then:
