@@ -53,5 +53,3 @@ branches:
     allowed: true
   - name: highleveldatasetupstaging
     allowed: true
-  - name: DTSPO-34664
-    allowed: true
