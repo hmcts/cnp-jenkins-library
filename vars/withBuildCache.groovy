@@ -66,7 +66,7 @@ def call(config, Closure body) {
       if (cypressProject && fileExists('node_modules/.bin/cypress')) {
         String nvmSetup = fileExists('.nvmrc') ? '''
           export NVM_DIR='/home/jenkinsssh/.nvm'
-          . /opt/nvm/nvm.sh
+          . /opt/nvm/nvm.sh || true
           nvm install
         ''' : ''
         sh(
