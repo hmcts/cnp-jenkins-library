@@ -40,6 +40,7 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '**/.venv/**',
     '**build/**',
     '**/build/**',
+    '.gradle-user-home/**',
     '**/.gradle-user-home/**'
   ].join(',')
   boolean updatedWorkspaceStashed = false
