@@ -53,3 +53,5 @@ branches:
     allowed: true
   - name: highleveldatasetupstaging
     allowed: true
+  - name: DTSPO-35800/gradle-stashing-exclude
+    allowed: true
