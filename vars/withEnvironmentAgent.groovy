@@ -53,6 +53,7 @@ def call(String environment, String product, String agentLabelOverride, Closure 
 
   echo "Using ${agentLabel} agent for ${environment}"
   inOriginalWorkspace {
+    logStashSummary(stashName, stashExcludes)
     stash name: stashName, includes: '**/*', excludes: stashExcludes
   }
 
@@ -79,6 +80,7 @@ def call(String environment, String product, String agentLabelOverride, Closure 
       } finally {
         if (bodySucceeded) {
           inOriginalWorkspace {
+            logStashSummary(updatedStashName, stashExcludes)
             stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
           }
           updatedWorkspaceStashed = true
@@ -98,6 +100,27 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     inOriginalWorkspace {
       unstash updatedStashName
     }
+  }
+}
+
+def logStashSummary(String stashName, String stashExcludes) {
+  if (env.STASH_DIAGNOSTICS != 'true') {
+    return
+  }
+
+  def folderCounts = [:]
+  int totalFiles = 0
+  findFiles(glob: '**/*', excludes: stashExcludes).each { entry ->
+    if (!entry.directory) {
+      String folder = entry.path.contains('/') ? entry.path.substring(0, entry.path.indexOf('/')) + '/' : '(root files)'
+      folderCounts[folder] = (folderCounts[folder] ?: 0) + 1
+      totalFiles++
+    }
+  }
+
+  echo "Stash summary for ${stashName}: ${totalFiles} files (recursive counts by top-level folder)"
+  folderCounts.keySet().sort().each { folder ->
+    echo "  ${folder}: ${folderCounts[folder]} files"
   }
 }
 
