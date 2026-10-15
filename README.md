@@ -612,6 +612,8 @@ withInfraPipeline(product) {
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
+The app pipeline retains its primary agent and workspace while infrastructure stages run on another environment's agent. These stages transfer only `infrastructure/**` and the root `.terraform-version`, using the usual stash exclusions. Source, coverage reports and dependency caches stay on the primary agent. The infrastructure workspace is not copied back; the named Terraform plan stash is still used between plan and apply. Terraform inputs and local dependencies must be under `infrastructure` or the transfer patterns must be extended. Infrastructure-only pipelines and other agent transfers are unchanged.
+
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
 ## Nightly pipeline
