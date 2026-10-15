@@ -16,6 +16,7 @@ def call(params) {
   def config = params?.appPipelineConfig
   def builder = params?.builder
   def environment = params?.environment
+  def callbackEnvironment = params?.callbackEnvironment ?: environment
   def product = params?.product
 
   // Additional safety check for test environments
@@ -35,9 +36,11 @@ def call(params) {
     stageWithEnvironmentAgent("High Level Data Setup - ${environment}", product, environment) {
       def vaultName = !highLevelDataSetupKeyVaultName?.trim() ? product : highLevelDataSetupKeyVaultName
 
-      withDefinitionImportSecretsAndEnvVars(vaultName, environment, config.vaultEnvironmentOverrides, product){
+      withDefinitionImportSecretsAndEnvVars(vaultName, environment, config.vaultEnvironmentOverrides, product) {
         pcr.callAround('highleveldatasetup') {
-          builder.highLevelDataSetup(environment)
+          pcr.callAround("highleveldatasetup:${callbackEnvironment}") {
+            builder.highLevelDataSetup(environment)
+          }
         }
       }
     }
