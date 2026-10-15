@@ -21,6 +21,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
 
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
   String updatedStashName = "${stashName}-updated"
+  String stashIncludes = env.ENVIRONMENT_AGENT_STASH_INCLUDES ?: '**/*'
+  boolean stashBack = env.ENVIRONMENT_AGENT_STASH_BACK != 'false'
   String stashExcludes = [
     '.yarn_dependencies_installed',
     '**/.yarn_dependencies_installed',
@@ -30,6 +32,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '**/node_modules/**',
     '.yarn/install-state.gz',
     '**/.yarn/install-state.gz',
+    '.yarn/**',
+    '**/.yarn/**',
     '.gradle/**',
     '**/.gradle/**',
     'vendor/bundle/**',
@@ -41,7 +45,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     '**build/**',
     '**/build/**',
     '.gradle-user-home/**',
-    '**/.gradle-user-home/**'
+    '**/.gradle-user-home/**',
+    '**/src/**'
   ].join(',')
   boolean updatedWorkspaceStashed = false
   String originalDir = pwd()
@@ -53,8 +58,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
 
   echo "Using ${agentLabel} agent for ${environment}"
   inOriginalWorkspace {
-    logStashSummary(stashName, stashExcludes)
-    stash name: stashName, includes: '**/*', excludes: stashExcludes
+    logStashSummary(stashName, stashExcludes, stashIncludes)
+    stash name: stashName, includes: stashIncludes, excludes: stashExcludes
   }
 
   node(agentLabel) {
@@ -78,10 +83,10 @@ def call(String environment, String product, String agentLabelOverride, Closure 
         }
         bodySucceeded = true
       } finally {
-        if (bodySucceeded) {
+        if (bodySucceeded && stashBack) {
           inOriginalWorkspace {
-            logStashSummary(updatedStashName, stashExcludes)
-            stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
+            logStashSummary(updatedStashName, stashExcludes, stashIncludes)
+            stash name: updatedStashName, includes: stashIncludes, excludes: stashExcludes
           }
           updatedWorkspaceStashed = true
         }
@@ -103,14 +108,14 @@ def call(String environment, String product, String agentLabelOverride, Closure 
   }
 }
 
-def logStashSummary(String stashName, String stashExcludes) {
+def logStashSummary(String stashName, String stashExcludes, String stashIncludes = '**/*') {
   if (env.STASH_DIAGNOSTICS != 'true') {
     return
   }
 
   def folderCounts = [:]
   int totalFiles = 0
-  findFiles(glob: '**/*', excludes: stashExcludes).each { entry ->
+  findFiles(glob: stashIncludes, excludes: stashExcludes).each { entry ->
     if (!entry.directory) {
       String folder = entry.path.contains('/') ? entry.path.substring(0, entry.path.indexOf('/')) + '/' : '(root files)'
       folderCounts[folder] = (folderCounts[folder] ?: 0) + 1

@@ -54,6 +54,8 @@ In practice:
 
 You only need to act where your Jenkinsfile calls Azure directly, outside of the sections the opinionated pipeline already manages for you.
 
+For temporary workspace-stash diagnostics, set the Jenkins environment variable `STASH_DIAGNOSTICS=true`. Before each environment-agent workspace stash, the library logs the total matching file count and recursive counts per top-level folder, with root files counted separately. The scan uses the stash's include/exclude patterns and requires the Pipeline Utility Steps `findFiles` step. It adds a workspace scan for each stash; unset the variable after testing. Stash contents are unchanged.
+
 #### withSubscription
 
 `withSubscription` now takes the product and the target environment, so the library can schedule the block onto the right agent and authenticate with the right identity:

@@ -66,6 +66,49 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
   }
 
   @Test
+  void 'terraform transfer leaves primary workspace untouched and skips stash back'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+    binding.env.ENVIRONMENT_AGENT_STASH_INCLUDES = 'infrastructure/**,.terraform-version'
+    binding.env.ENVIRONMENT_AGENT_STASH_BACK = 'false'
+    binding.env.STASH_DIAGNOSTICS = 'true'
+    binding.env.WORKSPACE = '/opt/jenkins/workspace/job'
+    binding.env.NODE_NAME = 'primary-preview'
+    List<String> deletedOnNodes = []
+    List<String> directories = []
+    helper.registerAllowedMethod('dir', [String.class, Closure.class], { String path, Closure body ->
+      directories << path
+      body()
+    })
+    helper.registerAllowedMethod('pwd', [], { -> '/opt/jenkins/workspace/job/infrastructure' })
+    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
+      nodeLabels << label
+      String previousNode = binding.env.NODE_NAME
+      binding.env.NODE_NAME = label
+      try {
+        body()
+      } finally {
+        binding.env.NODE_NAME = previousNode
+      }
+    })
+    helper.registerAllowedMethod('deleteDir', [], { -> deletedOnNodes << binding.env.NODE_NAME })
+    def nodeInsideBody
+
+    script.call('prod', 'civil') {
+      nodeInsideBody = binding.env.NODE_NAME
+    }
+
+    assertThat(nodeInsideBody).isEqualTo('civil-prod')
+    assertThat(binding.env.NODE_NAME).isEqualTo('primary-preview')
+    assertThat(binding.env.BUILD_AGENT_TYPE).isEqualTo('civil')
+    assertThat(deletedOnNodes).containsExactly('civil-prod', 'civil-prod')
+    assertThat(directories).contains('infrastructure')
+    assertThat(stashArgs).hasSize(1)
+    assertThat(stashArgs[0].includes).isEqualTo('infrastructure/**,.terraform-version')
+    assertThat(unstashNames).containsExactly(stashNames[0])
+    assertThat(findFilesArgs).containsExactly([glob: stashArgs[0].includes, excludes: stashArgs[0].excludes])
+  }
+
+  @Test
   void 'stash diagnostics count matching files by top level folder for both transfers'() {
     binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
     binding.env.STASH_DIAGNOSTICS = 'true'
