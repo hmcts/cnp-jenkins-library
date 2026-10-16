@@ -1,6 +1,7 @@
 package uk.gov.hmcts.pipeline
 
 import uk.gov.hmcts.contino.RepositoryUrl
+import uk.gov.hmcts.contino.azure.Acr
 
 class TerraformInfraApprovals {
 
@@ -59,17 +60,31 @@ class TerraformInfraApprovals {
       this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
       return true
     }
-    this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}") == 0
+    def approved = false
+    withAcrLogin {
+      this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
+        approved = this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}") == 0
+      }
     }
+    return approved
   }
 
   void storeResults(String tfInfraPath) {
     infraApprovals = getInfraApprovals()
 
     def joinedInfraApprovals = infraApprovals.join(" ")
-    this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-       this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} 2> terraform-approvals.log || true")
+    withAcrLogin {
+      this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
+        this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} 2> terraform-approvals.log || true")
+      }
+    }
+  }
+
+  private void withAcrLogin(Closure block) {
+    this.steps.withAcrClient(this.subscription) {
+      def env = this.steps.env
+      new Acr(this.steps, this.subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION).login()
+      block.call()
     }
   }
 
