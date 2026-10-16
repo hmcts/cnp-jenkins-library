@@ -21,6 +21,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
 
   String stashName = "workspace-${normalisedEnvironment}-${env.BUILD_NUMBER ?: currentBuild?.number ?: 'local'}-${UUID.randomUUID()}"
   String updatedStashName = "${stashName}-updated"
+  String stashIncludes = env.ENVIRONMENT_AGENT_STASH_INCLUDES ?: '**/*'
+  boolean stashBack = env.ENVIRONMENT_AGENT_STASH_BACK != 'false'
   String stashExcludes = [
     '.yarn_dependencies_installed',
     '**/.yarn_dependencies_installed',
@@ -51,7 +53,8 @@ def call(String environment, String product, String agentLabelOverride, Closure 
 
   echo "Using ${agentLabel} agent for ${environment}"
   inOriginalWorkspace {
-    stash name: stashName, includes: '**/*', excludes: stashExcludes
+    logStashSummary(stashName, stashExcludes, stashIncludes)
+    stash name: stashName, includes: stashIncludes, excludes: stashExcludes
   }
 
   node(agentLabel) {
@@ -75,9 +78,10 @@ def call(String environment, String product, String agentLabelOverride, Closure 
         }
         bodySucceeded = true
       } finally {
-        if (bodySucceeded) {
+        if (bodySucceeded && stashBack) {
           inOriginalWorkspace {
-            stash name: updatedStashName, includes: '**/*', excludes: stashExcludes
+            logStashSummary(updatedStashName, stashExcludes, stashIncludes)
+            stash name: updatedStashName, includes: stashIncludes, excludes: stashExcludes
           }
           updatedWorkspaceStashed = true
         }
@@ -96,6 +100,27 @@ def call(String environment, String product, String agentLabelOverride, Closure 
     inOriginalWorkspace {
       unstash updatedStashName
     }
+  }
+}
+
+def logStashSummary(String stashName, String stashExcludes, String stashIncludes = '**/*') {
+  if (env.STASH_DIAGNOSTICS != 'true') {
+    return
+  }
+
+  def folderCounts = [:]
+  int totalFiles = 0
+  findFiles(glob: stashIncludes, excludes: stashExcludes).each { entry ->
+    if (!entry.directory) {
+      String folder = entry.path.contains('/') ? entry.path.substring(0, entry.path.indexOf('/')) + '/' : '(root files)'
+      folderCounts[folder] = (folderCounts[folder] ?: 0) + 1
+      totalFiles++
+    }
+  }
+
+  echo "Stash summary for ${stashName}: ${totalFiles} files (recursive counts by top-level folder)"
+  folderCounts.keySet().sort().each { folder ->
+    echo "  ${folder}: ${folderCounts[folder]} files"
   }
 }
 

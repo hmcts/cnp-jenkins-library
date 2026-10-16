@@ -54,6 +54,8 @@ In practice:
 
 You only need to act where your Jenkinsfile calls Azure directly, outside of the sections the opinionated pipeline already manages for you.
 
+For temporary workspace-stash diagnostics, set the Jenkins environment variable `STASH_DIAGNOSTICS=true`. Before each environment-agent workspace stash, the library logs the total matching file count and recursive counts per top-level folder, with root files counted separately. The scan uses the stash's include/exclude patterns and requires the Pipeline Utility Steps `findFiles` step. It adds a workspace scan for each stash; unset the variable after testing. Stash contents are unchanged.
+
 #### withSubscription
 
 `withSubscription` now takes the product and the target environment, so the library can schedule the block onto the right agent and authenticate with the right identity:
@@ -399,6 +401,7 @@ Valid values for the `stage` variable are as follows where `ENV` must be replace
  * smoketest:ENV
  * functionalTest:ENV
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -589,6 +592,7 @@ Valid values for the `stage` variable are as follows where `ENV` should be repla
 
  * checkout
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -609,6 +613,10 @@ withInfraPipeline(product) {
 
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
+
+For both app and infrastructure pipelines, plan-only infrastructure runs invoke `planinfra:ENV` callbacks, while plan-and-apply runs invoke `buildinfra:ENV` callbacks. This applies to `before`, `afterSuccess`, `afterFailure`, `afterAlways`, and deprecated `after` hooks. Previously, both modes used `buildinfra:ENV`; move any hooks intentionally needed during plan-only runs to `planinfra:ENV`. A successful plan must not trigger deployment hooks such as production BPMN uploads. Global failure handling and after-all reporting still run for plans.
+
+The app pipeline retains its primary agent and workspace while infrastructure stages run on another environment's agent. These stages transfer only `infrastructure/**` and the root `.terraform-version`, using the usual stash exclusions. Source, coverage reports and dependency caches stay on the primary agent. The infrastructure workspace is not copied back; the named Terraform plan stash is still used between plan and apply. Terraform inputs and local dependencies must be under `infrastructure` or the transfer patterns must be extended. Infrastructure-only pipelines and other agent transfers are unchanged.
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
