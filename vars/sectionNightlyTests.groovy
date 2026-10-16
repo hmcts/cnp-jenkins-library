@@ -42,9 +42,16 @@ def call(pcr, config, pipelineType, String product, String component, String sub
     }
 
     if (config.fortifyScan) {
+      // Try both patterns and use the first that exists
+      def vaultName = config.fortifyVaultName ?: "${product}-kv-${environment.nonProdName}"
+      def vaultNameWithoutKv = "${product}-${environment.nonProdName}"
+      
+      // Check if vaultName contains "-kv1-" and use alternative if needed
+      def finalVaultName = (vaultName.contains("-kv1-") || config.useVaultWithoutKv) ? vaultNameWithoutKv : vaultName
+      
       fortifyScan(
         pipelineCallbacksRunner: pcr,
-        fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+        fortifyVaultName: finalVaultName,
         builder: builder,
         product: product,
       )
