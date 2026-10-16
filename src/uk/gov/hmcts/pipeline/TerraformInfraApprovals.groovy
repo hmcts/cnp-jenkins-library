@@ -1,7 +1,6 @@
 package uk.gov.hmcts.pipeline
 
 import uk.gov.hmcts.contino.RepositoryUrl
-import uk.gov.hmcts.contino.azure.Acr
 
 class TerraformInfraApprovals {
 
@@ -83,7 +82,7 @@ class TerraformInfraApprovals {
   private void withAcrLogin(Closure block) {
     this.steps.withAcrClient(this.subscription) {
       def env = this.steps.env
-      new Acr(this.steps, this.subscription, env.REGISTRY_NAME, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION).login()
+      this.steps.sh("az acr login --name ${env.REGISTRY_NAME} --subscription ${env.REGISTRY_SUBSCRIPTION}")
       block.call()
     }
   }
