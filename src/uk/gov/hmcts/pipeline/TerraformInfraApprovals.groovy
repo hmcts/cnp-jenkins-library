@@ -82,7 +82,9 @@ class TerraformInfraApprovals {
   private void withAcrLogin(Closure block) {
     this.steps.withAcrClient(this.subscription) {
       def env = this.steps.env
-      this.steps.sh("az acr login --name ${env.REGISTRY_NAME} --subscription ${env.REGISTRY_SUBSCRIPTION}")
+      def azureConfigDir = "/opt/jenkins/.azure-${this.subscription}"
+      this.steps.sh("env AZURE_CONFIG_DIR=${azureConfigDir} az login --identity")
+      this.steps.sh("env AZURE_CONFIG_DIR=${azureConfigDir} az acr login --name ${env.REGISTRY_NAME} --subscription ${env.REGISTRY_SUBSCRIPTION}")
       block.call()
     }
   }
