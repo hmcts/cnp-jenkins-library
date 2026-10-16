@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.RepositoryUrl
 
 class TerraformInfraApprovals {
 
-  public static final String TFUTILS_IMAGE = 'hmctspublic.azurecr.io/tf-utils:ff575af9-1691575325'
+  public static final String TFUTILS_IMAGE = 'hmctsprod.azurecr.io/tf-utils:b891aa26-1791849662'
   public static final String TFUTILS_RUN_ARGS = '--entrypoint ""'
 
   def steps
