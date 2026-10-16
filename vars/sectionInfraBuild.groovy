@@ -10,12 +10,11 @@ def call(params) {
   def expires = params.expires ?: LocalDate.now().plusDays(14)
   def pcr = params.pipelineCallbacksRunner
   def businessArea = env.BUSINESS_AREA_TAG
-  String callbackStage = planOnly ? "planinfra:${environment}" : "buildinfra:${environment}"
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
     withSubscription(subscription, product, environment) {
-      pcr.callAround(callbackStage) {
+      pcr.callAround("buildinfra:${environment}") {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
           // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox
           if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
