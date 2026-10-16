@@ -401,6 +401,7 @@ Valid values for the `stage` variable are as follows where `ENV` must be replace
  * smoketest:ENV
  * functionalTest:ENV
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -591,6 +592,7 @@ Valid values for the `stage` variable are as follows where `ENV` should be repla
 
  * checkout
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -611,6 +613,8 @@ withInfraPipeline(product) {
 
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
+
+For both app and infrastructure pipelines, plan-only infrastructure runs invoke `planinfra:ENV` callbacks, while plan-and-apply runs invoke `buildinfra:ENV` callbacks. This applies to `before`, `afterSuccess`, `afterFailure`, `afterAlways`, and deprecated `after` hooks. Previously, both modes used `buildinfra:ENV`; move any hooks intentionally needed during plan-only runs to `planinfra:ENV`. A successful plan must not trigger deployment hooks such as production BPMN uploads. Global failure handling and after-all reporting still run for plans.
 
 The app pipeline retains its primary agent and workspace while infrastructure stages run on another environment's agent. These stages transfer only `infrastructure/**` and the root `.terraform-version`, using the usual stash exclusions. Source, coverage reports and dependency caches stay on the primary agent. The infrastructure workspace is not copied back; the named Terraform plan stash is still used between plan and apply. Terraform inputs and local dependencies must be under `infrastructure` or the transfer patterns must be extended. Infrastructure-only pipelines and other agent transfers are unchanged.
 
