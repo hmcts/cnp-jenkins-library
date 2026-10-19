@@ -126,7 +126,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                   environment: environment.nonProdName,
                   subscription: subscription,
                   folder: "nightly",
-                  currentBuild: currentBuild,
+                  currentBuild: currentBuild
                 )
               }
             }
