@@ -201,6 +201,7 @@ def call(params) {
                   timeoutWithMsg(time: 120, unit: 'MINUTES', action: "Performance Test - ${environment} (staging slot)") {
                     builder.performanceTest()
                     publishPerformanceReports(params)
+                    params.currentBuild = currentBuild
                   }
                 }
               }

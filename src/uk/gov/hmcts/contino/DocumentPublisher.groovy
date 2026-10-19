@@ -62,7 +62,17 @@ class DocumentPublisher implements Serializable {
       job_base_name                : env.JOB_BASE_NAME,
       build_tag                    : env.BUILD_TAG,
       node_name                    : env.NODE_NAME,
-      stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"))
+      stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
+      current_build_number         : params.currentBuild.number,
+      current_step_name            : params.currentStepName,
+      current_build_result         : params.currentBuild.result,
+      current_build_current_result : params.currentBuild.currentResult,
+      current_build_display_name   : params.currentBuild.displayName,
+      current_build_id             : params.currentBuild.id,
+      current_build_duration       : params.currentBuild.duration,
+      current_build_duration_string: params.currentBuild.durationString,
+      current_build_previous_build : params.currentBuild.previousBuild?.number,
+      current_build_absolute_url   : params.currentBuild.absoluteUrl
     ]
   }
 
