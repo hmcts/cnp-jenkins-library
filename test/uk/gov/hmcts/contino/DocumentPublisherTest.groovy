@@ -20,11 +20,39 @@ class DocumentPublisherTest extends Specification {
   private static final String NODE_NAME          = 'node-name'
   private static final String SUBSCRIPTION       = 'prod'
 
+  private static final String CURRENT_STEP_NAME       = 'publish-step'
+  private static final int    CURRENT_BUILD_NUMBER    = 66
+  private static final String CURRENT_BUILD_RESULT    = 'SUCCESS'
+  private static final String CURRENT_BUILD_CURRENT   = 'SUCCESS'
+  private static final String CURRENT_BUILD_DISPLAY   = '#66'
+  private static final String CURRENT_BUILD_ID        = '66'
+  private static final long   CURRENT_BUILD_DURATION  = 12345L
+  private static final String CURRENT_BUILD_DURATION_STRING = '12 sec'
+  private static final int    PREVIOUS_BUILD_NUMBER   = 65
+  private static final String CURRENT_BUILD_URL       = 'https://jenkins.example/job/job-name/66/'
+
   private static final String DATA = "{\"simulation\": \"RhubarbReferenceSimulation\"}"
 
   DocumentPublisher documentPublisher
   def steps = Mock(JenkinsStepMock)
-  def params = [product: PRODUCT, component: COMPONENT, environment: ENVIRONMENT, subscription: SUBSCRIPTION]
+  def params = [
+    product        : PRODUCT,
+    component      : COMPONENT,
+    environment    : ENVIRONMENT,
+    subscription   : SUBSCRIPTION,
+    currentStepName: CURRENT_STEP_NAME,
+    currentBuild   : [
+      number        : CURRENT_BUILD_NUMBER,
+      result        : CURRENT_BUILD_RESULT,
+      currentResult : CURRENT_BUILD_CURRENT,
+      displayName   : CURRENT_BUILD_DISPLAY,
+      id            : CURRENT_BUILD_ID,
+      duration      : CURRENT_BUILD_DURATION,
+      durationString: CURRENT_BUILD_DURATION_STRING,
+      previousBuild : [number: PREVIOUS_BUILD_NUMBER],
+      absoluteUrl   : CURRENT_BUILD_URL
+    ]
+  ]
 
   def setup() {
     steps.env >> [BRANCH_NAME: BRANCH_NAME,
@@ -56,6 +84,17 @@ class DocumentPublisherTest extends Specification {
       assertThatJson(result).node('node_name').isStringEqualTo(NODE_NAME)
 
       assertThatJson(result).node('stage_timestamp').isPresent()
+      assertThatJson(result).node('current_build_number').isEqualTo(CURRENT_BUILD_NUMBER)
+      assertThatJson(result).node('current_step_name').isStringEqualTo(CURRENT_STEP_NAME)
+      assertThatJson(result).node('current_build_result').isStringEqualTo(CURRENT_BUILD_RESULT)
+      assertThatJson(result).node('current_build_current_result').isStringEqualTo(CURRENT_BUILD_CURRENT)
+      assertThatJson(result).node('current_build_display_name').isStringEqualTo(CURRENT_BUILD_DISPLAY)
+      assertThatJson(result).node('current_build_id').isStringEqualTo(CURRENT_BUILD_ID)
+      assertThatJson(result).node('current_build_duration').isEqualTo(CURRENT_BUILD_DURATION)
+      assertThatJson(result).node('current_build_duration_string').isStringEqualTo(CURRENT_BUILD_DURATION_STRING)
+      assertThatJson(result).node('current_build_previous_build').isEqualTo(PREVIOUS_BUILD_NUMBER)
+      assertThatJson(result).node('current_build_absolute_url').isStringEqualTo(CURRENT_BUILD_URL)
+
       assertThatJson(result).node("test\\.json").isPresent()
   }
 
