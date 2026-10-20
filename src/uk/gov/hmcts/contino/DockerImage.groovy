@@ -40,7 +40,7 @@ class DockerImage {
     this.imageTag = tag
     this.acr = acr
     this.commit = commit?.substring(0, 7)
-    this.lastCommitTime = lastCommitTime
+    this.lastCommitTime = lastCommitTime?.trim()
   }
 
   /**

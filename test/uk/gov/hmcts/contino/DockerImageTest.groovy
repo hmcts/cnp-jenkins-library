@@ -122,4 +122,14 @@ class DockerImageTest extends Specification {
       assertThat(serviceName).isEqualTo('custard-back-end-pr-47')
   }
 
+  def "shell timestamp whitespace is removed from build and promotion tags"() {
+    given:
+      def image = new DockerImage(PRODUCT, COMPONENT, acr, 'staging', COMMIT, "${LAST_COMMIT_TIMESTAMP}\n")
+
+    expect:
+      image.getBaseShortName() == 'custard/back-end:build-379c53a-20210601133228'
+      image.getShortName(DockerImage.DeploymentStage.STAGING) == 'custard/back-end:staging-379c53a-20210601133228'
+      image.getShortName(DockerImage.DeploymentStage.PROD) == 'custard/back-end:prod-379c53a-20210601133228'
+  }
+
 }

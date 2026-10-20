@@ -138,6 +138,39 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "master template rendering accepts a timestamp from shell output in both registries"() {
+    given:
+      def workspace = File.createTempDir('acr-template-', '')
+      new File(workspace, 'acb.tpl.yaml').text = 'image: {{REGISTRY_NAME}}.azurecr.io/{{CI_IMAGE_TAG}}\n'
+      def rendered = []
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def image = new DockerImage('pcs', 'api', acr, 'staging', 'e083a7e123', '20261020113010\n')
+      steps.fileExists('acb.yaml') >> true
+      steps.readFile('acb.yaml') >> 'version: v1.1.0'
+      steps.sh(_) >> { Map args ->
+        if (args.script.startsWith('sed ')) {
+          def process = new ProcessBuilder('sh', '-c', args.script.toString()).directory(workspace).redirectErrorStream(true).start()
+          def output = process.text
+          assert process.waitFor() == 0: output
+          rendered << new File(workspace, 'acb.yaml').text
+        }
+        return ''
+      }
+
+    when:
+      acr.runWithTemplate('acb.tpl.yaml', image)
+
+    then:
+      rendered == ['image: cnpacr.azurecr.io/pcs/api:build-e083a7e-20261020113010\n',
+                   'image: hmctsold.azurecr.io/pcs/api:build-e083a7e-20261020113010\n']
+
+    cleanup:
+      workspace.deleteDir()
+  }
+
   @spock.lang.Unroll
   def "overlapping master builds promote their own #component images in both registries"() {
     given:
