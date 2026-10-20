@@ -42,7 +42,17 @@ class WithGradleAgentRetryTest extends BasePipelineTest {
   }
 
   @Test
-  void 'agent retry clears and checks out the workspace for every attempt'() {
+  void 'successful first attempt uses the existing agent and workspace'() {
+    script.call('toffee', 'sbox') {
+      events << 'body'
+    }
+
+    assertThat(nodeSelectors).isEmpty()
+    assertThat(events).containsExactly('body')
+  }
+
+  @Test
+  void 'agent retry allocates and prepares a workspace only after failure'() {
     int bodyAttempts = 0
 
     script.call('toffee', 'sbox') {
@@ -57,9 +67,9 @@ class WithGradleAgentRetryTest extends BasePipelineTest {
       conditions: ['agent-condition'],
       count: 2
     ])
-    assertThat(nodeSelectors).containsExactly('ubuntu-sbox && !nightly', 'ubuntu-sbox && !nightly')
+    assertThat(nodeSelectors).containsExactly('ubuntu-sbox && !nightly')
     assertThat(events).containsExactly(
-      'deleteDir', 'checkout:scm-source', 'body:1',
+      'body:1',
       'deleteDir', 'checkout:scm-source', 'body:2'
     )
   }
