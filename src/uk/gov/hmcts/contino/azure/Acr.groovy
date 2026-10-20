@@ -191,7 +191,11 @@ class Acr extends Az {
       return this.az(command)
     }
 
-    String runId = this.az("${command} --no-wait --query runId --output tsv")
+    String submissionOutput = this.az("${command} --no-wait --query runId --output tsv 2>&1")
+    String runId = submissionOutput?.find(/(?m)^(?:WARNING:[ \t]*)?Queued a (?:run|build) with ID:[ \t]*([A-Za-z0-9_-]+)[ \t]*\r?$/) { message, queuedRunId -> queuedRunId }
+    if (!runId && submissionOutput?.trim() ==~ /[A-Za-z0-9_-]+/) {
+      runId = submissionOutput.trim()
+    }
     if (!runId?.trim()) {
       localSteps.error('ACR did not return a run ID; refusing to resubmit the build')
       return

@@ -93,7 +93,7 @@ class AcrTest extends Specification {
       acr.build(dockerImage, '', monitor)
 
     then:
-      1 * steps.sh({ it.script.contains('az acr build') && it.script.contains('--no-wait --query runId --output tsv') }) >> 'dbahs'
+      1 * steps.sh({ it.script.contains('az acr build') && it.script.contains('--no-wait --query runId --output tsv 2>&1') }) >> 'WARNING: Queued a build with ID: dbahs\n'
       3 * steps.sh({ it.script.contains('acr task show-run') && it.script.contains('--run-id dbahs') }) >> {
         polls++
         if (polls == 1) {
@@ -141,15 +141,18 @@ class AcrTest extends Specification {
       acr.runWithTemplate('acb.tpl.yaml', dockerImage) { Closure poll -> poll() }
 
     then:
-      1 * steps.sh({ it.script.contains(submitCommand) && it.script.contains('--no-wait --query runId --output tsv') }) >> 'dbahs'
+      1 * steps.sh({ it.script.contains(submitCommand) && it.script.contains('--no-wait --query runId --output tsv 2>&1') }) >> submissionOutput
       1 * steps.sh({ it.script.contains('acr task show-run') && it.script.contains('--run-id dbahs') }) >> 'Succeeded'
       1 * steps.sh({ it.script.contains('acr task logs') && it.script.contains('--run-id dbahs') }) >> 'build logs'
       0 * steps.error(_)
 
     where:
-      namedTask | submitCommand
-      false     | 'acr run -r'
-      true      | 'acr task run --name'
+      namedTask | submitCommand        | submissionOutput
+      false     | 'acr run -r'         | 'dbahs'
+      false     | 'acr run -r'         | 'WARNING: Queued a run with ID: dbahs\n'
+      true      | 'acr task run --name' | 'dbahs'
+      true      | 'acr task run --name' | 'WARNING: Packing source code into tar to upload...\nWARNING: Queued a run with ID: dbahs\n'
+      true      | 'acr task run --name' | 'WARNING: Queued a run with ID: dbahs\ndbahs\n'
   }
 
   def "dual publish monitors each run in its own registry and restores registry context"() {
@@ -189,10 +192,13 @@ class AcrTest extends Specification {
       acr.build(dockerImage, '') { Closure poll -> monitored = true }
 
     then:
-      1 * steps.sh({ it.script.contains('az acr build') }) >> ''
+      1 * steps.sh({ it.script.contains('az acr build') }) >> submissionOutput
       1 * steps.error('ACR did not return a run ID; refusing to resubmit the build') >> { throw new IllegalStateException('missing run ID') }
       thrown(IllegalStateException)
       !monitored
+
+    where:
+      submissionOutput << ['', 'WARNING: Packing source code into tar to upload...\n', 'WARNING: Queued a run with ID: invalid;command\n']
   }
 
   def "getHostname() should call az with correct arguments"() {
