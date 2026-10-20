@@ -49,9 +49,18 @@ def call(params) {
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
 
-  stage('ACR Migration Check') {
-    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
-  }
+  parallel(
+    'ACR Migration Check': {
+      stage('ACR Migration Check') {
+        warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+      }
+    },
+    'Check previous build (Cosmos DB)': {
+      stage('Check previous build (Cosmos DB)') {
+        buildRecovery?.checkPreviousBuild()
+      }
+    }
+  )
 
   onPathToLive {
     withEnvironmentAgent(environment, product) {

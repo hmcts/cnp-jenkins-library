@@ -146,7 +146,7 @@ class BuildRecoveryTest extends Specification {
   def 'disabled recovery and nonfailed previous builds do not query Cosmos'() {
     given:
       def publisher = Mock(MetricsPublisher)
-      def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(), [previousBuild: previous], publisher, enabled])
+      def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(echo: { String message -> }), [previousBuild: previous], publisher, enabled])
 
     when:
       recovery.prepare(true)
@@ -198,7 +198,7 @@ class BuildRecoveryTest extends Specification {
   def 'manual interruption is propagated rather than converted to fallback'() {
     given:
       def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
-      def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(), [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(echo: { String message -> }), [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> { throw new InterruptedException('aborted') }
 
     when:
@@ -222,5 +222,41 @@ class BuildRecoveryTest extends Specification {
       'SUCCESS'      | 'AGENT_DISCONNECTED'
       'FAILURE'      | 'STEP_FAILURE'
       'FAILURE'      | null
+  }
+
+  def 'Cosmos check logs results without restoring artifacts and prepare reuses the query'() {
+    given:
+      List<String> messages = []
+      List<Map> copies = []
+      int queries = 0
+      def steps = new Expando(
+        echo: { String message -> messages << message },
+        specific: { String build -> build },
+        copyArtifacts: { Map options -> copies << options },
+        junit: { Map options -> }
+      )
+      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      recovery.readMetrics(identity, '35') >> { queries++; records() }
+
+    when:
+      recovery.checkPreviousBuild()
+
+    then:
+      queries == 1
+      copies.isEmpty()
+      messages.any { it.contains('querying Cosmos DB pipeline-metrics') && it.contains('build #35') }
+      messages.any { it.contains('Cosmos DB returned 7 records') }
+      messages.any { it.contains('test=SUCCESS') }
+      messages.any { it.contains('dockerbuild=FAILURE') && it.contains('AGENT_DISCONNECTED') }
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      queries == 1
+      copies.size() == 1
+      recovery.shouldSkip('test')
+      recovery.shouldSkip('securitychecks')
   }
 }

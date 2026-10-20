@@ -25,6 +25,12 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     }
 
     stubBuilder.expect.verify()
+    def checks = helper.callStack.find { call ->
+      call.methodName == 'parallel' && call.args[0] instanceof Map && call.args[0].containsKey('ACR Migration Check')
+    }
+    assert checks != null
+    assert checks.args[0].keySet() == ['ACR Migration Check', 'Check previous build (Cosmos DB)'] as Set
+    assert helper.callStack.any { call -> call.methodName == 'stage' && call.args[0] == 'Check previous build (Cosmos DB)' }
   }
 
   @Test

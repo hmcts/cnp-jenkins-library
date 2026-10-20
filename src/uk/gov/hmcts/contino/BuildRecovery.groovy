@@ -10,6 +10,7 @@ class BuildRecovery implements Serializable {
   private final def publisher
   private final boolean enabled
   private Set<String> reusable = [] as Set
+  private boolean checked = false
   String sourceBuild
 
   BuildRecovery(steps, currentBuild, publisher, boolean enabled = true) {
@@ -19,10 +20,20 @@ class BuildRecovery implements Serializable {
     this.enabled = enabled
   }
 
-  void prepare(boolean canRestoreTests) {
+  void checkPreviousBuild() {
+    checked = true
     reusable.clear()
     sourceBuild = null
-    if (!enabled || currentBuild.previousBuild?.result != 'FAILURE') {
+    if (!enabled) {
+      steps.echo 'Build recovery: disabled; Cosmos DB not queried; running all steps'
+      return
+    }
+    if (currentBuild.previousBuild == null) {
+      steps.echo 'Build recovery: no previous build; Cosmos DB not queried; running all steps'
+      return
+    }
+    if (currentBuild.previousBuild.result != 'FAILURE') {
+      steps.echo "Build recovery: previous build #${currentBuild.previousBuild.number} result is ${currentBuild.previousBuild.result ?: 'not available'}; Cosmos DB not queried; running all steps"
       return
     }
     Map identity = publisher.recoveryIdentity()
@@ -32,30 +43,50 @@ class BuildRecovery implements Serializable {
     }
     sourceBuild = currentBuild.previousBuild.number.toString()
     try {
-      reusable = reusableSteps(readMetrics(identity, sourceBuild), identity, sourceBuild)
-      if (reusable.contains('test')) {
-        if (!canRestoreTests) {
-          reusable.remove('test')
-        } else {
-          try {
-            steps.copyArtifacts(projectName: identity.job_name, selector: steps.specific(sourceBuild), filter: TEST_ARTIFACTS, optional: false)
-            steps.junit(testResults: '**/test-results/test/*.xml', allowEmptyResults: false)
-          } catch (Exception failure) {
-            if (failure instanceof InterruptedException) {
-              throw failure
-            }
-            reusable.remove('test')
-            steps.echo 'Build recovery: test artifacts could not be restored; rerunning tests'
-          }
+      steps.echo "Build recovery: querying Cosmos DB pipeline-metrics for job ${identity.job_name}, product ${identity.product}, component ${identity.component}, branch ${identity.branch_name}, build #${sourceBuild}"
+      List<Map> records = readMetrics(identity, sourceBuild)
+      steps.echo "Build recovery: Cosmos DB returned ${records?.size() ?: 0} records for build #${sourceBuild}"
+      if (records != null && records.size() <= 1000) {
+        records.findAll { it.event_type == 'step' && it.step_result != 'STARTED' }.each { record ->
+          steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}, node_status=${record.node_status ?: 'not recorded'}, failure_reason=${record.failure_reason ?: 'none'}"
         }
       }
-      steps.echo "Build recovery from #${sourceBuild}: ${reusable ? reusable.join(', ') : 'no steps eligible'}"
+      reusable = reusableSteps(records, identity, sourceBuild)
+      steps.echo "Build recovery from #${sourceBuild}: ${reusable ? reusable.join(', ') : 'no steps eligible; source identity, agent-failure and completed-step requirements must all match'}"
     } catch (Exception failure) {
       if (failure instanceof InterruptedException) {
         throw failure
       }
       reusable.clear()
       steps.echo "Build recovery unavailable (${failure.class.simpleName}); running all steps"
+    }
+  }
+
+  void prepare(boolean canRestoreTests) {
+    if (!checked) {
+      checkPreviousBuild()
+    }
+    if (reusable.contains('test')) {
+      if (!canRestoreTests) {
+        reusable.remove('test')
+        steps.echo 'Build recovery: unit tests will run; artifact restoration is only supported for Gradle builds'
+      } else {
+        try {
+          Map identity = publisher.recoveryIdentity()
+          steps.echo "Build recovery: restoring unit-test artifacts from build #${sourceBuild}"
+          steps.copyArtifacts(projectName: identity.job_name, selector: steps.specific(sourceBuild), filter: TEST_ARTIFACTS, optional: false)
+          steps.junit(testResults: '**/test-results/test/*.xml', allowEmptyResults: false)
+        } catch (Exception failure) {
+          if (failure instanceof InterruptedException) {
+            throw failure
+          }
+          reusable.remove('test')
+          steps.echo 'Build recovery: test artifacts could not be restored; rerunning tests'
+        }
+      }
+    }
+    if (sourceBuild) {
+      steps.echo "Build recovery ready from #${sourceBuild}: ${reusable ? reusable.join(', ') : 'no steps will be skipped'}"
     }
   }
 

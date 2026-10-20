@@ -202,6 +202,12 @@ the normal pipeline. Existing metrics without explicit outcomes are not reused.
 The first build using this library version records the data and artifacts needed
 by later builds.
 
+The visible `Check previous build (Cosmos DB)` stage runs in parallel with
+`ACR Migration Check`, after checkout and before compilation. It reports the
+previous build checked, Cosmos record count, recorded step outcomes and eligible
+steps, or why no query was made. Unit-test artifacts are restored after
+compilation in the test workspace; the Cosmos query is not repeated.
+
 Only successful unit tests and security checks can be skipped. Gradle unit-test
 reuse also requires archived class, resource, test and JaCoCo outputs, restored
 using the Jenkins Copy Artifact plugin. Restored JUnit reports are published in
