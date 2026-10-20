@@ -138,6 +138,107 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  @spock.lang.Unroll
+  def "overlapping master builds promote their own #component images in both registries"() {
+    given:
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def oldImage = new DockerImage('pcs', component, acr, 'staging', 'e083a7e123', '20261020113010')
+      def newImage = new DockerImage('pcs', component, acr, 'staging', '78ea950123', '20261020120210')
+      def published = [:]
+      def commands = []
+      steps.sh(_) >> { Map args ->
+        String command = args.script
+        commands << command
+        if (command.contains('acr show')) {
+          return "${REGISTRY_NAME}.azurecr.io"
+        }
+        if (command.contains('acr build')) {
+          def registry = (command =~ / -r (\S+)/)[0][1]
+          def tag = (command =~ / -t (\S+)/)[0][1]
+          published["${registry}.azurecr.io/${tag}".toString()] = command.contains('78ea950') ? 'new-digest' : 'old-digest'
+        }
+        if (command.contains('acr import')) {
+          def registry = (command =~ / -n (\S+)/)[0][1]
+          def source = (command =~ / --source (\S+)/)[0][1]
+          def target = (command =~ / -t (\S+)/)[0][1]
+          assert published.containsKey(source)
+          published["${registry}.azurecr.io/${target}".toString()] = published[source]
+        }
+        return ''
+      }
+
+    when:
+      acr.build(oldImage)
+      acr.build(newImage)
+      assert !published.containsKey("${REGISTRY_NAME}.azurecr.io/pcs/${component}:staging-e083a7e-20261020113010".toString())
+      if (component == 'api') {
+        acr.retagForStage(DockerImage.DeploymentStage.STAGING, oldImage)
+      }
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, oldImage)
+      acr.retagForStage(DockerImage.DeploymentStage.LATEST, oldImage)
+
+    then:
+      ['cnpacr', 'hmctsold'].every { registry ->
+        published["${registry}.azurecr.io/pcs/${component}:prod-e083a7e-20261020113010".toString()] == 'old-digest' &&
+          published["${registry}.azurecr.io/pcs/${component}:latest".toString()] == 'old-digest'
+      }
+      !commands.any { it =~ /(?: -t | --source )(?:\S+\/)?pcs\/api(?:-test)?:staging(?: |$)/ }
+      commands.count { it.contains('acr import') } == (component == 'api' ? 6 : 4)
+
+    where:
+      component << ['api', 'api-test']
+  }
+
+  @spock.lang.Unroll
+  def "master template builds isolate tasks in both registries (existing task: #existingTask)"() {
+    given:
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def images = [new DockerImage('pcs', 'api', acr, 'staging', 'e083a7e123', '20261020113010'),
+                    new DockerImage('pcs', 'api', acr, 'staging', '78ea950123', '20261020120210')]
+      def commands = []
+      steps.fileExists('acb.yaml') >> true
+      steps.readFile('acb.yaml') >> 'from: external.azurecr.io/base/node:18-alpine'
+      steps.readJSON(_) >> { Map args -> new groovy.json.JsonSlurperClassic().parseText(args.text) }
+      steps.sh(_) >> { Map args ->
+        String command = args.script
+        commands << command
+        if (command.contains('acr identity show')) {
+          return '{"userAssignedIdentities":{"identity-id":{"clientId":"client-id"}}}'
+        }
+        if (command.contains('acr task show')) {
+          if (!existingTask) { throw new Exception('Task not found') }
+          return '{"identity":{"userAssignedIdentities":{"identity-id":{}}}}'
+        }
+        if (command.contains('acr task credential list')) {
+          return 'external.azurecr.io'
+        }
+        return ''
+      }
+
+    when:
+      images.each { acr.runWithTemplate('acb.tpl.yaml', it) }
+
+    then:
+      ['cnpacr', 'hmctsold'].every { registry ->
+        images.every { image ->
+          commands.any { it.contains("acr task ${existingTask ? 'update' : 'create'} --name pcs-api-${image.commit}-build --registry ${registry} ") } &&
+            commands.any { it.contains("acr task run --name pcs-api-${image.commit}-build --registry ${registry} ") &&
+              it.contains("--set CI_IMAGE_TAG=pcs/api:build-${image.commit}-${image.lastCommitTime}") }
+        }
+      }
+      commands.count { it.contains('acr task run') } == 4
+      !commands.any { it.contains('pcs-api-staging-build') }
+
+    where:
+      existingTask << [true, false]
+  }
+
   def "hasTag should return false in case of error"() {
     when:
       dockerImage.getTag() >> IMAGE_TAG
@@ -470,10 +571,11 @@ class AcrTest extends Specification {
       dockerImage = Mock(DockerImage.class)
       dockerImage.getShortName(_) >> IMAGE_NAME
       dockerImage.getBaseTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
       dockerImage.imageTag >> 'staging'
 
     when:
-      acr.retagForStage(DockerImage.DeploymentStage.STAGING, dockerImage)
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage)
 
     then:
       1 * steps.sh({it.containsKey('script') &&

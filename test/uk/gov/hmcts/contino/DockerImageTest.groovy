@@ -96,6 +96,22 @@ class DockerImageTest extends Specification {
     assertThat(name).isEqualTo('custard/back-end-test:prod-379c53a-20210601133228')
   }
 
+  def "master builds use commit-scoped base tags while other branches retain their base tags"() {
+    given:
+      def image = new DockerImage(PRODUCT, COMPONENT, acr, branchTag, COMMIT, LAST_COMMIT_TIMESTAMP)
+
+    expect:
+      image.getBaseShortName() == expectedName
+
+    where:
+      branchTag | expectedName
+      'staging' | 'custard/back-end:build-379c53a-20210601133228'
+      'pr-47'   | 'custard/back-end:pr-47'
+      'preview' | 'custard/back-end:preview'
+      'demo'    | 'custard/back-end:demo'
+      'latest'  | 'custard/back-end:latest'
+  }
+
   def "getAksServiceName should return the service name"() {
     when:
       acr.getHostname() >> REGISTRY_HOST
