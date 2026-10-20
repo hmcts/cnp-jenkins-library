@@ -153,6 +153,8 @@ class AcrTest extends Specification {
       true      | 'acr task run --name' | 'dbahs'
       true      | 'acr task run --name' | 'WARNING: Packing source code into tar to upload...\nWARNING: Queued a run with ID: dbahs\n'
       true      | 'acr task run --name' | 'WARNING: Queued a run with ID: dbahs\ndbahs\n'
+      true      | 'acr task run --name' | '\u001b[33mWARNING: Queued a run with ID: dbahs\u001b[0m\r\n'
+      true      | 'acr task run --name' | 'Queued a run with ID: dbahs\r\n'
   }
 
   def "dual publish monitors each run in its own registry and restores registry context"() {

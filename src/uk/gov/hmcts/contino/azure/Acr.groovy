@@ -1,5 +1,6 @@
 package uk.gov.hmcts.contino.azure
 
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.DockerImage
 
 /**
@@ -192,11 +193,9 @@ class Acr extends Az {
     }
 
     String submissionOutput = this.az("${command} --no-wait --query runId --output tsv 2>&1")
-    String runId = submissionOutput?.find(/(?m)^(?:WARNING:[ \t]*)?Queued a (?:run|build) with ID:[ \t]*([A-Za-z0-9_-]+)[ \t]*\r?$/) { message, queuedRunId -> queuedRunId }
-    if (!runId && submissionOutput?.trim() ==~ /[A-Za-z0-9_-]+/) {
-      runId = submissionOutput.trim()
-    }
+    String runId = extractRunId(submissionOutput)
     if (!runId?.trim()) {
+      localSteps.echo "ACR submission output: ${submissionOutput?.length() ?: 0} characters; queue message present: ${submissionOutput?.contains('with ID:') ?: false}"
       localSteps.error('ACR did not return a run ID; refusing to resubmit the build')
       return
     }
@@ -215,6 +214,16 @@ class Acr extends Az {
         return true
       }
     }
+  }
+
+  @NonCPS
+  private static String extractRunId(String submissionOutput) {
+    String output = (submissionOutput ?: '').replaceAll(/\x1B\[[0-?]*[ -\/]*[@-~]/, '').trim()
+    def queuedRun = output =~ /(?m)\bQueued a (?:run|build) with ID:[ \t]*([A-Za-z0-9_-]+)[ \t]*\r?$/
+    if (queuedRun.find()) {
+      return queuedRun.group(1)
+    }
+    return output ==~ /[A-Za-z0-9_-]+/ ? output : null
   }
 
   // ==================== Private Helper Methods ====================
