@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.BuildRecovery
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.PipelineType
@@ -53,15 +54,13 @@ def call(type, String product, String component, Closure body) {
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
-  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
-
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
-  }
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks, metricsPublisher)
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
+  def buildRecovery = new BuildRecovery(this, currentBuild, metricsPublisher,
+    pipelineConfig.buildRecovery && env.DISABLE_BUILD_RECOVERY?.toString() != 'true')
 
   dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
@@ -78,10 +77,9 @@ def call(type, String product, String component, Closure body) {
   def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
 
   try {
-    retry(conditions: [agent()], count: 2) {
       node(nodeSelector) {
         timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
-          def attemptFailed = false
+          def pipelineFailed = false
           if (!libraryBranchAllowed) {
             currentBuild.result = "FAILURE"
             return
@@ -97,6 +95,7 @@ def call(type, String product, String component, Closure body) {
             def deploymentEnabled = sectionBuildAndTest(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
+              buildRecovery: buildRecovery,
               builder: pipelineType.builder,
               subscription: branch.isPR() ? subscription.previewName : (autoDeployTarget?.subscriptionName ?: subscription.nonProdName),
               environment: primaryEnvironment,
@@ -156,11 +155,11 @@ def call(type, String product, String component, Closure body) {
               metricsPublisher.publish(err.message)
               return
             }
-            attemptFailed = true
+            pipelineFailed = true
             throw err
           } finally {
             notifyPipelineDeprecations(slackChannel, metricsPublisher)
-            if (attemptFailed || (currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+            if (pipelineFailed || (currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
               archiveBuildOutputs()
             }
             if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
@@ -170,17 +169,19 @@ def call(type, String product, String component, Closure body) {
           notifyBuildFixed channel: slackChannel
 
           callbacksRunner.call('onSuccess')
-          metricsPublisher.publish('Pipeline Succeeded')
+          metricsPublisher.publish('Pipeline Succeeded', [event_type: 'pipeline', pipeline_result: 'SUCCESS'])
         }
       }
-    }
   } catch (FlowInterruptedException err) {
     currentBuild.result = err.result.toString()
+    metricsPublisher.publish('Pipeline Interrupted', [event_type: 'pipeline', pipeline_result: currentBuild.result,
+      failure_reason: MetricsPublisher.isAgentFailure(err) ? 'AGENT_DISCONNECTED' : 'INTERRUPTED'])
     throw err
   } catch (err) {
     currentBuild.result = "FAILURE"
     notifyBuildFailure channel: slackChannel
-    metricsPublisher.publish('Pipeline Failed')
+    metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE',
+      failure_reason: MetricsPublisher.isAgentFailure(err) ? 'AGENT_DISCONNECTED' : 'STEP_FAILURE'])
     callbacksRunner.call('onFailure')
     throw err
   } finally {

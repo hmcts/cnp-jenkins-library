@@ -117,10 +117,70 @@ class MetricsPublisher implements Serializable {
       return [null, null]
   }
 
-  def publish(eventName) {
+  Map recoveryIdentity() {
+    def (libName, libVersion) = resolveSharedLibrary()
+    return [product: product, component: component, branch_name: env.BRANCH_NAME,
+      job_name: env.JOB_NAME, git_url: env.GIT_URL, git_commit: env.GIT_COMMIT,
+      shared_library_name: libName, shared_library_version: libVersion]
+  }
+
+  void publishStep(String stage, String result, String executionId, Throwable failure = null) {
+    publish(stage, [
+      event_type: 'step',
+      step_result: result,
+      step_execution_id: executionId,
+      failure_reason: failureReason(failure)
+    ])
+  }
+
+  @NonCPS
+  private String failureReason(Throwable failure) {
+    if (failure == null) {
+      return null
+    }
+    if (isAgentFailure(failure)) {
+      return 'AGENT_DISCONNECTED'
+    }
+    boolean connectionFailure = failure.class.name == 'hudson.AbortException' &&
+      ((failure.message ?: '') =~ /(?i)(cannot contact|channel.*(?:closed|closing)|agent.*(?:offline|removed)|script returned exit code (?:-2|137|143)\b)/).find()
+    if (connectionFailure && env.NODE_NAME) {
+      try {
+        def computer = agentComputer(env.NODE_NAME.toString())
+        if (computer == null || !computer.isOnline() || computer.getChannel() == null) {
+          return 'AGENT_DISCONNECTED'
+        }
+      } catch (Exception ignored) {
+        return 'STEP_FAILURE'
+      }
+    }
+    return 'STEP_FAILURE'
+  }
+
+  @NonCPS
+  static boolean isAgentFailure(Throwable failure) {
+    def visited = [] as Set
+    while (failure != null && visited.add(failure)) {
+      if (failure.class.name in [
+        'hudson.remoting.ChannelClosedException',
+        'hudson.remoting.RequestAbortedException',
+        'org.jenkinsci.plugins.workflow.support.steps.AgentOfflineException'
+      ]) {
+        return true
+      }
+      if (failure.class.name == 'org.jenkinsci.plugins.workflow.steps.FlowInterruptedException') {
+        if (failure.causes.any { it.class.name == 'org.jenkinsci.plugins.workflow.support.steps.ExecutorStepExecution$RemovedNodeCause' }) {
+          return true
+        }
+      }
+      failure = failure.cause
+    }
+    return false
+  }
+
+  def publish(eventName = null, Map details = [:]) {
     try {
       def database = cosmosDbTargetResolver.databaseName()
-      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName))
+      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName) + details)
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
     }

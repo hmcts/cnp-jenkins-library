@@ -6,9 +6,11 @@ import java.time.LocalDate
 
 class PipelineCallbacksRunner implements Serializable {
   def final config
+  private final MetricsPublisher metricsPublisher
 
-  PipelineCallbacksRunner(config) {
+  PipelineCallbacksRunner(config, MetricsPublisher metricsPublisher = null) {
     this.config = config
+    this.metricsPublisher = metricsPublisher
   }
 
   private def callAfter(String stage) {
@@ -36,12 +38,16 @@ class PipelineCallbacksRunner implements Serializable {
 
   void callAround(String stage, Closure body) {
     def errToThrow = null
+    Throwable failure = null
+    String executionId = UUID.randomUUID().toString()
+    metricsPublisher?.publishStep(stage, 'STARTED', executionId)
 
-    callBefore(stage)
     try {
+      callBefore(stage)
       body.call()
       callAfterSuccess(stage)
     } catch (err) {
+      failure = err
       call('onStageFailure', stage)
 
       callAfterFailure(stage)
@@ -51,6 +57,7 @@ class PipelineCallbacksRunner implements Serializable {
       try {
         callAfter(stage)
       } catch (err) {
+        failure = err
         call('onStageFailure', stage)
         errToThrow = err
       }
@@ -58,10 +65,18 @@ class PipelineCallbacksRunner implements Serializable {
       try {
         callAfterAlways(stage)
       } catch (err) {
+        failure = err
         call('onStageFailure', stage)
         errToThrow = err
       }
-      nullSafeCall('after:all', stage)
+      try {
+        nullSafeCall('after:all', stage)
+      } catch (err) {
+        failure = err
+        throw err
+      } finally {
+        metricsPublisher?.publishStep(stage, failure == null ? 'SUCCESS' : 'FAILURE', executionId, failure)
+      }
       if (errToThrow != null) {
         throw errToThrow
       }

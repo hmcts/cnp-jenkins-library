@@ -6,6 +6,34 @@ import static org.assertj.core.api.Assertions.assertThat
 
 class PipelineCallBacksRunnerTest extends Specification {
 
+  def "records explicit outcomes independently of the build result"() {
+    given:
+      def publisher = Mock(MetricsPublisher)
+      def runner = new PipelineCallbacksRunner(new PipelineCallbacksConfig(), publisher)
+
+    when:
+      runner.callAround('test') {}
+
+    then:
+      1 * publisher.publishStep('test', 'STARTED', _ as String)
+      1 * publisher.publishStep('test', 'SUCCESS', _ as String, null)
+  }
+
+  def "records and propagates a failed step"() {
+    given:
+      def publisher = Mock(MetricsPublisher)
+      def runner = new PipelineCallbacksRunner(new PipelineCallbacksConfig(), publisher)
+      def failure = new IllegalStateException('test failed')
+
+    when:
+      runner.callAround('test') { throw failure }
+
+    then:
+      thrown(IllegalStateException)
+      1 * publisher.publishStep('test', 'STARTED', _ as String)
+      1 * publisher.publishStep('test', 'FAILURE', _ as String, failure)
+  }
+
   def "ensure correctly registered call before is called before body"() {
     given:
       PipelineCallbacksConfig config = new PipelineCallbacksConfig()

@@ -17,12 +17,12 @@ class withJavaPipelineOnPreviewWithHighLevelDataSetupTests extends BaseCnpPipeli
 
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
-      build(0) {}
-      test(0) {}
-      securityCheck(0) {}
-      sonarScan(0) {}
-      techStackMaintenance(0) {}
+      setupToolVersion(1) {}
+      build(1) {}
+      test(1) {}
+      securityCheck(1) {}
+      sonarScan(1) {}
+      techStackMaintenance(1) {}
       highLevelDataSetup(0) {}
       smokeTest(0) {} //preview-staging
       e2eTest(0) {}

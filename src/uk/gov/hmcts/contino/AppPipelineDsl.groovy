@@ -18,6 +18,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.vaultSecrets = vaultSecrets
   }
 
+  void enableBuildRecovery() {
+    config.buildRecovery = true
+  }
+
   void enableDbMigration(String dbMigrationVaultName) {
     config.migrateDb = true
     config.dbMigrationVaultName = dbMigrationVaultName

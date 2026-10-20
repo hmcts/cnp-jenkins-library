@@ -89,7 +89,9 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("publishHTML", [Map.class], {})
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
     helper.registerAllowedMethod("sh", [Map.class], { m ->
-      if (m.get('script') == 'pwd') {
+      if (m.get('returnStatus')) {
+        return 0
+      } else if (m.get('script') == 'pwd') {
         return 'localPath'
       } else if (m.get('script')?.contains('allowed-library-branches.yml')) {
         return '''branches:

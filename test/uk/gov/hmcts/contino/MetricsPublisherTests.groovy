@@ -31,7 +31,7 @@ class MetricsPublisherTests extends Specification {
     metricsPublisher.publish()
 
     then:
-    notThrown()
+    noExceptionThrown()
   }
 
   def "collects build metrics"() {
@@ -99,4 +99,43 @@ class MetricsPublisherTests extends Specification {
     then:
     1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap)
   }
+
+  def 'publishes explicit outcomes and confirmed agent failure reasons'() {
+    given:
+      stubSteps.env.NODE_NAME = 'build-agent'
+      stubSteps.currentBuild.result = 'FAILURE'
+      def publisher = Spy(MetricsPublisher, constructorArgs: [stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver])
+      publisher.agentComputer('build-agent') >> {
+        if (lookupFails) {
+          throw new IllegalStateException('lookup denied')
+        }
+        return removed ? null : [isOnline: { online }, getChannel: { connected ? new Object() : null }]
+      }
+      Map document
+
+    when:
+      publisher.publishStep('test', result, 'execution-1', fails ?
+        (communicationError ? new hudson.AbortException('script returned exit code -2') : new IllegalStateException('step failed')) : null)
+
+    then:
+      1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap) >> { Map options -> document = options.document }
+      document.step_result == result
+      document.step_execution_id == 'execution-1'
+      document.event_type == 'step'
+      !document.containsKey('attempt_id')
+      document.current_build_result == 'FAILURE'
+      document.failure_reason == expectedReason
+
+    where:
+      result    | fails | online | connected | removed | lookupFails | communicationError | expectedReason
+      'SUCCESS' | false | true   | true      | false   | false       | false              | null
+      'FAILURE' | true  | true   | true      | false   | false       | false              | 'STEP_FAILURE'
+      'FAILURE' | true  | false  | false     | false   | false       | false              | 'STEP_FAILURE'
+      'FAILURE' | true  | false  | false     | false   | false       | true               | 'AGENT_DISCONNECTED'
+      'FAILURE' | true  | true   | false     | false   | false       | true               | 'AGENT_DISCONNECTED'
+      'FAILURE' | true  | false  | false     | true    | false       | true               | 'AGENT_DISCONNECTED'
+      'FAILURE' | true  | false  | false     | false   | true        | true               | 'STEP_FAILURE'
+      'FAILURE' | true  | true   | true      | false   | false       | true               | 'STEP_FAILURE'
+  }
+
 }

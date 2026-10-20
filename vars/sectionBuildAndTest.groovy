@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.GradleAPI
+import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
@@ -14,6 +15,7 @@ def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
   def builder = params.builder
+  def buildRecovery = params.buildRecovery
 
   def subscription = params.subscription
   def environment = params.environment
@@ -74,13 +76,22 @@ def call(params) {
         }
       }
 
+      buildRecovery?.prepare(builder instanceof GradleBuilder)
+
       def branches = [failFast: false]
       branches["Unit tests and Sonar scan"] = {
-        pcr.callAround('test') {
-          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-            withAcrClient(subscription){
-              acr.login()
-              builder.test()
+        if (buildRecovery?.shouldSkip('test')) {
+          buildRecovery.recordSkip('test')
+        } else {
+          pcr.callAround('test') {
+            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+              withAcrClient(subscription){
+                acr.login()
+                builder.test()
+              }
+              if (builder instanceof GradleBuilder) {
+                buildRecovery?.archiveTestArtifacts()
+              }
             }
           }
         }
@@ -101,8 +112,12 @@ def call(params) {
         }
       }
       branches["Security Checks"] = {
-        pcr.callAround('securitychecks') {
-          builder.securityCheck()
+        if (buildRecovery?.shouldSkip('securitychecks')) {
+          buildRecovery.recordSkip('securitychecks')
+        } else {
+          pcr.callAround('securitychecks') {
+            builder.securityCheck()
+          }
         }
       }
       branches["Tech Stack"] = {

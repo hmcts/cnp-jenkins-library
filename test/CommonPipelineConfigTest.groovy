@@ -26,6 +26,17 @@ class CommonPipelineConfigTest extends Specification {
       assertThat(callbacks.bodies.get("before:test")).isEqualTo(body)
   }
 
+  def "build recovery must be explicitly enabled"() {
+    expect:
+      !pipelineConfig.buildRecovery
+
+    when:
+      dsl.enableBuildRecovery()
+
+    then:
+      pipelineConfig.buildRecovery
+  }
+
   def "Register 'after' callback"() {
     when:
       Closure body = {
