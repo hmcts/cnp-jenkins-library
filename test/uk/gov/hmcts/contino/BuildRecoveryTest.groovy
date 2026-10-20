@@ -247,7 +247,7 @@ class BuildRecoveryTest extends Specification {
       copies.isEmpty()
       messages.any { it.contains('querying Cosmos DB pipeline-metrics') && it.contains('build #35') }
       messages.any { it.contains('Cosmos DB returned 7 records') }
-      messages.any { it.contains('test=SUCCESS') }
+      !messages.any { it.contains('test=SUCCESS') }
       messages.any { it.contains('dockerbuild=FAILURE') && it.contains('AGENT_DISCONNECTED') }
 
     when:
@@ -258,5 +258,27 @@ class BuildRecoveryTest extends Specification {
       copies.size() == 1
       recovery.shouldSkip('test')
       recovery.shouldSkip('securitychecks')
+  }
+
+  def 'only agent disconnections are displayed while all records determine recovery'() {
+    given:
+      List<String> messages = []
+      def steps = new Expando(echo: { String message -> messages << message })
+      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records()
+      events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE'])
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.checkPreviousBuild()
+
+    then:
+      def displayed = messages.findAll { it.startsWith('Previous build #35:') }
+      displayed.size() == 1
+      displayed[0].contains('dockerbuild=FAILURE')
+      displayed[0].contains('failure_reason=AGENT_DISCONNECTED')
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
   }
 }

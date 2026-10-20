@@ -47,7 +47,7 @@ class BuildRecovery implements Serializable {
       List<Map> records = readMetrics(identity, sourceBuild)
       steps.echo "Build recovery: Cosmos DB returned ${records?.size() ?: 0} records for build #${sourceBuild}"
       if (records != null && records.size() <= 1000) {
-        records.findAll { it.event_type == 'step' && it.step_result != 'STARTED' }.each { record ->
+        records.findAll { it.event_type == 'step' && it.step_result != 'STARTED' && it.failure_reason == 'AGENT_DISCONNECTED' }.each { record ->
           steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}, node_status=${record.node_status ?: 'not recorded'}, failure_reason=${record.failure_reason ?: 'none'}"
         }
       }
