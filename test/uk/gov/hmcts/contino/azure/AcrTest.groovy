@@ -138,6 +138,56 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "build() should also tag a master build with its commit"() {
+    when:
+      dockerImage.getImageTag() >> 'staging'
+      dockerImage.getBaseShortName() >> 'hmcts/alpine:staging'
+      dockerImage.getShortName() >> 'hmcts/alpine:staging-abc1234-20261020120000'
+      acr.build(dockerImage)
+
+    then:
+      1 * steps.sh({it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t hmcts/alpine:staging -t hmcts/alpine:staging-abc1234-20261020120000 --subscription")})
+  }
+
+  def "retagForStage() should promote a master build from its commit tag, not the shared staging tag"() {
+    when:
+      dockerImage.getImageTag() >> 'staging'
+      dockerImage.getShortName(DockerImage.DeploymentStage.PROD) >> 'hmcts/alpine:prod-abc1234-20261020120000'
+      dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/hmcts/alpine:staging-abc1234-20261020120000"
+      dockerImage.getBaseTaggedName() >> "${REGISTRY_NAME}.azurecr.io/hmcts/alpine:staging"
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+      1 * steps.sh({it.get('script').contains("--source ${REGISTRY_NAME}.azurecr.io/hmcts/alpine:staging-abc1234-20261020120000 -t hmcts/alpine:prod-abc1234-20261020120000")})
+      0 * steps.sh({it.get('script').contains("--source ${REGISTRY_NAME}.azurecr.io/hmcts/alpine:staging ")})
+  }
+
+  def "retagForStage() should skip the staging promotion of a master build because the commit tag already exists"() {
+    when:
+      dockerImage.getImageTag() >> 'staging'
+      dockerImage.getShortName() >> 'hmcts/alpine:staging-abc1234-20261020120000'
+      acr.retagForStage(DockerImage.DeploymentStage.STAGING, dockerImage)
+
+    then:
+      0 * steps.sh(_)
+  }
+
+  def "runWithTemplate() should pin the commit tag of a master build"() {
+    given:
+      dockerImage.getImageTag() >> 'staging'
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getBaseShortName() >> 'hmcts/alpine:staging'
+      dockerImage.getShortName() >> 'hmcts/alpine:staging-abc1234-20261020120000'
+      steps.fileExists("acb.yaml") >> true
+      steps.readFile("acb.yaml") >> "version: v1.1.0"
+
+    when:
+      acr.runWithTemplate("acb.tpl.yaml", dockerImage)
+
+    then:
+      1 * steps.sh({it.get('script').contains("acr import --force -n ${REGISTRY_NAME} -g ${REGISTRY_RESOURCE_GROUP} --subscription ${REGISTRY_SUBSCRIPTION} --source ${REGISTRY_NAME}.azurecr.io/hmcts/alpine:staging -t hmcts/alpine:staging-abc1234-20261020120000")})
+  }
+
   def "hasTag should return false in case of error"() {
     when:
       dockerImage.getTag() >> IMAGE_TAG
@@ -469,11 +519,11 @@ class AcrTest extends Specification {
       acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
       dockerImage = Mock(DockerImage.class)
       dockerImage.getShortName(_) >> IMAGE_NAME
-      dockerImage.getBaseTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
       dockerImage.imageTag >> 'staging'
 
     when:
-      acr.retagForStage(DockerImage.DeploymentStage.STAGING, dockerImage)
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage)
 
     then:
       1 * steps.sh({it.containsKey('script') &&
