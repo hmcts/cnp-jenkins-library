@@ -1,6 +1,6 @@
 import uk.gov.hmcts.pipeline.AgentSelector
 
-def call(String product, String environment, Closure body) {
+def call(String product, String environment, boolean checkoutWorkspace = true, Closure body) {
   String agentLabel = AgentSelector.labelForEnvironment(environment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector = agentLabel ? "${agentLabel} && !nightly" : '!nightly'
   boolean firstAttempt = true
@@ -11,8 +11,10 @@ def call(String product, String environment, Closure body) {
       body()
     } else {
       node(nodeSelector) {
-        deleteDir()
-        checkout scm
+        if (checkoutWorkspace) {
+          deleteDir()
+          checkout scm
+        }
         body()
       }
     }

@@ -173,14 +173,43 @@ class Acr extends Az {
    * @return
    *   stdout of the step
    */
-  def build(dockerImage, additionalArgs) {
+  def build(dockerImage, additionalArgs, Closure monitor = null) {
     // Build to primary registry
-    this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
+    executeBuild("acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} .", monitor)
     
     // Also build to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
       localSteps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
-      this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
+      withRegistryContext(this.secondaryRegistryName, this.secondaryResourceGroup, this.secondaryRegistrySubscription) {
+        executeBuild("acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} .", monitor)
+      }
+    }
+  }
+
+  private def executeBuild(String command, Closure monitor) {
+    if (monitor == null) {
+      return this.az(command)
+    }
+
+    String runId = this.az("${command} --no-wait --query runId --output tsv")
+    if (!runId?.trim()) {
+      localSteps.error('ACR did not return a run ID; refusing to resubmit the build')
+      return
+    }
+    localSteps.echo "Monitoring ACR run ${runId} in ${registryName}"
+    monitor.call {
+      String status
+      localSteps.waitUntil(initialRecurrencePeriod: 10000, quiet: true) {
+        status = this.az("acr task show-run --registry ${registryName} --subscription ${registrySubscription} --run-id ${runId} --query status --output tsv")
+        if (status in ['Queued', 'Started', 'Running']) {
+          return false
+        }
+        localSteps.echo(this.az("acr task logs --registry ${registryName} --subscription ${registrySubscription} --run-id ${runId}") ?: '')
+        if (status != 'Succeeded') {
+          localSteps.error("ACR run ${runId} in ${registryName} finished with status: ${status}")
+        }
+        return true
+      }
     }
   }
 
@@ -411,8 +440,8 @@ class Acr extends Az {
   /**
    * Execute a quick ACR run (without task-based authentication)
    */
-  private void quickRun() {
-    this.az "acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} ."
+  private void quickRun(Closure monitor = null) {
+    executeBuild("acr run -r ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} .", monitor)
   }
 
   /**
@@ -423,10 +452,10 @@ class Acr extends Az {
    * @param setArgs
    *   optional --set arguments for the task
    */
-  private void runTask(String taskName, String setArgs = "") {
+  private void runTask(String taskName, String setArgs = "", Closure monitor = null) {
     def setArgsStr = setArgs ? " ${setArgs}" : ""
     // Provide the current directory as context when running the task
-    this.az "acr task run --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --context .${setArgsStr}"
+    executeBuild("acr task run --name ${taskName} --registry ${registryName} --subscription ${registrySubscription} --context .${setArgsStr}", monitor)
   }
 
   /**
@@ -439,10 +468,10 @@ class Acr extends Az {
    * @param setArgs
    *   optional --set arguments for the task (only used for task-based execution)
    */
-  private void handleAcrExecution(String acbFilePath, String taskName, String setArgs = "") { 
+  private void handleAcrExecution(String acbFilePath, String taskName, String setArgs = "", Closure monitor = null) { 
     // Check if ACB file exists and detect cross-registry pulls
     if (!localSteps.fileExists(acbFilePath)) {
-      quickRun()
+      quickRun(monitor)
       return
     }
 
@@ -450,7 +479,7 @@ class Acr extends Az {
     
     if (!crossRegistryInfo.crossRegistry) {
       // No cross-registry pulls, use quick run
-      quickRun()
+      quickRun(monitor)
       return
     }
 
@@ -461,7 +490,7 @@ class Acr extends Az {
     
     if (!identity) {
       localSteps.echo "Warning: Cross-registry authentication requires a managed identity assigned to ACR '${registryName}'. Falling back to (az acr run)."
-      quickRun()
+      quickRun(monitor)
       return
     }
     
@@ -480,7 +509,7 @@ class Acr extends Az {
       def identityAssigned = assignIdentityToTask(taskName, identity.resourceId)
       if (!identityAssigned) {
         localSteps.echo "Falling back to quick run due to permission issues"
-        quickRun()
+        quickRun(monitor)
         return
       }
     }
@@ -493,7 +522,7 @@ class Acr extends Az {
     }
     
     // Run the task
-    runTask(taskName, setArgs)
+    runTask(taskName, setArgs, monitor)
   }
 
   // ==================== Public Methods ====================
@@ -517,7 +546,7 @@ class Acr extends Az {
     }
   }
 
-  def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage) {
+  def runWithTemplate(String acbTemplateFilePath, DockerImage dockerImage, Closure monitor = null) {
     def defaultAcrScriptFilePath = "acb.yaml"
     
     // Generate acb.yaml from template by replacing placeholders
@@ -541,7 +570,7 @@ class Acr extends Az {
     def taskName = "${repoName}-${taskIdentifier}-build"
     def setArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
     
-    handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs)
+    handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs, monitor)
 
     if (isDualPublishModeEnabled()) {
       localSteps.echo "Running ACB template build on secondary registry: ${secondaryRegistryName}"
@@ -553,7 +582,7 @@ class Acr extends Az {
         )?.trim()
 
         def secondarySetArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
-        handleAcrExecution(defaultAcrScriptFilePath, taskName, secondarySetArgs)
+        handleAcrExecution(defaultAcrScriptFilePath, taskName, secondarySetArgs, monitor)
       }
     }
   }

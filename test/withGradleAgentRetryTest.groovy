@@ -52,6 +52,22 @@ class WithGradleAgentRetryTest extends BasePipelineTest {
   }
 
   @Test
+  void 'monitor retry allocates an agent without preparing a source workspace'() {
+    int bodyAttempts = 0
+
+    script.call('toffee', 'sbox', false) {
+      bodyAttempts++
+      events << "body:${bodyAttempts}".toString()
+      if (bodyAttempts == 1) {
+        throw new IOException('simulated agent interruption')
+      }
+    }
+
+    assertThat(nodeSelectors).containsExactly('ubuntu-sbox && !nightly')
+    assertThat(events).containsExactly('body:1', 'body:2')
+  }
+
+  @Test
   void 'agent retry allocates and prepares a workspace only after failure'() {
     int bodyAttempts = 0
 

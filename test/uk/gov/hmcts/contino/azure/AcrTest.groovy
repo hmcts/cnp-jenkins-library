@@ -74,6 +74,127 @@ class AcrTest extends Specification {
       it.get('returnStdout').equals(true)})
   }
 
+  def "recovering monitoring polls the same run without submitting another build"() {
+    given:
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      int polls = 0
+      steps.waitUntil(_, _) >> { Map options, Closure poll ->
+        while (!poll()) {}
+      }
+      Closure monitor = { Closure poll ->
+        try {
+          poll()
+        } catch (IllegalStateException ignored) {
+          poll()
+        }
+      }
+
+    when:
+      acr.build(dockerImage, '', monitor)
+
+    then:
+      1 * steps.sh({ it.script.contains('az acr build') && it.script.contains('--no-wait --query runId --output tsv') }) >> 'dbahs'
+      3 * steps.sh({ it.script.contains('acr task show-run') && it.script.contains('--run-id dbahs') }) >> {
+        polls++
+        if (polls == 1) {
+          throw new IllegalStateException('agent disconnected')
+        }
+        return polls == 2 ? 'Running' : 'Succeeded'
+      }
+      1 * steps.sh({ it.script.contains('acr task logs') && it.script.contains('--run-id dbahs') }) >> 'build logs'
+      1 * steps.echo('build logs')
+      0 * steps.error(_)
+  }
+
+  def "monitoring reports unsuccessful terminal run status"() {
+    given:
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      steps.waitUntil(_, _) >> { Map options, Closure poll -> poll() }
+      steps.sh({ it.script.contains('az acr build') }) >> 'dbahs'
+      steps.sh({ it.script.contains('acr task show-run') }) >> status
+      steps.sh({ it.script.contains('acr task logs') }) >> 'failure logs'
+
+    when:
+      acr.build(dockerImage, '') { Closure poll -> poll() }
+
+    then:
+      1 * steps.echo('failure logs')
+      1 * steps.error("ACR run dbahs in ${REGISTRY_NAME} finished with status: ${status}") >> { throw new IllegalStateException('build failed') }
+      thrown(IllegalStateException)
+
+    where:
+      status << ['Failed', 'Canceled', 'Error', 'Timeout']
+  }
+
+  def "template builds submit asynchronously and monitor their run"() {
+    given:
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      dockerImage.getImageTag() >> IMAGE_TAG
+      steps.fileExists('acb.yaml') >> true
+      steps.readFile('acb.yaml') >> (namedTask ? 'registry: external.azurecr.io' : 'version: v1.1.0')
+      steps.sh({ it.script.contains('acr identity show') }) >> 'identity-json'
+      steps.readJSON(_) >> [userAssignedIdentities: ['identity-id': [clientId: 'client-id']]]
+      steps.waitUntil(_, _) >> { Map options, Closure poll -> poll() }
+
+    when:
+      acr.runWithTemplate('acb.tpl.yaml', dockerImage) { Closure poll -> poll() }
+
+    then:
+      1 * steps.sh({ it.script.contains(submitCommand) && it.script.contains('--no-wait --query runId --output tsv') }) >> 'dbahs'
+      1 * steps.sh({ it.script.contains('acr task show-run') && it.script.contains('--run-id dbahs') }) >> 'Succeeded'
+      1 * steps.sh({ it.script.contains('acr task logs') && it.script.contains('--run-id dbahs') }) >> 'build logs'
+      0 * steps.error(_)
+
+    where:
+      namedTask | submitCommand
+      false     | 'acr run -r'
+      true      | 'acr task run --name'
+  }
+
+  def "dual publish monitors each run in its own registry and restores registry context"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      steps.waitUntil(_, _) >> { Map options, Closure poll -> poll() }
+
+    when:
+      acr.build(dockerImage, '') { Closure poll -> poll() }
+
+    then:
+      1 * steps.sh({ it.script.contains("acr build --no-format -r ${REGISTRY_NAME}") && it.script.contains('--no-wait') }) >> 'primary-run'
+      1 * steps.sh({ it.script.contains('acr build --no-format -r hmctsold') && it.script.contains('--no-wait') }) >> 'secondary-run'
+      1 * steps.sh({ it.script.contains("acr task show-run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --run-id primary-run") }) >> 'Succeeded'
+      1 * steps.sh({ it.script.contains('acr task show-run --registry hmctsold --subscription old-sub --run-id secondary-run') }) >> 'Succeeded'
+      1 * steps.sh({ it.script.contains("acr task logs --registry ${REGISTRY_NAME}") && it.script.contains('--run-id primary-run') }) >> 'primary logs'
+      1 * steps.sh({ it.script.contains('acr task logs --registry hmctsold') && it.script.contains('--run-id secondary-run') }) >> 'secondary logs'
+      acr.registryName == REGISTRY_NAME
+      acr.registrySubscription == REGISTRY_SUBSCRIPTION
+      0 * steps.error(_)
+  }
+
+  def "missing run ID fails without monitoring or resubmitting"() {
+    given:
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      boolean monitored = false
+
+    when:
+      acr.build(dockerImage, '') { Closure poll -> monitored = true }
+
+    then:
+      1 * steps.sh({ it.script.contains('az acr build') }) >> ''
+      1 * steps.error('ACR did not return a run ID; refusing to resubmit the build') >> { throw new IllegalStateException('missing run ID') }
+      thrown(IllegalStateException)
+      !monitored
+  }
+
   def "getHostname() should call az with correct arguments"() {
     when:
       acr.getHostname()

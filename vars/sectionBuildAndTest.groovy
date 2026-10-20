@@ -136,10 +136,19 @@ def call(params) {
                       """
                 }
                 def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+                def monitorAcrBuild = { Closure monitor ->
+                  stage('Monitor ACR build') {
+                    withGradleAgentRetry(product, environment, false) {
+                      withAcrClient(subscription) {
+                        monitor()
+                      }
+                    }
+                  }
+                }
                 if (fileExists(acbTemplateFilePath)) {
-                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                  acr.runWithTemplate(acbTemplateFilePath, dockerImage, monitorAcrBuild)
                 } else {
-                  acr.build(dockerImage, buildArgs)
+                  acr.build(dockerImage, buildArgs, monitorAcrBuild)
                 }
               }
             }
