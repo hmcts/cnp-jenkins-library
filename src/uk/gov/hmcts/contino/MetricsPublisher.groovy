@@ -1,5 +1,8 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
+import jenkins.model.Jenkins
+
 class MetricsPublisher implements Serializable {
 
   def steps
@@ -38,6 +41,7 @@ class MetricsPublisher implements Serializable {
       build_tag                    : env.BUILD_TAG,
       node_name                    : env.NODE_NAME,
       node_labels                  : env.NODE_LABELS,
+      node_status                  : resolveAgentStatus(),
       build_url                    : env.BUILD_URL,
       job_url                      : env.JOB_URL,
       git_url                      : env.GIT_URL,
@@ -57,6 +61,25 @@ class MetricsPublisher implements Serializable {
       current_build_absolute_url   : currentBuild.absoluteUrl,
       stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
     ]
+  }
+
+  @NonCPS
+  private String resolveAgentStatus() {
+    String nodeName = env.NODE_NAME
+    if (!nodeName) {
+      return 'offline'
+    }
+    try {
+      def computer = agentComputer(nodeName)
+      return computer?.isOnline() && computer?.getChannel() != null ? 'online' : 'offline'
+    } catch (Exception ignored) {
+      return 'offline'
+    }
+  }
+
+  @NonCPS
+  protected def agentComputer(String nodeName) {
+    return Jenkins.get().getComputer(nodeName)
   }
 
   private List<String> resolveSharedLibrary() {    
