@@ -178,8 +178,8 @@ class AcrTest extends Specification {
       steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
                     SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
       acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
-      def oldImage = new DockerImage('pcs', component, acr, 'staging', 'e083a7e123', '20261020113010')
-      def newImage = new DockerImage('pcs', component, acr, 'staging', '78ea950123', '20261020120210')
+      def oldImage = new DockerImage('pcs', component, acr, 'staging', 'e083a7e123', '20261020113010\n')
+      def newImage = new DockerImage('pcs', component, acr, 'staging', '78ea950123', '20261020120210\n')
       def published = [:]
       def commands = []
       steps.sh(_) >> { Map args ->
@@ -220,6 +220,7 @@ class AcrTest extends Specification {
       }
       !commands.any { it =~ /(?: -t | --source )(?:\S+\/)?pcs\/api(?:-test)?:staging(?: |$)/ }
       commands.count { it.contains('acr import') } == (component == 'api' ? 6 : 4)
+      commands.every { !it.contains('\n') }
 
     where:
       component << ['api', 'api-test']
@@ -232,8 +233,8 @@ class AcrTest extends Specification {
       steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
                     SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
       acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
-      def images = [new DockerImage('pcs', 'api', acr, 'staging', 'e083a7e123', '20261020113010'),
-                    new DockerImage('pcs', 'api', acr, 'staging', '78ea950123', '20261020120210')]
+      def images = [new DockerImage('pcs', 'api', acr, 'staging', 'e083a7e123', '20261020113010\n'),
+                    new DockerImage('pcs', 'api', acr, 'staging', '78ea950123', '20261020120210\n')]
       def commands = []
       steps.fileExists('acb.yaml') >> true
       steps.readFile('acb.yaml') >> 'from: external.azurecr.io/base/node:18-alpine'
@@ -267,6 +268,7 @@ class AcrTest extends Specification {
       }
       commands.count { it.contains('acr task run') } == 4
       !commands.any { it.contains('pcs-api-staging-build') }
+      commands.every { !it.contains('\n') }
 
     where:
       existingTask << [true, false]
