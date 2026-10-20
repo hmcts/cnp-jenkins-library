@@ -192,19 +192,15 @@ withPipeline(type, product, component) {
 
 #### Recovery After Agent Failures
 
-Opt in to reusing successful work from the immediately previous failed build:
-
-```groovy
-withPipeline('java', 'product', 'component') {
-  enableBuildRecovery()
-}
-```
+Recovery is enabled by default for the app pipeline. No Jenkinsfile changes are
+required to reuse successful work from the immediately previous failed build.
 
 Recovery requires the same job, branch, repository, Git commit and shared-library
 name/version, plus explicit step records identifying an agent-related failure.
 Application failures, missing or ambiguous records, and Cosmos query errors run
 the normal pipeline. Existing metrics without explicit outcomes are not reused.
-The first opted-in build records the data and artifacts needed by later builds.
+The first build using this library version records the data and artifacts needed
+by later builds.
 
 Only successful unit tests and security checks can be skipped. Gradle unit-test
 reuse also requires archived class, resource, test and JaCoCo outputs, restored

@@ -12,7 +12,7 @@ class BuildRecovery implements Serializable {
   private Set<String> reusable = [] as Set
   String sourceBuild
 
-  BuildRecovery(steps, currentBuild, publisher, boolean enabled = false) {
+  BuildRecovery(steps, currentBuild, publisher, boolean enabled = true) {
     this.steps = steps
     this.currentBuild = currentBuild
     this.publisher = publisher
