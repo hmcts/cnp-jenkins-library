@@ -29,8 +29,6 @@ interface JenkinsStepMock {
   Object withSauceConnect(String, Closure)
   Object saucePublisher()
   Object retry(Integer, Closure)
-  Object waitUntil(Map, Closure)
-  Object readJSON(Map)
   Object readYaml(LinkedHashMap)
   Object writeYaml(Map)
   String readFile(String)

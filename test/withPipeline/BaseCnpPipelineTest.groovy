@@ -68,7 +68,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod('readFile', [String.class], { c -> '20.14.0' })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
-    helper.registerAllowedMethod('waitUntil', [Map.class, Closure.class], { Map options, Closure body -> body.call() })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("junit", [LinkedHashMap.class])
     helper.registerAllowedMethod("lock", [String.class, Closure.class], null)
@@ -106,10 +105,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
         return 0
       } else if (m.get('script').contains('account show') && m.get('script').contains('--query id')) {
         return 'management-subscription-id'
-      } else if (m.get('script').contains('--no-wait --query runId --output tsv')) {
-        return 'test-acr-run'
-      } else if (m.get('script').contains('acr task show-run')) {
-        return 'Succeeded'
       }
       else {
         return '{"azure_subscription": "fake_subscription_name","azure_client_id": "fake_client_id",' +

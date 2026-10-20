@@ -76,39 +76,33 @@ def call(params) {
 
       def branches = [failFast: false]
       branches["Unit tests and Sonar scan"] = {
-        withGradleAgentRetry(product, environment) {
-          builder.setupToolVersion()
-          pcr.callAround('test') {
-            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-              withAcrClient(subscription){
-                acr.login()
-                builder.test()
-              }
+        pcr.callAround('test') {
+          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+            withAcrClient(subscription){
+              acr.login()
+              builder.test()
             }
           }
+        }
 
-          pcr.callAround('sonarscan') {
-            pluginActive('sonar') {
-              withSonarQubeEnv("SonarQube") {
-                builder.sonarScan()
-              }
+        pcr.callAround('sonarscan') {
+          pluginActive('sonar') {
+            withSonarQubeEnv("SonarQube") {
+              builder.sonarScan()
+            }
 
-              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-                def qg = waitForQualityGate()
-                if (qg.status != 'OK') {
-                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                }
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+              def qg = waitForQualityGate()
+              if (qg.status != 'OK') {
+                error "Pipeline aborted due to quality gate failure: ${qg.status}"
               }
             }
           }
         }
       }
       branches["Security Checks"] = {
-        withGradleAgentRetry(product, environment) {
-          builder.setupToolVersion()
-          pcr.callAround('securitychecks') {
-            builder.securityCheck()
-          }
+        pcr.callAround('securitychecks') {
+          builder.securityCheck()
         }
       }
       branches["Tech Stack"] = {
@@ -136,19 +130,10 @@ def call(params) {
                       """
                 }
                 def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-                def monitorAcrBuild = { Closure monitor ->
-                  stage('Monitor ACR build') {
-                    withGradleAgentRetry(product, environment, false) {
-                      withAcrClient(subscription) {
-                        monitor()
-                      }
-                    }
-                  }
-                }
                 if (fileExists(acbTemplateFilePath)) {
-                  acr.runWithTemplate(acbTemplateFilePath, dockerImage, monitorAcrBuild)
+                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
                 } else {
-                  acr.build(dockerImage, buildArgs, monitorAcrBuild)
+                  acr.build(dockerImage, buildArgs)
                 }
               }
             }
