@@ -174,13 +174,33 @@ class Acr extends Az {
    *   stdout of the step
    */
   def build(dockerImage, additionalArgs) {
+    def tags = "-t ${dockerImage.getBaseShortName()}${commitTagArg(dockerImage)}"
+
     // Build to primary registry
-    this.az"acr build --no-format -r ${registryName} -t ${dockerImage.getBaseShortName()} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
-    
+    this.az"acr build --no-format -r ${registryName} ${tags} --subscription ${registrySubscription} -g ${resourceGroup} --build-arg REGISTRY_NAME=${registryName}${additionalArgs} ."
+
     // Also build to secondary registry if dual publish is enabled
     if (isDualPublishModeEnabled()) {
       localSteps.echo "Building image to secondary ACR: ${secondaryRegistryName}"
-      this.az"acr build --no-format -r ${secondaryRegistryName} -t ${dockerImage.getBaseShortName()} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
+      this.az"acr build --no-format -r ${secondaryRegistryName} ${tags} --subscription ${secondaryRegistrySubscription} -g ${secondaryResourceGroup} --build-arg REGISTRY_NAME=${secondaryRegistryName}${additionalArgs} ."
+    }
+  }
+
+  /**
+   * Master builds share the mutable 'staging' tag, so a concurrent build can overwrite it before
+   * this build promotes. Tagging the commit at build time gives promotion an immutable source.
+   */
+  boolean isStagingBuild(dockerImage) {
+    return dockerImage.getImageTag() == 'staging'
+  }
+
+  String commitTagArg(dockerImage) {
+    return isStagingBuild(dockerImage) ? " -t ${dockerImage.getShortName()}" : ""
+  }
+
+  def pinCommitTag(dockerImage) {
+    if (isStagingBuild(dockerImage)) {
+      this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${registryName}.azurecr.io/${dockerImage.getBaseShortName()} -t ${dockerImage.getShortName()}"?.trim()
     }
   }
 
@@ -542,6 +562,7 @@ class Acr extends Az {
     def setArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
     
     handleAcrExecution(defaultAcrScriptFilePath, taskName, setArgs)
+    pinCommitTag(dockerImage)
 
     if (isDualPublishModeEnabled()) {
       localSteps.echo "Running ACB template build on secondary registry: ${secondaryRegistryName}"
@@ -554,6 +575,7 @@ class Acr extends Az {
 
         def secondarySetArgs = "--set CI_IMAGE_TAG=${dockerImage.getBaseShortName()} --set REGISTRY_NAME=${registryName}"
         handleAcrExecution(defaultAcrScriptFilePath, taskName, secondarySetArgs)
+        pinCommitTag(dockerImage)
       }
     }
   }
@@ -584,9 +606,14 @@ class Acr extends Az {
    *   stdout of the step
    */
   def retagForStage(stage, dockerImage) {
+    if (isStagingBuild(dockerImage) && stage == DockerImage.DeploymentStage.STAGING) {
+      localSteps.echo "${dockerImage.getShortName()} was tagged at build time; nothing to promote"
+      return
+    }
+
     def additionalTag = dockerImage.getShortName(stage)
-    // Non master branch builds like preview are tagged with the base tag
-    def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
+    // PR and preview builds are tagged with the base tag; master promotes from its commit tag
+    def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW)
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
     
     // Retag in primary registry
