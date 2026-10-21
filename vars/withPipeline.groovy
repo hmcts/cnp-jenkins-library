@@ -118,6 +118,7 @@ def call(type, String product, String component, Closure body) {
                 sectionPromoteBuildToStage(
                   appPipelineConfig: pipelineConfig,
                   pipelineCallbacksRunner: callbacksRunner,
+                  buildRecovery: buildRecovery,
                   pipelineType: pipelineType,
                   subscription: subscription.previewName,
                   product: product,
@@ -128,7 +129,7 @@ def call(type, String product, String component, Closure body) {
               }
 
               handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
-              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
+              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery)
               onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
                 handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
               }
@@ -273,7 +274,7 @@ void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pip
     }
 }
 
-void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery = null) {
     onMaster {
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
@@ -341,6 +342,7 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
       sectionPromoteBuildToStage(
         appPipelineConfig: pipelineConfig,
         pipelineCallbacksRunner: callbacksRunner,
+        buildRecovery: buildRecovery,
         pipelineType: pipelineType,
         subscription: subscription.nonProdName,
         product: product,

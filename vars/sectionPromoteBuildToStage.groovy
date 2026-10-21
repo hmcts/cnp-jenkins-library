@@ -34,12 +34,19 @@ def call(params) {
     def product = params.product
     def component = params.component
     DockerImage.DeploymentStage deploymentStage = params.stage
+    def buildRecovery = params.buildRecovery
     String promotionStage = "${deploymentStage.label} build promotion"
+    String promotionStep = "${deploymentStage.label}:promotion"
+
+    if (buildRecovery?.shouldSkip(promotionStep)) {
+      buildRecovery.recordSkip(promotionStep)
+      return
+    }
 
     // Agent switching and workspace stash-back run outside callAround, so record the whole stage.
     pcr.recordStep(promotionStage) {
       stageWithEnvironmentAgent(promotionStage, product, environment) {
-        pcr.callAround("${deploymentStage.label}:promotion") {
+        pcr.callAround(promotionStep) {
           withAcrClient(subscription) {
             def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
             def projectBranch = new ProjectBranch(env.BRANCH_NAME)

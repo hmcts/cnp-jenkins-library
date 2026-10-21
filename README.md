@@ -208,12 +208,15 @@ previous build checked, Cosmos record count, recorded step outcomes and eligible
 steps, or why no query was made. Unit-test artifacts are restored after
 compilation in the test workspace; the Cosmos query is not repeated.
 
-Only successful unit tests and security checks can be skipped. Gradle unit-test
+Successful unit tests, security checks and image promotions can be skipped. A
+promotion is skipped only if both its promotion step and its whole stage
+(including agent switching) succeeded. The Docker build is skipped only if a
+promotion succeeded and the image for this commit still exists in ACR. Gradle unit-test
 reuse also requires archived class, resource, test and JaCoCo outputs, restored
 using the Jenkins Copy Artifact plugin. Restored JUnit reports are published in
 the new build. Missing artifacts, test reports or plugin support rerun
-unit tests. Non-Gradle unit tests always run. Sonar, checkout, setup, compilation,
-Docker builds and deployment stages always execute normally.
+unit tests. Non-Gradle unit tests always run. Sonar, checkout, setup, compilation
+and deployment stages always execute normally.
 
 The Cosmos reader reuses the Azure Cosmos DB plugin's cached client and the
 existing `cosmos-connection` credential, respecting `PIPELINE_METRICS_DATABASE`.

@@ -27,6 +27,7 @@ def call(params) {
   def imageRegistry
   def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
+  boolean imageExists = false
   boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
@@ -40,6 +41,7 @@ def call(params) {
       acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
       dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
       boolean hasTag = acr.hasTag(dockerImage)
+      imageExists = hasTag
       boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
       noSkipImgBuild = envOverrideForSkip || !hasTag
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
@@ -85,7 +87,7 @@ def call(params) {
         }
       }
 
-      buildRecovery?.prepare(builder instanceof GradleBuilder)
+      buildRecovery?.prepare(builder instanceof GradleBuilder, imageExists)
 
       def branches = [failFast: false]
       branches["Unit tests and Sonar scan"] = {
@@ -137,6 +139,10 @@ def call(params) {
 
       if (dockerFileExists) {
         branches["Docker Build"] = {
+          if (buildRecovery?.shouldSkip('dockerbuild')) {
+            buildRecovery.recordSkip('dockerbuild')
+            return
+          }
           withAcrClient(subscription) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
 

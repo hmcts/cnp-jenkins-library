@@ -62,9 +62,13 @@ class BuildRecovery implements Serializable {
     }
   }
 
-  void prepare(boolean canRestoreTests) {
+  void prepare(boolean canRestoreTests, boolean imageExists = false) {
     if (!checked) {
       checkPreviousBuild()
+    }
+    if (reusable.contains('dockerbuild') && !imageExists) {
+      reusable.remove('dockerbuild')
+      steps.echo 'Build recovery: image for this commit is not in ACR; rebuilding Docker image'
     }
     if (reusable.contains('test')) {
       if (!canRestoreTests) {
@@ -133,16 +137,29 @@ class BuildRecovery implements Serializable {
       return [] as Set
     }
     Set<String> eligible = [] as Set
-    ['test', 'securitychecks'].each { stage ->
+    def succeeded = { String stage ->
       def events = outcomes.findAll { it.current_step_name == stage }
       def executionIds = events.collect { it.step_execution_id }.unique()
-      if (executionIds.size() == 1 && executionIds[0] && events.size() == 2 &&
-          events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1) {
+      executionIds.size() == 1 && executionIds[0] && events.size() == 2 &&
+        events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1
+    }
+    ['test', 'securitychecks'].each { stage ->
+      if (succeeded(stage)) {
         eligible.add(stage)
       }
     }
     if (!records.any { it.event_type == 'step_artifacts' && it.current_step_name == 'test' && it.artifact_paths == TEST_ARTIFACTS }) {
       eligible.remove('test')
+    }
+    // The stage record also covers agent switching and workspace stash-back around the promotion.
+    outcomes.collect { it.current_step_name?.toString() }.unique().findAll { it?.endsWith(':promotion') }.each { String step ->
+      String label = step - ':promotion'
+      if (succeeded(step) && succeeded("${label} build promotion".toString())) {
+        eligible.add(step)
+      }
+    }
+    if (eligible.any { it.endsWith(':promotion') }) {
+      eligible.add('dockerbuild')
     }
     return eligible
   }

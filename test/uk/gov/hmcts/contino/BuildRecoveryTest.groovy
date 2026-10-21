@@ -28,6 +28,57 @@ class BuildRecoveryTest extends Specification {
       BuildRecovery.reusableSteps(records(), identity, '35') == ['test', 'securitychecks'] as Set
   }
 
+  List<Map> promotion(String label, String innerResult, String stageResult) {
+    return [
+      record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-inner".toString()]),
+      record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: innerResult, step_execution_id: "${label}-inner".toString(),
+        failure_reason: innerResult == 'FAILURE' ? 'AGENT_DISCONNECTED' : null]),
+      record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-stage".toString()]),
+      record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: stageResult, step_execution_id: "${label}-stage".toString(),
+        failure_reason: stageResult == 'FAILURE' ? 'AGENT_DISCONNECTED' : null])
+    ]
+  }
+
+  def 'completed promotions and the docker build are reusable'() {
+    given:
+      def events = records() + promotion('preview', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks', 'preview:promotion', 'dockerbuild'] as Set
+  }
+
+  def 'docker build is not reusable without a completed promotion'() {
+    given:
+      def events = records() + promotion('preview', innerResult, stageResult)
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set
+
+    where:
+      innerResult | stageResult
+      'SUCCESS'   | 'FAILURE'
+      'FAILURE'   | 'FAILURE'
+  }
+
+  def 'docker build is rebuilt when the image is missing from ACR'() {
+    given:
+      def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
+        copyArtifacts: { Map options -> }, junit: { Map options -> })
+      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      recovery.readMetrics(identity, '35') >> records() + promotion('preview', 'SUCCESS', 'SUCCESS')
+
+    when:
+      recovery.prepare(true, imageExists)
+
+    then:
+      recovery.shouldSkip('dockerbuild') == imageExists
+      recovery.shouldSkip('preview:promotion')
+
+    where:
+      imageExists << [true, false]
+  }
+
   def 'different source identity or build disables recovery'() {
     given:
       def events = records()
