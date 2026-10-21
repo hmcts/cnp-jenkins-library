@@ -173,15 +173,23 @@ def call(type, String product, String component, Closure body) {
         }
       }
   } catch (FlowInterruptedException err) {
+    if (metricsPublisher.pipelineFailureReason(err, 'INTERRUPTED') == 'AGENT_DISCONNECTED') {
+      currentBuild.result = 'FAILURE'
+      notifyBuildFailure channel: slackChannel
+      metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
+      callbacksRunner.call('onFailure')
+      // Rethrowing the interruption would make Jenkins finish the build as ABORTED.
+      throw new hudson.AbortException('Build agent disconnected')
+    }
     currentBuild.result = err.result.toString()
     metricsPublisher.publish('Pipeline Interrupted', [event_type: 'pipeline', pipeline_result: currentBuild.result,
-      failure_reason: MetricsPublisher.isAgentFailure(err) ? 'AGENT_DISCONNECTED' : 'INTERRUPTED'])
+      failure_reason: metricsPublisher.pipelineFailureReason(err, 'INTERRUPTED')])
     throw err
   } catch (err) {
     currentBuild.result = "FAILURE"
     notifyBuildFailure channel: slackChannel
     metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE',
-      failure_reason: MetricsPublisher.isAgentFailure(err) ? 'AGENT_DISCONNECTED' : 'STEP_FAILURE'])
+      failure_reason: metricsPublisher.pipelineFailureReason(err, 'STEP_FAILURE')])
     callbacksRunner.call('onFailure')
     throw err
   } finally {

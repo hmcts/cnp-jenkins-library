@@ -42,6 +42,33 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
     assertThat(helper.callStack*.methodName).doesNotContain('queueBuildArchive')
   }
 
+  static class RemovedNodeTimeoutCause extends jenkins.model.CauseOfInterruption {
+    String getShortDescription() { 'agent removed' }
+  }
+
+  @Test
+  void reportsAgentLossInterruptionAsFailure() {
+    def interruption = new FlowInterruptedException(Result.ABORTED, false, new RemovedNodeTimeoutCause())
+    helper.registerAllowedMethod("build", [Map], {})
+    helper.registerAllowedMethod("sh", [Map], { options ->
+      if (options.script.startsWith('grep -F "JavaLanguageVersion')) {
+        throw interruption
+      }
+      return options.returnStatus ? 1 : ''
+    })
+
+    def failure = null
+    try {
+      runScript("testResources/$jenkinsFile")
+    } catch (Exception expected) {
+      failure = expected
+    }
+
+    assertThat(failure).isNotNull().isNotInstanceOf(FlowInterruptedException)
+    assertThat(binding.getVariable('currentBuild').result).isEqualTo('FAILURE')
+    assertThat(helper.callStack*.methodName).contains('queueBuildArchive')
+  }
+
   @Test
   void queuesTheArchiveAfterASingleFailedExecution() {
     def failure = new RuntimeException('agent lost')

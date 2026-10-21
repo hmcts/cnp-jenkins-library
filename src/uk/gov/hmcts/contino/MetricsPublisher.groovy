@@ -11,6 +11,7 @@ class MetricsPublisher implements Serializable {
   String product
   String component
   String correlationId
+  boolean agentDisconnectionRecorded = false
   CosmosDbTargetResolver cosmosDbTargetResolver
 
   MetricsPublisher(steps, currentBuild, product, component, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
@@ -125,12 +126,21 @@ class MetricsPublisher implements Serializable {
   }
 
   void publishStep(String stage, String result, String executionId, Throwable failure = null) {
+    String reason = failureReason(failure)
+    if (reason == 'AGENT_DISCONNECTED') {
+      agentDisconnectionRecorded = true
+    }
     publish(stage, [
       event_type: 'step',
       step_result: result,
       step_execution_id: executionId,
-      failure_reason: failureReason(failure)
+      failure_reason: reason
     ])
+  }
+
+  // Cleanup on a lost agent can replace the original exception, so step records take precedence.
+  String pipelineFailureReason(Throwable failure, String defaultReason) {
+    return agentDisconnectionRecorded || failureReason(failure) == 'AGENT_DISCONNECTED' ? 'AGENT_DISCONNECTED' : defaultReason
   }
 
   @NonCPS
@@ -158,21 +168,30 @@ class MetricsPublisher implements Serializable {
 
   @NonCPS
   static boolean isAgentFailure(Throwable failure) {
-    def visited = [] as Set
-    while (failure != null && visited.add(failure)) {
-      if (failure.class.name in [
+    List<Throwable> pending = [failure]
+    Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>())
+    while (!pending.isEmpty()) {
+      Throwable current = pending.remove(0)
+      if (current == null || !visited.add(current)) {
+        continue
+      }
+      if (current.class.name in [
         'hudson.remoting.ChannelClosedException',
         'hudson.remoting.RequestAbortedException',
+        'java.nio.channels.ClosedChannelException',
         'org.jenkinsci.plugins.workflow.support.steps.AgentOfflineException'
       ]) {
         return true
       }
-      if (failure.class.name == 'org.jenkinsci.plugins.workflow.steps.FlowInterruptedException') {
-        if (failure.causes.any { it.class.name == 'org.jenkinsci.plugins.workflow.support.steps.ExecutorStepExecution$RemovedNodeCause' }) {
-          return true
-        }
+      if (current.class.name == 'org.jenkinsci.plugins.workflow.steps.FlowInterruptedException' &&
+          current.causes.any { it.class.simpleName in ['RemovedNodeCause', 'RemovedNodeTimeoutCause'] }) {
+        return true
       }
-      failure = failure.cause
+      if (((current.message ?: '') =~ /(?i)(unable to create live FilePath|was marked offline|has been removed or offline|assuming it is not coming back)/).find()) {
+        return true
+      }
+      pending.add(current.cause)
+      pending.addAll(current.suppressed as List)
     }
     return false
   }

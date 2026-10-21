@@ -36,6 +36,20 @@ class PipelineCallbacksRunner implements Serializable {
     nullSafeCall('before:' + stage, stage)
   }
 
+  void recordStep(String stage, Closure body) {
+    Throwable failure = null
+    String executionId = UUID.randomUUID().toString()
+    metricsPublisher?.publishStep(stage, 'STARTED', executionId)
+    try {
+      body.call()
+    } catch (Throwable err) {
+      failure = err
+      throw err
+    } finally {
+      metricsPublisher?.publishStep(stage, failure == null ? 'SUCCESS' : 'FAILURE', executionId, failure)
+    }
+  }
+
   void callAround(String stage, Closure body) {
     def errToThrow = null
     Throwable failure = null

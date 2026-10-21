@@ -138,4 +138,39 @@ class MetricsPublisherTests extends Specification {
       'FAILURE' | true  | true   | true      | false   | false       | true               | 'STEP_FAILURE'
   }
 
+  static class RemovedNodeTimeoutCause extends jenkins.model.CauseOfInterruption {
+    String getShortDescription() { 'agent removed' }
+  }
+
+  def 'recognises Jenkins agent removal and offline failures'() {
+    expect:
+      MetricsPublisher.isAgentFailure(failure) == expected
+
+    where:
+      failure                                                                                                                  | expected
+      new org.jenkinsci.plugins.workflow.steps.FlowInterruptedException(hudson.model.Result.ABORTED, false, new RemovedNodeTimeoutCause()) | true
+      new IOException('Unable to create live FilePath for agent-1; agent-1 was marked offline')                                | true
+      new IllegalStateException('cleanup failed').with { addSuppressed(new java.nio.channels.ClosedChannelException()); it } | true
+      new IllegalStateException('tests failed')                                                                                | false
+  }
+
+  def 'recorded agent loss classifies the pipeline even when cleanup replaces the error'() {
+    given:
+      stubSteps.env.NODE_NAME = 'build-agent'
+      def publisher = Spy(MetricsPublisher, constructorArgs: [stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver])
+      publisher.agentComputer('build-agent') >> null
+      def cleanupFailure = new IllegalStateException('deleteDir failed')
+
+    expect:
+      publisher.pipelineFailureReason(cleanupFailure, 'STEP_FAILURE') == 'STEP_FAILURE'
+
+    when:
+      publisher.publishStep('Staging:promotion', 'FAILURE', 'execution-1',
+        new org.jenkinsci.plugins.workflow.steps.FlowInterruptedException(hudson.model.Result.ABORTED, false, new RemovedNodeTimeoutCause()))
+
+    then:
+      publisher.pipelineFailureReason(cleanupFailure, 'STEP_FAILURE') == 'AGENT_DISCONNECTED'
+      publisher.pipelineFailureReason(cleanupFailure, 'INTERRUPTED') == 'AGENT_DISCONNECTED'
+  }
+
 }

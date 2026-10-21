@@ -34,6 +34,26 @@ class PipelineCallBacksRunnerTest extends Specification {
       1 * publisher.publishStep('test', 'FAILURE', _ as String, failure)
   }
 
+  def "records a failure outside callbacks when wrapping a stage"() {
+    given:
+      def publisher = Mock(MetricsPublisher)
+      def runner = new PipelineCallbacksRunner(new PipelineCallbacksConfig(), publisher)
+      def failure = new IllegalStateException('agent lost during stash back')
+
+    when:
+      runner.recordStep('AAT build promotion') {
+        runner.callAround('AAT:promotion') {}
+        throw failure
+      }
+
+    then:
+      thrown(IllegalStateException)
+      1 * publisher.publishStep('AAT:promotion', 'STARTED', _ as String)
+      1 * publisher.publishStep('AAT:promotion', 'SUCCESS', _ as String, null)
+      1 * publisher.publishStep('AAT build promotion', 'STARTED', _ as String)
+      1 * publisher.publishStep('AAT build promotion', 'FAILURE', _ as String, failure)
+  }
+
   def "ensure correctly registered call before is called before body"() {
     given:
       PipelineCallbacksConfig config = new PipelineCallbacksConfig()
