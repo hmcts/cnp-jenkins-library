@@ -40,6 +40,9 @@ def call(params) {
 
     if (buildRecovery?.shouldSkip(promotionStep)) {
       buildRecovery.recordSkip(promotionStep)
+      stage(promotionStage) {
+        when(false) {}
+      }
       return
     }
 

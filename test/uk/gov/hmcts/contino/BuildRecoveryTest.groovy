@@ -89,6 +89,14 @@ class BuildRecoveryTest extends Specification {
       BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks', 'preview:promotion', 'dockerbuild'] as Set
   }
 
+  def 'build-and-test image promotion is reusable separately from deployment promotions'() {
+    given:
+      def events = records() + promotion('staging-image', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks', 'staging-image:promotion', 'dockerbuild'] as Set
+  }
+
   def 'docker build is not reusable without a completed promotion'() {
     given:
       def events = records() + promotion('preview', innerResult, stageResult)
@@ -154,6 +162,47 @@ class BuildRecoveryTest extends Specification {
   def 'failed static checks are not reusable'() {
     expect:
       !BuildRecovery.reusableSteps(records() + staticChecks('FAILURE'), identity, '35').contains('static checks')
+  }
+
+  List<Map> completed(String step) {
+    return [
+      record([event_type: 'step', current_step_name: step, step_result: 'STARTED', step_execution_id: "${step}-1".toString()]),
+      record([event_type: 'step', current_step_name: step, step_result: 'SUCCESS', step_execution_id: "${step}-1".toString()])
+    ]
+  }
+
+  def 'static checks are inferred when every branch that ran succeeded'() {
+    given:
+      def events = records().findAll { it.current_step_name != 'dockerbuild' }
+      ['sonarscan', 'techstack', 'dockerbuild'].each { events.addAll(completed(it)) }
+      events << record([event_type: 'step', current_step_name: 'preview:promotion', step_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').contains('static checks')
+  }
+
+  def 'static checks are not inferred when a branch did not succeed'() {
+    expect:
+      !BuildRecovery.reusableSteps(records(), identity, '35').contains('static checks')
+  }
+
+  def 'resume point follows the last successful stage being skipped'() {
+    given:
+      def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
+        copyArtifacts: { Map options -> }, junit: { Map options -> })
+      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records() + staticChecks('SUCCESS') + promotion('preview', 'SUCCESS', 'SUCCESS')
+      events.find { it.event_type == 'pipeline' }.last_successful_stage = 'preview:promotion'
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.prepare(true, true)
+
+    then:
+      recovery.getResumeAfter() == 'preview:promotion'
+      recovery.shouldSkip('static checks')
+      recovery.shouldSkip('preview:promotion')
   }
 
   def 'skipped steps become the last successful stage'() {

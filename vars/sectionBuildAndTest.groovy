@@ -257,13 +257,13 @@ def call(params) {
     }
 
       stageWithAgent("Static checks / Container build", product) {
-        when(noSkipImgBuild) {
-          if (buildRecovery?.shouldSkip('static checks')) {
-            buildRecovery.recordSkip('static checks')
-          } else {
-            pcr.recordStep('static checks') {
-              parallel branches
-            }
+        boolean staticChecksCompleted = buildRecovery?.shouldSkip('static checks') ?: false
+        if (staticChecksCompleted) {
+          buildRecovery.recordSkip('static checks')
+        }
+        when(noSkipImgBuild && !staticChecksCompleted) {
+          pcr.recordStep('static checks') {
+            parallel branches
           }
 
           // files related to dependency checking that are not needed for the rest of the pipeline
@@ -300,19 +300,33 @@ def call(params) {
     }
 
     if (noSkipImgBuild && deploymentEnabled) {
-      stageWithAgent("Promote Docker Image", product) {
-        if (dockerFileExists) {
-          def deploymentStage = DockerImage.DeploymentStage.STAGING
-          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-          if (isOnPreview) {
-            deploymentStage = DockerImage.DeploymentStage.PREVIEW
-          }
-          onPR {
-            deploymentStage = DockerImage.DeploymentStage.PR
-          }
-          withAcrClient(subscription) {
-            acr.retagForStage(deploymentStage, dockerImage)
-            acr.purgeOldTags(deploymentStage, dockerImage)
+      def deploymentStage = DockerImage.DeploymentStage.STAGING
+      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+        deploymentStage = DockerImage.DeploymentStage.PREVIEW
+      }
+      onPR {
+        deploymentStage = DockerImage.DeploymentStage.PR
+      }
+      // Distinct from sectionPromoteBuildToStage, which also promotes to PREVIEW on preview branches.
+      String promotionLabel = "${deploymentStage.label}-image"
+      String promotionStep = "${promotionLabel}:promotion"
+
+      if (dockerFileExists && buildRecovery?.shouldSkip(promotionStep)) {
+        buildRecovery.recordSkip(promotionStep)
+        stage("Promote Docker Image") {
+          when(false) {}
+        }
+      } else {
+        pcr.recordStep("${promotionLabel} build promotion") {
+          stageWithAgent("Promote Docker Image", product) {
+            if (dockerFileExists) {
+              pcr.callAround(promotionStep) {
+                withAcrClient(subscription) {
+                  acr.retagForStage(deploymentStage, dockerImage)
+                  acr.purgeOldTags(deploymentStage, dockerImage)
+                }
+              }
+            }
           }
         }
       }

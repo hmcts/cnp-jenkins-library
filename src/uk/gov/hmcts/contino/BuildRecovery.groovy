@@ -5,12 +5,14 @@ import jenkins.model.Jenkins
 
 class BuildRecovery implements Serializable {
   static final String TEST_ARTIFACTS = '**/build/classes/**,**/build/resources/**,**/build/test-results/**,**/build/reports/jacoco/**,**/build/jacoco/**'
+  static final List<String> STATIC_CHECK_STEPS = ['test', 'sonarscan', 'securitychecks', 'techstack', 'dockerbuild', 'dockertestbuild', 'fortify-scan']
   private final def steps
   private final def currentBuild
   private final def publisher
   private final boolean enabled
   private Set<String> reusable = [] as Set
   private boolean checked = false
+  private String lastSuccessfulStage
   String sourceBuild
 
   BuildRecovery(steps, currentBuild, publisher, boolean enabled = true) {
@@ -24,6 +26,7 @@ class BuildRecovery implements Serializable {
     checked = true
     reusable.clear()
     sourceBuild = null
+    lastSuccessfulStage = null
     if (!enabled) {
       steps.echo 'Build recovery: disabled; Cosmos DB not queried; running all steps'
       return
@@ -54,6 +57,7 @@ class BuildRecovery implements Serializable {
       reusable = reusableSteps(records, identity, sourceBuild)
       def terminal = records?.find { it.event_type == 'pipeline' && it.pipeline_result == 'FAILURE' }
       if (terminal) {
+        lastSuccessfulStage = terminal.last_successful_stage
         steps.echo "Build recovery: previous build #${sourceBuild} last successful stage was ${terminal.last_successful_stage ?: 'not recorded'}"
       }
       String rejection = rejectionReason(records, identity, sourceBuild)
@@ -100,8 +104,21 @@ class BuildRecovery implements Serializable {
       }
     }
     if (sourceBuild) {
-      steps.echo "Build recovery ready from #${sourceBuild}: ${reusable ? reusable.join(', ') : 'no steps will be skipped'}"
+      steps.echo "Build recovery ready from #${sourceBuild}: ${reusable ? "skipping ${reusable.join(', ')}" : 'no steps will be skipped'}"
+      String resumePoint = getResumeAfter()
+      if (resumePoint) {
+        steps.echo "Build recovery: resuming after ${resumePoint}"
+      }
     }
+  }
+
+  // The last completed stage that this build will actually skip.
+  String getResumeAfter() {
+    if (lastSuccessfulStage && reusable.contains(lastSuccessfulStage)) {
+      return lastSuccessfulStage
+    }
+    String promotion = reusable.find { it.endsWith(':promotion') }
+    return promotion ?: (reusable.contains('static checks') ? 'static checks' : null)
   }
 
   boolean shouldSkip(String stage) {
@@ -147,6 +164,11 @@ class BuildRecovery implements Serializable {
       if (succeeded(stage)) {
         eligible.add(stage)
       }
+    }
+    // Builds recorded before the group record existed only have per-branch records.
+    def startedChecks = STATIC_CHECK_STEPS.findAll { step -> outcomes.any { it.current_step_name == step } }
+    if (startedChecks.containsAll(['test', 'securitychecks']) && startedChecks.every { succeeded(it) }) {
+      eligible.add('static checks')
     }
     if (!records.any { it.event_type == 'step_artifacts' && it.current_step_name == 'test' && it.artifact_paths == TEST_ARTIFACTS }) {
       eligible.remove('test')
