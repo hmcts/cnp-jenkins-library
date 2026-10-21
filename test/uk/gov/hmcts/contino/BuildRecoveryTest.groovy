@@ -28,6 +28,48 @@ class BuildRecoveryTest extends Specification {
       BuildRecovery.reusableSteps(records(), identity, '35') == ['test', 'securitychecks'] as Set
   }
 
+  def 'records published before checkout without Git details do not block recovery'() {
+    given:
+      def checkout = record([event_type: 'step', current_step_name: 'checkout', step_result: 'STARTED', step_execution_id: 'checkout-1'])
+      checkout.git_commit = null
+      checkout.git_url = null
+      def events = [checkout] + records()
+
+    expect:
+      BuildRecovery.rejectionReason(events, identity, '35') == null
+      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set
+  }
+
+  def 'a reusable step must have been recorded with the same commit'() {
+    given:
+      def events = records()
+      events.findAll { it.current_step_name == 'securitychecks' }.each { it.git_commit = null }
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35') == ['test'] as Set
+  }
+
+  def 'rejection reason identifies the failed requirement'() {
+    given:
+      def events = records()
+      switch (scenario) {
+        case 'commit': events[0].git_commit = 'other'; break
+        case 'terminal': events.removeAll { it.event_type == 'pipeline' }; break
+        case 'step': events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE']); break
+        case 'pipelineCommit': events.find { it.event_type == 'pipeline' }.git_commit = null; break
+      }
+
+    expect:
+      BuildRecovery.rejectionReason(events, identity, '35').contains(expected)
+
+    where:
+      scenario         | expected
+      'commit'         | 'git_commit does not match'
+      'terminal'       | 'found 0'
+      'step'           | 'failed with STEP_FAILURE'
+      'pipelineCommit' | 'same Git commit'
+  }
+
   List<Map> promotion(String label, String innerResult, String stageResult) {
     return [
       record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-inner".toString()]),

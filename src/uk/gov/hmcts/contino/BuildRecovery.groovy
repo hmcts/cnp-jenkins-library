@@ -52,7 +52,8 @@ class BuildRecovery implements Serializable {
         }
       }
       reusable = reusableSteps(records, identity, sourceBuild)
-      steps.echo "Build recovery from #${sourceBuild}: ${reusable ? reusable.join(', ') : 'no steps eligible; source identity, agent-failure and completed-step requirements must all match'}"
+      String rejection = rejectionReason(records, identity, sourceBuild)
+      steps.echo "Build recovery from #${sourceBuild}: ${reusable ? reusable.join(', ') : "no steps eligible; ${rejection ?: 'no completed steps that can be reused'}"}"
     } catch (Exception failure) {
       if (failure instanceof InterruptedException) {
         throw failure
@@ -120,28 +121,17 @@ class BuildRecovery implements Serializable {
 
   @NonCPS
   static Set<String> reusableSteps(List<Map> records, Map identity, String buildNumber) {
-    if (!records || records.size() > 1000 || records.any { it.attempt_id } || !identity.values().every { it }) {
-      return [] as Set
-    }
-    if (!records.every { record -> record.build_number?.toString() == buildNumber && identity.every { key, value -> record[key] == value } }) {
-      return [] as Set
-    }
-    def terminal = records.findAll { it.event_type == 'pipeline' && it.pipeline_result == 'FAILURE' }
-    if (terminal.size() != 1) {
+    if (rejectionReason(records, identity, buildNumber) != null) {
       return [] as Set
     }
     def outcomes = records.findAll { it.event_type == 'step' }
-    def failures = outcomes.findAll { it.step_result == 'FAILURE' }
-    if (!failures.every { it.failure_reason == 'AGENT_DISCONNECTED' } ||
-        !(terminal[0].failure_reason == 'AGENT_DISCONNECTED' || failures)) {
-      return [] as Set
-    }
     Set<String> eligible = [] as Set
     def succeeded = { String stage ->
       def events = outcomes.findAll { it.current_step_name == stage }
       def executionIds = events.collect { it.step_execution_id }.unique()
       executionIds.size() == 1 && executionIds[0] && events.size() == 2 &&
-        events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1
+        events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1 &&
+        events.every { it.git_commit == identity.git_commit && it.git_url == identity.git_url }
     }
     ['test', 'securitychecks'].each { stage ->
       if (succeeded(stage)) {
@@ -162,6 +152,48 @@ class BuildRecovery implements Serializable {
       eligible.add('dockerbuild')
     }
     return eligible
+  }
+
+  @NonCPS
+  static String rejectionReason(List<Map> records, Map identity, String buildNumber) {
+    if (!identity.values().every { it }) {
+      return 'this build is missing identity details'
+    }
+    if (!records) {
+      return "no metrics records found for build #${buildNumber}"
+    }
+    if (records.size() > 1000) {
+      return 'too many metrics records to evaluate'
+    }
+    if (records.any { it.attempt_id }) {
+      return 'records use the retired retry-attempt format'
+    }
+    // Records published before checkout have no Git details yet.
+    def mismatched = identity.keySet().find { key ->
+      records.any { record -> !(record[key] == identity[key] || (record[key] == null && key in ['git_url', 'git_commit'])) }
+    }
+    if (records.any { it.build_number?.toString() != buildNumber }) {
+      mismatched = 'build_number'
+    }
+    if (mismatched) {
+      return "previous build ${mismatched} does not match this build"
+    }
+    def terminal = records.findAll { it.event_type == 'pipeline' && it.pipeline_result == 'FAILURE' }
+    if (terminal.size() != 1) {
+      return "expected one pipeline FAILURE record, found ${terminal.size()}"
+    }
+    if (terminal[0].git_commit != identity.git_commit) {
+      return 'previous pipeline record does not have the same Git commit'
+    }
+    def failures = records.findAll { it.event_type == 'step' && it.step_result == 'FAILURE' }
+    def otherFailure = failures.find { it.failure_reason != 'AGENT_DISCONNECTED' }
+    if (otherFailure) {
+      return "step ${otherFailure.current_step_name} failed with ${otherFailure.failure_reason ?: 'no reason'}"
+    }
+    if (!(terminal[0].failure_reason == 'AGENT_DISCONNECTED' || failures)) {
+      return "previous pipeline failed with ${terminal[0].failure_reason ?: 'no reason'}, not AGENT_DISCONNECTED"
+    }
+    return null
   }
 
   @NonCPS
