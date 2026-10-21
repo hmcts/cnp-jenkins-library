@@ -121,6 +121,53 @@ class BuildRecoveryTest extends Specification {
       imageExists << [true, false]
   }
 
+  List<Map> staticChecks(String result) {
+    return [
+      record([event_type: 'step', current_step_name: 'static checks', step_result: 'STARTED', step_execution_id: 'static-1']),
+      record([event_type: 'step', current_step_name: 'static checks', step_result: result, step_execution_id: 'static-1',
+        failure_reason: result == 'FAILURE' ? 'AGENT_DISCONNECTED' : null])
+    ]
+  }
+
+  def 'completed static checks are reusable only when the image exists'() {
+    given:
+      List<String> messages = []
+      def steps = new Expando(echo: { String message -> messages << message }, specific: { String build -> build },
+        copyArtifacts: { Map options -> }, junit: { Map options -> })
+      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records() + staticChecks('SUCCESS')
+      events.find { it.event_type == 'pipeline' }.last_successful_stage = 'static checks'
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.prepare(true, imageExists)
+
+    then:
+      recovery.shouldSkip('static checks') == imageExists
+      messages.any { it.contains('last successful stage was static checks') }
+
+    where:
+      imageExists << [true, false]
+  }
+
+  def 'failed static checks are not reusable'() {
+    expect:
+      !BuildRecovery.reusableSteps(records() + staticChecks('FAILURE'), identity, '35').contains('static checks')
+  }
+
+  def 'skipped steps become the last successful stage'() {
+    given:
+      def publisher = Mock(MetricsPublisher)
+      def recovery = new BuildRecovery(new Expando(echo: { String message -> }), [:], publisher, true)
+
+    when:
+      recovery.recordSkip('static checks')
+
+    then:
+      1 * publisher.setProperty('lastSuccessfulStage', 'static checks')
+  }
+
   def 'different source identity or build disables recovery'() {
     given:
       def events = records()

@@ -12,6 +12,7 @@ class MetricsPublisher implements Serializable {
   String component
   String correlationId
   boolean agentDisconnectionRecorded = false
+  String lastSuccessfulStage
   CosmosDbTargetResolver cosmosDbTargetResolver
 
   MetricsPublisher(steps, currentBuild, product, component, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
@@ -130,6 +131,9 @@ class MetricsPublisher implements Serializable {
     if (reason == 'AGENT_DISCONNECTED') {
       agentDisconnectionRecorded = true
     }
+    if (result == 'SUCCESS') {
+      lastSuccessfulStage = stage
+    }
     publish(stage, [
       event_type: 'step',
       step_result: result,
@@ -198,6 +202,9 @@ class MetricsPublisher implements Serializable {
 
   def publish(eventName = null, Map details = [:]) {
     try {
+      if (details.event_type == 'pipeline') {
+        details = details + [last_successful_stage: lastSuccessfulStage]
+      }
       def database = cosmosDbTargetResolver.databaseName()
       steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName) + details)
     } catch (err) {

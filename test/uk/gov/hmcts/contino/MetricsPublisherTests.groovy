@@ -173,4 +173,21 @@ class MetricsPublisherTests extends Specification {
       publisher.pipelineFailureReason(cleanupFailure, 'INTERRUPTED') == 'AGENT_DISCONNECTED'
   }
 
+  def 'pipeline records include the last successful stage'() {
+    given:
+      List<Map> documents = []
+      def publisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver)
+
+    when:
+      publisher.publishStep('build', 'SUCCESS', 'build-1')
+      publisher.publishStep('static checks', 'SUCCESS', 'static-1')
+      publisher.publishStep('preview:promotion', 'FAILURE', 'promotion-1', new IllegalStateException('failed'))
+      publisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE'])
+
+    then:
+      4 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap) >> { Map options -> documents << options.document }
+      documents.last().last_successful_stage == 'static checks'
+      !documents.find { it.current_step_name == 'build' }.containsKey('last_successful_stage')
+  }
+
 }

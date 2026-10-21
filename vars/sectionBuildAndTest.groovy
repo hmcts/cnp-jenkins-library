@@ -87,7 +87,7 @@ def call(params) {
         }
       }
 
-      buildRecovery?.prepare(builder instanceof GradleBuilder, imageExists)
+      buildRecovery?.prepare(builder instanceof GradleBuilder, imageExists || !dockerFileExists)
 
       def branches = [failFast: false]
       branches["Unit tests and Sonar scan"] = {
@@ -258,7 +258,13 @@ def call(params) {
 
       stageWithAgent("Static checks / Container build", product) {
         when(noSkipImgBuild) {
-          parallel branches
+          if (buildRecovery?.shouldSkip('static checks')) {
+            buildRecovery.recordSkip('static checks')
+          } else {
+            pcr.recordStep('static checks') {
+              parallel branches
+            }
+          }
 
           // files related to dependency checking that are not needed for the rest of the pipeline
           // they can't be safely deleted in the parallel branches as docker build context will collect files

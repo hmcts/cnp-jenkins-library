@@ -52,6 +52,10 @@ class BuildRecovery implements Serializable {
         }
       }
       reusable = reusableSteps(records, identity, sourceBuild)
+      def terminal = records?.find { it.event_type == 'pipeline' && it.pipeline_result == 'FAILURE' }
+      if (terminal) {
+        steps.echo "Build recovery: previous build #${sourceBuild} last successful stage was ${terminal.last_successful_stage ?: 'not recorded'}"
+      }
       String rejection = rejectionReason(records, identity, sourceBuild)
       steps.echo "Build recovery from #${sourceBuild}: ${reusable ? reusable.join(', ') : "no steps eligible; ${rejection ?: 'no completed steps that can be reused'}"}"
     } catch (Exception failure) {
@@ -70,6 +74,11 @@ class BuildRecovery implements Serializable {
     if (reusable.contains('dockerbuild') && !imageExists) {
       reusable.remove('dockerbuild')
       steps.echo 'Build recovery: image for this commit is not in ACR; rebuilding Docker image'
+    }
+    // Skipping the whole group also skips the Docker build inside it.
+    if (reusable.contains('static checks') && !imageExists) {
+      reusable.remove('static checks')
+      steps.echo 'Build recovery: image for this commit is not in ACR; running static checks'
     }
     if (reusable.contains('test')) {
       if (!canRestoreTests) {
@@ -101,6 +110,7 @@ class BuildRecovery implements Serializable {
 
   void recordSkip(String stage) {
     steps.echo "Skipping ${stage}: successful in build #${sourceBuild} for the same commit"
+    publisher.lastSuccessfulStage = stage
     publisher.publish(stage, [event_type: 'step', step_result: 'SKIPPED', reused_from_build: sourceBuild])
   }
 
@@ -133,7 +143,7 @@ class BuildRecovery implements Serializable {
         events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1 &&
         events.every { it.git_commit == identity.git_commit && it.git_url == identity.git_url }
     }
-    ['test', 'securitychecks'].each { stage ->
+    ['test', 'securitychecks', 'static checks'].each { stage ->
       if (succeeded(stage)) {
         eligible.add(stage)
       }
