@@ -35,3 +35,5 @@ branches:
     allowed: true
   - name: DTSPO-34796/recover-from-agent-disconnect
     allowed: true
+  - name: "35961"
+    allowed: true
