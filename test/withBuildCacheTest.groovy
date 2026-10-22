@@ -22,8 +22,19 @@ class withBuildCacheTest extends BasePipelineTest {
     helper.registerAllowedMethod('fileExists', [String.class], { files.contains(it) })
     helper.registerAllowedMethod('readJSON', [Map.class], { packageJson })
     helper.registerAllowedMethod('readFile', [String.class], { yarnLock })
+    // Yarn 2+ only exposes binaries of direct dependencies to `yarn <bin>`. With Yarn 4.18.1 a
+    // transitive binary fails with: Usage Error: Couldn't find a script named "puppeteer".
+    def yarnCommands = ['install', 'rebuild', 'node', 'exec', 'dlx']
     helper.registerAllowedMethod('sh', [Map.class], {
       shCalls << it
+      def directDependencies = (packageJson.dependencies ?: [:]) + (packageJson.devDependencies ?: [:])
+      def matcher = it.script.toString() =~ /(?m)^\s*yarn (\S+)/
+      if (matcher.find()) {
+        String command = matcher.group(1)
+        if (!(command in yarnCommands) && !directDependencies.containsKey(command)) {
+          throw new Exception("script returned exit code 1: Usage Error: Couldn't find a script named \"${command}\".")
+        }
+      }
       events << 'install'
     })
     helper.registerAllowedMethod('arbitraryFileCache', [Map.class], { it })
@@ -65,7 +76,8 @@ class withBuildCacheTest extends BasePipelineTest {
 
   @Test
   void 'caches and installs the Puppeteer browser for transitive Puppeteer dependencies'() {
-    files.addAll(['yarn.lock', '.nvmrc', 'node_modules/.bin/puppeteer'])
+    files.addAll(['yarn.lock', 'package.json', '.yarnrc.yml', '.nvmrc'])
+    packageJson = [devDependencies: [pa11y: '^8.0.0']]
     yarnLock = '''
 "pa11y@npm:^8.0.0":
   dependencies:
@@ -93,8 +105,21 @@ class withBuildCacheTest extends BasePipelineTest {
       '. /opt/nvm/nvm.sh',
       'nvm install',
       'corepack enable --install-directory "$HOME/.local/bin"',
-      'yarn puppeteer browsers install chrome'
+      'yarn rebuild puppeteer'
     )
+  }
+
+  @Test
+  void 'does not add a Puppeteer browser cache to Yarn 1 projects'() {
+    files << 'yarn.lock'
+    yarnLock = 'puppeteer@^22.3.0:\n  version "22.15.0"\n'
+    boolean called = false
+
+    script.call([buildCache: true]) { called = true }
+
+    assertThat(called).isTrue()
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly('yarn-node-modules', 'yarn-pnp')
+    assertThat(shCalls).isEmpty()
   }
 
   @Test

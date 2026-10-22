@@ -92,13 +92,18 @@ def call(config, Closure body) {
         )
       }
       body()
+      // Runs after body() so the browser exists before later stages use it and before the cache is saved.
       if (puppeteerProject) {
         String nvmSetup = fileExists('.nvmrc') ? '''
+          set +e
           export NVM_DIR='/home/jenkinsssh/.nvm'
-          . /opt/nvm/nvm.sh || true
+          . /opt/nvm/nvm.sh
           nvm install
+          set -e
         ''' : ''
         // Yarn install state can be restored without Puppeteer's separately stored browser binary.
+        // Rebuilding reruns Puppeteer's postinstall, which also works when Puppeteer is a transitive
+        // dependency, unlike `yarn puppeteer`, and skips the download when the browser is present.
         sh(
           label: 'Install Puppeteer browser',
           script: """
@@ -107,7 +112,7 @@ def call(config, Closure body) {
             mkdir -p "\$HOME/.local/bin"
             corepack enable --install-directory "\$HOME/.local/bin"
             export PATH="\$HOME/.local/bin:\$PATH"
-            yarn puppeteer browsers install chrome
+            yarn rebuild puppeteer
           """.stripIndent()
         )
       }
@@ -130,7 +135,8 @@ private boolean usesCypress() {
 }
 
 private boolean usesPuppeteer() {
-  if (!fileExists('yarn.lock')) {
+  // `yarn rebuild` is only available from Yarn 2, which projects configure with .yarnrc.yml.
+  if (!fileExists('yarn.lock') || !fileExists('.yarnrc.yml')) {
     return false
   }
 
