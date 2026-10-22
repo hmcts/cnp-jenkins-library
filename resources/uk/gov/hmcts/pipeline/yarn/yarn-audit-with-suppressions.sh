@@ -34,7 +34,7 @@
 set -e
 
 # Never publish a report left behind by an earlier audit attempt.
-rm -f yarn-audit-result-formatted
+rm -f yarn-audit-result-formatted yarn-audit-known-issues-result
 
 src_dir="."
 # Auto-detect src_dir only if user provides "local" argument
@@ -107,19 +107,13 @@ check_for_unneeded_suppressions() {
 
 check_vulnerabilities() {
   local file="$1"
-  if [ ! -s "$file" ]; then
-    FOUND_VULNERABILITIES=0
+  if jq -e '.advisories | length > 0' "$file" >/dev/null; then
+    FOUND_VULNERABILITIES=1
+    echo "Vulnerabilities found. See output below for details."
+    cat "$file"
   else
-    VULNERABILITY_COUNT=$(cat "$file" | jq '.metadata.vulnerabilities | .info + .low + .moderate + .high + .critical // 0')
-    # Check if the total count is greater than 0.
-    if [ "${VULNERABILITY_COUNT:-0}" -gt 0 ]; then
-      FOUND_VULNERABILITIES=1
-      echo "Vulnerabilities found: $VULNERABILITY_COUNT. See output below for details."
-      cat "$file"
-    else
-      echo "No vulnerabilities found."
-      FOUND_VULNERABILITIES=0
-    fi
+    echo "No vulnerabilities found."
+    FOUND_VULNERABILITIES=0
   fi
 }
 
@@ -163,6 +157,11 @@ else
   $yarn_audit_command --ignore 1096460 > yarn-audit-result || yarn_audit_status=$?
 fi
 
+if [ "$yarn_audit_status" -ne 0 ] && [ "$yarn_audit_status" -ne 1 ]; then
+  echo "yarn audit failed with exit code $yarn_audit_status." >&2
+  exit "$yarn_audit_status"
+fi
+
 if [ ! -s yarn-audit-result ]; then
   if [ "$yarn_audit_status" -ne 0 ]; then
     echo "yarn audit failed with exit code $yarn_audit_status and produced no report." >&2
@@ -175,9 +174,8 @@ else
   check_audit_file_format yarn-audit-result
   if [ "$OLD_AUDIT_FORMAT" -eq 0 ]; then
     echo "Formatting Yarn Audit report from 4.x to Yarn 3.x audit format and enriching with GitHub Advisory data"
-    node "${src_dir}/transform-v4-to-v3-audit.cjs" < yarn-audit-result > yarn-audit-result-formatted
-    if ! jq empty yarn-audit-result-formatted >/dev/null 2>&1; then
-      echo "Yarn audit formatter produced invalid JSON; aborting audit processing." >&2
+    if ! node "${src_dir}/transform-v4-to-v3-audit.cjs" < yarn-audit-result > yarn-audit-result-formatted; then
+      rm -f yarn-audit-result-formatted
       exit 1
     fi
   else
@@ -185,7 +183,19 @@ else
   fi
 fi
 
+if ! jq -e -s -f "${src_dir}/validate-audit-report.jq" yarn-audit-result-formatted >/dev/null 2>&1; then
+  rm -f yarn-audit-result-formatted
+  echo "Yarn audit report is invalid; aborting audit processing." >&2
+  exit 1
+fi
+
 check_vulnerabilities yarn-audit-result-formatted
+
+if [ "$yarn_audit_status" -eq 1 ] && [ "$FOUND_VULNERABILITIES" -eq 0 ]; then
+  rm -f yarn-audit-result-formatted
+  echo "yarn audit failed with exit code 1 without valid findings." >&2
+  exit 1
+fi
 
 if [ "$FOUND_VULNERABILITIES" -eq 1 ]; then
   jq -cr '(.advisories // {}) | to_entries[].value' < yarn-audit-result-formatted | sort > sorted-yarn-audit-issues

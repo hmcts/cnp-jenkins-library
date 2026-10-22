@@ -85,9 +85,9 @@ class YarnAuditTransformerTest extends Specification {
     given:
     def preload = new File(directory, 'reject-fetch.cjs')
     preload.text = "global.fetch = async () => { throw new Error('controlled advisory fetch failure'); };"
-    def input = JsonOutput.toJson([value: 'example', children: [
-      ID: '123', 'Tree Versions': ['1.0.0'], URL: 'https://github.com/advisories/GHSA-example'
-    ]])
+    def advisory = rawAdvisory()
+    advisory.children.URL = 'https://github.com/advisories/GHSA-example'
+    def input = JsonOutput.toJson(advisory)
 
     when:
     def result = transform(input, ['--require', preload.absolutePath])
@@ -97,6 +97,80 @@ class YarnAuditTransformerTest extends Specification {
     result.stdout == ''
     result.stderr.contains('Yarn audit transformation failed:')
     result.stderr.contains('controlled advisory fetch failure')
+  }
+
+  @Unroll
+  def 'malformed raw field #field=#value fails without partial output'() {
+    given:
+    def advisory = rawAdvisory()
+    if (field == 'value') { advisory.value = value } else { advisory.children[field] = value }
+
+    when:
+    def result = transform(JsonOutput.toJson(rawAdvisory()) + '\n' + JsonOutput.toJson(advisory))
+
+    then:
+    result.status != 0
+    result.stdout == ''
+    result.stderr.contains('Yarn audit transformation failed:')
+
+    where:
+    field                 | value
+    'value'               | null
+    'value'               | ' '
+    'ID'                  | null
+    'ID'                  | ' '
+    'ID'                  | [:]
+    'Severity'            | null
+    'Severity'            | 'unknown'
+    'Tree Versions'       | '1.0.0'
+    'Tree Versions'       | []
+    'Tree Versions'       | [null]
+    'Dependents'          | 'application'
+    'Dependents'          | [12]
+    'Issue'               | ''
+    'Vulnerable Versions' | null
+    'URL'                 | 12
+  }
+
+  @Unroll
+  def 'valid numeric or string advisory identity #id is retained'() {
+    given:
+    def advisory = rawAdvisory()
+    advisory.children.ID = id
+
+    when:
+    def result = transform(JsonOutput.toJson(advisory))
+
+    then:
+    result.status == 0
+    new JsonSlurper().parseText(result.stdout).advisories[id.toString()].id == id
+
+    where:
+    id << [123, 'example (deprecation)', '__proto__']
+  }
+
+  def 'handled HTTP enrichment failure retains the advisory and succeeds'() {
+    given:
+    def preload = new File(directory, 'http-error.cjs')
+    preload.text = "global.fetch = async () => ({ok:false,status:503,text:async ()=>'synthetic outage'});"
+    def advisory = rawAdvisory()
+    advisory.children.URL = 'https://github.com/advisories/GHSA-example'
+
+    when:
+    def result = transform(JsonOutput.toJson(advisory), ['--require', preload.absolutePath])
+
+    then:
+    result.status == 0
+    result.stderr == ''
+    def report = new JsonSlurper().parseText(result.stdout)
+    report.advisories['123'].title.contains('ResultCode: 503')
+    report.metadata.vulnerabilities.high == 1
+  }
+
+  private static Map rawAdvisory() {
+    [value: 'example', children: [ID: '123', Dependents: ['application'],
+      'Tree Versions': ['1.0.0'], Issue: 'Example advisory', Severity: 'high',
+      'Vulnerable Versions': '<2.0.0']]
   }
 
   private Map transform(String input, List<String> nodeArguments = []) {

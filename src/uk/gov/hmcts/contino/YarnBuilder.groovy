@@ -160,6 +160,7 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    steps.sh 'rm -f yarn-audit-result-formatted yarn-audit-known-issues-result'
     Exception auditFailure = null
     try {
       steps.sh """
@@ -174,6 +175,7 @@ class YarnBuilder extends AbstractBuilder {
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
       steps.writeFile(file: 'transform-v4-to-v3-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/transform-v4-to-v3-audit.cjs'))
+      steps.writeFile(file: 'validate-audit-report.jq', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/validate-audit-report.jq'))
 
       this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
         steps.sh """
@@ -200,12 +202,7 @@ class YarnBuilder extends AbstractBuilder {
 
   private void publishAuditReport() {
     steps.sh """
-      if [ -s yarn-audit-result-formatted ] && jq -e -s '
-        length == 1 and (.[0] |
-          type == "object" and
-          (.metadata | type == "object") and
-          (.advisories | type == "object" and all(.[]; type == "object")))
-      ' yarn-audit-result-formatted >/dev/null 2>&1; then
+      if [ -s yarn-audit-result-formatted ] && jq -e -s -f validate-audit-report.jq yarn-audit-result-formatted >/dev/null 2>&1; then
         jq -c '. | {type: "auditSummary", data: .metadata}' yarn-audit-result-formatted > yarn-audit-issues-result-summary
         jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-result-formatted > yarn-audit-issues-advisories
       else
