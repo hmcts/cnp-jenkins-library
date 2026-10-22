@@ -18,8 +18,8 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
  */
 def call(teamSlackChannel, metricsPublisher ) {
   def warningMessage = WarningCollector.getSlackWarningMessage()
-  // Fetch all block sections from the warnings mesage to see if anything has been added
-  String warnings = warningMessage.blocks.collect { it.text.text }.join("\n\n")
+  // Fetch all block sections from the warnings mesage to see if anything has been added, skipping blocks without text (e.g. dividers)
+  String warnings = warningMessage.blocks.findAll { it.text }.collect { it.text.text }.join("\n\n")
 
   String changeAuthor = env.CHANGE_AUTHOR
 

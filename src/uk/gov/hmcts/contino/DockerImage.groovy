@@ -40,7 +40,7 @@ class DockerImage {
     this.imageTag = tag
     this.acr = acr
     this.commit = commit?.substring(0, 7)
-    this.lastCommitTime = lastCommitTime
+    this.lastCommitTime = lastCommitTime?.trim()
   }
 
   /**
@@ -56,8 +56,8 @@ class DockerImage {
   }
 
   /**
-   * Get the full image name, including the tag but excluding the commit.
-   * Use when you need to retag (promote) a pr image
+   * Get the full image name used by the build. Master builds use a commit-scoped
+   * build tag, separate from the staging tag created after checks pass.
    *
    * @return
    *   the image name, e.g.: 'cnpacr.azurecr.io/hmcts/alpine-test:sometag'
@@ -151,13 +151,18 @@ class DockerImage {
   }
 
   /**
-   * Get the 'short name' of the image, without the registry prefix ,commit suffix is added only for staging.
+   * Get the build image name without the registry prefix. Master builds include
+   * the commit and timestamp so concurrent builds have separate sources.
    * Use this while resolving name for the base image for building or re-tagging.
    *
    * @return
-   *   the short name. e.g. hmcts/product-component:branch
+   *   e.g. product/component:build-commit-timestamp or product/component:pr-47
    */
   def getBaseShortName() {
+    // Master builds must not overwrite another build's promotion source.
+    if (imageTag == 'staging') {
+      return shortName('build')
+    }
     return repositoryName().concat(':')
       .concat(imageTag)
   }

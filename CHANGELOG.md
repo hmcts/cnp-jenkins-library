@@ -5,6 +5,94 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.13.2] - 2026-10-21
+
+
+
+## [2.13.1] - 2026-10-20
+
+
+
+## [2.13.0] - 2026-10-15
+
+## :rocket: Features
+
+- feat: use custom message for deprecated helm chart @JamieMcConnellKainos (#1585)
+
+## :package: Dependency Updates
+
+- deps: Fix Kubectl login for local\_account\_disabled AKS clusters @JakeM-Kainos (#1566)
+
+## [2.12.3] - 2026-10-12
+
+## :package: Dependency Updates
+
+- deps: Fix Kubectl login for local\_account\_disabled AKS clusters @JakeM-Kainos (#1566)
+
+## [2.12.2] - 2026-10-07
+
+## :bug: Bug Fixes
+
+- fix:avoid topic lookup for choosing metrics database @adusumillipraveen (#1575)
+
+## [2.12.1] - 2026-10-07
+
+## :bug: Bug Fixes
+
+- fix: Temporarily disable shared-library tag verification @gunnertwin (#1574)
+
+## [2.12.0] - 2026-10-05
+
+## :rocket: Features
+
+- feat: DTSPO-35207 Warn about unpinned, branch and to be deprecated versions, fail on deprecated versions @dawidstrozak (#1567)
+
+## [2.11.2] - 2026-10-05
+
+## :wrench: Maintenance
+
+- Remove Cypress cache test branch allowlist @gunnertwin (#1570)
+
+## [2.11.1] - 2026-10-02
+
+## :wrench: Maintenance
+
+- Temporarily allow Cypress cache test branch @gunnertwin (#1569)
+
+## [2.11.0] - 2026-09-30
+
+## :rocket: Features
+
+- feat: DTSPO-35187 support crime-idam environments in the versioned library @manohar-hmcts (#1561)
+
+## :bug: Bug Fixes
+
+- fix: wait on workload rollouts, not a pod snapshot, on PR deploys @jasonpaige (#1565)
+
+## [2.10.2] - 2026-09-30
+
+## :bug: Bug Fixes
+
+- fix: wait on workload rollouts, not a pod snapshot, on PR deploys @jasonpaige (#1565)
+
+## [2.10.1] - 2026-09-25
+
+
+
+## [2.10.0] - 2026-09-24
+
+## :rocket: Features
+
+- feat: DTSPO-35143 add nagger for deprecated terraform module branches @manohar-hmcts (#1550)
+
+## [2.9.2] - 2026-09-24
+
+
+
+## [2.9.1] - 2026-09-22
+
+
+
 ## [2.9.0] - 2026-09-21
 
 - Feature/release drafter changelog from agents @gunnertwin (#1549)

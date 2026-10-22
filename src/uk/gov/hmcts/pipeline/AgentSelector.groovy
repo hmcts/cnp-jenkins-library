@@ -121,6 +121,7 @@ class AgentSelector implements Serializable {
 
   private static String cleanedEnvironment(String environment) {
     return environment?.trim()
+      ?.replaceFirst(/^crime-idam-/, '')
       ?.replaceFirst(/^idam-/, '')
       ?.replaceFirst(/^packer-/, '')
       ?.replaceFirst(/^vault-/, '')

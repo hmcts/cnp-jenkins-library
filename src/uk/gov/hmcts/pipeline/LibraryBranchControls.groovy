@@ -98,6 +98,14 @@ class LibraryBranchControls {
       return true
     }
 
+    def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
+    // Temporary incident mitigation: Jenkins has already resolved the requested library reference.
+    // Restore tag verification after the GitHub rate-limit investigation.
+    if (branchToCheck ==~ /\d+\.\d+\.\d+/) {
+      steps.echo "Temporarily skipping library tag verification for `${branchToCheck}`."
+      return true
+    }
+
     def libraryBranchControls = getLibraryBranchControls()
     if (!libraryBranchControls.containsKey('branches')) {
 
@@ -106,31 +114,25 @@ class LibraryBranchControls {
     }
 
     def configuredBranches = libraryBranchControls.get('branches')
-    def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
-
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
 
-    if (!branchAllowed) {
-      steps.echo '''
-       ================================================================================
-       ____      ____  _       _______     ____  _____  _____  ____  _____   ______
-       |_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  |
-         \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_|
-         \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____
-           \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
-           \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
-      '''
+    if (branchAllowed) {
+      steps.echo "Library branch `${branchToCheck}` is allowed."
+    }
 
+    if (!branchAllowed) {
+      steps.echo WarningBanner.get(steps)
       steps.echo """
-        Library branch `${branchToCheck}` is not approved for use.
-        Make sure to add your branch to:
+        Library branch: `${branchToCheck}` is not approved for use.
+        If you are using a branch, make sure to add it to:
         - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
+        Please check with the Platform Operations team for guidance.
         ================================================================================
       """
     }
 
-    return branchEntry && branchEntry['allowed'] == true
+    return branchAllowed
   }
 }

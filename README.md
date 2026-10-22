@@ -3,6 +3,11 @@
 ## Table of Contents
 
 - [How is this used?](#how-is-this-used)
+- [Library versioning](#library-versioning)
+  - [Environment specific agents](#environment-specific-agents)
+  - [Versioning](#versioning)
+  - [Automated updates](#automated-updates)
+  - [Changelogs](#changelogs)
 - [Opinionated app pipeline](#opinionated-app-pipeline)
 - [Opinionated infrastructure pipeline](#opinionated-infrastructure-pipeline)
 - [Application specific infrastructure](#application-specific-infrastructure)
@@ -15,6 +20,7 @@
 - [Tool versions](#tool-versions)
 - [Contract testing with Pact](#contract-testing-with-pact)
 - [Troubleshooting](#troubleshooting)
+- [Library controls](#library-controls)
 - [Contributing](#contributing)
 
 ## How is this used?
@@ -30,7 +36,104 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
   @Library('Infrastructure')
 ```
 
-### Opinionated app pipeline
+## Library versioning
+
+Always pin this library to a released version in your Jenkinsfile. `@Library('Infrastructure')` with no version resolves to the `master` branch, which moves as new features land — an unpinned pipeline can break without any change on your side. See [Versioning](#versioning) for how to pin.
+
+The most significant recent change is **environment-specific agents and managed identities**. This replaces the previous model, where a single shared identity was implicitly available to any pipeline stage on any agent, regardless of which environment it was targeting or what kind of work it was doing.
+
+### Environment specific agents
+
+Azure work is now routed to agents scoped to the relevant environment, which authenticate using the managed identity for that environment — rather than inheriting broad access simply from where a pipeline stage happens to run.
+
+In practice:
+
+- The opinionated pipelines (`withPipeline`, `withInfraPipeline`, `withNightlyPipeline`) place their own stages on the correct agent automatically, starting on the agent for the branch's target environment (`preview` for a PR build, `aat` for `master`, or the branch's own environment for `demo`/`perftest`/`ithc`). Deployment/infrastructure stages hop onto the agent for whichever environment they're deploying to.
+- A stage scheduled onto one environment's agent authenticates as that environment's identity. A stage deploying to AAT runs on, and authenticates as, the AAT identity — not a broad identity that can also reach production.
+- Agent labels default to `ubuntu-<environment>`. This can be overridden per environment, or per product for the app pipeline (`withInfraPipeline` honours environment-level overrides only), if your team needs a different agent pool — check with plat ops before doing this.
+
+You only need to act where your Jenkinsfile calls Azure directly, outside of the sections the opinionated pipeline already manages for you.
+
+For temporary workspace-stash diagnostics, set the Jenkins environment variable `STASH_DIAGNOSTICS=true`. Before each environment-agent workspace stash, the library logs the total matching file count and recursive counts per top-level folder, with root files counted separately. The scan uses the stash's include/exclude patterns and requires the Pipeline Utility Steps `findFiles` step. It adds a workspace scan for each stash; unset the variable after testing. Stash contents are unchanged.
+
+#### withSubscription
+
+`withSubscription` now takes the product and the target environment, so the library can schedule the block onto the right agent and authenticate with the right identity:
+
+```groovy
+withSubscription(subscription, product, params.ENVIRONMENT) {
+  // az / terraform commands run here, on an agent scoped to params.ENVIRONMENT,
+  // authenticated as that environment's managed identity
+}
+```
+
+### Versioning
+
+The library is consumed via the standard Jenkins Shared Library mechanism:
+
+```groovy
+@Library('Infrastructure') _
+```
+
+With no version pin, this resolves to the `master` branch. Don't rely on that — `master` moves as features land, and your pipeline can break without any change on your side.
+
+Pin an explicit release tag instead. Pinning means a change to the library cannot alter your pipeline until you merge a version bump:
+
+```groovy
+@Library('Infrastructure@2.8.0') _
+```
+
+Released versions are tagged on this repository — see the [tags list](https://github.com/hmcts/cnp-jenkins-library/tags). Existing tags up to `2.8.0` have no prefix; new releases from the automated release process (see [Changelogs](#changelogs)) are tagged `X.Y.Z`, e.g. `@Library('Infrastructure@2.9.0')`. You do not need to raise the bumps yourself — see [Automated updates](#automated-updates).
+
+You can also point at a branch while testing a change to the library itself:
+
+```groovy
+@Library('Infrastructure@<your-branch-name>') _
+```
+
+Branch usage is validated against an allow-list, see [Library controls](#library-controls). This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+
+### Automated updates
+
+This repository uses [Renovate](https://github.com/renovatebot/renovate) to keep its own dependencies current. The configuration extends the shared HMCTS config:
+
+```json
+{
+  "extends": ["local>hmcts/.github:renovate-config"]
+}
+```
+
+Custom managers are also configured to track specific Docker image references used within pipeline stages, such as the ZAP proxy images used by the security scan.
+
+If your repository is configured for Renovate to manage Jenkins Shared Library versions, it can raise a pull request when a new version of this library is released — check with your team whether that manager is set up before relying on it, and review the linked release notes before merging.
+
+### Changelogs
+
+Every push to `master` drafts (or updates) a GitHub Release using [Release Drafter](https://github.com/release-drafter/release-drafter). Release notes are compiled automatically from the titles and labels of the pull requests merged since the last release, grouped into categories (breaking changes, features, fixes, dependency updates, documentation, maintenance).
+
+Nothing is tagged on push. `CHANGELOG.md` is updated from the draft's notes on each push to `master` that resolves a new version, ahead of any tag being cut. A maintainer publishes the draft release separately, when a version is ready to cut — publishing is what creates the `X.Y.Z` tag that pipelines can pin to.
+
+**If you consume the library:** check the [releases page](https://github.com/hmcts/cnp-jenkins-library/releases) before taking a version bump. Breaking changes are called out in their own section of the notes.
+
+**If you contribute to the library:** the version bump and the changelog entry both come from your PR, so the title and labels matter.
+
+| Label             | Version bump |
+| ----------------- | ------------ |
+| `breaking-change` | major        |
+| `enhancement`     | minor        |
+| `bug`             | patch        |
+| `dependencies`    | patch        |
+| `documentation`   | patch        |
+| `chore`           | patch        |
+| _(no label)_      | patch        |
+
+Add `skip-changelog` to keep a PR out of the release notes entirely.
+
+Write PR titles as the release note you want teams to read, because they are published verbatim.
+
+`CHANGELOG.md` is generated by the release workflow, which prepends a section per version (creating the file on its first run). Leave it to the workflow rather than editing it by hand.
+
+## Opinionated app pipeline
 
 This library contains a complete opinionated pipeline that can build, test and deploy Java,
 NodeJS and Python applications. The pipeline contains the following stages:
@@ -298,6 +401,7 @@ Valid values for the `stage` variable are as follows where `ENV` must be replace
  * smoketest:ENV
  * functionalTest:ENV
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -315,6 +419,8 @@ withPipeline(type, product, component) {
   }
 }
 ```
+
+Extra steps run on the agent for the stage they're attached to, and authenticate as that stage's environment identity (see [Environment specific agents](#environment-specific-agents)). If a step needs to reach a *different* environment than the stage it's attached to, wrap it in `withSubscription` with the target product and environment so it hops onto the right agent.
 
 #### API (gateway) tests
 
@@ -365,6 +471,29 @@ The tests run after deployment to each environment (AAT and Production) on the m
   ```
 
 Please note that Pod logs are saved as artefacts in Jenkins before the Helm release is cleared.
+
+#### Preview-only chart dependencies
+
+Helm bundles every dependency into the published chart, including ones that are disabled by default. If your chart depends on other charts only so that a preview can deploy them alongside it, list them in the `hmcts.github.io/skip-publish` annotation and they are left out of the chart published to ACR and `hmcts-charts`:
+
+```yaml
+annotations:
+  hmcts.github.io/skip-publish: ccd-core, ccd-definition-store-api
+dependencies:
+  - name: java
+    version: 5.3.0
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+  - name: ccd-core
+    version: 9.3.0
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+    condition: ccd-core.enabled
+  - name: ccd-definition-store-api
+    version: 1.6.31
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+    condition: ccd-core.enabled
+```
+
+Use a dependency's alias if it has one, otherwise its name. Preview deploys are unaffected. The publish fails if an entry matches no dependency.
 
 ### Opinionated infrastructure pipeline
 
@@ -463,6 +592,7 @@ Valid values for the `stage` variable are as follows where `ENV` should be repla
 
  * checkout
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -483,6 +613,10 @@ withInfraPipeline(product) {
 
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
+
+For both app and infrastructure pipelines, plan-only infrastructure runs invoke `planinfra:ENV` callbacks, while plan-and-apply runs invoke `buildinfra:ENV` callbacks. This applies to `before`, `afterSuccess`, `afterFailure`, `afterAlways`, and deprecated `after` hooks. Previously, both modes used `buildinfra:ENV`; move any hooks intentionally needed during plan-only runs to `planinfra:ENV`. A successful plan must not trigger deployment hooks such as production BPMN uploads. Global failure handling and after-all reporting still run for plans.
+
+The app pipeline retains its primary agent and workspace while infrastructure stages run on another environment's agent. These stages transfer only `infrastructure/**` and the root `.terraform-version`, using the usual stash exclusions. Source, coverage reports and dependency caches stay on the primary agent. The infrastructure workspace is not copied back; the named Terraform plan stash is still used between plan and apply. Terraform inputs and local dependencies must be under `infrastructure` or the transfer patterns must be extended. Infrastructure-only pipelines and other agent transfers are unchanged.
 
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
@@ -1194,9 +1328,11 @@ This file will point to the repository which defines, in json syntax, which infr
 
 ## Library Controls
 
-Whilst we transition to v2.0.0 of this library, controls have been added to allowlist branches of this library to be used within HMCTS.
+Branches of this library used by pipelines are validated against an allow-list, to control which branches of this library can be used within HMCTS.
 
-Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail.
+Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail. This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+
+When testing a change to the library itself, add your branch to this file (see [Contributing](#contributing)) and remove it again once the change has merged.
 
 ## Contributing
 

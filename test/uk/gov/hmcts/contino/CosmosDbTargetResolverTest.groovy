@@ -4,44 +4,34 @@ import spock.lang.Specification
 
 class CosmosDbTargetResolverTest extends Specification {
 
-  def steps = Mock(JenkinsStepMock) {
-    echo(_) >> {}
-  }
-
-  def "returns SDS database when topics include jenkins-sds"() {
+  def "returns database configured by the Jenkins installation"() {
     given:
-    def resolver = new CosmosDbTargetResolver(steps) {
-      @Override
-      protected String fetchTopicsText() {
-        return "names:[jenkins-sds,java]"
-      }
+    def steps = Mock(JenkinsStepMock) {
+      getEnv() >> [(CosmosDbTargetResolver.DATABASE_ENV_VAR): "sds-jenkins"]
     }
+    def resolver = new CosmosDbTargetResolver(steps)
 
     expect:
     resolver.databaseName() == "sds-jenkins"
   }
 
-  def "returns default database when topics do not include sds"() {
+  def "returns default database when the installation variable is absent"() {
     given:
-    def resolver = new CosmosDbTargetResolver(steps) {
-      @Override
-      protected String fetchTopicsText() {
-        return "names:[jenkins-cft,platform]"
-      }
+    def steps = Mock(JenkinsStepMock) {
+      getEnv() >> [:]
     }
+    def resolver = new CosmosDbTargetResolver(steps)
 
     expect:
     resolver.databaseName() == "jenkins"
   }
 
-  def "falls back to default when fetch fails"() {
+  def "returns default database when the installation variable is blank"() {
     given:
-    def resolver = new CosmosDbTargetResolver(steps) {
-      @Override
-      protected String fetchTopicsText() {
-        throw new RuntimeException("boom")
-      }
+    def steps = Mock(JenkinsStepMock) {
+      getEnv() >> [(CosmosDbTargetResolver.DATABASE_ENV_VAR): "  "]
     }
+    def resolver = new CosmosDbTargetResolver(steps)
 
     expect:
     resolver.databaseName() == "jenkins"

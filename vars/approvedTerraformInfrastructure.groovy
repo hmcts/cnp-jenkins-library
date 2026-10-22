@@ -1,4 +1,5 @@
 import uk.gov.hmcts.pipeline.TerraformInfraApprovals
+import uk.gov.hmcts.pipeline.WarningBanner
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
@@ -25,16 +26,7 @@ def call(String environment, String product, metricsPublisher, Closure block) {
       def results = readFile("terraform-approvals.log")
       echo results
 
-      echo '''
-================================================================================
-
- ____      ____  _       _______     ____  _____  _____  ____  _____   ______
-|_  _|    |_  _|/ \\     |_   __ \\   |_   \\|_   _||_   _||_   \\|_   _|.' ___  |
-  \\ \\  /\\  / / / _ \\      | |__) |    |   \\ | |    | |    |   \\ | | / .'   \\_|
-   \\ \\/  \\/ / / ___ \\     |  __ /     | |\\ \\| |    | |    | |\\ \\| | | |   ____
-    \\  /\\  /_/ /   \\ \\_  _| |  \\ \\_  _| |_\\   |_  _| |_  _| |_\\   |_\\ `.___]  |
-     \\/  \\/|____| |____||____| |___||_____|\\____||_____||_____|\\____|`._____.'
-'''
+      echo WarningBanner.get(this)
 
       echo """
 Infrastructure for repo ${env.GIT_URL} is not approved for environment '${environment}'"
