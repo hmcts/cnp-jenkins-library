@@ -8,6 +8,7 @@ def call(config, Closure body) {
 
   def caches = []
   boolean cypressProject = false
+  boolean puppeteerProject = false
 
   if (fileExists('yarn.lock')) {
     caches.addAll([
@@ -32,6 +33,18 @@ def call(config, Closure body) {
         arbitraryFileCache(
           path: "${env.HOME}/.cache/Cypress".toString(),
           cacheName: 'cypress-binary',
+          cacheValidityDecidingFile: 'yarn.lock,package.json,.yarnrc.yml',
+          compressionMethod: 'TARGZ_BEST_SPEED'
+        )
+      )
+    }
+
+    puppeteerProject = usesPuppeteer()
+    if (puppeteerProject) {
+      caches.add(
+        arbitraryFileCache(
+          path: (env.PUPPETEER_CACHE_DIR ?: "${env.HOME}/.cache/puppeteer").toString(),
+          cacheName: 'puppeteer-browser',
           cacheValidityDecidingFile: 'yarn.lock,package.json,.yarnrc.yml',
           compressionMethod: 'TARGZ_BEST_SPEED'
         )
@@ -79,6 +92,25 @@ def call(config, Closure body) {
         )
       }
       body()
+      if (puppeteerProject) {
+        String nvmSetup = fileExists('.nvmrc') ? '''
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh || true
+          nvm install
+        ''' : ''
+        // Yarn install state can be restored without Puppeteer's separately stored browser binary.
+        sh(
+          label: 'Install Puppeteer browser',
+          script: """
+            set -e
+            ${nvmSetup}
+            mkdir -p "\$HOME/.local/bin"
+            corepack enable --install-directory "\$HOME/.local/bin"
+            export PATH="\$HOME/.local/bin:\$PATH"
+            yarn puppeteer browsers install chrome
+          """.stripIndent()
+        )
+      }
     }
     return
   }
@@ -95,4 +127,14 @@ private boolean usesCypress() {
   def packageJson = readJSON(file: 'package.json')
   return packageJson.dependencies?.containsKey('cypress') ||
     packageJson.devDependencies?.containsKey('cypress')
+}
+
+private boolean usesPuppeteer() {
+  if (!fileExists('yarn.lock')) {
+    return false
+  }
+
+  return readFile('yarn.lock').readLines().any {
+    it.startsWith('"puppeteer@') || it.startsWith('puppeteer@')
+  }
 }

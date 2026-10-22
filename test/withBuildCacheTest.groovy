@@ -13,6 +13,7 @@ class withBuildCacheTest extends BasePipelineTest {
   def restoredFiles = [] as Set
   def events = []
   def packageJson = [:]
+  def yarnLock = ''
 
   @Before
   void setUp() {
@@ -20,6 +21,7 @@ class withBuildCacheTest extends BasePipelineTest {
     binding.setVariable('env', [WORKSPACE: '/workspace'])
     helper.registerAllowedMethod('fileExists', [String.class], { files.contains(it) })
     helper.registerAllowedMethod('readJSON', [Map.class], { packageJson })
+    helper.registerAllowedMethod('readFile', [String.class], { yarnLock })
     helper.registerAllowedMethod('sh', [Map.class], {
       shCalls << it
       events << 'install'
@@ -59,6 +61,53 @@ class withBuildCacheTest extends BasePipelineTest {
       'nvm install',
       'node_modules/.bin/cypress install'
     )
+  }
+
+  @Test
+  void 'caches and installs the Puppeteer browser for transitive Puppeteer dependencies'() {
+    files.addAll(['yarn.lock', '.nvmrc', 'node_modules/.bin/puppeteer'])
+    yarnLock = '''
+"pa11y@npm:^8.0.0":
+  dependencies:
+    puppeteer: "npm:^22.3.0"
+
+"puppeteer@npm:^22.3.0":
+  version: 22.15.0
+'''
+    binding.setVariable('env', [WORKSPACE: '/workspace', HOME: '/home/jenkinsssh'])
+
+    script.call([buildCache: true]) { events << 'body' }
+
+    assertThat(events).containsExactly('restore', 'body', 'install')
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly(
+      'yarn-node-modules',
+      'yarn-pnp',
+      'puppeteer-browser'
+    )
+    assertThat(cacheCalls[0].caches[2]).containsEntry('path', '/home/jenkinsssh/.cache/puppeteer')
+    assertThat(cacheCalls[0].caches[2]).containsEntry('cacheValidityDecidingFile', 'yarn.lock,package.json,.yarnrc.yml')
+    assertThat(shCalls).hasSize(1)
+    assertThat(shCalls[0]).containsEntry('label', 'Install Puppeteer browser')
+    assertThat(shCalls[0].script.toString()).contains(
+      "export NVM_DIR='/home/jenkinsssh/.nvm'",
+      '. /opt/nvm/nvm.sh',
+      'nvm install',
+      'corepack enable --install-directory "$HOME/.local/bin"',
+      'yarn puppeteer browsers install chrome'
+    )
+  }
+
+  @Test
+  void 'does not add a Puppeteer browser cache to unrelated yarn projects'() {
+    files << 'yarn.lock'
+    yarnLock = '"pa11y@npm:^8.0.0":\n  version: 8.0.0\n'
+    boolean called = false
+
+    script.call([buildCache: true]) { called = true }
+
+    assertThat(called).isTrue()
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly('yarn-node-modules', 'yarn-pnp')
+    assertThat(shCalls).isEmpty()
   }
 
   @Test
