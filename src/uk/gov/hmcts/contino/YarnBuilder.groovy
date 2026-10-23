@@ -160,6 +160,8 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    steps.sh 'rm -f yarn-audit-result-formatted yarn-audit-known-issues-result'
+    Exception auditFailure = null
     try {
       steps.sh """
         set +ex
@@ -173,6 +175,7 @@ class YarnBuilder extends AbstractBuilder {
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
       steps.writeFile(file: 'transform-v4-to-v3-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/transform-v4-to-v3-audit.cjs'))
+      steps.writeFile(file: 'validate-audit-report.jq', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/validate-audit-report.jq'))
 
       this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
         steps.sh """
@@ -182,21 +185,44 @@ class YarnBuilder extends AbstractBuilder {
           ./yarn-audit-with-suppressions.sh
         """
       }
+    } catch (Exception failure) {
+      auditFailure = failure
+      throw failure
     } finally {
-      steps.sh """
-        cat yarn-audit-result-formatted | jq -c '. | {type: "auditSummary", data: .metadata}' > yarn-audit-issues-result-summary
-        cat yarn-audit-result-formatted | jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' >> yarn-audit-issues-advisories
-        cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
-      """
-      String issues = steps.readFile('yarn-audit-issues-result')
-      String knownIssues = null
-      if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
-        knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+      try {
+        publishAuditReport()
+      } catch (Exception failure) {
+        if (auditFailure == null) {
+          throw failure
+        }
+        steps.echo 'CVE report finalisation failed; preserving the original audit failure.'
       }
-      def cveReport = prepareCVEReport(issues, knownIssues)
-      new CVEPublisher(steps)
-        .publishCVEReport('node', cveReport)
     }
+  }
+
+  private void publishAuditReport() {
+    steps.sh """
+      if [ -s yarn-audit-result-formatted ] && jq -e -s -f validate-audit-report.jq yarn-audit-result-formatted >/dev/null 2>&1; then
+        jq -c '. | {type: "auditSummary", data: .metadata}' yarn-audit-result-formatted > yarn-audit-issues-result-summary
+        jq -cr '.advisories| to_entries[] | {"type": "auditAdvisory", "data": { "advisory": .value }}' yarn-audit-result-formatted > yarn-audit-issues-advisories
+      else
+        echo 'Yarn audit report is unavailable or invalid; skipping CVE report publication.'
+        : > yarn-audit-issues-result-summary
+        : > yarn-audit-issues-advisories
+      fi
+      cat yarn-audit-issues-result-summary yarn-audit-issues-advisories > yarn-audit-issues-result
+    """
+    String issues = steps.readFile('yarn-audit-issues-result')
+    if (!issues?.trim()) {
+      throw new IllegalStateException('Yarn audit report is unavailable or invalid; CVE report was not published.')
+    }
+    String knownIssues = null
+    if (steps.fileExists(CVE_KNOWN_ISSUES_FILE_PATH)) {
+      knownIssues = steps.readFile(CVE_KNOWN_ISSUES_FILE_PATH)
+    }
+    def cveReport = prepareCVEReport(issues, knownIssues)
+    new CVEPublisher(steps)
+      .publishCVEReport('node', cveReport)
   }
 
   @Override
