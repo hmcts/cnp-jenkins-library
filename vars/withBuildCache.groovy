@@ -104,17 +104,20 @@ def call(config, Closure body) {
         // Yarn install state can be restored without Puppeteer's separately stored browser binary.
         // Rebuilding reruns Puppeteer's postinstall, which also works when Puppeteer is a transitive
         // dependency, unlike `yarn puppeteer`, and skips the download when the browser is present.
-        sh(
-          label: 'Install Puppeteer browser',
-          script: """
-            set -e
-            ${nvmSetup}
-            mkdir -p "\$HOME/.local/bin"
-            corepack enable --install-directory "\$HOME/.local/bin"
-            export PATH="\$HOME/.local/bin:\$PATH"
-            yarn rebuild puppeteer
-          """.stripIndent()
-        )
+        // The build body's timeout has ended; bound setup and browser downloads separately.
+        timeout(time: 15, unit: 'MINUTES') {
+          sh(
+            label: 'Install Puppeteer browser',
+            script: """
+              set -e
+              ${nvmSetup}
+              mkdir -p "\$HOME/.local/bin"
+              corepack enable --install-directory "\$HOME/.local/bin"
+              export PATH="\$HOME/.local/bin:\$PATH"
+              yarn rebuild puppeteer
+            """.stripIndent()
+          )
+        }
       }
     }
     return
