@@ -104,4 +104,46 @@ class PipelineCallBacksRunnerTest extends Specification {
       assertThat(beforeBuildCalled).isFalse()
   }
 
+  def "passes elapsed duration to duration-aware afterAll callbacks"() {
+    given:
+      PipelineCallbacksConfig config = new PipelineCallbacksConfig()
+      Long observedDuration
+      String observedStage
+      config.registerAfterAll { stage, durationMillis ->
+        observedStage = stage
+        observedDuration = durationMillis
+      }
+      PipelineCallbacksRunner pcr = new PipelineCallbacksRunner(config)
+
+    when:
+      pcr.callAround('build') {
+        Thread.sleep(1)
+      }
+
+    then:
+      observedStage == 'build'
+      observedDuration != null
+      observedDuration >= 0
+  }
+
+  def "passes elapsed duration when the stage body fails"() {
+    given:
+      PipelineCallbacksConfig config = new PipelineCallbacksConfig()
+      Long observedDuration
+      config.registerAfterAll { stage, durationMillis ->
+        observedDuration = durationMillis
+      }
+      PipelineCallbacksRunner pcr = new PipelineCallbacksRunner(config)
+
+    when:
+      pcr.callAround('build') {
+        throw new RuntimeException('stage failed')
+      }
+
+    then:
+      thrown(RuntimeException)
+      observedDuration != null
+      observedDuration >= 0
+  }
+
 }
