@@ -82,7 +82,7 @@ def checkAllowedLibraryBranches() {
     def allowedLibraryBranches = new LibraryBranchControls(this)
         .getLibraryBranchControls()
         .branches
-        .findAll { it.allowed && it.name != 'master' && !(it.name ==~ /\d+\.\d+\.\d+/) }
+        .findAll { it.allowed && it.name != 'master' && it.name != 'cve-dashboard' && !(it.name ==~ /\d+\.\d+\.\d+/) }
         .collect { it.name }
 
     allowedLibraryBranches.each { branch ->
