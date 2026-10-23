@@ -55,6 +55,7 @@ class withBuildCacheTest extends BasePipelineTest {
     assertThat(shCalls[0]).containsEntry('label', 'Install Cypress binary')
     assertThat(shCalls[0].script.toString()).contains(
       "export NVM_DIR='/home/jenkinsssh/.nvm'",
+      'set -- --no-use',
       '. /opt/nvm/nvm.sh',
       'nvm install',
       'node_modules/.bin/cypress install'
