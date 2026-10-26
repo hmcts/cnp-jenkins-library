@@ -28,6 +28,8 @@ class withPipelineAgentDisconnectTest extends BasePipelineTest {
 
     assertThat(helper.callStack.findAll { it.methodName == 'sleep' }).hasSize(8)
     assertThat(helper.callStack.findAll { it.methodName == 'node' }).isEmpty()
+    assertThat(helper.callStack.find { it.methodName == 'stage' }.args[0].toString())
+      .isEqualTo('Waiting 2 minutes for agent to reconnect')
   }
 
   @Test

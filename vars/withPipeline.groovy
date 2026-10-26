@@ -217,15 +217,17 @@ int agentDisconnectWaitMinutes(config) {
 
 void handleAgentDisconnect(String agentName, int waitMinutes, metricsPublisher, pendingHelmReleases, String nodeSelector) {
   if (waitMinutes > 0) {
-    echo "Build agent ${agentName ?: 'unknown'} disconnected; waiting up to ${waitMinutes} min for it to reconnect"
-    boolean reconnected = false
-    for (int check = 0; check < waitMinutes * 4 && !reconnected; check++) {
-      sleep(time: 15, unit: 'SECONDS')
-      reconnected = metricsPublisher.isAgentOnline(agentName)
+    stage("Waiting ${waitMinutes} ${waitMinutes == 1 ? 'minute' : 'minutes'} for agent to reconnect") {
+      echo "Build agent ${agentName ?: 'unknown'} disconnected; waiting up to ${waitMinutes} min for it to reconnect"
+      boolean reconnected = false
+      for (int check = 0; check < waitMinutes * 4 && !reconnected; check++) {
+        sleep(time: 15, unit: 'SECONDS')
+        reconnected = metricsPublisher.isAgentOnline(agentName)
+      }
+      echo(reconnected ?
+        "Build agent ${agentName} reconnected, but this build cannot resume on it; the next build will recover" :
+        "Build agent ${agentName ?: 'unknown'} did not reconnect within ${waitMinutes} min")
     }
-    echo(reconnected ?
-      "Build agent ${agentName} reconnected, but this build cannot resume on it; the next build will recover" :
-      "Build agent ${agentName ?: 'unknown'} did not reconnect within ${waitMinutes} min")
   }
   if (pendingHelmReleases) {
     node(nodeSelector) {
