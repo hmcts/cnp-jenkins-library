@@ -75,9 +75,12 @@ def call(type, String product, String component, Closure body) {
   String nodeSelector = agentType ? "${agentType} && !nightly" : '!nightly'
   def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
   def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
+  List<Map> pendingHelmReleases = []
+  String primaryAgentName = null
 
   try {
       node(nodeSelector) {
+        primaryAgentName = env.NODE_NAME
         timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
           def pipelineFailed = false
           if (!libraryBranchAllowed) {
@@ -128,8 +131,8 @@ def call(type, String product, String component, Closure body) {
                 )
               }
 
-              handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
-              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery)
+              handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component, pendingHelmReleases)
+              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery, pendingHelmReleases)
               onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
                 handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
               }
@@ -175,6 +178,8 @@ def call(type, String product, String component, Closure body) {
       }
   } catch (FlowInterruptedException err) {
     if (metricsPublisher.pipelineFailureReason(err, 'INTERRUPTED') == 'AGENT_DISCONNECTED') {
+      handleAgentDisconnect(metricsPublisher.disconnectedAgent ?: primaryAgentName, agentDisconnectWaitMinutes(pipelineConfig),
+        metricsPublisher, pendingHelmReleases, nodeSelector)
       currentBuild.result = 'FAILURE'
       notifyBuildFailure channel: slackChannel
       metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
@@ -187,10 +192,15 @@ def call(type, String product, String component, Closure body) {
       failure_reason: metricsPublisher.pipelineFailureReason(err, 'INTERRUPTED')])
     throw err
   } catch (err) {
+    String failureReason = metricsPublisher.pipelineFailureReason(err, 'STEP_FAILURE')
+    if (failureReason == 'AGENT_DISCONNECTED') {
+      handleAgentDisconnect(metricsPublisher.disconnectedAgent ?: primaryAgentName, agentDisconnectWaitMinutes(pipelineConfig),
+        metricsPublisher, pendingHelmReleases, nodeSelector)
+    }
     currentBuild.result = "FAILURE"
     notifyBuildFailure channel: slackChannel
     metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE',
-      failure_reason: metricsPublisher.pipelineFailureReason(err, 'STEP_FAILURE')])
+      failure_reason: failureReason])
     callbacksRunner.call('onFailure')
     throw err
   } finally {
@@ -200,7 +210,34 @@ def call(type, String product, String component, Closure body) {
   }
 }
 
-void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component) {
+int agentDisconnectWaitMinutes(config) {
+  String override = env.AGENT_DISCONNECT_WAIT_MINUTES?.toString()?.trim()
+  return override?.isInteger() ? override.toInteger() : config.agentDisconnectWaitMinutes
+}
+
+void handleAgentDisconnect(String agentName, int waitMinutes, metricsPublisher, pendingHelmReleases, String nodeSelector) {
+  if (waitMinutes > 0) {
+    echo "Build agent ${agentName ?: 'unknown'} disconnected; waiting up to ${waitMinutes} min for it to reconnect"
+    boolean reconnected = false
+    for (int check = 0; check < waitMinutes * 4 && !reconnected; check++) {
+      sleep(time: 15, unit: 'SECONDS')
+      reconnected = metricsPublisher.isAgentOnline(agentName)
+    }
+    echo(reconnected ?
+      "Build agent ${agentName} reconnected, but this build cannot resume on it; the next build will recover" :
+      "Build agent ${agentName ?: 'unknown'} did not reconnect within ${waitMinutes} min")
+  }
+  if (pendingHelmReleases) {
+    node(nodeSelector) {
+      pendingHelmReleases.each { release ->
+        helmUninstall.afterAgentDisconnect(release.dockerImage, release)
+      }
+    }
+    pendingHelmReleases.clear()
+  }
+}
+
+void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component, pendingHelmReleases = null) {
     onPR {
       onTerraformChangeInPR(pipelineConfig) {
         // we always need a tf plan of aat (i.e. staging)
@@ -270,11 +307,12 @@ void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pip
         environment: environment.previewName,
         product: product,
         component: component,
+        pendingHelmReleases: pendingHelmReleases,
       )
     }
 }
 
-void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery = null) {
+void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery = null, pendingHelmReleases = null) {
     onMaster {
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
@@ -305,6 +343,7 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
         environment: environment.nonProdName,
         product: product,
         component: component,
+        pendingHelmReleases: pendingHelmReleases,
       )
 
       stageWithAgent('Publish Helm chart', product) {

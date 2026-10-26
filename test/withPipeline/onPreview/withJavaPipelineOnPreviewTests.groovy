@@ -48,6 +48,40 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   }
 
   @Test
+  void agentDisconnectWaitsTwoMinutesByDefaultBeforeFailing() {
+    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
+      throw new java.nio.channels.ClosedChannelException()
+    })
+    helper.registerAllowedMethod('sleep', [Map.class], {})
+    Exception failure
+
+    try {
+      runScript("testResources/$jenkinsFile")
+    } catch (Exception err) {
+      failure = err
+    }
+
+    assertThat(failure).isNotNull()
+    assertThat(helper.callStack.findAll { it.methodName == 'sleep' }).hasSize(8)
+  }
+
+  @Test
+  void agentDisconnectWaitCanBeOverridden() {
+    binding.getVariable('env').putAt('AGENT_DISCONNECT_WAIT_MINUTES', '0')
+    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
+      throw new java.nio.channels.ClosedChannelException()
+    })
+    helper.registerAllowedMethod('sleep', [Map.class], {})
+
+    try {
+      runScript("testResources/$jenkinsFile")
+    } catch (Exception ignored) {
+    }
+
+    assertThat(helper.callStack.findAll { it.methodName == 'sleep' }).isEmpty()
+  }
+
+  @Test
   void smokeTestUsesTeamSecretsByDefault() {
     runScript("testResources/$pipelineWithSecrets")
 

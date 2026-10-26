@@ -15,6 +15,21 @@ def call(dockerImage, Map params, pcr) {
   }
 }
 
+// Runs on a fresh agent after the original one was lost; no step metrics so build recovery is not affected.
+def afterAgentDisconnect(dockerImage, Map params) {
+  try {
+    stage("Uninstall Helm Release - ${params.environment}") {
+      withAksClient(params.subscription, params.environment, params.product) {
+        uninstallRelease(dockerImage, params)
+      }
+    }
+  } catch (InterruptedException err) {
+    throw err
+  } catch (ignored) {
+    echo "Unable to uninstall this helm release."
+  }
+}
+
 def uninstallRelease(dockerImage, Map params) {
 
   def subscription = params.subscription

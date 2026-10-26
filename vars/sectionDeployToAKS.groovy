@@ -19,10 +19,14 @@ def testEnv(String testUrl, block) {
   }
 }
 
+boolean shouldClearHelmReleaseOnFailure(boolean enableHelmLabel, AppPipelineConfig config) {
+  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+  return (projectBranch.isMaster() && config.clearHelmReleaseOnFailure) || (projectBranch.isPR() && !enableHelmLabel)
+}
+
 def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-    def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-    if ((projectBranch.isMaster() && config.clearHelmReleaseOnFailure) || (projectBranch.isPR() && !enableHelmLabel)) {
-        helmUninstall(dockerImage, params, pcr)
+  if (shouldClearHelmReleaseOnFailure(enableHelmLabel, config)) {
+    helmUninstall(dockerImage, params, pcr)
   }
 }
 
@@ -66,6 +70,7 @@ def call(params) {
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
+  Map pendingHelmRelease = null
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithEnvironmentAgentAndSecrets("AKS deploy - ${environment}", config, product, environment) {
@@ -79,6 +84,12 @@ def call(params) {
             log.info("Using AKS environment: ${params.environment}")
             warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
             params.imageName = dockerImageTaggedName
+            if (params.pendingHelmReleases != null && shouldClearHelmReleaseOnFailure(enableHelmLabel, config)) {
+              // Lets withPipeline uninstall from a fresh agent if this one is lost.
+              pendingHelmRelease = [dockerImage: dockerImage, subscription: subscription, environment: params.environment,
+                product: product, component: component, aksSubscription: params.aksSubscription]
+              params.pendingHelmReleases.add(pendingHelmRelease)
+            }
             aksUrl = helmInstall(dockerImage, params)
             log.info("deployed component URL: ${aksUrl}")
             onPR {
@@ -482,6 +493,9 @@ def call(params) {
       if (isOnMaster || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
+    }
+    if (pendingHelmRelease != null) {
+      params.pendingHelmReleases.remove(pendingHelmRelease)
     }
   }
 }

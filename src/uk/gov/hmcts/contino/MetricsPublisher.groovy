@@ -12,6 +12,7 @@ class MetricsPublisher implements Serializable {
   String component
   String correlationId
   boolean agentDisconnectionRecorded = false
+  String disconnectedAgent
   String lastSuccessfulStage
   CosmosDbTargetResolver cosmosDbTargetResolver
 
@@ -67,15 +68,19 @@ class MetricsPublisher implements Serializable {
 
   @NonCPS
   private String resolveAgentStatus() {
-    String nodeName = env.NODE_NAME
+    return isAgentOnline(env.NODE_NAME) ? 'online' : 'offline'
+  }
+
+  @NonCPS
+  boolean isAgentOnline(String nodeName) {
     if (!nodeName) {
-      return 'offline'
+      return false
     }
     try {
       def computer = agentComputer(nodeName)
-      return computer?.isOnline() && computer?.getChannel() != null ? 'online' : 'offline'
+      return computer?.isOnline() && computer?.getChannel() != null
     } catch (Exception ignored) {
-      return 'offline'
+      return false
     }
   }
 
@@ -130,6 +135,7 @@ class MetricsPublisher implements Serializable {
     String reason = failureReason(failure)
     if (reason == 'AGENT_DISCONNECTED') {
       agentDisconnectionRecorded = true
+      disconnectedAgent = disconnectedAgent ?: env.NODE_NAME
     }
     if (result == 'SUCCESS') {
       lastSuccessfulStage = stage
