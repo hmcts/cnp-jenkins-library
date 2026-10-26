@@ -227,6 +227,7 @@ void handleAgentDisconnect(String agentName, int waitMinutes, metricsPublisher, 
       echo(reconnected ?
         "Build agent ${agentName} reconnected, but this build cannot resume on it; the next build will recover" :
         "Build agent ${agentName ?: 'unknown'} did not reconnect within ${waitMinutes} min")
+      echo "Helm release will be uninstalled momentarily"
     }
   }
   if (pendingHelmReleases) {
