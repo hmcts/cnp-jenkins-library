@@ -19,7 +19,7 @@ def testEnv(String testUrl, block) {
   }
 }
 
-boolean shouldClearHelmReleaseOnFailure(boolean enableHelmLabel, AppPipelineConfig config) {
+boolean shouldClearHelmReleaseOnFailure(boolean enableHelmLabel, config) {
   def projectBranch = new ProjectBranch(env.BRANCH_NAME)
   return (projectBranch.isMaster() && config.clearHelmReleaseOnFailure) || (projectBranch.isPR() && !enableHelmLabel)
 }

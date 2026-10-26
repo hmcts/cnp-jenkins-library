@@ -18,6 +18,7 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
   void registerArchiveInterruptionSteps() {
     helper.registerAllowedMethod("node", [String, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("timeout", [Map, Closure], { _, body -> body.call() })
+    helper.registerAllowedMethod("sleep", [Map], {})
   }
 
   @Test

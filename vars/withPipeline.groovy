@@ -178,9 +178,9 @@ def call(type, String product, String component, Closure body) {
       }
   } catch (FlowInterruptedException err) {
     if (metricsPublisher.pipelineFailureReason(err, 'INTERRUPTED') == 'AGENT_DISCONNECTED') {
+      currentBuild.result = 'FAILURE'
       handleAgentDisconnect(metricsPublisher.disconnectedAgent ?: primaryAgentName, agentDisconnectWaitMinutes(pipelineConfig),
         metricsPublisher, pendingHelmReleases, nodeSelector)
-      currentBuild.result = 'FAILURE'
       notifyBuildFailure channel: slackChannel
       metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
       callbacksRunner.call('onFailure')
@@ -193,11 +193,11 @@ def call(type, String product, String component, Closure body) {
     throw err
   } catch (err) {
     String failureReason = metricsPublisher.pipelineFailureReason(err, 'STEP_FAILURE')
+    currentBuild.result = "FAILURE"
     if (failureReason == 'AGENT_DISCONNECTED') {
       handleAgentDisconnect(metricsPublisher.disconnectedAgent ?: primaryAgentName, agentDisconnectWaitMinutes(pipelineConfig),
         metricsPublisher, pendingHelmReleases, nodeSelector)
     }
-    currentBuild.result = "FAILURE"
     notifyBuildFailure channel: slackChannel
     metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE',
       failure_reason: failureReason])
