@@ -3,17 +3,15 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
-import static java.lang.Float.valueOf
 
 class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
-  private static final Float DESIRED_MIN_VERSION = 18.16
-  private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues-result'
 
   def securitytest
@@ -473,48 +471,82 @@ EOF
     }
   }
 
-  private LocalDate node18ExpirationDate() {
-    def date;
-    switch (steps.env.PRODUCT) {
-      case "xui":
-      case "em":
-        date = LocalDate.of(2024, 01, 15)
-        break
-      case "ccd":
-        date = LocalDate.of(2023, 12, 21)
-        break
-      case "bar":
-      case "fees-register":
-      case "ccpay":
-        date = LocalDate.of(2023, 12, 8)
-        break
-      default:
-        date = NODEJS_EXPIRATION
-        break
-    }
-    steps.echo "Node.Js upgrade deadline is: ${date}, product is: ${steps.env.PRODUCT}"
-    return date
-  }
-
-  private isNodeJSV18OrNewer() {
-    boolean validVersion = true;
+  private isNodeJSVersionSupported(Map policy) {
     if (steps.fileExists(NVMRC)) {
-      String nodeVersion = steps.readFile(NVMRC).replace("v", "")
-      Float current_version = valueOf(nodeVersion
-                                          .trim()
-                                          .substring(0, nodeVersion.lastIndexOf(".")))
-      validVersion = current_version >= DESIRED_MIN_VERSION
-    } else {
-      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", node18ExpirationDate())
+      String nodeVersion = steps.readFile(NVMRC)
+      try {
+        return isSupportedNodeVersion(nodeVersion, policy.minimumVersion)
+      } catch (IllegalArgumentException exception) {
+        steps.error("Invalid ${NVMRC}: ${exception.message} Specify an exact Node.js version, for example '${policy.minimumVersion}'.")
+        return false
+      }
     }
 
-    return validVersion
+    // Preserve the existing key because it is published as a metric.
+    WarningCollector.addPipelineWarning("missing_nvrmc_file", "A ${NVMRC} file is missing for this project. See https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", policy.deadline)
+    return true
   }
 
-  private nagAboutOldNodeJSVersions() {
-    if (!isNodeJSV18OrNewer()) {
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", node18ExpirationDate())
+  private nagAboutUnsupportedNodeJSVersions() {
+    Map policy = getNodeJSDeprecationPolicy()
+    if (!policy) {
+      return
     }
+
+    if (!isNodeJSVersionSupported(policy)) {
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please use Node.js v${policy.minimumVersion} or greater by updating the version in your ${NVMRC} file. See https://nodejs.org/en/about/previous-releases", policy.deadline)
+    }
+  }
+
+  Map getNodeJSDeprecationPolicy() {
+    def config = new DeprecationConfig(steps).getDeprecationConfig(steps.env.GIT_URL)
+    def nodeVersionConfig = config?.nodejs?.node_version
+    if (!nodeVersionConfig?.version || !nodeVersionConfig?.date_deadline) {
+      steps.echo("[Warning] Node.js deprecation check skipped because nodejs.node_version.version and nodejs.node_version.date_deadline are not configured.")
+      return null
+    }
+
+    return [
+      minimumVersion: nodeVersionConfig.version.toString(),
+      deadline: LocalDate.parse(nodeVersionConfig.date_deadline.toString())
+    ]
+  }
+
+  /**
+   * Compares exact Node.js versions by numeric major, minor and patch components.
+   * A prerelease of the minimum version does not satisfy the released minimum.
+   */
+  static boolean isSupportedNodeVersion(String actualVersion, String minimumVersion) {
+    def actual = parseNodeVersion(actualVersion)
+    def minimum = parseNodeVersion(minimumVersion)
+
+    for (int index = 0; index < 3; index++) {
+      if (actual.numbers[index] != minimum.numbers[index]) {
+        return actual.numbers[index] > minimum.numbers[index]
+      }
+    }
+
+    if (actual.prerelease && !minimum.prerelease) {
+      return false
+    }
+    return true
+  }
+
+  private static Map parseNodeVersion(String rawVersion) {
+    String version = rawVersion?.trim()
+    def matcher = version =~ /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("'${version ?: rawVersion}' is not an exact Node.js version.")
+    }
+
+    return [
+      numbers: [
+        matcher[0][1].toInteger(),
+        matcher[0][2].toInteger(),
+        matcher[0][3].toInteger()
+      ],
+      prerelease: matcher[0][4]
+    ]
   }
 
   private corepackEnable() {
@@ -569,7 +601,7 @@ EOF
     }
 
     localSteps.sh "java -version"
-    nagAboutOldNodeJSVersions()
+    nagAboutUnsupportedNodeJSVersions()
   }
 
 }
