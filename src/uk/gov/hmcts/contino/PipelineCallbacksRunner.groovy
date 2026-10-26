@@ -6,9 +6,9 @@ import java.time.LocalDate
 
 class PipelineCallbacksRunner implements Serializable {
   def final config
-  private final MetricsPublisher metricsPublisher
+  private final metricsPublisher
 
-  PipelineCallbacksRunner(config, MetricsPublisher metricsPublisher = null) {
+  PipelineCallbacksRunner(config, metricsPublisher = null) {
     this.config = config
     this.metricsPublisher = metricsPublisher
   }
