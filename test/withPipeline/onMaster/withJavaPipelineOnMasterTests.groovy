@@ -40,7 +40,7 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
+      setupToolVersion(0..1) {}
       build(0) {}
       test(0) {}
       securityCheck(0) {}

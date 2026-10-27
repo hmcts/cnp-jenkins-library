@@ -38,7 +38,7 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     helper.registerAllowedMethod("when", [boolean, Closure.class], {})
 
     def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(1) {}
+    stubBuilder.demand.setupToolVersion(0..1) {}
     stubBuilder.demand.build(0) {}
     stubBuilder.demand.test(0) {}
     stubBuilder.demand.securityCheck(0) {}
