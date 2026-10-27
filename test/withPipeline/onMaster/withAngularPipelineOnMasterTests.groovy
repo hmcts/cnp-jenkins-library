@@ -17,7 +17,7 @@ class withAngularPipelineOnMasterTests extends BaseCnpPipelineTest {
     def stubBuilder = new StubFor(AngularBuilder)
 //    todo: revisit these demands
     stubBuilder.demand.with {
-      setupToolVersion(1) {}
+      setupToolVersion(0..1) {}
       build(1) {}
       test(1) {}
       securityCheck(1) {}
