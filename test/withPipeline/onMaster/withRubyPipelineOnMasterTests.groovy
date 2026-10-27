@@ -38,13 +38,13 @@ class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(RubyBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
-      build(0) {}
-      test(0) {}
-      securityCheck(0) {}
-      sonarScan(0) {}
-      smokeTest(0) {} //aat-staging - should be 0 in skips scenario
-      functionalTest(0) {} // should be 0 in skips scenario
+      setupToolVersion(1) {}
+      build(1) {}
+      test(1) {}
+      securityCheck(1) {}
+      sonarScan(1) {}
+      smokeTest(1) {} //aat-staging - should be 0 in skips scenario
+      functionalTest(1) {} // should be 0 in skips scenario
     }
 
     stubBuilder.use {
