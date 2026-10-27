@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.13.5] - 2026-10-27
+
+## :wrench: Maintenance
+
+- chore: adding publishGithubAppRateLimits groovy file @tmckillop95 (#1581)
+
 ## [2.13.4] - 2026-10-23
 
 ## :bug: Bug Fixes
