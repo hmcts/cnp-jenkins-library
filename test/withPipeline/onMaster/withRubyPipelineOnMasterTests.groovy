@@ -38,6 +38,7 @@ class withRubyPipelineOnMasterTests extends BaseCnpPipelineTest {
 
     def stubBuilder = new StubFor(RubyBuilder)
     stubBuilder.demand.with {
+      setupToolVersion(0..1) {}
       build(0) {}
       test(0) {}
       securityCheck(0) {}
