@@ -88,6 +88,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("publishHTML", [Map.class], {})
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
+    helper.registerAllowedMethod("sh", [String.class], {})
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('returnStatus')) {
         String script = m.get('script')?.toString() ?: ''
