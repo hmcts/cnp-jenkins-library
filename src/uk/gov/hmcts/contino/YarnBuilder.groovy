@@ -545,7 +545,6 @@ EOF
 
   @Override
   def setupToolVersion() {
-    super.setupToolVersion()
     // Java required on nodejs pipeline, if data import only available as java job, but project itself is nodejs
     def statusCodeJava21 = steps.sh(script: """
       find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(21)" {} + > /dev/null
