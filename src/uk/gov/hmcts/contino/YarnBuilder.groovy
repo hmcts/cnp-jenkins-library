@@ -471,20 +471,20 @@ EOF
     }
   }
 
-  private isNodeJSVersionSupported(Map policy) {
+  private Map getNodeJSVersionDeprecation(Map policy) {
     if (steps.fileExists(NVMRC)) {
       String nodeVersion = steps.readFile(NVMRC)
       try {
-        return isSupportedNodeVersion(nodeVersion, policy.minimumVersion)
+        return findNodeVersionDeprecation(nodeVersion, policy)
       } catch (IllegalArgumentException exception) {
         steps.error("Invalid ${NVMRC}: ${exception.message} Specify an exact Node.js version, for example '${policy.minimumVersion}'.")
-        return false
+        return null
       }
     }
 
     // Preserve the existing key because it is published as a metric.
     WarningCollector.addPipelineWarning("missing_nvrmc_file", "A ${NVMRC} file is missing for this project. See https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", policy.deadline)
-    return true
+    return null
   }
 
   private nagAboutUnsupportedNodeJSVersions() {
@@ -493,8 +493,12 @@ EOF
       return
     }
 
-    if (!isNodeJSVersionSupported(policy)) {
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please use Node.js v${policy.minimumVersion} or greater by updating the version in your ${NVMRC} file. See https://nodejs.org/en/about/previous-releases", policy.deadline)
+    Map deprecation = getNodeJSVersionDeprecation(policy)
+    if (deprecation) {
+      String requirement = deprecation.major
+        ? "Node.js ${deprecation.major} v${deprecation.minimumVersion} or greater"
+        : "Node.js v${deprecation.minimumVersion} or greater"
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please use ${requirement} by updating your ${NVMRC} file. See https://nodejs.org/en/about/previous-releases", deprecation.deadline)
     }
   }
 
@@ -506,8 +510,22 @@ EOF
       return null
     }
 
+    def invalidMajorVersion = (nodeVersionConfig.major_versions ?: [:]).find { major, details ->
+      !(details instanceof Map) || !details.version || !details.date_deadline
+    }
+    if (invalidMajorVersion) {
+      steps.echo("[Warning] Node.js deprecation check skipped because every nodejs.node_version.major_versions entry must define version and date_deadline.")
+      return null
+    }
+
     return [
       minimumVersion: nodeVersionConfig.version.toString(),
+      majorVersions: (nodeVersionConfig.major_versions ?: [:]).collectEntries { major, details ->
+        [(major.toString()): [
+          minimumVersion: details.version.toString(),
+          deadline: LocalDate.parse(details.date_deadline.toString())
+        ]]
+      },
       deadline: LocalDate.parse(nodeVersionConfig.date_deadline.toString())
     ]
   }
@@ -516,20 +534,61 @@ EOF
    * Compares exact Node.js versions by numeric major, minor and patch components.
    * A prerelease of the minimum version does not satisfy the released minimum.
    */
-  static boolean isSupportedNodeVersion(String actualVersion, String minimumVersion) {
-    def actual = parseNodeVersion(actualVersion)
-    def minimum = parseNodeVersion(minimumVersion)
+  static boolean isSupportedNodeVersion(String actualVersion, String minimumVersion, Map majorVersions = [:]) {
+    Map policy = [
+      minimumVersion: minimumVersion,
+      majorVersions: majorVersions
+    ]
+    return findNodeVersionDeprecation(actualVersion, policy) == null
+  }
 
+  static Map findNodeVersionDeprecation(String actualVersion, Map policy) {
+    def actual = parseNodeVersion(actualVersion)
+    Map globalRule = [
+      minimumVersion: policy.minimumVersion.toString(),
+      deadline: policy.deadline
+    ]
+    def minimum = parseNodeVersion(globalRule.minimumVersion)
+
+    if (compareNodeVersions(actual, minimum) < 0) {
+      return globalRule
+    }
+
+    String actualMajor = actual.numbers[0].toString()
+    def configuredMajorRule = policy.majorVersions?.get(actualMajor)
+    if (!configuredMajorRule) {
+      return null
+    }
+
+    Map majorRule = configuredMajorRule instanceof Map
+      ? [
+          minimumVersion: (configuredMajorRule.minimumVersion ?: configuredMajorRule.version).toString(),
+          deadline: configuredMajorRule.deadline,
+          major: actualMajor
+        ]
+      : [minimumVersion: configuredMajorRule.toString(), deadline: policy.deadline, major: actualMajor]
+    def majorMinimum = parseNodeVersion(majorRule.minimumVersion)
+    if (majorMinimum.numbers[0] != actual.numbers[0]) {
+      throw new IllegalArgumentException("Major-specific minimum '${majorRule.minimumVersion}' does not match Node.js major ${actualMajor}.")
+    }
+
+    return compareNodeVersions(actual, majorMinimum) < 0 ? majorRule : null
+  }
+
+  private static int compareNodeVersions(Map actual, Map minimum) {
     for (int index = 0; index < 3; index++) {
       if (actual.numbers[index] != minimum.numbers[index]) {
-        return actual.numbers[index] > minimum.numbers[index]
+        return actual.numbers[index] > minimum.numbers[index] ? 1 : -1
       }
     }
 
     if (actual.prerelease && !minimum.prerelease) {
-      return false
+      return -1
     }
-    return true
+    if (!actual.prerelease && minimum.prerelease) {
+      return 1
+    }
+    return 0
   }
 
   private static Map parseNodeVersion(String rawVersion) {
