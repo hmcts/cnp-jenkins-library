@@ -1,8 +1,11 @@
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import hudson.model.Result
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.junit.Before
 import org.junit.Test
 
 import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.assertThatThrownBy
 
 class withBuildCacheTest extends BasePipelineTest {
 
@@ -13,6 +16,12 @@ class withBuildCacheTest extends BasePipelineTest {
   def restoredFiles = [] as Set
   def events = []
   def packageJson = [:]
+  def yarnLock = ''
+  def readFileCalls = []
+  def timeoutCalls = []
+  def installTimeouts = []
+  def activeTimeout
+  def timeoutInterruption
 
   @Before
   void setUp() {
@@ -20,9 +29,38 @@ class withBuildCacheTest extends BasePipelineTest {
     binding.setVariable('env', [WORKSPACE: '/workspace'])
     helper.registerAllowedMethod('fileExists', [String.class], { files.contains(it) })
     helper.registerAllowedMethod('readJSON', [Map.class], { packageJson })
+    helper.registerAllowedMethod('readFile', [String.class], {
+      readFileCalls << it
+      yarnLock
+    })
+    helper.registerAllowedMethod('timeout', [Map.class, Closure.class], { options, body ->
+      timeoutCalls << options
+      def previousTimeout = activeTimeout
+      activeTimeout = options
+      try {
+        body()
+      } finally {
+        activeTimeout = previousTimeout
+      }
+    })
+    // Yarn 2+ only exposes binaries of direct dependencies to `yarn <bin>`. With Yarn 4.18.1 a
+    // transitive binary fails with: Usage Error: Couldn't find a script named "puppeteer".
+    def yarnCommands = ['install', 'rebuild', 'node', 'exec', 'dlx']
     helper.registerAllowedMethod('sh', [Map.class], {
       shCalls << it
+      installTimeouts << activeTimeout
+      def directDependencies = (packageJson.dependencies ?: [:]) + (packageJson.devDependencies ?: [:])
+      def matcher = it.script.toString() =~ /(?m)^\s*yarn (\S+)/
+      if (matcher.find()) {
+        String command = matcher.group(1)
+        if (!(command in yarnCommands) && !directDependencies.containsKey(command)) {
+          throw new Exception("script returned exit code 1: Usage Error: Couldn't find a script named \"${command}\".")
+        }
+      }
       events << 'install'
+      if (activeTimeout && timeoutInterruption) {
+        throw timeoutInterruption
+      }
     })
     helper.registerAllowedMethod('arbitraryFileCache', [Map.class], { it })
     helper.registerAllowedMethod('cache', [Map.class, Closure.class], { args, body ->
@@ -60,6 +98,90 @@ class withBuildCacheTest extends BasePipelineTest {
       'nvm install',
       'node_modules/.bin/cypress install'
     )
+  }
+
+  @Test
+  void 'caches and installs the Puppeteer browser for transitive Puppeteer dependencies'() {
+    files.addAll(['yarn.lock', 'package.json', '.yarnrc.yml', '.nvmrc'])
+    packageJson = [devDependencies: [pa11y: '^8.0.0']]
+    yarnLock = '''
+"pa11y@npm:^8.0.0":
+  dependencies:
+    puppeteer: "npm:^22.3.0"
+
+"puppeteer@npm:^22.3.0":
+  version: 22.15.0
+'''
+    binding.setVariable('env', [WORKSPACE: '/workspace', HOME: '/home/jenkinsssh'])
+
+    script.call([buildCache: true]) { events << 'body' }
+
+    assertThat(events).containsExactly('restore', 'body', 'install')
+    assertThat(timeoutCalls).containsExactly([time: 15, unit: 'MINUTES'])
+    assertThat(installTimeouts).containsExactly([time: 15, unit: 'MINUTES'])
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly(
+      'yarn-node-modules',
+      'yarn-pnp',
+      'puppeteer-browser'
+    )
+    assertThat(cacheCalls[0].caches[2]).containsEntry('path', '/home/jenkinsssh/.cache/puppeteer')
+    assertThat(cacheCalls[0].caches[2]).containsEntry('cacheValidityDecidingFile', 'yarn.lock,package.json,.yarnrc.yml')
+    assertThat(shCalls).hasSize(1)
+    assertThat(shCalls[0]).containsEntry('label', 'Install Puppeteer browser')
+    assertThat(shCalls[0].script.toString()).contains(
+      "export NVM_DIR='/home/jenkinsssh/.nvm'",
+      '. /opt/nvm/nvm.sh',
+      'nvm install',
+      'corepack enable --install-directory "$HOME/.local/bin"',
+      'yarn rebuild puppeteer'
+    )
+  }
+
+  @Test
+  void 'propagates a timeout while installing the Puppeteer browser'() {
+    files.addAll(['yarn.lock', 'package.json', '.yarnrc.yml'])
+    packageJson = [devDependencies: [pa11y: '^8.0.0']]
+    yarnLock = '"puppeteer@npm:^22.3.0":\n  version: 22.15.0\n'
+    binding.setVariable('env', [WORKSPACE: '/workspace', HOME: '/home/jenkinsssh'])
+    timeoutInterruption = new FlowInterruptedException(Result.ABORTED, true)
+
+    assertThatThrownBy {
+      script.call([buildCache: true]) { events << 'body' }
+    }.isSameAs(timeoutInterruption)
+
+    assertThat(events).containsExactly('restore', 'body', 'install')
+    assertThat(installTimeouts).containsExactly([time: 15, unit: 'MINUTES'])
+    assertThat(shCalls).hasSize(1)
+    assertThat(activeTimeout).isNull()
+  }
+
+  @Test
+  void 'does not add a Puppeteer browser cache to Yarn 1 projects'() {
+    files << 'yarn.lock'
+    yarnLock = 'puppeteer@^22.3.0:\n  version "22.15.0"\n'
+    boolean called = false
+
+    script.call([buildCache: true]) { called = true }
+
+    assertThat(called).isTrue()
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly('yarn-node-modules', 'yarn-pnp')
+    assertThat(shCalls).isEmpty()
+  }
+
+  @Test
+  void 'does not add a Puppeteer browser cache to unrelated Yarn 2+ projects'() {
+    files.addAll(['yarn.lock', 'package.json', '.yarnrc.yml'])
+    packageJson = [devDependencies: [jest: '^30.0.0']]
+    yarnLock = '"jest@npm:^30.0.0":\n  version: 30.0.0\n'
+    boolean called = false
+
+    script.call([buildCache: true]) { called = true }
+
+    assertThat(called).isTrue()
+    assertThat(readFileCalls).containsExactly('yarn.lock')
+    assertThat(cacheCalls[0].caches*.cacheName).containsExactly('yarn-node-modules', 'yarn-pnp')
+    assertThat(shCalls).isEmpty()
+    assertThat(timeoutCalls).isEmpty()
   }
 
   @Test

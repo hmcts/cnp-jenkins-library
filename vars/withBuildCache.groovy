@@ -8,6 +8,7 @@ def call(config, Closure body) {
 
   def caches = []
   boolean cypressProject = false
+  boolean puppeteerProject = false
 
   if (fileExists('yarn.lock')) {
     caches.addAll([
@@ -32,6 +33,18 @@ def call(config, Closure body) {
         arbitraryFileCache(
           path: "${env.HOME}/.cache/Cypress".toString(),
           cacheName: 'cypress-binary',
+          cacheValidityDecidingFile: 'yarn.lock,package.json,.yarnrc.yml',
+          compressionMethod: 'TARGZ_BEST_SPEED'
+        )
+      )
+    }
+
+    puppeteerProject = usesPuppeteer()
+    if (puppeteerProject) {
+      caches.add(
+        arbitraryFileCache(
+          path: (env.PUPPETEER_CACHE_DIR ?: "${env.HOME}/.cache/puppeteer").toString(),
+          cacheName: 'puppeteer-browser',
           cacheValidityDecidingFile: 'yarn.lock,package.json,.yarnrc.yml',
           compressionMethod: 'TARGZ_BEST_SPEED'
         )
@@ -80,6 +93,33 @@ def call(config, Closure body) {
         )
       }
       body()
+      // Runs after body() so the browser exists before later stages use it and before the cache is saved.
+      if (puppeteerProject) {
+        String nvmSetup = fileExists('.nvmrc') ? '''
+          set +e
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh
+          nvm install
+          set -e
+        ''' : ''
+        // Yarn install state can be restored without Puppeteer's separately stored browser binary.
+        // Rebuilding reruns Puppeteer's postinstall, which also works when Puppeteer is a transitive
+        // dependency, unlike `yarn puppeteer`, and skips the download when the browser is present.
+        // The build body's timeout has ended; bound setup and browser downloads separately.
+        timeout(time: 15, unit: 'MINUTES') {
+          sh(
+            label: 'Install Puppeteer browser',
+            script: """
+              set -e
+              ${nvmSetup}
+              mkdir -p "\$HOME/.local/bin"
+              corepack enable --install-directory "\$HOME/.local/bin"
+              export PATH="\$HOME/.local/bin:\$PATH"
+              yarn rebuild puppeteer
+            """.stripIndent()
+          )
+        }
+      }
     }
     return
   }
@@ -96,4 +136,15 @@ private boolean usesCypress() {
   def packageJson = readJSON(file: 'package.json')
   return packageJson.dependencies?.containsKey('cypress') ||
     packageJson.devDependencies?.containsKey('cypress')
+}
+
+private boolean usesPuppeteer() {
+  // `yarn rebuild` is only available from Yarn 2, which projects configure with .yarnrc.yml.
+  if (!fileExists('yarn.lock') || !fileExists('.yarnrc.yml')) {
+    return false
+  }
+
+  return readFile('yarn.lock').readLines().any {
+    it.startsWith('"puppeteer@') || it.startsWith('puppeteer@')
+  }
 }
