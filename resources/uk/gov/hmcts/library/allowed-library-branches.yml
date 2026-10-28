@@ -37,3 +37,5 @@ branches:
     allowed: true
   - name: "35961"
     allowed: true
+  - name: "fixnodejsdeprecation"
+    allowed: true
