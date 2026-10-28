@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.13.5] - 2026-10-27
+
+## :wrench: Maintenance
+
+- chore: adding publishGithubAppRateLimits groovy file @tmckillop95 (#1581)
+
+## [2.13.4] - 2026-10-23
+
+## :bug: Bug Fixes
+
+- 35961: fix nvm bootstrap options @playfair0319-moj (#1596)
+
+## [2.13.3] - 2026-10-23
+
+## :wrench: Maintenance
+
+- chore:Allow cve-dashboard during pilot phase @endakelly (#1594)
+
+## [2.13.2] - 2026-10-21
+
+
+
+## [2.13.1] - 2026-10-20
+
+
+
 ## [2.13.0] - 2026-10-15
 
 ## :rocket: Features

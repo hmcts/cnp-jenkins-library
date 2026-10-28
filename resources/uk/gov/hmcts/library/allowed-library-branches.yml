@@ -1,8 +1,6 @@
 branches:
   - name: master
     allowed: true
-  - name: fix/library-branch-validation-rate-limit
-    allowed: true
   - name: DTSPO-35113/master
     allowed: true
   - name: main
@@ -13,45 +11,31 @@ branches:
     allowed: true
   - name: "2.10.0"
     allowed: true
-  - name: DTSPO-30107-jenkins-agents
-    allowed: true
-  - name: DTSPO-00001
-    allowed: true
   - name: library-branch-controls
     allowed: true
   - name: cve-dashboard
     allowed: true
   - name: GatlingSmartAlerts
     allowed: true
-  - name: feat/add-python-support
-    allowed: true
-  - name: uv-audit-pretty-print
-    allowed: true
   - name: poll_for_helm
-    allowed: true
-  - name: archive-complete-build-results
-    allowed: true
-  - name: feature/optional-smoke-test-secrets
-    allowed: true
-  - name: feat/DTSPO-33498/fix-cause-serialization
     allowed: true
   - name: performance-stages-updatev5
     allowed: true
   - name: gatling-configuration
     allowed: true
-  - name: fix-owasp
-    allowed: true
   - name: Enable-helm-on-staging
     allowed: true
   - name: feature/remove-state
     allowed: true
-  - name: acr-migration-check-graceful-failure
-    allowed: true
   - name: feat/stage-cost-metrics
-    allowed: true
-  - name: DTSPO-33915-kubeconform-jenkins
     allowed: true
   - name: highleveldatasetupstaging
     allowed: true
   - name: DTSPO-35800/gradle-stashing-exclude
+    allowed: true
+  - name: DTSPO-34796/recover-from-agent-disconnect
+    allowed: true
+  - name: "35961"
+    allowed: true
+  - name: "fixnodejsdeprecation"
     allowed: true
