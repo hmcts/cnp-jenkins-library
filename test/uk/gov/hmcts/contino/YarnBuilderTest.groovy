@@ -1,6 +1,9 @@
 package uk.gov.hmcts.contino
 
+import java.time.LocalDate
 import spock.lang.Specification
+import spock.lang.Unroll
+import uk.gov.hmcts.pipeline.DeprecationConfig
 
 class YarnBuilderTest extends Specification {
   static final String YARN_CMD = 'yarn'
@@ -46,6 +49,11 @@ class YarnBuilderTest extends Specification {
     steps.usernamePassword(_ as Map) >> [:]
 
     builder = new YarnBuilder(steps)
+    DeprecationConfig.deprecationConfigInternal = null
+  }
+
+  def cleanup() {
+    DeprecationConfig.deprecationConfigInternal = null
   }
 
   def "build calls 'yarn install' and 'yarn lint'"() {
@@ -316,4 +324,112 @@ def "securityCheck calls 'yarn audit'"() {
       then:
         1 * steps.echo('Running Yarn Tech stack maintenance')
     }
+
+  @Unroll
+  def "checks Node.js version #actual against global and major-specific minimums"() {
+    expect:
+      YarnBuilder.isSupportedNodeVersion(actual, '22.23.4', ['24': '24.3.1']) == supported
+
+    where:
+      actual          || supported
+      'v22.23.4\n'    || true
+      '22.24.0'       || true
+      '23.11.1'       || true
+      'v24.3.1\n'     || true
+      '24.3.2'        || true
+      '24.4.0'        || true
+      '25.9.0'        || true
+      '26.12.1'       || true
+      '22.23.3'       || false
+      '20.20.0'       || false
+      '24.3.0'        || false
+      '24.2.10'       || false
+      '22.23.4-rc.1'  || false
+  }
+
+  def "reads Node.js minimum version and deadline from deprecation config"() {
+    given:
+      DeprecationConfig.deprecationConfigInternal = [
+        nodejs: [node_version: [
+          version: '22.23.4',
+          major_versions: ['24': [version: '24.3.1', date_deadline: '2027-03-15']],
+          date_deadline: '2027-01-31'
+        ]]
+      ]
+
+    when:
+      def policy = builder.getNodeJSDeprecationPolicy()
+
+    then:
+      policy.minimumVersion == '22.23.4'
+      policy.majorVersions == ['24': [minimumVersion: '24.3.1', deadline: LocalDate.of(2027, 3, 15)]]
+      policy.deadline == LocalDate.of(2027, 1, 31)
+  }
+
+  def "selects the deadline belonging to the violated Node.js rule"() {
+    given:
+      def policy = [
+        minimumVersion: '22.23.4',
+        deadline: LocalDate.of(2026, 11, 9),
+        majorVersions: ['24': [minimumVersion: '24.3.1', deadline: LocalDate.of(2027, 1, 15)]]
+      ]
+
+    expect:
+      YarnBuilder.findNodeVersionDeprecation('22.23.3', policy).deadline == LocalDate.of(2026, 11, 9)
+      YarnBuilder.findNodeVersionDeprecation('24.3.0', policy).deadline == LocalDate.of(2027, 1, 15)
+      YarnBuilder.findNodeVersionDeprecation('23.1.0', policy) == null
+      YarnBuilder.findNodeVersionDeprecation('24.3.1', policy) == null
+  }
+
+  def "skips Node.js deprecation enforcement when config entry is absent"() {
+    given:
+      DeprecationConfig.deprecationConfigInternal = [:]
+
+    when:
+      def policy = builder.getNodeJSDeprecationPolicy()
+
+    then:
+      policy == null
+      1 * steps.echo({ it.contains('[Warning]') && it.contains('nodejs.node_version') })
+  }
+
+  def "skips Node.js deprecation enforcement when a major rule has no deadline"() {
+    given:
+      DeprecationConfig.deprecationConfigInternal = [
+        nodejs: [node_version: [
+          version: '22.23.4',
+          major_versions: ['24': [version: '24.3.1']],
+          date_deadline: '2026-11-09'
+        ]]
+      ]
+
+    when:
+      def policy = builder.getNodeJSDeprecationPolicy()
+
+    then:
+      policy == null
+      1 * steps.echo({ it.contains('[Warning]') && it.contains('major_versions') })
+  }
+
+  @Unroll
+  def "rejects non-exact Node.js version #version"() {
+    when:
+      YarnBuilder.isSupportedNodeVersion(version, '22.23.4')
+
+    then:
+      def exception = thrown(IllegalArgumentException)
+      exception.message.contains('not an exact Node.js version')
+
+    where:
+      version << ['', '24', '24.22', 'node', 'lts/*', 'not-a-version']
+  }
+
+  def "rejects a major-specific minimum configured for the wrong major"() {
+    when:
+      YarnBuilder.isSupportedNodeVersion('24.3.1', '22.23.4', ['24': '25.1.0'])
+
+    then:
+      def exception = thrown(IllegalArgumentException)
+      exception.message.contains("does not match Node.js major 24")
+  }
   }
