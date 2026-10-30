@@ -15,6 +15,7 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
+    assert helper.libLoader.libRecords.containsKey('Infrastructure@master')
     def stubBuilder = new StubFor(YarnBuilder)
     stubBuilder.demand.with {
       setupToolVersion(0..1) {}

@@ -181,5 +181,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return ''
     })
     binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
+    helper.libLoader.loadLibrary('Infrastructure')
   }
 }
