@@ -287,6 +287,19 @@ class AcrTest extends Specification {
       assert hasTag == false
   }
 
+  def "purgeOldTags() should retire commit-scoped build tags with the build stage retention"() {
+    when:
+    dockerImage.getImageTag() >> 'staging'
+    dockerImage.getRepositoryName() >> IMAGE_REPO
+    acr.purgeOldTags(DockerImage.DeploymentStage.BUILD, dockerImage)
+
+    then:
+    1 * steps.sh({it.containsKey('script') &&
+      it.get('script').contains("acr purge --filter ${IMAGE_REPO}:^build-.* --ago 1d --keep 5 --untagged --concurrency 5") &&
+      it.containsKey('returnStdout') &&
+      it.get('returnStdout').equals(true)})
+  }
+
   def "purgeOldTags() should call the purge command with the provided arguments"() {
     when:
     dockerImage.getImageTag() >> IMAGE_TAG

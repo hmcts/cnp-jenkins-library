@@ -47,10 +47,14 @@ def call(params) {
           acr.purgeOldTags(deploymentStage, dockerImage)
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
             acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
+            // The commit-scoped build tag has now been promoted everywhere it needs to be.
+            // Nothing else removes build-* tags, so retire the old ones here.
+            acr.purgeOldTags(DockerImage.DeploymentStage.BUILD, dockerImage)
             if (config.dockerTestBuild && projectBranch.isMaster() && fileExists('build.gradle')) {
               def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
               acr.retagForStage(deploymentStage, dockerImageTest)
               acr.purgeOldTags(deploymentStage, dockerImageTest)
+              acr.purgeOldTags(DockerImage.DeploymentStage.BUILD, dockerImageTest)
             }
           }
         }

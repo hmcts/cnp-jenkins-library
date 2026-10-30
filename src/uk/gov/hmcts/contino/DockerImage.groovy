@@ -9,6 +9,7 @@ class DockerImage {
   // environment the image has been promoted to
   enum DeploymentStage {
     PR('pr'),
+    BUILD('build', "1d", 5),
     STAGING('staging'),
     PREVIEW('preview'),
     PROD('prod', "5d", 5),
@@ -161,7 +162,7 @@ class DockerImage {
   def getBaseShortName() {
     // Master builds must not overwrite another build's promotion source.
     if (imageTag == 'staging') {
-      return shortName('build')
+      return shortName(DeploymentStage.BUILD.label)
     }
     return repositoryName().concat(':')
       .concat(imageTag)

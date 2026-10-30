@@ -122,6 +122,17 @@ class DockerImageTest extends Specification {
       assertThat(serviceName).isEqualTo('custard-back-end-pr-47')
   }
 
+  def "build stage tags are commit-scoped and purged more slowly than staging tags"() {
+    given:
+      def image = new DockerImage(PRODUCT, COMPONENT, acr, 'staging', COMMIT, LAST_COMMIT_TIMESTAMP)
+
+    expect:
+      image.getBaseShortName() == image.getShortName(DockerImage.DeploymentStage.BUILD)
+      image.getTag(DockerImage.DeploymentStage.BUILD) == 'build-379c53a-20210601133228'
+      DockerImage.DeploymentStage.BUILD.purgeAgo == '1d'
+      DockerImage.DeploymentStage.BUILD.purgeKeep == '5'
+  }
+
   def "shell timestamp whitespace is removed from build and promotion tags"() {
     given:
       def image = new DockerImage(PRODUCT, COMPONENT, acr, 'staging', COMMIT, "${LAST_COMMIT_TIMESTAMP}\n")
