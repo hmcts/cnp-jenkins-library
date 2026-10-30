@@ -16,9 +16,9 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
 
   @Before
   void registerArchiveInterruptionSteps() {
-    helper.registerAllowedMethod("retry", [LinkedHashMap, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("node", [String, Closure], { _, body -> body.call() })
     helper.registerAllowedMethod("timeout", [Map, Closure], { _, body -> body.call() })
+    helper.registerAllowedMethod("sleep", [Map], {})
   }
 
   @Test
@@ -43,28 +43,43 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
     assertThat(helper.callStack*.methodName).doesNotContain('queueBuildArchive')
   }
 
+  static class RemovedNodeTimeoutCause extends jenkins.model.CauseOfInterruption {
+    String getShortDescription() { 'agent removed' }
+  }
+
   @Test
-  void queuesTheArchiveOnlyAfterAgentRetriesAreExhausted() {
+  void reportsAgentLossInterruptionAsFailure() {
+    def interruption = new FlowInterruptedException(Result.ABORTED, false, new RemovedNodeTimeoutCause())
+    helper.registerAllowedMethod("build", [Map], {})
+    helper.registerAllowedMethod("sh", [Map], { options ->
+      if (options.script.startsWith('grep -F "JavaLanguageVersion')) {
+        throw interruption
+      }
+      return options.returnStatus ? 1 : ''
+    })
+
+    def failure = null
+    try {
+      runScript("testResources/$jenkinsFile")
+    } catch (Exception expected) {
+      failure = expected
+    }
+
+    assertThat(failure).isNotNull().isNotInstanceOf(FlowInterruptedException)
+    assertThat(binding.getVariable('currentBuild').result).isEqualTo('FAILURE')
+    assertThat(helper.callStack*.methodName).contains('queueBuildArchive')
+  }
+
+  @Test
+  void queuesTheArchiveAfterASingleFailedExecution() {
     def failure = new RuntimeException('agent lost')
     def attempts = 0
     def queueCount = 0
-    def retryComplete = false
+    def failureObserved = false
     helper.registerAllowedMethod("archiveBuildOutputs", [], {})
     helper.registerAllowedMethod("build", [Map], {
-      assertThat(retryComplete).isTrue()
+      assertThat(failureObserved).isTrue()
       queueCount++
-    })
-    helper.registerAllowedMethod("retry", [LinkedHashMap, Closure], { _, body ->
-      try {
-        attempts++
-        body.call()
-      } catch (RuntimeException firstFailure) {
-        assertThat(queueCount).isZero()
-        attempts++
-        body.call()
-      } finally {
-        retryComplete = true
-      }
     })
     binding.getVariable('env').BUILD_URL = 'https://build.example/job/service/job/PR-1/4/'
     binding.getVariable('env').JOB_NAME = 'service/PR-1'
@@ -72,6 +87,8 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
 
     helper.registerAllowedMethod("sh", [Map], { options ->
       if (options.script.startsWith('grep -F "JavaLanguageVersion')) {
+        attempts++
+        failureObserved = true
         throw failure
       }
       return options.returnStatus ? 1 : ''
@@ -83,7 +100,7 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
       assertThat(expected).isSameAs(failure)
     }
 
-    assertThat(attempts).isEqualTo(2)
+    assertThat(attempts).isEqualTo(1)
     assertThat(queueCount).isEqualTo(1)
     assertThat(binding.getVariable('currentBuild').result).isEqualTo('FAILURE')
   }

@@ -12,6 +12,8 @@ repositories {
 
 test {
   systemProperty 'groovy.grape.enable', 'false'
+  // Each pipeline test recompiles the library; the default 512m heap thrashes and evicts cached library classes.
+  maxHeapSize = '1g'
 
   reports {
     html.required = true

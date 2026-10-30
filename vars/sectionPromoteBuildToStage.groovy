@@ -34,28 +34,42 @@ def call(params) {
     def product = params.product
     def component = params.component
     DockerImage.DeploymentStage deploymentStage = params.stage
+    def buildRecovery = params.buildRecovery
+    String promotionStage = "${deploymentStage.label} build promotion"
+    String promotionStep = "${deploymentStage.label}:promotion"
 
-    stageWithEnvironmentAgent("${deploymentStage.label} build promotion", product, environment) {
-      pcr.callAround("${deploymentStage.label}:promotion") {
-        withAcrClient(subscription) {
-          def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
-          def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-          def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
-          def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+    if (buildRecovery?.shouldSkip(promotionStep)) {
+      buildRecovery.recordSkip(promotionStep)
+      stage(promotionStage) {
+        when(false) {}
+      }
+      return
+    }
 
-          acr.retagForStage(deploymentStage, dockerImage)
-          acr.purgeOldTags(deploymentStage, dockerImage)
-          if (DockerImage.DeploymentStage.PROD == deploymentStage) {
-            acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
-            if (config.dockerTestBuild && projectBranch.isMaster() && fileExists('build.gradle')) {
-              def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-              acr.retagForStage(deploymentStage, dockerImageTest)
-              acr.purgeOldTags(deploymentStage, dockerImageTest)
+    // Agent switching and workspace stash-back run outside callAround, so record the whole stage.
+    pcr.recordStep(promotionStage) {
+      stageWithEnvironmentAgent(promotionStage, product, environment) {
+        pcr.callAround(promotionStep) {
+          withAcrClient(subscription) {
+            def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
+            def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+            def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
+            def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+
+            acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
+            if (DockerImage.DeploymentStage.PROD == deploymentStage) {
+              acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
+              if (config.dockerTestBuild && projectBranch.isMaster() && fileExists('build.gradle')) {
+                def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+                acr.retagForStage(deploymentStage, dockerImageTest)
+                acr.purgeOldTags(deploymentStage, dockerImageTest)
+              }
             }
           }
-        }
-        if (subscription != 'sandbox' && subscription != 'sbox') {
-          reconcileFluxImageRepository product: product, component: component, environment: 'ptl'
+          if (subscription != 'sandbox' && subscription != 'sbox') {
+            reconcileFluxImageRepository product: product, component: component, environment: 'ptl'
+          }
         }
       }
     }

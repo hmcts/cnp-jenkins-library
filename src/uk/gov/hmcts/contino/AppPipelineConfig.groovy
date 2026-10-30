@@ -39,6 +39,8 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
   boolean buildCache = true
+  boolean buildRecovery = true
+  int agentDisconnectWaitMinutes = 2
   boolean onlyDeploy = false
   boolean skipHighLevelDataSetupProd = false
   boolean alwaysTerraformPlanOnPR = false

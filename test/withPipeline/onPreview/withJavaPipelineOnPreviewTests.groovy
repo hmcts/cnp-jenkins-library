@@ -1,8 +1,6 @@
 package withPipeline.onPreview
 
-import groovy.mock.interceptor.StubFor
 import org.junit.Test
-import uk.gov.hmcts.contino.GradleBuilder
 import withPipeline.BaseCnpPipelineTest
 
 import static com.lesfurets.jenkins.unit.MethodCall.callArgsToString
@@ -19,22 +17,72 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
-    def stubBuilder = javaBuilderStub()
-
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     binding.getVariable('env').putAt('CHANGE_TITLE', 'Some change')
 
-    stubBuilder.use {
+    runScript("testResources/$jenkinsFile")
+
+    assertThat(stageIndex('Checkout')).isNotNegative()
+    assertThat(stageIndex('Build')).isGreaterThan(stageIndex('Checkout'))
+    assertThat(helper.callStack.findAll { it.methodName == 'agent' }).isEmpty()
+  }
+
+  @Test
+  void agentFailureIsPropagatedWithoutRetryingThePipeline() {
+    int nodeCalls = 0
+    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
+      nodeCalls++
+      throw new IOException('agent disconnected')
+    })
+    Exception failure
+
+    try {
       runScript("testResources/$jenkinsFile")
+    } catch (Exception err) {
+      failure = err
     }
 
-    stubBuilder.expect.verify()
+    assertThat(failure).isNotNull()
+    assertThat(nodeCalls).isEqualTo(1)
+    assertThat(helper.callStack.findAll { it.methodName == 'agent' }).isEmpty()
+  }
+
+  @Test
+  void agentDisconnectWaitsTwoMinutesByDefaultBeforeFailing() {
+    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
+      throw new java.nio.channels.ClosedChannelException()
+    })
+    helper.registerAllowedMethod('sleep', [Map.class], {})
+    Exception failure
+
+    try {
+      runScript("testResources/$jenkinsFile")
+    } catch (Exception err) {
+      failure = err
+    }
+
+    assertThat(failure).isNotNull()
+    assertThat(helper.callStack.findAll { it.methodName == 'sleep' }).hasSize(8)
+  }
+
+  @Test
+  void agentDisconnectWaitCanBeOverridden() {
+    binding.getVariable('env').putAt('AGENT_DISCONNECT_WAIT_MINUTES', '0')
+    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
+      throw new java.nio.channels.ClosedChannelException()
+    })
+    helper.registerAllowedMethod('sleep', [Map.class], {})
+
+    try {
+      runScript("testResources/$jenkinsFile")
+    } catch (Exception ignored) {
+    }
+
+    assertThat(helper.callStack.findAll { it.methodName == 'sleep' }).isEmpty()
   }
 
   @Test
   void smokeTestUsesTeamSecretsByDefault() {
-    enablePipelineExecution()
-
     runScript("testResources/$pipelineWithSecrets")
 
     def secretIndexes = teamSecretIndexes()
@@ -52,8 +100,6 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   @Test
   void smokeTestCanRunBeforeTeamSecretsAreLoaded() {
     binding.getVariable('env').putAt('DISABLE_SMOKE_TEST_SECRETS', 'true')
-    enablePipelineExecution()
-
     runScript("testResources/$pipelineWithSecrets")
 
     def secretIndexes = teamSecretIndexes()
@@ -66,28 +112,6 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
     assertThat(smokeIndex).isLessThan(secretIndexes[1])
     assertThat(secretIndexes[1]).isLessThan(functionalIndex)
     assertThat(smokeIndex).isLessThan(functionalIndex)
-  }
-
-  private StubFor javaBuilderStub() {
-    def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.with {
-      setupToolVersion(0) {}
-      build(0) {}
-      test(0) {}
-      securityCheck(0) {}
-      techStackMaintenance(0) {}
-      sonarScan(0) {}
-      smokeTest(0) {}
-      e2eTest(0) {}
-      functionalTest(0) {}
-    }
-    stubBuilder
-  }
-
-  private void enablePipelineExecution() {
-    helper.registerAllowedMethod('retry', [LinkedHashMap.class, Closure.class], { Map ignored, Closure body ->
-      body.call()
-    })
   }
 
   private List<Integer> teamSecretIndexes() {

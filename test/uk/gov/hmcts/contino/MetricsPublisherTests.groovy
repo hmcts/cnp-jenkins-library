@@ -31,7 +31,7 @@ class MetricsPublisherTests extends Specification {
     metricsPublisher.publish()
 
     then:
-    notThrown()
+    noExceptionThrown()
   }
 
   def "collects build metrics"() {
@@ -46,6 +46,46 @@ class MetricsPublisherTests extends Specification {
     assertThat(metricsMap).contains(entry("current_build_scheduled_time", "2017-12-18T16:15:48Z"))
     assertThat(metricsMap).contains(entry("shared_library_name", "Infrastructure"))
     assertThat(metricsMap).contains(entry("shared_library_version", "feature/test-lib-branch"))
+    assertThat(metricsMap).contains(entry("node_status", "offline"))
+  }
+
+  def "records whether the build agent is online and connected"() {
+    given:
+    stubSteps.env.NODE_NAME = 'build-agent'
+    def metricsPublisher = Spy(MetricsPublisher, constructorArgs: [stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver])
+    metricsPublisher.agentComputer('build-agent') >> (agentExists ? [
+      isOnline: { online },
+      getChannel: { connected ? new Object() : null }
+    ] : null)
+
+    when:
+    def metricsMap = metricsPublisher.collectMetrics('test')
+
+    then:
+    metricsMap.node_name == 'build-agent'
+    metricsMap.node_status == expectedStatus
+
+    where:
+    agentExists | online | connected | expectedStatus
+    true        | true   | true      | 'online'
+    true        | false  | true      | 'offline'
+    true        | true   | false     | 'offline'
+    true        | false  | false     | 'offline'
+    false       | false  | false     | 'offline'
+  }
+
+  def "agent lookup failure does not prevent collecting metrics"() {
+    given:
+    stubSteps.env.NODE_NAME = 'build-agent'
+    def metricsPublisher = Spy(MetricsPublisher, constructorArgs: [stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver])
+    metricsPublisher.agentComputer('build-agent') >> { throw new IllegalStateException('Jenkins is unavailable') }
+
+    when:
+    def metricsMap = metricsPublisher.collectMetrics('test')
+
+    then:
+    metricsMap.node_status == 'offline'
+    metricsMap.product == 'testProduct'
   }
 
   def "publishes to database returned by resolver"() {
@@ -59,4 +99,95 @@ class MetricsPublisherTests extends Specification {
     then:
     1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap)
   }
+
+  def 'publishes explicit outcomes and confirmed agent failure reasons'() {
+    given:
+      stubSteps.env.NODE_NAME = 'build-agent'
+      stubSteps.currentBuild.result = 'FAILURE'
+      def publisher = Spy(MetricsPublisher, constructorArgs: [stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver])
+      publisher.agentComputer('build-agent') >> {
+        if (lookupFails) {
+          throw new IllegalStateException('lookup denied')
+        }
+        return removed ? null : [isOnline: { online }, getChannel: { connected ? new Object() : null }]
+      }
+      Map document
+
+    when:
+      publisher.publishStep('test', result, 'execution-1', fails ?
+        (communicationError ? new hudson.AbortException('script returned exit code -2') : new IllegalStateException('step failed')) : null)
+
+    then:
+      1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap) >> { Map options -> document = options.document }
+      document.step_result == result
+      document.step_execution_id == 'execution-1'
+      document.event_type == 'step'
+      !document.containsKey('attempt_id')
+      document.current_build_result == 'FAILURE'
+      document.failure_reason == expectedReason
+
+    where:
+      result    | fails | online | connected | removed | lookupFails | communicationError | expectedReason
+      'SUCCESS' | false | true   | true      | false   | false       | false              | null
+      'FAILURE' | true  | true   | true      | false   | false       | false              | 'STEP_FAILURE'
+      'FAILURE' | true  | false  | false     | false   | false       | false              | 'STEP_FAILURE'
+      'FAILURE' | true  | false  | false     | false   | false       | true               | 'AGENT_DISCONNECTED'
+      'FAILURE' | true  | true   | false     | false   | false       | true               | 'AGENT_DISCONNECTED'
+      'FAILURE' | true  | false  | false     | true    | false       | true               | 'AGENT_DISCONNECTED'
+      'FAILURE' | true  | false  | false     | false   | true        | true               | 'STEP_FAILURE'
+      'FAILURE' | true  | true   | true      | false   | false       | true               | 'STEP_FAILURE'
+  }
+
+  static class RemovedNodeTimeoutCause extends jenkins.model.CauseOfInterruption {
+    String getShortDescription() { 'agent removed' }
+  }
+
+  def 'recognises Jenkins agent removal and offline failures'() {
+    expect:
+      MetricsPublisher.isAgentFailure(failure) == expected
+
+    where:
+      failure                                                                                                                  | expected
+      new org.jenkinsci.plugins.workflow.steps.FlowInterruptedException(hudson.model.Result.ABORTED, false, new RemovedNodeTimeoutCause()) | true
+      new IOException('Unable to create live FilePath for agent-1; agent-1 was marked offline')                                | true
+      new IllegalStateException('cleanup failed').with { addSuppressed(new java.nio.channels.ClosedChannelException()); it } | true
+      new IllegalStateException('tests failed')                                                                                | false
+  }
+
+  def 'recorded agent loss classifies the pipeline even when cleanup replaces the error'() {
+    given:
+      stubSteps.env.NODE_NAME = 'build-agent'
+      def publisher = Spy(MetricsPublisher, constructorArgs: [stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver])
+      publisher.agentComputer('build-agent') >> null
+      def cleanupFailure = new IllegalStateException('deleteDir failed')
+
+    expect:
+      publisher.pipelineFailureReason(cleanupFailure, 'STEP_FAILURE') == 'STEP_FAILURE'
+
+    when:
+      publisher.publishStep('Staging:promotion', 'FAILURE', 'execution-1',
+        new org.jenkinsci.plugins.workflow.steps.FlowInterruptedException(hudson.model.Result.ABORTED, false, new RemovedNodeTimeoutCause()))
+
+    then:
+      publisher.pipelineFailureReason(cleanupFailure, 'STEP_FAILURE') == 'AGENT_DISCONNECTED'
+      publisher.pipelineFailureReason(cleanupFailure, 'INTERRUPTED') == 'AGENT_DISCONNECTED'
+  }
+
+  def 'pipeline records include the last successful stage'() {
+    given:
+      List<Map> documents = []
+      def publisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver)
+
+    when:
+      publisher.publishStep('build', 'SUCCESS', 'build-1')
+      publisher.publishStep('static checks', 'SUCCESS', 'static-1')
+      publisher.publishStep('preview:promotion', 'FAILURE', 'promotion-1', new IllegalStateException('failed'))
+      publisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE'])
+
+    then:
+      4 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap) >> { Map options -> documents << options.document }
+      documents.last().last_successful_stage == 'static checks'
+      !documents.find { it.current_step_name == 'build' }.containsKey('last_successful_stage')
+  }
+
 }

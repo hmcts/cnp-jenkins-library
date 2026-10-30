@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.GradleAPI
+import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
@@ -14,6 +15,7 @@ def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
   def builder = params.builder
+  def buildRecovery = params.buildRecovery
 
   def subscription = params.subscription
   def environment = params.environment
@@ -25,6 +27,7 @@ def call(params) {
   def imageRegistry
   def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
+  boolean imageExists = false
   boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
@@ -38,6 +41,7 @@ def call(params) {
       acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
       dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
       boolean hasTag = acr.hasTag(dockerImage)
+      imageExists = hasTag
       boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
       noSkipImgBuild = envOverrideForSkip || !hasTag
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
@@ -47,9 +51,18 @@ def call(params) {
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
 
-  stage('ACR Migration Check') {
-    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
-  }
+  parallel(
+    'ACR Migration Check': {
+      stage('ACR Migration Check') {
+        warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+      }
+    },
+    'Check previous build (Cosmos DB)': {
+      stage('Check previous build (Cosmos DB)') {
+        buildRecovery?.checkPreviousBuild()
+      }
+    }
+  )
 
   onPathToLive {
     withEnvironmentAgent(environment, product) {
@@ -74,13 +87,22 @@ def call(params) {
         }
       }
 
+      buildRecovery?.prepare(builder instanceof GradleBuilder, imageExists || !dockerFileExists)
+
       def branches = [failFast: false]
       branches["Unit tests and Sonar scan"] = {
-        pcr.callAround('test') {
-          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-            withAcrClient(subscription){
-              acr.login()
-              builder.test()
+        if (buildRecovery?.shouldSkip('test')) {
+          buildRecovery.recordSkip('test')
+        } else {
+          pcr.callAround('test') {
+            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+              withAcrClient(subscription){
+                acr.login()
+                builder.test()
+              }
+              if (builder instanceof GradleBuilder) {
+                buildRecovery?.archiveTestArtifacts()
+              }
             }
           }
         }
@@ -101,8 +123,12 @@ def call(params) {
         }
       }
       branches["Security Checks"] = {
-        pcr.callAround('securitychecks') {
-          builder.securityCheck()
+        if (buildRecovery?.shouldSkip('securitychecks')) {
+          buildRecovery.recordSkip('securitychecks')
+        } else {
+          pcr.callAround('securitychecks') {
+            builder.securityCheck()
+          }
         }
       }
       branches["Tech Stack"] = {
@@ -113,6 +139,10 @@ def call(params) {
 
       if (dockerFileExists) {
         branches["Docker Build"] = {
+          if (buildRecovery?.shouldSkip('dockerbuild')) {
+            buildRecovery.recordSkip('dockerbuild')
+            return
+          }
           withAcrClient(subscription) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
 
@@ -227,8 +257,14 @@ def call(params) {
     }
 
       stageWithAgent("Static checks / Container build", product) {
-        when(noSkipImgBuild) {
-          parallel branches
+        boolean staticChecksCompleted = buildRecovery?.shouldSkip('static checks') ?: false
+        if (staticChecksCompleted) {
+          buildRecovery.recordSkip('static checks')
+        }
+        when(noSkipImgBuild && !staticChecksCompleted) {
+          pcr.recordStep('static checks') {
+            parallel branches
+          }
 
           // files related to dependency checking that are not needed for the rest of the pipeline
           // they can't be safely deleted in the parallel branches as docker build context will collect files
@@ -264,19 +300,33 @@ def call(params) {
     }
 
     if (noSkipImgBuild && deploymentEnabled) {
-      stageWithAgent("Promote Docker Image", product) {
-        if (dockerFileExists) {
-          def deploymentStage = DockerImage.DeploymentStage.STAGING
-          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-          if (isOnPreview) {
-            deploymentStage = DockerImage.DeploymentStage.PREVIEW
-          }
-          onPR {
-            deploymentStage = DockerImage.DeploymentStage.PR
-          }
-          withAcrClient(subscription) {
-            acr.retagForStage(deploymentStage, dockerImage)
-            acr.purgeOldTags(deploymentStage, dockerImage)
+      def deploymentStage = DockerImage.DeploymentStage.STAGING
+      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+        deploymentStage = DockerImage.DeploymentStage.PREVIEW
+      }
+      onPR {
+        deploymentStage = DockerImage.DeploymentStage.PR
+      }
+      // Distinct from sectionPromoteBuildToStage, which also promotes to PREVIEW on preview branches.
+      String promotionLabel = "${deploymentStage.label}-image"
+      String promotionStep = "${promotionLabel}:promotion"
+
+      if (dockerFileExists && buildRecovery?.shouldSkip(promotionStep)) {
+        buildRecovery.recordSkip(promotionStep)
+        stage("Promote Docker Image") {
+          when(false) {}
+        }
+      } else {
+        pcr.recordStep("${promotionLabel} build promotion") {
+          stageWithAgent("Promote Docker Image", product) {
+            if (dockerFileExists) {
+              pcr.callAround(promotionStep) {
+                withAcrClient(subscription) {
+                  acr.retagForStage(deploymentStage, dockerImage)
+                  acr.purgeOldTags(deploymentStage, dockerImage)
+                }
+              }
+            }
           }
         }
       }

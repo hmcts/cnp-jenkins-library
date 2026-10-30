@@ -190,6 +190,47 @@ withPipeline(type, product, component) {
 }
 ```
 
+#### Recovery After Agent Failures
+
+Recovery is enabled by default for the app pipeline. No Jenkinsfile changes are
+required to reuse successful work from the immediately previous failed build.
+
+Recovery requires the same job, branch, repository, Git commit and shared-library
+name/version, plus explicit step records identifying an agent-related failure.
+Application failures, missing or ambiguous records, and Cosmos query errors run
+the normal pipeline. Existing metrics without explicit outcomes are not reused.
+The first build using this library version records the data and artifacts needed
+by later builds.
+
+The visible `Check previous build (Cosmos DB)` stage runs in parallel with
+`ACR Migration Check`, after checkout and before compilation. It reports the
+previous build checked, Cosmos record count, recorded step outcomes and eligible
+steps, or why no query was made. Unit-test artifacts are restored after
+compilation in the test workspace; the Cosmos query is not repeated.
+
+Successful unit tests, security checks and image promotions can be skipped. A
+promotion is skipped only if both its promotion step and its whole stage
+(including agent switching) succeeded. The Docker build is skipped only if a
+promotion succeeded and the image for this commit still exists in ACR. Gradle unit-test
+reuse also requires archived class, resource, test and JaCoCo outputs, restored
+using the Jenkins Copy Artifact plugin. Restored JUnit reports are published in
+the new build. Missing artifacts, test reports or plugin support rerun
+unit tests. Non-Gradle unit tests always run. Sonar, checkout, setup, compilation
+and deployment stages always execute normally.
+
+The Cosmos reader reuses the Azure Cosmos DB plugin's cached client and the
+existing `cosmos-connection` credential, respecting `PIPELINE_METRICS_DATABASE`.
+That credential needs query permission in addition to its existing write access.
+Plugin/API incompatibility disables recovery for that build. The SDK client stays
+on the controller and is never serialized into pipeline state.
+
+Set the environment variable `DISABLE_BUILD_RECOVERY=true` to force a full build.
+The app pipeline does not automatically retry after agent loss. Recovery applies
+only to a newly triggered build; older retry-attempt metrics are not reused.
+Reused steps emit
+`SKIPPED` metrics pointing to the source build; they are not treated as fresh
+successes in a subsequent recovery.
+
 #### Branch and Environment Mapping
 The opinionated pipeline uses the following branch mapping to deploy applications to different environments.
 
