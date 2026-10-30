@@ -1,3 +1,6 @@
+exemptJobs:
+  - Pipeline_Test_Sandbox/
+
 branches:
   - name: master
     allowed: true
