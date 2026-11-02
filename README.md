@@ -196,9 +196,10 @@ Recovery is enabled by default for the app pipeline. No Jenkinsfile changes are
 required to reuse successful work from the immediately previous failed build.
 
 Recovery requires the same job, branch, repository, Git commit and shared-library
-name/version, plus explicit step records identifying an agent-related failure.
-Application failures, missing or ambiguous records, and Cosmos query errors run
-the normal pipeline. Existing metrics without explicit outcomes are not reused.
+name/version, plus an explicit failed-pipeline record. Failure cause does not
+limit recovery: clearly successful eligible steps can be reused after any
+failure. Missing or ambiguous records and Cosmos query errors run the normal
+pipeline. Existing metrics without explicit outcomes are not reused.
 The first build using this library version records the data and artifacts needed
 by later builds.
 

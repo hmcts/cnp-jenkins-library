@@ -23,7 +23,7 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
-  def 'only successful allowlisted steps from the previous failed build are reusable'() {
+  def 'successful allowlisted steps from the previous failed build are reusable'() {
     expect:
       BuildRecovery.reusableSteps(records(), identity, '35') == ['test', 'securitychecks'] as Set
   }
@@ -55,7 +55,6 @@ class BuildRecoveryTest extends Specification {
       switch (scenario) {
         case 'commit': events[0].git_commit = 'other'; break
         case 'terminal': events.removeAll { it.event_type == 'pipeline' }; break
-        case 'step': events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE']); break
         case 'pipelineCommit': events.find { it.event_type == 'pipeline' }.git_commit = null; break
       }
 
@@ -66,7 +65,6 @@ class BuildRecoveryTest extends Specification {
       scenario         | expected
       'commit'         | 'git_commit does not match'
       'terminal'       | 'found 0'
-      'step'           | 'failed with STEP_FAILURE'
       'pipelineCommit' | 'same Git commit'
   }
 
@@ -229,13 +227,14 @@ class BuildRecoveryTest extends Specification {
       field << ['product', 'component', 'branch_name', 'job_name', 'git_url', 'git_commit', 'shared_library_name', 'shared_library_version', 'build_number']
   }
 
-  def 'application failures prohibit recovery even alongside agent failures'() {
+  def 'other step failures do not block recovery of prior successful work'() {
     given:
       def events = records()
       events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE'])
+      events.find { it.event_type == 'pipeline' }.failure_reason = 'STEP_FAILURE'
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set
   }
 
   def 'missing terminal record or old metrics disable recovery'() {
@@ -397,20 +396,21 @@ class BuildRecoveryTest extends Specification {
       thrown(InterruptedException)
   }
 
-  def 'successful pipeline and missing failure classification do not qualify'() {
+  def 'only failed pipelines qualify regardless of failure classification'() {
     given:
       def events = records()
       events.removeAll { it.current_step_name == 'dockerbuild' }
+      events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: reason])
       events.find { it.event_type == 'pipeline' }.putAll([pipeline_result: pipelineResult, failure_reason: reason])
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+      (BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set) == reusable
 
     where:
-      pipelineResult | reason
-      'SUCCESS'      | 'AGENT_DISCONNECTED'
-      'FAILURE'      | 'STEP_FAILURE'
-      'FAILURE'      | null
+      pipelineResult | reason               | reusable
+      'SUCCESS'      | 'AGENT_DISCONNECTED' | false
+      'FAILURE'      | 'STEP_FAILURE'        | true
+      'FAILURE'      | null                  | true
   }
 
   def 'Cosmos check logs results without restoring artifacts and prepare reuses the query'() {
@@ -449,7 +449,7 @@ class BuildRecoveryTest extends Specification {
       recovery.shouldSkip('securitychecks')
   }
 
-  def 'only agent disconnections are displayed while all records determine recovery'() {
+  def 'all failed steps are displayed while successful work remains recoverable'() {
     given:
       List<String> messages = []
       def steps = new Expando(echo: { String message -> messages << message })
@@ -464,10 +464,12 @@ class BuildRecoveryTest extends Specification {
 
     then:
       def displayed = messages.findAll { it.startsWith('Previous build #35:') }
-      displayed.size() == 1
+      displayed.size() == 2
       displayed[0].contains('dockerbuild=FAILURE')
       displayed[0].contains('failure_reason=AGENT_DISCONNECTED')
-      !recovery.shouldSkip('test')
-      !recovery.shouldSkip('securitychecks')
+      displayed[1].contains('sonarscan=FAILURE')
+      displayed[1].contains('failure_reason=STEP_FAILURE')
+      recovery.shouldSkip('test')
+      recovery.shouldSkip('securitychecks')
   }
 }

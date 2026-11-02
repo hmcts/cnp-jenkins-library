@@ -50,7 +50,7 @@ class BuildRecovery implements Serializable {
       List<Map> records = readMetrics(identity, sourceBuild)
       steps.echo "Build recovery: Cosmos DB returned ${records?.size() ?: 0} records for build #${sourceBuild}"
       if (records != null && records.size() <= 1000) {
-        records.findAll { it.event_type == 'step' && it.step_result != 'STARTED' && it.failure_reason == 'AGENT_DISCONNECTED' }.each { record ->
+        records.findAll { it.event_type == 'step' && it.step_result == 'FAILURE' }.each { record ->
           steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}, node_status=${record.node_status ?: 'not recorded'}, failure_reason=${record.failure_reason ?: 'none'}"
         }
       }
@@ -216,14 +216,6 @@ class BuildRecovery implements Serializable {
     }
     if (terminal[0].git_commit != identity.git_commit) {
       return 'previous pipeline record does not have the same Git commit'
-    }
-    def failures = records.findAll { it.event_type == 'step' && it.step_result == 'FAILURE' }
-    def otherFailure = failures.find { it.failure_reason != 'AGENT_DISCONNECTED' }
-    if (otherFailure) {
-      return "step ${otherFailure.current_step_name} failed with ${otherFailure.failure_reason ?: 'no reason'}"
-    }
-    if (!(terminal[0].failure_reason == 'AGENT_DISCONNECTED' || failures)) {
-      return "previous pipeline failed with ${terminal[0].failure_reason ?: 'no reason'}, not AGENT_DISCONNECTED"
     }
     return null
   }
