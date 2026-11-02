@@ -1,12 +1,22 @@
 package uk.gov.hmcts.contino
 
+import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Docker
+import uk.gov.hmcts.pipeline.AgentSelector
 import groovy.json.JsonSlurperClassic
 
+/**
+ * Helm chart management class.
+ *
+ * Supports dual ACR publish mode for transitioning between registries.
+ * When DUAL_ACR_PUBLISH_ENABLED is set to 'true', Helm charts will be
+ * published to both primary and secondary ACR registries.
+ */
 class Helm {
 
   public static final String HELM_RESOURCES_DIR = 'charts'
+  public static final String SKIP_PUBLISH_ANNOTATION = 'hmcts.github.io/skip-publish'
   def steps
   def acr
   def docker
@@ -24,6 +34,20 @@ class Helm {
   String registrySubscription
   def namespace
 
+  // Secondary ACR for dual publish mode
+  def secondaryRegistryName
+  def secondaryResourceGroup
+  def secondaryRegistrySubscription
+
+  // External registries rewritten to the current registry for sandbox isolation
+  List<String> sandboxRewrittenRegistries = []
+
+  // Original chart metadata captured before a sandbox dependency rewrite. Restored after
+  // install/publish so the mutation cannot leak back into the workspace via the
+  // withEnvironmentAgent stash-back and contaminate later stages or environments.
+  Map<String, String> rewrittenChartFileBackups = [:]
+  List<String> rewriteGeneratedFiles = []
+
   Helm(steps, String chartName) {
     this.steps = steps
     this.subscription = this.steps.env.SUBSCRIPTION_NAME
@@ -38,6 +62,42 @@ class Helm {
     this.chartLocation = "${HELM_RESOURCES_DIR}/${chartName}"
     this.chartName = chartName
     this.namespace = this.steps.env.TEAM_NAMESPACE
+    // NOTE: Do NOT initialize dual publish mode here - Jenkins CPS cannot call
+    // CPS-transformed methods (steps.env, steps.echo) from constructors.
+    // Dual publish mode is checked lazily via isDualPublishModeEnabled().
+  }
+
+  /**
+   * Check if dual ACR publish mode is enabled.
+   * Reads directly from environment variables each time to avoid CPS issues.
+   *
+   * @return true if dual publish is enabled and properly configured
+   */
+  private boolean isDualPublishModeEnabled() {
+    def enabled = steps.env.DUAL_ACR_PUBLISH_ENABLED?.toLowerCase() == 'true'
+
+    if (enabled) {
+      // Load secondary registry details from environment if not already set
+      if (!this.secondaryRegistryName) {
+        this.secondaryRegistryName = steps.env.SECONDARY_REGISTRY_NAME
+        this.secondaryResourceGroup = steps.env.SECONDARY_REGISTRY_RESOURCE_GROUP
+        this.secondaryRegistrySubscription = steps.env.SECONDARY_REGISTRY_SUBSCRIPTION
+      }
+
+      // Validate configuration
+      if (!this.secondaryRegistryName || !this.secondaryResourceGroup || !this.secondaryRegistrySubscription) {
+        return false
+      }
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Check if dual publish mode is enabled (public accessor for tests).
+   */
+  boolean isDualPublishEnabled() {
+    return isDualPublishModeEnabled()
   }
 
   def setup() {
@@ -56,8 +116,212 @@ class Helm {
     this.steps.sh(label: "helm repo rm ${registryName}", script: 'helm repo rm $REGISTRY_NAME || echo "Helm repo may not exist on disk, skipping remove"', env: [REGISTRY_NAME: registryName])
   }
 
+  /**
+   * Detect if Chart.yaml has dependencies from external ACR registries
+   *
+   * @return
+   *   list of external ACR registry names (e.g., ['hmctsprod'])
+   */
+  private List<String> detectCrossRegistryDependencies() {
+    def chartYamlPath = "${this.chartLocation}/Chart.yaml"
+
+    if (!steps.fileExists(chartYamlPath)) {
+      return []
+    }
+
+    try {
+      def chartYaml = steps.readFile(chartYamlPath)
+      def externalRegistries = [] as Set
+
+      steps.echo "Scanning Chart.yaml for OCI-based cross-registry dependencies..."
+
+      // Look for OCI repository references in dependencies
+      // Example: repository: oci://hmctsprod.azurecr.io/helm
+      // Handles: repository: 'oci://...' or repository: "oci://..." or repository: oci://...
+      def ociPattern = ~/repository:\s*['"]?oci:\/\/([a-zA-Z0-9]+)\.azurecr\.io/
+      def matcher = chartYaml =~ ociPattern
+      matcher.each { match ->
+        def externalRegistry = match[1]
+        steps.echo('Found OCI registry: ' + externalRegistry)
+        // Only add if it's not the current registry
+        if (externalRegistry != registryName) {
+          externalRegistries.add(externalRegistry)
+        } else {
+          steps.echo('skipped - same as current registry')
+        }
+      }
+
+      return externalRegistries.toList()
+    } catch (Exception e) {
+      steps.echo "Warning: Could not parse Chart.yaml for cross-registry dependencies: ${e.message}"
+      return []
+    }
+  }
+
   def authenticateAcr() {
-    this.acr.az "acr login --name ${registryName}"
+    // Authenticate to current registry
+    this.acr.az "acr login --name ${registryName} --subscription ${registrySubscription}"
+
+    // Check if chart has dependencies from other ACR registries
+    def externalRegistries = detectCrossRegistryDependencies()
+
+    steps.echo "Detected external registries: ${externalRegistries.size() > 0 ? externalRegistries.join(', ') : 'none'}"
+
+    // Sandbox stays isolated from other registries: resolve dependencies from this
+    // environment's own registry instead of authenticating across the boundary.
+    if (externalRegistries && isSandboxContext()) {
+      rewriteChartDependenciesToCurrentRegistry(externalRegistries)
+      externalRegistries = []
+    }
+
+    if (externalRegistries) {
+      steps.echo "Chart has dependencies from: ${externalRegistries.join(', ')}"
+      externalRegistries.each { externalRegistry ->
+        String externalSubscription = externalRegistrySubscription(externalRegistry)
+        if (externalSubscription) {
+          steps.echo "Authenticating to ${externalRegistry} ACR for chart dependencies (subscription: ${externalSubscription})"
+          this.acr.az "acr login --name ${externalRegistry} --subscription ${externalSubscription}"
+        } else {
+          steps.echo "Authenticating to ${externalRegistry} ACR for chart dependencies. If this fails to resolve the registry, set EXTERNAL_ACR_SUBSCRIPTION_${registryEnvKey(externalRegistry)} in the Jenkins global environment."
+          this.acr.az "acr login --name ${externalRegistry}"
+        }
+      }
+    }
+
+    // Also authenticate to secondary registry if dual publish is enabled
+    if (isDualPublishModeEnabled()) {
+      steps.echo "Authenticating to secondary ACR for dual publish: ${secondaryRegistryName}"
+      this.acr.az "acr login --name ${secondaryRegistryName} --subscription ${secondaryRegistrySubscription}"
+    }
+  }
+
+  private boolean isSandboxContext() {
+    return AgentSelector.normaliseEnvironment(this.subscription) == 'sbox' ||
+      AgentSelector.normaliseEnvironment(this.steps.env.DEPLOYMENT_ENVIRONMENT) == 'sbox'
+  }
+
+  private String externalRegistrySubscription(String externalRegistry) {
+    def value = steps.env["EXTERNAL_ACR_SUBSCRIPTION_${registryEnvKey(externalRegistry)}"]
+    return value ? value.toString().trim() : ''
+  }
+
+  private static String registryEnvKey(String registry) {
+    return registry.toUpperCase().replaceAll(/[^A-Z0-9]/, '_')
+  }
+
+  private void rewriteChartDependenciesToCurrentRegistry(List<String> externalRegistries) {
+    def chartYamlPath = "${this.chartLocation}/Chart.yaml"
+    if (!steps.fileExists(chartYamlPath)) {
+      return
+    }
+
+    backupChartDependencyFiles()
+
+    String chartYaml = steps.readFile(chartYamlPath)
+    externalRegistries.each { externalRegistry ->
+      chartYaml = chartYaml.replace("oci://${externalRegistry}.azurecr.io", "oci://${registryName}.azurecr.io")
+    }
+    steps.writeFile(file: chartYamlPath, text: chartYaml)
+    sandboxRewrittenRegistries.addAll(externalRegistries)
+
+    steps.echo "Sandbox isolation: rewrote Chart.yaml dependency repositories from ${externalRegistries.join(', ')} to ${registryName}. The dependency charts must be published to ${registryName}."
+  }
+
+  /**
+   * Capture Chart.yaml and Chart.lock before they are mutated, so restoreChartDependencyFiles()
+   * can put them back. Chart.lock is regenerated by `helm dependency update` after any mutation,
+   * so it is captured too, or marked for removal if it did not exist. Files already captured are
+   * left alone, so the backup always holds the original rather than an earlier mutation.
+   */
+  private void backupChartDependencyFiles() {
+    ["${this.chartLocation}/Chart.yaml", "${this.chartLocation}/Chart.lock"].each { path ->
+      String key = path.toString()
+      if (rewrittenChartFileBackups.containsKey(key) || rewriteGeneratedFiles.contains(key)) {
+        return
+      }
+      if (steps.fileExists(key)) {
+        rewrittenChartFileBackups[key] = steps.readFile(key)
+      } else {
+        rewriteGeneratedFiles.add(key)
+      }
+    }
+  }
+
+  /**
+   * Remove the dependencies a chart lists in its skip-publish annotation, so the published
+   * chart does not bundle the stack a preview deploys around it. Entries are matched against a
+   * dependency's alias if it has one, otherwise its name, and an entry that matches nothing fails
+   * the publish rather than silently publishing the full stack.
+   *
+   * @return
+   *   true if any dependency was removed, in which case `helm dependency update` must be run to
+   *   clear the removed charts out of charts/, since `helm package` bundles everything in there
+   */
+  private boolean removePreviewDependencies() {
+    def chartYamlPath = "${this.chartLocation}/Chart.yaml".toString()
+    if (!steps.fileExists(chartYamlPath)) {
+      return false
+    }
+
+    def chart = steps.readYaml(file: chartYamlPath)
+    List<String> previewDependencies = previewDependencyNames(chart)
+    if (!previewDependencies) {
+      return false
+    }
+
+    List<String> unmatched = unmatchedDependencyNames(chart, previewDependencies)
+    if (unmatched) {
+      throw new RuntimeException("${SKIP_PUBLISH_ANNOTATION} in ${chartYamlPath} lists ${unmatched.join(', ')}, " +
+        "which does not match the alias or name of any dependency")
+    }
+
+    backupChartDependencyFiles()
+    chart.dependencies = withoutDependencies(chart, previewDependencies)
+    steps.writeYaml(file: chartYamlPath, data: chart, overwrite: true)
+
+    steps.echo "Removed ${SKIP_PUBLISH_ANNOTATION} dependencies ${previewDependencies.join(', ')} from ${this.chartName} before publishing"
+    return true
+  }
+
+  @NonCPS
+  private static List<String> previewDependencyNames(Map chart) {
+    String listed = chart?.annotations?.get(SKIP_PUBLISH_ANNOTATION)
+    if (!listed) {
+      return []
+    }
+    listed.split(',')*.trim().findAll { it }
+  }
+
+  @NonCPS
+  private static List<String> unmatchedDependencyNames(Map chart, List<String> names) {
+    List<String> declared = (chart.dependencies ?: []).collect { it.alias ?: it.name }
+    names.findAll { !declared.contains(it) }
+  }
+
+  @NonCPS
+  private static List<Map> withoutDependencies(Map chart, List<String> names) {
+    (chart.dependencies ?: []).findAll { !names.contains(it.alias ?: it.name) }
+  }
+
+  /**
+   * Put back the original chart metadata after a sandbox dependency rewrite or preview dependency
+   * removal, so the mutated files never survive past the install/publish that needed them.
+   */
+  def restoreChartDependencyFiles() {
+    if (!rewrittenChartFileBackups && !rewriteGeneratedFiles) {
+      return
+    }
+
+    rewrittenChartFileBackups.keySet().each { String path ->
+      steps.writeFile(file: path, text: rewrittenChartFileBackups[path])
+    }
+    rewriteGeneratedFiles.each { String path ->
+      steps.sh("rm -f ${path}")
+    }
+    steps.echo "Restored original chart dependency metadata"
+
+    rewrittenChartFileBackups = [:]
+    rewriteGeneratedFiles = []
   }
 
   def authenticateDockerHub() {
@@ -66,39 +330,82 @@ class Helm {
   }
 
   def publishIfNotExists(List<String> values) {
-    configureAcr()
-    removeRepo()
-    authenticateAcr()
-    dependencyUpdate()
-    lint(values)
+    try {
+      configureAcr()
+      removeRepo()
+      authenticateAcr()
+      removePreviewDependencies()
+      dependencyUpdate()
+      lint(values)
+      kubeconform()
 
-    def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
-    this.steps.echo "Version of chart locally is: ${version}"
+      def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation} | grep ^version | cut -d ':' -f 2", returnStdout: true).trim()
+      this.steps.echo "Version of chart locally is: ${version}"
+
+      // Check and publish to primary registry
+      def primaryResult = checkAndPublishToRegistry(registryName, version)
+
+      // Also publish to secondary registry if dual publish is enabled
+      if (isDualPublishModeEnabled()) {
+        this.steps.echo "Checking secondary ACR for chart: ${secondaryRegistryName}"
+        checkAndPublishToRegistry(secondaryRegistryName, version)
+      }
+    } finally {
+      restoreChartDependencyFiles()
+    }
+  }
+
+  /**
+   * Check if a chart version exists in a registry and publish if not.
+   *
+   * @param targetRegistry
+   *   the registry name to publish to
+   * @param version
+   *   the chart version
+   *
+   * @return
+   *   true if published, false if already exists
+   */
+  private boolean checkAndPublishToRegistry(String targetRegistry, String version) {
     def resultOfSearch
     try {
-      this.steps.sh(script: "helm pull oci://${registryName}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
+      this.steps.sh(script: "helm pull oci://${targetRegistry}.azurecr.io/helm/${this.chartName} --version ${version} -d .", returnStdout: true).trim()
       resultOfSearch = version
     } catch (ignored) {
       resultOfSearch = notFoundMessage
     }
 
-    this.steps.echo "Searched remote repo ${registryName}, result was ${resultOfSearch}"
+    this.steps.echo "Searched remote repo ${targetRegistry}, result was ${resultOfSearch}"
 
     if (resultOfSearch == notFoundMessage) {
-      this.steps.echo "Publishing new version of ${this.chartName}"
+      this.steps.echo "Publishing new version of ${this.chartName} to ${targetRegistry}"
 
       this.steps.sh "helm package ${this.chartLocation} --destination ${this.chartLocation}"
-      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${registryName}.azurecr.io/helm/")
+      this.steps.sh(script: "helm push ${this.chartLocation}/${this.chartName}-${version}.tgz oci://${targetRegistry}.azurecr.io/helm/")
       this.steps.sh(script: "rm ${this.chartLocation}/${this.chartName}-${version}.tgz")
-      this.steps.echo "Published ${this.chartName}-${version} to ${registryName}"
+      this.steps.echo "Published ${this.chartName}-${version} to ${targetRegistry}"
+      return true
     } else {
-      this.steps.echo "Chart already published, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+      this.steps.echo "Chart already published to ${targetRegistry}, skipping publish, bump the version in ${this.chartLocation}/Chart.yaml if you want it to be published"
+      return false
     }
   }
 
   def publishToGitIfNotExists(List<String> values) {
+    try {
+      publishToGit(values)
+    } finally {
+      restoreChartDependencyFiles()
+    }
+  }
+
+  private void publishToGit(List<String> values) {
     authenticateAcr()
+    if (removePreviewDependencies()) {
+      dependencyUpdate()
+    }
     lint(values)
+    kubeconform()
 
     def version = this.steps.sh(script: "helm inspect chart ${this.chartLocation}  | grep ^version | cut -d  ':' -f 2", returnStdout: true).trim()
     this.steps.echo "Version of chart locally is: ${version}"
@@ -121,11 +428,78 @@ class Helm {
     this.execute('lint', this.chartLocation, values, null)
   }
 
+  /**
+   * Validate the fully-rendered chart manifests against the Kubernetes API schema
+   * using kubeconform, catching type violations and invalid manifests at publish
+   * time rather than at deployment time.
+   *
+   * kubeconform is baked into the Jenkins agent image and is expected to already be
+   * on PATH, its version is pinned and managed in the jenkins-packer agent provisioning
+   * script.
+   *
+   * The base values and each documented environment values template are validated
+   * separately. Environment templates are applied as overlays on the base values,
+   * matching how Helm consumes them during deployment.
+   *
+   * -ignore-missing-schemas is set deliberately because the default schema registry
+   * does not include all custom resources used by HMCTS. Resources whose schemas do
+   * resolve are still validated under -strict.
+   *
+   * @param k8sVersion
+   *   Kubernetes API schema version to validate against, defaults to the current
+   *   cluster version
+   */
+  def kubeconform(String k8sVersion = '1.35.0') {
+    def baseValues = "${this.chartLocation}/values.yaml"
+    List<Map<String, String>> environmentTemplates = []
+    for (def template : this.steps.findFiles(glob: "${this.chartLocation}/values.*.template.yaml")) {
+      String templateName = template.name as String
+      if (templateName ==~ /values\.[^.]+\.template\.yaml/) {
+        environmentTemplates.add([name: templateName, path: template.path as String])
+      }
+    }
+    environmentTemplates = sortTemplatesByPath(environmentTemplates)
+
+    validateWithKubeconform([baseValues], k8sVersion, 'base values')
+    for (def template : environmentTemplates) {
+      validateWithKubeconform([baseValues, template.path], k8sVersion, template.name)
+    }
+  }
+
+  @NonCPS
+  private static List<Map<String, String>> sortTemplatesByPath(List<Map<String, String>> templates) {
+    templates.sort(false) { left, right -> left.path <=> right.path }
+  }
+
+  private void validateWithKubeconform(List<String> values, String k8sVersion, String valuesName) {
+    def valuesStr = "${' -f ' + values.join(' -f ')}"
+    this.steps.sh(
+      label: "kubeconform schema validation (${valuesName})",
+      script: """
+        helm template ${this.chartName} ${this.chartLocation} ${valuesStr} \\
+          | kubeconform \\
+              -strict \\
+              -summary \\
+              -ignore-missing-schemas \\
+              -kubernetes-version ${k8sVersion} \\
+              -schema-location default
+      """
+    )
+  }
+
   def installOrUpgrade(String imageTag, List<String> values, List<String> options) {
     if (!values) {
       throw new RuntimeException('Helm charts need at least a values file (none given).')
     }
 
+    try {
+      doInstallOrUpgrade(imageTag, values, options)
+    } finally {
+      restoreChartDependencyFiles()
+    }
+  }
+
+  private void doInstallOrUpgrade(String imageTag, List<String> values, List<String> options) {
     def releaseName = "${this.chartName}-${imageTag}"
     dependencyUpdate()
     lint(values)
@@ -133,7 +507,7 @@ class Helm {
     this.steps.writeFile file: 'aks-debug-info.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/aks-debug-info.sh')
 
     this.steps.sh('chmod +x aks-debug-info.sh')
-    
+
     boolean onPR = new ProjectBranch(this.steps.env.BRANCH_NAME).isPR()
     def optionsStr = (options + (onPR ? ['--install', '--timeout 1250s'] : ['--install', '--wait', '--timeout 1250s'])).join(' ')
     def valuesStr =  "${' -f ' + values.flatten().join(' -f ')}"
@@ -142,13 +516,12 @@ class Helm {
       this.steps.sh(label: 'helm upgrade', script: "helm upgrade ${releaseName}  ${this.chartLocation} ${valuesStr} ${optionsStr}")
       this.steps.sh(label: 'wait for install', script:
         """
-        echo 'Waiting 30s for initial pod creation...'
-        sleep 30
+        echo 'Waiting for initial pod creation...'
 
-        POD_COUNT=\$(kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' --no-headers 2>/dev/null | wc -l)
-
-        if [ "\$POD_COUNT" -eq 0 ]; then
-          echo "ℹ️  No pods found matching selector - this chart may only contain jobs/cronjobs"
+        if timeout 60 kubectl get pods -n ${this.namespace} -l app.kubernetes.io/instance=${releaseName},'!job-name' -w 2>/dev/null | grep -m1 "Running\\|Pending" > /dev/null; then
+          echo "Pods detected"
+        else
+          echo "No pods found matching selector - this chart may only contain jobs/cronjobs"
           exit 0
         fi
 
@@ -160,9 +533,14 @@ class Helm {
            exit 1
         fi
 
-        echo 'Waiting for pods to be scheduled and ready...'
-        kubectl wait --for=condition=ready pod \\
-          -l app.kubernetes.io/instance=${releaseName},'!job-name' \\
+        # Wait on the release's workloads, not a snapshot of its pods. A pod-level
+        # wait resolves its pod list once, so a pod from the previous revision that
+        # the rollout replaces mid-wait is waited on until the timeout. Rollout
+        # status follows each workload's current revision instead. The outer
+        # timeout caps the total, because --timeout applies to each workload.
+        echo 'Waiting for workloads to roll out...'
+        timeout 1220 kubectl rollout status deployment,statefulset,daemonset \\
+          -l app.kubernetes.io/instance=${releaseName} \\
           -n ${this.namespace} \\
           --timeout=1220s || ./aks-debug-info.sh ${releaseName} ${this.namespace}
         """)
@@ -173,7 +551,17 @@ class Helm {
   }
 
   def dependencyUpdate() {
-    this.execute('dependency update', this.chartLocation)
+    try {
+      this.execute('dependency update', this.chartLocation)
+    } catch (Exception dependencyError) {
+      if (sandboxRewrittenRegistries) {
+        throw new RuntimeException("helm dependency update failed after dependency repositories were rewritten from " +
+          "${sandboxRewrittenRegistries.join(', ')} to ${registryName} for sandbox isolation. " +
+          "Publish the dependency charts to ${registryName} (e.g. via dual ACR publish) or pin versions that exist there. " +
+          "Original error: ${dependencyError.message}", dependencyError)
+      }
+      throw dependencyError
+    }
   }
 
   def delete(String imageTag, String namespace) {

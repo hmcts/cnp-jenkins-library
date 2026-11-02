@@ -1,39 +1,44 @@
-def nonProdName = System.getenv("NONPROD_SUBSCRIPTION_NAME")
+// SDS subscription name is set to 'sbox' while CNP one is set to 'sandbox' in sds-flux and cnp-flux respectively
+def isSandboxSubscription = (System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sandbox" || System.getenv("NONPROD_SUBSCRIPTION_NAME") == "sbox")
+def mirrorUrl = "https://${isSandboxSubscription ? 'artifactory.sandbox' : 'artifactory'}.platform.hmcts.net/artifactory/maven-remotes"
 
-def mirrorHost = nonProdName == "sandbox" || nonProdName == "sbox" ? 'artifactory.sandbox' : 'artifactory'
-def mirrorUrl = "https://${mirrorHost}.platform.hmcts.net/artifactory/maven-remotes"
+settingsEvaluated { settings ->
+    settings.pluginManagement {
+        repositories {
+            clear()
+            maven {
+                name = "JenkinsMirrorPlugins"
+                url = mirrorUrl
+            }
+        }
+    }
+
+    settings.dependencyResolutionManagement {
+      // PREFER_SETTINGS ignores repositories declared in build.gradle
+      repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+      repositories {
+            clear()
+            maven {
+                name = "JenkinsMirrorDeps"
+                url = mirrorUrl
+            }
+        }
+    }
+}
 
 allprojects {
-  repositories {
-    maven {
-      url mirrorUrl
+    // Legacy support for buildscript blocks
+    buildscript {
+        repositories {
+            clear()
+            maven { url mirrorUrl }
+        }
+        dependencies {
+            classpath 'org.postgresql:postgresql:42.6.0'
+        }
     }
-  }
-  buildscript {
-    repositories {
-      maven {
-        url mirrorUrl
-      }
-      mavenCentral()
-    }
-    dependencies {
-      classpath  group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
-    }
-  }
+}
 
-  task printVersionInit {
-    doLast { println project.version }
-  }
-}
-settingsEvaluated { settings ->
-  settings.pluginManagement {
-    repositories {
-      maven {
-        url mirrorUrl
-      }
-    }
-  }
-}
 
 allprojects {
   afterEvaluate { project ->
@@ -46,12 +51,12 @@ allprojects {
           failBuildOnCVSS = 0
 
           // JSON dependency check reports are logged to cosmos for reporting.
-          formats += 'JSON'
+          formats.add('JSON')
 
           // Scan only the dependencies used at application runtime.
           // See https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
           if (!('runtimeClasspath' in it.scanConfigurations)) {
-            scanConfigurations += 'runtimeClasspath'
+            scanConfigurations.add('runtimeClasspath')
           }
           // Scan and skip configurations are mutually exclusive,
           // so we must clear any skipped configurations the build may have configured.
@@ -60,4 +65,8 @@ allprojects {
       }
     }
   }
+
+    task printVersionInit {
+        doLast { println project.version }
+    }
 }

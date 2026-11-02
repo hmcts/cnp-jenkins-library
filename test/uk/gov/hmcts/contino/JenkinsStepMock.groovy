@@ -11,6 +11,7 @@ interface JenkinsStepMock {
   Object sh(String)
   Object echo(String)
   Object error(String)
+  Object[] findFiles(Map params)
   Object git(Map params)
   Object tool(HashMap)
   String libraryResource(String)
@@ -28,13 +29,16 @@ interface JenkinsStepMock {
   Object withSauceConnect(String, Closure)
   Object saucePublisher()
   Object retry(Integer, Closure)
+  Object readJSON(Map)
   Object readYaml(LinkedHashMap)
+  Object writeYaml(Map)
   String readFile(String)
   Object usernamePassword(Map)
   Object publishHTML(Map)
+  Object fortifyOnDemandScan()
+  Object fortifyOnDemandScan(Map)
 
   void azureCosmosDBCreateDocument(LinkedHashMap)
 }
-
 
 

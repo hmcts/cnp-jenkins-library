@@ -1,4 +1,8 @@
-
+/* This script transforms Yarn v4 audit JSON output to Yarn v3 audit JSON output format
+   Currently, within Yarn 4.x audit reports, there is some information missing such as CVSS scores
+   This file queries the GitHub Advisory API (which is the same registry that the NPM Audit queries) to retrieve the missing information
+   This is then converted to a standard report format that we store within our Cosmos DB for ingestion into the Grafana dashboard
+*/
 const fs = require("fs");
 
 async function main() {
@@ -40,7 +44,7 @@ async function getAdvisory(advisory) {
     access: "public",
     created: null,
     cves: [],
-    cvss: null,
+    cvss: advisory.children.cvss ? [advisory.children.cvss] : [],
     cwe: [],
     deleted: null,
     findings: [{

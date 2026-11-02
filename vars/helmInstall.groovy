@@ -24,7 +24,7 @@ def call(DockerImage dockerImage, Map params) {
   def helmResourcesDir = Helm.HELM_RESOURCES_DIR
   def namespace = env.TEAM_NAMESPACE
 
-  def imageName = dockerImage.getTaggedName()
+  def imageName = params.imageName ?: dockerImage.getTaggedName()
   def aksServiceName = dockerImage.getAksServiceName()
 
   EnvironmentDnsConfigEntry dnsConfigEntry = new EnvironmentDnsConfig(this).getEntry(params.environment, product, component)
@@ -134,6 +134,12 @@ def call(DockerImage dockerImage, Map params) {
 
     // // Helm throws error if trying to upgrade when there have only been failed deployments, or if the previous one is in a 'pending' status
     def deleted = false
+    def releaseName = "${chartName}-${dockerImage.getImageTag()}"
+    try {
+      kubectl.deleteJobsByReleasePrefix(namespace, releaseName)
+    } catch (sweepError) {
+      echo "Orphan job sweep failed (non-fatal): ${sweepError}"
+    }
     if (helm.hasAnyFailedToDeploy(dockerImage.getImageTag(), namespace)) {
 
       deleted = true

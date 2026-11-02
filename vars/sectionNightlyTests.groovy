@@ -1,4 +1,14 @@
+import com.cloudbees.groovy.cps.NonCPS
+import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor
 import uk.gov.hmcts.contino.Environment
+
+@NonCPS
+boolean isTriggeredByTimer() {
+  def causes = currentBuild.rawBuild?.getCauses() ?: []
+  return causes.any {
+    it.getClass().getName().contains('TimerTriggerCause')
+  }
+}
 
 def call(pcr, config, pipelineType, String product, String component, String subscription) {
 
@@ -79,21 +89,20 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
     }
 
+
     if (config.performanceTest) {
 
       //Check if build started by chron job
-      def causes = currentBuild.rawBuild?.getCauses() ?: []
-      def triggeredByTimer = causes.any { cause ->
-        cause.getClass().getSimpleName() == "TimerTriggerCause"
-      }
+      boolean triggeredByTimer = isTriggeredByTimer()
 
-      boolean doSecondRun = false
+      boolean doSecondRun = false //This is set to true if first
       def stages = ['Performance test', 'Failed Test Rerun']
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < stages.size(); i++) {
         stageWithAgent(stages[i], product) {
           warnError('Failure in performanceTest') {
             pcr.callAround('PerformanceTest') {
-              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: 'Performance test') {
+              timeoutWithMsg(time: config.perfTestTimeout, unit: 'MINUTES', action: stages[i]) {
+                //First run uses a trick of setting buildresult to SUCCESS, so that a rerun can be attempted with jenkins build failing
                 if ((i == 0) && (triggeredByTimer == true) && (config.perfRerunOnFail == true)) {
                   catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     try {
@@ -104,31 +113,28 @@ def call(pcr, config, pipelineType, String product, String component, String sub
                       throw e
                     }
                   }
+                  //The below else block executes a test re-run and not triggered by timer
                 } else {
-                  catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    builder.performanceTest()
-                  }
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      builder.performanceTest()
+                    }
                 }
 
                 publishPerformanceReports(
                   product: product,
                   component: component,
                   environment: environment.nonProdName,
-                  subscription: subscription
+                  subscription: subscription,
+                  folder: "nightly"
                 )
               }
             }
           }
         }
 
-        //Rerun failed test if started by chron job
-        if (triggeredByTimer == false)
+        //Break out of loop and not to run second re-reun if any of the following conditions are satisfied.
+        if (!(triggeredByTimer && config.perfRerunOnFail && doSecondRun))
           break
-        else if (config.perfRerunOnFail == false)
-          break
-        else if (doSecondRun == false)
-          break
-
       }
 
       //Alerts wil become active if config.gatlingAlerts is set to true
@@ -136,6 +142,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
         performanceCheckIfTestFailed("${config.perfSlackChannel}")
 
     }
+
 
     if (config.securityScan) {
       stageWithAgent('Security scan', product) {

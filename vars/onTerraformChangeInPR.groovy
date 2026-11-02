@@ -1,4 +1,4 @@
-def call(Closure block) {
+def call(pipelineConfig, Closure block) {
   def credentialsId = env.GIT_CREDENTIALS_ID
   folderExists('infrastructure') {
     writeFile file: 'check-infrastructure-files-changed.sh', text: libraryResource('uk/gov/hmcts/infrastructure/check-infrastructure-files-changed.sh')
@@ -12,6 +12,8 @@ def call(Closure block) {
       )
       sh 'rm check-infrastructure-files-changed.sh'
       if (infraFolderHasChanges == 1) {
+        return block.call()
+      } else if (pipelineConfig.alwaysTerraformPlanOnPR) {
         return block.call()
       }
     }

@@ -6,24 +6,32 @@ __container=$3
 __location=$4
 __subscription=$5
 
-if [ -z $__rg ]; then
+fail() {
+    echo "$1" >&2
+    exit 1
+}
+
+if [ -z "$__rg" ]; then
     fail "Resource Group name not provided!"
 fi
 
-if [ -z $__sa ]; then
+if [ -z "$__sa" ]; then
     fail "Storage Account name not provided!"
 fi
 
-if [ -z $__container ]; then
+if [ -z "$__container" ]; then
     fail "Storage Account Container name not provided!"
 fi
 
-if [ -z $__location ]; then
+if [ -z "$__location" ]; then
     fail "Location not provided!"
 fi
 
 # check if the storage account exists. Creates it if not.
-if  ! "$(env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$__subscription az group exists --name $__rg)" ; then
+__groupExists="$(env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$__subscription az group exists --name $__rg)" ||
+    fail "Unable to check whether resource group $__rg exists."
+
+if [ "$__groupExists" != "true" ] ; then
 
     __isCreated="$(env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$__subscription az group create --name $__rg --location $__location --output tsv --query properties.provisioningState)"
 
@@ -31,7 +39,6 @@ if  ! "$(env AZURE_CONFIG_DIR=/opt/jenkins/.azure-$__subscription az group exist
         echo "The resource $__rg has been created with no error"
     else
         fail "The resource group $__rg hasn't been created successfully"
-        return 0
     fi
 else
     echo "The resource $__rg already exists."

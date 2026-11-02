@@ -6,9 +6,10 @@ def channel = '#platops-build-notices'
 GradleBuilder builder = new GradleBuilder(this, 'jenkins-library')
 
 def testBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+def pipelineTestAgent = env.ENVIRONMENT_AGENT_LABEL_SBOX ?: env.BUILD_AGENT_TYPE_SBOX ?: 'ubuntu-sbox'
 
 try {
-  node {
+  node(pipelineTestAgent) {
     stage('Checkout') {
       deleteDir()
       checkout scm

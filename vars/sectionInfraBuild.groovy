@@ -10,28 +10,29 @@ def call(params) {
   def expires = params.expires ?: LocalDate.now().plusDays(14)
   def pcr = params.pipelineCallbacksRunner
   def businessArea = env.BUSINESS_AREA_TAG
+  String callbackStage = planOnly ? "planinfra:${environment}" : "buildinfra:${environment}"
 
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, "")
   approvedEnvironmentRepository(environment, metricsPublisher) {
-    withSubscription(subscription) {
-      pcr.callAround("buildinfra:${environment}") {
+    withSubscription(subscription, product, environment) {
+      pcr.callAround(callbackStage) {
         timeoutWithMsg(time: 150, unit: 'MINUTES', action: "buildinfra:${environment}") {
-          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox 
-           if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
+          // withAksClient adds the cluster name and RG to env vars  -- only used in CFT Sandbox
+          if ( environment == "sandbox" && params.aksSubscription && businessArea == "CFT" ){
             withAksClient(subscription, environment, product) {
               startEnvironmentIfRequired params
             }
-           }
+          }
 
           // build environment infrastructure once
-           return spinInfra(
-              product: product,
-              component: component,
-              expires: expires,
-              environment: environment,
-              tfPlanOnly: planOnly,
-              subscription: subscription
-             )
+          return spinInfra(
+            product: product,
+            component: component,
+            expires: expires,
+            environment: environment,
+            tfPlanOnly: planOnly,
+            subscription: subscription
+          )
         }
       }
     }

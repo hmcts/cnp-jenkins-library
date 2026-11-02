@@ -9,7 +9,7 @@ def call(Map<String, String> params) {
 
   withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
     def bearerToken = env.BEARER_TOKEN
-    CHART_BUMP = sh (
+    def CHART_BUMP = sh (
       script: "chmod +x check-helm-version-bumped.sh\n" +
         "    ./check-helm-version-bumped.sh $product $component $branch $credentialsId $bearerToken $gitEmailId",
       returnStatus: true

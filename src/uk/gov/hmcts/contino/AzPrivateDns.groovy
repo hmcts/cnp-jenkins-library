@@ -62,21 +62,35 @@ class AzPrivateDns {
       def ttl = this.environmentDnsConfigEntry.ttl
       def zone = this.environmentDnsConfigEntry.zone
       
-      def aRecordSet
+      boolean aRecordSetExists = false
+      List<String> existingIps = []
 
       // check for existing record
       try {
-        aRecordSet = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} -o tsv"
+        existingIps = getARecordIps(resourceGroup, zone, recordName, subscription)
+        aRecordSetExists = true
       } catch (e) {
       } // do nothing, record not found
       
-      if (!aRecordSet) {
+      if (!aRecordSetExists) {
         this.steps.echo "Registering DNS for ${recordName} to ${serviceIP} with ttl = ${ttl}"
         this.az.az "network private-dns record-set a create -g ${resourceGroup} -z ${zone} -n ${recordName} --ttl ${ttl} --subscription ${subscription}"
+        existingIps = getARecordIps(resourceGroup, zone, recordName, subscription)
+      }
+
+      if (existingIps.contains(serviceIP)) {
+        this.steps.echo "A record for ${recordName} already contains ${serviceIP}; updating ttl = ${ttl}"
+        this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'ttl=${ttl}'"
+      } else if (existingIps.isEmpty()) {
         this.az.az "network private-dns record-set a add-record -g ${resourceGroup} -z ${zone} -n ${recordName} -a ${serviceIP} --subscription ${subscription}"
       } else {
         this.steps.echo "Updating existing A record for ${recordName}"
         this.az.az "network private-dns record-set a update -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --set 'aRecords[0].ipv4Address=\"${serviceIP}\"' --set 'ttl=${ttl}'"
       }
+    }
+
+    private List<String> getARecordIps(String resourceGroup, String zone, String recordName, String subscription) {
+      def output = this.az.az "network private-dns record-set a show -g ${resourceGroup} -z ${zone} -n ${recordName} --subscription ${subscription} --query 'aRecords[].ipv4Address' -o tsv"
+      return output?.readLines()?.collect { it.trim() }?.findAll { it } ?: []
     }
 }

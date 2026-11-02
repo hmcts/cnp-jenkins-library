@@ -64,7 +64,11 @@ fi
 
 if [[ ${CHART_BUMPED} = 'true' ]]  || [[ ${ALIAS_UPDATED} = 'true' ]] ; then
   git fetch origin $BRANCH:$BRANCH
-  git remote set-url origin $(git config remote.origin.url | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+  # Only modify URL if it doesn't already contain credentials
+  REMOTE_URL=$(git config remote.origin.url)
+  if [[ ! "$REMOTE_URL" =~ @github\.com ]]; then
+    git remote set-url origin $(echo "$REMOTE_URL" | sed "s/github.com/${USER_NAME}:${BEARER_TOKEN}@github.com/g")
+  fi
   git config --global user.name ${USER_NAME}
   git config --global user.email ${GIT_APP_EMAIL_ID}
 

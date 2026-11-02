@@ -20,6 +20,10 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean e2eTest = false
   boolean securityScan = false
   boolean serviceApp = true
+  boolean smokeTestSecrets = true
+  boolean deployableApp = true
+  boolean releaseOnMerge = false
+  boolean libraryBranchAllowed = false
   boolean aksStagingDeployment = false
   boolean legacyDeployment = true
   Set<String> legacyDeploymentExemptions = []
@@ -34,7 +38,10 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   String s2sServiceName
   String highLevelDataSetupKeyVaultName
   boolean dockerTestBuild = false
+  boolean buildCache = true
+  boolean onlyDeploy = false
   boolean skipHighLevelDataSetupProd = false
+  boolean alwaysTerraformPlanOnPR = false
 
   int crossBrowserTestTimeout
   int perfTestTimeout = 15
@@ -47,6 +54,33 @@ class AppPipelineConfig extends CommonPipelineConfig implements Serializable {
   boolean perfGatlingAlerts = false
   boolean perfRerunOnFail = false
   String perfSlackChannel = "#performance-alerts"
+
+  // Performance test stages configuration
+  boolean performanceTestStages = false
+  int performanceTestStagesTimeout
+  String performanceTestConfigPath
+  List<String> performanceTestEnvironments = ['preview', 'aat', 'perftest']
+
+
+  // Site Reliability Guardian configuration
+  boolean srgEvaluation = false
+  String srgServiceName = null  // Explicit SRG service name in Dynatrace
+  String srgFailureBehavior = 'warn' // 'fail', 'warn', 'ignore'
+
+  // Gatling load test configuration
+  boolean gatlingLoadTests = false
+  int gatlingLoadTestTimeout = 10
+  String gatlingRepo
+  String gatlingBranch = 'master'
+  String gatlingSimulation
+
+  // IDAM test user creation configuration
+  boolean idamTestUser = false
+  String idamTestUserEmail
+  String idamTestUserForename
+  String idamTestUserSurname
+  String idamTestUserPassword
+  List<String> idamTestUserRoles = []
 
   boolean legacyDeploymentForEnv(String environment) {
     return legacyDeployment && !legacyDeploymentExemptions.contains(environment)

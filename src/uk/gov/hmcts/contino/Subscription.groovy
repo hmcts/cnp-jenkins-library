@@ -16,7 +16,7 @@ class Subscription implements Serializable {
     nonProdName = env.NONPROD_SUBSCRIPTION_NAME ?: 'nonprod'
     prodName = env.PROD_SUBSCRIPTION_NAME ?: 'prod'
     demoName = env.DEMO_SUBSCRIPTION_NAME ?: 'nonprod'
-    previewName = env.PREVIEW_SUBSCRIPTION_NAME ?: 'nonprod'
+    previewName = env.PREVIEW_SUBSCRIPTION_NAME ?: nonProdName
     qaName = env.QA_SUBSCRIPTION_NAME ?: 'qa'
     ithcName = env.ITHC_SUBSCRIPTION_NAME ?: 'qa'
     perftestName = env.PERFTEST_SUBSCRIPTION_NAME ?: 'qa'

@@ -88,6 +88,19 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.serviceApp = false
   }
 
+  void disableSmokeTestSecrets() {
+    config.smokeTestSecrets = false
+  }
+
+  void nonDeployableApp() {
+    config.deployableApp = false
+    nonServiceApp()
+  }
+
+  void releaseOnMerge() {
+    config.releaseOnMerge = true
+  }
+
   void overrideVaultEnvironments(Map<String, String> vaultOverrides) {
     config.vaultEnvironmentOverrides = vaultOverrides
   }
@@ -136,5 +149,43 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
 
   void enableDockerTestBuild() {
     config.dockerTestBuild = true
+  }
+
+  void disableBuildCache() {
+    config.buildCache = false
+  }
+
+  void enablePerformanceTestStages(Map params = [:]) {
+    config.performanceTestStages = true
+    config.performanceTestStagesTimeout = params.timeout ?: 15
+    config.performanceTestConfigPath = params.configPath
+    config.performanceTestEnvironments = params.perfTestEnvironments ?: ['preview','aat','perftest']
+  }
+
+  void enableSrgEvaluation(Map params = [:]) {
+    config.srgEvaluation = true
+    config.srgServiceName = params.serviceName ?: null
+    config.srgFailureBehavior = params.failureBehavior ?: 'warn'
+  }
+
+  void enableGatlingLoadTests(Map params = [:]) {
+    config.gatlingLoadTests = true
+    config.gatlingLoadTestTimeout = params.timeout ?: 10
+    config.gatlingRepo = params.repo
+    config.gatlingBranch = params.branch ?: 'master'
+    config.gatlingSimulation = params.simulation
+
+    if (!config.gatlingRepo) {
+      throw new IllegalArgumentException("enableGatlingLoadTests: 'repo' parameter is required")
+    }
+  }
+
+  void enableIdamTestUser(Map params = [:]) {
+    config.idamTestUser = true
+    config.idamTestUserEmail = params.email
+    config.idamTestUserForename = params.forename
+    config.idamTestUserSurname = params.surname
+    config.idamTestUserPassword = params.password
+    config.idamTestUserRoles = params.roles ?: []
   }
 }

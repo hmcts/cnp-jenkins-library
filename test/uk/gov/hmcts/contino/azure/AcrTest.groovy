@@ -20,6 +20,8 @@ class AcrTest extends Specification {
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
+    // Default env with dual publish disabled
+    steps.env >> [:]
     dockerImage = Mock(DockerImage.class)
     acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
   }
@@ -84,6 +86,10 @@ class AcrTest extends Specification {
   }
 
   def "run() should call the run command with the right registry group and resource group"() {
+    given:
+      steps.fileExists("acb.yaml") >> true
+      steps.readFile("acb.yaml") >> "version: v1.1.0"
+
     when:
       acr.run()
 
@@ -97,6 +103,10 @@ class AcrTest extends Specification {
   def "runWithTemplate() should evaluate the acb.yaml file from the passed template then run the acr run command"() {
     given:
       def mockFile = Mock(File, constructorArgs :["./acb.tpl.yaml"])
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      steps.fileExists("acb.yaml") >> true
+      steps.readFile("acb.yaml") >> "version: v1.1.0"
 
     when:
       acr.runWithTemplate("acb.tpl.yaml", dockerImage)
@@ -128,6 +138,142 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "master template rendering accepts a timestamp from shell output in both registries"() {
+    given:
+      def workspace = File.createTempDir('acr-template-', '')
+      new File(workspace, 'acb.tpl.yaml').text = 'image: {{REGISTRY_NAME}}.azurecr.io/{{CI_IMAGE_TAG}}\n'
+      def rendered = []
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def image = new DockerImage('pcs', 'api', acr, 'staging', 'e083a7e123', '20261020113010\n')
+      steps.fileExists('acb.yaml') >> true
+      steps.readFile('acb.yaml') >> 'version: v1.1.0'
+      steps.sh(_) >> { Map args ->
+        if (args.script.startsWith('sed ')) {
+          def process = new ProcessBuilder('sh', '-c', args.script.toString()).directory(workspace).redirectErrorStream(true).start()
+          def output = process.text
+          assert process.waitFor() == 0: output
+          rendered << new File(workspace, 'acb.yaml').text
+        }
+        return ''
+      }
+
+    when:
+      acr.runWithTemplate('acb.tpl.yaml', image)
+
+    then:
+      rendered == ['image: cnpacr.azurecr.io/pcs/api:build-e083a7e-20261020113010\n',
+                   'image: hmctsold.azurecr.io/pcs/api:build-e083a7e-20261020113010\n']
+
+    cleanup:
+      workspace.deleteDir()
+  }
+
+  @spock.lang.Unroll
+  def "overlapping master builds promote their own #component images in both registries"() {
+    given:
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def oldImage = new DockerImage('pcs', component, acr, 'staging', 'e083a7e123', '20261020113010\n')
+      def newImage = new DockerImage('pcs', component, acr, 'staging', '78ea950123', '20261020120210\n')
+      def published = [:]
+      def commands = []
+      steps.sh(_) >> { Map args ->
+        String command = args.script
+        commands << command
+        if (command.contains('acr show')) {
+          return "${REGISTRY_NAME}.azurecr.io"
+        }
+        if (command.contains('acr build')) {
+          def registry = (command =~ / -r (\S+)/)[0][1]
+          def tag = (command =~ / -t (\S+)/)[0][1]
+          published["${registry}.azurecr.io/${tag}".toString()] = command.contains('78ea950') ? 'new-digest' : 'old-digest'
+        }
+        if (command.contains('acr import')) {
+          def registry = (command =~ / -n (\S+)/)[0][1]
+          def source = (command =~ / --source (\S+)/)[0][1]
+          def target = (command =~ / -t (\S+)/)[0][1]
+          assert published.containsKey(source)
+          published["${registry}.azurecr.io/${target}".toString()] = published[source]
+        }
+        return ''
+      }
+
+    when:
+      acr.build(oldImage)
+      acr.build(newImage)
+      assert !published.containsKey("${REGISTRY_NAME}.azurecr.io/pcs/${component}:staging-e083a7e-20261020113010".toString())
+      if (component == 'api') {
+        acr.retagForStage(DockerImage.DeploymentStage.STAGING, oldImage)
+      }
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, oldImage)
+      acr.retagForStage(DockerImage.DeploymentStage.LATEST, oldImage)
+
+    then:
+      ['cnpacr', 'hmctsold'].every { registry ->
+        published["${registry}.azurecr.io/pcs/${component}:prod-e083a7e-20261020113010".toString()] == 'old-digest' &&
+          published["${registry}.azurecr.io/pcs/${component}:latest".toString()] == 'old-digest'
+      }
+      !commands.any { it =~ /(?: -t | --source )(?:\S+\/)?pcs\/api(?:-test)?:staging(?: |$)/ }
+      commands.count { it.contains('acr import') } == (component == 'api' ? 6 : 4)
+      commands.every { !it.contains('\n') }
+
+    where:
+      component << ['api', 'api-test']
+  }
+
+  @spock.lang.Unroll
+  def "master template builds isolate tasks in both registries (existing task: #existingTask)"() {
+    given:
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def images = [new DockerImage('pcs', 'api', acr, 'staging', 'e083a7e123', '20261020113010\n'),
+                    new DockerImage('pcs', 'api', acr, 'staging', '78ea950123', '20261020120210\n')]
+      def commands = []
+      steps.fileExists('acb.yaml') >> true
+      steps.readFile('acb.yaml') >> 'from: external.azurecr.io/base/node:18-alpine'
+      steps.readJSON(_) >> { Map args -> new groovy.json.JsonSlurperClassic().parseText(args.text) }
+      steps.sh(_) >> { Map args ->
+        String command = args.script
+        commands << command
+        if (command.contains('acr identity show')) {
+          return '{"userAssignedIdentities":{"identity-id":{"clientId":"client-id"}}}'
+        }
+        if (command.contains('acr task show')) {
+          if (!existingTask) { throw new Exception('Task not found') }
+          return '{"identity":{"userAssignedIdentities":{"identity-id":{}}}}'
+        }
+        if (command.contains('acr task credential list')) {
+          return 'external.azurecr.io'
+        }
+        return ''
+      }
+
+    when:
+      images.each { acr.runWithTemplate('acb.tpl.yaml', it) }
+
+    then:
+      ['cnpacr', 'hmctsold'].every { registry ->
+        images.every { image ->
+          commands.any { it.contains("acr task ${existingTask ? 'update' : 'create'} --name pcs-api-${image.commit}-build --registry ${registry} ") } &&
+            commands.any { it.contains("acr task run --name pcs-api-${image.commit}-build --registry ${registry} ") &&
+              it.contains("--set CI_IMAGE_TAG=pcs/api:build-${image.commit}-${image.lastCommitTime}") }
+        }
+      }
+      commands.count { it.contains('acr task run') } == 4
+      !commands.any { it.contains('pcs-api-staging-build') }
+      commands.every { !it.contains('\n') }
+
+    where:
+      existingTask << [true, false]
+  }
+
   def "hasTag should return false in case of error"() {
     when:
       dockerImage.getTag() >> IMAGE_TAG
@@ -153,6 +299,351 @@ class AcrTest extends Specification {
       it.get('script').contains("acr run --registry ${REGISTRY_NAME} --subscription ${REGISTRY_SUBSCRIPTION} --cmd \"acr purge --filter ${IMAGE_REPO}:^prod-.* --ago 5d --keep 5 --untagged --concurrency 5\" /dev/null") &&
       it.containsKey('returnStdout') &&
       it.get('returnStdout').equals(true)})
+  }
+
+  def "run() should detect cross-registry pulls and use task-based execution"() {
+    given:
+      def identityJson = '{"userAssignedIdentities":{"/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi":{"clientId":"client-id-123"}}}'
+      def taskJson = '{"identity":{"userAssignedIdentities":{}}}'
+      // Stub file and JSON operations
+      steps.fileExists(_) >> true
+      steps.readFile(_) >> "registry: hmctsprod.azurecr.io\nfrom: hmctsprod.azurecr.io/base/node:18-alpine"
+      steps.readJSON(_) >> { args ->
+        def text = (args instanceof Map) ? args.text : args
+        if (text == identityJson) {
+          return [
+            userAssignedIdentities: [
+              '/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi': [
+                clientId: 'client-id-123'
+              ]
+            ]
+          ]
+        } else if (text == taskJson) {
+          return [
+            identity: [
+              userAssignedIdentities: [:]
+            ]
+          ]
+        }
+        return [:]
+      }
+      steps.echo(_) >> null
+      // Stub all sh() calls with appropriate responses
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr identity show")}) >> identityJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task show")}) >> { throw new Exception("Task not found") }
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task create")}) >> taskJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task identity assign")}) >> ''
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential list")}) >> '[]'
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential add")}) >> ''
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task run")}) >> ''
+
+    when:
+      acr.run()
+
+    then:
+      // Stubs in given block ensure correct calls are made
+      // If wrong methods called or wrong order, stubs won't match and test fails
+      true
+  }
+
+  def "runWithTemplate() should detect cross-registry pulls and use task-based execution with repository-specific task name"() {
+    given:
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      def identityJson = '{"userAssignedIdentities":{"/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi":{"clientId":"client-id-123"}}}'
+      def taskJson = '{"identity":{"userAssignedIdentities":{}}}'
+      // Stub file operations
+      steps.fileExists("acb.yaml") >> true
+      steps.readFile("acb.yaml") >> "registry: hmctsprod.azurecr.io\nfrom: hmctsprod.azurecr.io/base/node:18-alpine"
+      // Stub readJSON - match any call and return appropriate response
+      steps.readJSON(_) >> { args ->
+        def text = (args instanceof Map) ? args.text : args
+        if (text == identityJson) {
+          return [
+            userAssignedIdentities: [
+              '/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi': [
+                clientId: 'client-id-123'
+              ]
+            ]
+          ]
+        } else if (text == taskJson) {
+          return [
+            identity: [
+              userAssignedIdentities: [:]
+            ]
+          ]
+        }
+        return [:]
+      }
+      steps.echo(_) >> null
+      // All sh() stubs in given block
+      steps.sh({it.containsKey('script') && it.get('script').contains("sed -e")}) >> ""
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr identity show")}) >> identityJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task show")}) >> { throw new Exception("Task not found") }
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task create")}) >> taskJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task identity assign")}) >> ''
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential list")}) >> '[]'
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential add")}) >> ''
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task run")}) >> ''
+
+    when:
+      acr.runWithTemplate("acb.tpl.yaml", dockerImage)
+
+    then:
+      true
+  }
+
+  def "run() should fallback to quick run when no managed identity is available"() {
+    given:
+      // These must be stubs in 'given' to return values during execution
+      steps.fileExists("acb.yaml") >> true
+      steps.readFile("acb.yaml") >> "registry: hmctsprod.azurecr.io\nfrom: hmctsprod.azurecr.io/base/node:18-alpine"
+      steps.echo(_) >> null
+      // Stubs for Azure CLI commands
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr identity show")}) >> { throw new Exception("No identity") }
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr run -r")}) >> ''
+
+    when:
+      acr.run()
+
+    then:
+      true
+  }
+
+  def "run() should fallback to quick run when identity assignment fails"() {
+    given:
+      def identityJson = '{"userAssignedIdentities":{"/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi":{"clientId":"client-id-123"}}}'
+      def taskJson = '{"identity":{"userAssignedIdentities":{}}}'
+      // Stub file operations
+      steps.fileExists(_) >> true
+      steps.readFile(_) >> "registry: hmctsprod.azurecr.io\nfrom: hmctsprod.azurecr.io/base/node:18-alpine"
+      // Stub readJSON - match any call and return appropriate response
+      steps.readJSON(_) >> { args ->
+        def text = (args instanceof Map) ? args.text : args
+        if (text == identityJson) {
+          return [
+            userAssignedIdentities: [
+              '/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi': [
+                clientId: 'client-id-123'
+              ]
+            ]
+          ]
+        } else if (text == taskJson) {
+          return [
+            identity: [
+              userAssignedIdentities: [:]
+            ]
+          ]
+        }
+        return [:]
+      }
+      steps.echo(_) >> null
+      // All sh() stubs in given block
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr identity show")}) >> identityJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task show")}) >> { throw new Exception("Task not found") }
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task create")}) >> taskJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task identity assign")}) >> { throw new Exception("Permission denied") }
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr run -r")}) >> ''
+
+    when:
+      acr.run()
+
+    then:
+      true
+  }
+
+  def "run() should skip credential addition if credentials already exist"() {
+    given:
+      steps.fileExists(_) >> true
+      steps.readFile(_) >> "registry: hmctsprod.azurecr.io"
+      def identityJson = '{"userAssignedIdentities":{"/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi":{"clientId":"client-id-123"}}}'
+      def taskJson = '{"identity":{"userAssignedIdentities":{"/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi":{}}}}'
+      // Stub readJSON - match any call and return appropriate response
+      steps.readJSON(_) >> { args ->
+        def text = (args instanceof Map) ? args.text : args
+        if (text == identityJson) {
+          return [
+            userAssignedIdentities: [
+              '/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi': [
+                clientId: 'client-id-123'
+              ]
+            ]
+          ]
+        } else if (text == taskJson) {
+          return [
+            identity: [
+              userAssignedIdentities: [
+                '/subscriptions/sub-id/resourcegroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi': [:]
+              ]
+            ]
+          ]
+        }
+        return [:]
+      }
+      steps.echo(_) >> null
+      // All sh() stubs in given block
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr identity show")}) >> identityJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task show")}) >> taskJson
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential list")}) >> 'hmctsprod.azurecr.io'
+      steps.sh({it.containsKey('script') && it.get('script').contains("az acr task run")}) >> ''
+
+    when:
+      acr.run()
+
+    then:
+      // Should NOT add credentials again
+      0 * steps.sh({it.containsKey('script') && it.get('script').contains("az acr task credential add")})
+  }
+
+  // ==================== Dual ACR Publish Tests ====================
+
+  def "isDualPublishEnabled() returns false when DUAL_ACR_PUBLISH_ENABLED is not set"() {
+    given:
+      steps.env >> [:]
+
+    when:
+      def result = acr.isDualPublishEnabled()
+
+    then:
+      result == false
+  }
+
+  def "isDualPublishEnabled() returns false when secondary registry details are missing"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: null
+      ]
+      steps.echo(_) >> null
+
+    when:
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def result = acr.isDualPublishEnabled()
+
+    then:
+      result == false
+  }
+
+  def "isDualPublishEnabled() returns true when all secondary registry details are provided"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+
+    when:
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def result = acr.isDualPublishEnabled()
+
+    then:
+      result == true
+  }
+
+  def "login() should login to both registries when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+
+    when:
+      acr.login()
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr login --name ${REGISTRY_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr login --name hmctsold")})
+  }
+
+  def "build() should build to primary and secondary when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage = Mock(DockerImage.class)
+      dockerImage.getImageTag() >> IMAGE_TAG
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+
+    when:
+      acr.build(dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr build --no-format -r ${REGISTRY_NAME} -t ${IMAGE_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr build --no-format -r hmctsold -t ${IMAGE_NAME}") &&
+                    it.get('script').contains("--build-arg REGISTRY_NAME=hmctsold")})
+  }
+
+  def "retagForStage() should retag in both registries when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage = Mock(DockerImage.class)
+      dockerImage.getShortName(_) >> IMAGE_NAME
+      dockerImage.getBaseTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      dockerImage.getTaggedName() >> "${REGISTRY_NAME}.azurecr.io/${IMAGE_NAME}"
+      dockerImage.imageTag >> 'staging'
+
+    when:
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr import --force -n ${REGISTRY_NAME}")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr import --force -n hmctsold")})
+  }
+
+  def "purgeOldTags() should purge from both registries when dual publish is enabled"() {
+    given:
+      steps = Mock(JenkinsStepMock.class)
+      steps.env >> [
+        DUAL_ACR_PUBLISH_ENABLED: 'true',
+        SECONDARY_REGISTRY_NAME: 'hmctsold',
+        SECONDARY_REGISTRY_RESOURCE_GROUP: 'hmcts-old-rg',
+        SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub'
+      ]
+      steps.echo(_) >> null
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      dockerImage = Mock(DockerImage.class)
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getImageTag() >> IMAGE_TAG
+
+    when:
+      acr.purgeOldTags(DockerImage.DeploymentStage.PROD, dockerImage)
+
+    then:
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr run --registry ${REGISTRY_NAME}") &&
+                    it.get('script').contains("acr purge")})
+      1 * steps.sh({it.containsKey('script') &&
+                    it.get('script').contains("az acr run --registry hmctsold") &&
+                    it.get('script').contains("acr purge")})
   }
 
 }

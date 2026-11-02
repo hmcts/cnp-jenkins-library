@@ -6,6 +6,8 @@ import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
+import uk.gov.hmcts.contino.GradleAPI
+import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
 
@@ -14,16 +16,22 @@ def call(params) {
   def builder = params.builder
 
   def subscription = params.subscription
+  def environment = params.environment
   def product = params.product
   def component = params.component
   def acr
   def dockerImage
   def projectBranch
   def imageRegistry
+  def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
+  boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
+
+    // This needs to be initialised after the checkoutScm as it relies on env.GIT_URL which is not populated until after checkout
+    deploymentEnabled = new DeploymentControls(this).isDeployEnabled(env.GIT_URL, config)
     withAcrClient(subscription) {
       projectBranch = new ProjectBranch(env.BRANCH_NAME)
       imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
@@ -38,138 +46,224 @@ def call(params) {
   }
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
+
+  stage('ACR Migration Check') {
+    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+  }
+
   onPathToLive {
-    stageWithAgent("Build", product) {
-      onPR {
-        enforceChartVersionBumped product: product, component: component
-        warnAboutAADIdentityPreviewHack product: product, component: component
-      }
-
-      // always build master and demo as we currently do not deploy an image there
-      boolean envSub = autoDeployEnvironment() != null
-      when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
-        pcr.callAround('build') {
-          timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
-            builder.build()
+    withEnvironmentAgent(environment, product) {
+      stageWithAgent("Build", product) {
+        onPR {
+          if (config.deployableApp) {
+            enforceChartVersionBumped product: product, component: component
+            warnAboutAADIdentityPreviewHack product: product, component: component
           }
         }
-      }
-    }
-
-    def branches = [failFast: false]
-    branches["Unit tests and Sonar scan"] = {
-      pcr.callAround('test') {
-        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-          builder.test()
-        }
-      }
-
-      pcr.callAround('sonarscan') {
-        pluginActive('sonar') {
-          withSonarQubeEnv("SonarQube") {
-            builder.sonarScan()
-          }
-
-          timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        
+        // always build master and demo as we currently do not deploy an image there
+        boolean envSub = autoDeployEnvironment() != null
+        when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+          pcr.callAround('build') {
+            withBuildCache(config) {
+              timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
+                builder.build()
+              }
             }
           }
         }
       }
-    }
-    branches["Security Checks"] = {
-      pcr.callAround('securitychecks') {
-        builder.securityCheck()
-      }
-    }
-    branches["Tech Stack"] = {
-      pcr.callAround('techstack') {
-        builder.techStackMaintenance()
-      }
-    }
 
-    if (dockerFileExists) {
-      branches["Docker Build"] = {
-        withAcrClient(subscription) {
-          def acbTemplateFilePath = 'acb.tpl.yaml'
+      def branches = [failFast: false]
+      branches["Unit tests and Sonar scan"] = {
+        pcr.callAround('test') {
+          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+            withAcrClient(subscription){
+              acr.login()
+              builder.test()
+            }
+          }
+        }
 
-          pcr.callAround('dockerbuild') {
-            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker build') {
-              if (!fileExists('.dockerignore')) {
-                writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-              } else {
-                writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-                sh script: """
+        pcr.callAround('sonarscan') {
+          pluginActive('sonar') {
+            withSonarQubeEnv("SonarQube") {
+              builder.sonarScan()
+            }
+
+            timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Sonar Scan') {
+              def qg = waitForQualityGate()
+              if (qg.status != 'OK') {
+                error "Pipeline aborted due to quality gate failure: ${qg.status}"
+              }
+            }
+          }
+        }
+      }
+      branches["Security Checks"] = {
+        pcr.callAround('securitychecks') {
+          builder.securityCheck()
+        }
+      }
+      branches["Tech Stack"] = {
+        pcr.callAround('techstack') {
+          builder.techStackMaintenance()
+        }
+      }
+
+      if (dockerFileExists) {
+        branches["Docker Build"] = {
+          withAcrClient(subscription) {
+            def acbTemplateFilePath = 'acb.tpl.yaml'
+
+            pcr.callAround('dockerbuild') {
+              // temporary whilst we have dual acr push enabled
+              timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Docker build') {
+                if (!fileExists('.dockerignore')) {
+                  writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                } else {
+                  writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
+                  sh script: """
                         # in case anyone doesn't have a trailing new line in their file
                         printf '\r\n' >> .dockerignore
                         cat .dockerignore_build >> .dockerignore
                       """
-              }
-              def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-              if (fileExists(acbTemplateFilePath)) {
-                acr.runWithTemplate(acbTemplateFilePath, dockerImage)
-              } else {
-                acr.build(dockerImage, buildArgs)
-              }
-            }
-          }
-        }
-      }
-    }
-
-    onMaster {
-      if (config.dockerTestBuild && fileExists('build.gradle') && dockerFileExists) {
-        branches["Docker Test Build"] = {
-          withAcrClient(subscription) {
-            def dockerfileTest = 'Dockerfile_test'
-
-            pcr.callAround('dockertestbuild') {
-              timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
-                writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
-                writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
-                if (!fileExists(dockerfileTest)) {
-                  writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
                 }
-                def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
-                acr.build(dockerImageTest, " -f ${dockerfileTest}")
+                def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
+                if (fileExists(acbTemplateFilePath)) {
+                  acr.runWithTemplate(acbTemplateFilePath, dockerImage)
+                } else {
+                  acr.build(dockerImage, buildArgs)
+                }
               }
             }
           }
         }
       }
-    }
 
-    onPR {
-      GithubAPI gitHubAPI = new GithubAPI(this)
-      def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
-      if (testLabels.contains('enable_fortify_scan')) {
+      onMaster {
+        if (config.dockerTestBuild && fileExists('build.gradle') && dockerFileExists) {
+          branches["Docker Test Build"] = {
+            withAcrClient(subscription) {
+              def dockerfileTest = 'Dockerfile_test'
+
+              pcr.callAround('dockertestbuild') {
+                timeoutWithMsg(time: 30, unit: 'MINUTES', action: 'Docker test build') {
+                  writeFile file: 'Dockerfile_test.dockerignore', text: libraryResource('uk/gov/hmcts/gradle/.dockerignore_test')
+                  writeFile file: 'runTests.sh', text: libraryResource('uk/gov/hmcts/gradle/runTests.sh')
+                  if (!fileExists(dockerfileTest)) {
+                    writeFile file: dockerfileTest, text: libraryResource('uk/gov/hmcts/gradle/Dockerfile_test')
+                  }
+                  def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
+                  acr.build(dockerImageTest, " -f ${dockerfileTest}")
+                }
+              }
+            }
+          }
+        }
+      }
+
+      onPR {
+        GithubAPI gitHubAPI = new GithubAPI(this)
+        def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
+        if (testLabels.contains('enable_fortify_scan')) {
+          branches["Fortify scan"] = {
+            ws("${env.WORKSPACE}@fortify") {
+              deleteDir()
+              checkout scm
+              withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+                warnError('Failure in Fortify Scan') {
+                  pcr.callAround('fortify-scan') {
+                    builder.fortifyScan()
+                  }
+                }
+
+                warnError('Failure in Fortify vulnerability report') {
+                  fortifyVulnerabilityReport()
+                }
+
+                archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+              }
+            }
+          }
+        }
+        echo 'Checking for only_deploy label to determine if we should skip build and tests'
+        def onlyDeployLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'only_deploy')
+        if (onlyDeployLabels.contains('only_deploy')) {
+          echo 'only_deploy label found, skipping build and tests'
+          config.onlyDeploy = true
+        }      
+      }
+
+      if (config.fortifyScan && branches["Fortify scan"] == null) {
         branches["Fortify scan"] = {
-          withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
-            warnError('Failure in Fortify Scan') {
-              pcr.callAround('fortify-scan') {
-                builder.fortifyScan()
+          ws("${env.WORKSPACE}@fortify") {
+            deleteDir()
+            checkout scm
+            withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
+              // The library FoD scan runner (fallback when the repo has no fortifyScan task/script)
+              // needs the real OAuth client_id/secret, not just the vault username/password.
+              withFortifyOAuthSecrets {
+                warnError('Failure in Fortify Scan') {
+                  pcr.callAround('fortify-scan') {
+                    builder.fortifyScan()
+                  }
+                }
+
+                warnError('Failure in Fortify vulnerability report') {
+                  fortifyVulnerabilityReport()
+                }
               }
+
+              archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
             }
+          }
+        }
+      }
+
+    if (config.onlyDeploy) {
+      branches.remove("Unit tests and Sonar scan")
+      branches.remove("Fortify scan")
+    }
+
+      stageWithAgent("Static checks / Container build", product) {
+        when(noSkipImgBuild) {
+          parallel branches
+
+          // files related to dependency checking that are not needed for the rest of the pipeline
+          // they can't be safely deleted in the parallel branches as docker build context will collect files
+          // and then upload them, if any are missing it will error:
+          // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
+          sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
+        }
+      }
+
+    if (config.releaseOnMerge) {
+      onMaster {
+        stageWithAgent("Create release", product) {
+          if (fileExists('build.gradle')) {
+            String gradleVersion = gradleAPI.resolveGradleVersion()
+            if (!gradleVersion) {
+              echo('Skipping GitHub release creation: unable to resolve Gradle version')
+              return
+            }
+
+            GithubAPI githubAPI = new GithubAPI(this)
+            String project = githubAPI.currentProject()
+            String latestReleaseVersion = githubAPI.getLatestReleaseVersion(project)
+
+            if (latestReleaseVersion && gradleAPI.compareReleaseVersions(gradleVersion, latestReleaseVersion) <= 0) {
+              echo("Skipping GitHub release creation: ${gradleVersion} is not greater than latest release ${latestReleaseVersion}")
+              return
+            }
+
+            githubAPI.createGitHubRelease(project, gradleVersion, env.GIT_COMMIT)
           }
         }
       }
     }
 
-    stageWithAgent("Static checks / Container build", product) {
-      when(noSkipImgBuild) {
-        parallel branches
-
-        // files related to dependency checking that are not needed for the rest of the pipeline
-        // they can't be safely deleted in the parallel branches as docker build context will collect files
-        // and then upload them, if any are missing it will error:
-        // ERROR: [Errno 2] No such file or directory: './sorted-yarn-audit-issues'
-        sh "rm -f new_vulnerabilities unneeded_suppressions sorted-yarn-audit-issues sorted-yarn-audit-known-issues active_suppressions unused_suppressions depsProc languageProc || true"
-      }
-    }
-
-    if (noSkipImgBuild) {
+    if (noSkipImgBuild && deploymentEnabled) {
       stageWithAgent("Promote Docker Image", product) {
         if (dockerFileExists) {
           def deploymentStage = DockerImage.DeploymentStage.STAGING
@@ -187,8 +281,9 @@ def call(params) {
         }
       }
     }
+  }
 
-    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && noSkipImgBuild) {
+    if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
         timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
           def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
@@ -200,8 +295,8 @@ def call(params) {
           env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
           /*
-         * These instructions have to be kept in order
-         */
+        * These instructions have to be kept in order
+        */
           pcr.callAround('pact-consumer-tests') {
             builder.runConsumerTests(env.PACT_BROKER_URL, version)
           }
@@ -209,4 +304,6 @@ def call(params) {
       }
     }
   }
+  return deploymentEnabled
 }
+

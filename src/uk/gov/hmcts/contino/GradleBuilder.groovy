@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
@@ -27,11 +28,47 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    gradle("fortifyScan")
+    try {
+      String runner = (localSteps.env.FORTIFY_SCAN_RUNNER ?: 'auto').toString().trim().toLowerCase()
+      if (runner == 'library') {
+        localSteps.echo('Fortify: using library FoD scan runner (FORTIFY_SCAN_RUNNER=library)')
+        localSteps.fortifyOnDemandScan()
+      } else if (runner == 'repo' || hasFortifyScanTask()) {
+        gradle("fortifyScan")
+      } else {
+        localSteps.echo("Fortify: no Gradle fortifyScan task found; using library FoD scan runner")
+        localSteps.fortifyOnDemandScan()
+      }
+    } finally {
+      localSteps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+    }
+  }
+
+  private boolean hasFortifyScanTask() {
+    if (!localSteps.fileExists('gradlew')) {
+      return false
+    }
+    try {
+      addInitScript()
+      int status = localSteps.sh(
+        script: "./gradlew --no-daemon --init-script init.gradle tasks --all | grep -q \"\\bfortifyScan\\b\"",
+        returnStatus: true
+      ) as int
+      return status == 0
+    } catch (Exception ignored) {
+      return false
+    }
   }
 
   def addInitScript() {
     localSteps.writeFile(file: 'init.gradle', text: localSteps.libraryResource('uk/gov/hmcts/gradle/init.gradle'))
+  }
+
+  private withAdoMavenPat(Closure body) {
+    def secrets = [
+      [ secretType: 'Secret', name: 'ado-maven-mirror-pat', version: '', envVariable: 'ADO_MAVEN_PAT' ]
+    ]
+    localSteps.withAzureKeyvault(secrets) { body() }
   }
 
   def test() {
@@ -80,6 +117,7 @@ class GradleBuilder extends AbstractBuilder {
 
   def functionalTest() {
     try {
+      installYarnDependenciesForFunctionalTestsIfRequired()
       // By default Gradle will skip task execution if it's already been run (is 'up to date').
       // --rerun-tasks ensures that subsequent calls to tests against different slots are executed.
       gradle("--rerun-tasks functional")
@@ -90,6 +128,20 @@ class GradleBuilder extends AbstractBuilder {
         localSteps.junit '**/test-results/functional/*.xml,**/test-results/functionalTest/*.xml'
       }
     }
+  }
+
+  private void installYarnDependenciesForFunctionalTestsIfRequired() {
+    // Only Yarn Berry workspaces need this; Yarn Classic uses .yarnrc, not .yarnrc.yml.
+    if (!localSteps.fileExists('package.json') || !localSteps.fileExists('yarn.lock') || !localSteps.fileExists('.yarnrc.yml')) {
+      return
+    }
+
+    if (localSteps.fileExists('node_modules/.yarn-state.yml') || localSteps.fileExists('.pnp.cjs')) {
+      return
+    }
+
+    localSteps.echo('Installing yarn dependencies - install state missing after agent hop')
+    localSteps.sh(label: 'Install yarn dependencies', script: '/usr/bin/yarn install --immutable --silent')
   }
 
   def apiGatewayTest() {
@@ -138,6 +190,15 @@ class GradleBuilder extends AbstractBuilder {
   }
 
   def securityCheck() {
+    def dependencyCheckHtmlCandidates = [
+      'build/reports/dependency-check/dependency-check-report.html',
+      'build/reports/dependency-check-report.html'
+    ]
+    def dependencyCheckJsonCandidates = [
+      'build/reports/dependency-check/dependency-check-report.json',
+      'build/reports/dependency-check-report.json'
+    ]
+
     def secrets = [
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Account', version: '', envVariable: 'OWASPDB_V15_ACCOUNT' ],
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Password', version: '', envVariable: 'OWASPDB_V15_PASSWORD' ],
@@ -148,8 +209,18 @@ class GradleBuilder extends AbstractBuilder {
       try {
         gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
-        localSteps.archiveArtifacts 'build/reports/dependency-check-report.html'
-        String dependencyReport = localSteps.readFile('build/reports/dependency-check-report.json')
+        def dependencyCheckHtml = dependencyCheckHtmlCandidates.find { localSteps.fileExists(it) }
+        if (dependencyCheckHtml) {
+          localSteps.archiveArtifacts dependencyCheckHtml
+        } else {
+          localSteps.echo "No Dependency-Check HTML report found in expected locations: ${dependencyCheckHtmlCandidates.join(', ')}"
+        }
+
+        def dependencyCheckJson = dependencyCheckJsonCandidates.find { localSteps.fileExists(it) }
+        String dependencyReport = dependencyCheckJson ? localSteps.readFile(dependencyCheckJson) : ''
+        if (!dependencyCheckJson) {
+          localSteps.echo "No Dependency-Check JSON report found in expected locations: ${dependencyCheckJsonCandidates.join(', ')}"
+        }
 
         def cveReport = prepareCVEReport(dependencyReport)
 
@@ -242,7 +313,9 @@ EOF
       prepend += ' '
     }
     addInitScript()
-    localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    withAdoMavenPat {
+      localSteps.sh("${prepend}./gradlew --no-daemon --init-script init.gradle ${task}")
+    }
   }
 
   private String gradleWithOutput(String task) {
@@ -272,21 +345,35 @@ EOF
 
   @Override
   def setupToolVersion() {
-    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(11)" build.gradle', returnStatus: true
-    if (statusCode == 0) {
-      WarningCollector.addPipelineWarning("java_11_deprecated",
-        "Please upgrade to Java 17, upgrade to " +
-          "<https://moj.enterprise.slack.com/files/T02DYEB3A/F02V9BNFXRU?origin_team=T1L0WSW9F|Application Insights v3 first>, " +
-          "then <https://github.com/hmcts/draft-store/pull/989|upgrade to Java 17>. " +
-          "Make sure you use the latest version of the Application insights agent, see the configuration in " +
-          "<https://github.com/hmcts/spring-boot-template/|spring-boot-template>, " +
-          "look at the `.github/renovate.json` and `Dockerfile` files.", LocalDate.of(2023, 8, 1)
+    def statusCode = steps.sh script: 'grep -F "JavaLanguageVersion.of(17)" build.gradle', returnStatus: true
+    def dockerfileStatusCode = steps.sh script: 'grep -E "FROM.*java.*:17|FROM.*java17" Dockerfile', returnStatus: true
+
+    if (statusCode == 0 || dockerfileStatusCode == 0) {
+      def deprecationConfig = new DeprecationConfig(steps)
+      def repoUrl = steps.env.GIT_URL
+      def config = deprecationConfig.getDeprecationConfig(repoUrl)
+      def java17Config = config?.java?.java17
+      def deadline = java17Config?.date_deadline ? LocalDate.parse(java17Config.date_deadline) : LocalDate.of(2026, 6, 1)
+
+      WarningCollector.addPipelineWarning("java_17_deprecated",
+        "Please upgrade to Java 21. " +
+          "Java 17 support will be removed. " +
+          "Update your build.gradle to use JavaLanguageVersion.of(21) and " +
+          "update your Dockerfile to use the Java 21 base image. " +
+          "See <https://github.com/hmcts/spring-boot-template/|spring-boot-template> for reference.", deadline
       )
     }
 
     def statusCodeJava21 = steps.sh script: 'grep -F "JavaLanguageVersion.of(21)" build.gradle', returnStatus: true
     if (statusCodeJava21 == 0) {
       def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-21-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
+    def statusCodeJava25 = steps.sh script: 'grep -F "JavaLanguageVersion.of(25)" build.gradle', returnStatus: true
+    if (statusCodeJava25 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-25-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
       steps.env.JAVA_HOME = javaHomeLocation
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
@@ -317,19 +404,36 @@ EOF
   }
 
   @Override
-  def performanceTest() {
+  def performanceTest(simulation = null) {
     //support for the new and old (deprecated) gatling gradle plugins
     if (hasPlugin("gatling-gradle-plugin") || hasPlugin("gradle-gatling-plugin")) {
       localSteps.env.GATLING_REPORTS_PATH = 'build/reports/gatling'
       localSteps.env.GATLING_REPORTS_DIR =  '$WORKSPACE/' + localSteps.env.GATLING_REPORTS_PATH
-      gradle("gatlingRun")
-      this.localSteps.gatlingArchive()
+      
+      // If simulation is provided Gatling will run that simulation, otherwise run all simulations within the
+      // performance repo
+      def gatlingCommand = simulation ? "gatlingRun --simulation=${simulation}" : "gatlingRun"
+      gradle(gatlingCommand)
+      archiveGatlingReports()
     } else {
       WarningCollector.addPipelineWarning("gatling_docker_deprecated",
         "Please use the gatling plugin instead of the docker image " +
           "See <https://github.com/hmcts/cnp-plum-recipes-service/pull/817/files|example>", LocalDate.of(2023, 9, 1)
       )
       super.executeGatling()
+    }
+  }
+
+  private void archiveGatlingReports() {
+    try {
+      this.localSteps.gatlingArchive()
+    } catch (Exception e) {
+      localSteps.echo("Gatling plugin archive step failed: ${e.class.simpleName}: ${e.message}")
+      localSteps.echo("Falling back to artifact archiving for Gatling reports")
+      localSteps.archiveArtifacts(
+        artifacts: "${localSteps.env.GATLING_REPORTS_PATH}/**/*",
+        allowEmptyArchive: true
+      )
     }
   }
 }

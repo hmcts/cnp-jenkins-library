@@ -29,8 +29,8 @@ def call(Map params) {
         values << valuesEnv
       }
 
-      helm.publishIfNotExists()
-      helm.publishToGitIfNotExists()
+      helm.publishIfNotExists(values)
+      helm.publishToGitIfNotExists(values)
     }
   }
 }

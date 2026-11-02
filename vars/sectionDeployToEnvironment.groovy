@@ -32,18 +32,21 @@ def call(params) {
             deploymentNumber = githubCreateDeployment()
           }
 
-          withSubscription(subscription) {
+          withEnv([
+            'ENVIRONMENT_AGENT_STASH_INCLUDES=infrastructure/**,.terraform-version',
+            'ENVIRONMENT_AGENT_STASH_BACK=false'
+          ]) {
             dir('infrastructure') {
-                sectionInfraBuild(
-                  subscription: subscription,
-                  environment: environment,
-                  aksSubscription: aksSubscription,
-                  product: product,
-                  component: component,
-                  pipelineCallbacksRunner: pcr,
-                  planOnly: tfPlanOnly,
-                  expires: config.expiryDate
-                )
+              sectionInfraBuild(
+                subscription: subscription,
+                environment: environment,
+                aksSubscription: aksSubscription,
+                product: product,
+                component: component,
+                pipelineCallbacksRunner: pcr,
+                planOnly: tfPlanOnly,
+                expires: config.expiryDate
+              )
             }
           }
         }
@@ -52,7 +55,7 @@ def call(params) {
       if(!tfPlanOnly){
 
         if (config.migrateDb) {
-          stageWithAgent("DB Migration - ${environment}", product) {
+          stageWithEnvironmentAgent("DB Migration - ${environment}", product, environment) {
             pcr.callAround("dbmigrate:${environment}") {
               builder.dbMigrate(
                 tfOutput?.vaultName ? tfOutput.vaultName.value : "${config.dbMigrationVaultName}-${environment}",

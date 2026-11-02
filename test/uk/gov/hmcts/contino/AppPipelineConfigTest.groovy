@@ -33,10 +33,15 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.securityScan).isFalse()
       assertThat(pipelineConfig.legacyDeployment).isTrue()
       assertThat(pipelineConfig.serviceApp).isTrue()
+      assertThat(pipelineConfig.smokeTestSecrets).isTrue()
+      assertThat(pipelineConfig.deployableApp).isTrue()
+      assertThat(pipelineConfig.libraryBranchAllowed).isFalse()
+      assertThat(pipelineConfig.releaseOnMerge).isFalse()
       assertThat(pipelineConfig.pactBrokerEnabled).isFalse()
       assertThat(pipelineConfig.pactProviderVerificationsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
+      assertThat(pipelineConfig.buildCache).isTrue()
   }
 
   def "ensure securityScan can be set in steps"() {
@@ -58,6 +63,13 @@ class AppPipelineConfigTest extends Specification {
       dsl.loadVaultSecrets(secrets)
     then:
       assertThat(pipelineConfig.vaultSecrets).isEqualTo(secrets)
+  }
+
+  def "disable smoke test secrets"() {
+    when:
+      dsl.disableSmokeTestSecrets()
+    then:
+      assertThat(pipelineConfig.smokeTestSecrets).isFalse()
   }
 
   def "ensure enable e2e test"() {
@@ -153,6 +165,21 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.serviceApp).isFalse()
   }
 
+  def "ensure is non deployable app"() {
+    when:
+    dsl.nonDeployableApp()
+    then:
+    assertThat(pipelineConfig.deployableApp).isFalse()
+    assertThat(pipelineConfig.serviceApp).isFalse()
+  }
+
+  def "ensure release on merge"() {
+    when:
+    dsl.releaseOnMerge()
+    then:
+    assertThat(pipelineConfig.releaseOnMerge).isTrue()
+  }
+
   def "ensure enable deploy to AKS Staging"() {
     when:
     dsl.enableAksStagingDeployment()
@@ -215,6 +242,13 @@ class AppPipelineConfigTest extends Specification {
     then:
     assertThat(pipelineConfig.slackChannel).isEqualTo(slackChannel)
     assertThat(steps.env.BUILD_NOTICE_SLACK_CHANNEL).isEqualTo(slackChannel)
+  }
+  
+  def "ensure disable build cache"() {
+    when:
+      dsl.disableBuildCache()
+    then:
+      assertThat(pipelineConfig.buildCache).isFalse()
   }
 
   def "ensure enable pact broker deployment check"() {

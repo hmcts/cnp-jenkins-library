@@ -3,17 +3,15 @@ package uk.gov.hmcts.contino
 import groovy.json.JsonSlurperClassic
 import uk.gov.hmcts.ardoq.ArdoqClient
 import uk.gov.hmcts.pipeline.CVEPublisher
+import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.SonarProperties
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import java.time.LocalDate
-import static java.lang.Float.valueOf
 
 class YarnBuilder extends AbstractBuilder {
 
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
-  private static final Float DESIRED_MIN_VERSION = 18.16
-  private static final LocalDate NODEJS_EXPIRATION = LocalDate.of(2023, 8, 31)
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues-result'
 
   def securitytest
@@ -34,7 +32,34 @@ class YarnBuilder extends AbstractBuilder {
   }
 
   def fortifyScan() {
-    yarn("fortifyScan")
+    try {
+      String runner = (steps.env.FORTIFY_SCAN_RUNNER ?: 'auto').toString().trim().toLowerCase()
+      if (runner == 'library') {
+        steps.echo('Fortify: using library FoD scan runner (FORTIFY_SCAN_RUNNER=library)')
+        steps.fortifyOnDemandScan()
+      } else if (runner == 'repo' || hasFortifyScanScript()) {
+        yarn("fortifyScan")
+      } else {
+        steps.echo("Fortify: no package.json fortifyScan script found; using library FoD scan runner")
+        steps.fortifyOnDemandScan()
+      }
+    } finally {
+      steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+    }
+  }
+
+  private boolean hasFortifyScanScript() {
+    if (!steps.fileExists('package.json')) {
+      return false
+    }
+    try {
+      def pkg = new JsonSlurperClassic().parseText(steps.readFile('package.json') ?: '{}') as Map
+      def scripts = (pkg.scripts instanceof Map) ? (pkg.scripts as Map) : [:]
+      def script = scripts.fortifyScan
+      return script != null && script.toString().trim()
+    } catch (Exception ignored) {
+      return false
+    }
   }
 
   def test() {
@@ -145,7 +170,7 @@ class YarnBuilder extends AbstractBuilder {
       corepackEnable()
       steps.writeFile(file: 'yarn-audit-with-suppressions.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/yarn-audit-with-suppressions.sh'))
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
-      steps.writeFile(file: 'format-v4-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/format-v4-audit.cjs'))
+      steps.writeFile(file: 'transform-v4-to-v3-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/transform-v4-to-v3-audit.cjs'))
 
       this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
         steps.sh """
@@ -247,6 +272,7 @@ class YarnBuilder extends AbstractBuilder {
       patched_versions   : it?.data?.advisory?.patched_versions,
       severity           : it?.data?.advisory?.severity,
       cwe                : it?.data?.advisory?.cwe,
+      cvss               : it?.data?.advisory?.cvss,
       url                : it?.data?.advisory?.url,
       module_name        : it?.data?.advisory?.module_name
     ]
@@ -350,48 +376,236 @@ EOF
     return status == 0  // only a 0 return status is success
   }
 
-  private LocalDate node18ExpirationDate() {
-    def date;
-    switch (steps.env.PRODUCT) {
-      case "xui":
-      case "em":
-        date = LocalDate.of(2024, 01, 15)
-        break
-      case "ccd":
-        date = LocalDate.of(2023, 12, 21)
-        break
-      case "bar":
-      case "fees-register":
-      case "ccpay":
-        date = LocalDate.of(2023, 12, 8)
-        break
-      default:
-        date = NODEJS_EXPIRATION
-        break
+  private installDependencies() {
+    corepackEnable()
+
+    String nvmSetup = steps.fileExists(NVMRC) ? '''
+          set +e
+          export NVM_DIR='/home/jenkinsssh/.nvm'
+          . /opt/nvm/nvm.sh
+          nvm install
+          set -e
+    ''' : ''
+
+    def status = steps.sh(label: 'Install yarn dependencies', script: """
+      set +x
+      set -e
+      export PATH=\$HOME/.local/bin:\$PATH
+
+      dependencies_available() {
+        if [ -f ".pnp.cjs" ] || [ -f ".pnp.js" ]; then
+          return 0
+        fi
+
+        if [ -f ".yarnrc.yml" ]; then
+          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules' ".yarnrc.yml"; then
+            [ -f "node_modules/.yarn-state.yml" ]
+            return \$?
+          fi
+
+          return 1
+        fi
+
+        [ -d "node_modules" ]
+      }
+
+      node_modules_populated() {
+        [ -d "node_modules" ] && [ -n "\$(find node_modules -mindepth 1 -maxdepth 1 -print -quit)" ]
+      }
+
+      dependencies_available_after_success() {
+        dependencies_available || node_modules_populated
+      }
+
+      install_marker_valid() {
+        [ -f "${INSTALL_CHECK_FILE}" ] && dependencies_available
+      }
+
+      lock_dir="${INSTALL_CHECK_FILE}.lock"
+      while ! mkdir "\$lock_dir" 2>/dev/null; do
+        if install_marker_valid; then
+          exit 0
+        fi
+        sleep 2
+      done
+
+      cleanup() {
+        rmdir "\$lock_dir" 2>/dev/null || true
+      }
+      trap cleanup EXIT
+
+      if install_marker_valid; then
+        exit 0
+      fi
+
+      rm -f "${INSTALL_CHECK_FILE}"
+
+      ${nvmSetup}
+
+      set +e
+      yarn install
+      install_status=\$?
+      set -e
+      if [ "\$install_status" -eq 0 ]; then
+        if ! dependencies_available_after_success; then
+          echo "Yarn install completed but dependency state is missing" >&2
+          exit 1
+        fi
+
+        touch "${INSTALL_CHECK_FILE}"
+        exit 0
+      fi
+
+      if dependencies_available; then
+        echo "Yarn install exited with status \$install_status; using existing dependency state"
+        touch "${INSTALL_CHECK_FILE}"
+        exit 0
+      fi
+
+      echo "Yarn install failed with status \$install_status and dependency state is missing" >&2
+      exit "\$install_status"
+    """, returnStatus: true)
+
+    if (status != 0) {
+      steps.error("Yarn dependency install failed with status ${status}")
     }
-    steps.echo "Node.Js upgrade deadline is: ${date}, product is: ${steps.env.PRODUCT}"
-    return date
   }
 
-  private isNodeJSV18OrNewer() {
-    boolean validVersion = true;
+  private Map getNodeJSVersionDeprecation(Map policy) {
     if (steps.fileExists(NVMRC)) {
-      String nodeVersion = steps.readFile(NVMRC).replace("v", "")
-      Float current_version = valueOf(nodeVersion
-                                          .trim()
-                                          .substring(0, nodeVersion.lastIndexOf(".")))
-      validVersion = current_version >= DESIRED_MIN_VERSION
-    } else {
-      WarningCollector.addPipelineWarning("missing_nvrmc_file", "An nvrmc file is missing for this project. see https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", node18ExpirationDate())
+      String nodeVersion = steps.readFile(NVMRC)
+      try {
+        return findNodeVersionDeprecation(nodeVersion, policy)
+      } catch (IllegalArgumentException exception) {
+        steps.error("Invalid ${NVMRC}: ${exception.message} Specify an exact Node.js version, for example '${policy.minimumVersion}'.")
+        return null
+      }
     }
 
-    return validVersion
+    // Preserve the existing key because it is published as a metric.
+    WarningCollector.addPipelineWarning("missing_nvrmc_file", "A ${NVMRC} file is missing for this project. See https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", policy.deadline)
+    return null
   }
 
-  private nagAboutOldNodeJSVersions() {
-    if (!isNodeJSV18OrNewer()) {
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please upgrade to NodeJS v18.16.0 or greater by updating the version in your .nvrmc file, https://nodejs.org/en", node18ExpirationDate())
+  private nagAboutUnsupportedNodeJSVersions() {
+    Map policy = getNodeJSDeprecationPolicy()
+    if (!policy) {
+      return
     }
+
+    Map deprecation = getNodeJSVersionDeprecation(policy)
+    if (deprecation) {
+      String requirement = deprecation.major
+        ? "Node.js ${deprecation.major} v${deprecation.minimumVersion} or greater"
+        : "Node.js v${deprecation.minimumVersion} or greater"
+      WarningCollector.addPipelineWarning("old_nodejs_version", "Please use ${requirement} by updating your ${NVMRC} file. See https://nodejs.org/en/about/previous-releases", deprecation.deadline)
+    }
+  }
+
+  Map getNodeJSDeprecationPolicy() {
+    def config = new DeprecationConfig(steps).getDeprecationConfig(steps.env.GIT_URL)
+    def nodeVersionConfig = config?.nodejs?.node_version
+    if (!nodeVersionConfig?.version || !nodeVersionConfig?.date_deadline) {
+      steps.echo("[Warning] Node.js deprecation check skipped because nodejs.node_version.version and nodejs.node_version.date_deadline are not configured.")
+      return null
+    }
+
+    def invalidMajorVersion = (nodeVersionConfig.major_versions ?: [:]).find { major, details ->
+      !(details instanceof Map) || !details.version || !details.date_deadline
+    }
+    if (invalidMajorVersion) {
+      steps.echo("[Warning] Node.js deprecation check skipped because every nodejs.node_version.major_versions entry must define version and date_deadline.")
+      return null
+    }
+
+    return [
+      minimumVersion: nodeVersionConfig.version.toString(),
+      majorVersions: (nodeVersionConfig.major_versions ?: [:]).collectEntries { major, details ->
+        [(major.toString()): [
+          minimumVersion: details.version.toString(),
+          deadline: LocalDate.parse(details.date_deadline.toString())
+        ]]
+      },
+      deadline: LocalDate.parse(nodeVersionConfig.date_deadline.toString())
+    ]
+  }
+
+  /**
+   * Compares exact Node.js versions by numeric major, minor and patch components.
+   * A prerelease of the minimum version does not satisfy the released minimum.
+   */
+  static boolean isSupportedNodeVersion(String actualVersion, String minimumVersion, Map majorVersions = [:]) {
+    Map policy = [
+      minimumVersion: minimumVersion,
+      majorVersions: majorVersions
+    ]
+    return findNodeVersionDeprecation(actualVersion, policy) == null
+  }
+
+  static Map findNodeVersionDeprecation(String actualVersion, Map policy) {
+    def actual = parseNodeVersion(actualVersion)
+    Map globalRule = [
+      minimumVersion: policy.minimumVersion.toString(),
+      deadline: policy.deadline
+    ]
+    def minimum = parseNodeVersion(globalRule.minimumVersion)
+
+    if (compareNodeVersions(actual, minimum) < 0) {
+      return globalRule
+    }
+
+    String actualMajor = actual.numbers[0].toString()
+    def configuredMajorRule = policy.majorVersions?.get(actualMajor)
+    if (!configuredMajorRule) {
+      return null
+    }
+
+    Map majorRule = configuredMajorRule instanceof Map
+      ? [
+          minimumVersion: (configuredMajorRule.minimumVersion ?: configuredMajorRule.version).toString(),
+          deadline: configuredMajorRule.deadline,
+          major: actualMajor
+        ]
+      : [minimumVersion: configuredMajorRule.toString(), deadline: policy.deadline, major: actualMajor]
+    def majorMinimum = parseNodeVersion(majorRule.minimumVersion)
+    if (majorMinimum.numbers[0] != actual.numbers[0]) {
+      throw new IllegalArgumentException("Major-specific minimum '${majorRule.minimumVersion}' does not match Node.js major ${actualMajor}.")
+    }
+
+    return compareNodeVersions(actual, majorMinimum) < 0 ? majorRule : null
+  }
+
+  private static int compareNodeVersions(Map actual, Map minimum) {
+    for (int index = 0; index < 3; index++) {
+      if (actual.numbers[index] != minimum.numbers[index]) {
+        return actual.numbers[index] > minimum.numbers[index] ? 1 : -1
+      }
+    }
+
+    if (actual.prerelease && !minimum.prerelease) {
+      return -1
+    }
+    if (!actual.prerelease && minimum.prerelease) {
+      return 1
+    }
+    return 0
+  }
+
+  private static Map parseNodeVersion(String rawVersion) {
+    String version = rawVersion?.trim()
+    def matcher = version =~ /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("'${version ?: rawVersion}' is not an exact Node.js version.")
+    }
+
+    return [
+      numbers: [
+        matcher[0][1].toInteger(),
+        matcher[0][2].toInteger(),
+        matcher[0][3].toInteger()
+      ],
+      prerelease: matcher[0][4]
+    ]
   }
 
   private corepackEnable() {
@@ -403,11 +617,7 @@ EOF
   }
 
   def yarn(String task, String prepend = "") {
-    if (!steps.fileExists(INSTALL_CHECK_FILE)) {
-      steps.sh("touch ${INSTALL_CHECK_FILE}")
-      corepackEnable()
-      runYarn("install")
-    }
+    installDependencies()
     runYarn(task, prepend)
   }
 
@@ -437,8 +647,20 @@ EOF
       steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
     }
 
+    // grep -q . guards against the `find -exec ... +` gotcha: with no build.gradle present
+    // find still exits 0, which would otherwise wrongly enter the Java 25 branch on pure
+    // yarn/frontend repos and fail at the temurin-25 lookup.
+    def statusCodeJava25 = steps.sh(script: """
+      find . -name "build.gradle" -exec grep -l "JavaLanguageVersion.of(25)" {} + | grep -q .
+      """, returnStatus: true)
+    if (statusCodeJava25 == 0) {
+      def javaHomeLocation = steps.sh(script: 'ls -d /usr/lib/jvm/temurin-25-jdk-*', returnStdout: true, label: 'Detect Java location').trim()
+      steps.env.JAVA_HOME = javaHomeLocation
+      steps.env.PATH = "${steps.env.JAVA_HOME}/bin:${steps.env.PATH}"
+    }
+
     localSteps.sh "java -version"
-    nagAboutOldNodeJSVersions()
+    nagAboutUnsupportedNodeJSVersions()
   }
 
 }

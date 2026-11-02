@@ -1,6 +1,7 @@
 package uk.gov.hmcts.contino
 
 import groovy.json.JsonSlurperClassic
+import uk.gov.hmcts.pipeline.AgentSelector
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 
 class Kubectl {
@@ -11,6 +12,7 @@ class Kubectl {
   def namespace
   def resourceGroup
   def clusterName
+  def environment
   def kubectl = { cmd, namespace, returnJsonOutput -> return this.steps.sh(script: "kubectl $cmd $namespace $returnJsonOutput", returnStdout: true)}
 
   Kubectl(steps, subscription, namespace) {
@@ -29,6 +31,7 @@ class Kubectl {
     this.resourceGroup = steps.env.AKS_RESOURCE_GROUP
     this.clusterName = steps.env.AKS_CLUSTER_NAME
     this.aksSubscription = aksSubscription
+    this.environment = steps.env.DEPLOYMENT_ENVIRONMENT
   }
 
   // ignore return status so doesn't fail if namespace already exists
@@ -54,6 +57,19 @@ class Kubectl {
 
   def deleteJob(String name) {
     this.steps.sh(returnStatus: true, script: "kubectl delete job ${name} -n ${this.namespace}")
+  }
+
+  def deleteJobsByReleasePrefix(String namespace, String releasePrefix) {
+    this.steps.sh(
+      returnStatus: true,
+      script: """
+        set +e
+        JOBS=\$(kubectl get jobs -n ${namespace} -o name 2>/dev/null | grep '^job.batch/${releasePrefix}-' || true)
+        if [ -n "\$JOBS" ]; then
+          echo "\$JOBS" | xargs -r kubectl delete -n ${namespace} --ignore-not-found=true --wait=false || true
+        fi
+      """
+    )
   }
 
   def getServiceLoadbalancerIP(String name) {
@@ -92,7 +108,43 @@ class Kubectl {
 
   // Annoyingly this can't be done in the constructor (constructors only @NonCPS)
   def login() {
-    this.steps.sh(script: "env AZURE_CONFIG_DIR=/opt/jenkins/.azure-${this.subscription} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} -a --overwrite-existing ", returnStdout: true)
+    def azureConfigName = resolveAzureConfigName()
+    boolean usesManagedIdentity = usesEnvironmentManagedIdentity()
+    String azureConfigDir = "AZURE_CONFIG_DIR=/opt/jenkins/.azure-${azureConfigName}"
+
+    if (usesManagedIdentity) {
+      this.steps.echo("Kubectl.login(): authenticating via environment agent's managed identity (${azureConfigDir})")
+      this.steps.sh(script: "env ${azureConfigDir} az login --identity", returnStdout: true)
+    } else {
+      this.steps.echo("Kubectl.login(): not running on a recognised environment agent")
+    }
+
+    try {
+      this.steps.sh(script: "env ${azureConfigDir} az aks get-credentials --resource-group ${this.resourceGroup} --name ${this.clusterName} --subscription  ${aksSubscription} --overwrite-existing ", returnStdout: true)
+    } catch (e) {
+      this.steps.echo("Kubectl.login(): 'az aks get-credentials' failed for cluster ${this.clusterName} (usesManagedIdentity=${usesManagedIdentity}). " +
+        (usesManagedIdentity ?
+          "Check the agent's managed identity has the AKS 'Cluster User' Azure role (or another role granting listClusterUserCredential) on this cluster." :
+          "This agent isn't matched to an environment MI, so az cli must already be logged in before calling login() - check the calling pipeline authenticates first (e.g. via withSubscription())."))
+      throw e
+    }
+
+    if (usesManagedIdentity) {
+      // local accounts are disabled, so the kubeconfig needs converting to fetch tokens via the agent's managed identity
+      this.steps.sh(script: "env ${azureConfigDir} kubelogin convert-kubeconfig -l msi", returnStdout: true)
+    }
+  }
+
+  private String resolveAzureConfigName() {
+    if (usesEnvironmentManagedIdentity()) {
+      return AgentSelector.normaliseEnvironment(this.environment)
+    }
+
+    return this.subscription
+  }
+
+  private boolean usesEnvironmentManagedIdentity() {
+    return AgentSelector.isRunningOnEnvironmentAgent(this.steps.env, this.environment)
   }
 
   private String getILBIP(String serviceName, String namespace) {

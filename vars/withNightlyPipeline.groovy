@@ -3,6 +3,7 @@ import uk.gov.hmcts.contino.PipelineType
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.SpringBootPipelineType
 import uk.gov.hmcts.contino.AngularPipelineType
+import uk.gov.hmcts.contino.PythonPipelineType
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.Subscription
 import uk.gov.hmcts.contino.AppPipelineConfig
@@ -10,6 +11,10 @@ import uk.gov.hmcts.contino.AppPipelineDsl
 import uk.gov.hmcts.contino.PipelineCallbacksConfig
 import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import uk.gov.hmcts.pipeline.AgentSelector
+import uk.gov.hmcts.contino.Environment
 
 def call(type, product, component, timeout = 300, Closure body) {
 
@@ -18,7 +23,8 @@ def call(type, product, component, timeout = 300, Closure body) {
     nodejs : new NodePipelineType(this, product, component),
     java   : new SpringBootPipelineType(this, product, component),
     angular: new AngularPipelineType(this, product, component),
-    ruby: new RubyPipelineType(this, product, component)
+    ruby: new RubyPipelineType(this, product, component),
+    python: new PythonPipelineType(this, product, component)
   ]
 
   def pipelineType = pipelineTypes.get(type)
@@ -44,34 +50,50 @@ def call(type, product, component, timeout = 300, Closure body) {
     currentBuild.result = "FAILURE"
   }
 
+  Environment environment = new Environment(env)
+  String primaryEnvironment = environment.nonProdName
   def teamConfig = new TeamConfig(this).setTeamConfigEnv(product)
-  String agentType = env.BUILD_AGENT_TYPE
+  String agentType = AgentSelector.labelForEnvironment(primaryEnvironment, env, product) ?: env.BUILD_AGENT_TYPE
   String nodeSelector
-
+  
   if (agentType == "") {
-    nodeSelector = "daily"
+    nodeSelector = "nightly"
   } else if (agentType == "civil") {
     nodeSelector = agentType
+  } else if (agentType == "xui") {
+    nodeSelector = agentType
   } else {
-    nodeSelector = agentType + ' && daily'
+    nodeSelector = agentType + ' && nightly'
   }
+
+  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
 
   node(nodeSelector) {
     timeoutWithMsg(time: timeout, unit: 'MINUTES', action: 'pipeline') {
       def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
       try {
+        if (!libraryBranchAllowed) {
+          currentBuild.result = "FAILURE"
+          return
+        }
+
         dockerAgentSetup()
         env.PATH = "$env.PATH:/usr/local/bin"
-        withSubscriptionLogin(subscription.nonProdName) {
-          sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
-          onMaster {
-            sectionSyncBranchesWithMaster(
-              branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
-              product: product
-            )
+        withEnv(['IS_NIGHTLY_PIPELINE=true']) {
+          withSubscriptionLogin(subscription.nonProdName) {
+            sectionNightlyTests(callbacksRunner, pipelineConfig, pipelineType, product, component, subscription.nonProdName)
+            onMaster {
+              sectionSyncBranchesWithMaster(
+                branchestoSync: pipelineConfig.branchesToSyncWithMaster != null ? pipelineConfig.branchesToSyncWithMaster : [],
+                product: product
+              )
+            }
           }
         }
         assert  pipelineType!= null
+      } catch (FlowInterruptedException err) {
+        currentBuild.result = err.result.toString()
+        throw err
       } catch (err) {
         currentBuild.result = "FAILURE"
         notifyBuildFailure channel: slackChannel
@@ -81,6 +103,10 @@ def call(type, product, component, timeout = 300, Closure body) {
         throw err
       } finally {
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
+        if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+          archiveBuildOutputs()
+          queueBuildArchive(product: product, component: component)
+        }
         deleteDir()
       }
 

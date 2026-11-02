@@ -1,0 +1,138 @@
+package uk.gov.hmcts.pipeline
+
+class LibraryBranchControls {
+  def steps
+  static def libraryBranchControls
+
+  LibraryBranchControls(steps) {
+    this.steps = steps
+  }
+
+  def getConfigFilePath() {
+    return "uk/gov/hmcts/library/allowed-library-branches.yml"
+  }
+
+  def getLibraryBranchControls() {
+    def response = steps.httpRequest(
+      consoleLogResponseBody: true,
+      authentication: steps.env.GIT_CREDENTIALS_ID,
+      timeout: 10,
+      url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/${getConfigFilePath()}",
+      validResponseCodes: '200'
+    )
+    libraryBranchControls = steps.readYaml(text: response.content)
+    return libraryBranchControls
+  }
+
+  private String extractLibraryBranch(String libraryReference) {
+    if (!libraryReference) {
+      return null
+    }
+
+    def reference = libraryReference.trim()
+    def extractedReference = reference
+
+    // Supports values like @Library("Infrastructure@my-branch")
+    def matcher = (reference =~ /@Library\(\s*["']?([^"'\)\s]+)["']?\s*\)/)
+    if (matcher.find()) {
+      extractedReference = matcher.group(1)
+    }
+
+    if (extractedReference.contains('@')) {
+      return extractedReference.split('@', 2)[1].trim()
+    }
+
+    // If only the library name is provided, default to the configured default branch.
+    if (extractedReference.equalsIgnoreCase('Infrastructure')) {
+      return 'master'
+    }
+
+    return extractedReference
+  }
+
+  private String resolveLibraryBranch() {
+    def runtimeLibraryBranch = resolveLibraryBranchFromRuntime()
+    if (runtimeLibraryBranch) {
+      return runtimeLibraryBranch
+    }
+
+    if (steps?.env?.SHARED_LIBRARY_VERSION) {
+      return steps.env.SHARED_LIBRARY_VERSION
+    }
+
+    if (steps?.env?.SHARED_LIBRARY_NAME) {
+      return steps.env.SHARED_LIBRARY_NAME
+    }
+
+    return 'Infrastructure'
+  }
+
+  private String resolveLibraryBranchFromRuntime() {
+    try {
+      def actionClass = this.class.classLoader.loadClass('org.jenkinsci.plugins.workflow.libs.LibrariesAction')
+      def action = steps?.currentBuild?.rawBuild?.getAction(actionClass)
+      def envLibraryName = steps?.env?.SHARED_LIBRARY_NAME
+      def namesToTry = envLibraryName ? [envLibraryName] : ['Infrastructure', 'Pipeline', 'Tagged']
+
+      for (name in namesToTry) {
+        def record = action?.libraries?.find { it.name == name }
+        if (record?.version) {
+          return record.version
+        }
+      }
+
+      def firstLoadedLibrary = action?.libraries?.first()
+      if (firstLoadedLibrary?.version) {
+        return firstLoadedLibrary.version
+      }
+    } catch (ignored) {
+      // Runtime metadata lookup is best-effort; fallback handlers below remain in place.
+    }
+
+    return null
+  }
+
+  boolean isBranchAllowed(def pipelineConfig = null) {
+    if (steps?.env?.PROD_SUBSCRIPTION_NAME == 'sandbox') {
+      steps.echo 'Skipping library branch allowlist validation on sandbox Jenkins.'
+      return true
+    }
+
+    def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
+    // Temporary incident mitigation: Jenkins has already resolved the requested library reference.
+    // Restore tag verification after the GitHub rate-limit investigation.
+    if (branchToCheck ==~ /\d+\.\d+\.\d+/) {
+      steps.echo "Temporarily skipping library tag verification for `${branchToCheck}`."
+      return true
+    }
+
+    def libraryBranchControls = getLibraryBranchControls()
+    if (!libraryBranchControls.containsKey('branches')) {
+
+      steps.echo "No 'branches' key found in deployment controls configuration. Deployment will be disabled by default."
+      return false
+    }
+
+    def configuredBranches = libraryBranchControls.get('branches')
+    def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
+    def branchAllowed = branchEntry && branchEntry['allowed'] == true
+
+    if (branchAllowed) {
+      steps.echo "Library branch `${branchToCheck}` is allowed."
+    }
+
+    if (!branchAllowed) {
+      steps.echo WarningBanner.get(steps)
+      steps.echo """
+        Library branch: `${branchToCheck}` is not approved for use.
+        If you are using a branch, make sure to add it to:
+        - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
+        If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
+        Please check with the Platform Operations team for guidance.
+        ================================================================================
+      """
+    }
+
+    return branchAllowed
+  }
+}

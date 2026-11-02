@@ -9,3 +9,10 @@ bin
 .settings
 .DS_Store
 .java/**
+
+# ASDF
+.tool-versions
+
+docs/superpowers/
+
+graphify-out/**

@@ -61,6 +61,22 @@ class EnvironmentTest extends Specification {
     assert environmentTagName == "sandbox"
   }
 
+  def "Strips environment prefixes before resolving the tag name"() {
+    expect:
+    Environment.toTagName(environment) == tagName
+
+    where:
+    environment          | tagName
+    'idam-sandbox'       | 'sandbox'
+    'idam-aat'           | 'staging'
+    'packer-prod'        | 'production'
+    'vault-demo'         | 'demo'
+    'crime-idam-sandbox' | 'sandbox'
+    'crime-idam-aat'     | 'staging'
+    'crime-idam-prod'    | 'production'
+    'crime-idam-preview' | 'development'
+  }
+
   def "Throws exception on unknown environment"() {
     when:
     new Environment("unknown_environment")

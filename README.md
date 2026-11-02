@@ -1,5 +1,28 @@
 # Shared Jenkins Library for Code and Infrastructure pipelines
 
+## Table of Contents
+
+- [How is this used?](#how-is-this-used)
+- [Library versioning](#library-versioning)
+  - [Environment specific agents](#environment-specific-agents)
+  - [Versioning](#versioning)
+  - [Automated updates](#automated-updates)
+  - [Changelogs](#changelogs)
+- [Opinionated app pipeline](#opinionated-app-pipeline)
+- [Opinionated infrastructure pipeline](#opinionated-infrastructure-pipeline)
+- [Application specific infrastructure](#application-specific-infrastructure)
+- [Nightly pipeline](#nightly-pipeline)
+- [PR label behaviour](#pr-label-behaviour)
+- [Performance Testing with Dynatrace and Gatling](#performance-testing-with-dynatrace-and-gatling)
+- [Non-Deployable App](#non-deployable-app)
+- [Release on merge](#release-on-merge)
+- [Building and Testing](#building-and-testing)
+- [Tool versions](#tool-versions)
+- [Contract testing with Pact](#contract-testing-with-pact)
+- [Troubleshooting](#troubleshooting)
+- [Library controls](#library-controls)
+- [Contributing](#contributing)
+
 ## How is this used?
 Code in this library are loaded at runtime by Jenkins.
 Jenkins is already configured to point to this repository.
@@ -13,10 +36,107 @@ To use this pipeline in your repo, you must import it in a Jenkinsfile
   @Library('Infrastructure')
 ```
 
-### Opinionated app pipeline
+## Library versioning
 
-This library contains a complete opinionated pipeline that can build, test and deploy Java
-and NodeJS applications. The pipeline contains the following stages:
+Always pin this library to a released version in your Jenkinsfile. `@Library('Infrastructure')` with no version resolves to the `master` branch, which moves as new features land — an unpinned pipeline can break without any change on your side. See [Versioning](#versioning) for how to pin.
+
+The most significant recent change is **environment-specific agents and managed identities**. This replaces the previous model, where a single shared identity was implicitly available to any pipeline stage on any agent, regardless of which environment it was targeting or what kind of work it was doing.
+
+### Environment specific agents
+
+Azure work is now routed to agents scoped to the relevant environment, which authenticate using the managed identity for that environment — rather than inheriting broad access simply from where a pipeline stage happens to run.
+
+In practice:
+
+- The opinionated pipelines (`withPipeline`, `withInfraPipeline`, `withNightlyPipeline`) place their own stages on the correct agent automatically, starting on the agent for the branch's target environment (`preview` for a PR build, `aat` for `master`, or the branch's own environment for `demo`/`perftest`/`ithc`). Deployment/infrastructure stages hop onto the agent for whichever environment they're deploying to.
+- A stage scheduled onto one environment's agent authenticates as that environment's identity. A stage deploying to AAT runs on, and authenticates as, the AAT identity — not a broad identity that can also reach production.
+- Agent labels default to `ubuntu-<environment>`. This can be overridden per environment, or per product for the app pipeline (`withInfraPipeline` honours environment-level overrides only), if your team needs a different agent pool — check with plat ops before doing this.
+
+You only need to act where your Jenkinsfile calls Azure directly, outside of the sections the opinionated pipeline already manages for you.
+
+For temporary workspace-stash diagnostics, set the Jenkins environment variable `STASH_DIAGNOSTICS=true`. Before each environment-agent workspace stash, the library logs the total matching file count and recursive counts per top-level folder, with root files counted separately. The scan uses the stash's include/exclude patterns and requires the Pipeline Utility Steps `findFiles` step. It adds a workspace scan for each stash; unset the variable after testing. Stash contents are unchanged.
+
+#### withSubscription
+
+`withSubscription` now takes the product and the target environment, so the library can schedule the block onto the right agent and authenticate with the right identity:
+
+```groovy
+withSubscription(subscription, product, params.ENVIRONMENT) {
+  // az / terraform commands run here, on an agent scoped to params.ENVIRONMENT,
+  // authenticated as that environment's managed identity
+}
+```
+
+### Versioning
+
+The library is consumed via the standard Jenkins Shared Library mechanism:
+
+```groovy
+@Library('Infrastructure') _
+```
+
+With no version pin, this resolves to the `master` branch. Don't rely on that — `master` moves as features land, and your pipeline can break without any change on your side.
+
+Pin an explicit release tag instead. Pinning means a change to the library cannot alter your pipeline until you merge a version bump:
+
+```groovy
+@Library('Infrastructure@2.8.0') _
+```
+
+Released versions are tagged on this repository — see the [tags list](https://github.com/hmcts/cnp-jenkins-library/tags). Existing tags up to `2.8.0` have no prefix; new releases from the automated release process (see [Changelogs](#changelogs)) are tagged `X.Y.Z`, e.g. `@Library('Infrastructure@2.9.0')`. You do not need to raise the bumps yourself — see [Automated updates](#automated-updates).
+
+You can also point at a branch while testing a change to the library itself:
+
+```groovy
+@Library('Infrastructure@<your-branch-name>') _
+```
+
+Branch usage is validated against an allow-list, see [Library controls](#library-controls). This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+
+### Automated updates
+
+This repository uses [Renovate](https://github.com/renovatebot/renovate) to keep its own dependencies current. The configuration extends the shared HMCTS config:
+
+```json
+{
+  "extends": ["local>hmcts/.github:renovate-config"]
+}
+```
+
+Custom managers are also configured to track specific Docker image references used within pipeline stages, such as the ZAP proxy images used by the security scan.
+
+If your repository is configured for Renovate to manage Jenkins Shared Library versions, it can raise a pull request when a new version of this library is released — check with your team whether that manager is set up before relying on it, and review the linked release notes before merging.
+
+### Changelogs
+
+Every push to `master` drafts (or updates) a GitHub Release using [Release Drafter](https://github.com/release-drafter/release-drafter). Release notes are compiled automatically from the titles and labels of the pull requests merged since the last release, grouped into categories (breaking changes, features, fixes, dependency updates, documentation, maintenance).
+
+Nothing is tagged on push. `CHANGELOG.md` is updated from the draft's notes on each push to `master` that resolves a new version, ahead of any tag being cut. A maintainer publishes the draft release separately, when a version is ready to cut — publishing is what creates the `X.Y.Z` tag that pipelines can pin to.
+
+**If you consume the library:** check the [releases page](https://github.com/hmcts/cnp-jenkins-library/releases) before taking a version bump. Breaking changes are called out in their own section of the notes.
+
+**If you contribute to the library:** the version bump and the changelog entry both come from your PR, so the title and labels matter.
+
+| Label             | Version bump |
+| ----------------- | ------------ |
+| `breaking-change` | major        |
+| `enhancement`     | minor        |
+| `bug`             | patch        |
+| `dependencies`    | patch        |
+| `documentation`   | patch        |
+| `chore`           | patch        |
+| _(no label)_      | patch        |
+
+Add `skip-changelog` to keep a PR out of the release notes entirely.
+
+Write PR titles as the release note you want teams to read, because they are published verbatim.
+
+`CHANGELOG.md` is generated by the release workflow, which prepends a section per version (creating the file on its first run). Leave it to the workflow rather than editing it by hand.
+
+## Opinionated app pipeline
+
+This library contains a complete opinionated pipeline that can build, test and deploy Java,
+NodeJS and Python applications. The pipeline contains the following stages:
 
 * Checkout
 * Build
@@ -36,7 +156,9 @@ and NodeJS applications. The pipeline contains the following stages:
 * (Optional) API (gateway) Tests - Production
 
 In this version, Java apps must use Gradle for builds and contain the `gradlew` wrapper
-script and dependencies in source control. NodeJS apps must use Yarn.
+script and dependencies in source control. NodeJS apps must use Yarn. Python apps must use
+[uv](https://docs.astral.sh/uv/) for package management and include a `.python-version` file
+at the root of the repository.
 
 The opinionated app pipeline supports Slack notifications when the build fails or is fixed - your team build channel should be provided.
 
@@ -46,7 +168,7 @@ Example `Jenkinsfile` to use the opinionated pipeline:
 
 @Library("Infrastructure")
 
-def type = "java"          // supports "java", "nodejs" and "angular"
+def type = "java"          // supports "java", "nodejs", "angular" and "python"
 
 def product = "rhubarb"
 
@@ -54,6 +176,17 @@ def component = "recipe-backend" // must match infrastructure module name
 
 withPipeline(type, product, component) {
   enableSlackNotifications('#my-team-builds')
+}
+```
+
+#### Build dependency caching
+
+Dependency caching is enabled by default for Gradle and Yarn during the Build stage in the library version `2.9.0` or later.
+
+It can be disabled with:
+```groovy
+withPipeline(type, product, component) {
+  disableBuildCache()
 }
 ```
 
@@ -185,6 +318,17 @@ called after each deployment to each environment.
 
 The smoke tests are to be non-destructive (i.e. have no data impact, such as not creating accounts) and a subset of component level functional tests.
 
+If a smoke test only uses `TEST_URL` and does not require the secrets configured by `loadVaultSecrets`, it can avoid loading them for that stage:
+
+```groovy
+withPipeline(type, product, component) {
+  loadVaultSecrets(secrets)
+  disableSmokeTestSecrets()
+}
+```
+
+The configured secrets remain available to deployment, functional and other test stages.
+
 #### Docker test build for continuous functional and smoke tests
 
 An application can configure running continuous smoke/functional tests on java app deployments managed through flux.
@@ -257,6 +401,7 @@ Valid values for the `stage` variable are as follows where `ENV` must be replace
  * smoketest:ENV
  * functionalTest:ENV
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -274,6 +419,8 @@ withPipeline(type, product, component) {
   }
 }
 ```
+
+Extra steps run on the agent for the stage they're attached to, and authenticate as that stage's environment identity (see [Environment specific agents](#environment-specific-agents)). If a step needs to reach a *different* environment than the stage it's attached to, wrap it in `withSubscription` with the target product and environment so it hops onto the right agent.
 
 #### API (gateway) tests
 
@@ -293,6 +440,23 @@ tests for that API. For the pipeline to run those tests, do the following:
 
 The API tests run after smoke tests.
 
+#### E2E Tests on master branch
+
+E2E tests can be enabled to run on the `master` branch after deployment to AKS environments (AAT and Production). To enable E2E tests, add `enableE2eTest()` to your `withPipeline` block:
+
+```
+withPipeline(type, product, component) {
+  ...
+  enableE2eTest()
+  ...
+}
+```
+
+E2E tests require the appropriate task to be defined in your application's build configuration:
+- For Java: `e2eTest` task in build.gradle
+
+The tests run after deployment to each environment (AAT and Production) on the master branch, after smoke tests and API gateway tests (if enabled).
+
 #### Clear Helm Release
 
 - By default your Helm resources are uninstalled to free up resources on the cluster.
@@ -307,6 +471,29 @@ The API tests run after smoke tests.
   ```
 
 Please note that Pod logs are saved as artefacts in Jenkins before the Helm release is cleared.
+
+#### Preview-only chart dependencies
+
+Helm bundles every dependency into the published chart, including ones that are disabled by default. If your chart depends on other charts only so that a preview can deploy them alongside it, list them in the `hmcts.github.io/skip-publish` annotation and they are left out of the chart published to ACR and `hmcts-charts`:
+
+```yaml
+annotations:
+  hmcts.github.io/skip-publish: ccd-core, ccd-definition-store-api
+dependencies:
+  - name: java
+    version: 5.3.0
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+  - name: ccd-core
+    version: 9.3.0
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+    condition: ccd-core.enabled
+  - name: ccd-definition-store-api
+    version: 1.6.31
+    repository: 'oci://hmctsprod.azurecr.io/helm'
+    condition: ccd-core.enabled
+```
+
+Use a dependency's alias if it has one, otherwise its name. Preview deploys are unaffected. The publish fails if an entry matches no dependency.
 
 ### Opinionated infrastructure pipeline
 
@@ -348,6 +535,7 @@ These parameters include:
 | --- | --- |
 | component | https://hmcts.github.io/glossary/#component |
 | expires | https://github.com/hmcts/terraform-module-common-tags#expiresafter |
+| alwaysTerraformPlanOnPR | Always run a terraform plan, even if no terraform code changes detected |
 
 Example `Jenkinsfile` to use the opinionated infrastructure pipeline:
 ```groovy
@@ -365,6 +553,7 @@ withInfraPipeline(product, component) {
 
   enableSlackNotifications('#my-team-builds')
   expires(expiresAfter)
+  alwaysTerraformPlanOnPR()
 
 }
 ```
@@ -380,6 +569,12 @@ For resources that must remain permanently, specify a value of `"3000-01-01"`
 ```
 def expiresAfter = "3000-01-01"
 ```
+
+`alwaysTerraformPlanOnPR` is designed to force terraform plan to run when targeting the AAT/Prod environment environment on a pull request.
+
+By default, terraform plan will only run if changes are made to the terraform code.
+
+This value forces a terraform plan on every run. This will add up to a minute to pipeline runtime but it will help detect terraform changes that might result from non-terraform code related changes such as library version changes or changes made manually to Azure resources in the portal.
 
 #### Extending the opinionated infratructure pipeline
 
@@ -397,6 +592,7 @@ Valid values for the `stage` variable are as follows where `ENV` should be repla
 
  * checkout
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -418,6 +614,10 @@ withInfraPipeline(product) {
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
+For both app and infrastructure pipelines, plan-only infrastructure runs invoke `planinfra:ENV` callbacks, while plan-and-apply runs invoke `buildinfra:ENV` callbacks. This applies to `before`, `afterSuccess`, `afterFailure`, `afterAlways`, and deprecated `after` hooks. Previously, both modes used `buildinfra:ENV`; move any hooks intentionally needed during plan-only runs to `planinfra:ENV`. A successful plan must not trigger deployment hooks such as production BPMN uploads. Global failure handling and after-all reporting still run for plans.
+
+The app pipeline retains its primary agent and workspace while infrastructure stages run on another environment's agent. These stages transfer only `infrastructure/**` and the root `.terraform-version`, using the usual stash exclusions. Source, coverage reports and dependency caches stay on the primary agent. The infrastructure workspace is not copied back; the named Terraform plan stash is still used between plan and apply. Terraform inputs and local dependencies must be under `infrastructure` or the transfer patterns must be extended. Infrastructure-only pipelines and other agent transfers are unchanged.
+
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
 ## Nightly pipeline
@@ -435,6 +635,23 @@ withNightlyPipeline(type, product, component) {
 ```
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
+
+You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
+
+When Fortify completes, the pipeline archives:
+- `Fortify Scan/FortifyScanReport.html` (summary produced by the Fortify client)
+- `Fortify Scan/FortifyVulnerabilities.html` and `Fortify Scan/FortifyVulnerabilities.json` (per-issue details fetched from FoD)
+
+If your repo does not already provide a `fortifyScan` script/task, the library falls back to a built-in FoD API runner (zips the workspace, starts a static scan, and writes `Fortify Scan/FortifyScanReport.html`). The scan runner resolves `releaseId` from `FORTIFY_RELEASE_ID`, `config/fortify-client.properties`, or by looking up a FoD release whose name matches the repository name (derived from `GIT_URL`).
+
+To force the built-in scan runner (even if the repo has its own `fortifyScan` hook), set `FORTIFY_SCAN_RUNNER=library`. Default is `auto` (use repo hook if present, otherwise library runner).
+
+Authentication for the per-issue vulnerability fetch uses FoD OAuth `client_credentials` with `FORTIFY_OAUTH_CLIENT_ID`/`FORTIFY_OAUTH_CLIENT_SECRET` (client id/secret).
+
+`withFortifySecrets(...)` loads Fortify scan credentials from Azure Key Vault secrets `fortify-on-demand-username`/`fortify-on-demand-password` and exports them as `FORTIFY_USER_NAME`/`FORTIFY_PASSWORD`.
+
+`withFortifyOAuthSecrets(...)` binds the Jenkins `usernamePassword` credential `fortify-on-demand-oauth` (override via `FORTIFY_OAUTH_CREDENTIALS_ID`) and exports it as `FORTIFY_OAUTH_CLIENT_ID`/`FORTIFY_OAUTH_CLIENT_SECRET`.
+
 
 All available test stages are detailed in the table below:
 
@@ -526,6 +743,8 @@ withNightlyPipeline(type, product, component) {
 }
 ```
 
+
+
 ## Enabling nightly checks on pull requests
 
 It is possible to trigger optional full functional tests, performance tests, fortify scans and security scans on your PRs. To trigger a test, add the appropriate label(s) to your pull request in GitHub:
@@ -542,6 +761,290 @@ Some tests may require additional configuration - copy this from your `Jenkinsfi
 
 The fortify scan will be triggered in parallel as part of the Tests/Checks/Container Build stage.
 
+## PR label behaviour
+
+### `only_deploy`
+
+Add `only_deploy` to a PR when you want to deploy to preview quickly without running the full set of tests and checks.
+
+Behaviour:
+- Skips `Unit tests`, `Sonar scan`, `Fortify scan`, and `Pact tests`.
+- Leaves deployment in place by skipping Helm uninstall
+- Above tests must still pass to enable merge to master/main
+
+### `pr-values:<name>`
+
+Add labels in the format `pr-values:<name>` to include extra Helm values files during PR deployments.
+
+Behaviour:
+- For each matching label, the pipeline looks for:
+  - `charts/<product>-<component>/values.<name>.<environment>.template.yaml`
+- If found, it renders and includes that values file in the Helm install/upgrade for the PR deployment.
+
+Example:
+- Label: `pr-values:nightly`
+- File expected: `charts/product-component/values.nightly.preview.template.yaml`
+
+### PR labels
+The following labels do not require additional configuration and can be used to change pipeline behaviour.
+
+Label/Topic | Effect | Applies to
+--- | --- | ---
+`enable_keep_helm` | Keeps deployed Helm release/resources instead of uninstalling at end of PR run. | PR pipelines
+`only_deploy` | Skips tests and checks including unit, sonar, fortify, pact; keeps deployment up and intentionally fails to prevent merge. | PR pipelines
+`pr-values:<name>` | Includes `values.<name>.<environment>.template.yaml` in PR Helm deployment values when present. | PR pipelines
+`not-plan-on-prod` (label) | Skips extra Terraform plan against prod/base environment. | PR and infra PR pipelines
+`not-plan-on-prod` (repo topic) | Same as label above, applied repo-wide. | PR and infra PR pipelines
+
+## Performance Testing extension for Smart Slack Alerts & Automatic Rerun on Fail
+Additional parameters have been added to enablePerformanceTest as follows:
+- enablePerformanceTest(timeout=30, perfGatlingAlerts=true, perfRerunOnFail=true)
+- *perfGatlingAlerts will activate alerts to slack channel performance-alerts if a test fails more than 3 days in a row.
+- *perfRerunOnFail will activate 1 rerun of a failed test which will start a new stage on the pipeline test.
+
+The above features utilise 2 reusable functions:
+- performanceCheckIfTestFailed({Slack channel name}) - This alerts a slack channel of 3 or more fails in a row.
+- sendSlackMessage({user}, {colour}, {body})
+- *user is the slack channel
+- *colour can be warning or danger
+- *body is any text
+
+## Performance Testing with Dynatrace and Gatling
+
+The pipeline supports running performance tests as part of your deployment to AAT or perftest environments. There are two types of performance tests available:
+
+### Dynatrace Synthetic Tests
+Dynatrace synthetic tests are browser-based tests that monitor your application from the user's perspective. These run in Dynatrace and check response times, availability, and functional correctness.
+
+### External Gatling Load Tests
+Gatling tests run load tests against your application from a separate Git repository. This lets teams maintain centralised performance test suites that can be reused across multiple services.
+
+### Enabling Performance Tests
+
+Add the following to your `Jenkinsfile_CNP`:
+
+```groovy
+withPipeline(type, product, component) {
+
+  // Enable Dynatrace synthetic tests
+  enablePerformanceTestStages(
+    timeout: 15,
+    configPath: 'src/test/performance/config/config.groovy'
+  )
+
+  // Enable Gatling load tests from external repo
+  enableGatlingLoadTests(
+    repo: 'https://github.com/hmcts/your-performance-tests.git',
+    branch: 'main',
+    simulation: 'uk.gov.hmcts.yourapp.simulation.LoadTest',
+    timeout: 10
+  )
+
+  // Optionally enable Site Reliability Guardian evaluation
+  enableSrgEvaluation(
+    serviceName: 'your-service-name',
+    failureBehavior: 'warn'  // 'fail', 'warn', or 'ignore'
+  )
+
+  // Optionally create IDAM test user for performance tests
+  enableIdamTestUser(
+    email: 'perf.test.caseworker@testmail.com',
+    forename: 'Performance',
+    surname: 'Tester',
+    password: 'PerfTest1!',
+    roles: ['caseworker', 'caseworker-employment', 'caseworker-employment-englandwales']
+  )
+}
+```
+
+### Performance Test Configuration
+
+For Dynatrace tests, create a config file in your service repo (default location: `src/test/performance/config/config.groovy`):
+
+```groovy
+// config.groovy
+
+// ====== Set up default values ======
+this.dynatraceMetricType = 'service-application'
+this.dynatraceMetricTag = 'namespace:'
+
+//Preview Config
+this.dynatraceSyntheticTestPreview = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdPreview = "DASHBOARD-123"
+this.dynatraceDashboardURLPreview = "https://your-preview-dashboard-url"
+this.dynatraceEntitySelectorPreview = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:PREVIEW\\"),entityId(\\"\\")'
+
+//AAT Config
+this.dynatraceSyntheticTestAAT = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdAAT = "DASHBOARD-123"
+this.dynatraceDashboardURLAAT = "https://your-aat-dashboard-url"
+this.dynatraceEntitySelectorAAT = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:AAT\\"),entityId(\\"\\")'
+
+//Perftest Config
+this.dynatraceSyntheticTestPerfTest = "SYNTHETIC_TEST-ABC123"
+this.dynatraceDashboardIdPerfTest = "DASHBOARD-123"
+this.dynatraceDashboardURLPerfTest = "https://your-perftest-dashboard-url"
+this.dynatraceEntitySelectorPerfTest = 'type(service),tag(\\"[Kubernetes]namespace:\\"),tag(\\"Environment:PERF\\"),entityId(\\"\\")'
+```
+
+### Gatling Test Repository
+
+Your external Gatling repository must:
+- Have Gradle with `gatling-gradle-plugin` or `gradle-gatling-plugin`
+- Read `TEST_URL` from the environment to target the correct deployment
+- Define test parameters (users, duration, ramp) in `build.gradle` rather than the pipeline
+
+Example Gatling `build.gradle`:
+```gradle
+gatling {
+  simulations = {
+    include 'uk/gov/hmcts/**/*.scala'
+  }
+}
+```
+
+### Secrets Required
+
+Performance tests require Dynatrace API tokens stored in Azure KeyVault (`et-perftest` or your product-specific vault):
+- `perf-synthetic-monitor-token` - For triggering and monitoring synthetic tests
+- `perf-metrics-token` - For sending release metrics
+- `perf-event-token` - For posting build events
+- `perf-synthetic-update-token` - For enabling/disabling synthetic tests
+
+These are automatically loaded by the pipeline from the shared perftest vault.
+
+### When Tests Run
+
+Performance test stages run:
+- **Preview environment**: After deployment (for PR branches)
+- **AAT environment**: After deployment (for master branch)
+- **Perftest environment**: After deployment (for perftest branch)
+
+Tests can run in parallel (Dynatrace and Gatling at the same time) or individually depending on which you've enabled.
+
+### Site Reliability Guardian (SRG)
+
+SRG evaluates performance test results against quality gates you define in Dynatrace. You can configure what happens when tests fail:
+- `fail` - Pipeline fails if SRG thresholds are breached
+- `warn` - Pipeline marked as unstable (default)
+- `ignore` - Results logged but build continues
+
+Note: SRG evaluation is not yet fully implemented - the structure is in place for future use.
+
+### Test Reports
+
+Gatling test reports are automatically uploaded to Azure Blob Storage and CosmosDB. You can view them at:
+```
+https://buildlog-storage-account.blob.core.windows.net/performance/{product}-{component}/{environment}
+```
+
+For external Gatling tests, reports are uploaded to:
+```
+https://buildlog-storage-account.blob.core.windows.net/performance/perfInBuildPipeline/{product}-{component}/{environment}
+```
+
+### Creating IDAM Test Users
+
+For performance testing, you can create test users in IDAM using the `createIdamTestUsers` pipeline function.
+
+**Important**: This function only runs in **AAT and Preview environments** (both use AAT IDAM). In other environments, it logs a message and returns null without creating users.
+
+#### Prerequisites
+
+1. Store the full IDAM testing-support URL in KeyVault as `idam-test-support-url`
+2. This is already added to the shared rpe-shared-perftest KV which the performance stages load secrets from
+
+#### Usage Example
+
+```groovy
+def secrets = [
+  secret('idam-test-support-url', 'IDAM_TEST_SUPPORT_URL')
+]
+
+withAzureKeyvault(azureKeyVaultSecrets: secrets, keyVaultURLOverride: 'https://your-vault-aat.vault.azure.net/') {
+  def testUser = createIdamTestUsers(
+    email: 'caseworker@testmail.com',
+    forename: 'Case',
+    surname: 'Worker',
+    password: 'Caseworker1!',
+    roles: ['caseworker', 'caseworker-employment', 'caseworker-employment-englandwales']
+  )
+
+  // Store credentials for use in tests
+  if (testUser) {
+    env.TEST_USER_EMAIL = testUser.email
+  }
+}
+```
+
+#### Password Requirements
+
+IDAM requires passwords to have:
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
+
+#### Idempotent User Creation
+
+If a user already exists (409 Conflict), the function will **continue the build** and use the existing user. This makes user creation idempotent - you can safely call it multiple times with the same email without failing the build.
+
+The response will include `existed: true` to indicate the user already existed:
+```groovy
+def user = createIdamTestUsers(email: 'existing@testmail.com', ...)
+if (user.existed) {
+  echo "Using existing user: ${user.email}"
+} else {
+  echo "Created new user: ${user.email}"
+}
+```
+
+#### Environment Behaviour
+
+The function automatically checks the environment:
+
+- **AAT/Preview**: User creation proceeds (both use AAT IDAM)
+- **Other environments**: Returns `null` and logs a message - build continues normally
+
+This means you can safely call it in any environment without conditional logic:
+
+```groovy
+def testUser = createIdamTestUsers(email: 'test@example.com', ...)
+
+if (testUser) {
+  echo "Test user available: ${testUser.email}"
+} else {
+  echo "Test user creation skipped (not AAT/Preview)"
+}
+```
+
+#### Integration with Performance Tests
+
+The recommended approach is to use `enableIdamTestUser()` in your pipeline configuration (see [Performance Testing](#performance-testing-with-dynatrace-and-gatling) section above). This automatically creates the test user during the Dynatrace Performance Setup stage and makes credentials available via environment variables:
+
+```groovy
+withPipeline(type, product, component) {
+  enablePerformanceTestStages(
+    configPath: 'src/test/performance/config/config.groovy'
+  )
+
+  enableIdamTestUser(
+    email: 'perf.test.caseworker@testmail.com',
+    forename: 'Performance',
+    surname: 'Tester',
+    password: 'PerfTest1!',
+    roles: ['caseworker', 'caseworker-employment']
+  )
+}
+```
+
+The test user is created automatically, and credentials are stored in:
+- `TEST_USER_EMAIL` - The user's email address
+- `TEST_USER_PASSWORD` - The user's password
+
+Your Gatling tests or functional tests can access these environment variables directly.
+
 ## Cron Jobs
 You need to add `nonServiceApp()` method in `withPipeline` block to skip service specific steps in the pipeline.
 
@@ -552,6 +1055,32 @@ You need to add `nonServiceApp()` method in `withPipeline` block to skip service
 
 withPipeline(type, product, component) {
     nonServiceApp()
+}
+```
+
+## Non-Deployable App
+You need to add `nonDeployableApp()` method in `withPipeline` block to skip deployments.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  nonDeployableApp()
+}
+```
+
+## Release on merge
+You need to add `releaseOnMerge()` method in `withPipeline` to automatically trigger a release pipeline when changes are merged to master if the gradle version number has been updated.
+
+```groovy
+#!groovy
+
+@Library("Infrastructure")
+
+withPipeline(type, product, component) {
+  releaseOnMerge()
 }
 ```
 
@@ -640,6 +1169,9 @@ Java 11 is installed on the Jenkins agent.
 
 ### Node.JS
 [nvm](https://github.com/nvm-sh/nvm) is used, place a `.nvmrc` file at the root of your repo containing the version you want. If it isn't present we fallback to whatever is on the Jenkins agent, currently the latest 8.x version.
+
+### Python
+[uv](https://docs.astral.sh/uv/) is used for package management. Place a `.python-version` file at the root of your repo containing the Python version you want (e.g. `3.13`). The pipeline enforces the use of supported Python versions — currently `3.13`. The `.python-version` file is also read by uv locally.
 
 ### Terraform
 [tfenv](https://github.com/tfutils/tfenv) is used, place a `.terraform-version` file in your infrastructure folder for app pipelines, and at the root of your repo for infra pipelines. If this file isn't present we fallback to v0.11.7.
@@ -794,11 +1326,66 @@ This file calls a class named [TerraformInfraApprovals](https://github.com/hmcts
 
 This file will point to the repository which defines, in json syntax, which infrastructure resources and modules are approved for use at the [global](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/global.json) and [project](https://github.com/hmcts/cnp-jenkins-config/blob/master/terraform-infra-approvals/bulk-scan-shared-infrastructure.json) level.
 
+## Library Controls
+
+Branches of this library used by pipelines are validated against an allow-list, to control which branches of this library can be used within HMCTS.
+
+Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail. This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+
+When testing a change to the library itself, add your branch to this file (see [Contributing](#contributing)) and remove it again once the change has merged.
+
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
+ 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+ 3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
 ```
 
+## Completed build archives
+
+The application pipeline can queue a separate Jenkins job to copy failed build
+records to Azure Blob Storage for PR, master and nightly builds. Successful,
+unstable and aborted builds are ignored. Every failed build queues the root
+Jenkins job named `Archive Completed Builds` after any agent retries are
+exhausted.
+
+Before queuing the archive job, the application and nightly pipelines add common
+Gradle, Playwright, functional-test and pod-log outputs to the source build's
+Jenkins artifacts. The archive job must call `archiveCompletedBuild` with the
+parameters passed by `queueBuildArchive`:
+
+```groovy
+@Library('Infrastructure') _
+
+archiveCompletedBuild(
+  sourceBuildUrl: params.SOURCE_BUILD_URL,
+  sourceJobName: params.SOURCE_JOB_NAME,
+  sourceBuildNumber: params.SOURCE_BUILD_NUMBER,
+  sourceBuildResult: params.SOURCE_BUILD_RESULT,
+  sourceProduct: params.SOURCE_PRODUCT,
+  sourceComponent: params.SOURCE_COMPONENT
+)
+```
+
+The archive job waits for the source build to finish, then reads it directly
+from the same Jenkins controller. It captures the complete console output,
+build metadata, test-result metadata and artifact ZIP without a separate
+Jenkins API credential. It uploads the resulting directory using the existing
+`azureBlobUpload` step. Archive names include the final outcome and, when
+Jenkins reports one, the failed stage, for example
+`completed-build_43_FAILURE_Deploy_to_AKS`.
+
+The following global environment variables configure the archive:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BUILD_ARCHIVE_STORAGE_SUBSCRIPTION` | `sandbox` | Azure subscription alias |
+| `BUILD_ARCHIVE_STORAGE_CREDENTIALS_ID` | `buildlog-storage-account` | Storage credential |
+| `BUILD_ARCHIVE_STORAGE_CONTAINER` | `jenkins-build-archive` | Blob container |
+| `BUILD_ARCHIVE_STORAGE_PREFIX` | `builds` | Path below the container |
+| `BUILD_ARCHIVE_AGENT` | any agent | Label used by the archive job |
+| `BUILD_ARCHIVE_LOCAL_ONLY` | `false` | Archive back to Jenkins instead of Azure for local testing |
+| `BUILD_ARCHIVE_WAIT_TIMEOUT_MINUTES` | `300` | Maximum wait for the source build to finish |
+| `BUILD_ARCHIVE_OPERATION_TIMEOUT_MINUTES` | `120` | Maximum time for capture and upload |

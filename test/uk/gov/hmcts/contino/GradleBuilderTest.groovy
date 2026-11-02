@@ -11,15 +11,17 @@ class GradleBuilderTest extends Specification {
   def sampleCVEReport
 
   def builder
+  def envVars
 
   def setup() {
     steps = Mock(JenkinsStepMock.class)
-    steps.getEnv() >> [
-      BRANCH_NAME: 'master',
-    ]
+    envVars = [BRANCH_NAME: 'master']
+    steps.getEnv() >> envVars
     builder = new GradleBuilder(steps, 'test')
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
+    // Pass the ADO_MAVEN_PAT withAzureKeyvault wrapper through to the closure body.
+    steps.withAzureKeyvault(_, _) >> { args -> args[1].call() }
   }
 
   def "build calls 'gradle assemble'"() {
@@ -43,6 +45,52 @@ class GradleBuilderTest extends Specification {
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('sonarqube') })
   }
 
+  def "fortifyScan uses gradle fortifyScan task when available"() {
+    given:
+      steps.fileExists('gradlew') >> true
+      steps.libraryResource('uk/gov/hmcts/gradle/init.gradle') >> null
+      steps.writeFile([file: 'init.gradle', text: null]) >> null
+      steps.sh({ it instanceof Map && it.returnStatus == true && it.script.contains('tasks --all') }) >> 0
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      0 * steps.fortifyOnDemandScan()
+      1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
+  def "fortifyScan falls back to library runner when gradle task missing"() {
+    given:
+      steps.fileExists('gradlew') >> true
+      steps.libraryResource('uk/gov/hmcts/gradle/init.gradle') >> null
+      steps.writeFile([file: 'init.gradle', text: null]) >> null
+      steps.sh({ it instanceof Map && it.returnStatus == true && it.script.contains('tasks --all') }) >> 1
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      1 * steps.fortifyOnDemandScan()
+      0 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
+  def "fortifyScan can be forced to use library runner"() {
+    given:
+      envVars.FORTIFY_SCAN_RUNNER = 'library'
+      steps.fileExists('gradlew') >> true
+
+    when:
+      builder.fortifyScan()
+
+    then:
+      1 * steps.fortifyOnDemandScan()
+      0 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('fortifyScan') })
+      1 * steps.archiveArtifacts({ it.allowEmptyArchive == true && it.artifacts == 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*' })
+  }
+
   def "smokeTest calls 'gradle smoke' with '--rerun-tasks' flag"() {
     when:
       builder.smokeTest()
@@ -55,6 +103,53 @@ class GradleBuilderTest extends Specification {
       builder.functionalTest()
     then:
       1 * steps.sh({ it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
+  }
+
+  def "functionalTest installs Yarn dependencies when generated test package is missing install state"() {
+    given:
+      steps.fileExists('package.json') >> true
+      steps.fileExists('yarn.lock') >> true
+      steps.fileExists('.yarnrc.yml') >> true
+      steps.fileExists('node_modules/.yarn-state.yml') >> false
+      steps.fileExists('.pnp.cjs') >> false
+
+    when:
+      builder.functionalTest()
+
+    then:
+      1 * steps.echo('Installing yarn dependencies - install state missing after agent hop')
+      1 * steps.sh({ it instanceof Map && it.label == 'Install yarn dependencies' && it.script == '/usr/bin/yarn install --immutable --silent' })
+      1 * steps.sh({ !(it instanceof Map) && it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
+  }
+
+  def "functionalTest skips Yarn install when dependencies are already installed"() {
+    given:
+      steps.fileExists('package.json') >> true
+      steps.fileExists('yarn.lock') >> true
+      steps.fileExists('.yarnrc.yml') >> true
+      steps.fileExists('node_modules/.yarn-state.yml') >> true
+
+    when:
+      builder.functionalTest()
+
+    then:
+      0 * steps.sh({ it instanceof Map && it.label == 'Install yarn dependencies' })
+      1 * steps.sh({ !(it instanceof Map) && it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
+  }
+
+  def "functionalTest skips Yarn install when project is not a Yarn Berry workspace"() {
+    given:
+      steps.fileExists('package.json') >> true
+      steps.fileExists('yarn.lock') >> true
+      steps.fileExists('.yarnrc.yml') >> false
+
+    when:
+      builder.functionalTest()
+
+    then:
+      0 * steps.echo('Installing yarn dependencies - install state missing after agent hop')
+      0 * steps.sh({ it instanceof Map && it.label == 'Install yarn dependencies' })
+      1 * steps.sh({ !(it instanceof Map) && it.startsWith(GRADLE_CMD) && it.contains('functional') && it.contains('--rerun-tasks') })
   }
 
   def "e2eTest calls 'gradle e2eTest' with '--rerun-tasks' flag"(){

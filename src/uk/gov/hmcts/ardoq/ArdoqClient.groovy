@@ -74,7 +74,7 @@ class ArdoqClient {
 
       this.steps.writeFile(file: 'payload.json', text: jsonPayload);
       // gzip the payload
-      this.steps.sh "gzip payload.json"
+      this.steps.sh "gzip -kf payload.json"
 
       this.steps.sh """curl -w "%{http_code}" --location --request POST '${this.apiUrl}/api/dependencies' \
                   --header 'Authorization: Bearer ${this.apiKey}' \
