@@ -437,7 +437,7 @@ class BuildRecoveryTest extends Specification {
       messages.any { it.contains('querying Cosmos DB pipeline-metrics') && it.contains('build #35') }
       messages.any { it.contains('Cosmos DB returned 7 records') }
       !messages.any { it.contains('test=SUCCESS') }
-      messages.any { it.contains('dockerbuild=FAILURE') && it.contains('AGENT_DISCONNECTED') }
+      messages.any { it.contains('dockerbuild=FAILURE') }
 
     when:
       recovery.prepare(true)
@@ -466,9 +466,8 @@ class BuildRecoveryTest extends Specification {
       def displayed = messages.findAll { it.startsWith('Previous build #35:') }
       displayed.size() == 2
       displayed[0].contains('dockerbuild=FAILURE')
-      displayed[0].contains('failure_reason=AGENT_DISCONNECTED')
       displayed[1].contains('sonarscan=FAILURE')
-      displayed[1].contains('failure_reason=STEP_FAILURE')
+      displayed.every { !it.contains('failure_reason=') }
       recovery.shouldSkip('test')
       recovery.shouldSkip('securitychecks')
   }

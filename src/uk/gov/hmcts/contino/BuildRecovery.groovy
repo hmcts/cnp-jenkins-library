@@ -51,7 +51,7 @@ class BuildRecovery implements Serializable {
       steps.echo "Build recovery: Cosmos DB returned ${records?.size() ?: 0} records for build #${sourceBuild}"
       if (records != null && records.size() <= 1000) {
         records.findAll { it.event_type == 'step' && it.step_result == 'FAILURE' }.each { record ->
-          steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}, node_status=${record.node_status ?: 'not recorded'}, failure_reason=${record.failure_reason ?: 'none'}"
+          steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}, node_status=${record.node_status ?: 'not recorded'}"
         }
       }
       reusable = reusableSteps(records, identity, sourceBuild)

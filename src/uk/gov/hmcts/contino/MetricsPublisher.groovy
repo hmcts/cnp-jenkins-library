@@ -12,7 +12,6 @@ class MetricsPublisher implements Serializable {
   String component
   String correlationId
   boolean agentDisconnectionRecorded = false
-  String disconnectedAgent
   String lastSuccessfulStage
   CosmosDbTargetResolver cosmosDbTargetResolver
 
@@ -132,10 +131,8 @@ class MetricsPublisher implements Serializable {
   }
 
   void publishStep(String stage, String result, String executionId, Throwable failure = null) {
-    String reason = failureReason(failure)
-    if (reason == 'AGENT_DISCONNECTED') {
+    if (failureReason(failure) == 'AGENT_DISCONNECTED') {
       agentDisconnectionRecorded = true
-      disconnectedAgent = disconnectedAgent ?: env.NODE_NAME
     }
     if (result == 'SUCCESS') {
       lastSuccessfulStage = stage
@@ -143,8 +140,7 @@ class MetricsPublisher implements Serializable {
     publish(stage, [
       event_type: 'step',
       step_result: result,
-      step_execution_id: executionId,
-      failure_reason: reason
+      step_execution_id: executionId
     ])
   }
 

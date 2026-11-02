@@ -100,7 +100,7 @@ class MetricsPublisherTests extends Specification {
     1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap)
   }
 
-  def 'publishes explicit outcomes and confirmed agent failure reasons'() {
+  def 'publishes explicit outcomes without persisting failure reasons'() {
     given:
       stubSteps.env.NODE_NAME = 'build-agent'
       stubSteps.currentBuild.result = 'FAILURE'
@@ -124,7 +124,8 @@ class MetricsPublisherTests extends Specification {
       document.event_type == 'step'
       !document.containsKey('attempt_id')
       document.current_build_result == 'FAILURE'
-      document.failure_reason == expectedReason
+      !document.containsKey('failure_reason')
+      publisher.agentDisconnectionRecorded == (expectedReason == 'AGENT_DISCONNECTED')
 
     where:
       result    | fails | online | connected | removed | lookupFails | communicationError | expectedReason

@@ -70,7 +70,6 @@ def call(params) {
   GithubAPI gitHubAPI = new GithubAPI(this)
   def testLabels = gitHubAPI.getLabelsbyPattern(env.BRANCH_NAME, 'enable_')
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
-  Map pendingHelmRelease = null
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
     stageWithEnvironmentAgentAndSecrets("AKS deploy - ${environment}", config, product, environment) {
@@ -84,12 +83,6 @@ def call(params) {
             log.info("Using AKS environment: ${params.environment}")
             warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
             params.imageName = dockerImageTaggedName
-            if (params.pendingHelmReleases != null && shouldClearHelmReleaseOnFailure(enableHelmLabel, config)) {
-              // Lets withPipeline uninstall from a fresh agent if this one is lost.
-              pendingHelmRelease = [dockerImage: dockerImage, subscription: subscription, environment: params.environment,
-                product: product, component: component, aksSubscription: params.aksSubscription]
-              params.pendingHelmReleases.add(pendingHelmRelease)
-            }
             aksUrl = helmInstall(dockerImage, params)
             log.info("deployed component URL: ${aksUrl}")
             onPR {
@@ -493,9 +486,6 @@ def call(params) {
       if (isOnMaster || !enableHelmLabel) {
         helmUninstall(dockerImage, params, pcr)
       }
-    }
-    if (pendingHelmRelease != null) {
-      params.pendingHelmReleases.remove(pendingHelmRelease)
     }
   }
 }
