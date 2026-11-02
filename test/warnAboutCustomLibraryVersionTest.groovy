@@ -142,7 +142,11 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     @Test
     void 'custom version check adds only the allowed branch warning when an allowed branch is detected'() {
         given:
-        libraryBranches = [[name: 'master', allowed: true], [name: 'feature/test', allowed: true]]
+        def branchDeadline = LocalDate.now().plusDays(7).toString()
+        libraryBranches = [
+            [name: 'master', allowed: true],
+            [name: 'feature/test', allowed: true, date_deadline: branchDeadline]
+        ]
         statuses.branch = 1
 
         when:
@@ -152,6 +156,33 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
         assertThat(WarningCollector.pipelineWarnings*.warningKey)
             .containsExactly('allowed_infrastructure_library_branch')
         assertThat(WarningCollector.pipelineWarnings.first().warningMessage).contains('*feature/test*.')
+        assertThat(WarningCollector.pipelineWarnings.first().deprecationDate)
+            .isEqualTo(LocalDate.parse(branchDeadline))
+    }
+
+    @Test
+    void 'custom version check fails for an expired allowed branch deadline'() {
+        given:
+        def branchDeadline = LocalDate.now().minusDays(1).toString()
+        libraryBranches = [
+            [name: 'master', allowed: true],
+            [name: 'feature/expired', allowed: true, date_deadline: branchDeadline]
+        ]
+        statuses.branch = 1
+
+        when:
+        RuntimeException failure
+        try {
+            script.call()
+            fail('Expected an expired allowed library branch to fail the pipeline')
+        } catch (RuntimeException expected) {
+            failure = expected
+        }
+
+        then:
+        assertThat(failure.message).contains('feature/expired')
+        WarningCollector.pipelineWarnings*.warningKey == ['allowed_infrastructure_library_branch']
+        WarningCollector.pipelineWarnings.first().deprecationDate == LocalDate.parse(branchDeadline)
     }
 
     @Test

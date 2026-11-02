@@ -5,7 +5,7 @@ import spock.lang.Unroll
 import uk.gov.hmcts.contino.JenkinsStepMock
 
 class LibraryBranchControlsTest extends Specification {
-  static final String ALLOWLIST_URL = 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
+  static final String ALLOWLIST_URL = 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/allowed-library-branches.yml'
 
   def steps = Mock(JenkinsStepMock)
   def controls = new LibraryBranchControls(steps)

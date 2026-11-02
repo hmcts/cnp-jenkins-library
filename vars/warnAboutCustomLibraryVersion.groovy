@@ -83,13 +83,12 @@ def checkAllowedLibraryBranches() {
         .getLibraryBranchControls()
         .branches
         .findAll { it.allowed && it.name != 'master' && it.name != 'cve-dashboard' && !(it.name ==~ /\d+\.\d+\.\d+/) }
-        .collect { it.name }
 
     allowedLibraryBranches.each { branch ->
         int branchStatus = sh(
             script: """
             chmod +x check-library-version.sh
-            ./check-library-version.sh 'branch' '${branch}'
+            ./check-library-version.sh 'branch' '${branch.name}'
             """,
             returnStatus: true
         )
@@ -100,7 +99,7 @@ def checkAllowedLibraryBranches() {
                 [
                     [
                         'Your Jenkinsfile is using an allowed Infrastructure library branch',
-                        "*${branch}*."
+                        "*${branch.name}*."
                     ],
                     [
                         'Merge the changes you need from this branch, check for the latest release at',
@@ -109,7 +108,8 @@ def checkAllowedLibraryBranches() {
                         'the chance of upstream changes unexpectedly breaking your pipeline.',
                         'Renovate can automatically update pinned library versions for you.'
                     ]
-                ]
+                ],
+                branch.date_deadline
         )
     }
 }

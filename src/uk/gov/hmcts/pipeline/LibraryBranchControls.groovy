@@ -9,7 +9,11 @@ class LibraryBranchControls {
   }
 
   def getConfigFilePath() {
-    return "uk/gov/hmcts/library/allowed-library-branches.yml"
+    return "allowed-library-branches.yml"
+  }
+
+  def getConfigRepoUrl() {
+    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/${getConfigFilePath()}"
   }
 
   def getLibraryBranchControls() {
@@ -17,7 +21,7 @@ class LibraryBranchControls {
       consoleLogResponseBody: true,
       authentication: steps.env.GIT_CREDENTIALS_ID,
       timeout: 10,
-      url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/${getConfigFilePath()}",
+      url: getConfigRepoUrl(),
       validResponseCodes: '200'
     )
     libraryBranchControls = steps.readYaml(text: response.content)
@@ -126,7 +130,7 @@ class LibraryBranchControls {
       steps.echo """
         Library branch: `${branchToCheck}` is not approved for use.
         If you are using a branch, make sure to add it to:
-        - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
+        - ${getConfigRepoUrl()}
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
         Please check with the Platform Operations team for guidance.
         ================================================================================

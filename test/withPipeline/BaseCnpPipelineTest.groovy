@@ -91,14 +91,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
-      } else if (m.get('script')?.contains('allowed-library-branches.yml')) {
-        return '''branches:
-  - name: master
-    allowed: true
-  - name: main
-    allowed: true
-'''
-      }  else if(m.get('script').startsWith("kubectl get service")){
+      } else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
           '"loadBalancerIP":"10.10.33.250","selector":{"app":"traefik","release":"traefik"},"type":"LoadBalancer"},"status":{"loadBalancer":{"ingress":[{"ip":"10.10.33.250"}]}}}'
       } else if (m.get('script')?.contains('check-library-version.sh')) {
@@ -123,7 +116,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
         'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml': EnvironmentApprovalsTest.response,
         'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml': EnvironmentDnsConfigTest.response,
         'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml': DeprecationConfigTest.response,
-        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml': LibraryBranchAllowlistTest.response
+        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/allowed-library-branches.yml': LibraryBranchAllowlistTest.response
       ]
       return responsesByUrl.get(url?.toString(), DefaultHttpResponseTest.response)
     })
@@ -162,14 +155,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return [:]
     })
     helper.registerAllowedMethod("libraryResource", [String.class], { resourcePath ->
-      if (resourcePath == 'uk/gov/hmcts/library/allowed-library-branches.yml') {
-        return '''branches:
-  - name: master
-    allowed: true
-  - name: main
-    allowed: true
-'''
-      }
       if (resourcePath == 'uk/gov/hmcts/pipeline/warning-banner.txt') {
         return 'warning banner'
       }
