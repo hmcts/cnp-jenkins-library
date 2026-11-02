@@ -89,7 +89,7 @@ def call(params) {
 
       buildRecovery?.prepare(builder instanceof GradleBuilder, imageExists || !dockerFileExists)
 
-      def branches = [failFast: false]
+      def branches = [failFast: true]
       branches["Unit tests and Sonar scan"] = {
         if (buildRecovery?.shouldSkip('test')) {
           buildRecovery.recordSkip('test')
