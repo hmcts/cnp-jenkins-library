@@ -27,8 +27,15 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
       functionalTest(0) {}
     }
 
+    Script pipeline = loadScript("testResources/$jenkinsFile")
+    def sectionBuildAndTest = binding.getVariable('sectionBuildAndTest')
+    // The library can resolve its own copy of GradleBuilder, which StubFor cannot intercept.
+    helper.registerAllowedMethod('sectionBuildAndTest', [Object.class], { params ->
+      sectionBuildAndTest.call(params + [builder: new GradleBuilder(delegate, params.product)])
+    })
+
     stubBuilder.use {
-      runScript("testResources/$jenkinsFile")
+      runScript(pipeline)
     }
 
     stubBuilder.expect.verify()

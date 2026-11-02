@@ -31,8 +31,16 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     binding.getVariable('env').putAt('CHANGE_TITLE', 'Some change')
+
+    Script pipeline = loadScript("testResources/$jenkinsFile")
+    def sectionBuildAndTest = binding.getVariable('sectionBuildAndTest')
+    // The library can resolve its own copy of YarnBuilder, which StubFor cannot intercept.
+    helper.registerAllowedMethod('sectionBuildAndTest', [Object.class], { params ->
+      sectionBuildAndTest.call(params + [builder: new YarnBuilder(delegate)])
+    })
+
     stubBuilder.use {
-      runScript("testResources/$jenkinsFile")
+      runScript(pipeline)
     }
 
     stubBuilder.expect.verify()
