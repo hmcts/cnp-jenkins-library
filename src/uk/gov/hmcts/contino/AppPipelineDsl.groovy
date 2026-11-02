@@ -151,6 +151,25 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
     config.dockerTestBuild = true
   }
 
+  void enableImmutableImagePromotion() {
+    config.immutableImagePromotion = true
+  }
+
+  Map immutableImageCandidate() {
+    if (!config.immutableImagePromotion || !config.imageCandidate) {
+      throw new IllegalStateException('No immutable image was produced by this build')
+    }
+    return new LinkedHashMap(config.imageCandidate)
+  }
+
+  // Call only after the owning pipeline verifies its candidate-bound release evidence.
+  void approveImmutableImage(String imageReference) {
+    if (immutableImageCandidate().imageReference != imageReference) {
+      throw new IllegalArgumentException('Approval must match this build\'s immutable image')
+    }
+    config.approvedImageReference = imageReference
+  }
+
   void disableBuildCache() {
     config.buildCache = false
   }

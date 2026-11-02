@@ -339,6 +339,25 @@ To build docker images for this, add `enableDockerTestBuild()` in `Jenkinsfile_C
 
 A Docker test build was previously built by default however has been made optional for pipeline speed and reliability.
 
+#### Opt-in immutable image promotion
+
+`enableImmutableImagePromotion()` builds a fresh image on every invocation, including reruns of the same commit. Checkout seals a Git archive of the captured revision and stashes it explicitly for agent transitions; the Docker branch verifies its SHA-256 and builds from that archive in an owned temporary directory. Later workspace edits and generated files cannot change the candidate source. It adds a unique `candidate-<UUID>` tag alongside the existing build tag, resolves that candidate's registry digest, and pulls/inspects the immutable reference to establish its actual platform. The build agent therefore needs Docker and registry pull access. This initial path requires a Dockerfile, and rejects ACB templates and `enableDockerTestBuild()`.
+
+In `afterSuccess('dockerbuild')`, `immutableImageCandidate()` returns a defensive copy of this invocation's descriptor:
+
+```text
+schemaVersion: 1
+registry, repository, digest, imageReference
+sourceCommit, sourceTree, producerJob, producerBuild, invocationId
+buildTag, platform, imageConfigDigest
+```
+
+`imageReference` is `registry/repository@sha256:<64 lowercase hex>`; commit/tree are full Git object IDs; producer build is the positive Jenkins build-number string; invocation is a UUID; supported inspected platforms are `linux/amd64` and `linux/arm64`. The real Docker build receives `BUILD_SOURCE_COMMIT`, `BUILD_SOURCE_TREE`, `BUILD_PRODUCER_JOB`, `BUILD_PRODUCER_BUILD`, and `BUILD_INVOCATION_ID` arguments for consumer-owned embedded provenance.
+
+The owning pipeline must verify its required release evidence against independently constructed expectations in `before('prod:promotion')`, then call `approveImmutableImage(candidate.imageReference)`. Missing approval, a different reference, stale producer identity, or a failing callback stops promotion. Approval is cleared before each promotion callback, so an earlier approval cannot satisfy a later verification. This API records the verifier's decision; it does not itself validate a receipt or replace the owner's review gate.
+
+Both prod and latest imports use the approved digest. In dual-registry mode both destinations import that same primary-registry content; independently built secondary content is not implicitly approved. Cross-registry import permissions must be validated before enabling this option. Other consumers retain their existing build/skip/promotion behaviour. Owner review and real Jenkins/registry rejection evidence are required before activation.
+
 #### High level data setup
 
 This can be used to import data required for the application.
