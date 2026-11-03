@@ -39,5 +39,3 @@ branches:
     allowed: true
   - name: "fixnodejsdeprecation"
     allowed: true
-  - name: "DTSPO-36210-fortify-optional-vault-secrets"
-    allowed: true
