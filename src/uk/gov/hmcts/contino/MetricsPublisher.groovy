@@ -43,7 +43,6 @@ class MetricsPublisher implements Serializable {
       build_tag                    : env.BUILD_TAG,
       node_name                    : env.NODE_NAME,
       node_labels                  : env.NODE_LABELS,
-      node_status                  : resolveAgentStatus(),
       build_url                    : env.BUILD_URL,
       job_url                      : env.JOB_URL,
       git_url                      : env.GIT_URL,
@@ -63,24 +62,6 @@ class MetricsPublisher implements Serializable {
       current_build_absolute_url   : currentBuild.absoluteUrl,
       stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
     ]
-  }
-
-  @NonCPS
-  private String resolveAgentStatus() {
-    return isAgentOnline(env.NODE_NAME) ? 'online' : 'offline'
-  }
-
-  @NonCPS
-  boolean isAgentOnline(String nodeName) {
-    if (!nodeName) {
-      return false
-    }
-    try {
-      def computer = agentComputer(nodeName)
-      return computer?.isOnline() && computer?.getChannel() != null
-    } catch (Exception ignored) {
-      return false
-    }
   }
 
   @NonCPS

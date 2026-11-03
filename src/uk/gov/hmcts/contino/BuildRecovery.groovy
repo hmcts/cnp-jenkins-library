@@ -4,6 +4,7 @@ import com.cloudbees.groovy.cps.NonCPS
 import jenkins.model.Jenkins
 
 class BuildRecovery implements Serializable {
+  static final int MAX_COSMOSDB_RECORDS = 50
   static final String TEST_ARTIFACTS = '**/build/classes/**,**/build/resources/**,**/build/test-results/**,**/build/reports/jacoco/**,**/build/jacoco/**'
   static final List<String> STATIC_CHECK_STEPS = ['test', 'sonarscan', 'securitychecks', 'techstack', 'dockerbuild', 'dockertestbuild', 'fortify-scan']
   private final def steps
@@ -49,9 +50,9 @@ class BuildRecovery implements Serializable {
       steps.echo "Build recovery: querying Cosmos DB pipeline-metrics for job ${identity.job_name}, product ${identity.product}, component ${identity.component}, branch ${identity.branch_name}, build #${sourceBuild}"
       List<Map> records = readMetrics(identity, sourceBuild)
       steps.echo "Build recovery: Cosmos DB returned ${records?.size() ?: 0} records for build #${sourceBuild}"
-      if (records != null && records.size() <= 1000) {
+      if (records != null && records.size() < MAX_COSMOSDB_RECORDS) {
         records.findAll { it.event_type == 'step' && it.step_result == 'FAILURE' }.each { record ->
-          steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}, node_status=${record.node_status ?: 'not recorded'}"
+          steps.echo "Previous build #${sourceBuild}: ${record.current_step_name}=${record.step_result}"
         }
       }
       reusable = reusableSteps(records, identity, sourceBuild)
@@ -194,7 +195,7 @@ class BuildRecovery implements Serializable {
     if (!records) {
       return "no metrics records found for build #${buildNumber}"
     }
-    if (records.size() > 1000) {
+    if (records.size() >= MAX_COSMOSDB_RECORDS) {
       return 'too many metrics records to evaluate'
     }
     if (records.any { it.attempt_id }) {
@@ -232,14 +233,14 @@ class BuildRecovery implements Serializable {
       parameters.add(parameterClass.newInstance("@${key}".toString(), identity[key]))
     }
     parameters.add(parameterClass.newInstance('@build_number', buildNumber))
-    String queryText = 'SELECT TOP 1001 * FROM c WHERE c.product = @product AND c.component = @component AND c.branch_name = @branch_name AND c.job_name = @job_name AND c.build_number = @build_number'
+    String queryText = "SELECT TOP ${MAX_COSMOSDB_RECORDS} * FROM c WHERE c.product = @product AND c.component = @component AND c.branch_name = @branch_name AND c.job_name = @job_name AND c.build_number = @build_number"
     def query = sdkLoader.loadClass('com.azure.cosmos.models.SqlQuerySpec').newInstance(queryText, parameters)
     def options = sdkLoader.loadClass('com.azure.cosmos.models.CosmosQueryRequestOptions').newInstance()
     String database = steps.env.PIPELINE_METRICS_DATABASE?.toString()?.trim() ?: CosmosDbTargetResolver.DEFAULT_DATABASE
     def container = client.getDatabase(database).getContainer('pipeline-metrics')
     List<Map> records = []
     def iterator = container.queryItems(query, options, Map.class).iterator()
-    while (iterator.hasNext() && records.size() <= 1000) {
+    while (iterator.hasNext() && records.size() < MAX_COSMOSDB_RECORDS) {
       records.add(new LinkedHashMap(iterator.next()))
     }
     return records

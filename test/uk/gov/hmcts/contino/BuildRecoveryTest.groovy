@@ -68,6 +68,23 @@ class BuildRecoveryTest extends Specification {
       'pipelineCommit' | 'same Git commit'
   }
 
+  def 'results reaching the query cap are rejected as potentially truncated'() {
+    given:
+      def events = records()
+      while (events.size() < resultCount) {
+        events << record([event_type: 'diagnostic', current_step_name: "record-${events.size()}"])
+      }
+
+    expect:
+      (BuildRecovery.rejectionReason(events, identity, '35') == null) == reusable
+      BuildRecovery.reusableSteps(events, identity, '35').contains('test') == reusable
+
+    where:
+      resultCount                         | reusable
+      BuildRecovery.MAX_COSMOSDB_RECORDS - 1 | true
+      BuildRecovery.MAX_COSMOSDB_RECORDS     | false
+  }
+
   List<Map> promotion(String label, String innerResult, String stageResult) {
     return [
       record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-inner".toString()]),
@@ -242,7 +259,7 @@ class BuildRecoveryTest extends Specification {
       BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
 
     where:
-      events << [[], [[current_step_name: 'test', current_build_current_result: 'FAILURE', node_status: 'offline']]]
+      events << [[], [[current_step_name: 'test', current_build_current_result: 'FAILURE']]]
   }
 
   def 'incomplete ambiguous or unarchived test results are rerun'() {
