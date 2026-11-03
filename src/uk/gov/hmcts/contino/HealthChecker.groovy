@@ -28,11 +28,18 @@ class HealthChecker {
         )
 
         if (!isHealthy(response)) {
-          if (attemptCounter < maxAttempts) {
-            steps.sleep sleepDuration
-          }
           steps.error "Service isn’t healthy, will try up to ${maxAttempts} times"
         }
+      }
+      catch (InterruptedException e) {
+        throw e
+      }
+      catch (e) {
+        // Also wait after a failed request, e.g. while a newly registered DNS record propagates
+        if (attemptCounter < maxAttempts) {
+          steps.sleep sleepDuration
+        }
+        throw e
       }
       finally {
         ++attemptCounter
