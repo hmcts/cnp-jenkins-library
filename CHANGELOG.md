@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.13.6] - 2026-11-03
+
+## :bug: Bug Fixes
+
+- fix: wait between health check attempts when the request fails @banderous (#1586)
+
 ## [2.14.0] - 2026-11-02
 
 ## :rocket: Features
