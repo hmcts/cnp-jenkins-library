@@ -172,17 +172,21 @@ def call(params) {
               deleteDir()
               checkout scm
               withFortifySecrets(config.fortifyVaultName ?: "${product}-${params.environment}") {
-                warnError('Failure in Fortify Scan') {
-                  pcr.callAround('fortify-scan') {
-                    builder.fortifyScan()
+                // Same as the enableFortifyScan() branch below: the library FoD scan runner needs the
+                // Jenkins OAuth client_id/secret, not just the vault username/password.
+                withFortifyOAuthSecrets {
+                  warnError('Failure in Fortify Scan') {
+                    pcr.callAround('fortify-scan') {
+                      builder.fortifyScan()
+                    }
                   }
-                }
 
-                warnError('Failure in Fortify vulnerability report') {
-                  fortifyVulnerabilityReport()
-                }
+                  warnError('Failure in Fortify vulnerability report') {
+                    fortifyVulnerabilityReport()
+                  }
 
-                archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+                  archiveArtifacts allowEmptyArchive: true, artifacts: 'Fortify Scan/FortifyScanReport.html,Fortify Scan/FortifyVulnerabilities.*'
+                }
               }
             }
           }
