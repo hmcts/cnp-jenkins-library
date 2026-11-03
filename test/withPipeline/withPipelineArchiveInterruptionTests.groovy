@@ -72,7 +72,7 @@ class withPipelineArchiveInterruptionTests extends BaseCnpPipelineTest {
 
   @Test
   void queuesTheArchiveAfterASingleFailedExecution() {
-    def failure = new RuntimeException('agent lost')
+    def failure = new RuntimeException('temporary failure')
     def attempts = 0
     def queueCount = 0
     def failureObserved = false
