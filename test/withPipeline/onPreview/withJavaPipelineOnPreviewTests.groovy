@@ -28,11 +28,11 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   }
 
   @Test
-  void agentFailureIsPropagatedWithoutRetryingThePipeline() {
+  void pipelineFailureIsPropagatedWithoutRetryingThePipeline() {
     int nodeCalls = 0
     helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
       nodeCalls++
-      throw new IOException('agent disconnected')
+      throw new IllegalStateException('temporary failure')
     })
     Exception failure
 
