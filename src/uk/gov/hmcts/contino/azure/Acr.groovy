@@ -526,14 +526,13 @@ class Acr extends Az {
       returnStdout: true
     )?.trim()
     
-    // Use a unique task name per build to avoid conflicts between parallel builds
-    // Format: repo-identifier-build (e.g., plum-frontend-1347-build, plum-frontend-staging-build)
-    // Note: master branch uses "staging" as imageTag, not "master"
+    // Separate master commits must not update one another's task definitions.
+    // Format: repo-identifier-build (e.g., plum-frontend-1347-build).
     def repoName = dockerImage.getRepositoryName().replaceAll('/', '-')
     def imageTag = dockerImage.getImageTag()
     
     // Extract just the PR number for cleaner task names (pr-1347 -> 1347)
-    def taskIdentifier = imageTag
+    def taskIdentifier = imageTag == 'staging' ? dockerImage.commit : imageTag
     if (imageTag =~ /^pr-(\d+)$/) {
       taskIdentifier = (imageTag =~ /^pr-(\d+)$/)[0][1]
     }
@@ -585,7 +584,7 @@ class Acr extends Az {
    */
   def retagForStage(stage, dockerImage) {
     def additionalTag = dockerImage.getShortName(stage)
-    // Non master branch builds like preview are tagged with the base tag
+    // Master build output is commit-scoped; PR and preview use their branch tag.
     def baseTag = (stage == DockerImage.DeploymentStage.PR || stage == DockerImage.DeploymentStage.PREVIEW || dockerImage.imageTag == 'staging')
       ? dockerImage.getBaseTaggedName() : dockerImage.getTaggedName()
     
