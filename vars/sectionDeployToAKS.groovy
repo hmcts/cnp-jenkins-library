@@ -83,7 +83,12 @@ def call(params) {
             log.info("Using AKS environment: ${params.environment}")
             warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
             params.imageName = dockerImageTaggedName
-            aksUrl = helmInstall(dockerImage, params)
+            try {
+              aksUrl = helmInstall(dockerImage, params)
+            } catch (err) {
+              clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+              throw err
+            }
             log.info("deployed component URL: ${aksUrl}")
             onPR {
               githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
