@@ -1,5 +1,8 @@
 package uk.gov.hmcts.pipeline
 
+import java.time.LocalDate
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
 class LibraryBranchControls {
   def steps
   static def libraryBranchControls
@@ -121,6 +124,15 @@ class LibraryBranchControls {
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
 
+    if (branchAllowed && shouldWarnAboutBranch(branchEntry)) {
+      WarningCollector.addPipelineWarning(
+        "allowed_infrastructure_library_branch",
+        "Your pipeline is using the allowed Infrastructure library branch *${branchEntry.name}*. " +
+          "Merge the required changes, then switch to a fixed library release.",
+        branchEntry.date_deadline ? LocalDate.parse(branchEntry.date_deadline.toString()) : null
+      )
+    }
+
     if (branchAllowed) {
       steps.echo "Library branch `${branchToCheck}` is allowed."
     }
@@ -138,5 +150,13 @@ class LibraryBranchControls {
     }
 
     return branchAllowed
+  }
+
+  private static boolean shouldWarnAboutBranch(def branchEntry) {
+    String branchName = branchEntry?.name
+    return branchName &&
+      branchName != 'master' &&
+      branchName != 'cve-dashboard' &&
+      !(branchName ==~ /\d+\.\d+\.\d+/)
   }
 }

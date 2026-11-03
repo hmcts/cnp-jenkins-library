@@ -1,6 +1,5 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import uk.gov.hmcts.pipeline.DeprecationConfig
-import uk.gov.hmcts.pipeline.LibraryBranchControls
 import uk.gov.hmcts.pipeline.WarningBanner
 import java.time.LocalDate
 
@@ -18,7 +17,6 @@ def call(String repoUrl = null) {
 
     try {
         checkUnpinnedLibrary()
-        checkAllowedLibraryBranches()
         checkOldLibraryVersions(jenkinsLibraryDeprecationConfig)
     } finally {
         sh 'rm -f check-library-version.sh'
@@ -76,42 +74,6 @@ def checkUnpinnedLibrary() {
                 ]
             ]
     )
-}
-
-def checkAllowedLibraryBranches() {
-    def allowedLibraryBranches = new LibraryBranchControls(this)
-        .getLibraryBranchControls()
-        .branches
-        .findAll { it.allowed && it.name != 'master' && it.name != 'cve-dashboard' && !(it.name ==~ /\d+\.\d+\.\d+/) }
-
-    allowedLibraryBranches.each { branch ->
-        int branchStatus = sh(
-            script: """
-            chmod +x check-library-version.sh
-            ./check-library-version.sh 'branch' '${branch.name}'
-            """,
-            returnStatus: true
-        )
-
-        buildAndAddWarning(
-            branchStatus,
-                "allowed_infrastructure_library_branch",
-                [
-                    [
-                        'Your Jenkinsfile is using an allowed Infrastructure library branch',
-                        "*${branch.name}*."
-                    ],
-                    [
-                        'Merge the changes you need from this branch, check for the latest release at',
-                        'https://github.com/hmcts/cnp-jenkins-library/releases, then switch to a fixed',
-                        'library version. Pinned versions receive the latest library features and reduce',
-                        'the chance of upstream changes unexpectedly breaking your pipeline.',
-                        'Renovate can automatically update pinned library versions for you.'
-                    ]
-                ],
-                branch.date_deadline
-        )
-    }
 }
 
 def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {

@@ -30,15 +30,6 @@ unpinned_library_found () {
     exit 1
 }
 
-allowed_branch_library_found () {
-    echo ""
-    echo "Allowed Infrastructure library branch reference found."
-    echo "This Jenkinsfile is using @Library(\"Infrastructure@${CUSTOM_LIBRARY_VERSION}\") instead of a fixed library version."
-    echo "${PINNED_VERSION_RECOMMENDATION}"
-    echo ""
-    exit 1
-}
-
 no_custom_library_found () {
     echo "No old references found. All clear!"
     exit 0
@@ -75,10 +66,10 @@ warn_for_found_references () {
     fi
 }
 
-WARNING_MODE="${1:-deprecation}" # warning mode - can be 'unpinned', 'branch', or 'deprecation'
-CUSTOM_LIBRARY_VERSION="${2:-}"  # Version or branch to detect, can be empty when detecting for unpinned libraries
-NEW_LIBRARY_VERSION="${3:-}"     # New library version to suggest in the warning message, can be empty for unpinned or branch warnings
-DEADLINE="${4:-}"                # Deadline for updating the library version, can be empty for unpinned or branch warnings
+WARNING_MODE="${1:-deprecation}" # warning mode - can be 'unpinned' or 'deprecation'
+CUSTOM_LIBRARY_VERSION="${2:-}"  # Version to detect, can be empty when detecting unpinned libraries
+NEW_LIBRARY_VERSION="${3:-}"     # New library version to suggest, can be empty for unpinned warnings
+DEADLINE="${4:-}"                # Deadline for updating the library version, can be empty for unpinned warnings
 ESCAPED_CUSTOM_LIBRARY_VERSION=$(printf '%s' "${CUSTOM_LIBRARY_VERSION}" | sed 's/[][\\.^$*+?(){}|]/\\&/g')
 
 FOUND_REFERENCES=0
@@ -96,13 +87,6 @@ if [[ "${WARNING_MODE}" == "unpinned" ]]; then
     LIBRARY_PATTERN="@Library\\([\"']?Infrastructure[\"']?\\)"
     scan_jenkinsfiles "${LIBRARY_PATTERN}"
     warn_for_found_references "Unpinned Infrastructure library in use!" unpinned_library_found
-    no_custom_library_found
-fi
-
-if [[ "${WARNING_MODE}" == "branch" ]]; then
-    LIBRARY_PATTERN="@Library\\([\"']?Infrastructure@${ESCAPED_CUSTOM_LIBRARY_VERSION}[\"']?\\)"
-    scan_jenkinsfiles "${LIBRARY_PATTERN}"
-    warn_for_found_references "Allowed Infrastructure library branch in use!" allowed_branch_library_found
     no_custom_library_found
 fi
 

@@ -2,7 +2,6 @@ import com.lesfurets.jenkins.unit.BasePipelineTest
 import org.junit.Before
 import org.junit.Test
 import uk.gov.hmcts.pipeline.DeprecationConfig
-import uk.gov.hmcts.pipeline.LibraryBranchControls
 import uk.gov.hmcts.pipeline.SlackBlockMessage
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
@@ -14,8 +13,7 @@ import static org.junit.Assert.fail
 class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
 
     def script
-    Map<String, Integer> statuses = [unpinned: 0, branch: 0, deprecation: 0]
-    List<Map> libraryBranches = [[name: 'master', allowed: true]]
+    Map<String, Integer> statuses = [unpinned: 0, deprecation: 0]
     def deprecationPatterns = '1.0.0'
     String deprecationDeadline = LocalDate.now().minusDays(1).toString()
     List<String> shellCommands = []
@@ -28,19 +26,14 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
         WarningCollector.pipelineWarnings.clear()
         WarningCollector.slackMessage = new SlackBlockMessage()
         DeprecationConfig.deprecationConfigInternal = null
-        LibraryBranchControls.libraryBranchControls = null
 
         binding.setVariable('env', [GIT_CREDENTIALS_ID: 'credentials'])
         helper.registerAllowedMethod('libraryResource', [String.class], { 'resource content' })
         helper.registerAllowedMethod('writeFile', [Map.class], {})
         helper.registerAllowedMethod('httpRequest', [Map.class], { Map request ->
-            [content: request.url.contains('allowed-library-branches') ? 'branches' : 'deprecations']
+            [content: 'deprecations']
         })
         helper.registerAllowedMethod('readYaml', [Map.class], { Map arguments ->
-            if (arguments.text == 'branches') {
-                return [branches: libraryBranches]
-            }
-
             return [
                 jenkins: [
                     legacyVersion: [
@@ -57,9 +50,6 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
 
             if (command.contains("'unpinned'")) {
                 return statuses.unpinned
-            }
-            if (command.contains("'branch'")) {
-                return statuses.branch
             }
             if (command.contains("'deprecation'")) {
                 return statuses.deprecation
@@ -140,62 +130,6 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'custom version check adds only the allowed branch warning when an allowed branch is detected'() {
-        given:
-        def branchDeadline = LocalDate.now().plusDays(7).toString()
-        libraryBranches = [
-            [name: 'master', allowed: true],
-            [name: 'feature/test', allowed: true, date_deadline: branchDeadline]
-        ]
-        statuses.branch = 1
-
-        when:
-        script.call()
-
-        then:
-        assertThat(WarningCollector.pipelineWarnings*.warningKey)
-            .containsExactly('allowed_infrastructure_library_branch')
-        assertThat(WarningCollector.pipelineWarnings.first().warningMessage).contains('*feature/test*.')
-        assertThat(WarningCollector.pipelineWarnings.first().deprecationDate)
-            .isEqualTo(LocalDate.parse(branchDeadline))
-    }
-
-    @Test
-    void 'custom version check fails for an expired allowed branch deadline'() {
-        given:
-        def branchDeadline = LocalDate.now().minusDays(1).toString()
-        libraryBranches = [
-            [name: 'master', allowed: true],
-            [name: 'feature/expired', allowed: true, date_deadline: branchDeadline]
-        ]
-        statuses.branch = 1
-
-        when:
-        RuntimeException failure
-        try {
-            script.call()
-            fail('Expected an expired allowed library branch to fail the pipeline')
-        } catch (RuntimeException expected) {
-            failure = expected
-        }
-
-        then:
-        assertThat(failure.message).contains('feature/expired')
-        WarningCollector.pipelineWarnings*.warningKey == ['allowed_infrastructure_library_branch']
-        WarningCollector.pipelineWarnings.first().deprecationDate == LocalDate.parse(branchDeadline)
-    }
-
-    @Test
-    void 'custom version check does not check master as an allowed branch version'() {
-        when:
-        script.call()
-
-        then:
-        assertThat(shellCommands.findAll { it.contains("'branch'") }).isEmpty()
-        assertThat(WarningCollector.pipelineWarnings).isEmpty()
-    }
-
-    @Test
     void 'custom version check adds an old library warning and fails when an expired version is detected'() {
         given:
         statuses.deprecation = 1
@@ -229,28 +163,6 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'custom version check adds a warning for each allowed branch detected'() {
-        given:
-        libraryBranches = [
-            [name: 'master', allowed: true],
-            [name: 'feature/one', allowed: true],
-            [name: 'feature/two', allowed: true]
-        ]
-        statuses.branch = 1
-
-        when:
-        script.call()
-
-        then:
-        assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly(
-            'allowed_infrastructure_library_branch',
-            'allowed_infrastructure_library_branch'
-        )
-        assertThat(WarningCollector.pipelineWarnings[0].warningMessage).contains('*feature/one*.')
-        assertThat(WarningCollector.pipelineWarnings[1].warningMessage).contains('*feature/two*.')
-    }
-
-    @Test
     void 'custom version check adds a warning for each deprecated pattern detected before its deadline'() {
         given:
         deprecationPatterns = ['1.0.0', '1.1.0']
@@ -266,10 +178,9 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     }
 
     @Test
-    void 'custom version check adds advisory warnings then fails when all custom library versions are detected'() {
+    void 'custom version check adds an unpinned warning then fails for an expired version'() {
         given:
-        libraryBranches = [[name: 'master', allowed: true], [name: 'feature/test', allowed: true]]
-        statuses.putAll([unpinned: 1, branch: 1, deprecation: 1])
+        statuses.putAll([unpinned: 1, deprecation: 1])
 
         when:
         try {
@@ -282,7 +193,6 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
         then:
         assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly(
             'unpinned_infrastructure_library',
-            'allowed_infrastructure_library_branch',
             'old_library_version'
         )
         assertThat(WarningCollector.pipelineWarnings*.warningMessage).containsExactly(
@@ -291,11 +201,6 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
                 'so it can change unexpectedly when upstream library updates are merged. Check for the latest release at ' +
                 'https://github.com/hmcts/cnp-jenkins-library/releases, then update to a fixed library version to keep the ' +
                 'pipeline stable. Renovate can automatically update pinned library versions for you.',
-            'Your Jenkinsfile is using an allowed Infrastructure library branch *feature/test*.\n\n' +
-                'Merge the changes you need from this branch, check for the latest release at ' +
-                'https://github.com/hmcts/cnp-jenkins-library/releases, then switch to a fixed library version. Pinned versions ' +
-                'receive the latest library features and reduce the chance of upstream changes unexpectedly breaking your pipeline. ' +
-                'Renovate can automatically update pinned library versions for you.',
             'Your Jenkinsfile references a deprecated Jenkins library version.\n\n' +
                 'Update it to use *Infrastructure@2.0.0*'
         )
