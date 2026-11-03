@@ -129,7 +129,7 @@ class BuildRecoveryTest extends Specification {
     given:
       def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
         copyArtifacts: { Map options -> }, junit: { Map options -> })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> records() + promotion('preview', 'SUCCESS', 'SUCCESS')
 
@@ -157,7 +157,7 @@ class BuildRecoveryTest extends Specification {
       List<String> messages = []
       def steps = new Expando(echo: { String message -> messages << message }, specific: { String build -> build },
         copyArtifacts: { Map options -> }, junit: { Map options -> })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       def events = records() + staticChecks('SUCCESS')
       events.find { it.event_type == 'pipeline' }.last_successful_stage = 'static checks'
@@ -205,7 +205,7 @@ class BuildRecoveryTest extends Specification {
     given:
       def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
         copyArtifacts: { Map options -> }, junit: { Map options -> })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       def events = records() + staticChecks('SUCCESS') + promotion('preview', 'SUCCESS', 'SUCCESS')
       events.find { it.event_type == 'pipeline' }.last_successful_stage = 'preview:promotion'
@@ -301,7 +301,7 @@ class BuildRecoveryTest extends Specification {
       steps.specific = { String build -> [build: build] }
       steps.copyArtifacts = { Map options -> copied << options }
       steps.junit = { Map options -> reports << options }
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> records()
 
@@ -321,7 +321,7 @@ class BuildRecoveryTest extends Specification {
     given:
       def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
         copyArtifacts: { Map options -> throw new IllegalStateException('missing artifacts') })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> records()
 
@@ -336,7 +336,7 @@ class BuildRecoveryTest extends Specification {
   def 'unavailable Cosmos falls back to normal execution'() {
     given:
       def steps = new Expando(echo: { String message -> })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> { throw new IllegalStateException('unavailable') }
 
@@ -358,7 +358,7 @@ class BuildRecoveryTest extends Specification {
 
     then:
       0 * recovery.readMetrics(_, _)
-      0 * publisher.recoveryIdentity()
+      0 * publisher.recoveryContext()
       !recovery.shouldSkip('test')
 
     where:
@@ -373,7 +373,7 @@ class BuildRecoveryTest extends Specification {
     given:
       def sourceIdentity = new LinkedHashMap(identity)
       sourceIdentity.git_commit = null
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> sourceIdentity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> sourceIdentity }
       def steps = new Expando(echo: { String message -> })
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
 
@@ -388,7 +388,7 @@ class BuildRecoveryTest extends Specification {
   def 'non Gradle tests are never skipped'() {
     given:
       def steps = new Expando(echo: { String message -> })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> records()
 
@@ -402,7 +402,7 @@ class BuildRecoveryTest extends Specification {
 
   def 'manual interruption is propagated rather than converted to fallback'() {
     given:
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(echo: { String message -> }), [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> { throw new InterruptedException('aborted') }
 
@@ -441,7 +441,7 @@ class BuildRecoveryTest extends Specification {
         copyArtifacts: { Map options -> copies << options },
         junit: { Map options -> }
       )
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> { queries++; records() }
 
@@ -470,7 +470,7 @@ class BuildRecoveryTest extends Specification {
     given:
       List<String> messages = []
       def steps = new Expando(echo: { String message -> messages << message })
-      def publisher = Mock(MetricsPublisher) { recoveryIdentity() >> identity }
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       def events = records()
       events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE'])

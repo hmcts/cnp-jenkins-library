@@ -104,7 +104,7 @@ class MetricsPublisher implements Serializable {
       return [null, null]
   }
 
-  Map recoveryIdentity() {
+  Map recoveryContext() {
     def (libName, libVersion) = resolveSharedLibrary()
     return [product: product, component: component, branch_name: env.BRANCH_NAME,
       job_name: env.JOB_NAME, git_url: env.GIT_URL, git_commit: env.GIT_COMMIT,
@@ -125,7 +125,7 @@ class MetricsPublisher implements Serializable {
     ])
   }
 
-  // Cleanup on a lost agent can replace the original exception, so step records take precedence.
+  // If an agent gets disconnected, record it as a failure rather than aborted
   String pipelineFailureReason(Throwable failure, String defaultReason) {
     return agentDisconnectionRecorded || failureReason(failure) == 'AGENT_DISCONNECTED' ? 'AGENT_DISCONNECTED' : defaultReason
   }

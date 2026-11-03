@@ -40,7 +40,7 @@ class BuildRecovery implements Serializable {
       steps.echo "Build recovery: previous build #${currentBuild.previousBuild.number} result is ${currentBuild.previousBuild.result ?: 'not available'}; Cosmos DB not queried; running all steps"
       return
     }
-    Map identity = publisher.recoveryIdentity()
+    Map identity = publisher.recoveryContext()
     if (!identity.values().every { it }) {
       steps.echo 'Build recovery: identity is incomplete; running all steps'
       return
@@ -91,7 +91,7 @@ class BuildRecovery implements Serializable {
         steps.echo 'Build recovery: unit tests will run; artifact restoration is only supported for Gradle builds'
       } else {
         try {
-          Map identity = publisher.recoveryIdentity()
+          Map identity = publisher.recoveryContext()
           steps.echo "Build recovery: restoring unit-test artifacts from build #${sourceBuild}"
           steps.copyArtifacts(projectName: identity.job_name, selector: steps.specific(sourceBuild), filter: TEST_ARTIFACTS, optional: false)
           steps.junit(testResults: '**/test-results/test/*.xml', allowEmptyResults: false)
