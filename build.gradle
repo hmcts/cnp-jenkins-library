@@ -12,6 +12,8 @@ repositories {
 
 test {
   systemProperty 'groovy.grape.enable', 'false'
+  // The pipeline tests parse every vars/ script in one JVM; Gradle's 512m default no longer fits them all.
+  maxHeapSize = '1g'
 
   reports {
     html.required = true
