@@ -16,7 +16,7 @@ class LibraryBranchControls {
   }
 
   def getConfigRepoUrl() {
-    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/${getConfigFilePath()}"
+    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/debugtest/${getConfigFilePath()}"
   }
 
   def getLibraryBranchControls() {
