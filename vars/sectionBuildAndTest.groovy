@@ -76,7 +76,7 @@ def call(params) {
         
         // always build master and demo as we currently do not deploy an image there
         boolean envSub = autoDeployEnvironment() != null
-        when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+        when(noSkipImgBuild || projectBranch.isMaster() || envSub || buildRecovery?.shouldSkip('static checks')) {
           pcr.callAround('build') {
             withBuildCache(config) {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
