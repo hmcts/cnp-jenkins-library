@@ -335,20 +335,24 @@ def call(params) {
 
     if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
-        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
-          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+        if (buildRecovery?.shouldSkip('pact-consumer-tests')) {
+          buildRecovery.recordSkip('pact-consumer-tests')
+        } else {
+          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
+            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
-          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
+            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+            env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
+            env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+            env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
-          /*
-        * These instructions have to be kept in order
-        */
-          pcr.callAround('pact-consumer-tests') {
-            builder.runConsumerTests(env.PACT_BROKER_URL, version)
+            /*
+          * These instructions have to be kept in order
+          */
+            pcr.callAround('pact-consumer-tests') {
+              builder.runConsumerTests(env.PACT_BROKER_URL, version)
+            }
           }
         }
       }

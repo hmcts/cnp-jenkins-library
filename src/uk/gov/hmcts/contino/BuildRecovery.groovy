@@ -161,7 +161,7 @@ class BuildRecovery implements Serializable {
         events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1 &&
         events.every { it.git_commit == identity.git_commit && it.git_url == identity.git_url }
     }
-    ['test', 'securitychecks', 'static checks'].each { stage ->
+    ['test', 'securitychecks', 'static checks', 'pact-consumer-tests'].each { stage ->
       if (succeeded(stage)) {
         eligible.add(stage)
       }

@@ -186,6 +186,22 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
+  def 'successful Pact consumer verification is reusable'() {
+    expect:
+      BuildRecovery.reusableSteps(records() + completed('pact-consumer-tests'), identity, '35').contains('pact-consumer-tests')
+  }
+
+  def 'failed Pact consumer verification is not reusable'() {
+    given:
+      def events = records() + [
+        record([event_type: 'step', current_step_name: 'pact-consumer-tests', step_result: 'STARTED', step_execution_id: 'pact-1']),
+        record([event_type: 'step', current_step_name: 'pact-consumer-tests', step_result: 'FAILURE', step_execution_id: 'pact-1'])
+      ]
+
+    expect:
+      !BuildRecovery.reusableSteps(events, identity, '35').contains('pact-consumer-tests')
+  }
+
   def 'static checks are inferred when every branch that ran succeeded'() {
     given:
       def events = records().findAll { it.current_step_name != 'dockerbuild' }
