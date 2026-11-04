@@ -14,11 +14,7 @@ def call(String fortifyVaultName = null, Closure block) {
 
   String theKeyVaultUrl = "https://${fortifyVaultName}.vault.azure.net"
 
-  // The team vault credentials are only needed by a repo-level fortifyScan task (tenant-qualified
-  // username + PAT). The library FoD runner authenticates with the Jenkins `fortify-on-demand-oauth`
-  // credential, so a vault that simply does not hold these secrets must not fail the pipeline.
-  // Anything else (abort/timeout, access denied, network) still fails as before, and once the block
-  // has started its own errors propagate unchanged.
+  // Missing vault secrets are tolerated (the library runner uses Jenkins OAuth); other errors still fail.
   boolean secretsLoaded = false
   try {
     withAzureKeyvault(azureKeyVaultSecrets: fortifySecrets, keyVaultURLOverride: theKeyVaultUrl) {
@@ -36,9 +32,7 @@ def call(String fortifyVaultName = null, Closure block) {
   }
 }
 
-// The azure-keyvault plugin wraps every retrieval failure in AzureKeyVaultException("Failed to retrieve
-// secret ... error message: ..."), so a missing secret is told apart from other failures by the Azure
-// SDK's ResourceNotFoundException in the cause chain or the 404 / SecretNotFound details in the message.
+// Detects a missing secret from the cause chain or the plugin's wrapped 404 / SecretNotFound message.
 @NonCPS
 private boolean isSecretNotFound(Throwable e) {
   for (Throwable t = e; t != null; t = (t.cause == t ? null : t.cause)) {

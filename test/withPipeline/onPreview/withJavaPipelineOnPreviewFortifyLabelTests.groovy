@@ -31,8 +31,7 @@ class withJavaPipelineOnPreviewFortifyLabelTests extends BaseCnpPipelineTest {
 
     runScript("testResources/$jenkinsFile")
 
-    // fortifyVulnerabilityReport binds the OAuth credential on its own after the scan, so what matters is
-    // that it is already bound when the library FoD scan runner starts.
+    // OAuth must be bound before the scan runner starts
     int vaultIndex = helper.callStack.findIndexOf { it.methodName == 'withFortifySecrets' }
     int scanIndex = helper.callStack.findIndexOf { it.methodName == 'fortifyOnDemandScan' }
     int credentialIndex = helper.callStack.findIndexOf {

@@ -9,8 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy
 
 class WithFortifySecretsTest extends BasePipelineTest {
 
-  // Message shapes produced by azure-keyvault-plugin's AzureKeyVaultCredentialRetriever, which wraps every
-  // SecretClient.getSecret failure as "Failed to retrieve secret X from vault Y, error message: <SDK message>"
+  // Message shapes produced by azure-keyvault-plugin
   static final String NOT_FOUND = 'Failed to retrieve secret fortify-on-demand-username from vault https://amp-marketplace-aat.vault.azure.net, ' +
     'error message: Status code 404, "{"error":{"code":"SecretNotFound","message":"A secret with (name/id) fortify-on-demand-username was not found in this key vault."}}"'
   static final String FORBIDDEN = 'Failed to retrieve secret fortify-on-demand-username from vault https://amp-marketplace-aat.vault.azure.net, ' +
@@ -143,8 +142,7 @@ class WithFortifySecretsTest extends BasePipelineTest {
     assertThat(echoCalls).containsExactly('Fortify: missing fortifyVaultName; proceeding without Fortify scan credentials')
   }
 
-  // Stand-in for com.azure.core.exception.ResourceNotFoundException (not on the test classpath);
-  // the production check matches on the simple class name.
+  // Stand-in for com.azure.core.exception.ResourceNotFoundException (matched by simple name)
   static class ResourceNotFoundException extends RuntimeException {
     ResourceNotFoundException(String message) { super(message) }
   }
