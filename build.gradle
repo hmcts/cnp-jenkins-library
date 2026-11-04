@@ -12,6 +12,7 @@ repositories {
 
 test {
   systemProperty 'groovy.grape.enable', 'false'
+  maxHeapSize = '1g'
 
   reports {
     html.required = true

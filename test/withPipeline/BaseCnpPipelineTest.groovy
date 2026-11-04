@@ -11,6 +11,7 @@ import uk.gov.hmcts.contino.MockJenkinsPlugin
 import uk.gov.hmcts.contino.MockJenkinsPluginManager
 
 import uk.gov.hmcts.pipeline.EnvironmentApprovalsTest
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 import uk.gov.hmcts.pipeline.TeamConfigTest
 import uk.gov.hmcts.contino.GithubAPITest
 
@@ -116,7 +117,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
         'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/environment-approvals.yml': EnvironmentApprovalsTest.response,
         'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/private-dns-config.yml': EnvironmentDnsConfigTest.response,
         'https://raw.githubusercontent.com/hmcts/cnp-deprecation-map/master/nagger-versions.yaml': DeprecationConfigTest.response,
-        'https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/allowed-library-branches.yml': LibraryBranchAllowlistTest.response
+        (new LibraryBranchControls(null).getConfigRepoUrl().toString()): LibraryBranchAllowlistTest.response
       ]
       return responsesByUrl.get(url?.toString(), DefaultHttpResponseTest.response)
     })
