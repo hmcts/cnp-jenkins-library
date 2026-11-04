@@ -28,6 +28,11 @@ class WarningCollector implements Serializable {
     String message =  deprecationDate.format(DATE_FORMATTER)
     if (currentDate == deprecationDate) {
       return message.concat(" ( today )")
+    } else if (deprecationDate.isBefore(currentDate)) {
+      def daysAgo = ChronoUnit.DAYS.between(deprecationDate, currentDate)
+      return daysAgo == 1
+        ? message.concat(" ( yesterday )")
+        : message.concat(" ( ${daysAgo} days ago )")
     } else if (nextDay == deprecationDate){
       return message.concat(" ( tomorrow )")
     } else if (nextYear == deprecationDate){
@@ -45,9 +50,14 @@ class WarningCollector implements Serializable {
    */
   static SlackBlockMessage getSlackWarningMessage() {
     for (pipelineWarning in pipelineWarnings) {
-      String message = pipelineWarning.deprecationDate
-        ? pipelineWarning.warningMessage.concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate))
-        : pipelineWarning.warningMessage.concat(" This configuration does not have a deprecation date but it is not recommended.")
+      String message
+      if (!pipelineWarning.deprecationDate) {
+        message = pipelineWarning.warningMessage.concat(" This configuration does not have a deprecation date but it is not recommended.")
+      } else if (pipelineWarning.deprecationDate.isBefore(LocalDate.now())) {
+        message = pipelineWarning.warningMessage.concat(" This configuration stopped being supported on ").concat(getMessageByDays(pipelineWarning.deprecationDate))
+      } else {
+        message = pipelineWarning.warningMessage.concat(" This configuration will stop working by ").concat(getMessageByDays(pipelineWarning.deprecationDate))
+      }
       slackMessage.addSection(message)
     }
     return slackMessage
