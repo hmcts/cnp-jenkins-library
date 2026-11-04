@@ -169,17 +169,17 @@ class LibraryBranchControlsTest extends Specification {
     0 * steps.httpRequest(_)
   }
 
-  def "an allowed temporary branch fails after its deadline"() {
+  def "an allowed temporary branch is rejected after its deadline without bypassing notification"() {
     given:
     def deadline = LocalDate.now().minusDays(1)
     steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'feature/expired', GIT_CREDENTIALS_ID: 'creds']
 
     when:
-    controls.isBranchAllowed()
+    def allowed = controls.isBranchAllowed()
 
     then:
-    def exception = thrown(RuntimeException)
-    exception.message.contains('feature/expired')
+    !allowed
+    noExceptionThrown()
     1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [
       branches: [[name: 'feature/expired', allowed: true, date_deadline: deadline.toString()]]

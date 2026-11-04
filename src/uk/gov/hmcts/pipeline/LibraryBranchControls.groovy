@@ -16,7 +16,7 @@ class LibraryBranchControls {
   }
 
   def getConfigRepoUrl() {
-    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/debugtest/${getConfigFilePath()}"
+    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/${getConfigFilePath()}"
   }
 
   def getLibraryBranchControls() {
@@ -125,12 +125,15 @@ class LibraryBranchControls {
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
 
     if (branchAllowed && shouldWarnAboutBranch(branchEntry)) {
+      LocalDate deadline = branchEntry.date_deadline ? LocalDate.parse(branchEntry.date_deadline.toString()) : null
       WarningCollector.addPipelineWarning(
         "allowed_infrastructure_library_branch",
         "Your pipeline is using the allowed Infrastructure library branch *${branchEntry.name}*. " +
           "Merge the required changes, then switch to a fixed library release.",
-        branchEntry.date_deadline ? LocalDate.parse(branchEntry.date_deadline.toString()) : null
+        deadline,
+        false
       )
+      branchAllowed = !deadline?.isBefore(LocalDate.now())
     }
 
     if (branchAllowed) {

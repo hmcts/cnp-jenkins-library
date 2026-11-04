@@ -41,6 +41,19 @@ class WarningCollectorTest extends Specification {
     thrown RuntimeException
   }
 
+  def "addPipelineWarning() can collect an expired warning without throwing for deferred enforcement"() {
+    given:
+    def pastDate = LocalDate.now().minusDays(1)
+
+    when:
+    WarningCollector.addPipelineWarning("test_key", "deferred failure", pastDate, false)
+
+    then:
+    noExceptionThrown()
+    WarningCollector.pipelineWarnings*.warningKey == ["test_key"]
+    WarningCollector.pipelineWarnings.first().deprecationDate == pastDate
+  }
+
 
   def "getMessageByDays() with same day should return today"() {
 
