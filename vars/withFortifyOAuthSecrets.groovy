@@ -7,11 +7,17 @@ def call(Closure block) {
     return
   }
 
+  // Only a credential binding failure is tolerated; block errors and aborts propagate.
+  boolean credentialsBound = false
   try {
     withCredentials([usernamePassword(credentialsId: credentialsId, usernameVariable: 'FORTIFY_OAUTH_CLIENT_ID', passwordVariable: 'FORTIFY_OAUTH_CLIENT_SECRET')]) {
+      credentialsBound = true
       block.call()
     }
   } catch (Exception e) {
+    if (credentialsBound || e instanceof InterruptedException) {
+      throw e
+    }
     echo("Fortify: unable to bind Jenkins credentialsId='${credentialsId}'; proceeding without Fortify OAuth credentials (${e.message})")
     block.call()
   }

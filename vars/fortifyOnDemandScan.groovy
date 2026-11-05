@@ -1,9 +1,11 @@
 /**
  * Starts (and optionally waits for) a Fortify on Demand static scan using FoD v3 APIs.
  *
- * Expected credentials (provided by withFortifySecrets):
- * - FORTIFY_USER_NAME (OAuth client_id)
- * - FORTIFY_PASSWORD  (OAuth client_secret)
+ * Expected credentials:
+ * - FORTIFY_OAUTH_CLIENT_ID / FORTIFY_OAUTH_CLIENT_SECRET (FoD OAuth API key/secret, bound by
+ *   withFortifyOAuthSecrets from the Jenkins `fortify-on-demand-oauth` credential)
+ * - Fallback only: FORTIFY_USER_NAME / FORTIFY_PASSWORD from withFortifySecrets (team Key Vault).
+ *   These are SSC-style username/PAT values and are normally rejected as OAuth client credentials.
  *
  * Release resolution order:
  * 1) params.releaseId
