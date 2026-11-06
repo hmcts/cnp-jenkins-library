@@ -36,8 +36,8 @@ def call(type, String product, String component, String s2sServiceName, String t
 
   assert pipelineType != null
 
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
+  callbacks.registerAfterAll { stage, durationMs ->
+    metricsPublisher.publish(stage, durationMs)
   }
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
