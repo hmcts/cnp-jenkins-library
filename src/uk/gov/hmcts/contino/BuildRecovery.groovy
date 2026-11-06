@@ -5,7 +5,6 @@ import jenkins.model.Jenkins
 
 class BuildRecovery implements Serializable {
   static final int MAX_COSMOSDB_RECORDS = 50
-  static final String TEST_ARTIFACTS = '**/build/classes/**,**/build/resources/**,**/build/test-results/**,**/build/reports/jacoco/**,**/build/jacoco/**'
   static final List<String> STATIC_CHECK_STEPS = ['test', 'sonarscan', 'securitychecks', 'techstack', 'dockerbuild', 'dockertestbuild', 'fortify-scan']
   private final def steps
   private final def currentBuild
@@ -107,20 +106,6 @@ class BuildRecovery implements Serializable {
     steps.echo "Skipping ${stage}: successful in build #${sourceBuild} for the same commit"
     publisher.lastSuccessfulStage = stage
     publisher.publish(stage, [event_type: 'step', step_result: 'SKIPPED', reused_from_build: sourceBuild])
-  }
-
-  void archiveTestArtifacts() {
-    if (!enabled) {
-      return
-    }
-    try {
-      steps.archiveArtifacts(artifacts: TEST_ARTIFACTS, allowEmptyArchive: false)
-    } catch (Exception failure) {
-      if (failure instanceof InterruptedException) {
-        throw failure
-      }
-      steps.echo 'Build recovery: test artifacts could not be archived'
-    }
   }
 
   @NonCPS

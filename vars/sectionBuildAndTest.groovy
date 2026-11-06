@@ -97,9 +97,6 @@ def call(params) {
               acr.login()
               builder.test()
             }
-            if (builder instanceof GradleBuilder) {
-              buildRecovery?.archiveTestArtifacts()
-            }
           }
         }
 
