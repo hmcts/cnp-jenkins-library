@@ -15,11 +15,17 @@ class GradleBuilder extends AbstractBuilder {
 
   // https://issues.jenkins.io/browse/JENKINS-47355 means a weird super class issue
   def localSteps
+  private final Closure withAzureKeyvaultStep
 
   GradleBuilder(steps, product) {
+    this(steps, product, { secrets, body -> steps.withAzureKeyvault(secrets, body) })
+  }
+
+  GradleBuilder(steps, product, Closure withAzureKeyvaultStep) {
     super(steps)
     this.product = product
     this.localSteps = steps
+    this.withAzureKeyvaultStep = withAzureKeyvaultStep
   }
 
   def build() {
@@ -68,7 +74,7 @@ class GradleBuilder extends AbstractBuilder {
     def secrets = [
       [ secretType: 'Secret', name: 'ado-maven-mirror-pat', version: '', envVariable: 'ADO_MAVEN_PAT' ]
     ]
-    localSteps.withAzureKeyvault(secrets) { body() }
+    withAzureKeyvaultStep(secrets) { body() }
   }
 
   def test() {
@@ -205,7 +211,7 @@ class GradleBuilder extends AbstractBuilder {
       [ secretType: 'Secret', name: 'OWASPPostgresDb-v15-Connection-String', version: '', envVariable: 'OWASPDB_V15_CONNECTION_STRING' ]
     ]
 
-    localSteps.withAzureKeyvault(secrets) {
+    withAzureKeyvaultStep(secrets) {
       try {
         gradle("--stacktrace -DdependencyCheck.failBuild=true -Dnvd.api.check.validforhours=24 -Danalyzer.central.enabled=false -Ddata.driver_name='org.postgresql.Driver' -Ddata.connection_string='${localSteps.env.OWASPDB_V15_CONNECTION_STRING}' -Ddata.user='${localSteps.env.OWASPDB_V15_ACCOUNT}' -Ddata.password='${localSteps.env.OWASPDB_V15_PASSWORD}'  -Danalyzer.retirejs.enabled=false -Danalyzer.ossindex.enabled=false dependencyCheckAggregate")
       } finally {
@@ -238,7 +244,7 @@ class GradleBuilder extends AbstractBuilder {
         [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
         [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
       ]
-      localSteps.withAzureKeyvault(secrets) {
+      withAzureKeyvaultStep(secrets) {
         localSteps.sh "./gradlew -q dependencies > depsProc"
         def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
         client.updateDependencies(localSteps.readFile('depsProc'), 'gradle')

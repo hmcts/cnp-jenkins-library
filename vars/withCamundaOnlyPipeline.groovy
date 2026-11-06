@@ -20,9 +20,9 @@ def call(type, String product, String component, String s2sServiceName, String t
   def callbacksRunner = new PipelineCallbacksRunner(callbacks)
 
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component),
+    java  : new SpringBootPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    nodejs: new NodePipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    angular: new AngularPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
     ruby: new RubyPipelineType(this, product, component)
   ]
 
@@ -129,6 +129,7 @@ def call(type, String product, String component, String s2sServiceName, String t
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      reportInsecureInterpolation()
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if (env.KEEP_DIR_FOR_DEBUGGING != 'true') {
         deleteDir()
