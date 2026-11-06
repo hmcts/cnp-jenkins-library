@@ -87,22 +87,18 @@ def call(params) {
         }
       }
 
-      buildRecovery?.prepare(builder instanceof GradleBuilder, imageExists || !dockerFileExists)
+      buildRecovery?.prepare(imageExists || !dockerFileExists)
 
       def branches = [failFast: true]
       branches["Unit tests and Sonar scan"] = {
-        if (buildRecovery?.shouldSkip('test')) {
-          buildRecovery.recordSkip('test')
-        } else {
-          pcr.callAround('test') {
-            timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
-              withAcrClient(subscription){
-                acr.login()
-                builder.test()
-              }
-              if (builder instanceof GradleBuilder) {
-                buildRecovery?.archiveTestArtifacts()
-              }
+        pcr.callAround('test') {
+          timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
+            withAcrClient(subscription){
+              acr.login()
+              builder.test()
+            }
+            if (builder instanceof GradleBuilder) {
+              buildRecovery?.archiveTestArtifacts()
             }
           }
         }
@@ -123,12 +119,8 @@ def call(params) {
         }
       }
       branches["Security Checks"] = {
-        if (buildRecovery?.shouldSkip('securitychecks')) {
-          buildRecovery.recordSkip('securitychecks')
-        } else {
-          pcr.callAround('securitychecks') {
-            builder.securityCheck()
-          }
+        pcr.callAround('securitychecks') {
+          builder.securityCheck()
         }
       }
       branches["Tech Stack"] = {
@@ -139,10 +131,6 @@ def call(params) {
 
       if (dockerFileExists) {
         branches["Docker Build"] = {
-          if (buildRecovery?.shouldSkip('dockerbuild')) {
-            buildRecovery.recordSkip('dockerbuild')
-            return
-          }
           withAcrClient(subscription) {
             def acbTemplateFilePath = 'acb.tpl.yaml'
 

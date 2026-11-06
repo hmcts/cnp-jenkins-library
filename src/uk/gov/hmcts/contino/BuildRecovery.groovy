@@ -72,37 +72,14 @@ class BuildRecovery implements Serializable {
     }
   }
 
-  void prepare(boolean canRestoreTests, boolean imageExists = false) {
+  void prepare(boolean imageExists = false) {
     if (!checked) {
       checkPreviousBuild()
-    }
-    if (reusable.contains('dockerbuild') && !imageExists) {
-      reusable.remove('dockerbuild')
-      steps.echo 'Build recovery: image for this commit is not in ACR; rebuilding Docker image'
     }
     // Skipping the whole group also skips the Docker build inside it.
     if (reusable.contains('static checks') && !imageExists) {
       reusable.remove('static checks')
       steps.echo 'Build recovery: image for this commit is not in ACR; running static checks'
-    }
-    if (reusable.contains('test')) {
-      if (!canRestoreTests) {
-        reusable.remove('test')
-        steps.echo 'Build recovery: unit tests will run; artifact restoration is only supported for Gradle builds'
-      } else {
-        try {
-          Map identity = publisher.recoveryContext()
-          steps.echo "Build recovery: restoring unit-test artifacts from build #${sourceBuild}"
-          steps.copyArtifacts(projectName: identity.job_name, selector: steps.specific(sourceBuild), filter: TEST_ARTIFACTS, optional: false)
-          steps.junit(testResults: '**/test-results/test/*.xml', allowEmptyResults: false)
-        } catch (Exception failure) {
-          if (failure instanceof InterruptedException) {
-            throw failure
-          }
-          reusable.remove('test')
-          steps.echo 'Build recovery: test artifacts could not be restored; rerunning tests'
-        }
-      }
     }
     if (sourceBuild) {
       steps.echo "Build recovery ready from #${sourceBuild}: ${reusable ? "skipping ${reusable.join(', ')}" : 'no steps will be skipped'}"
@@ -138,12 +115,11 @@ class BuildRecovery implements Serializable {
     }
     try {
       steps.archiveArtifacts(artifacts: TEST_ARTIFACTS, allowEmptyArchive: false)
-      publisher.publish('test', [event_type: 'step_artifacts', artifact_paths: TEST_ARTIFACTS])
     } catch (Exception failure) {
       if (failure instanceof InterruptedException) {
         throw failure
       }
-      steps.echo 'Build recovery: test artifacts could not be archived; tests will not be reusable'
+      steps.echo 'Build recovery: test artifacts could not be archived'
     }
   }
 
@@ -161,7 +137,7 @@ class BuildRecovery implements Serializable {
         events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1 &&
         events.every { it.git_commit == identity.git_commit && it.git_url == identity.git_url }
     }
-    ['test', 'securitychecks', 'static checks', 'pact-consumer-tests'].each { stage ->
+    ['static checks', 'pact-consumer-tests'].each { stage ->
       if (succeeded(stage)) {
         eligible.add(stage)
       }
@@ -171,18 +147,12 @@ class BuildRecovery implements Serializable {
     if (startedChecks.containsAll(['test', 'securitychecks']) && startedChecks.every { succeeded(it) }) {
       eligible.add('static checks')
     }
-    if (!records.any { it.event_type == 'step_artifacts' && it.current_step_name == 'test' && it.artifact_paths == TEST_ARTIFACTS }) {
-      eligible.remove('test')
-    }
     // The stage record also covers agent switching and workspace stash-back around the promotion.
     outcomes.collect { it.current_step_name?.toString() }.unique().findAll { it?.endsWith(':promotion') }.each { String step ->
       String label = step - ':promotion'
       if (succeeded(step) && succeeded("${label} build promotion".toString())) {
         eligible.add(step)
       }
-    }
-    if (eligible.any { it.endsWith(':promotion') }) {
-      eligible.add('dockerbuild')
     }
     return eligible
   }

@@ -15,7 +15,6 @@ class BuildRecoveryTest extends Specification {
     return [
       record([event_type: 'step', current_step_name: 'test', step_result: 'STARTED', step_execution_id: 'test-1']),
       record([event_type: 'step', current_step_name: 'test', step_result: 'SUCCESS', step_execution_id: 'test-1']),
-      record([event_type: 'step_artifacts', current_step_name: 'test', artifact_paths: BuildRecovery.TEST_ARTIFACTS]),
       record([event_type: 'step', current_step_name: 'securitychecks', step_result: 'STARTED', step_execution_id: 'security-1']),
       record([event_type: 'step', current_step_name: 'securitychecks', step_result: 'SUCCESS', step_execution_id: 'security-1']),
       record([event_type: 'step', current_step_name: 'dockerbuild', step_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED']),
@@ -23,9 +22,9 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
-  def 'successful allowlisted steps from the previous failed build are reusable'() {
+  def 'successful static-check child steps are not reusable independently'() {
     expect:
-      BuildRecovery.reusableSteps(records(), identity, '35') == ['test', 'securitychecks'] as Set
+      BuildRecovery.reusableSteps(records(), identity, '35').isEmpty()
   }
 
   def 'records published before checkout without Git details do not block recovery'() {
@@ -37,7 +36,7 @@ class BuildRecoveryTest extends Specification {
 
     expect:
       BuildRecovery.rejectionReason(events, identity, '35') == null
-      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
   def 'a reusable step must have been recorded with the same commit'() {
@@ -46,7 +45,7 @@ class BuildRecoveryTest extends Specification {
       events.findAll { it.current_step_name == 'securitychecks' }.each { it.git_commit = null }
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['test'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
   def 'rejection reason identifies the failed requirement'() {
@@ -77,7 +76,6 @@ class BuildRecoveryTest extends Specification {
 
     expect:
       (BuildRecovery.rejectionReason(events, identity, '35') == null) == reusable
-      BuildRecovery.reusableSteps(events, identity, '35').contains('test') == reusable
 
     where:
       resultCount                         | reusable
@@ -96,12 +94,12 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
-  def 'completed promotions and the docker build are reusable'() {
+  def 'completed promotions are reusable without reusing the container build separately'() {
     given:
       def events = records() + promotion('preview', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks', 'preview:promotion', 'dockerbuild'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35') == ['preview:promotion'] as Set
   }
 
   def 'build-and-test image promotion is reusable separately from deployment promotions'() {
@@ -109,7 +107,7 @@ class BuildRecoveryTest extends Specification {
       def events = records() + promotion('staging-image', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks', 'staging-image:promotion', 'dockerbuild'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35') == ['staging-image:promotion'] as Set
   }
 
   def 'docker build is not reusable without a completed promotion'() {
@@ -117,7 +115,7 @@ class BuildRecoveryTest extends Specification {
       def events = records() + promotion('preview', innerResult, stageResult)
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
 
     where:
       innerResult | stageResult
@@ -127,18 +125,22 @@ class BuildRecoveryTest extends Specification {
 
   def 'docker build is rebuilt when the image is missing from ACR'() {
     given:
+      def copied = []
       def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
-        copyArtifacts: { Map options -> }, junit: { Map options -> })
+        copyArtifacts: { Map options -> copied << options }, junit: { Map options -> })
       def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       recovery.readMetrics(identity, '35') >> records() + promotion('preview', 'SUCCESS', 'SUCCESS')
 
     when:
-      recovery.prepare(true, imageExists)
+      recovery.prepare(imageExists)
 
     then:
-      recovery.shouldSkip('dockerbuild') == imageExists
+      !recovery.shouldSkip('dockerbuild')
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
       recovery.shouldSkip('preview:promotion')
+      copied.isEmpty()
 
     where:
       imageExists << [true, false]
@@ -164,7 +166,7 @@ class BuildRecoveryTest extends Specification {
       recovery.readMetrics(identity, '35') >> events
 
     when:
-      recovery.prepare(true, imageExists)
+      recovery.prepare(imageExists)
 
     then:
       recovery.shouldSkip('static checks') == imageExists
@@ -228,7 +230,7 @@ class BuildRecoveryTest extends Specification {
       recovery.readMetrics(identity, '35') >> events
 
     when:
-      recovery.prepare(true, true)
+      recovery.prepare(true)
 
     then:
       recovery.getResumeAfter() == 'preview:promotion'
@@ -260,14 +262,14 @@ class BuildRecoveryTest extends Specification {
       field << ['product', 'component', 'branch_name', 'job_name', 'git_url', 'git_commit', 'shared_library_name', 'shared_library_version', 'build_number']
   }
 
-  def 'other step failures do not block recovery of prior successful work'() {
+  def 'a failed child step prevents atomic static-check reuse'() {
     given:
       def events = records()
       events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE'])
       events.find { it.event_type == 'pipeline' }.failure_reason = 'STEP_FAILURE'
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set
+      !BuildRecovery.reusableSteps(events, identity, '35').contains('static checks')
   }
 
   def 'missing terminal record or old metrics disable recovery'() {
@@ -278,25 +280,12 @@ class BuildRecoveryTest extends Specification {
       events << [[], [[current_step_name: 'test', current_build_current_result: 'FAILURE']]]
   }
 
-  def 'incomplete ambiguous or unarchived test results are rerun'() {
+  def 'successful child records do not independently reuse static checks'() {
     given:
       def events = records()
-      if (removeArtifacts) {
-        events.removeAll { it.event_type == 'step_artifacts' }
-      } else if (duplicate) {
-        events << record([event_type: 'step', current_step_name: 'test', step_result: 'STARTED', step_execution_id: 'test-2'])
-      } else {
-        events.removeAll { it.current_step_name == 'test' && it.step_result == 'SUCCESS' }
-      }
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['securitychecks'] as Set
-
-    where:
-      removeArtifacts | duplicate
-      true            | false
-      false           | true
-      false           | false
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
   def 'legacy retry attempt records are not reused'() {
@@ -308,45 +297,23 @@ class BuildRecoveryTest extends Specification {
       BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
-  def 'plan restores test artifacts from the previous build'() {
+  def 'completed static checks skip as a whole without restoring artifacts'() {
     given:
-      def steps = new Expando()
-      def copied = []
-      def reports = []
-      steps.echo = { String message -> }
-      steps.specific = { String build -> [build: build] }
-      steps.copyArtifacts = { Map options -> copied << options }
-      steps.junit = { Map options -> reports << options }
+      def steps = new Expando(echo: { String message -> })
       def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
-      recovery.readMetrics(identity, '35') >> records()
+      def events = records() + staticChecks('SUCCESS')
+      events.find { it.event_type == 'pipeline' }.last_successful_stage = 'static checks'
+      recovery.readMetrics(identity, '35') >> events
 
     when:
       recovery.prepare(true)
 
     then:
-      recovery.shouldSkip('test')
-      recovery.shouldSkip('securitychecks')
-      !recovery.shouldSkip('dockerbuild')
-      copied[0].selector == [build: '35']
-      copied[0].filter == BuildRecovery.TEST_ARTIFACTS
-      reports == [[testResults: '**/test-results/test/*.xml', allowEmptyResults: false]]
-  }
-
-  def 'unavailable artifacts rerun tests while retaining eligible security checks'() {
-    given:
-      def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
-        copyArtifacts: { Map options -> throw new IllegalStateException('missing artifacts') })
-      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
-      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
-      recovery.readMetrics(identity, '35') >> records()
-
-    when:
-      recovery.prepare(true)
-
-    then:
+      recovery.shouldSkip('static checks')
       !recovery.shouldSkip('test')
-      recovery.shouldSkip('securitychecks')
+      !recovery.shouldSkip('securitychecks')
+      !recovery.shouldSkip('dockerbuild')
   }
 
   def 'unavailable Cosmos falls back to normal execution'() {
@@ -401,7 +368,7 @@ class BuildRecoveryTest extends Specification {
       !recovery.shouldSkip('test')
   }
 
-  def 'non Gradle tests are never skipped'() {
+  def 'static-check children are never individually reusable'() {
     given:
       def steps = new Expando(echo: { String message -> })
       def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
@@ -409,11 +376,11 @@ class BuildRecoveryTest extends Specification {
       recovery.readMetrics(identity, '35') >> records()
 
     when:
-      recovery.prepare(false)
+      recovery.prepare(true)
 
     then:
       !recovery.shouldSkip('test')
-      recovery.shouldSkip('securitychecks')
+      !recovery.shouldSkip('securitychecks')
   }
 
   def 'manual interruption is propagated rather than converted to fallback'() {
@@ -437,13 +404,13 @@ class BuildRecoveryTest extends Specification {
       events.find { it.event_type == 'pipeline' }.putAll([pipeline_result: pipelineResult, failure_reason: reason])
 
     expect:
-      (BuildRecovery.reusableSteps(events, identity, '35') == ['test', 'securitychecks'] as Set) == reusable
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
 
     where:
-      pipelineResult | reason               | reusable
-      'SUCCESS'      | 'AGENT_DISCONNECTED' | false
-      'FAILURE'      | 'STEP_FAILURE'        | true
-      'FAILURE'      | null                  | true
+      pipelineResult | reason
+      'SUCCESS'      | 'AGENT_DISCONNECTED'
+      'FAILURE'      | 'STEP_FAILURE'
+      'FAILURE'      | null
   }
 
   def 'Cosmos check logs results without restoring artifacts and prepare reuses the query'() {
@@ -468,7 +435,7 @@ class BuildRecoveryTest extends Specification {
       queries == 1
       copies.isEmpty()
       messages.any { it.contains('querying Cosmos DB pipeline-metrics') && it.contains('build #35') }
-      messages.any { it.contains('Cosmos DB returned 7 records') }
+      messages.any { it.contains('Cosmos DB returned 6 records') }
       !messages.any { it.contains('test=SUCCESS') }
       messages.any { it.contains('dockerbuild=FAILURE') }
 
@@ -477,9 +444,9 @@ class BuildRecoveryTest extends Specification {
 
     then:
       queries == 1
-      copies.size() == 1
-      recovery.shouldSkip('test')
-      recovery.shouldSkip('securitychecks')
+      copies.isEmpty()
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
   }
 
   def 'all failed steps are displayed while successful work remains recoverable'() {
@@ -501,7 +468,7 @@ class BuildRecoveryTest extends Specification {
       displayed[0].contains('dockerbuild=FAILURE')
       displayed[1].contains('sonarscan=FAILURE')
       displayed.every { !it.contains('failure_reason=') }
-      recovery.shouldSkip('test')
-      recovery.shouldSkip('securitychecks')
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
   }
 }
