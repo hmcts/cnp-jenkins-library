@@ -19,9 +19,9 @@ import uk.gov.hmcts.pipeline.LibraryBranchControls
 def call(type, String product, String component, Closure body) {
 
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component),
+    java  : new SpringBootPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    nodejs: new NodePipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    angular: new AngularPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
     ruby: new RubyPipelineType(this, product, component)
   ]
 
