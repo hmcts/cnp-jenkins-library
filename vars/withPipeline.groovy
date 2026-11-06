@@ -159,7 +159,6 @@ def call(type, String product, String component, Closure body) {
             attemptFailed = true
             throw err
           } finally {
-            notifyPipelineDeprecations(slackChannel, metricsPublisher)
             if (attemptFailed || (currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
               archiveBuildOutputs()
             }
@@ -184,6 +183,7 @@ def call(type, String product, String component, Closure body) {
     callbacksRunner.call('onFailure')
     throw err
   } finally {
+      notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
         queueBuildArchive(product: product, component: component)
       }

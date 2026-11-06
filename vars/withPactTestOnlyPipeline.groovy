@@ -14,8 +14,6 @@ import uk.gov.hmcts.contino.PipelineCallbacksRunner
 import uk.gov.hmcts.pipeline.TeamConfig
 import uk.gov.hmcts.pipeline.LibraryBranchControls
 
-  def libraryBranchAllowed = new LibraryBranchControls(this).isBranchAllowed(pipelineConfig)
-
 def call(type, String product, String component, Closure body) {
 
   def pipelineTypes = [
