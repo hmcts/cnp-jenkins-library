@@ -102,6 +102,7 @@ def call(type, product, component, timeout = 300, Closure body) {
         metricsPublisher.publish('Pipeline Failed')
         throw err
       } finally {
+        reportInsecureInterpolation()
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
         if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
           archiveBuildOutputs()

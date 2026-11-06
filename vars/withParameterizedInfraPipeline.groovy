@@ -69,7 +69,6 @@ def call(String product, String environment, String subscription, Boolean planOn
         pipelineCallbacksRunner: callbacksRunner,
       )
 
-
     } catch (err) {
       currentBuild.result = "FAILURE"
       notifyBuildFailure channel: slackChannel
@@ -78,6 +77,7 @@ def call(String product, String environment, String subscription, Boolean planOn
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      reportInsecureInterpolation()
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
         deleteDir()

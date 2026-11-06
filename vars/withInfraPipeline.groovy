@@ -149,6 +149,7 @@ def call(String product, String component = null, Closure body) {
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      reportInsecureInterpolation()
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
         deleteDir()

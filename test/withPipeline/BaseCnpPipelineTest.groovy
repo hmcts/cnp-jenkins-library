@@ -41,6 +41,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod('credentials', [String.class], { String credentialId -> "stub-credential-${credentialId}" })
     helper.registerAllowedMethod('withAzureKeyvault', [List.class, Closure.class], withCredentialsMock.&call)
     helper.registerAllowedMethod('withAzureKeyvault', [Map.class, Closure.class], withCredentialsMock.&call)
+    helper.registerAllowedMethod('reportInsecureInterpolation', [], {})
 
     return runScript(script)
   }
