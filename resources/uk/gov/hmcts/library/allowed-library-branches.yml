@@ -1,3 +1,4 @@
+#Deprecated, Do not update
 branches:
   - name: master
     allowed: true
@@ -37,7 +38,6 @@ branches:
     allowed: true
   - name: "35961"
     allowed: true
-  - name: "fixnodejsdeprecation"
+  - name: move-allowed-library-branches-config
     allowed: true
-  - name: "DTSPO-36210-fortify-optional-vault-secrets"
-    allowed: true
+#Deprecated, Do not update
