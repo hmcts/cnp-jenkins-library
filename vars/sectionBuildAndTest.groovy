@@ -231,7 +231,9 @@ def call(params) {
 
       stageWithAgent("Static checks / Container build", product) {
         when(noSkipImgBuild) {
-          parallel branches
+          smartRetry(profile: 'infra', maxRetries: 2, backoff: 'exponential') {
+            parallel branches
+          }
 
           // files related to dependency checking that are not needed for the rest of the pipeline
           // they can't be safely deleted in the parallel branches as docker build context will collect files

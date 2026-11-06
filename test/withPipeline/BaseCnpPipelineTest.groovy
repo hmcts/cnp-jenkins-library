@@ -78,6 +78,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("helmPublish", [LinkedHashMap], null)
     helper.registerAllowedMethod("azureCosmosDBCreateDocument", [LinkedHashMap], null)
     helper.registerAllowedMethod("retry", [LinkedHashMap, Closure.class], {})
+    helper.registerAllowedMethod('smartRetry', [Map.class, Closure.class], { Map options, Closure body -> body.call() })
     helper.registerAllowedMethod("agent", [], {})
     helper.registerAllowedMethod("stash", [LinkedHashMap.class], {})
     helper.registerAllowedMethod("unstash", [String.class], {})

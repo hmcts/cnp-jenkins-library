@@ -32,6 +32,34 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
   }
 
   @Test
+  void staticChecksRunInsideSmartRetry() {
+    enablePipelineExecution()
+    boolean insideSmartRetry = false
+    int parallelCallsInsideRetry = 0
+    def retryOptions = []
+    helper.registerAllowedMethod('smartRetry', [Map.class, Closure.class], { Map options, Closure body ->
+      retryOptions << options
+      insideSmartRetry = true
+      try {
+        body.call()
+      } finally {
+        insideSmartRetry = false
+      }
+    })
+    helper.registerAllowedMethod('parallel', [Map.class], { Map branches ->
+      if (insideSmartRetry) {
+        assertThat(branches).containsKey('Unit tests and Sonar scan')
+        parallelCallsInsideRetry++
+      }
+    })
+
+    runScript("testResources/$jenkinsFile")
+
+    assertThat(retryOptions).containsExactly([profile: 'infra', maxRetries: 2, backoff: 'exponential'])
+    assertThat(parallelCallsInsideRetry).isEqualTo(1)
+  }
+
+  @Test
   void smokeTestUsesTeamSecretsByDefault() {
     enablePipelineExecution()
 
