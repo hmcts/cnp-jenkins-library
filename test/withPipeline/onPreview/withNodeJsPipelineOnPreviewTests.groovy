@@ -15,14 +15,15 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
 
+    assert helper.libLoader.libRecords.containsKey('Infrastructure@master')
     def stubBuilder = new StubFor(YarnBuilder)
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
-      build(0) {}
-      test(0) {}
-      securityCheck(0) {}
-      techStackMaintenance(0) {}
-      sonarScan(0) {}
+      setupToolVersion(0..1) {}
+      build(1) {}
+      test(1) {}
+      securityCheck(1) {}
+      techStackMaintenance(1) {}
+      sonarScan(1) {}
       smokeTest(0) {} //preview-staging
       e2eTest(0) {}
       functionalTest(0) {}
@@ -30,8 +31,16 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     binding.getVariable('env').putAt('CHANGE_TITLE', 'Some change')
+
+    Script pipeline = loadScript("testResources/$jenkinsFile")
+    def sectionBuildAndTest = binding.getVariable('sectionBuildAndTest')
+    // The library can resolve its own copy of YarnBuilder, which StubFor cannot intercept.
+    helper.registerAllowedMethod('sectionBuildAndTest', [Object.class], { params ->
+      sectionBuildAndTest.call(params + [builder: new YarnBuilder(delegate)])
+    })
+
     stubBuilder.use {
-      runScript("testResources/$jenkinsFile")
+      runScript(pipeline)
     }
 
     stubBuilder.expect.verify()

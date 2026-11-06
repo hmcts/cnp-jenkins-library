@@ -17,7 +17,7 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(0) {}
+    stubBuilder.demand.setupToolVersion(0..1) {}
     stubBuilder.demand.build(0) {}
 
     stubBuilder.use {
@@ -25,6 +25,12 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     }
 
     stubBuilder.expect.verify()
+    def checks = helper.callStack.find { call ->
+      call.methodName == 'parallel' && call.args[0] instanceof Map && call.args[0].containsKey('ACR Migration Check')
+    }
+    assert checks != null
+    assert checks.args[0].keySet() == ['ACR Migration Check', 'Check previous build (Cosmos DB)'] as Set
+    assert helper.callStack.any { call -> call.methodName == 'stage' && call.args[0] == 'Check previous build (Cosmos DB)' }
   }
 
   @Test
@@ -32,7 +38,7 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
     helper.registerAllowedMethod("when", [boolean, Closure.class], {})
 
     def stubBuilder = new StubFor(GradleBuilder)
-    stubBuilder.demand.setupToolVersion(0) {}
+    stubBuilder.demand.setupToolVersion(0..1) {}
     stubBuilder.demand.build(0) {}
     stubBuilder.demand.test(0) {}
     stubBuilder.demand.securityCheck(0) {}

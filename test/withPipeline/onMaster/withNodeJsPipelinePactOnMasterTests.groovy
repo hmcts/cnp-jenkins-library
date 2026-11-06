@@ -25,6 +25,8 @@ class withNodeJsPipelinePactOnMasterTests extends BaseCnpPipelineTest {
       smokeTest(1) {} //aat-staging
       functionalTest(1) {}
       runProviderVerification(1) {}
+      runConsumerTests(0..1) { Object... arguments -> }
+      runConsumerCanIDeploy(0..1) { Object... arguments -> }
       e2eTest(1) {}
       asBoolean() { return true }
     }

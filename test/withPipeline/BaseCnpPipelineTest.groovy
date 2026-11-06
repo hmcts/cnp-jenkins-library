@@ -89,8 +89,13 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("publishHTML", [Map.class], {})
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
+    helper.registerAllowedMethod("sh", [String.class], {})
     helper.registerAllowedMethod("sh", [Map.class], { m ->
-      if (m.get('script') == 'pwd') {
+      if (m.get('returnStatus')) {
+        String script = m.get('script')?.toString() ?: ''
+        // Java 17 detection greps must miss, otherwise the past deprecation deadline fails the build.
+        return (script.contains('JavaLanguageVersion.of(17)') || script.contains(':17|FROM.*java17')) ? 1 : 0
+      } else if (m.get('script') == 'pwd') {
         return 'localPath'
       } else if(m.get('script').startsWith("kubectl get service")){
         return '{"apiVersion":"v1","kind":"Service","spec":{"clusterIP":"10.0.238.83","externalTrafficPolicy":"Cluster",' +
@@ -162,5 +167,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return ''
     })
     binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
+    helper.libLoader.loadLibrary('Infrastructure')
   }
 }

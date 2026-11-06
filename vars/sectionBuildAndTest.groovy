@@ -7,6 +7,7 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.GradleAPI
+import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
@@ -14,6 +15,7 @@ def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
   def builder = params.builder
+  def buildRecovery = params.buildRecovery
 
   def subscription = params.subscription
   def environment = params.environment
@@ -25,6 +27,7 @@ def call(params) {
   def imageRegistry
   def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
+  boolean imageExists = false
   boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
@@ -38,6 +41,7 @@ def call(params) {
       acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
       dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
       boolean hasTag = acr.hasTag(dockerImage)
+      imageExists = hasTag
       boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
       noSkipImgBuild = envOverrideForSkip || !hasTag
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
@@ -47,9 +51,18 @@ def call(params) {
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
 
-  stage('ACR Migration Check') {
-    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
-  }
+  parallel(
+    'ACR Migration Check': {
+      stage('ACR Migration Check') {
+        warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+      }
+    },
+    'Check previous build (Cosmos DB)': {
+      stage('Check previous build (Cosmos DB)') {
+        buildRecovery?.checkPreviousBuild()
+      }
+    }
+  )
 
   onPathToLive {
     withEnvironmentAgent(environment, product) {
@@ -63,7 +76,7 @@ def call(params) {
         
         // always build master and demo as we currently do not deploy an image there
         boolean envSub = autoDeployEnvironment() != null
-        when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+        when(noSkipImgBuild || projectBranch.isMaster() || envSub || buildRecovery?.shouldSkip('static checks')) {
           pcr.callAround('build') {
             withBuildCache(config) {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
@@ -74,7 +87,9 @@ def call(params) {
         }
       }
 
-      def branches = [failFast: false]
+      buildRecovery?.prepare(imageExists || !dockerFileExists)
+
+      def branches = [failFast: true]
       branches["Unit tests and Sonar scan"] = {
         pcr.callAround('test') {
           timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
@@ -230,8 +245,14 @@ def call(params) {
     }
 
       stageWithAgent("Static checks / Container build", product) {
-        when(noSkipImgBuild) {
-          parallel branches
+        boolean staticChecksCompleted = buildRecovery?.shouldSkip('static checks') ?: false
+        if (staticChecksCompleted) {
+          buildRecovery.recordSkip('static checks')
+        }
+        when(noSkipImgBuild && !staticChecksCompleted) {
+          pcr.recordStep('static checks') {
+            parallel branches
+          }
 
           // files related to dependency checking that are not needed for the rest of the pipeline
           // they can't be safely deleted in the parallel branches as docker build context will collect files
@@ -267,19 +288,33 @@ def call(params) {
     }
 
     if (noSkipImgBuild && deploymentEnabled) {
-      stageWithAgent("Promote Docker Image", product) {
-        if (dockerFileExists) {
-          def deploymentStage = DockerImage.DeploymentStage.STAGING
-          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
-          if (isOnPreview) {
-            deploymentStage = DockerImage.DeploymentStage.PREVIEW
-          }
-          onPR {
-            deploymentStage = DockerImage.DeploymentStage.PR
-          }
-          withAcrClient(subscription) {
-            acr.retagForStage(deploymentStage, dockerImage)
-            acr.purgeOldTags(deploymentStage, dockerImage)
+      def deploymentStage = DockerImage.DeploymentStage.STAGING
+      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
+        deploymentStage = DockerImage.DeploymentStage.PREVIEW
+      }
+      onPR {
+        deploymentStage = DockerImage.DeploymentStage.PR
+      }
+      // Distinct from sectionPromoteBuildToStage, which also promotes to PREVIEW on preview branches.
+      String promotionLabel = "${deploymentStage.label}-image"
+      String promotionStep = "${promotionLabel}:promotion"
+
+      if (dockerFileExists && buildRecovery?.shouldSkip(promotionStep)) {
+        buildRecovery.recordSkip(promotionStep)
+        stage("Promote Docker Image") {
+          when(false) {}
+        }
+      } else {
+        pcr.recordStep("${promotionLabel} build promotion") {
+          stageWithAgent("Promote Docker Image", product) {
+            if (dockerFileExists) {
+              pcr.callAround(promotionStep) {
+                withAcrClient(subscription) {
+                  acr.retagForStage(deploymentStage, dockerImage)
+                  acr.purgeOldTags(deploymentStage, dockerImage)
+                }
+              }
+            }
           }
         }
       }
@@ -288,20 +323,24 @@ def call(params) {
 
     if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
-        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
-          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+        if (buildRecovery?.shouldSkip('pact-consumer-tests')) {
+          buildRecovery.recordSkip('pact-consumer-tests')
+        } else {
+          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
+            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
-          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
+            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+            env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
+            env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+            env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
-          /*
-        * These instructions have to be kept in order
-        */
-          pcr.callAround('pact-consumer-tests') {
-            builder.runConsumerTests(env.PACT_BROKER_URL, version)
+            /*
+          * These instructions have to be kept in order
+          */
+            pcr.callAround('pact-consumer-tests') {
+              builder.runConsumerTests(env.PACT_BROKER_URL, version)
+            }
           }
         }
       }
