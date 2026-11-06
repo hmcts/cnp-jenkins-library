@@ -36,6 +36,7 @@ class PipelineCallbacksRunner implements Serializable {
 
   void callAround(String stage, Closure body) {
     def errToThrow = null
+    def stageStartMillis = System.currentTimeMillis()
 
     callBefore(stage)
     try {
@@ -61,7 +62,8 @@ class PipelineCallbacksRunner implements Serializable {
         call('onStageFailure', stage)
         errToThrow = err
       }
-      nullSafeCall('after:all', stage)
+      def stageDurationMillis = System.currentTimeMillis() - stageStartMillis
+      nullSafeCall('after:all', stage, stageDurationMillis)
       if (errToThrow != null) {
         throw errToThrow
       }
@@ -73,9 +75,19 @@ class PipelineCallbacksRunner implements Serializable {
   }
 
   private def nullSafeCall(String key, String stage) {
+    nullSafeCall(key, stage, null)
+  }
+
+  private def nullSafeCall(String key, String stage, Long stageDurationMillis) {
     def body = config.bodies.get(key)
     if (body != null) {
-      body.call(stage)
+      // Only pass the duration through to callbacks that were declared to accept it,
+      // so existing single-arg 'after:all' callbacks keep working unchanged.
+      if (stageDurationMillis != null && body.maximumNumberOfParameters >= 2) {
+        body.call(stage, stageDurationMillis)
+      } else {
+        body.call(stage)
+      }
     }
   }
 }
