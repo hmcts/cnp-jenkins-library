@@ -1,14 +1,22 @@
 package uk.gov.hmcts.pipeline
 
+import java.time.LocalDate
 import spock.lang.Specification
 import spock.lang.Unroll
 import uk.gov.hmcts.contino.JenkinsStepMock
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class LibraryBranchControlsTest extends Specification {
-  static final String ALLOWLIST_URL = 'https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/uk/gov/hmcts/library/allowed-library-branches.yml'
-
   def steps = Mock(JenkinsStepMock)
   def controls = new LibraryBranchControls(steps)
+
+  def setup() {
+    WarningCollector.pipelineWarnings.clear()
+  }
+
+  def cleanup() {
+    WarningCollector.pipelineWarnings.clear()
+  }
 
   def "sandbox Jenkins bypasses the allowlist check"() {
     given:
@@ -32,7 +40,7 @@ class LibraryBranchControlsTest extends Specification {
 
     then:
     !allowed
-    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
     0 * steps.httpRequest(_)
 
@@ -41,7 +49,7 @@ class LibraryBranchControlsTest extends Specification {
   }
 
   @Unroll
-  def "production subscription #subscription allows a whitelisted branch without querying GitHub tags"() {
+  def "production subscription #subscription allows a whitelisted branch and adds one advisory warning"() {
     given:
     steps.env >> [PROD_SUBSCRIPTION_NAME: subscription, SHARED_LIBRARY_VERSION: 'allowed-branch', GIT_CREDENTIALS_ID: 'creds']
 
@@ -50,8 +58,10 @@ class LibraryBranchControlsTest extends Specification {
 
     then:
     allowed
-    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'allowed-branch', allowed: true]]]
+    WarningCollector.pipelineWarnings*.warningKey == ['allowed_infrastructure_library_branch']
+    WarningCollector.pipelineWarnings.first().deprecationDate == null
     0 * steps.httpRequest(_)
 
     where:
@@ -86,7 +96,7 @@ class LibraryBranchControlsTest extends Specification {
 
     then:
     !allowed
-    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
     0 * steps.httpRequest(_)
 
@@ -118,8 +128,62 @@ class LibraryBranchControlsTest extends Specification {
 
     then:
     !allowed
-    1 * steps.httpRequest({ it.url == ALLOWLIST_URL }) >> [content: 'allowlist']
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
     1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'blocked-branch', allowed: false]]]
+    0 * steps.httpRequest(_)
+  }
+
+  def "a permanent allowed branch does not add a deprecation warning"() {
+    given:
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'master', GIT_CREDENTIALS_ID: 'creds']
+
+    when:
+    def allowed = controls.isBranchAllowed()
+
+    then:
+    allowed
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
+    1 * steps.readYaml([text: 'allowlist']) >> [branches: [[name: 'master', allowed: true]]]
+    WarningCollector.pipelineWarnings.isEmpty()
+    0 * steps.httpRequest(_)
+  }
+
+  def "an allowed temporary branch warns before its deadline"() {
+    given:
+    def deadline = LocalDate.now().plusDays(1)
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'feature/test', GIT_CREDENTIALS_ID: 'creds']
+
+    when:
+    def allowed = controls.isBranchAllowed()
+
+    then:
+    allowed
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
+    1 * steps.readYaml([text: 'allowlist']) >> [
+      branches: [[name: 'feature/test', allowed: true, date_deadline: deadline.toString()]]
+    ]
+    WarningCollector.pipelineWarnings*.warningKey == ['allowed_infrastructure_library_branch']
+    WarningCollector.pipelineWarnings.first().deprecationDate == deadline
+    0 * steps.httpRequest(_)
+  }
+
+  def "an allowed temporary branch is rejected after its deadline without bypassing notification"() {
+    given:
+    def deadline = LocalDate.now().minusDays(1)
+    steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'feature/expired', GIT_CREDENTIALS_ID: 'creds']
+
+    when:
+    def allowed = controls.isBranchAllowed()
+
+    then:
+    !allowed
+    noExceptionThrown()
+    1 * steps.httpRequest({ it.url == controls.getConfigRepoUrl() }) >> [content: 'allowlist']
+    1 * steps.readYaml([text: 'allowlist']) >> [
+      branches: [[name: 'feature/expired', allowed: true, date_deadline: deadline.toString()]]
+    ]
+    WarningCollector.pipelineWarnings*.warningKey == ['allowed_infrastructure_library_branch']
+    WarningCollector.pipelineWarnings.first().deprecationDate == deadline
     0 * steps.httpRequest(_)
   }
 }

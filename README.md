@@ -1330,14 +1330,16 @@ This file will point to the repository which defines, in json syntax, which infr
 
 Branches of this library used by pipelines are validated against an allow-list, to control which branches of this library can be used within HMCTS.
 
-Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail. This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+Branches must be allowed in the [yaml file](https://github.com/hmcts/cnp-jenkins-config/blob/master/allowed-library-branches.yml) otherwise, the pipeline will fail. This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+
+Temporary branches can include an optional `date_deadline` in the allow-list. Pipelines using the branch receive deprecation warnings before that date and fail once the deadline has passed. Permanent branches can omit the field.
 
 When testing a change to the library itself, add your branch to this file (see [Contributing](#contributing)) and remove it again once the change has merged.
 
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+ 2. Add your branch to the [library controls yaml file](https://github.com/hmcts/cnp-jenkins-config/blob/master/allowed-library-branches.yml)
  3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
