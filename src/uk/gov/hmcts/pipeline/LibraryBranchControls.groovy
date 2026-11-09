@@ -99,13 +99,17 @@ class LibraryBranchControls {
     return null
   }
 
+  String getLibraryVersion() {
+    return extractLibraryBranch(resolveLibraryBranch())
+  }
+
   boolean isBranchAllowed(def pipelineConfig = null) {
     if (steps?.env?.PROD_SUBSCRIPTION_NAME == 'sandbox') {
       steps.echo 'Skipping library branch allowlist validation on sandbox Jenkins.'
       return true
     }
 
-    def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
+    def branchToCheck = getLibraryVersion()
     // Temporary incident mitigation: Jenkins has already resolved the requested library reference.
     // Restore tag verification after the GitHub rate-limit investigation.
     if (branchToCheck ==~ /\d+\.\d+\.\d+/) {
