@@ -46,7 +46,7 @@ class PipelineCallbacksRunner implements Serializable {
       failure = err
       throw err
     } finally {
-      metricsPublisher?.publishStep(stage, failure == null ? 'SUCCESS' : 'FAILURE', executionId, failure)
+      metricsPublisher?.publishStep(stage, failure == null ? 'SUCCESS' : 'FAILURE', executionId)
     }
   }
 
@@ -89,7 +89,7 @@ class PipelineCallbacksRunner implements Serializable {
         failure = err
         throw err
       } finally {
-        metricsPublisher?.publishStep(stage, failure == null ? 'SUCCESS' : 'FAILURE', executionId, failure)
+        metricsPublisher?.publishStep(stage, failure == null ? 'SUCCESS' : 'FAILURE', executionId)
       }
       if (errToThrow != null) {
         throw errToThrow

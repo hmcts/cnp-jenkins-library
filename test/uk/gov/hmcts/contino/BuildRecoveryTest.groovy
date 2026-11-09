@@ -17,7 +17,7 @@ class BuildRecoveryTest extends Specification {
       record([event_type: 'step', current_step_name: 'test', step_result: 'SUCCESS', step_execution_id: 'test-1']),
       record([event_type: 'step', current_step_name: 'securitychecks', step_result: 'STARTED', step_execution_id: 'security-1']),
       record([event_type: 'step', current_step_name: 'securitychecks', step_result: 'SUCCESS', step_execution_id: 'security-1']),
-      record([event_type: 'step', current_step_name: 'dockerbuild', step_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED']),
+      record([event_type: 'step', current_step_name: 'dockerbuild', step_result: 'FAILURE']),
       record([event_type: 'pipeline', pipeline_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
     ]
   }
@@ -86,28 +86,26 @@ class BuildRecoveryTest extends Specification {
   List<Map> promotion(String label, String innerResult, String stageResult) {
     return [
       record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-inner".toString()]),
-      record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: innerResult, step_execution_id: "${label}-inner".toString(),
-        failure_reason: innerResult == 'FAILURE' ? 'AGENT_DISCONNECTED' : null]),
+      record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: innerResult, step_execution_id: "${label}-inner".toString()]),
       record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-stage".toString()]),
-      record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: stageResult, step_execution_id: "${label}-stage".toString(),
-        failure_reason: stageResult == 'FAILURE' ? 'AGENT_DISCONNECTED' : null])
+      record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: stageResult, step_execution_id: "${label}-stage".toString()])
     ]
   }
 
-  def 'completed promotions are reusable without reusing the container build separately'() {
+  def 'completed promotions are never reusable'() {
     given:
       def events = records() + promotion('preview', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['preview:promotion'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
-  def 'build-and-test image promotion is reusable separately from deployment promotions'() {
+  def 'build-and-test image promotions are never reusable'() {
     given:
       def events = records() + promotion('staging-image', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
 
     expect:
-      BuildRecovery.reusableSteps(events, identity, '35') == ['staging-image:promotion'] as Set
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
   def 'docker build is not reusable without a completed promotion'() {
@@ -139,7 +137,7 @@ class BuildRecoveryTest extends Specification {
       !recovery.shouldSkip('dockerbuild')
       !recovery.shouldSkip('test')
       !recovery.shouldSkip('securitychecks')
-      recovery.shouldSkip('preview:promotion')
+      !recovery.shouldSkip('preview:promotion')
       copied.isEmpty()
 
     where:
@@ -149,8 +147,7 @@ class BuildRecoveryTest extends Specification {
   List<Map> staticChecks(String result) {
     return [
       record([event_type: 'step', current_step_name: 'static checks', step_result: 'STARTED', step_execution_id: 'static-1']),
-      record([event_type: 'step', current_step_name: 'static checks', step_result: result, step_execution_id: 'static-1',
-        failure_reason: result == 'FAILURE' ? 'AGENT_DISCONNECTED' : null])
+      record([event_type: 'step', current_step_name: 'static checks', step_result: result, step_execution_id: 'static-1'])
     ]
   }
 
@@ -170,7 +167,6 @@ class BuildRecoveryTest extends Specification {
 
     then:
       recovery.shouldSkip('static checks') == imageExists
-      messages.any { it.contains('last successful stage was static checks') }
 
     where:
       imageExists << [true, false]
@@ -188,9 +184,9 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
-  def 'successful Pact consumer verification is reusable'() {
+  def 'successful Pact consumer verification is never reusable'() {
     expect:
-      BuildRecovery.reusableSteps(records() + completed('pact-consumer-tests'), identity, '35').contains('pact-consumer-tests')
+      !BuildRecovery.reusableSteps(records() + completed('pact-consumer-tests'), identity, '35').contains('pact-consumer-tests')
   }
 
   def 'failed Pact consumer verification is not reusable'() {
@@ -208,7 +204,7 @@ class BuildRecoveryTest extends Specification {
     given:
       def events = records().findAll { it.current_step_name != 'dockerbuild' }
       ['sonarscan', 'techstack', 'dockerbuild'].each { events.addAll(completed(it)) }
-      events << record([event_type: 'step', current_step_name: 'preview:promotion', step_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
+      events << record([event_type: 'step', current_step_name: 'preview:promotion', step_result: 'FAILURE'])
 
     expect:
       BuildRecovery.reusableSteps(events, identity, '35').contains('static checks')
@@ -219,26 +215,24 @@ class BuildRecoveryTest extends Specification {
       !BuildRecovery.reusableSteps(records(), identity, '35').contains('static checks')
   }
 
-  def 'resume point follows the last successful stage being skipped'() {
+  def 'only static checks are skipped when other stages succeeded'() {
     given:
       def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
         copyArtifacts: { Map options -> }, junit: { Map options -> })
       def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
       def events = records() + staticChecks('SUCCESS') + promotion('preview', 'SUCCESS', 'SUCCESS')
-      events.find { it.event_type == 'pipeline' }.last_successful_stage = 'preview:promotion'
       recovery.readMetrics(identity, '35') >> events
 
     when:
       recovery.prepare(true)
 
     then:
-      recovery.getResumeAfter() == 'preview:promotion'
       recovery.shouldSkip('static checks')
-      recovery.shouldSkip('preview:promotion')
+      !recovery.shouldSkip('preview:promotion')
   }
 
-  def 'skipped steps become the last successful stage'() {
+  def 'skipped static checks are recorded in Cosmos metrics'() {
     given:
       def publisher = Mock(MetricsPublisher)
       def recovery = new BuildRecovery(new Expando(echo: { String message -> }), [:], publisher, true)
@@ -247,7 +241,7 @@ class BuildRecoveryTest extends Specification {
       recovery.recordSkip('static checks')
 
     then:
-      1 * publisher.setProperty('lastSuccessfulStage', 'static checks')
+      1 * publisher.publish('static checks', [event_type: 'step', step_result: 'SKIPPED', reused_from_build: null])
   }
 
   def 'different source identity or build disables recovery'() {
@@ -396,7 +390,7 @@ class BuildRecoveryTest extends Specification {
       thrown(InterruptedException)
   }
 
-  def 'only failed pipelines qualify regardless of failure classification'() {
+  def 'only failed pipelines qualify regardless of failure details'() {
     given:
       def events = records()
       events.removeAll { it.current_step_name == 'dockerbuild' }
@@ -408,7 +402,7 @@ class BuildRecoveryTest extends Specification {
 
     where:
       pipelineResult | reason
-      'SUCCESS'      | 'AGENT_DISCONNECTED'
+      'SUCCESS'      | 'BUILD_FAILURE'
       'FAILURE'      | 'STEP_FAILURE'
       'FAILURE'      | null
   }

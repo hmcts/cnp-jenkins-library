@@ -16,7 +16,6 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
   @Test
   void PipelineExecutesExpectedStepsInExpectedOrder() {
-
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     binding.getVariable('env').putAt('CHANGE_TITLE', 'Some change')
 
@@ -24,27 +23,6 @@ class withJavaPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
     assertThat(stageIndex('Checkout')).isNotNegative()
     assertThat(stageIndex('Build')).isGreaterThan(stageIndex('Checkout'))
-    assertThat(helper.callStack.findAll { it.methodName == 'agent' }).isEmpty()
-  }
-
-  @Test
-  void pipelineFailureIsPropagatedWithoutRetryingThePipeline() {
-    int nodeCalls = 0
-    helper.registerAllowedMethod('node', [String.class, Closure.class], { String label, Closure body ->
-      nodeCalls++
-      throw new IllegalStateException('temporary failure')
-    })
-    Exception failure
-
-    try {
-      runScript("testResources/$jenkinsFile")
-    } catch (Exception err) {
-      failure = err
-    }
-
-    assertThat(failure).isNotNull()
-    assertThat(nodeCalls).isEqualTo(1)
-    assertThat(helper.callStack.findAll { it.methodName == 'agent' }).isEmpty()
   }
 
   @Test

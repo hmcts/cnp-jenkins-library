@@ -12,7 +12,6 @@ class BuildRecovery implements Serializable {
   private final boolean enabled
   private Set<String> reusable = [] as Set
   private boolean checked = false
-  private String lastSuccessfulStage
   String sourceBuild
 
   BuildRecovery(steps, currentBuild, publisher, boolean enabled = true) {
@@ -26,7 +25,6 @@ class BuildRecovery implements Serializable {
     checked = true
     reusable.clear()
     sourceBuild = null
-    lastSuccessfulStage = null
     if (!enabled) {
       steps.echo 'Build recovery: disabled; Cosmos DB not queried; running all steps'
       return
@@ -55,11 +53,6 @@ class BuildRecovery implements Serializable {
         }
       }
       reusable = reusableSteps(records, identity, sourceBuild)
-      def terminal = records?.find { it.event_type == 'pipeline' && it.pipeline_result == 'FAILURE' }
-      if (terminal) {
-        lastSuccessfulStage = terminal.last_successful_stage
-        steps.echo "Build recovery: previous build #${sourceBuild} last successful stage was ${terminal.last_successful_stage ?: 'not recorded'}"
-      }
       String rejection = rejectionReason(records, identity, sourceBuild)
       steps.echo "Build recovery from #${sourceBuild}: ${reusable ? reusable.join(', ') : "no steps eligible; ${rejection ?: 'no completed steps that can be reused'}"}"
     } catch (Exception failure) {
@@ -82,29 +75,15 @@ class BuildRecovery implements Serializable {
     }
     if (sourceBuild) {
       steps.echo "Build recovery ready from #${sourceBuild}: ${reusable ? "skipping ${reusable.join(', ')}" : 'no steps will be skipped'}"
-      String resumePoint = getResumeAfter()
-      if (resumePoint) {
-        steps.echo "Build recovery: resuming after ${resumePoint}"
-      }
     }
-  }
-
-  // The last completed stage that this build will actually skip.
-  String getResumeAfter() {
-    if (lastSuccessfulStage && reusable.contains(lastSuccessfulStage)) {
-      return lastSuccessfulStage
-    }
-    String promotion = reusable.find { it.endsWith(':promotion') }
-    return promotion ?: (reusable.contains('static checks') ? 'static checks' : null)
   }
 
   boolean shouldSkip(String stage) {
-    return enabled && reusable.contains(stage)
+    return enabled && stage == 'static checks' && reusable.contains(stage)
   }
 
   void recordSkip(String stage) {
     steps.echo "Skipping ${stage}: successful in build #${sourceBuild} for the same commit"
-    publisher.lastSuccessfulStage = stage
     publisher.publish(stage, [event_type: 'step', step_result: 'SKIPPED', reused_from_build: sourceBuild])
   }
 
@@ -122,22 +101,13 @@ class BuildRecovery implements Serializable {
         events.count { it.step_result == 'STARTED' } == 1 && events.count { it.step_result == 'SUCCESS' } == 1 &&
         events.every { it.git_commit == identity.git_commit && it.git_url == identity.git_url }
     }
-    ['static checks', 'pact-consumer-tests'].each { stage ->
-      if (succeeded(stage)) {
-        eligible.add(stage)
-      }
+    if (succeeded('static checks')) {
+      eligible.add('static checks')
     }
     // Builds recorded before the group record existed only have per-branch records.
     def startedChecks = STATIC_CHECK_STEPS.findAll { step -> outcomes.any { it.current_step_name == step } }
     if (startedChecks.containsAll(['test', 'securitychecks']) && startedChecks.every { succeeded(it) }) {
       eligible.add('static checks')
-    }
-    // The stage record also covers agent switching and workspace stash-back around the promotion.
-    outcomes.collect { it.current_step_name?.toString() }.unique().findAll { it?.endsWith(':promotion') }.each { String step ->
-      String label = step - ':promotion'
-      if (succeeded(step) && succeeded("${label} build promotion".toString())) {
-        eligible.add(step)
-      }
     }
     return eligible
   }

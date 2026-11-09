@@ -77,9 +77,10 @@ def call(type, String product, String component, Closure body) {
   def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
 
   try {
+    retry(conditions: [agent()], count: 2) {
       node(nodeSelector) {
         timeoutWithMsg(time: 180, unit: 'MINUTES', action: 'pipeline') {
-          def pipelineFailed = false
+          def attemptFailed = false
           if (!libraryBranchAllowed) {
             currentBuild.result = "FAILURE"
             return
@@ -118,7 +119,6 @@ def call(type, String product, String component, Closure body) {
                 sectionPromoteBuildToStage(
                   appPipelineConfig: pipelineConfig,
                   pipelineCallbacksRunner: callbacksRunner,
-                  buildRecovery: buildRecovery,
                   pipelineType: pipelineType,
                   subscription: subscription.previewName,
                   product: product,
@@ -129,7 +129,7 @@ def call(type, String product, String component, Closure body) {
               }
 
               handlePRDeployment(branch, aksSubscriptions, subscription, environment, pipelineConfig, callbacksRunner, pipelineType, product, component)
-              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery)
+              handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component)
               onAutoDeployBranch { subscriptionName, environmentName, aksSubscription ->
                 handleAutoDeployBranch(subscriptionName, environmentName, aksSubscription, pipelineConfig, callbacksRunner, pipelineType, product, component)
               }
@@ -156,11 +156,10 @@ def call(type, String product, String component, Closure body) {
               metricsPublisher.publish(err.message)
               return
             }
-            pipelineFailed = true
+            attemptFailed = true
             throw err
           } finally {
-            notifyPipelineDeprecations(slackChannel, metricsPublisher)
-            if (pipelineFailed || (currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
+            if (attemptFailed || (currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
               archiveBuildOutputs()
             }
             if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
@@ -173,18 +172,9 @@ def call(type, String product, String component, Closure body) {
           metricsPublisher.publish('Pipeline Succeeded', [event_type: 'pipeline', pipeline_result: 'SUCCESS'])
         }
       }
-  } catch (FlowInterruptedException err) {
-    if (metricsPublisher.pipelineFailureReason(err, 'INTERRUPTED') == 'AGENT_DISCONNECTED') {
-      currentBuild.result = 'FAILURE'
-      notifyBuildFailure channel: slackChannel
-      metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE'])
-      callbacksRunner.call('onFailure')
-      // Rethrowing the interruption would make Jenkins finish the build as ABORTED.
-      throw new hudson.AbortException('Build agent disconnected')
     }
+  } catch (FlowInterruptedException err) {
     currentBuild.result = err.result.toString()
-    metricsPublisher.publish('Pipeline Interrupted', [event_type: 'pipeline', pipeline_result: currentBuild.result,
-    ])
     throw err
   } catch (err) {
     currentBuild.result = "FAILURE"
@@ -274,7 +264,7 @@ void handlePRDeployment(branch, aksSubscriptions, subscription, environment, pip
     }
 }
 
-void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component, buildRecovery = null) {
+void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelineConfig, callbacksRunner, pipelineType, product, component) {
     onMaster {
       sectionDeployToEnvironment(
         appPipelineConfig: pipelineConfig,
@@ -342,7 +332,6 @@ void handleMasterDeployment(subscription, environment, aksSubscriptions, pipelin
       sectionPromoteBuildToStage(
         appPipelineConfig: pipelineConfig,
         pipelineCallbacksRunner: callbacksRunner,
-        buildRecovery: buildRecovery,
         pipelineType: pipelineType,
         subscription: subscription.nonProdName,
         product: product,

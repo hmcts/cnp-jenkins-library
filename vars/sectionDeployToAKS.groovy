@@ -19,14 +19,10 @@ def testEnv(String testUrl, block) {
   }
 }
 
-boolean shouldClearHelmReleaseOnFailure(boolean enableHelmLabel, config) {
-  def projectBranch = new ProjectBranch(env.BRANCH_NAME)
-  return (projectBranch.isMaster() && config.clearHelmReleaseOnFailure) || (projectBranch.isPR() && !enableHelmLabel)
-}
-
 def clearHelmReleaseForFailure(boolean enableHelmLabel, AppPipelineConfig config, DockerImage dockerImage, Map params, PipelineCallbacksRunner pcr) {
-  if (shouldClearHelmReleaseOnFailure(enableHelmLabel, config)) {
-    helmUninstall(dockerImage, params, pcr)
+    def projectBranch = new ProjectBranch(env.BRANCH_NAME)
+    if ((projectBranch.isMaster() && config.clearHelmReleaseOnFailure) || (projectBranch.isPR() && !enableHelmLabel)) {
+        helmUninstall(dockerImage, params, pcr)
   }
 }
 
@@ -72,8 +68,6 @@ def call(params) {
   boolean enableHelmLabel = testLabels.contains('enable_keep_helm')
 
   lock("${deploymentProduct}-${component}-${environment}-deploy") {
-    boolean cleanupRequired = false
-    try {
     stageWithEnvironmentAgentAndSecrets("AKS deploy - ${environment}", config, product, environment) {
       pcr.callAround('akschartsinstall') {
         withAksClient(subscription, environment, product) {
@@ -85,12 +79,7 @@ def call(params) {
             log.info("Using AKS environment: ${params.environment}")
             warnAboutDeprecatedChartConfig(product: product, component: component, repoUrl: (env.GIT_URL ?: 'unknown'))
             params.imageName = dockerImageTaggedName
-            try {
-              aksUrl = helmInstall(dockerImage, params)
-            } catch (err) {
-              cleanupRequired = true
-              throw err
-            }
+            aksUrl = helmInstall(dockerImage, params)
             log.info("deployed component URL: ${aksUrl}")
             onPR {
               githubUpdateDeploymentStatus(deploymentNumber, aksUrl)
@@ -144,7 +133,7 @@ def call(params) {
             } finally {
               savePodsLogs(dockerImage, params, "smoke")
               if (!success) {
-                cleanupRequired = true
+                clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
               }
             }
           }
@@ -160,8 +149,7 @@ def call(params) {
           }
 
           onFunctionalTestEnvironment(environment) {
-            try {
-              if (testLabels.contains('enable_full_functional_tests')) {
+            if (testLabels.contains('enable_full_functional_tests')) {
                 stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
                   testEnv(aksUrl) {
                     def passed = true
@@ -177,6 +165,7 @@ def call(params) {
                       savePodsLogs(dockerImage, params, "full-functional")
                     }
                     if (!passed) {
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                       error('Functional test (Full) failed')
                     }
                   }
@@ -197,15 +186,12 @@ def call(params) {
                       savePodsLogs(dockerImage, params, "functional")
                     }
                     if (!passed) {
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                       error('Functional test failed')
                     }
                   }
                 }
               }
-            } catch (err) {
-              cleanupRequired = true
-              throw err
-            }
           }
 
           if (config.performanceTest) {
@@ -301,7 +287,7 @@ def call(params) {
                     } finally {
                       savePodsLogs(dockerImage, params, "dynatrace-synthetic")
                       if (!success) {
-                        cleanupRequired = true
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                       }
                     }
                   }
@@ -334,7 +320,7 @@ def call(params) {
                     } finally {
                       savePodsLogs(dockerImage, params, "gatling-load-tests")
                       if (!success) {
-                        cleanupRequired = true
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                       }
                     }
                   }
@@ -372,7 +358,7 @@ def call(params) {
                     } catch (Exception e) {
                       echo "SRG evaluation stage failed: ${e.message}"
                       if (config.srgFailureBehavior == 'fail') {
-                        cleanupRequired = true
+                        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                         throw e
                       }
                     }
@@ -420,7 +406,7 @@ def call(params) {
                   }
                   savePodsLogs(dockerImage, params, "e2e")
                   if (passed == false) {
-                    cleanupRequired = true
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     error('E2E test failed')
                   }
                 }
@@ -440,7 +426,7 @@ def call(params) {
                   }
                   savePodsLogs(dockerImage, params, "e2e")
                   if (passed == false) {
-                    cleanupRequired = true
+                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
                     error('E2E test failed')
                   }
                 }
@@ -484,12 +470,6 @@ def call(params) {
           }
         }
       }
-    }
-    } catch (err) {
-      if (cleanupRequired) {
-        clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-      }
-      throw err
     }
     if (config.onlyDeploy) {
       stageWithAgent('Deployment only pipeline', product) {

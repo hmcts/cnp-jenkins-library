@@ -7,7 +7,6 @@ import uk.gov.hmcts.contino.ProjectBranch
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.GithubAPI
 import uk.gov.hmcts.contino.GradleAPI
-import uk.gov.hmcts.contino.GradleBuilder
 import uk.gov.hmcts.pipeline.DeploymentControls
 
 def call(params) {
@@ -288,33 +287,19 @@ def call(params) {
     }
 
     if (noSkipImgBuild && deploymentEnabled) {
-      def deploymentStage = DockerImage.DeploymentStage.STAGING
-      if (new ProjectBranch(env.BRANCH_NAME).isPreview()) {
-        deploymentStage = DockerImage.DeploymentStage.PREVIEW
-      }
-      onPR {
-        deploymentStage = DockerImage.DeploymentStage.PR
-      }
-      // Distinct from sectionPromoteBuildToStage, which also promotes to PREVIEW on preview branches.
-      String promotionLabel = "${deploymentStage.label}-image"
-      String promotionStep = "${promotionLabel}:promotion"
-
-      if (dockerFileExists && buildRecovery?.shouldSkip(promotionStep)) {
-        buildRecovery.recordSkip(promotionStep)
-        stage("Promote Docker Image") {
-          when(false) {}
-        }
-      } else {
-        pcr.recordStep("${promotionLabel} build promotion") {
-          stageWithAgent("Promote Docker Image", product) {
-            if (dockerFileExists) {
-              pcr.callAround(promotionStep) {
-                withAcrClient(subscription) {
-                  acr.retagForStage(deploymentStage, dockerImage)
-                  acr.purgeOldTags(deploymentStage, dockerImage)
-                }
-              }
-            }
+      stageWithAgent("Promote Docker Image", product) {
+        if (dockerFileExists) {
+          def deploymentStage = DockerImage.DeploymentStage.STAGING
+          def isOnPreview = new ProjectBranch(env.BRANCH_NAME).isPreview()
+          if (isOnPreview) {
+            deploymentStage = DockerImage.DeploymentStage.PREVIEW
+          }
+          onPR {
+            deploymentStage = DockerImage.DeploymentStage.PR
+          }
+          withAcrClient(subscription) {
+            acr.retagForStage(deploymentStage, dockerImage)
+            acr.purgeOldTags(deploymentStage, dockerImage)
           }
         }
       }
@@ -323,24 +308,20 @@ def call(params) {
 
     if (config.pactBrokerEnabled && config.pactConsumerTestsEnabled && !config.onlyDeploy) {
       stageWithAgent("Pact Consumer Verification", product) {
-        if (buildRecovery?.shouldSkip('pact-consumer-tests')) {
-          buildRecovery.recordSkip('pact-consumer-tests')
-        } else {
-          timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
-            def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
-            def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
+        timeoutWithMsg(time: 20, unit: 'MINUTES', action: 'Pact Consumer Verification') {
+          def version = env.GIT_COMMIT.length() > 7 ? env.GIT_COMMIT.substring(0, 7) : env.GIT_COMMIT
+          def isOnMaster = new ProjectBranch(env.BRANCH_NAME).isMaster()
 
-            env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
-            env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
-            env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
-            env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
+          env.PACT_BRANCH_NAME = isOnMaster ? env.BRANCH_NAME : env.CHANGE_BRANCH
+          env.PACT_BROKER_URL = env.PACT_BROKER_URL ?: 'https://pact-broker.platform.hmcts.net'
+          env.PACT_BROKER_SCHEME = env.PACT_BROKER_SCHEME ?: 'https'
+          env.PACT_BROKER_PORT = env.PACT_BROKER_PORT ?: '443'
 
-            /*
-          * These instructions have to be kept in order
-          */
-            pcr.callAround('pact-consumer-tests') {
-              builder.runConsumerTests(env.PACT_BROKER_URL, version)
-            }
+          /*
+        * These instructions have to be kept in order
+        */
+          pcr.callAround('pact-consumer-tests') {
+            builder.runConsumerTests(env.PACT_BROKER_URL, version)
           }
         }
       }

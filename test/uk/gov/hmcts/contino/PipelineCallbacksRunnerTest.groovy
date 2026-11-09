@@ -16,7 +16,7 @@ class PipelineCallBacksRunnerTest extends Specification {
 
     then:
       1 * publisher.publishStep('test', 'STARTED', _ as String)
-      1 * publisher.publishStep('test', 'SUCCESS', _ as String, null)
+      1 * publisher.publishStep('test', 'SUCCESS', _ as String)
   }
 
   def "records and propagates a failed step"() {
@@ -31,27 +31,27 @@ class PipelineCallBacksRunnerTest extends Specification {
     then:
       thrown(IllegalStateException)
       1 * publisher.publishStep('test', 'STARTED', _ as String)
-      1 * publisher.publishStep('test', 'FAILURE', _ as String, failure)
+      1 * publisher.publishStep('test', 'FAILURE', _ as String)
   }
 
   def "records a failure outside callbacks when wrapping a stage"() {
     given:
       def publisher = Mock(MetricsPublisher)
       def runner = new PipelineCallbacksRunner(new PipelineCallbacksConfig(), publisher)
-      def failure = new IllegalStateException('agent lost during stash back')
+      def failure = new IllegalStateException('static checks failed')
 
     when:
-      runner.recordStep('AAT build promotion') {
-        runner.callAround('AAT:promotion') {}
+      runner.recordStep('static checks') {
+        runner.callAround('test') { throw failure }
         throw failure
       }
 
     then:
       thrown(IllegalStateException)
-      1 * publisher.publishStep('AAT:promotion', 'STARTED', _ as String)
-      1 * publisher.publishStep('AAT:promotion', 'SUCCESS', _ as String, null)
-      1 * publisher.publishStep('AAT build promotion', 'STARTED', _ as String)
-      1 * publisher.publishStep('AAT build promotion', 'FAILURE', _ as String, failure)
+      1 * publisher.publishStep('test', 'STARTED', _ as String)
+      1 * publisher.publishStep('test', 'FAILURE', _ as String)
+      1 * publisher.publishStep('static checks', 'STARTED', _ as String)
+      1 * publisher.publishStep('static checks', 'FAILURE', _ as String)
   }
 
   def "ensure correctly registered call before is called before body"() {

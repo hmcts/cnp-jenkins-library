@@ -39,6 +39,9 @@ class withJavaPipelineOnMasterTests extends BaseCnpPipelineTest {
     }
 
     stubBuilder.expect.verify()
+    assert helper.callStack.any { call ->
+      call.methodName == 'parallel' && call.args[0] instanceof Map && call.args[0].failFast == true
+    }
   }
 
   @Test

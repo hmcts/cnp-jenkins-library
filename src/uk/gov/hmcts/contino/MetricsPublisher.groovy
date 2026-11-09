@@ -1,8 +1,5 @@
 package uk.gov.hmcts.contino
 
-import com.cloudbees.groovy.cps.NonCPS
-import jenkins.model.Jenkins
-
 class MetricsPublisher implements Serializable {
 
   def steps
@@ -11,8 +8,6 @@ class MetricsPublisher implements Serializable {
   String product
   String component
   String correlationId
-  boolean agentDisconnectionRecorded = false
-  String lastSuccessfulStage
   CosmosDbTargetResolver cosmosDbTargetResolver
 
   MetricsPublisher(steps, currentBuild, product, component, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
@@ -64,11 +59,6 @@ class MetricsPublisher implements Serializable {
     ]
   }
 
-  @NonCPS
-  protected def agentComputer(String nodeName) {
-    return Jenkins.get().getComputer(nodeName)
-  }
-
   private List<String> resolveSharedLibrary() {    
     // try different library names as it is possible for these to vary. Default is Infrastructure
     def namesToTry = env?.SHARED_LIBRARY_NAME ? [env.SHARED_LIBRARY_NAME] :  ['Infrastructure', 'Pipeline', 'Tagged']
@@ -111,13 +101,7 @@ class MetricsPublisher implements Serializable {
       shared_library_name: libName, shared_library_version: libVersion]
   }
 
-  void publishStep(String stage, String result, String executionId, Throwable failure = null) {
-    if (failureReason(failure) == 'AGENT_DISCONNECTED') {
-      agentDisconnectionRecorded = true
-    }
-    if (result == 'SUCCESS') {
-      lastSuccessfulStage = stage
-    }
+  void publishStep(String stage, String result, String executionId) {
     publish(stage, [
       event_type: 'step',
       step_result: result,
@@ -125,69 +109,8 @@ class MetricsPublisher implements Serializable {
     ])
   }
 
-  // If an agent gets disconnected, record it as a failure rather than aborted
-  String pipelineFailureReason(Throwable failure, String defaultReason) {
-    return agentDisconnectionRecorded || failureReason(failure) == 'AGENT_DISCONNECTED' ? 'AGENT_DISCONNECTED' : defaultReason
-  }
-
-  @NonCPS
-  private String failureReason(Throwable failure) {
-    if (failure == null) {
-      return null
-    }
-    if (isAgentFailure(failure)) {
-      return 'AGENT_DISCONNECTED'
-    }
-    boolean connectionFailure = failure.class.name == 'hudson.AbortException' &&
-      ((failure.message ?: '') =~ /(?i)(cannot contact|channel.*(?:closed|closing)|agent.*(?:offline|removed)|script returned exit code (?:-2|137|143)\b)/).find()
-    if (connectionFailure && env.NODE_NAME) {
-      try {
-        def computer = agentComputer(env.NODE_NAME.toString())
-        if (computer == null || !computer.isOnline() || computer.getChannel() == null) {
-          return 'AGENT_DISCONNECTED'
-        }
-      } catch (Exception ignored) {
-        return 'STEP_FAILURE'
-      }
-    }
-    return 'STEP_FAILURE'
-  }
-
-  @NonCPS
-  static boolean isAgentFailure(Throwable failure) {
-    List<Throwable> pending = [failure]
-    Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>())
-    while (!pending.isEmpty()) {
-      Throwable current = pending.remove(0)
-      if (current == null || !visited.add(current)) {
-        continue
-      }
-      if (current.class.name in [
-        'hudson.remoting.ChannelClosedException',
-        'hudson.remoting.RequestAbortedException',
-        'java.nio.channels.ClosedChannelException',
-        'org.jenkinsci.plugins.workflow.support.steps.AgentOfflineException'
-      ]) {
-        return true
-      }
-      if (current.class.name == 'org.jenkinsci.plugins.workflow.steps.FlowInterruptedException' &&
-          current.causes.any { it.class.simpleName in ['RemovedNodeCause', 'RemovedNodeTimeoutCause'] }) {
-        return true
-      }
-      if (((current.message ?: '') =~ /(?i)(unable to create live FilePath|was marked offline|has been removed or offline|assuming it is not coming back)/).find()) {
-        return true
-      }
-      pending.add(current.cause)
-      pending.addAll(current.suppressed as List)
-    }
-    return false
-  }
-
   def publish(eventName = null, Map details = [:]) {
     try {
-      if (details.event_type == 'pipeline') {
-        details = details + [last_successful_stage: lastSuccessfulStage]
-      }
       def database = cosmosDbTargetResolver.databaseName()
       steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName) + details)
     } catch (err) {
