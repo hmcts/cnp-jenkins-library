@@ -30,7 +30,6 @@ class withNodeJsPipelineOnPreviewTests extends BaseCnpPipelineTest {
 
     binding.getVariable('env').putAt('CHANGE_URL', 'http://github.com/some-repo/pr/16')
     binding.getVariable('env').putAt('CHANGE_TITLE', 'Some change')
-
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
     }
