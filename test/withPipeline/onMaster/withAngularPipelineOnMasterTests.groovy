@@ -17,16 +17,23 @@ class withAngularPipelineOnMasterTests extends BaseCnpPipelineTest {
     def stubBuilder = new StubFor(AngularBuilder)
 //    todo: revisit these demands
     stubBuilder.demand.with {
-      setupToolVersion(0) {}
-      build(0) {}
-      test(0) {}
-      securityCheck(0) {}
-      techStackMaintenance(0) {}
-      sonarScan(0) {}
+      setupToolVersion(0..1) {}
+      build(1) {}
+      test(1) {}
+      securityCheck(1) {}
+      techStackMaintenance(1) {}
+      sonarScan(1) {}
       smokeTest(0) {} //aat-staging
       e2eTest(0) {}
       functionalTest(0) {}
     }
+
+    Script pipeline = loadScript("testResources/$jenkinsFile")
+    def sectionBuildAndTest = binding.getVariable('sectionBuildAndTest')
+    // The library can resolve its own copy of AngularBuilder, which StubFor cannot intercept.
+    helper.registerAllowedMethod('sectionBuildAndTest', [Object.class], { params ->
+      sectionBuildAndTest.call(params + [builder: new AngularBuilder(delegate)])
+    })
 
     stubBuilder.use {
       runScript("testResources/$jenkinsFile")
