@@ -89,6 +89,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("publishHTML", [Map.class], {})
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
+    helper.registerAllowedMethod("sh", [String.class], {})
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
@@ -162,5 +163,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return ''
     })
     binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
+    helper.libLoader.loadLibrary('Infrastructure')
   }
 }
