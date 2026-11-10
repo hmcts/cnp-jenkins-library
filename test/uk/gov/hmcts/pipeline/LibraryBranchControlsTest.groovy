@@ -119,6 +119,14 @@ class LibraryBranchControlsTest extends Specification {
     0 * steps.readYaml(_)
   }
 
+  def "exposes the resolved version for deprecation checks"() {
+    given:
+    steps.env >> [SHARED_LIBRARY_VERSION: '2.4.1']
+
+    expect:
+    controls.getLibraryVersion() == '2.4.1'
+  }
+
   def "an explicitly disallowed branch remains blocked"() {
     given:
     steps.env >> [PROD_SUBSCRIPTION_NAME: 'prod', SHARED_LIBRARY_VERSION: 'blocked-branch', GIT_CREDENTIALS_ID: 'creds']
