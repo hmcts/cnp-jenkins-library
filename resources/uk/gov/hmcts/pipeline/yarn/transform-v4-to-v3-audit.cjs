@@ -10,14 +10,15 @@ async function main() {
 
   const v3lines = v3input.split("\n").filter(line => line.length > 0);
   const v3json = v3lines.map(line => JSON.parse(line));
+  v3json.forEach(validateAdvisory);
 
   const advisories = await Promise.all(v3json.map(getAdvisory));
   const yarnLock = fs.readFileSync('yarn.lock', 'utf8');
-  const numDependencies = yarnLock.match(/resolution: "/g).length;
+  const numDependencies = (yarnLock.match(/resolution: "/g) || []).length;
   const advisoriesById = advisories.reduce((acc, advisory) => {
     acc[advisory.id] = advisory;
     return acc;
-  }, {});
+  }, Object.create(null));
 
   console.log(JSON.stringify({
     actions: [],
@@ -37,6 +38,21 @@ async function main() {
     },
     muted: []
   }, null, 2));
+}
+
+function validateAdvisory(advisory) {
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  const texts = value => Array.isArray(value) && value.every(text);
+  const children = advisory?.children;
+  if (!text(advisory?.value) || !children ||
+      !(text(children.ID) || (Number.isSafeInteger(children.ID) && children.ID >= 0)) ||
+      !['info', 'low', 'moderate', 'high', 'critical'].includes(children.Severity) ||
+      !text(children.Issue) || !text(children['Vulnerable Versions']) ||
+      !texts(children['Tree Versions']) || children['Tree Versions'].length === 0 ||
+      !texts(children.Dependents) ||
+      (children.URL != null && !text(children.URL))) {
+    throw new TypeError('Invalid Yarn audit advisory fields');
+  }
 }
 
 async function getAdvisory(advisory) {
@@ -110,4 +126,10 @@ async function getGitHubAdvisory(htmlUrl) {
   }
 }
 
-main().catch(console.log);
+main().catch((error) => {
+  // Keep stdout reserved for the JSON report consumed by jq. Jenkins captures
+  // this stream into yarn-audit-result-formatted, so diagnostics must go to
+  // stderr or they corrupt the report and hide the original failure.
+  console.error('Yarn audit transformation failed:', error);
+  process.exitCode = 1;
+});
