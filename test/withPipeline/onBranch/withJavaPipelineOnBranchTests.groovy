@@ -16,6 +16,7 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
 
   @Test
   void PipelineExecutesExpectedSteps() {
+    helper.registerAllowedMethod("retry", [LinkedHashMap, Closure.class], { Map options, Closure body -> body.call() })
     def stubBuilder = new StubFor(GradleBuilder)
     stubBuilder.demand.setupToolVersion(0..1) {}
     stubBuilder.demand.build(0) {}

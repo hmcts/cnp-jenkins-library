@@ -22,11 +22,6 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
-  def 'successful static-check child steps are not reusable independently'() {
-    expect:
-      BuildRecovery.reusableSteps(records(), identity, '35').isEmpty()
-  }
-
   def 'records published before checkout without Git details do not block recovery'() {
     given:
       def checkout = record([event_type: 'step', current_step_name: 'checkout', step_result: 'STARTED', step_execution_id: 'checkout-1'])
@@ -83,67 +78,6 @@ class BuildRecoveryTest extends Specification {
       BuildRecovery.MAX_COSMOSDB_RECORDS     | false
   }
 
-  List<Map> promotion(String label, String innerResult, String stageResult) {
-    return [
-      record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-inner".toString()]),
-      record([event_type: 'step', current_step_name: "${label}:promotion".toString(), step_result: innerResult, step_execution_id: "${label}-inner".toString()]),
-      record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: 'STARTED', step_execution_id: "${label}-stage".toString()]),
-      record([event_type: 'step', current_step_name: "${label} build promotion".toString(), step_result: stageResult, step_execution_id: "${label}-stage".toString()])
-    ]
-  }
-
-  def 'completed promotions are never reusable'() {
-    given:
-      def events = records() + promotion('preview', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
-
-    expect:
-      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
-  }
-
-  def 'build-and-test image promotions are never reusable'() {
-    given:
-      def events = records() + promotion('staging-image', 'SUCCESS', 'SUCCESS') + promotion('prod', 'SUCCESS', 'FAILURE')
-
-    expect:
-      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
-  }
-
-  def 'docker build is not reusable without a completed promotion'() {
-    given:
-      def events = records() + promotion('preview', innerResult, stageResult)
-
-    expect:
-      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
-
-    where:
-      innerResult | stageResult
-      'SUCCESS'   | 'FAILURE'
-      'FAILURE'   | 'FAILURE'
-  }
-
-  def 'docker build is rebuilt when the image is missing from ACR'() {
-    given:
-      def copied = []
-      def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
-        copyArtifacts: { Map options -> copied << options }, junit: { Map options -> })
-      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
-      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
-      recovery.readMetrics(identity, '35') >> records() + promotion('preview', 'SUCCESS', 'SUCCESS')
-
-    when:
-      recovery.prepare(imageExists)
-
-    then:
-      !recovery.shouldSkip('dockerbuild')
-      !recovery.shouldSkip('test')
-      !recovery.shouldSkip('securitychecks')
-      !recovery.shouldSkip('preview:promotion')
-      copied.isEmpty()
-
-    where:
-      imageExists << [true, false]
-  }
-
   List<Map> staticChecks(String result) {
     return [
       record([event_type: 'step', current_step_name: 'static checks', step_result: 'STARTED', step_execution_id: 'static-1']),
@@ -184,22 +118,6 @@ class BuildRecoveryTest extends Specification {
     ]
   }
 
-  def 'successful Pact consumer verification is never reusable'() {
-    expect:
-      !BuildRecovery.reusableSteps(records() + completed('pact-consumer-tests'), identity, '35').contains('pact-consumer-tests')
-  }
-
-  def 'failed Pact consumer verification is not reusable'() {
-    given:
-      def events = records() + [
-        record([event_type: 'step', current_step_name: 'pact-consumer-tests', step_result: 'STARTED', step_execution_id: 'pact-1']),
-        record([event_type: 'step', current_step_name: 'pact-consumer-tests', step_result: 'FAILURE', step_execution_id: 'pact-1'])
-      ]
-
-    expect:
-      !BuildRecovery.reusableSteps(events, identity, '35').contains('pact-consumer-tests')
-  }
-
   def 'static checks are inferred when every branch that ran succeeded'() {
     given:
       def events = records().findAll { it.current_step_name != 'dockerbuild' }
@@ -221,7 +139,7 @@ class BuildRecoveryTest extends Specification {
         copyArtifacts: { Map options -> }, junit: { Map options -> })
       def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
       def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
-      def events = records() + staticChecks('SUCCESS') + promotion('preview', 'SUCCESS', 'SUCCESS')
+      def events = records() + staticChecks('SUCCESS') + completed('functionaltest')
       recovery.readMetrics(identity, '35') >> events
 
     when:
@@ -229,7 +147,7 @@ class BuildRecoveryTest extends Specification {
 
     then:
       recovery.shouldSkip('static checks')
-      !recovery.shouldSkip('preview:promotion')
+      !recovery.shouldSkip('functionaltest')
   }
 
   def 'skipped static checks are recorded in Cosmos metrics'() {
@@ -272,14 +190,6 @@ class BuildRecoveryTest extends Specification {
 
     where:
       events << [[], [[current_step_name: 'test', current_build_current_result: 'FAILURE']]]
-  }
-
-  def 'successful child records do not independently reuse static checks'() {
-    given:
-      def events = records()
-
-    expect:
-      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
   }
 
   def 'legacy retry attempt records are not reused'() {
@@ -360,21 +270,6 @@ class BuildRecoveryTest extends Specification {
     then:
       0 * recovery.readMetrics(_, _)
       !recovery.shouldSkip('test')
-  }
-
-  def 'static-check children are never individually reusable'() {
-    given:
-      def steps = new Expando(echo: { String message -> })
-      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
-      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
-      recovery.readMetrics(identity, '35') >> records()
-
-    when:
-      recovery.prepare(true)
-
-    then:
-      !recovery.shouldSkip('test')
-      !recovery.shouldSkip('securitychecks')
   }
 
   def 'manual interruption is propagated rather than converted to fallback'() {

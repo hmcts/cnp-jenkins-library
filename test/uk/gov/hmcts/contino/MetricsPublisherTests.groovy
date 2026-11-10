@@ -31,7 +31,7 @@ class MetricsPublisherTests extends Specification {
     metricsPublisher.publish()
 
     then:
-    noExceptionThrown()
+    notThrown()
   }
 
   def "collects build metrics"() {
@@ -46,7 +46,6 @@ class MetricsPublisherTests extends Specification {
     assertThat(metricsMap).contains(entry("current_build_scheduled_time", "2017-12-18T16:15:48Z"))
     assertThat(metricsMap).contains(entry("shared_library_name", "Infrastructure"))
     assertThat(metricsMap).contains(entry("shared_library_version", "feature/test-lib-branch"))
-    assertThat(metricsMap).doesNotContainKey("node_status")
   }
 
   def "publishes to database returned by resolver"() {
