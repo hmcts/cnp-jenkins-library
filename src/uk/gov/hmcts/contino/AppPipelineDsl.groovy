@@ -142,9 +142,10 @@ class AppPipelineDsl extends CommonPipelineDsl implements Serializable {
   }
 
 
-  void enableFortifyScan(String fortifyVaultName = "") {
+  void enableFortifyScan(String fortifyVaultName = "", boolean parallel = false) {
     config.fortifyScan = true
     config.fortifyVaultName = fortifyVaultName
+    config.fortifyScanParallel = parallel
   }
 
   void enableDockerTestBuild() {
