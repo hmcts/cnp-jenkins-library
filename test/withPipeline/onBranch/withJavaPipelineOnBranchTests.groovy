@@ -17,6 +17,7 @@ class withJavaPipelineOnBranchTests extends BaseCnpPipelineTest {
   @Test
   void PipelineExecutesExpectedSteps() {
     def stubBuilder = new StubFor(GradleBuilder)
+    stubBuilder.demand.setupToolVersion(0) {}
     stubBuilder.demand.build(0) {}
 
     stubBuilder.use {
