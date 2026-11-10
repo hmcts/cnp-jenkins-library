@@ -36,17 +36,40 @@ def call(params) {
     DockerImage.DeploymentStage deploymentStage = params.stage
 
     stageWithEnvironmentAgent("${deploymentStage.label} build promotion", product, environment) {
+      if (config.immutableImagePromotion) {
+        config.approvedImageReference = null
+      }
       pcr.callAround("${deploymentStage.label}:promotion") {
+        Map candidate
+        if (config.immutableImagePromotion) {
+          candidate = new LinkedHashMap(config.imageCandidate)
+          if (!candidate.imageReference || candidate.sourceCommit != env.GIT_COMMIT ||
+              candidate.producerJob != env.JOB_NAME || candidate.producerBuild != env.BUILD_NUMBER) {
+            error 'No immutable image belongs to this source and Jenkins build'
+          }
+          if (deploymentStage in [DockerImage.DeploymentStage.PROD, DockerImage.DeploymentStage.LATEST] &&
+              config.approvedImageReference != candidate.imageReference) {
+            error 'Release evidence has not approved this immutable image'
+          }
+        }
         withAcrClient(subscription) {
           def imageRegistry = env.TEAM_CONTAINER_REGISTRY ?: env.REGISTRY_NAME
           def projectBranch = new ProjectBranch(env.BRANCH_NAME)
           def acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
           def dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
 
-          acr.retagForStage(deploymentStage, dockerImage)
+          if (config.immutableImagePromotion) {
+            acr.retagForStage(deploymentStage, dockerImage, candidate)
+          } else {
+            acr.retagForStage(deploymentStage, dockerImage)
+          }
           acr.purgeOldTags(deploymentStage, dockerImage)
           if (DockerImage.DeploymentStage.PROD == deploymentStage) {
-            acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
+            if (config.immutableImagePromotion) {
+              acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage, candidate)
+            } else {
+              acr.retagForStage(DockerImage.DeploymentStage.LATEST, dockerImage)
+            }
             if (config.dockerTestBuild && projectBranch.isMaster() && fileExists('build.gradle')) {
               def dockerImageTest = new DockerImage(product, "${component}-${DockerImage.TEST_REPO}", acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
               acr.retagForStage(deploymentStage, dockerImageTest)

@@ -85,6 +85,152 @@ class AcrTest extends Specification {
                     it.get('returnStdout').equals(true)})
   }
 
+  def "candidate builds bind source and invocation to the inspected digest while keeping legacy tags"() {
+    given:
+      def commands = []
+      def identity = [sourceCommit: 'a' * 40, sourceTree: 'b' * 40, producerJob: "xui/webapp's master",
+                      producerBuild: '42', invocationId: '12345678-1234-1234-8234-123456789abc']
+      def digest = 'sha256:' + ('c' * 64)
+      def reference = "${REGISTRY_NAME}.azurecr.io/${IMAGE_REPO}@${digest}".toString()
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      steps.sh(_) >> { Map args ->
+        commands << args.script.toString()
+        if (args.script.contains('--query loginServer')) return "${REGISTRY_NAME}.azurecr.io"
+        if (args.script.contains('repository show ')) return digest
+        return '{}'
+      }
+      steps.readJSON(_) >> [RepoDigests: [reference], Os: 'linux', Architecture: 'amd64', Id: 'sha256:' + ('d' * 64)]
+
+    when:
+      def candidate = acr.buildCandidate(dockerImage, ' --build-arg DEV_MODE=true', identity)
+
+    then:
+      candidate == identity + [schemaVersion: 1, registry: "${REGISTRY_NAME}.azurecr.io", repository: IMAGE_REPO,
+        digest: digest, imageReference: reference, buildTag: "candidate-${identity.invocationId}",
+        platform: 'linux/amd64', imageConfigDigest: 'sha256:' + ('d' * 64)]
+      commands.find { it.contains('acr build ') }.contains("-t ${IMAGE_NAME}")
+      commands.find { it.contains('acr build ') }.contains("-t ${IMAGE_REPO}:candidate-${identity.invocationId}")
+      commands.find { it.contains('acr build ') }.contains("--build-arg BUILD_PRODUCER_JOB='xui/webapp'\"'\"'s master'")
+      commands.find { it.contains('acr build ') }.contains("--build-arg BUILD_SOURCE_COMMIT='${identity.sourceCommit}'")
+      commands.find { it.contains('repository show ') }.contains("--image ${IMAGE_REPO}:candidate-${identity.invocationId}")
+      commands.contains("docker pull ${reference}".toString())
+      commands.findIndexOf { it.contains('acr login ') } >= 0
+      commands.findIndexOf { it.contains('acr login ') } < commands.indexOf("docker pull ${reference}".toString())
+      commands.contains("docker image inspect ${reference} --format '{{json .}}'".toString())
+  }
+
+  @spock.lang.Unroll
+  def "candidate build rejects missing or malformed producer #field before a build"() {
+    given:
+      def identity = [sourceCommit: 'a' * 40, sourceTree: 'b' * 40, producerJob: 'xui/webapp/master',
+                      producerBuild: '42', invocationId: '12345678-1234-1234-8234-123456789abc']
+      identity[field] = invalid
+
+    when:
+      acr.buildCandidate(dockerImage, '', identity)
+
+    then:
+      thrown(IllegalArgumentException)
+      0 * steps.sh(_)
+
+    where:
+      field          | invalid
+      'sourceCommit' | 'abcdefg'
+      'sourceTree'   | null
+      'sourceCommit' | '0' * 40
+      'producerJob'  | ' '
+      'producerJob'  | 'job\u0085other'
+      'producerJob'  | "job\nnext"
+      'producerBuild'| '42; id'
+      'producerBuild'| '0'
+      'producerBuild'| '00'
+      'invocationId' | 'reused-tag'
+  }
+
+  @spock.lang.Unroll
+  def "candidate build refuses an unobserved digest or platform #inspection"() {
+    given:
+      def digest = 'sha256:' + ('c' * 64)
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      dockerImage.getBaseShortName() >> IMAGE_NAME
+      steps.sh(_) >> { Map args ->
+        if (args.script.contains('--query loginServer')) return "${REGISTRY_NAME}.azurecr.io"
+        if (args.script.contains('repository show ')) return digest
+        return '{}'
+      }
+      steps.readJSON(_) >> inspection
+
+    when:
+      acr.buildCandidate(dockerImage, '', [sourceCommit: 'a' * 40, sourceTree: 'b' * 40,
+        producerJob: 'xui/webapp/master', producerBuild: '42', invocationId: '12345678-1234-1234-8234-123456789abc'])
+
+    then:
+      thrown(IllegalStateException)
+
+    where:
+      inspection << [[:],
+        [RepoDigests: ['another/image@sha256:' + ('c' * 64)], Os: 'linux', Architecture: 'amd64', Id: 'sha256:' + ('d' * 64)],
+        [RepoDigests: ['cnpacr.azurecr.io/hmcts/alpine@sha256:' + ('c' * 64)], Os: 'linux', Architecture: 'ppc64le', Id: 'sha256:' + ('d' * 64)]]
+  }
+
+  def "digest promotion imports the approved primary content into both registries for prod and latest"() {
+    given:
+      steps = Mock(JenkinsStepMock)
+      steps.env >> [DUAL_ACR_PUBLISH_ENABLED: 'true', SECONDARY_REGISTRY_NAME: 'hmctsold',
+                    SECONDARY_REGISTRY_RESOURCE_GROUP: 'old-rg', SECONDARY_REGISTRY_SUBSCRIPTION: 'old-sub']
+      acr = new Acr(steps, SUBSCRIPTION, REGISTRY_NAME, REGISTRY_RESOURCE_GROUP, REGISTRY_SUBSCRIPTION)
+      def image = new DockerImage('xui', 'webapp', acr, 'staging', 'a' * 40, '20261102120000')
+      def digest = 'sha256:' + ('c' * 64)
+      def candidate = [registry: "${REGISTRY_NAME}.azurecr.io", repository: 'xui/webapp', digest: digest,
+                       imageReference: "${REGISTRY_NAME}.azurecr.io/xui/webapp@${digest}"]
+      def commands = []
+      steps.sh(_) >> { Map args ->
+        commands << args.script.toString()
+        return "${REGISTRY_NAME}.azurecr.io"
+      }
+
+    when:
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, image, candidate)
+      acr.retagForStage(DockerImage.DeploymentStage.LATEST, image, candidate)
+
+    then:
+      def imports = commands.findAll { it.contains('acr import ') }
+      imports.size() == 4
+      imports.every { it.contains("--source ${candidate.imageReference}") }
+      imports.count { it.contains('-n hmctsold ') } == 2
+      imports.count { it.contains('-t xui/webapp:latest') } == 2
+      !imports.any { it.contains('--source hmctsold.') || it.contains('--source cnpacr.azurecr.io/xui/webapp:') }
+  }
+
+  @spock.lang.Unroll
+  def "immutable promotion rejects malformed or mismatched #field before importing"() {
+    given:
+      def digest = 'sha256:' + ('c' * 64)
+      def candidate = [registry: "${REGISTRY_NAME}.azurecr.io", repository: IMAGE_REPO, digest: digest,
+                       imageReference: "${REGISTRY_NAME}.azurecr.io/${IMAGE_REPO}@${digest}"]
+      candidate[field] = invalid
+      dockerImage.getRepositoryName() >> IMAGE_REPO
+      steps.sh({ it.script.contains('--query loginServer') }) >> "${REGISTRY_NAME}.azurecr.io"
+
+    when:
+      acr.retagForStage(DockerImage.DeploymentStage.PROD, dockerImage, candidate)
+
+    then:
+      thrown(IllegalArgumentException)
+      0 * steps.sh({ it.script.contains('acr import ') })
+
+    where:
+      field           | invalid
+      'registry'      | 'cnpacr.azurecr.io;id'
+      'registry'      | 'another.azurecr.io'
+      'repository'    | '../webapp'
+      'repository'    | 'xui/other'
+      'digest'        | 'sha256:abc'
+      'digest'        | null
+      'imageReference'| 'cnpacr.azurecr.io/hmcts/alpine:staging'
+  }
+
   def "run() should call the run command with the right registry group and resource group"() {
     given:
       steps.fileExists("acb.yaml") >> true

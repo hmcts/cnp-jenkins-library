@@ -26,6 +26,12 @@ def call(params) {
   def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
   boolean deploymentEnabled = false
+  Map buildIdentity
+  String sourceArchiveName
+  String sourceArchiveDigest
+  String sourceStashName
+  config.imageCandidate = [:]
+  config.approvedImageReference = null
 
   stageWithAgent('Checkout', product) {
     checkoutScm(pipelineCallbacksRunner: pcr)
@@ -39,12 +45,36 @@ def call(params) {
       dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
       boolean hasTag = acr.hasTag(dockerImage)
       boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
-      noSkipImgBuild = envOverrideForSkip || !hasTag
+      // Reused tags cannot attest to this invocation's source or producer.
+      noSkipImgBuild = config.immutableImagePromotion || envOverrideForSkip || !hasTag
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
     }
     builder.setupToolVersion()
+    if (config.immutableImagePromotion) {
+      def sourceCommit = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+      def sourceTree = sh(script: 'git rev-parse HEAD^{tree}', returnStdout: true).trim()
+      sh 'git diff --quiet HEAD --'
+      if (sourceCommit != env.GIT_COMMIT || !(sourceCommit ==~ /[a-f0-9]{40}/) || !(sourceTree ==~ /[a-f0-9]{40}/)) {
+        error 'Immutable image source does not match the Jenkins checkout'
+      }
+      buildIdentity = [sourceCommit: sourceCommit, sourceTree: sourceTree,
+        producerJob: env.JOB_NAME, producerBuild: env.BUILD_NUMBER,
+        invocationId: UUID.randomUUID().toString()]
+      sourceArchiveName = "candidate-source-${buildIdentity.invocationId}.tar"
+      sourceStashName = "candidate-source-${buildIdentity.invocationId}"
+      sh "git archive --format=tar --output=${sourceArchiveName} ${sourceCommit}"
+      sourceArchiveDigest = sh(script: "sha256sum ${sourceArchiveName}", returnStdout: true).trim().tokenize()[0]
+      if (!(sourceArchiveDigest ==~ /[a-f0-9]{64}/)) {
+        error 'Cannot seal the immutable image source archive'
+      }
+      stash name: sourceStashName, includes: sourceArchiveName
+      sh "rm -- ${sourceArchiveName}"
+    }
   }
   boolean dockerFileExists = fileExists('Dockerfile')
+  if (config.immutableImagePromotion && (!dockerFileExists || fileExists('acb.tpl.yaml') || config.dockerTestBuild)) {
+    error 'Immutable image promotion requires a Dockerfile without ACB templates or a separate Docker test build'
+  }
   warnAboutJitpackRemoval(product: product, component: component)
 
   stage('ACR Migration Check') {
@@ -119,9 +149,9 @@ def call(params) {
             pcr.callAround('dockerbuild') {
               // temporary whilst we have dual acr push enabled
               timeoutWithMsg(time: 80, unit: 'MINUTES', action: 'Docker build') {
-                if (!fileExists('.dockerignore')) {
+                if (!config.immutableImagePromotion && !fileExists('.dockerignore')) {
                   writeFile file: '.dockerignore', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
-                } else {
+                } else if (!config.immutableImagePromotion) {
                   writeFile file: '.dockerignore_build', text: libraryResource('uk/gov/hmcts/.dockerignore_build')
                   sh script: """
                         # in case anyone doesn't have a trailing new line in their file
@@ -130,7 +160,20 @@ def call(params) {
                       """
                 }
                 def buildArgs = projectBranch.isPR() ? " --build-arg DEV_MODE=true" : ""
-                if (fileExists(acbTemplateFilePath)) {
+                if (config.immutableImagePromotion) {
+                  dir("${pwd(tmp: true)}/immutable-image-${buildIdentity.invocationId}") {
+                    deleteDir()
+                    try {
+                      unstash sourceStashName
+                      sh "printf '%s  %s\\n' ${sourceArchiveDigest} ${sourceArchiveName} | sha256sum -c -"
+                      sh "tar -xf ${sourceArchiveName}"
+                      sh "rm -- ${sourceArchiveName}"
+                      config.imageCandidate = acr.buildCandidate(dockerImage, buildArgs, buildIdentity)
+                    } finally {
+                      deleteDir()
+                    }
+                  }
+                } else if (fileExists(acbTemplateFilePath)) {
                   acr.runWithTemplate(acbTemplateFilePath, dockerImage)
                 } else {
                   acr.build(dockerImage, buildArgs)
@@ -278,7 +321,11 @@ def call(params) {
             deploymentStage = DockerImage.DeploymentStage.PR
           }
           withAcrClient(subscription) {
-            acr.retagForStage(deploymentStage, dockerImage)
+            if (config.immutableImagePromotion) {
+              acr.retagForStage(deploymentStage, dockerImage, config.imageCandidate)
+            } else {
+              acr.retagForStage(deploymentStage, dockerImage)
+            }
             acr.purgeOldTags(deploymentStage, dockerImage)
           }
         }
