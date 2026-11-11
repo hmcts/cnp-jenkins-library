@@ -15,6 +15,7 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
     def script
     Map<String, Integer> statuses = [unpinned: 0, deprecation: 0]
     def deprecationPatterns = '1.0.0'
+    String recommendedVersion = '2.0.0'
     String deprecationDeadline = LocalDate.now().minusDays(1).toString()
     List<String> shellCommands = []
 
@@ -38,7 +39,7 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
                 jenkins: [
                     legacyVersion: [
                         pattern: deprecationPatterns,
-                        version: '2.0.0',
+                        version: recommendedVersion,
                         date_deadline: deprecationDeadline
                     ]
                 ]
@@ -160,6 +161,24 @@ class warnAboutCustomLibraryVersionTest extends BasePipelineTest {
         assertThat(WarningCollector.pipelineWarnings*.warningKey).containsExactly('old_library_version')
         assertThat(WarningCollector.pipelineWarnings.first().deprecationDate)
             .isEqualTo(LocalDate.parse(deprecationDeadline))
+    }
+
+    @Test
+    void 'custom version check recommends the latest release when no upgrade version is configured'() {
+        given:
+        statuses.deprecation = 1
+        recommendedVersion = null
+        deprecationDeadline = LocalDate.now().plusDays(1).toString()
+
+        when:
+        script.call()
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings.first().warningMessage)
+            .contains('Check for the latest release at https://github.com/hmcts/cnp-jenkins-library/releases')
+            .doesNotContain('Infrastructure@null')
+        assertThat(shellCommands.find { it.contains("'deprecation'") })
+            .contains("'deprecation' '1.0.0' ''")
     }
 
     @Test

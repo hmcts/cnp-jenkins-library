@@ -1,5 +1,6 @@
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.LibraryBranchControls
 import uk.gov.hmcts.pipeline.WarningBanner
 import java.time.LocalDate
 
@@ -17,7 +18,10 @@ def call(String repoUrl = null) {
 
     try {
         checkUnpinnedLibrary()
-        checkOldLibraryVersions(jenkinsLibraryDeprecationConfig)
+        checkOldLibraryVersions(
+            jenkinsLibraryDeprecationConfig,
+            new LibraryBranchControls(this).getLibraryVersion()
+        )
     } finally {
         sh 'rm -f check-library-version.sh'
         sh 'rm -f warning-banner.txt'
@@ -76,7 +80,7 @@ def checkUnpinnedLibrary() {
     )
 }
 
-def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {
+def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig, String currentLibraryVersion = null) {
     jenkinsLibraryDeprecationConfig.each { configKey, deprecation ->
         def patterns = []
         if (deprecation.pattern instanceof Collection) {
@@ -92,22 +96,29 @@ def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {
         }
 
         patterns.each { pattern ->
+            String recommendedVersion = deprecation.version?.toString()
             int status = sh(
                 script: """
                 chmod +x check-library-version.sh
-                ./check-library-version.sh 'deprecation' '${pattern}' '${deprecation.version}' '${deprecation.date_deadline}'
+                ./check-library-version.sh 'deprecation' '${pattern}' '${recommendedVersion ?: ''}' '${deprecation.date_deadline}' '${currentLibraryVersion ?: ''}'
                 """,
                 returnStatus: true
             )
+
+            List<String> upgradeRecommendation = recommendedVersion ?
+                ["Update it to use *Infrastructure@${recommendedVersion}*"] :
+                [
+                    'Check for the latest release at',
+                    'https://github.com/hmcts/cnp-jenkins-library/releases,',
+                    'then update your Jenkinsfile to use that fixed library version.'
+                ]
 
             buildAndAddWarning(
                 status,
                     "old_library_version",
                     [
                         ['Your Jenkinsfile references a deprecated Jenkins library version.'],
-                        [
-                            "Update it to use *Infrastructure@${deprecation.version}*",
-                        ]
+                        upgradeRecommendation
                     ],
                     deprecation.date_deadline
             )
