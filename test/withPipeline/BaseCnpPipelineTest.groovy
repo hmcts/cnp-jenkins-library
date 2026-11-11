@@ -66,7 +66,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
     helper.registerAllowedMethod("usernamePassword", [LinkedHashMap], null)
     helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' || c == 'Dockerfile' || c.startsWith('charts') || c == '.nvmrc' })
-    helper.registerAllowedMethod('readFile', [String.class], { c -> '20.14.0' })
+    helper.registerAllowedMethod('readFile', [String.class], { c -> '22.23.4' })
     helper.registerAllowedMethod("withSonarQubeEnv", [String.class, Closure.class], null)
     helper.registerAllowedMethod("waitForQualityGate", { [status: 'OK'] })
     helper.registerAllowedMethod("writeFile", [LinkedHashMap.class], {})
@@ -89,6 +89,7 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     })
     helper.registerAllowedMethod("publishHTML", [Map.class], {})
     helper.registerAllowedMethod("slackSend", [LinkedHashMap], null)
+    helper.registerAllowedMethod("sh", [String.class], {})
     helper.registerAllowedMethod("sh", [Map.class], { m ->
       if (m.get('script') == 'pwd') {
         return 'localPath'
@@ -162,5 +163,6 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
       return ''
     })
     binding.getVariable('currentBuild').previousBuild = [result: 'SUCCESS']
+    helper.libLoader.loadLibrary('Infrastructure')
   }
 }

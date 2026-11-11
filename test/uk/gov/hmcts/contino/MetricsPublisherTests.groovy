@@ -59,4 +59,21 @@ class MetricsPublisherTests extends Specification {
     then:
     1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap)
   }
+
+  def 'publishes step outcome and execution ID for recovery checks'() {
+    given:
+      Map document
+      def publisher = new MetricsPublisher(stubSteps, stubSteps.currentBuild, 'testProduct', 'testComponent', cosmosDbTargetResolver)
+
+    when:
+      publisher.publishStep('static checks', 'SUCCESS', 'execution-1')
+
+    then:
+      1 * stubSteps.azureCosmosDBCreateDocument(_ as LinkedHashMap) >> { Map options -> document = options.document }
+      document.current_step_name == 'static checks'
+      document.event_type == 'step'
+      document.step_result == 'SUCCESS'
+      document.step_execution_id == 'execution-1'
+  }
+
 }

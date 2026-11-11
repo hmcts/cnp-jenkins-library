@@ -150,48 +150,48 @@ def call(params) {
 
           onFunctionalTestEnvironment(environment) {
             if (testLabels.contains('enable_full_functional_tests')) {
-              stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
-                testEnv(aksUrl) {
-                  def passed = true
-                  try {
-                    pcr.callAround("fullFunctionalTest:${environment}") {
-                      timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
-                        builder.fullFunctionalTest()
+                stageWithEnvironmentAgentAndSecrets('Functional test (Full)', config, product, environment) {
+                  testEnv(aksUrl) {
+                    def passed = true
+                    try {
+                      pcr.callAround("fullFunctionalTest:${environment}") {
+                        timeoutWithMsg(time: config.fullFunctionalTestTimeout, unit: 'MINUTES', action: 'Functional tests') {
+                          builder.fullFunctionalTest()
+                        }
                       }
+                    } catch (err) {
+                      passed = false
+                    } finally {
+                      savePodsLogs(dockerImage, params, "full-functional")
                     }
-                  } catch (err) {
-                    passed = false
-                  } finally {
-                    savePodsLogs(dockerImage, params, "full-functional")
+                    if (!passed) {
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('Functional test (Full) failed')
+                    }
                   }
-                  if (!passed) {
-                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    error('Functional test (Full) failed')
+                }
+              } else {
+                stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
+                  testEnv(aksUrl) {
+                    def passed = true
+                    try {
+                      pcr.callAround("functionalTest:${environment}") {
+                        timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
+                          builder.functionalTest()
+                        }
+                      }
+                    } catch (err) {
+                      passed = false
+                    } finally {
+                      savePodsLogs(dockerImage, params, "functional")
+                    }
+                    if (!passed) {
+                      clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
+                      error('Functional test failed')
+                    }
                   }
                 }
               }
-            } else {
-              stageWithEnvironmentAgentAndSecrets("Functional Test - ${environment}", config, product, environment) {
-                testEnv(aksUrl) {
-                  def passed = true
-                  try {
-                    pcr.callAround("functionalTest:${environment}") {
-                      timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'Functional Test - AKS') {
-                        builder.functionalTest()
-                      }
-                    }
-                  } catch (err) {
-                    passed = false
-                  } finally {
-                    savePodsLogs(dockerImage, params, "functional")
-                  }
-                  if (!passed) {
-                    clearHelmReleaseForFailure(enableHelmLabel, config, dockerImage, params, pcr)
-                    error('Functional test failed')
-                  }
-                }
-              }
-            }
           }
 
           if (config.performanceTest) {
