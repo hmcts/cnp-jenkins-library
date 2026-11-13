@@ -41,7 +41,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       }
     }
 
-    if (config.fortifyScan) {
+    if (config.fortifyScan && !config.fortifyScanParallel) {
       fortifyScan(
         pipelineCallbacksRunner: pcr,
         fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
@@ -50,6 +50,7 @@ def call(pcr, config, pipelineType, String product, String component, String sub
       )
     }
 
+    def nightlyTests = {
     if (config.crossBrowserTest) {
       stageWithAgent("Cross browser tests", product) {
         warnError('Failure in crossBrowserTest') {
@@ -189,6 +190,28 @@ def call(pcr, config, pipelineType, String product, String component, String sub
           }
         }
       }
+    }
+
+    }
+
+    if (config.fortifyScan && config.fortifyScanParallel) {
+      parallel(
+        'Fortify Scan': {
+          ws("${env.WORKSPACE}@fortify") {
+            deleteDir()
+            checkout scm
+            fortifyScan(
+              pipelineCallbacksRunner: pcr,
+              fortifyVaultName: config.fortifyVaultName ?: "${product}-${environment.nonProdName}",
+              builder: builder,
+              product: product,
+            )
+          }
+        },
+        'Nightly tests': nightlyTests
+      )
+    } else {
+      nightlyTests()
     }
 
     if (currentBuild.result == "UNSTABLE" || currentBuild.result == "FAILURE") {

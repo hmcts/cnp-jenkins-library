@@ -636,6 +636,8 @@ withNightlyPipeline(type, product, component) {
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
 
+In the nightly pipeline `enableFortifyScan()` runs the Fortify scan before the test stages, which wait for it to finish. Use `enableParallelFortifyScan()` instead to run it alongside the test stages, in a separate `@fortify` workspace with a fresh checkout. `fortify-scan` callbacks then run in that workspace, so they cannot rely on build output or files from other stages.
+
 You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
 
 When Fortify completes, the pipeline archives:

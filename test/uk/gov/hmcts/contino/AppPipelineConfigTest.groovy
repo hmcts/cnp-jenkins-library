@@ -235,6 +235,15 @@ class AppPipelineConfigTest extends Specification {
     assertThat(pipelineConfig.fortifyVaultName).isEqualTo("fortifyVaultName")
   }
 
+  def "ensure enable parallel fortify scan"() {
+    when:
+    dsl.enableParallelFortifyScan("fortifyVaultName")
+    then:
+    assertThat(pipelineConfig.fortifyScan).isTrue()
+    assertThat(pipelineConfig.fortifyScanParallel).isTrue()
+    assertThat(pipelineConfig.fortifyVaultName).isEqualTo("fortifyVaultName")
+  }
+
   def "ensure enable slack notifications"() {
     def slackChannel = "#donotdisturb"
     when:
