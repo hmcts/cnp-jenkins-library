@@ -20,9 +20,9 @@ def call(type, product, component, timeout = 300, Closure body) {
 
 
   def pipelineTypes = [
-    nodejs : new NodePipelineType(this, product, component),
-    java   : new SpringBootPipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component),
+    nodejs : new NodePipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    java   : new SpringBootPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    angular: new AngularPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
     ruby: new RubyPipelineType(this, product, component),
     python: new PythonPipelineType(this, product, component)
   ]
@@ -78,6 +78,7 @@ def call(type, product, component, timeout = 300, Closure body) {
         }
 
         dockerAgentSetup()
+        configureGithubAppSSHAuthOverride()
         env.PATH = "$env.PATH:/usr/local/bin"
         withEnv(['IS_NIGHTLY_PIPELINE=true']) {
           withSubscriptionLogin(subscription.nonProdName) {
@@ -102,6 +103,7 @@ def call(type, product, component, timeout = 300, Closure body) {
         metricsPublisher.publish('Pipeline Failed')
         throw err
       } finally {
+        reportInsecureInterpolation()
         notifyPipelineDeprecations(slackChannel, metricsPublisher)
         if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
           archiveBuildOutputs()

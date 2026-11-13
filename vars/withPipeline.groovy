@@ -30,9 +30,9 @@ def call(type, String product, String component, Closure body) {
   def deploymentProduct = deploymentNamespace ? "$deploymentNamespace-$product" : product
 
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component),
+    java  : new SpringBootPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    nodejs: new NodePipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    angular: new AngularPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
     ruby: new RubyPipelineType(this, product, component),
     python: new PythonPipelineType(this, product, component)
   ]
@@ -92,6 +92,7 @@ def call(type, String product, String component, Closure body) {
             env.BUILD_AGENT_TYPE = agentType
             env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
             dockerAgentSetup()
+            configureGithubAppSSHAuthOverride()
             env.PATH = "$env.PATH:/usr/local/bin"
 
             def deploymentEnabled = sectionBuildAndTest(
@@ -183,6 +184,7 @@ def call(type, String product, String component, Closure body) {
     callbacksRunner.call('onFailure')
     throw err
   } finally {
+      reportInsecureInterpolation()
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if ((currentBuild.result ?: currentBuild.currentResult) == 'FAILURE') {
         queueBuildArchive(product: product, component: component)
