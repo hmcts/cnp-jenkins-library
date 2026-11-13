@@ -55,6 +55,7 @@ def call(type, String product, String component, String s2sServiceName, String t
     def slackChannel = env.BUILD_NOTICES_SLACK_CHANNEL
     try {
       dockerAgentSetup()
+      configureGithubAppSSHAuthOverride()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       PipelineCallbacksRunner pcr = callbacksRunner

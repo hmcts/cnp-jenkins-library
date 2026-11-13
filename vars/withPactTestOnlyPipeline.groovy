@@ -66,6 +66,7 @@ def call(type, String product, String component, Closure body) {
       }
 
       dockerAgentSetup()
+      configureGithubAppSSHAuthOverride()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       onMaster {

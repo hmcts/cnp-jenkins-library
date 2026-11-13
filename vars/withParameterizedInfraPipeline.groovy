@@ -50,6 +50,7 @@ def call(String product, String environment, String subscription, Boolean planOn
       env.BUILD_AGENT_TYPE = agentType
       env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
       dockerAgentSetup()
+      configureGithubAppSSHAuthOverride()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {

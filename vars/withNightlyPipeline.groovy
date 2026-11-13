@@ -78,6 +78,7 @@ def call(type, product, component, timeout = 300, Closure body) {
         }
 
         dockerAgentSetup()
+        configureGithubAppSSHAuthOverride()
         env.PATH = "$env.PATH:/usr/local/bin"
         withEnv(['IS_NIGHTLY_PIPELINE=true']) {
           withSubscriptionLogin(subscription.nonProdName) {

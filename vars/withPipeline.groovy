@@ -92,6 +92,7 @@ def call(type, String product, String component, Closure body) {
             env.BUILD_AGENT_TYPE = agentType
             env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
             dockerAgentSetup()
+            configureGithubAppSSHAuthOverride()
             env.PATH = "$env.PATH:/usr/local/bin"
 
             def deploymentEnabled = sectionBuildAndTest(
