@@ -9,7 +9,7 @@
  */
 
 def call(String user, String colour, String message) {
-  if (user == "") or (colour == "") or (message == "") {
+  if (user == "" || colour == "" || message == "") {
     log.info("check parameters - one or more is empty")
   }
   else {
