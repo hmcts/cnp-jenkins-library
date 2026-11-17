@@ -8,12 +8,16 @@ class AngularPipelineType implements PipelineType, Serializable {
   AngularBuilder builder
 
   AngularPipelineType(steps, product, app) {
+    this(steps, product, app, { secrets, body -> steps.withAzureKeyvault(secrets, body) })
+  }
+
+  AngularPipelineType(steps, product, app, Closure withAzureKeyvaultStep) {
     this.steps = steps
     this.product = product
     this.app = app
 
     this.steps.env.PRODUCT = product
 
-    builder = new AngularBuilder(steps)
+    builder = new AngularBuilder(steps, withAzureKeyvaultStep)
   }
 }

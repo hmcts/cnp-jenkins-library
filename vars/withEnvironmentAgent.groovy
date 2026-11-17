@@ -68,6 +68,7 @@ def call(String environment, String product, String agentLabelOverride, Closure 
       if (!(env.PATH ?: '').split(':').contains('/usr/local/bin')) {
         env.PATH = "$env.PATH:/usr/local/bin"
       }
+      configureGithubAppSSHAuthOverride()
       boolean bodySucceeded = false
       try {
         if (relativeDir) {

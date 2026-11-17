@@ -139,7 +139,7 @@ def call(Map params) {
       env.GATLING_TEST_START_TIME = testStartTime
       echo "Gatling load test start time: ${testStartTime}"
 
-      def builder = new GradleBuilder(this, params.product)
+      def builder = new GradleBuilder(this, params.product, { secrets, body -> withAzureKeyvault(secrets, body) })
       catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error in Gatling Performance test') {
         builder.performanceTest(params.gatlingSimulation)
       }

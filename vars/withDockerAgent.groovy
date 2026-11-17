@@ -8,6 +8,7 @@ def call(String product, Closure body) {
       container(agentContainer) {
         echo "Using agent container: ${agentContainer}"
         dockerAgentSetup()
+        configureGithubAppSSHAuthOverride()
         body()
       }
     } catch (Exception e) {

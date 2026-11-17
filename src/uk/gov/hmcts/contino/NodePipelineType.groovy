@@ -8,12 +8,16 @@ public class NodePipelineType implements PipelineType, Serializable {
   YarnBuilder builder
 
   NodePipelineType(steps, product, app) {
+    this(steps, product, app, { secrets, body -> steps.withAzureKeyvault(secrets, body) })
+  }
+
+  NodePipelineType(steps, product, app, Closure withAzureKeyvaultStep) {
     this.steps = steps
     this.product = product
     this.app = app
 
     this.steps.env.PRODUCT = product
 
-    builder = new YarnBuilder(steps)
+    builder = new YarnBuilder(steps, withAzureKeyvaultStep)
   }
 }

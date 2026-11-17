@@ -10,6 +10,8 @@ import java.time.LocalDate
 
 class YarnBuilder extends AbstractBuilder {
 
+  private final Closure withAzureKeyvaultStep
+
   private static final String INSTALL_CHECK_FILE = '.yarn_dependencies_installed'
   private static final String NVMRC = '.nvmrc'
   private static final String CVE_KNOWN_ISSUES_FILE_PATH = 'yarn-audit-known-issues-result'
@@ -20,7 +22,12 @@ class YarnBuilder extends AbstractBuilder {
   def localSteps
 
   YarnBuilder(steps) {
+    this(steps, { secrets, body -> steps.withAzureKeyvault(secrets, body) })
+  }
+
+  YarnBuilder(steps, Closure withAzureKeyvaultStep) {
     super(steps)
+    this.withAzureKeyvaultStep = withAzureKeyvaultStep
     this.localSteps = steps
     this.securitytest = new SecurityScan(steps)
   }
@@ -205,7 +212,7 @@ class YarnBuilder extends AbstractBuilder {
         [ secretType: 'Secret', name: 'ardoq-api-key', version: '', envVariable: 'ARDOQ_API_KEY' ],
         [ secretType: 'Secret', name: 'ardoq-api-url', version: '', envVariable: 'ARDOQ_API_URL' ]
       ]
-      localSteps.withAzureKeyvault(secrets) {
+      withAzureKeyvaultStep(secrets) {
         def client = new ArdoqClient(localSteps.env.ARDOQ_API_KEY, localSteps.env.ARDOQ_API_URL, steps)
         client.updateDependencies(localSteps.readFile('yarn.lock'), 'yarn')
       }
