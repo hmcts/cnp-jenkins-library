@@ -35,6 +35,7 @@ class PipelineCallbacksRunner implements Serializable {
   }
 
   void callAround(String stage, Closure body) {
+    final long stageStartedAt = System.nanoTime()
     def errToThrow = null
 
     callBefore(stage)
@@ -61,7 +62,11 @@ class PipelineCallbacksRunner implements Serializable {
         call('onStageFailure', stage)
         errToThrow = err
       }
-      nullSafeCall('after:all', stage)
+
+      final long elapsedMillis = (System.nanoTime() - stageStartedAt) / 1_000_000L
+      final long stageDurationMillis = elapsedMillis < 0L ? 0L : elapsedMillis
+      nullSafeCall('after:all', stage, stageDurationMillis)
+
       if (errToThrow != null) {
         throw errToThrow
       }
@@ -72,10 +77,14 @@ class PipelineCallbacksRunner implements Serializable {
     nullSafeCall(callback, stage)
   }
 
-  private def nullSafeCall(String key, String stage) {
+  private void nullSafeCall(String key, String stage, Long stageDurationMillis = null) {
     def body = config.bodies.get(key)
     if (body != null) {
-      body.call(stage)
+      if (stageDurationMillis != null && body.maximumNumberOfParameters > 1) {
+        body.call(stage, stageDurationMillis)
+      } else {
+        body.call(stage)
+      }
     }
   }
 }

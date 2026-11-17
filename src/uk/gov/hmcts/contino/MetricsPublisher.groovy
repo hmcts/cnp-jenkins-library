@@ -1,5 +1,7 @@
 package uk.gov.hmcts.contino
 
+import java.math.RoundingMode
+
 class MetricsPublisher implements Serializable {
 
   def steps
@@ -9,8 +11,16 @@ class MetricsPublisher implements Serializable {
   String component
   String correlationId
   CosmosDbTargetResolver cosmosDbTargetResolver
+  AzureVmPricing azureVmPricing
 
-  MetricsPublisher(steps, currentBuild, product, component, CosmosDbTargetResolver cosmosDbTargetResolver = null) {
+  MetricsPublisher(
+    steps,
+    currentBuild,
+    product,
+    component,
+    CosmosDbTargetResolver cosmosDbTargetResolver = null,
+    AzureVmPricing azureVmPricing = null
+  ) {
     this.product = product
     this.component = component
     this.steps = steps
@@ -18,13 +28,14 @@ class MetricsPublisher implements Serializable {
     this.currentBuild = currentBuild
     this.correlationId = UUID.randomUUID().toString()
     this.cosmosDbTargetResolver = cosmosDbTargetResolver ?: new CosmosDbTargetResolver(steps)
+    this.azureVmPricing = azureVmPricing ?: new AzureVmPricing(steps)
   }
 
-  private def collectMetrics(currentStepName) {
+  private def collectMetrics(currentStepName, Long stageDurationMillis = null) {
     def dateBuildScheduled = new Date(currentBuild.timeInMillis as long)
     def (libName, libVersion) = resolveSharedLibrary()
 
-    return [
+    def metrics = [
       id                           : UUID.randomUUID().toString(),
       correlation_id               : correlationId,
       product                      : product,
@@ -57,6 +68,45 @@ class MetricsPublisher implements Serializable {
       current_build_absolute_url   : currentBuild.absoluteUrl,
       stage_timestamp              : new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC")),
     ]
+
+    metrics.putAll(stageCostMetrics(stageDurationMillis))
+    return metrics
+  }
+
+  private Map<String, Object> stageCostMetrics(Long stageDurationMillis) {
+    Map<String, Object> emptyMetrics = [
+      stage_duration_ms : stageDurationMillis,
+      vm_sku            : null,
+      vm_region         : null,
+      vm_hourly_price   : null,
+      vm_price_currency : null,
+      stage_cost        : null
+    ]
+
+    if (stageDurationMillis == null) {
+      return emptyMetrics
+    }
+
+    try {
+      Map<String, Object> pricing = azureVmPricing.lookup(env.NODE_NAME)
+      BigDecimal duration = new BigDecimal(stageDurationMillis.toString())
+      BigDecimal hourlyPrice = pricing.vm_hourly_price as BigDecimal
+      BigDecimal cost = duration
+        .multiply(hourlyPrice)
+        .divide(new BigDecimal('3600000'), 12, RoundingMode.HALF_UP)
+
+      return [
+        stage_duration_ms : stageDurationMillis,
+        vm_sku            : pricing.vm_sku,
+        vm_region         : pricing.vm_region,
+        vm_hourly_price   : hourlyPrice,
+        vm_price_currency : pricing.vm_price_currency,
+        stage_cost        : cost
+      ]
+    } catch (AzureVmPricingException error) {
+      steps.echo "Unable to calculate stage cost: ${error.message}"
+      return emptyMetrics
+    }
   }
 
   private List<String> resolveSharedLibrary() {    
@@ -94,10 +144,10 @@ class MetricsPublisher implements Serializable {
       return [null, null]
   }
 
-  def publish(eventName) {
+  def publish(eventName = null, Long stageDurationMillis = null) {
     try {
       def database = cosmosDbTargetResolver.databaseName()
-      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName))
+      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName, stageDurationMillis))
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
     }
