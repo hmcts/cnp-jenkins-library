@@ -14,6 +14,7 @@ def call(params) {
   PipelineCallbacksRunner pcr = params.pipelineCallbacksRunner
   AppPipelineConfig config = params.appPipelineConfig
   def builder = params.builder
+  def buildRecovery = params.buildRecovery
 
   def subscription = params.subscription
   def environment = params.environment
@@ -25,6 +26,7 @@ def call(params) {
   def imageRegistry
   def gradleAPI = new GradleAPI(this)
   boolean noSkipImgBuild = true
+  boolean imageExists = false
   boolean deploymentEnabled = false
 
   stageWithAgent('Checkout', product) {
@@ -38,6 +40,7 @@ def call(params) {
       acr = new Acr(this, subscription, imageRegistry, env.REGISTRY_RESOURCE_GROUP, env.REGISTRY_SUBSCRIPTION)
       dockerImage = new DockerImage(product, component, acr, projectBranch.imageTag(), env.GIT_COMMIT, env.LAST_COMMIT_TIMESTAMP)
       boolean hasTag = acr.hasTag(dockerImage)
+      imageExists = hasTag
       boolean envOverrideForSkip = env.NO_SKIP_IMG_BUILD?.trim()?.toLowerCase() == 'true'
       noSkipImgBuild = envOverrideForSkip || !hasTag
       echo("Checking if we should skip image build, tag: ${projectBranch.imageTag()}, git commit: ${env.GIT_COMMIT}, timestamp: ${env.LAST_COMMIT_TIMESTAMP}, hasTag: ${hasTag}, hasOverride: ${envOverrideForSkip}, result: ${!noSkipImgBuild}")
@@ -47,9 +50,18 @@ def call(params) {
   boolean dockerFileExists = fileExists('Dockerfile')
   warnAboutJitpackRemoval(product: product, component: component)
 
-  stage('ACR Migration Check') {
-    warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
-  }
+  parallel(
+    'ACR Migration Check': {
+      stage('ACR Migration Check') {
+        warnAboutOldAcrReferences(env.GIT_URL ?: 'unknown')
+      }
+    },
+    'Check previous build (Cosmos DB)': {
+      stage('Check previous build (Cosmos DB)') {
+        buildRecovery?.checkPreviousBuild()
+      }
+    }
+  )
 
   onPathToLive {
     withEnvironmentAgent(environment, product) {
@@ -63,7 +75,7 @@ def call(params) {
         
         // always build master and demo as we currently do not deploy an image there
         boolean envSub = autoDeployEnvironment() != null
-        when(noSkipImgBuild || projectBranch.isMaster() || envSub) {
+        when(noSkipImgBuild || projectBranch.isMaster() || envSub || buildRecovery?.shouldSkip('static checks')) {
           pcr.callAround('build') {
             withBuildCache(config) {
               timeoutWithMsg(time: 15, unit: 'MINUTES', action: 'build') {
@@ -74,7 +86,9 @@ def call(params) {
         }
       }
 
-      def branches = [failFast: false]
+      buildRecovery?.prepare(imageExists || !dockerFileExists)
+
+      def branches = [failFast: true]
       branches["Unit tests and Sonar scan"] = {
         pcr.callAround('test') {
           timeoutWithMsg(time: 40, unit: 'MINUTES', action: 'test') {
@@ -230,8 +244,14 @@ def call(params) {
     }
 
       stageWithAgent("Static checks / Container build", product) {
-        when(noSkipImgBuild) {
-          parallel branches
+        boolean staticChecksCompleted = buildRecovery?.shouldSkip('static checks') ?: false
+        if (staticChecksCompleted) {
+          buildRecovery.recordSkip('static checks')
+        }
+        when(noSkipImgBuild && !staticChecksCompleted) {
+          pcr.recordStep('static checks') {
+            parallel branches
+          }
 
           // files related to dependency checking that are not needed for the rest of the pipeline
           // they can't be safely deleted in the parallel branches as docker build context will collect files

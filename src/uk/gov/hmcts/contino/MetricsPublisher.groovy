@@ -94,10 +94,25 @@ class MetricsPublisher implements Serializable {
       return [null, null]
   }
 
-  def publish(eventName) {
+  Map recoveryContext() {
+    def (libName, libVersion) = resolveSharedLibrary()
+    return [product: product, component: component, branch_name: env.BRANCH_NAME,
+      job_name: env.JOB_NAME, git_url: env.GIT_URL, git_commit: env.GIT_COMMIT,
+      shared_library_name: libName, shared_library_version: libVersion]
+  }
+
+  void publishStep(String stage, String result, String executionId) {
+    publish(stage, [
+      event_type: 'step',
+      step_result: result,
+      step_execution_id: executionId
+    ])
+  }
+
+  def publish(eventName = null, Map details = [:]) {
     try {
       def database = cosmosDbTargetResolver.databaseName()
-      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName))
+      steps.azureCosmosDBCreateDocument(container: 'pipeline-metrics', credentialsId: 'cosmos-connection', database: database, document: collectMetrics(eventName) + details)
     } catch (err) {
       steps.echo "Unable to log metrics '${err}'"
     }

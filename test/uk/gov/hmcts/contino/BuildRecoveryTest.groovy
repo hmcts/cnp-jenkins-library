@@ -1,0 +1,363 @@
+package uk.gov.hmcts.contino
+
+import spock.lang.Specification
+
+class BuildRecoveryTest extends Specification {
+  Map identity = [product: 'apple', component: 'recipe-backend', branch_name: 'master',
+    job_name: 'apple/recipe-backend/master', git_url: 'https://github.com/hmcts/recipe-backend',
+    git_commit: 'abc123', shared_library_name: 'Infrastructure', shared_library_version: 'master']
+
+  Map record(Map details) {
+    return identity + [build_number: '35'] + details
+  }
+
+  List<Map> records() {
+    return [
+      record([event_type: 'step', current_step_name: 'test', step_result: 'STARTED', step_execution_id: 'test-1']),
+      record([event_type: 'step', current_step_name: 'test', step_result: 'SUCCESS', step_execution_id: 'test-1']),
+      record([event_type: 'step', current_step_name: 'securitychecks', step_result: 'STARTED', step_execution_id: 'security-1']),
+      record([event_type: 'step', current_step_name: 'securitychecks', step_result: 'SUCCESS', step_execution_id: 'security-1']),
+      record([event_type: 'step', current_step_name: 'dockerbuild', step_result: 'FAILURE']),
+      record([event_type: 'pipeline', pipeline_result: 'FAILURE', failure_reason: 'AGENT_DISCONNECTED'])
+    ]
+  }
+
+  def 'records published before checkout without Git details do not block recovery'() {
+    given:
+      def checkout = record([event_type: 'step', current_step_name: 'checkout', step_result: 'STARTED', step_execution_id: 'checkout-1'])
+      checkout.git_commit = null
+      checkout.git_url = null
+      def events = [checkout] + records()
+
+    expect:
+      BuildRecovery.rejectionReason(events, identity, '35') == null
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+  }
+
+  def 'a reusable step must have been recorded with the same commit'() {
+    given:
+      def events = records()
+      events.findAll { it.current_step_name == 'securitychecks' }.each { it.git_commit = null }
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+  }
+
+  def 'rejection reason identifies the failed requirement'() {
+    given:
+      def events = records()
+      switch (scenario) {
+        case 'commit': events[0].git_commit = 'other'; break
+        case 'terminal': events.removeAll { it.event_type == 'pipeline' }; break
+        case 'pipelineCommit': events.find { it.event_type == 'pipeline' }.git_commit = null; break
+      }
+
+    expect:
+      BuildRecovery.rejectionReason(events, identity, '35').contains(expected)
+
+    where:
+      scenario         | expected
+      'commit'         | 'git_commit does not match'
+      'terminal'       | 'found 0'
+      'pipelineCommit' | 'same Git commit'
+  }
+
+  def 'results reaching the query cap are rejected as potentially truncated'() {
+    given:
+      def events = records()
+      while (events.size() < resultCount) {
+        events << record([event_type: 'diagnostic', current_step_name: "record-${events.size()}"])
+      }
+
+    expect:
+      (BuildRecovery.rejectionReason(events, identity, '35') == null) == reusable
+
+    where:
+      resultCount                         | reusable
+      BuildRecovery.MAX_COSMOSDB_RECORDS - 1 | true
+      BuildRecovery.MAX_COSMOSDB_RECORDS     | false
+  }
+
+  List<Map> staticChecks(String result) {
+    return [
+      record([event_type: 'step', current_step_name: 'static checks', step_result: 'STARTED', step_execution_id: 'static-1']),
+      record([event_type: 'step', current_step_name: 'static checks', step_result: result, step_execution_id: 'static-1'])
+    ]
+  }
+
+  def 'completed static checks are reusable only when the image exists'() {
+    given:
+      List<String> messages = []
+      def steps = new Expando(echo: { String message -> messages << message }, specific: { String build -> build },
+        copyArtifacts: { Map options -> }, junit: { Map options -> })
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records() + staticChecks('SUCCESS')
+      events.find { it.event_type == 'pipeline' }.last_successful_stage = 'static checks'
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.prepare(imageExists)
+
+    then:
+      recovery.shouldSkip('static checks') == imageExists
+
+    where:
+      imageExists << [true, false]
+  }
+
+  def 'failed static checks are not reusable'() {
+    expect:
+      !BuildRecovery.reusableSteps(records() + staticChecks('FAILURE'), identity, '35').contains('static checks')
+  }
+
+  List<Map> completed(String step) {
+    return [
+      record([event_type: 'step', current_step_name: step, step_result: 'STARTED', step_execution_id: "${step}-1".toString()]),
+      record([event_type: 'step', current_step_name: step, step_result: 'SUCCESS', step_execution_id: "${step}-1".toString()])
+    ]
+  }
+
+  def 'static checks are inferred when every branch that ran succeeded'() {
+    given:
+      def events = records().findAll { it.current_step_name != 'dockerbuild' }
+      ['sonarscan', 'techstack', 'dockerbuild'].each { events.addAll(completed(it)) }
+      events << record([event_type: 'step', current_step_name: 'preview:promotion', step_result: 'FAILURE'])
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').contains('static checks')
+  }
+
+  def 'static checks are not inferred when a branch did not succeed'() {
+    expect:
+      !BuildRecovery.reusableSteps(records(), identity, '35').contains('static checks')
+  }
+
+  def 'only static checks are skipped when other stages succeeded'() {
+    given:
+      def steps = new Expando(echo: { String message -> }, specific: { String build -> build },
+        copyArtifacts: { Map options -> }, junit: { Map options -> })
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records() + staticChecks('SUCCESS') + completed('functionaltest')
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      recovery.shouldSkip('static checks')
+      !recovery.shouldSkip('functionaltest')
+  }
+
+  def 'skipped static checks are recorded in Cosmos metrics'() {
+    given:
+      def publisher = Mock(MetricsPublisher)
+      def recovery = new BuildRecovery(new Expando(echo: { String message -> }), [:], publisher, true)
+
+    when:
+      recovery.recordSkip('static checks')
+
+    then:
+      1 * publisher.publish('static checks', [event_type: 'step', step_result: 'SKIPPED', reused_from_build: null])
+  }
+
+  def 'different source identity or build disables recovery'() {
+    given:
+      def events = records()
+      events[0][field] = 'different'
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+
+    where:
+      field << ['product', 'component', 'branch_name', 'job_name', 'git_url', 'git_commit', 'shared_library_name', 'shared_library_version', 'build_number']
+  }
+
+  def 'a failed child step prevents atomic static-check reuse'() {
+    given:
+      def events = records()
+      events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE'])
+      events.find { it.event_type == 'pipeline' }.failure_reason = 'STEP_FAILURE'
+
+    expect:
+      !BuildRecovery.reusableSteps(events, identity, '35').contains('static checks')
+  }
+
+  def 'missing terminal record or old metrics disable recovery'() {
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+
+    where:
+      events << [[], [[current_step_name: 'test', current_build_current_result: 'FAILURE']]]
+  }
+
+  def 'legacy retry attempt records are not reused'() {
+    given:
+      def events = records()
+      events.findAll { it.current_step_name in ['test', 'securitychecks'] }.each { it.attempt_id = 'old-attempt' }
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+  }
+
+  def 'completed static checks skip as a whole without restoring artifacts'() {
+    given:
+      def steps = new Expando(echo: { String message -> })
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records() + staticChecks('SUCCESS')
+      events.find { it.event_type == 'pipeline' }.last_successful_stage = 'static checks'
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      recovery.shouldSkip('static checks')
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
+      !recovery.shouldSkip('dockerbuild')
+  }
+
+  def 'unavailable Cosmos falls back to normal execution'() {
+    given:
+      def steps = new Expando(echo: { String message -> })
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      recovery.readMetrics(identity, '35') >> { throw new IllegalStateException('unavailable') }
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
+  }
+
+  def 'disabled recovery and nonfailed previous builds do not query Cosmos'() {
+    given:
+      def publisher = Mock(MetricsPublisher)
+      def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(echo: { String message -> }), [previousBuild: previous], publisher, enabled])
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      0 * recovery.readMetrics(_, _)
+      0 * publisher.recoveryContext()
+      !recovery.shouldSkip('test')
+
+    where:
+      enabled | previous
+      false   | [number: 35, result: 'FAILURE']
+      true    | null
+      true    | [number: 35, result: 'SUCCESS']
+      true    | [number: 35, result: 'ABORTED']
+  }
+
+  def 'missing identity disables querying and skipping'() {
+    given:
+      def sourceIdentity = new LinkedHashMap(identity)
+      sourceIdentity.git_commit = null
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> sourceIdentity }
+      def steps = new Expando(echo: { String message -> })
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      0 * recovery.readMetrics(_, _)
+      !recovery.shouldSkip('test')
+  }
+
+  def 'manual interruption is propagated rather than converted to fallback'() {
+    given:
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [new Expando(echo: { String message -> }), [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      recovery.readMetrics(identity, '35') >> { throw new InterruptedException('aborted') }
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      thrown(InterruptedException)
+  }
+
+  def 'only failed pipelines qualify regardless of failure details'() {
+    given:
+      def events = records()
+      events.removeAll { it.current_step_name == 'dockerbuild' }
+      events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: reason])
+      events.find { it.event_type == 'pipeline' }.putAll([pipeline_result: pipelineResult, failure_reason: reason])
+
+    expect:
+      BuildRecovery.reusableSteps(events, identity, '35').isEmpty()
+
+    where:
+      pipelineResult | reason
+      'SUCCESS'      | 'BUILD_FAILURE'
+      'FAILURE'      | 'STEP_FAILURE'
+      'FAILURE'      | null
+  }
+
+  def 'Cosmos check logs results without restoring artifacts and prepare reuses the query'() {
+    given:
+      List<String> messages = []
+      List<Map> copies = []
+      int queries = 0
+      def steps = new Expando(
+        echo: { String message -> messages << message },
+        specific: { String build -> build },
+        copyArtifacts: { Map options -> copies << options },
+        junit: { Map options -> }
+      )
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      recovery.readMetrics(identity, '35') >> { queries++; records() }
+
+    when:
+      recovery.checkPreviousBuild()
+
+    then:
+      queries == 1
+      copies.isEmpty()
+      messages.any { it.contains('querying Cosmos DB pipeline-metrics') && it.contains('build #35') }
+      messages.any { it.contains('Cosmos DB returned 6 records') }
+      !messages.any { it.contains('test=SUCCESS') }
+      messages.any { it.contains('dockerbuild=FAILURE') }
+
+    when:
+      recovery.prepare(true)
+
+    then:
+      queries == 1
+      copies.isEmpty()
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
+  }
+
+  def 'all failed steps are displayed while successful work remains recoverable'() {
+    given:
+      List<String> messages = []
+      def steps = new Expando(echo: { String message -> messages << message })
+      def publisher = Mock(MetricsPublisher) { recoveryContext() >> identity }
+      def recovery = Spy(BuildRecovery, constructorArgs: [steps, [previousBuild: [number: 35, result: 'FAILURE']], publisher, true])
+      def events = records()
+      events << record([event_type: 'step', current_step_name: 'sonarscan', step_result: 'FAILURE', failure_reason: 'STEP_FAILURE'])
+      recovery.readMetrics(identity, '35') >> events
+
+    when:
+      recovery.checkPreviousBuild()
+
+    then:
+      def displayed = messages.findAll { it.startsWith('Previous build #35:') }
+      displayed.size() == 2
+      displayed[0].contains('dockerbuild=FAILURE')
+      displayed[1].contains('sonarscan=FAILURE')
+      displayed.every { !it.contains('failure_reason=') }
+      !recovery.shouldSkip('test')
+      !recovery.shouldSkip('securitychecks')
+  }
+}
