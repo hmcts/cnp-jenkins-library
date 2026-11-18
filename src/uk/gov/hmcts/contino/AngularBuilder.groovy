@@ -95,6 +95,11 @@ class AngularBuilder extends AbstractBuilder {
   }
 
   @Override
+  def checkContainerRuntimeVersion(dockerImage) {
+    builder.checkContainerRuntimeVersion(dockerImage)
+  }
+
+  @Override
   def runProviderVerification(){
     builder.runProviderVerification()
   }

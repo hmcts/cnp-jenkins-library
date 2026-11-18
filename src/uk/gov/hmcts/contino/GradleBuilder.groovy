@@ -384,6 +384,138 @@ EOF
     localSteps.sh "java -version"
   }
 
+  @Override
+  def checkContainerRuntimeVersion(dockerImage) {
+    Map policy = getJavaRuntimeDeprecationPolicy()
+    if (!policy) {
+      return
+    }
+
+    String imageName = dockerImage.getBaseTaggedName()
+    dockerImage.acr.login()
+    steps.sh label: 'Pull image for Java runtime version check', script: "docker pull '${imageName}'"
+
+    // Execute Java directly because distroless images have no shell.
+    String versionOutput = steps.sh(
+      label: 'Detect container Java runtime version',
+      returnStdout: true,
+      script: "docker run --rm --entrypoint /usr/bin/java --env JAVA_TOOL_OPTIONS= '${imageName}' -XshowSettings:properties -version 2>&1"
+    ).trim()
+    String actualVersion = extractJavaRuntimeVersion(versionOutput)
+    Map deprecation = findJavaRuntimeVersionDeprecation(actualVersion, policy)
+
+    if (deprecation) {
+      String requirement = deprecation.major
+        ? "Java ${deprecation.major} runtime ${deprecation.minimumVersion} or greater"
+        : "Java runtime ${deprecation.minimumVersion} or greater"
+      WarningCollector.addPipelineWarning(
+        'old_java_runtime_version',
+        "The built container uses Java runtime ${actualVersion}. Please use ${requirement} by rebuilding with an updated cnp-java-base image.",
+        deprecation.deadline
+      )
+    }
+  }
+
+  Map getJavaRuntimeDeprecationPolicy() {
+    def config = new DeprecationConfig(steps).getDeprecationConfig(steps.env.GIT_URL)
+    def runtimeVersionConfig = config?.java?.runtime_version
+    if (!runtimeVersionConfig?.version || !runtimeVersionConfig?.date_deadline) {
+      steps.echo('[Warning] Java runtime deprecation check skipped because java.runtime_version.version and java.runtime_version.date_deadline are not configured.')
+      return null
+    }
+
+    def invalidMajorVersion = (runtimeVersionConfig.major_versions ?: [:]).find { major, details ->
+      !(details instanceof Map) || !details.version || !details.date_deadline
+    }
+    if (invalidMajorVersion) {
+      steps.echo('[Warning] Java runtime deprecation check skipped because every java.runtime_version.major_versions entry must define version and date_deadline.')
+      return null
+    }
+
+    return [
+      minimumVersion: runtimeVersionConfig.version.toString(),
+      majorVersions: (runtimeVersionConfig.major_versions ?: [:]).collectEntries { major, details ->
+        [(major.toString()): [
+          minimumVersion: details.version.toString(),
+          deadline: LocalDate.parse(details.date_deadline.toString())
+        ]]
+      },
+      deadline: LocalDate.parse(runtimeVersionConfig.date_deadline.toString())
+    ]
+  }
+
+  static Map findJavaRuntimeVersionDeprecation(String actualVersion, Map policy) {
+    Map actual = parseJavaRuntimeVersion(actualVersion)
+    Map globalRule = [minimumVersion: policy.minimumVersion.toString(), deadline: policy.deadline]
+    Map minimum = parseJavaRuntimeVersion(globalRule.minimumVersion)
+
+    if (compareJavaRuntimeVersions(actual, minimum) < 0) {
+      return globalRule
+    }
+
+    String actualMajor = actual.numbers[0].toString()
+    def configuredMajorRule = policy.majorVersions?.get(actualMajor)
+    if (!configuredMajorRule) {
+      return null
+    }
+
+    Map majorRule = [
+      minimumVersion: (configuredMajorRule.minimumVersion ?: configuredMajorRule.version).toString(),
+      deadline: configuredMajorRule.deadline,
+      major: actualMajor
+    ]
+    Map majorMinimum = parseJavaRuntimeVersion(majorRule.minimumVersion)
+    if (majorMinimum.numbers[0] != actual.numbers[0]) {
+      throw new IllegalArgumentException("Major-specific minimum '${majorRule.minimumVersion}' does not match Java major ${actualMajor}.")
+    }
+
+    return compareJavaRuntimeVersions(actual, majorMinimum) < 0 ? majorRule : null
+  }
+
+  static String extractJavaRuntimeVersion(String versionOutput) {
+    def matcher = versionOutput =~ /(?m)^\s*java\.runtime\.version\s*=\s*(\S+)\s*$/
+    if (!matcher.find()) {
+      throw new IllegalArgumentException('Unable to determine java.runtime.version from the built container image.')
+    }
+    String version = matcher.group(1)
+    parseJavaRuntimeVersion(version)
+    return version
+  }
+
+  private static Map parseJavaRuntimeVersion(String rawVersion) {
+    String version = rawVersion?.trim()
+    def matcher = version =~ /^(\d+(?:\.\d+){0,3})(.*)$/
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("'${version ?: rawVersion}' is not a valid Java runtime version.")
+    }
+
+    String suffix = matcher[0][2]
+    if (suffix && !(suffix ==~ /^(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?(?:-[0-9A-Za-z.-]+)?$/)) {
+      throw new IllegalArgumentException("'${version}' is not a valid Java runtime version.")
+    }
+
+    List<Integer> numbers = matcher[0][1].split(/\./).collect { it.toInteger() }
+    while (numbers.size() < 4) {
+      numbers.add(0)
+    }
+    return [numbers: numbers, prerelease: suffix?.startsWith('-')]
+  }
+
+  private static int compareJavaRuntimeVersions(Map actual, Map minimum) {
+    for (int index = 0; index < 4; index++) {
+      if (actual.numbers[index] != minimum.numbers[index]) {
+        return actual.numbers[index] > minimum.numbers[index] ? 1 : -1
+      }
+    }
+    if (actual.prerelease && !minimum.prerelease) {
+      return -1
+    }
+    if (!actual.prerelease && minimum.prerelease) {
+      return 1
+    }
+    return 0
+  }
+
   def hasPlugin(String pluginName) {
     return gradleWithOutput("buildEnvironment").contains(pluginName)
   }

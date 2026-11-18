@@ -1,6 +1,11 @@
 package uk.gov.hmcts.contino
 
+import java.time.LocalDate
 import spock.lang.Specification
+import spock.lang.Unroll
+import uk.gov.hmcts.contino.azure.Acr
+import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class GradleBuilderTest extends Specification {
 
@@ -18,10 +23,17 @@ class GradleBuilderTest extends Specification {
     envVars = [BRANCH_NAME: 'master']
     steps.getEnv() >> envVars
     builder = new GradleBuilder(steps, 'test')
+    DeprecationConfig.deprecationConfigInternal = null
+    WarningCollector.pipelineWarnings.clear()
     sampleCVEReport = new File(this.getClass().getClassLoader().getResource('dependency-check-report.json').toURI()).text
     steps.readFile(_ as String) >> sampleCVEReport
     // Pass the ADO_MAVEN_PAT withAzureKeyvault wrapper through to the closure body.
     steps.withAzureKeyvault(_, _) >> { args -> args[1].call() }
+  }
+
+  def cleanup() {
+    DeprecationConfig.deprecationConfigInternal = null
+    WarningCollector.pipelineWarnings.clear()
   }
 
   def "build calls 'gradle assemble'"() {
@@ -271,5 +283,99 @@ class GradleBuilderTest extends Specification {
     builder.techStackMaintenance()
     then:
     1 * steps.echo('Running Gradle Tech stack maintenance')
+  }
+
+  @Unroll
+  def "checks Java runtime #actual against global and major-specific minimums"() {
+    given:
+      def policy = [
+        minimumVersion: '21.0.9',
+        deadline: LocalDate.of(2099, 1, 1),
+        majorVersions: ['25': [minimumVersion: '25.0.1', deadline: LocalDate.of(2099, 2, 1)]]
+      ]
+
+    expect:
+      (GradleBuilder.findJavaRuntimeVersionDeprecation(actual, policy) == null) == supported
+
+    where:
+      actual              || supported
+      '21.0.9+10-LTS'     || true
+      '21.0.10+7-LTS'     || true
+      '22+36'             || true
+      '25.0.1+8-LTS'      || true
+      '25.0.2+1-LTS'      || true
+      '21.0.8+9-LTS'      || false
+      '21.0.9.1+1-LTS'    || true
+      '25+36-LTS'         || false
+      '25.0.1-ea+4'       || false
+  }
+
+  def "extracts the runtime version from distroless Java settings output"() {
+    given:
+      String output = '''
+Property settings:
+    file.encoding = UTF-8
+    java.runtime.version = 21.0.8+9-LTS
+openjdk version "21.0.8" 2025-07-15 LTS
+'''
+
+    expect:
+      GradleBuilder.extractJavaRuntimeVersion(output) == '21.0.8+9-LTS'
+  }
+
+  def "checks Java by directly overriding the distroless image entrypoint"() {
+    given:
+      String imageName = 'cnpacr.azurecr.io/pcs/pcs-api:pr-123'
+      def acr = Mock(Acr)
+      def dockerImage = Mock(DockerImage)
+      dockerImage.getBaseTaggedName() >> imageName
+      dockerImage.getAcr() >> acr
+      DeprecationConfig.deprecationConfigInternal = [
+        java: [runtime_version: [version: '21.0.9', date_deadline: '2099-01-01']]
+      ]
+      String versionOutput = '''
+    java.runtime.version = 21.0.8+9-LTS
+openjdk version "21.0.8" 2025-07-15 LTS
+'''
+
+    when:
+      builder.checkContainerRuntimeVersion(dockerImage)
+
+    then:
+      1 * acr.login()
+      1 * steps.sh({
+        it instanceof Map &&
+          it.label == 'Pull image for Java runtime version check' &&
+          it.script == "docker pull '${imageName}'"
+      })
+      1 * steps.sh({
+        it instanceof Map &&
+          it.returnStdout &&
+          it.script.contains('--entrypoint /usr/bin/java') &&
+          it.script.contains('--env JAVA_TOOL_OPTIONS=') &&
+          !it.script.contains('sh -c')
+      }) >> versionOutput
+      WarningCollector.pipelineWarnings.size() == 1
+      WarningCollector.pipelineWarnings.first().warningKey == 'old_java_runtime_version'
+      WarningCollector.pipelineWarnings.first().warningMessage.contains('21.0.8+9-LTS')
+  }
+
+  def "reads Java runtime minimums and deadlines from deprecation config"() {
+    given:
+      DeprecationConfig.deprecationConfigInternal = [
+        java: [runtime_version: [
+          version: '21.0.9',
+          date_deadline: '2099-01-01',
+          major_versions: ['25': [version: '25.0.1', date_deadline: '2099-02-01']]
+        ]]
+      ]
+
+    when:
+      Map policy = builder.getJavaRuntimeDeprecationPolicy()
+
+    then:
+      policy.minimumVersion == '21.0.9'
+      policy.deadline == LocalDate.of(2099, 1, 1)
+      policy.majorVersions == ['25': [minimumVersion: '25.0.1', deadline: LocalDate.of(2099, 2, 1)]]
   }
 }

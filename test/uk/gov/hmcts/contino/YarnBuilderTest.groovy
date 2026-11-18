@@ -3,7 +3,9 @@ package uk.gov.hmcts.contino
 import java.time.LocalDate
 import spock.lang.Specification
 import spock.lang.Unroll
+import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 class YarnBuilderTest extends Specification {
   static final String YARN_CMD = 'yarn'
@@ -50,10 +52,12 @@ class YarnBuilderTest extends Specification {
 
     builder = new YarnBuilder(steps)
     DeprecationConfig.deprecationConfigInternal = null
+    WarningCollector.pipelineWarnings.clear()
   }
 
   def cleanup() {
     DeprecationConfig.deprecationConfigInternal = null
+    WarningCollector.pipelineWarnings.clear()
   }
 
   def "build calls 'yarn install' and 'yarn lint'"() {
@@ -432,4 +436,40 @@ def "securityCheck calls 'yarn audit'"() {
       def exception = thrown(IllegalArgumentException)
       exception.message.contains("does not match Node.js major 24")
   }
+
+  def "checks Node.js runtime by directly overriding the image entrypoint"() {
+    given:
+      String imageName = 'cnpacr.azurecr.io/plum/frontend:pr-123'
+      def acr = Mock(Acr)
+      def dockerImage = Mock(DockerImage)
+      dockerImage.getBaseTaggedName() >> imageName
+      dockerImage.getAcr() >> acr
+      DeprecationConfig.deprecationConfigInternal = [
+        nodejs: [node_version: [version: '22.23.4', date_deadline: '2099-01-01']]
+      ]
+      String versionOutput = 'v22.23.3\n'
+
+    when:
+      builder.checkContainerRuntimeVersion(dockerImage)
+
+    then:
+      1 * acr.login()
+      1 * steps.sh({
+        it instanceof Map &&
+          it.label == 'Pull image for Node.js runtime version check' &&
+          it.script == "docker pull '${imageName}'"
+      })
+      1 * steps.sh({
+        it instanceof Map &&
+          it.returnStdout &&
+          it.script.contains('--entrypoint node') &&
+          it.script.contains('--env NODE_OPTIONS=') &&
+          !it.script.contains('sh -c')
+      }) >> versionOutput
+      WarningCollector.pipelineWarnings.size() == 1
+      WarningCollector.pipelineWarnings.first().warningKey == 'old_nodejs_runtime_version'
+      WarningCollector.pipelineWarnings.first().warningMessage.contains('built container')
+      WarningCollector.pipelineWarnings.first().warningMessage.contains('runtime v22.23.3')
+  }
+
   }
