@@ -405,9 +405,11 @@ EOF
     Map deprecation = findJavaRuntimeVersionDeprecation(actualVersion, policy)
 
     if (deprecation) {
-      String requirement = deprecation.major
-        ? "Java ${deprecation.major} runtime ${deprecation.minimumVersion} or greater"
-        : "Java runtime ${deprecation.minimumVersion} or greater"
+      String requirement = deprecation.unsupportedMajor
+        ? "a supported Java LTS runtime (Java ${policy.supportedMajorVersions.join(' or Java ')})"
+        : deprecation.major
+          ? "Java ${deprecation.major} runtime ${deprecation.minimumVersion} or greater"
+          : "Java runtime ${deprecation.minimumVersion} or greater"
       WarningCollector.addPipelineWarning(
         'old_java_runtime_version',
         "The built container uses Java runtime ${actualVersion}. ${policy.message ? policy.message + ' ' : ''}Please use ${requirement} by rebuilding with an updated cnp-java-base image.",
@@ -441,12 +443,18 @@ EOF
         ]]
       },
       deadline: LocalDate.parse(runtimeVersionConfig.date_deadline.toString()),
-      message: runtimeVersionConfig.message?.toString()
+      message: runtimeVersionConfig.message?.toString(),
+      supportedMajorVersions: (runtimeVersionConfig.supported_major_versions ?: []).collect { it.toString() }
     ]
   }
 
   static Map findJavaRuntimeVersionDeprecation(String actualVersion, Map policy) {
     Map actual = parseJavaRuntimeVersion(actualVersion)
+    String actualMajor = actual.numbers[0].toString()
+    if (policy.supportedMajorVersions && !policy.supportedMajorVersions.contains(actualMajor)) {
+      return [unsupportedMajor: true, deadline: policy.deadline]
+    }
+
     Map globalRule = [minimumVersion: policy.minimumVersion.toString(), deadline: policy.deadline]
     Map minimum = parseJavaRuntimeVersion(globalRule.minimumVersion)
 
@@ -454,7 +462,6 @@ EOF
       return globalRule
     }
 
-    String actualMajor = actual.numbers[0].toString()
     def configuredMajorRule = policy.majorVersions?.get(actualMajor)
     if (!configuredMajorRule) {
       return null

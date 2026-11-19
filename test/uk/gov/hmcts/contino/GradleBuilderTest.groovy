@@ -291,6 +291,7 @@ class GradleBuilderTest extends Specification {
       def policy = [
         minimumVersion: '21.0.13.1',
         deadline: LocalDate.of(2099, 1, 1),
+        supportedMajorVersions: ['21', '25'],
         majorVersions: ['25': [minimumVersion: '25.0.5.1', deadline: LocalDate.of(2099, 2, 1)]]
       ]
 
@@ -301,13 +302,14 @@ class GradleBuilderTest extends Specification {
       actual              || supported
       '21.0.13.1+2-LTS'   || true
       '21.0.14+7-LTS'     || true
-      '22+36'             || true
       '25.0.5.1+2-LTS'    || true
       '25.0.6+1-LTS'      || true
       '21.0.13.0.3+1-LTS' || false
       '21.0.13+9-LTS'     || false
       '25.0.5.0.3+1-LTS'  || false
       '25.0.5.1-ea+4'     || false
+      '22.0.2+9'          || false
+      '24.0.2+12'         || false
   }
 
   def "extracts the runtime version from distroless Java settings output"() {
@@ -372,6 +374,7 @@ openjdk version "21.0.8" 2025-07-15 LTS
           version: '21.0.13.1',
           date_deadline: '2099-01-01',
           message: 'This version is affected by CVE-2026-114938.',
+          supported_major_versions: ['21', '25'],
           major_versions: ['25': [version: '25.0.5.1', date_deadline: '2099-02-01']]
         ]]
       ]
@@ -383,6 +386,7 @@ openjdk version "21.0.8" 2025-07-15 LTS
       policy.minimumVersion == '21.0.13.1'
       policy.deadline == LocalDate.of(2099, 1, 1)
       policy.message == 'This version is affected by CVE-2026-114938.'
+      policy.supportedMajorVersions == ['21', '25']
       policy.majorVersions == ['25': [minimumVersion: '25.0.5.1', deadline: LocalDate.of(2099, 2, 1)]]
   }
 }
