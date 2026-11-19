@@ -410,7 +410,7 @@ EOF
         : "Java runtime ${deprecation.minimumVersion} or greater"
       WarningCollector.addPipelineWarning(
         'old_java_runtime_version',
-        "The built container uses Java runtime ${actualVersion}. Please use ${requirement} by rebuilding with an updated cnp-java-base image.",
+        "The built container uses Java runtime ${actualVersion}. ${policy.message ? policy.message + ' ' : ''}Please use ${requirement} by rebuilding with an updated cnp-java-base image.",
         deprecation.deadline
       )
     }
@@ -440,7 +440,8 @@ EOF
           deadline: LocalDate.parse(details.date_deadline.toString())
         ]]
       },
-      deadline: LocalDate.parse(runtimeVersionConfig.date_deadline.toString())
+      deadline: LocalDate.parse(runtimeVersionConfig.date_deadline.toString()),
+      message: runtimeVersionConfig.message?.toString()
     ]
   }
 
@@ -484,7 +485,7 @@ EOF
 
   private static Map parseJavaRuntimeVersion(String rawVersion) {
     String version = rawVersion?.trim()
-    def matcher = version =~ /^(\d+(?:\.\d+){0,3})(.*)$/
+    def matcher = version =~ /^(\d+(?:\.\d+)*)(.*)$/
     if (!matcher.matches()) {
       throw new IllegalArgumentException("'${version ?: rawVersion}' is not a valid Java runtime version.")
     }
@@ -495,16 +496,16 @@ EOF
     }
 
     List<Integer> numbers = matcher[0][1].split(/\./).collect { it.toInteger() }
-    while (numbers.size() < 4) {
-      numbers.add(0)
-    }
     return [numbers: numbers, prerelease: suffix?.startsWith('-')]
   }
 
   private static int compareJavaRuntimeVersions(Map actual, Map minimum) {
-    for (int index = 0; index < 4; index++) {
-      if (actual.numbers[index] != minimum.numbers[index]) {
-        return actual.numbers[index] > minimum.numbers[index] ? 1 : -1
+    int componentCount = Math.max(actual.numbers.size(), minimum.numbers.size())
+    for (int index = 0; index < componentCount; index++) {
+      int actualComponent = index < actual.numbers.size() ? actual.numbers[index] : 0
+      int minimumComponent = index < minimum.numbers.size() ? minimum.numbers[index] : 0
+      if (actualComponent != minimumComponent) {
+        return actualComponent > minimumComponent ? 1 : -1
       }
     }
     if (actual.prerelease && !minimum.prerelease) {

@@ -289,9 +289,9 @@ class GradleBuilderTest extends Specification {
   def "checks Java runtime #actual against global and major-specific minimums"() {
     given:
       def policy = [
-        minimumVersion: '21.0.9',
+        minimumVersion: '21.0.13.1',
         deadline: LocalDate.of(2099, 1, 1),
-        majorVersions: ['25': [minimumVersion: '25.0.1', deadline: LocalDate.of(2099, 2, 1)]]
+        majorVersions: ['25': [minimumVersion: '25.0.5.1', deadline: LocalDate.of(2099, 2, 1)]]
       ]
 
     expect:
@@ -299,15 +299,15 @@ class GradleBuilderTest extends Specification {
 
     where:
       actual              || supported
-      '21.0.9+10-LTS'     || true
-      '21.0.10+7-LTS'     || true
+      '21.0.13.1+2-LTS'   || true
+      '21.0.14+7-LTS'     || true
       '22+36'             || true
-      '25.0.1+8-LTS'      || true
-      '25.0.2+1-LTS'      || true
-      '21.0.8+9-LTS'      || false
-      '21.0.9.1+1-LTS'    || true
-      '25+36-LTS'         || false
-      '25.0.1-ea+4'       || false
+      '25.0.5.1+2-LTS'    || true
+      '25.0.6+1-LTS'      || true
+      '21.0.13.0.3+1-LTS' || false
+      '21.0.13+9-LTS'     || false
+      '25.0.5.0.3+1-LTS'  || false
+      '25.0.5.1-ea+4'     || false
   }
 
   def "extracts the runtime version from distroless Java settings output"() {
@@ -331,7 +331,11 @@ openjdk version "21.0.8" 2025-07-15 LTS
       dockerImage.getBaseTaggedName() >> imageName
       dockerImage.getAcr() >> acr
       DeprecationConfig.deprecationConfigInternal = [
-        java: [runtime_version: [version: '21.0.9', date_deadline: '2099-01-01']]
+        java: [runtime_version: [
+          version: '21.0.13.1',
+          date_deadline: '2099-01-01',
+          message: 'This version is affected by CVE-2026-114938.'
+        ]]
       ]
       String versionOutput = '''
     java.runtime.version = 21.0.8+9-LTS
@@ -358,15 +362,17 @@ openjdk version "21.0.8" 2025-07-15 LTS
       WarningCollector.pipelineWarnings.size() == 1
       WarningCollector.pipelineWarnings.first().warningKey == 'old_java_runtime_version'
       WarningCollector.pipelineWarnings.first().warningMessage.contains('21.0.8+9-LTS')
+      WarningCollector.pipelineWarnings.first().warningMessage.contains('CVE-2026-114938')
   }
 
   def "reads Java runtime minimums and deadlines from deprecation config"() {
     given:
       DeprecationConfig.deprecationConfigInternal = [
         java: [runtime_version: [
-          version: '21.0.9',
+          version: '21.0.13.1',
           date_deadline: '2099-01-01',
-          major_versions: ['25': [version: '25.0.1', date_deadline: '2099-02-01']]
+          message: 'This version is affected by CVE-2026-114938.',
+          major_versions: ['25': [version: '25.0.5.1', date_deadline: '2099-02-01']]
         ]]
       ]
 
@@ -374,8 +380,9 @@ openjdk version "21.0.8" 2025-07-15 LTS
       Map policy = builder.getJavaRuntimeDeprecationPolicy()
 
     then:
-      policy.minimumVersion == '21.0.9'
+      policy.minimumVersion == '21.0.13.1'
       policy.deadline == LocalDate.of(2099, 1, 1)
-      policy.majorVersions == ['25': [minimumVersion: '25.0.1', deadline: LocalDate.of(2099, 2, 1)]]
+      policy.message == 'This version is affected by CVE-2026-114938.'
+      policy.majorVersions == ['25': [minimumVersion: '25.0.5.1', deadline: LocalDate.of(2099, 2, 1)]]
   }
 }
