@@ -135,6 +135,7 @@ def call(params) {
                 } else {
                   acr.build(dockerImage, buildArgs)
                 }
+                builder.checkContainerRuntimeVersion(dockerImage)
               }
             }
           }
