@@ -22,6 +22,9 @@ class AppPipelineConfigTest extends Specification {
 
   def "ensure defaults"() {
     expect:
+      !pipelineConfig.immutableImagePromotion
+      pipelineConfig.imageCandidate == [:]
+      pipelineConfig.approvedImageReference == null
       assertThat(pipelineConfig.migrateDb).isFalse()
       assertThat(pipelineConfig.e2eTest).isFalse()
       assertThat(pipelineConfig.performanceTest).isFalse()
@@ -42,6 +45,32 @@ class AppPipelineConfigTest extends Specification {
       assertThat(pipelineConfig.pactConsumerTestsEnabled).isFalse()
       assertThat(pipelineConfig.pactConsumerCanIDeployEnabled).isFalse()
       assertThat(pipelineConfig.buildCache).isTrue()
+  }
+
+  def "immutable image approval is opt-in and only accepts this build's defensive descriptor copy"() {
+    given:
+      def reference = 'cnpacr.azurecr.io/xui/webapp@sha256:' + ('a' * 64)
+      pipelineConfig.imageCandidate = [imageReference: reference]
+
+    when:
+      dsl.immutableImageCandidate()
+    then:
+      thrown(IllegalStateException)
+
+    when:
+      dsl.enableImmutableImagePromotion()
+      def copy = dsl.immutableImageCandidate()
+      copy.imageReference = 'another image'
+      dsl.approveImmutableImage('another image')
+    then:
+      thrown(IllegalArgumentException)
+      pipelineConfig.approvedImageReference == null
+      pipelineConfig.imageCandidate.imageReference == reference
+
+    when:
+      dsl.approveImmutableImage(reference)
+    then:
+      pipelineConfig.approvedImageReference == reference
   }
 
   def "ensure securityScan can be set in steps"() {
