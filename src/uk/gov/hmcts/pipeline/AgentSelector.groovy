@@ -49,6 +49,12 @@ class AgentSelector implements Serializable {
   }
 
   private static String selectLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback, boolean allowProductAgentLabelFallback) {
+    String resolvedLabel = resolveLabelForEnvironment(environment, envVars, product, allowProductFallback, allowProductAgentLabelFallback)
+    // TEMPORARY (DTSPO-31776): redirect every pipeline using this library branch to -nossh agent variants for keyless-image testing
+    return resolvedLabel ? "${resolvedLabel}-nossh" : resolvedLabel
+  }
+
+  private static String resolveLabelForEnvironment(String environment, Object envVars, String product, boolean allowProductFallback, boolean allowProductAgentLabelFallback) {
     String normalisedEnvironment = normaliseEnvironment(environment)
     if (!normalisedEnvironment) {
       return ''

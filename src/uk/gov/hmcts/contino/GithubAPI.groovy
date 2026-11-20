@@ -9,9 +9,11 @@ class GithubAPI {
   static final String API_URL = 'https://api.github.com/repos'
 
   def steps
+  private GithubRateLimitRotator githubRateLimitRotator
 
   GithubAPI(steps) {
     this.steps = steps
+    this.githubRateLimitRotator = new GithubRateLimitRotator(steps)
   }
 
   private String resolveCredentialsId() {
@@ -143,13 +145,14 @@ class GithubAPI {
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
     def credentialsId = resolveCredentialsId()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: credentialsId,
+    def response = githubRateLimitRotator.httpRequest(credentialsId, [
+      httpMode: 'GET',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
       consoleLogResponseBody: true,
-      validResponseCodes: '200')
+      validResponseCodes: '200'
+    ])
 
     if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
@@ -167,13 +170,14 @@ class GithubAPI {
     this.steps.echo "Get topic cache"
     def project = currentProject()
     def credentialsId = resolveCredentialsId()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: credentialsId,
+    def response = githubRateLimitRotator.httpRequest(credentialsId, [
+      httpMode: 'GET',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/topics",
       consoleLogResponseBody: true,
-      validResponseCodes: '200')
+      validResponseCodes: '200'
+    ])
 
       if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
@@ -192,13 +196,14 @@ class GithubAPI {
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
     def credentialsId = resolveCredentialsId()
-    def response = this.steps.httpRequest(httpMode: 'GET',
-      authentication: credentialsId,
+    def response = githubRateLimitRotator.httpRequest(credentialsId, [
+      httpMode: 'GET',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/pulls/${issueNumber}",
       consoleLogResponseBody: true,
-      validResponseCodes: '200')
+      validResponseCodes: '200'
+    ])
 
     if (response.status == 200) {
       def json_response = new JsonSlurperClassic().parseText(response.content)
@@ -228,14 +233,15 @@ class GithubAPI {
     this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
     def credentialsId = resolveCredentialsId()
-    def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: credentialsId,
+    def response = githubRateLimitRotator.httpRequest(credentialsId, [
+      httpMode: 'POST',
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
       requestBody: "${body}",
       consoleLogResponseBody: true,
-      validResponseCodes: '200')
+      validResponseCodes: '200'
+    ])
 
     if (response.status == 200) {
       if (isCacheValid()) {
@@ -349,15 +355,14 @@ class GithubAPI {
       return null
     }
 
-    def response = this.steps.httpRequest(
+    def response = githubRateLimitRotator.httpRequest(credentialsId, [
       httpMode: 'GET',
-      authentication: credentialsId,
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/releases/latest",
       consoleLogResponseBody: false,
       validResponseCodes: '200,404'
-    )
+    ])
 
     if (response.status == 404) {
       return null
