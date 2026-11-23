@@ -1,8 +1,10 @@
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 def call(Map<String, String> params) {
   def product = params.product
   def component = params.component
   def branch = env.CHANGE_BRANCH
-  def credentialsId = env.GIT_CREDENTIALS_ID
+  def credentialsId = new RateLimitedGithub(this).getDistributedCredentialId(env.GIT_CREDENTIALS_ID)
   def gitEmailId = env.GIT_APP_EMAIL_ID
 
   writeFile file: 'check-helm-version-bumped.sh', text: libraryResource('uk/gov/hmcts/helm/check-helm-version-bumped.sh')

@@ -6,6 +6,7 @@ import uk.gov.hmcts.contino.TerraformTagMap
 import uk.gov.hmcts.contino.MetricsPublisher
 import uk.gov.hmcts.pipeline.AKSSubscriptions
 import uk.gov.hmcts.contino.RepositoryUrl
+import uk.gov.hmcts.contino.RateLimitedGithub
 
 def call(product, environment, tfPlanOnly, subscription) {
   call(product, null, environment, tfPlanOnly, subscription)
@@ -149,7 +150,7 @@ def call(Map<String, ?> params) {
         onPR {
           
           String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(env.CHANGE_URL)
-          def credentialsId = env.GIT_CREDENTIALS_ID
+          def credentialsId = new RateLimitedGithub(this).getDistributedCredentialId(env.GIT_CREDENTIALS_ID)
           withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'APP_ID')]) {
             sh """
               tfcmt --owner hmcts \

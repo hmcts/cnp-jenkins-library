@@ -1,5 +1,7 @@
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 def call(pipelineConfig, Closure block) {
-  def credentialsId = env.GIT_CREDENTIALS_ID
+  def credentialsId = new RateLimitedGithub(this).getDistributedCredentialId(env.GIT_CREDENTIALS_ID)
   folderExists('infrastructure') {
     writeFile file: 'check-infrastructure-files-changed.sh', text: libraryResource('uk/gov/hmcts/infrastructure/check-infrastructure-files-changed.sh')
 

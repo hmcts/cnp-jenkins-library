@@ -1,6 +1,7 @@
 import jenkins.scm.api.SCMSource;
 import uk.gov.hmcts.contino.PipelineCallbacksConfig;
 import uk.gov.hmcts.contino.PipelineCallbacksRunner;
+import uk.gov.hmcts.contino.RateLimitedGithub;
 
 /**
 * Compatibility for external consumers that were using this (mostly IDAM)
@@ -25,8 +26,9 @@ def call(params) {
       def credentialsId = SCMSource.SourceByItem.findSource(currentBuild.rawBuild.parent).credentialsId
       env.GIT_CREDENTIALS_ID = credentialsId
       //This code assumes it uses GitHub App Authentication
-      def response = steps.httpRequest url: "https://api.github.com/users/$credentialsId%5Bbot%5D", httpMode: 'GET', acceptType: 'APPLICATION_JSON',
-        authentication: credentialsId
+      def response = new RateLimitedGithub(this).getWithDistributedCredentials(credentialsId, [
+        url: "https://api.github.com/users/$credentialsId%5Bbot%5D", acceptType: 'APPLICATION_JSON'
+      ])
       def gitUserId = steps.readYaml(text: response.content).id
       env.GIT_APP_EMAIL_ID = gitUserId + "+" + credentialsId + "[bot]@users.noreply.github.com"
     } catch (err) {

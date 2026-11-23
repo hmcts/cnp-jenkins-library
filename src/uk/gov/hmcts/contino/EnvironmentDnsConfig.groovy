@@ -16,13 +16,12 @@ class EnvironmentDnsConfig {
       def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
 
       def dnsConfigMap = [:]
-      def response = steps.httpRequest(
+      def response = new RateLimitedGithub(steps).getWithDistributedCredentials(steps.env.GIT_CREDENTIALS_ID, [
         consoleLogResponseBody: true,
-        authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
         url: "https://raw.githubusercontent.com/hmcts/${repo}/master/private-dns-config.yml",
         validResponseCodes: '200'
-      )
+      ])
       dnsConfigMap = steps.readYaml (text: response.content)
       this.envDnsConfigMap = mapToEnvironmentConfig(product, component, dnsConfigMap)
     }

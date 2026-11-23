@@ -1,17 +1,18 @@
 package uk.gov.hmcts.contino
 
-class GithubRateLimitRotator {
+class RateLimitedGithub implements Serializable {
 
+  // List of various Github Apps to distribute requests across, these must exist as credentials within Jenkins!
   private static final Map<String, List<String>> POOLS = [
     'tag-verification': [
       'hmcts-jenkins-tag-verification',
-      'hmcts-jenkins-tag-verification-1',
-      'hmcts-jenkins-tag-verification-2'
+      'hmcts-jenkins-tag-verification-2',
+      'hmcts-jenkins-tag-verification-3'
     ],
     'allowed-branches': [
       'hmcts-jenkins-allowed-branches',
-      'hmcts-jenkins-allowed-branches-1',
-      'hmcts-jenkins-allowed-branches-2'
+      'hmcts-jenkins-allowed-branches-2',
+      'hmcts-jenkins-allowed-branches-3'
     ],
     'a-to-c': [
       'hmcts-jenkins-a-to-c',
@@ -32,50 +33,82 @@ class GithubRateLimitRotator {
 
   private final def steps
 
-  GithubRateLimitRotator(def steps) {
+  RateLimitedGithub(def steps) {
     this.steps = steps
-    for (List<String> pool : POOLS.values()) {
-      verifyPool(pool)
-    }
   }
 
-  def httpRequest(String credentialsId, Map params) {
-    if (!credentialsId) {
-      throw new IllegalArgumentException('A GitHub credential ID is required')
-    }
-
+  String getDistributedCredentialId(String credentialsId) {
     List<String> pool = resolvePool(credentialsId)
     if (pool.isEmpty()) {
-      return execute(credentialsId, params)
+      this.steps?.echo("Selected Github App credential: '${credentialsId}'")
+      return credentialsId
     }
+    String selectedCredentialId = pool[choosePrimaryOrSecondary(credentialsId)]
+    this.steps?.echo("Selected Github App credential: '${selectedCredentialId}'")
+    return selectedCredentialId
+  }
 
-    int startIndex = pool.indexOf(credentialsId)
+  protected int choosePrimaryOrSecondary(String credentialsId) {
+    String key = this.steps?.env?.GIT_URL ?
+      this.steps.env.GIT_URL.toString() :
+      (this.steps?.env?.JOB_NAME ?: credentialsId).toString()
+    return new BigInteger(
+      java.security.MessageDigest.getInstance('SHA-256')
+        .digest(key.getBytes('UTF-8'))
+    ).abs().mod(BigInteger.valueOf(2)).intValue()
+  }
 
-    for (int i = startIndex; i < pool.size(); i++) {
-      String candidate = pool[i]
-      try {
-        def response = execute(candidate, params)
-        if (isCoreRateLimitExhausted(response)) {
-          boolean allowRetry = isSafeRetry(params)
-          if (!allowRetry) {
-            throw httpError(response)
-          }
-          continue
-        }
-        if (isHttpError(response)) {
-          if (isStatusAllowed(response.status, params.validResponseCodes)) {
-            return response
-          }
-          throw httpError(response)
-        }
+  def getWithDistributedCredentials(String credentialsId, Map params) {
+    return request(credentialsId, params, 'GET', true)
+  }
+
+  def headWithDistributedCredentials(String credentialsId, Map params) {
+    return request(credentialsId, params, 'HEAD', true)
+  }
+
+  def postWithDistributedCredentials(String credentialsId, Map params) {
+    return request(credentialsId, params, 'POST', false)
+  }
+
+  def putWithDistributedCredentials(String credentialsId, Map params) {
+    return request(credentialsId, params, 'PUT', false)
+  }
+
+  def patchWithDistributedCredentials(String credentialsId, Map params) {
+    return request(credentialsId, params, 'PATCH', false)
+  }
+
+  def deleteWithDistributedCredentials(String credentialsId, Map params) {
+    return request(credentialsId, params, 'DELETE', false)
+  }
+
+  private def request(String credentialsId, Map params, String method, boolean allowRetry) {
+    List<String> pool = resolvePool(credentialsId)
+    String selected = getDistributedCredentialId(credentialsId)
+    Map request = new LinkedHashMap(params)
+    request.httpMode = method
+    request.authentication = selected
+    if (!allowRetry || pool.isEmpty()) {
+      def response = this.steps.httpRequest(request)
+      if (isHttpError(response) && params.validResponseCodes && isStatusAllowed(response.status, params.validResponseCodes)) {
         return response
-      } catch (RuntimeException err) {
-        throw err
-      } catch (Throwable err) {
-        throw err
       }
+      if (isHttpError(response) && params.validResponseCodes) {
+        throw httpError(response)
+      }
+      return response
     }
-    throw new IllegalStateException("GitHub credential pool exhausted for '${credentialsId}'")
+
+    request.validResponseCodes = '100:599'
+    def response = this.steps.httpRequest(request)
+    if (isCoreRateLimitExhausted(response)) {
+      request.authentication = pool[2]
+      response = this.steps.httpRequest(request)
+    }
+    if (isHttpError(response) && !isStatusAllowed(response.status, params.validResponseCodes)) {
+      throw httpError(response)
+    }
+    return response
   }
 
   List<String> resolvePool(String credentialsId) {
@@ -89,33 +122,6 @@ class GithubRateLimitRotator {
 
   Map<String, List<String>> getPools() {
     return POOLS.collectEntries { key, value -> [key, Collections.unmodifiableList(new ArrayList<String>(value))] }
-  }
-
-  private def execute(String credentialsId, Map params) {
-    Map request = new LinkedHashMap(params)
-    request.authentication = credentialsId
-    request.validResponseCodes = '100:599'
-    return this.steps.httpRequest(request)
-  }
-
-  private void verifyPool(List<String> pool) {
-    for (String credentialId : pool) {
-      try {
-        def credential = this.steps.usernamePassword(
-          credentialsId: credentialId,
-          usernameVariable: 'GITHUB_RATE_LIMIT_ROTATOR_APP_ID',
-          passwordVariable: 'GITHUB_RATE_LIMIT_ROTATOR_TOKEN'
-        )
-        this.steps.withCredentials([credential]) {
-          // Credential resolution is deliberately verified without making a GitHub request.
-        }
-      } catch (Throwable err) {
-        throw new IllegalStateException(
-          "GitHub credential '${credentialId}' in pool is missing or cannot be bound",
-          err
-        )
-      }
-    }
   }
 
   private boolean isHttpError(def response) {
@@ -153,12 +159,6 @@ class GithubRateLimitRotator {
     String resource = headerValue(response, 'x-ratelimit-resource')
     return !resource || resource.equalsIgnoreCase('core')
   }
-
-  private boolean isSafeRetry(Map params) {
-    String method = (params.httpMode ?: 'GET').toString().toUpperCase()
-    return method in ['GET', 'HEAD']
-  }
-
 
   private String headerValue(def response, String name) {
     def headers = response.headers

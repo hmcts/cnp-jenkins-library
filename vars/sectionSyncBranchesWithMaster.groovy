@@ -1,5 +1,7 @@
 #!groovy
 
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 // Section to Sync branches with master branch
 // USAGE:
 
@@ -12,7 +14,7 @@
 def call(params) {
     def branchesToSync = params.branchestoSync != null ? params.branchestoSync : ['ithc', 'demo', 'perftest']
     def product = params.product
-    def credentialsId = env.GIT_CREDENTIALS_ID
+    def credentialsId = new RateLimitedGithub(this).getDistributedCredentialId(env.GIT_CREDENTIALS_ID)
 
     if (!branchesToSync.isEmpty()) {
         stageWithAgent("Sync Branches with Master", product) {

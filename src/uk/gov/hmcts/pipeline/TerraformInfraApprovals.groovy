@@ -1,5 +1,7 @@
 package uk.gov.hmcts.pipeline
 
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 import uk.gov.hmcts.contino.RepositoryUrl
 
 class TerraformInfraApprovals {
@@ -26,13 +28,13 @@ class TerraformInfraApprovals {
 
       String repositoryShortUrl = new RepositoryUrl().getShortWithoutOrgOrSuffix(this.steps.env.GIT_URL)
       ["global.json": "200", "${repositoryShortUrl}.json": "200:404"].each { k,v ->
-        def response = steps.httpRequest(
+        def response = new RateLimitedGithub(steps).getWithDistributedCredentials(steps.env.GIT_CREDENTIALS_ID, [
           consoleLogResponseBody: true,
           timeout: 10,
           url: "${githubBaseUrl}/${k}",
           validResponseCodes: v,
           outputFile: k
-        )
+        ])
         if (response.status == 200) {
           this.steps.echo "Infra approvals file exists"
           localInfraApprovals << k

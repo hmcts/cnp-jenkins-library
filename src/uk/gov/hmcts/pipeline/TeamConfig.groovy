@@ -1,5 +1,7 @@
 package uk.gov.hmcts.pipeline
 
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 class TeamConfig {
 
   def steps
@@ -44,12 +46,12 @@ class TeamConfig {
     if (teamConfigMap ==null ){
       def repo = steps.env.JENKINS_CONFIG_REPO ?: "cnp-jenkins-config"
 
-      def response = steps.httpRequest(
+      def response = new RateLimitedGithub(steps).getWithDistributedCredentials(steps.env.GIT_CREDENTIALS_ID, [
         consoleLogResponseBody: true,
         timeout: 10,
         url: "https://raw.githubusercontent.com/hmcts/${repo}/master/team-config.yml",
         validResponseCodes: '200'
-      )
+      ])
       teamConfigMap = steps.readYaml (text: response.content)
     }
     return teamConfigMap

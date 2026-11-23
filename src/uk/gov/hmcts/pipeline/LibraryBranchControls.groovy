@@ -1,5 +1,9 @@
 package uk.gov.hmcts.pipeline
 
+import uk.gov.hmcts.contino.RateLimitedGithub
+
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 import java.time.LocalDate
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
@@ -20,13 +24,12 @@ class LibraryBranchControls {
   }
 
   def getLibraryBranchControls() {
-    def response = steps.httpRequest(
+    def response = new RateLimitedGithub(steps).getWithDistributedCredentials('hmcts-jenkins-allowed-branches', [
       consoleLogResponseBody: true,
-      authentication: steps.env.GIT_CREDENTIALS_ID,
       timeout: 10,
       url: getConfigRepoUrl(),
       validResponseCodes: '200'
-    )
+    ])
     libraryBranchControls = steps.readYaml(text: response.content)
     return libraryBranchControls
   }

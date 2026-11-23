@@ -9,11 +9,11 @@ class GithubAPI {
   static final String API_URL = 'https://api.github.com/repos'
 
   def steps
-  private GithubRateLimitRotator githubRateLimitRotator
+  private RateLimitedGithub rateLimitedGithub
 
   GithubAPI(steps) {
     this.steps = steps
-    this.githubRateLimitRotator = new GithubRateLimitRotator(steps)
+    this.rateLimitedGithub = new RateLimitedGithub(steps)
   }
 
   private String resolveCredentialsId() {
@@ -145,8 +145,7 @@ class GithubAPI {
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
     def credentialsId = resolveCredentialsId()
-    def response = githubRateLimitRotator.httpRequest(credentialsId, [
-      httpMode: 'GET',
+    def response = rateLimitedGithub.getWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
@@ -170,8 +169,7 @@ class GithubAPI {
     this.steps.echo "Get topic cache"
     def project = currentProject()
     def credentialsId = resolveCredentialsId()
-    def response = githubRateLimitRotator.httpRequest(credentialsId, [
-      httpMode: 'GET',
+    def response = rateLimitedGithub.getWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/topics",
@@ -196,8 +194,7 @@ class GithubAPI {
     def project = currentProject()
     def issueNumber = currentPullRequestNumber()
     def credentialsId = resolveCredentialsId()
-    def response = githubRateLimitRotator.httpRequest(credentialsId, [
-      httpMode: 'GET',
+    def response = rateLimitedGithub.getWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/pulls/${issueNumber}",
@@ -233,8 +230,7 @@ class GithubAPI {
     this.steps.echo "Adding the following labels: ${labels}"
     def body = JsonOutput.toJson(labels)
     def credentialsId = resolveCredentialsId()
-    def response = githubRateLimitRotator.httpRequest(credentialsId, [
-      httpMode: 'POST',
+    def response = rateLimitedGithub.postWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/issues/${issueNumber}/labels",
@@ -355,8 +351,7 @@ class GithubAPI {
       return null
     }
 
-    def response = githubRateLimitRotator.httpRequest(credentialsId, [
-      httpMode: 'GET',
+    def response = rateLimitedGithub.getWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/releases/latest",
@@ -391,16 +386,14 @@ class GithubAPI {
       generate_release_notes: true
     ])
 
-    return this.steps.httpRequest(
-      httpMode: 'POST',
-      authentication: credentialsId,
+    return rateLimitedGithub.postWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: API_URL + "/${project}/releases",
       requestBody: requestBody,
       consoleLogResponseBody: true,
       validResponseCodes: '201'
-    )
+    ])
   }
 
   private String normalizeVersion(String version) {
@@ -437,13 +430,12 @@ class GithubAPI {
        }
     """
     def credentialsId = resolveCredentialsId()
-    def response = this.steps.httpRequest(httpMode: 'POST',
-      authentication: credentialsId,
+    def response = rateLimitedGithub.postWithDistributedCredentials(credentialsId, [
       acceptType: 'APPLICATION_JSON',
       contentType: 'APPLICATION_JSON',
       url: "${API_URL}/hmcts/auto-shutdown/actions/workflows/${workflowName}/dispatches",
       requestBody: body,
       consoleLogResponseBody: true,
-      validResponseCodes: '204')
+      validResponseCodes: '204'])
   }
 }

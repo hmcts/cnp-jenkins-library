@@ -1,5 +1,7 @@
 package uk.gov.hmcts.pipeline
 
+import uk.gov.hmcts.contino.RateLimitedGithub
+
 class DeploymentControls {
   def steps
   static def deploymentControls
@@ -19,13 +21,12 @@ class DeploymentControls {
 
   def getDeploymentControls() {
     if (deploymentControls == null) {
-      def response = steps.httpRequest(
+      def response = new RateLimitedGithub(steps).getWithDistributedCredentials(steps.env.GIT_CREDENTIALS_ID, [
         consoleLogResponseBody: true,
-        authentication: steps.env.GIT_CREDENTIALS_ID,
         timeout: 10,
         url: getConfigRepoUrl(),
         validResponseCodes: '200'
-      )
+      ])
       deploymentControls = steps.readYaml(text: response.content)
     }
     return deploymentControls

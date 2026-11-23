@@ -198,7 +198,7 @@ class GithubAPITest extends Specification {
       def cache = githubApi.refreshLabelCache()
 
     then:
-      assertThat(cache).isEqualTo([])
+      thrown(RuntimeException)
   }
 
   def "AddLabels [200 response]"() {
@@ -222,7 +222,7 @@ class GithubAPITest extends Specification {
       def cache = githubApi.addLabels('evilcorp/my-project', '89', labels)
 
     then:
-      assertThat(cache).isEqualTo([])
+      thrown(RuntimeException)
   }
 
   def "AddLabelsToCurrentPR"() {

@@ -111,7 +111,8 @@ def call(Map params) {
     // Checkout external repository using Git credentials
     echo "Cloning ${params.gatlingRepo} branch ${gatlingBranch}..."
     
-    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
+    def credentialsId = new uk.gov.hmcts.contino.RateLimitedGithub(this).getDistributedCredentialId(env.GIT_CREDENTIALS_ID)
+    withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'USER_NAME')]) {
       catchError(stageResult:'FAILURE', buildResult:'SUCCESS', message:'Error cloning Gatling repo - both specified branch and default branch failed') {
         try {
           // Try the specified branch first

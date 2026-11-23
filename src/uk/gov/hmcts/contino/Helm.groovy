@@ -3,6 +3,7 @@ package uk.gov.hmcts.contino
 import com.cloudbees.groovy.cps.NonCPS
 import uk.gov.hmcts.contino.azure.Acr
 import uk.gov.hmcts.contino.Docker
+import uk.gov.hmcts.contino.RateLimitedGithub
 import uk.gov.hmcts.pipeline.AgentSelector
 import groovy.json.JsonSlurperClassic
 
@@ -412,7 +413,8 @@ class Helm {
 
     this.steps.writeFile file: 'push-helm-charts-to-git.sh', text: this.steps.libraryResource('uk/gov/hmcts/helm/push-helm-charts-to-git.sh')
 
-    this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+    def credentialsId = new RateLimitedGithub(this.steps).getDistributedCredentialId(this.steps.env.GIT_CREDENTIALS_ID)
+    this.steps.withCredentials([this.steps.usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
       this.steps.sh(
         """
         chmod +x push-helm-charts-to-git.sh

@@ -172,7 +172,8 @@ class YarnBuilder extends AbstractBuilder {
       steps.writeFile(file: 'prettyPrintAudit.sh', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/prettyPrintAudit.sh'))
       steps.writeFile(file: 'transform-v4-to-v3-audit.cjs', text: steps.libraryResource('uk/gov/hmcts/pipeline/yarn/transform-v4-to-v3-audit.cjs'))
 
-      this.steps.withCredentials([this.steps.usernamePassword(credentialsId: this.steps.env.GIT_CREDENTIALS_ID, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
+      def credentialsId = new RateLimitedGithub(steps).getDistributedCredentialId(steps.env.GIT_CREDENTIALS_ID)
+      this.steps.withCredentials([this.steps.usernamePassword(credentialsId: credentialsId, passwordVariable: 'BEARER_TOKEN', usernameVariable: 'APP_ID')]) {
         steps.sh """
            export PATH=\$HOME/.local/bin:\$PATH
            export YARN_VERSION=\$(jq -r '.packageManager' package.json | sed 's/yarn@//' | grep -o '^[^.]*')
