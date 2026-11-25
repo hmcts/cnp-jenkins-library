@@ -12,8 +12,8 @@ class WarningCollector implements Serializable {
     .ofPattern("dd/MM/yyyy");
   static slackMessage = new SlackBlockMessage()
 
-  static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate = null, boolean enforceDeadline = true) {
-    pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate))
+  static void addPipelineWarning(String warningKey, String warningMessage, LocalDate deprecationDate = null, boolean enforceDeadline = true, boolean includeDeadlineMessage = true) {
+    pipelineWarnings.add(new DeprecationWarning(warningKey, warningMessage, deprecationDate, includeDeadlineMessage))
 
     if (enforceDeadline && deprecationDate?.isBefore(LocalDate.now())){
       throw new RuntimeException(warningMessage + " This change is enforced from ${deprecationDate.format(DATE_FORMATTER)} ")
@@ -51,7 +51,9 @@ class WarningCollector implements Serializable {
   static SlackBlockMessage getSlackWarningMessage() {
     for (pipelineWarning in pipelineWarnings) {
       String message
-      if (!pipelineWarning.deprecationDate) {
+      if (!pipelineWarning.includeDeadlineMessage) {
+        message = pipelineWarning.warningMessage
+      } else if (!pipelineWarning.deprecationDate) {
         message = pipelineWarning.warningMessage.concat(" This configuration does not have a deprecation date but it is not recommended.")
       } else if (pipelineWarning.deprecationDate.isBefore(LocalDate.now())) {
         message = pipelineWarning.warningMessage.concat(" This configuration stopped being supported on ").concat(getMessageByDays(pipelineWarning.deprecationDate))
