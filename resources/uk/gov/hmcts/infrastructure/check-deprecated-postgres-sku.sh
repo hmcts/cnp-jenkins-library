@@ -4,10 +4,10 @@ set -euo pipefail
 plan_file="${1:?Terraform plan file is required}"
 
 postgres_resources=$(terraform show -json "$plan_file" | jq -r '
-  if (.resource_changes | type) != "array" then
-    error("Terraform plan has no resource_changes array")
+  if has("resource_changes") and (.resource_changes | type) != "array" then
+    error("Terraform plan resource_changes is not an array")
   else
-    .resource_changes[]
+    (.resource_changes // [])[]
     | select(.mode == "managed" and .type == "azurerm_postgresql_flexible_server")
     | .address as $address
     | .change as $change

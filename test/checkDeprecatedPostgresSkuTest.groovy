@@ -12,7 +12,7 @@ class checkDeprecatedPostgresSkuTest {
     private Map runCheck(List changes) {
         File directory = temporaryFolder.newFolder()
         File plan = new File(directory, 'plan.json')
-        plan.text = JsonOutput.toJson([resource_changes: changes])
+        plan.text = JsonOutput.toJson(changes == null ? [:] : [resource_changes: changes])
         File terraform = new File(directory, 'terraform')
         terraform.text = '#!/bin/sh\ncat "$3"\n'
         assert terraform.setExecutable(true)
@@ -61,5 +61,12 @@ class checkDeprecatedPostgresSkuTest {
         assertThat(result.status).isEqualTo(0)
         assertThat(result.stdout).isEmpty()
         assertThat(result.stderr).contains('unknown', 'module.unknown.server')
+    }
+
+    @Test
+    void 'does not warn for an empty plan'() {
+        def result = runCheck(null)
+        assertThat(result.status).isEqualTo(0)
+        assertThat(result.stdout).isEmpty()
     }
 }

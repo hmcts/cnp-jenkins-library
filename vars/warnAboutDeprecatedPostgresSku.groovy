@@ -4,7 +4,12 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 def call(String repoUrl = env.GIT_URL) {
     def deprecation = new DeprecationConfig(this).getDeprecationConfig(repoUrl).database?.postgresql_v3_sku
     if (!deprecation?.date_deadline || !deprecation?.upgrade_guide || !deprecation?.message) {
-        throw new IllegalStateException("Missing database.postgresql_v3_sku deprecation configuration")
+        echo 'WARNING: Missing database.postgresql_v3_sku configuration; the PostgreSQL SKU check could not run.'
+        return
+    }
+    if (sh(script: 'command -v jq >/dev/null 2>&1', returnStatus: true) != 0) {
+        echo 'WARNING: jq is unavailable; the PostgreSQL SKU check could not run.'
+        return
     }
 
     writeFile(
