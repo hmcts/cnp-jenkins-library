@@ -3,9 +3,12 @@ import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 def call(String repoUrl = env.GIT_URL) {
     def deprecation = new DeprecationConfig(this).getDeprecationConfig(repoUrl).database?.postgresql_v3_sku
-    if (!deprecation?.date_deadline || !deprecation?.upgrade_guide || !deprecation?.message) {
+    if (!deprecation?.sku || !deprecation?.date_deadline || !deprecation?.message) {
         echo 'WARNING: Missing database.postgresql_v3_sku configuration; the PostgreSQL SKU check could not run.'
         return
+    }
+    if (!(deprecation.sku instanceof String) || !(deprecation.sku ==~ /v[0-9]+/)) {
+        throw new IllegalStateException('Invalid database.postgresql_v3_sku.sku; expected a generation such as v3')
     }
     if (sh(script: 'command -v jq >/dev/null 2>&1', returnStatus: true) != 0) {
         echo 'WARNING: jq is unavailable; the PostgreSQL SKU check could not run.'
@@ -20,13 +23,12 @@ def call(String repoUrl = env.GIT_URL) {
     try {
         sh 'chmod +x check-deprecated-postgres-sku.sh'
         def affectedResources = sh(
-            script: './check-deprecated-postgres-sku.sh tfplan',
+            script: "./check-deprecated-postgres-sku.sh tfplan '${deprecation.sku}'",
             returnStdout: true
         ).trim()
 
         if (affectedResources) {
             String message = "${deprecation.message} Deadline: ${deprecation.date_deadline}. " +
-                "Upgrade guidance: ${deprecation.upgrade_guide}. " +
                 "Affected Terraform resources (address, state and SKU): ${affectedResources.replace('\n', ', ')}"
             echo "WARNING: ${message}"
             WarningCollector.addPipelineWarning('deprecated_postgresql_v3_sku', message, null, false, false)

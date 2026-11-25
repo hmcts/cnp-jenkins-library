@@ -26,9 +26,9 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
         helper.registerAllowedMethod('httpRequest', [Map.class], { [content: 'deprecations'] })
         helper.registerAllowedMethod('readYaml', [Map.class], {
             [database: configAvailable ? [postgresql_v3_sku: [
+                sku: 'v3',
                 date_deadline: 'June 2027',
-                upgrade_guide: 'https://example.com/upgrade',
-                message: 'v3 reserved instance coverage ends'
+                message: 'v3 reserved instance coverage ends. Upgrade guidance: https://example.com/upgrade'
             ]] : [:]]
         })
         helper.registerAllowedMethod('libraryResource', [String.class], { 'script body' })
@@ -36,7 +36,7 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
         helper.registerAllowedMethod('echo', [String.class], { String message -> messages << message })
         helper.registerAllowedMethod('sh', [String.class], { String command -> commands << command; 0 })
         helper.registerAllowedMethod('sh', [Map.class], { Map arguments ->
-            commands << arguments.script
+            commands << arguments.script.toString()
             arguments.returnStdout ? affectedResources : jqStatus
         })
         script = loadScript('vars/warnAboutDeprecatedPostgresSku.groovy')
@@ -62,6 +62,7 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
             .contains('module.db.azurerm_postgresql_flexible_server.db', 'GP_Standard_D2s_v3', 'June 2027', 'https://example.com/upgrade')
         assertThat(messages.first()).contains('GP_Standard_D2s_v3', 'June 2027')
         assertThat(commands).contains('rm -f check-deprecated-postgres-sku.sh')
+        assertThat(commands).contains("./check-deprecated-postgres-sku.sh tfplan 'v3'")
     }
 
     @Test

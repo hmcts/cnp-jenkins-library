@@ -9,7 +9,7 @@ class checkDeprecatedPostgresSkuTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder()
 
-    private Map runCheck(List changes) {
+    private Map runCheck(List changes, String generation = 'v3') {
         File directory = temporaryFolder.newFolder()
         File plan = new File(directory, 'plan.json')
         plan.text = JsonOutput.toJson(changes == null ? [:] : [resource_changes: changes])
@@ -17,7 +17,7 @@ class checkDeprecatedPostgresSkuTest {
         terraform.text = '#!/bin/sh\ncat "$3"\n'
         assert terraform.setExecutable(true)
         def processBuilder = new ProcessBuilder(
-            'bash', 'resources/uk/gov/hmcts/infrastructure/check-deprecated-postgres-sku.sh', plan.absolutePath
+            'bash', 'resources/uk/gov/hmcts/infrastructure/check-deprecated-postgres-sku.sh', plan.absolutePath, generation
         )
         processBuilder.environment().put('PATH', directory.absolutePath + ':' + System.getenv('PATH'))
         Process process = processBuilder.start()
@@ -68,5 +68,15 @@ class checkDeprecatedPostgresSkuTest {
         def result = runCheck(null)
         assertThat(result.status).isEqualTo(0)
         assertThat(result.stdout).isEmpty()
+    }
+
+    @Test
+    void 'uses the configured SKU generation and rejects invalid values'() {
+        def result = runCheck([server('module.v5.server', null, 'GP_Standard_D2ds_v5')], 'v5')
+        assertThat(result.status).isEqualTo(0)
+        assertThat(result.stdout).contains('module.v5.server', 'GP_Standard_D2ds_v5')
+        def invalid = runCheck([], 'v3; echo unsafe')
+        assertThat(invalid.status).isEqualTo(2)
+        assertThat(invalid.stderr).contains('Invalid deprecated SKU generation')
     }
 }

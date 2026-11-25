@@ -2,6 +2,12 @@
 set -euo pipefail
 
 plan_file="${1:?Terraform plan file is required}"
+deprecated_sku="${2:?Deprecated SKU generation is required}"
+if [[ ! "$deprecated_sku" =~ ^v[0-9]+$ ]]; then
+  echo "Invalid deprecated SKU generation: $deprecated_sku" >&2
+  exit 2
+fi
+generation="${deprecated_sku:1}"
 
 postgres_resources=$(terraform show -json "$plan_file" | jq -r '
   if has("resource_changes") and (.resource_changes | type) != "array" then
@@ -27,7 +33,7 @@ while IFS=$'\t' read -r address state sku; do
   [[ -n "$address" ]] || continue
   if [[ "$state" == "unknown" ]]; then
     printf 'WARNING: Planned PostgreSQL SKU is unknown for %s; it cannot be checked yet.\n' "$address" >&2
-  elif [[ "$sku" =~ _[vV]3$ ]]; then
+  elif [[ "$sku" =~ _[vV]${generation}$ ]]; then
     printf '%s\t%s\t%s\n' "$address" "$state" "$sku"
   fi
 done <<< "$postgres_resources"
