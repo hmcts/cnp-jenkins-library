@@ -32,7 +32,6 @@ branches:
     allowed: true
   - name: highleveldatasetupstaging
     allowed: true
-    allowed: true
   - name: DTSPO-35800/gradle-stashing-exclude
     allowed: true
   - name: DTSPO-34796/recover-from-agent-disconnect
