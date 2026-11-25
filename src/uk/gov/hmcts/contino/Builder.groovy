@@ -30,4 +30,9 @@ interface Builder {
    * @return
    */
   def setupToolVersion()
+
+  /**
+   * Check the runtime embedded in a built container image, when applicable.
+   */
+  def checkContainerRuntimeVersion(dockerImage)
 }

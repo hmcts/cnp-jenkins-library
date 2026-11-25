@@ -483,7 +483,7 @@ EOF
     }
 
     // Preserve the existing key because it is published as a metric.
-    WarningCollector.addPipelineWarning("missing_nvrmc_file", "A ${NVMRC} file is missing for this project. See https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", policy.deadline)
+    WarningCollector.addPipelineWarning("missing_nvrmc_file", "A ${NVMRC} file is missing, so the build-time Node.js version is not pinned for this project. See https://github.com/hmcts/expressjs-template/blob/HEAD/.nvmrc", policy.deadline)
     return null
   }
 
@@ -498,7 +498,7 @@ EOF
       String requirement = deprecation.major
         ? "Node.js ${deprecation.major} v${deprecation.minimumVersion} or greater"
         : "Node.js v${deprecation.minimumVersion} or greater"
-      WarningCollector.addPipelineWarning("old_nodejs_version", "Please use ${requirement} by updating your ${NVMRC} file. See https://nodejs.org/en/about/previous-releases", deprecation.deadline)
+      WarningCollector.addPipelineWarning("old_nodejs_version", "The build-time Node.js version in ${NVMRC} is unsupported. Please use ${requirement} by updating ${NVMRC}. See https://nodejs.org/en/about/previous-releases", deprecation.deadline)
     }
   }
 
@@ -606,6 +606,44 @@ EOF
       ],
       prerelease: matcher[0][4]
     ]
+  }
+
+  @Override
+  def checkContainerRuntimeVersion(dockerImage) {
+    Map policy = getNodeJSDeprecationPolicy()
+    if (!policy) {
+      return
+    }
+
+    String imageName = dockerImage.getBaseTaggedName()
+    dockerImage.acr.login()
+    steps.sh label: 'Pull image for Node.js runtime version check', script: "docker pull '${imageName}'"
+
+    // Execute Node directly so the check does not require a shell in the image.
+    String actualVersion = steps.sh(
+      label: 'Detect container Node.js runtime version',
+      returnStdout: true,
+      script: "docker run --rm --entrypoint node --env NODE_OPTIONS= '${imageName}' --version 2>&1"
+    ).trim()
+
+    Map deprecation
+    try {
+      deprecation = findNodeVersionDeprecation(actualVersion, policy)
+    } catch (IllegalArgumentException exception) {
+      steps.error("Unable to determine the Node.js runtime version from built container '${imageName}': ${exception.message}")
+      return
+    }
+
+    if (deprecation) {
+      String requirement = deprecation.major
+        ? "Node.js ${deprecation.major} runtime v${deprecation.minimumVersion} or greater"
+        : "Node.js runtime v${deprecation.minimumVersion} or greater"
+      WarningCollector.addPipelineWarning(
+        'old_nodejs_runtime_version',
+        "The built container uses Node.js runtime ${actualVersion}. Please use ${requirement} by rebuilding with an updated Node.js base image.",
+        deprecation.deadline
+      )
+    }
   }
 
   private corepackEnable() {

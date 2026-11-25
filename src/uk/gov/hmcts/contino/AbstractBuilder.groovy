@@ -41,4 +41,8 @@ abstract class AbstractBuilder implements Builder, Serializable {
   @Override
   def setupToolVersion() {
   }
+
+  @Override
+  def checkContainerRuntimeVersion(dockerImage) {
+  }
 }
