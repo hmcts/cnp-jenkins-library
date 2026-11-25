@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.15.0] - 2026-11-25
+
+## :rocket: Features
+
+- feat: Add deprecation warning for runtime versions of nodejs and java versions @adusumillipraveen (#1610)
+
 ## [2.13.7] - 2026-11-06
 
 - Backward compatibility  Add allowed-library-branches.yml configuration @adusumillipraveen (#1604)
