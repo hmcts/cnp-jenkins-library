@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.13.7] - 2026-11-06
+
+- Backward compatibility  Add allowed-library-branches.yml configuration @adusumillipraveen (#1604)
+
+## [2.13.6] - 2026-11-03
+
+## :bug: Bug Fixes
+
+- fix: wait between health check attempts when the request fails @banderous (#1586)
+
+## [2.14.0] - 2026-11-02
+
+## :rocket: Features
+
+- feat: Add deprecation warning for nodejs @adusumillipraveen (#1598)
+
+## :bug: Bug Fixes
+
+- fix:  Update allowed-library-branches.yml @adusumillipraveen (#1599)
+
+## :wrench: Maintenance
+
+- chore: adding publishGithubAppRateLimits groovy file @tmckillop95 (#1581)
+
+## [2.13.5] - 2026-10-27
+
+## :wrench: Maintenance
+
+- chore: adding publishGithubAppRateLimits groovy file @tmckillop95 (#1581)
+
+## [2.13.4] - 2026-10-23
+
+## :bug: Bug Fixes
+
+- 35961: fix nvm bootstrap options @playfair0319-moj (#1596)
+
+## [2.13.3] - 2026-10-23
+
+## :wrench: Maintenance
+
+- chore:Allow cve-dashboard during pilot phase @endakelly (#1594)
+
+## [2.13.2] - 2026-10-21
+
+
+
+## [2.13.1] - 2026-10-20
+
+
+
+## [2.13.0] - 2026-10-15
+
+## :rocket: Features
+
+- feat: use custom message for deprecated helm chart @JamieMcConnellKainos (#1585)
+
+## :package: Dependency Updates
+
+- deps: Fix Kubectl login for local\_account\_disabled AKS clusters @JakeM-Kainos (#1566)
+
 ## [2.12.3] - 2026-10-12
 
 ## :package: Dependency Updates

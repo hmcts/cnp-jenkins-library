@@ -4,7 +4,7 @@ import uk.gov.hmcts.contino.RepositoryUrl
 
 class TerraformInfraApprovals {
 
-  public static final String TFUTILS_IMAGE = 'hmctspublic.azurecr.io/tf-utils:ff575af9-1691575325'
+  public static final String TFUTILS_IMAGE = 'hmctsprod.azurecr.io/tf-utils:b891aa26-1791849662'
   public static final String TFUTILS_RUN_ARGS = '--entrypoint ""'
 
   def steps
@@ -59,17 +59,33 @@ class TerraformInfraApprovals {
       this.steps.sh("echo 'WARNING: Terraform whitelisting disabled in sandbox'")
       return true
     }
-    this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-      return this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}") == 0
+    def approved = false
+    withAcrLogin {
+      this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
+        approved = this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals}") == 0
+      }
     }
+    return approved
   }
 
   void storeResults(String tfInfraPath) {
     infraApprovals = getInfraApprovals()
 
     def joinedInfraApprovals = infraApprovals.join(" ")
-    this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
-       this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} 2> terraform-approvals.log || true")
+    withAcrLogin {
+      this.steps.withDocker(TFUTILS_IMAGE, TFUTILS_RUN_ARGS) {
+        this.steps.sh(returnStatus: true, script: "/tf-utils --whitelist ${tfInfraPath} ${joinedInfraApprovals} 2> terraform-approvals.log || true")
+      }
+    }
+  }
+
+  private void withAcrLogin(Closure block) {
+    this.steps.withAcrClient(this.subscription) {
+      def env = this.steps.env
+      def azureConfigDir = "/opt/jenkins/.azure-${this.subscription}"
+      this.steps.sh("env AZURE_CONFIG_DIR=${azureConfigDir} az login --identity")
+      this.steps.sh("env AZURE_CONFIG_DIR=${azureConfigDir} az acr login --name ${env.REGISTRY_NAME} --subscription ${env.REGISTRY_SUBSCRIPTION}")
+      block.call()
     }
   }
 

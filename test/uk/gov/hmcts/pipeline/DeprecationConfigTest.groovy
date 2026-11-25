@@ -15,6 +15,7 @@ class DeprecationConfigTest {
         "npm"      : ["angular/core": ["version": "15", "date_deadline": "2024-03-25"]],
         "python"   : ["python_version": ["date_deadline": "2027-01-01"]],
         "database" : ["postgresql": ["version": "15", "date_deadline": "2027-02-01", "message": "PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later."]]
+        "nodejs"   : ["node_version": ["version": "22.23.4", "major_versions": ["24": ["version": "24.3.1", "date_deadline": "2026-11-09"]], "date_deadline": "2026-11-09"]]
       ]
   ]
 }

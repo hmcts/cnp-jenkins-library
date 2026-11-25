@@ -1,5 +1,8 @@
 package uk.gov.hmcts.pipeline
 
+import java.time.LocalDate
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
 class LibraryBranchControls {
   def steps
   static def libraryBranchControls
@@ -9,7 +12,11 @@ class LibraryBranchControls {
   }
 
   def getConfigFilePath() {
-    return "uk/gov/hmcts/library/allowed-library-branches.yml"
+    return "allowed-library-branches.yml"
+  }
+
+  def getConfigRepoUrl() {
+    return "https://raw.githubusercontent.com/hmcts/cnp-jenkins-config/master/${getConfigFilePath()}"
   }
 
   def getLibraryBranchControls() {
@@ -17,7 +24,7 @@ class LibraryBranchControls {
       consoleLogResponseBody: true,
       authentication: steps.env.GIT_CREDENTIALS_ID,
       timeout: 10,
-      url: "https://raw.githubusercontent.com/hmcts/cnp-jenkins-library/master/resources/${getConfigFilePath()}",
+      url: getConfigRepoUrl(),
       validResponseCodes: '200'
     )
     libraryBranchControls = steps.readYaml(text: response.content)
@@ -92,13 +99,17 @@ class LibraryBranchControls {
     return null
   }
 
+  String getLibraryVersion() {
+    return extractLibraryBranch(resolveLibraryBranch())
+  }
+
   boolean isBranchAllowed(def pipelineConfig = null) {
     if (steps?.env?.PROD_SUBSCRIPTION_NAME == 'sandbox') {
       steps.echo 'Skipping library branch allowlist validation on sandbox Jenkins.'
       return true
     }
 
-    def branchToCheck = extractLibraryBranch(resolveLibraryBranch())
+    def branchToCheck = getLibraryVersion()
     // Temporary incident mitigation: Jenkins has already resolved the requested library reference.
     // Restore tag verification after the GitHub rate-limit investigation.
     if (branchToCheck ==~ /\d+\.\d+\.\d+/) {
@@ -117,6 +128,18 @@ class LibraryBranchControls {
     def branchEntry = configuredBranches.find { it.name.equalsIgnoreCase(branchToCheck) }
     def branchAllowed = branchEntry && branchEntry['allowed'] == true
 
+    if (branchAllowed && shouldWarnAboutBranch(branchEntry)) {
+      LocalDate deadline = branchEntry.date_deadline ? LocalDate.parse(branchEntry.date_deadline.toString()) : null
+      WarningCollector.addPipelineWarning(
+        "allowed_infrastructure_library_branch",
+        "Your pipeline is using the allowed Infrastructure library branch *${branchEntry.name}*. " +
+          "Merge the required changes, then switch to a fixed library release.",
+        deadline,
+        false
+      )
+      branchAllowed = !deadline?.isBefore(LocalDate.now())
+    }
+
     if (branchAllowed) {
       steps.echo "Library branch `${branchToCheck}` is allowed."
     }
@@ -126,7 +149,7 @@ class LibraryBranchControls {
       steps.echo """
         Library branch: `${branchToCheck}` is not approved for use.
         If you are using a branch, make sure to add it to:
-        - resources/${getConfigFilePath()} in hmcts/cnp-jenkins-library
+        - ${getConfigRepoUrl()}
         If you recently updated the allowed branches and this is unexpected, ensure you are using a new agent as this can be cached.
         Please check with the Platform Operations team for guidance.
         ================================================================================
@@ -134,5 +157,13 @@ class LibraryBranchControls {
     }
 
     return branchAllowed
+  }
+
+  private static boolean shouldWarnAboutBranch(def branchEntry) {
+    String branchName = branchEntry?.name
+    return branchName &&
+      branchName != 'master' &&
+      branchName != 'cve-dashboard' &&
+      !(branchName ==~ /\d+\.\d+\.\d+/)
   }
 }

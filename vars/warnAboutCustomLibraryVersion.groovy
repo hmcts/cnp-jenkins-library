@@ -18,8 +18,10 @@ def call(String repoUrl = null) {
 
     try {
         checkUnpinnedLibrary()
-        checkAllowedLibraryBranches()
-        checkOldLibraryVersions(jenkinsLibraryDeprecationConfig)
+        checkOldLibraryVersions(
+            jenkinsLibraryDeprecationConfig,
+            new LibraryBranchControls(this).getLibraryVersion()
+        )
     } finally {
         sh 'rm -f check-library-version.sh'
         sh 'rm -f warning-banner.txt'
@@ -78,43 +80,7 @@ def checkUnpinnedLibrary() {
     )
 }
 
-def checkAllowedLibraryBranches() {
-    def allowedLibraryBranches = new LibraryBranchControls(this)
-        .getLibraryBranchControls()
-        .branches
-        .findAll { it.allowed && it.name != 'master' && !(it.name ==~ /\d+\.\d+\.\d+/) }
-        .collect { it.name }
-
-    allowedLibraryBranches.each { branch ->
-        int branchStatus = sh(
-            script: """
-            chmod +x check-library-version.sh
-            ./check-library-version.sh 'branch' '${branch}'
-            """,
-            returnStatus: true
-        )
-
-        buildAndAddWarning(
-            branchStatus,
-                "allowed_infrastructure_library_branch",
-                [
-                    [
-                        'Your Jenkinsfile is using an allowed Infrastructure library branch',
-                        "*${branch}*."
-                    ],
-                    [
-                        'Merge the changes you need from this branch, check for the latest release at',
-                        'https://github.com/hmcts/cnp-jenkins-library/releases, then switch to a fixed',
-                        'library version. Pinned versions receive the latest library features and reduce',
-                        'the chance of upstream changes unexpectedly breaking your pipeline.',
-                        'Renovate can automatically update pinned library versions for you.'
-                    ]
-                ]
-        )
-    }
-}
-
-def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {
+def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig, String currentLibraryVersion = null) {
     jenkinsLibraryDeprecationConfig.each { configKey, deprecation ->
         def patterns = []
         if (deprecation.pattern instanceof Collection) {
@@ -130,22 +96,29 @@ def checkOldLibraryVersions(jenkinsLibraryDeprecationConfig) {
         }
 
         patterns.each { pattern ->
+            String recommendedVersion = deprecation.version?.toString()
             int status = sh(
                 script: """
                 chmod +x check-library-version.sh
-                ./check-library-version.sh 'deprecation' '${pattern}' '${deprecation.version}' '${deprecation.date_deadline}'
+                ./check-library-version.sh 'deprecation' '${pattern}' '${recommendedVersion ?: ''}' '${deprecation.date_deadline}' '${currentLibraryVersion ?: ''}'
                 """,
                 returnStatus: true
             )
+
+            List<String> upgradeRecommendation = recommendedVersion ?
+                ["Update it to use *Infrastructure@${recommendedVersion}*"] :
+                [
+                    'Check for the latest release at',
+                    'https://github.com/hmcts/cnp-jenkins-library/releases,',
+                    'then update your Jenkinsfile to use that fixed library version.'
+                ]
 
             buildAndAddWarning(
                 status,
                     "old_library_version",
                     [
                         ['Your Jenkinsfile references a deprecated Jenkins library version.'],
-                        [
-                            "Update it to use *Infrastructure@${deprecation.version}*",
-                        ]
+                        upgradeRecommendation
                     ],
                     deprecation.date_deadline
             )

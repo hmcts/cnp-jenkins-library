@@ -41,6 +41,19 @@ class WarningCollectorTest extends Specification {
     thrown RuntimeException
   }
 
+  def "addPipelineWarning() can collect an expired warning without throwing for deferred enforcement"() {
+    given:
+    def pastDate = LocalDate.now().minusDays(1)
+
+    when:
+    WarningCollector.addPipelineWarning("test_key", "deferred failure", pastDate, false)
+
+    then:
+    noExceptionThrown()
+    WarningCollector.pipelineWarnings*.warningKey == ["test_key"]
+    WarningCollector.pipelineWarnings.first().deprecationDate == pastDate
+  }
+
 
   def "getMessageByDays() with same day should return today"() {
 
@@ -69,6 +82,28 @@ class WarningCollectorTest extends Specification {
 
     then:
     assertThat(message).isEqualTo(nextWeekFormattedDate+" ( in 7 days )")
+  }
+
+  def "getMessageByDays() with a past date should return days ago without a negative countdown"() {
+    given:
+    def threeDaysAgo = now.minusDays(3)
+
+    when:
+    String message = WarningCollector.getMessageByDays(threeDaysAgo)
+
+    then:
+    assertThat(message).isEqualTo(threeDaysAgo.format(ofPattern("dd/MM/yyyy"))+" ( 3 days ago )")
+  }
+
+  def "getMessageByDays() with yesterday should use natural wording"() {
+    given:
+    def yesterday = now.minusDays(1)
+
+    when:
+    String message = WarningCollector.getMessageByDays(yesterday)
+
+    then:
+    assertThat(message).isEqualTo(yesterday.format(ofPattern("dd/MM/yyyy"))+" ( yesterday )")
   }
 
   def "getMessageByDays() with a year later should return the date without additional text"() {
@@ -111,5 +146,21 @@ class WarningCollectorTest extends Specification {
     assertThat(WarningCollector.pipelineWarnings).hasSize(1)
     assertThat(WarningCollector.pipelineWarnings.first().deprecationDate).isNull()
     assertThat(actualMessage).isEqualTo("Test warning without a due date. This configuration does not have a deprecation date but it is not recommended.")
+  }
+
+  def "expired deferred warning uses past-tense Slack wording"() {
+    given:
+    def threeDaysAgo = now.minusDays(3)
+
+    when:
+    WarningCollector.addPipelineWarning("test_key", "Expired branch.", threeDaysAgo, false)
+    SlackBlockMessage message = WarningCollector.getSlackWarningMessage()
+    String actualMessage = message.blocks.collect { it.text.text }.join("\n\n")
+
+    then:
+    assertThat(actualMessage).isEqualTo(
+      "Expired branch. This configuration stopped being supported on " +
+        threeDaysAgo.format(ofPattern("dd/MM/yyyy")) + " ( 3 days ago )"
+    )
   }
 }

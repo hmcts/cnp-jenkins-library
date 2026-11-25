@@ -54,6 +54,8 @@ In practice:
 
 You only need to act where your Jenkinsfile calls Azure directly, outside of the sections the opinionated pipeline already manages for you.
 
+For temporary workspace-stash diagnostics, set the Jenkins environment variable `STASH_DIAGNOSTICS=true`. Before each environment-agent workspace stash, the library logs the total matching file count and recursive counts per top-level folder, with root files counted separately. The scan uses the stash's include/exclude patterns and requires the Pipeline Utility Steps `findFiles` step. It adds a workspace scan for each stash; unset the variable after testing. Stash contents are unchanged.
+
 #### withSubscription
 
 `withSubscription` now takes the product and the target environment, so the library can schedule the block onto the right agent and authenticate with the right identity:
@@ -399,6 +401,7 @@ Valid values for the `stage` variable are as follows where `ENV` must be replace
  * smoketest:ENV
  * functionalTest:ENV
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -589,6 +592,7 @@ Valid values for the `stage` variable are as follows where `ENV` should be repla
 
  * checkout
  * buildinfra:ENV
+ * planinfra:ENV
 
 E.g.
 
@@ -610,6 +614,10 @@ withInfraPipeline(product) {
 ## Application specific infrastructure
 It is possible for applications to build their specific infrastructure elements by providing `infrastructure` folder in application home directory containing terraform scripts to build that
 
+For both app and infrastructure pipelines, plan-only infrastructure runs invoke `planinfra:ENV` callbacks, while plan-and-apply runs invoke `buildinfra:ENV` callbacks. This applies to `before`, `afterSuccess`, `afterFailure`, `afterAlways`, and deprecated `after` hooks. Previously, both modes used `buildinfra:ENV`; move any hooks intentionally needed during plan-only runs to `planinfra:ENV`. A successful plan must not trigger deployment hooks such as production BPMN uploads. Global failure handling and after-all reporting still run for plans.
+
+The app pipeline retains its primary agent and workspace while infrastructure stages run on another environment's agent. These stages transfer only `infrastructure/**` and the root `.terraform-version`, using the usual stash exclusions. Source, coverage reports and dependency caches stay on the primary agent. The infrastructure workspace is not copied back; the named Terraform plan stash is still used between plan and apply. Terraform inputs and local dependencies must be under `infrastructure` or the transfer patterns must be extended. Infrastructure-only pipelines and other agent transfers are unchanged.
+
 In case your infrastructure includes database creation there is a Flyway migration step available that will be triggered only if it's enabled inside `withPipeline` block via `enableDbMigration()` function. By default this step is disabled
 
 ## Nightly pipeline
@@ -627,6 +635,8 @@ withNightlyPipeline(type, product, component) {
 ```
 
 Dependency checks are mandatory and will be included in all pipelines. The tests stages are all 'opt-in' and can be added or removed based on your needs.
+
+In the nightly pipeline `enableFortifyScan()` runs the Fortify scan before the test stages, which wait for it to finish. Use `enableFortifyScan('', true)` (or `enableFortifyScan('<vault>', true)`) instead to run it alongside the test stages, in a separate `@fortify` workspace with a fresh checkout. `fortify-scan` callbacks then run in that workspace, so they cannot rely on build output or files from other stages.
 
 You can also call `enableFortifyScan()` inside a `withPipeline` block. When enabled there, the Fortify scan runs in parallel with the other static checks in the `Static checks / Container build` stage of the regular pipeline and, by default, does not fail the pipeline.
 
@@ -1322,14 +1332,16 @@ This file will point to the repository which defines, in json syntax, which infr
 
 Branches of this library used by pipelines are validated against an allow-list, to control which branches of this library can be used within HMCTS.
 
-Branches must be allowed in the [yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml) otherwise, the pipeline will fail. This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+Branches must be allowed in the [yaml file](https://github.com/hmcts/cnp-jenkins-config/blob/master/allowed-library-branches.yml) otherwise, the pipeline will fail. This validation is skipped on Sandbox Jenkins; every other Jenkins instance, including Production, enforces it.
+
+Temporary branches can include an optional `date_deadline` in the allow-list. Pipelines using the branch receive deprecation warnings before that date and fail once the deadline has passed. Permanent branches can omit the field.
 
 When testing a change to the library itself, add your branch to this file (see [Contributing](#contributing)) and remove it again once the change has merged.
 
 ## Contributing
 
  1. Use the Github pull requests to make change
- 2. Add your branch to the [library controls yaml file](resources/uk/gov/hmcts/library/allowed-library-branches.yml)
+ 2. Add your branch to the [library controls yaml file](https://github.com/hmcts/cnp-jenkins-config/blob/master/allowed-library-branches.yml)
  3. Test the change by pointing a repository, to the branch with the change, edit your `Jenkinsfile` like so:
 ```groovy
 @Library('Infrastructure@<your-branch-name>') _
