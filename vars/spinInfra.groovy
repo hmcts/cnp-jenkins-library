@@ -126,7 +126,6 @@ def call(Map<String, ?> params) {
         terraformInit()
 
         warnAboutOldTfAzureProvider(config.environment, config.product, builtFrom)
-        warnAboutDeprecatedPostgres()
         warnAboutModuleBranches(builtFrom)
         
         env.TF_VAR_subscription = config.subscription
@@ -143,6 +142,7 @@ def call(Map<String, ?> params) {
         sh "terraform get -update=true"
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
+        warnAboutDeprecatedPostgresVersion(builtFrom)
         stash name: terraformPlanStashName, includes: 'tfplan'
 
 
