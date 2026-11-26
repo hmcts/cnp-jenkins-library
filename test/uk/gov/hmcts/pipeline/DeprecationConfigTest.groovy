@@ -14,7 +14,10 @@ class DeprecationConfigTest {
         "gradle"   : ["java-logging": ["version": "6.0.1", "date_deadline": "2023-10-28"]],
         "npm"      : ["angular/core": ["version": "15", "date_deadline": "2024-03-25"]],
         "python"   : ["python_version": ["date_deadline": "2027-01-01"]],
-        "database" : ["postgresql": ["version": "15", "date_deadline": "2027-02-01", "message": "PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later."]],
+        "database" : [
+          "postgresql"       : ["version": "15", "date_deadline": "2027-02-01", "message": "PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later."],
+          "postgresql_v3_sku": ["sku": "v3", "date_deadline": "June 2027", "message": "PostgreSQL Flexible Server v3 SKUs will not be supported under the June 2027 reserved-instance renewal. Migrate to a v5 SKU and PostgreSQL 18 using the upgrade guidance"]
+        ],
         "nodejs"   : ["node_version": ["version": "22.23.4", "major_versions": ["24": ["version": "24.3.1", "date_deadline": "2026-11-09"]], "date_deadline": "2026-11-09"]]
       ]
   ]
