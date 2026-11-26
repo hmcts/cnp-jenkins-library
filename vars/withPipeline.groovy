@@ -2,6 +2,7 @@ import uk.gov.hmcts.contino.AngularPipelineType
 import uk.gov.hmcts.contino.DockerImage
 import uk.gov.hmcts.contino.Environment
 import uk.gov.hmcts.contino.MetricsPublisher
+import uk.gov.hmcts.contino.BuildRecovery
 import uk.gov.hmcts.contino.NodePipelineType
 import uk.gov.hmcts.contino.RubyPipelineType
 import uk.gov.hmcts.contino.PipelineType
@@ -53,15 +54,13 @@ def call(type, String product, String component, Closure body) {
   MetricsPublisher metricsPublisher = new MetricsPublisher(this, currentBuild, product, component)
   def pipelineConfig = new AppPipelineConfig()
   def callbacks = new PipelineCallbacksConfig()
-  def callbacksRunner = new PipelineCallbacksRunner(callbacks)
-
-  callbacks.registerAfterAll { stage ->
-    metricsPublisher.publish(stage)
-  }
+  def callbacksRunner = new PipelineCallbacksRunner(callbacks, metricsPublisher)
 
   def dsl = new AppPipelineDsl(this, callbacks, pipelineConfig)
   body.delegate = dsl
   body.call() // register pipeline config
+  def buildRecovery = new BuildRecovery(this, currentBuild, metricsPublisher,
+    pipelineConfig.buildRecovery && env.DISABLE_BUILD_RECOVERY?.toString() != 'true')
 
   dsl.onStageFailure() {
     currentBuild.result = "FAILURE"
@@ -97,6 +96,7 @@ def call(type, String product, String component, Closure body) {
             def deploymentEnabled = sectionBuildAndTest(
               appPipelineConfig: pipelineConfig,
               pipelineCallbacksRunner: callbacksRunner,
+              buildRecovery: buildRecovery,
               builder: pipelineType.builder,
               subscription: branch.isPR() ? subscription.previewName : (autoDeployTarget?.subscriptionName ?: subscription.nonProdName),
               environment: primaryEnvironment,
@@ -169,7 +169,7 @@ def call(type, String product, String component, Closure body) {
           notifyBuildFixed channel: slackChannel
 
           callbacksRunner.call('onSuccess')
-          metricsPublisher.publish('Pipeline Succeeded')
+          metricsPublisher.publish('Pipeline Succeeded', [event_type: 'pipeline', pipeline_result: 'SUCCESS'])
         }
       }
     }
@@ -179,7 +179,7 @@ def call(type, String product, String component, Closure body) {
   } catch (err) {
     currentBuild.result = "FAILURE"
     notifyBuildFailure channel: slackChannel
-    metricsPublisher.publish('Pipeline Failed')
+    metricsPublisher.publish('Pipeline Failed', [event_type: 'pipeline', pipeline_result: 'FAILURE'])
     callbacksRunner.call('onFailure')
     throw err
   } finally {
