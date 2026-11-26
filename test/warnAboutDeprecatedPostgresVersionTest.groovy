@@ -1,0 +1,106 @@
+import com.lesfurets.jenkins.unit.BasePipelineTest
+import org.junit.Before
+import org.junit.Test
+import uk.gov.hmcts.pipeline.DeprecationConfig
+import uk.gov.hmcts.pipeline.SlackBlockMessage
+import uk.gov.hmcts.pipeline.deprecation.WarningCollector
+
+import java.time.LocalDate
+
+import static org.assertj.core.api.Assertions.assertThat
+import static org.junit.Assert.fail
+
+class warnAboutDeprecatedPostgresVersionTest extends BasePipelineTest {
+
+    def script
+    String plannedPostgresResources = ''
+    String deprecationDeadline = '2027-02-01'
+    String deprecationMessage = 'PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later.'
+    List<String> shellCommands = []
+
+    @Override
+    @Before
+    void setUp() {
+        super.setUp()
+
+        WarningCollector.pipelineWarnings.clear()
+        WarningCollector.slackMessage = new SlackBlockMessage()
+        DeprecationConfig.deprecationConfigInternal = null
+
+        binding.setVariable('env', [GIT_URL: 'https://github.com/hmcts/test-service.git'])
+        helper.registerAllowedMethod('httpRequest', [Map.class], { [content: 'deprecations'] })
+        helper.registerAllowedMethod('readYaml', [Map.class], {
+            [
+                database: [
+                    postgresql: [
+                        version: '15',
+                        date_deadline: deprecationDeadline,
+                        message: deprecationMessage
+                    ]
+                ]
+            ]
+        })
+        helper.registerAllowedMethod('libraryResource', [String.class], { 'script body' })
+        helper.registerAllowedMethod('writeFile', [Map.class], {})
+        helper.registerAllowedMethod('sh', [String.class], { String command ->
+            shellCommands << command
+            0
+        })
+        helper.registerAllowedMethod('sh', [Map.class], { Map arguments ->
+            shellCommands << arguments.script
+            if (arguments.returnStdout) {
+                return plannedPostgresResources
+            }
+            return 0
+        })
+
+        script = loadScript('vars/warnAboutDeprecatedPostgresVersion.groovy')
+    }
+
+    @Test
+    void 'does not warn when the plan has no PostgreSQL versions below the supported version'() {
+        when:
+        script.call()
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings).isEmpty()
+    }
+
+    @Test
+    void 'warns with affected resource details before the deadline for PostgreSQL 14 or below'() {
+        given:
+        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
+        deprecationDeadline = LocalDate.now().plusDays(1).toString()
+
+        when:
+        script.call()
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings).hasSize(1)
+        assertThat(WarningCollector.pipelineWarnings.first().warningKey).isEqualTo('deprecated_postgresql_version')
+        assertThat(WarningCollector.pipelineWarnings.first().warningMessage)
+            .contains('PostgreSQL 14 and below are deprecated')
+            .contains('module.database.azurerm_postgresql_flexible_server.this')
+            .contains('14')
+    }
+
+    @Test
+    void 'fails once the deprecation deadline has passed for an affected plan'() {
+        given:
+        plannedPostgresResources = 'module.database.azurerm_postgresql_flexible_server.this\t14'
+        deprecationDeadline = LocalDate.now().minusDays(1).toString()
+
+        when:
+        try {
+          script.call()
+          fail('Expected an expired PostgreSQL version to fail the pipeline')
+        } catch (RuntimeException expected) {
+          assertThat(expected.message).contains('PostgreSQL 14 and below are deprecated')
+        }
+
+        then:
+        assertThat(WarningCollector.pipelineWarnings*.warningKey)
+          .containsExactly('deprecated_postgresql_version')
+        assertThat(shellCommands).contains('rm -f check-deprecated-postgres-version.sh')
+    }
+}
