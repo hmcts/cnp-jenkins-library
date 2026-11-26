@@ -144,7 +144,7 @@ def call(Map<String, ?> params) {
         sh "terraform plan -out tfplan -var 'common_tags=${pipelineTags}' -var 'env=${config.environment}' -var 'product=${config.product}'" +
           (fileExists("${config.environment}.tfvars") ? " -var-file=${config.environment}.tfvars" : "")
         warnAboutDeprecatedPostgresVersion(builtFrom)
-        warnAboutDeprecatedPostgresSku(builtFrom)
+        warnAboutDeprecatedPostgresSku(builtFrom, config.environment)
         stash name: terraformPlanStashName, includes: 'tfplan'
 
 

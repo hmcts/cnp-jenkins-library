@@ -1,9 +1,9 @@
 import uk.gov.hmcts.pipeline.DeprecationConfig
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
-def call(String repoUrl = env.GIT_URL) {
+def call(String repoUrl, String environment) {
     def deprecation = new DeprecationConfig(this).getDeprecationConfig(repoUrl).database?.postgresql_v3_sku
-    if (!deprecation?.sku || !deprecation?.date_deadline || !deprecation?.message) {
+    if (!deprecation?.sku || !deprecation?.message) {
         throw new IllegalStateException('Missing database.postgresql_v3_sku deprecation configuration')
     }
     if (!(deprecation.sku instanceof String) || !(deprecation.sku ==~ /v[0-9]+/)) {
@@ -22,7 +22,7 @@ def call(String repoUrl = env.GIT_URL) {
         ).trim()
 
         if (affectedResources) {
-            String message = "${deprecation.message} Reserved-instance renewal: ${deprecation.date_deadline}. " +
+            String message = "Environment: ${environment}\n${deprecation.message}\n" +
                 "Affected Terraform resources (address and SKU): ${affectedResources.replace('\n', ', ')}"
             echo "WARNING: ${message}"
             WarningCollector.addPipelineWarning('deprecated_postgresql_v3_sku', message, null, false)
