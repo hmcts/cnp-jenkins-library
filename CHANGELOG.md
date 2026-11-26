@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.16.0] - 2026-11-26
+
+## :rocket: Features
+
+- feat: add PostgreSQL server nagger to jenkins library @SalimKainos (#1579)
+
 ## [2.15.0] - 2026-11-25
 
 ## :rocket: Features
