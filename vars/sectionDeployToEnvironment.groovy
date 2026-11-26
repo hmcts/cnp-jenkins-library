@@ -33,7 +33,7 @@ def call(params) {
           }
 
           withEnv([
-            'ENVIRONMENT_AGENT_STASH_INCLUDES=infrastructure/**,.terraform-version',
+            'ENVIRONMENT_AGENT_STASH_INCLUDES=**/*',
             'ENVIRONMENT_AGENT_STASH_BACK=false'
           ]) {
             dir('infrastructure') {

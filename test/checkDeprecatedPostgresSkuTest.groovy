@@ -1,0 +1,77 @@
+import groovy.json.JsonOutput
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+
+import static org.assertj.core.api.Assertions.assertThat
+
+class checkDeprecatedPostgresSkuTest {
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder()
+
+    private Map runCheck(List resources, String generation = 'v3') {
+        File directory = temporaryFolder.newFolder()
+        File plan = new File(directory, 'plan.json')
+        plan.text = JsonOutput.toJson([planned_values: [root_module: [
+            child_modules: [[address: 'module.db', resources: resources ?: []]]
+        ]]])
+        File terraform = new File(directory, 'terraform')
+        terraform.text = '#!/bin/sh\ncat "$3"\n'
+        assert terraform.setExecutable(true)
+        def processBuilder = new ProcessBuilder(
+            'bash', 'resources/uk/gov/hmcts/infrastructure/check-deprecated-postgres-sku.sh', plan.absolutePath, generation
+        )
+        processBuilder.environment().put('PATH', directory.absolutePath + ':' + System.getenv('PATH'))
+        Process process = processBuilder.start()
+        String stdout = process.inputStream.text
+        String stderr = process.errorStream.text
+        int status = process.waitFor()
+        [status: status, stdout: stdout, stderr: stderr]
+    }
+
+    private Map server(String address, String sku) {
+        [
+            address: address,
+            mode: 'managed',
+            type: 'azurerm_postgresql_flexible_server',
+            values: [sku_name: sku]
+        ]
+    }
+
+    @Test
+    void 'finds planned v3 SKUs in modules but excludes v5 and other resources'() {
+        def result = runCheck([
+            server('module.new.server', 'GP_Standard_D4s_v3'),
+            server('module.v5.server', 'GP_Standard_D2ds_v5'),
+            [address: 'other', mode: 'managed', type: 'other', values: [sku_name: 'GP_Standard_D2s_v3']]
+        ])
+        assertThat(result.status).isEqualTo(0)
+        assertThat(result.stdout).contains('module.new.server\tGP_Standard_D4s_v3')
+            .doesNotContain('module.v5.server', 'other')
+    }
+
+    @Test
+    void 'reports unknown planned SKU without claiming it is v3'() {
+        def result = runCheck([server('module.unknown.server', null)])
+        assertThat(result.status).isEqualTo(2)
+        assertThat(result.stdout).isEmpty()
+        assertThat(result.stderr).contains('unknown', 'module.unknown.server')
+    }
+
+    @Test
+    void 'does not warn for an empty plan'() {
+        def result = runCheck(null)
+        assertThat(result.status).isEqualTo(0)
+        assertThat(result.stdout).isEmpty()
+    }
+
+    @Test
+    void 'uses the configured SKU generation and rejects invalid values'() {
+        def result = runCheck([server('module.v5.server', 'GP_Standard_D2ds_v5')], 'v5')
+        assertThat(result.status).isEqualTo(0)
+        assertThat(result.stdout).contains('module.v5.server', 'GP_Standard_D2ds_v5')
+        def invalid = runCheck([], 'v3; echo unsafe')
+        assertThat(invalid.status).isEqualTo(2)
+        assertThat(invalid.stderr).contains('Invalid deprecated SKU generation')
+    }
+}

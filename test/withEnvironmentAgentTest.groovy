@@ -1,6 +1,9 @@
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import org.apache.tools.ant.types.selectors.SelectorUtils
 import org.junit.Before
 import org.junit.Test
+import uk.gov.hmcts.contino.AppPipelineConfig
+import uk.gov.hmcts.contino.MetricsPublisher
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.assertThatThrownBy
@@ -106,6 +109,41 @@ class WithEnvironmentAgentTest extends BasePipelineTest {
     assertThat(stashArgs[0].includes).isEqualTo('infrastructure/**,.terraform-version')
     assertThat(unstashNames).containsExactly(stashNames[0])
     assertThat(findFilesArgs).containsExactly([glob: stashArgs[0].includes, excludes: stashArgs[0].excludes])
+  }
+
+  @Test
+  void 'application infrastructure transfer includes terraform inputs outside infrastructure'() {
+    binding.env.ENVIRONMENT_AGENT_LABEL_TEMPLATE_CIVIL = 'civil-{environment}'
+    binding.setVariable('currentBuild', [:])
+    helper.registerAllowedMethod('approvedEnvironmentRepository', [String.class, MetricsPublisher.class, Closure.class], {
+      String environment, MetricsPublisher publisher, Closure body -> body()
+    })
+    helper.registerAllowedMethod('lock', [Map.class, Closure.class], { Map options, Closure body -> body() })
+    helper.registerAllowedMethod('folderExists', [String.class, Closure.class], { String path, Closure body -> body() })
+    helper.registerAllowedMethod('stageWithAgent', [String.class, String.class, Closure.class], {
+      String name, String product, Closure body -> body()
+    })
+    helper.registerAllowedMethod('onPreview', [Closure.class], { Closure body -> })
+    helper.registerAllowedMethod('dir', [String.class, Closure.class], { String path, Closure body -> body() })
+    helper.registerAllowedMethod('sectionInfraBuild', [Map.class], { Map options ->
+      script.call(options.environment, options.product) {}
+    })
+
+    def deploy = loadScript('vars/sectionDeployToEnvironment.groovy')
+    deploy.call(
+      appPipelineConfig: new AppPipelineConfig(),
+      pipelineType: [builder: null],
+      environment: 'stg',
+      product: 'civil',
+      component: 'service',
+      tfPlanOnly: true
+    )
+
+    assertThat(stashArgs).hasSize(1)
+    String includes = stashArgs[0].includes
+    assertThat(SelectorUtils.matchPath(includes, 'infrastructure/main.tf')).isTrue()
+    assertThat(SelectorUtils.matchPath(includes, 'lib/applicationinsights.json')).isTrue()
+    assertThat(stashArgs[0].excludes as String).contains('**/build/**')
   }
 
   @Test
