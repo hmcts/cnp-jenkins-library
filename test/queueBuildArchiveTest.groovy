@@ -11,6 +11,7 @@ class queueBuildArchiveTest extends BasePipelineTest {
   def queuedBuild
   def queuedBuildCount = 0
   def buildFailure
+  def archiveJob = 'Archive Completed Builds'
   def script
 
   @Override
@@ -23,6 +24,7 @@ class queueBuildArchiveTest extends BasePipelineTest {
       BUILD_NUMBER: '4'
     ])
     binding.setVariable('currentBuild', [result: 'FAILURE'])
+    binding.setVariable('Jenkins', [instance: [getItemByFullName: { archiveJob }]])
     helper.registerAllowedMethod('string', [Map.class], { it })
     helper.registerAllowedMethod('build', [Map.class], {
       if (buildFailure) {
@@ -80,6 +82,15 @@ class queueBuildArchiveTest extends BasePipelineTest {
   @Test
   void doesNothingWhenTheBuildUrlIsUnavailable() {
     binding.getVariable('env').BUILD_URL = ''
+
+    script.call(product: 'et', component: 'cos')
+
+    assertThat(queuedBuild).isNull()
+  }
+
+  @Test
+  void skipsWhenTheArchiveJobDoesNotExist() {
+    archiveJob = null
 
     script.call(product: 'et', component: 'cos')
 

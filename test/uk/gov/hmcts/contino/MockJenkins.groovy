@@ -15,4 +15,8 @@ class MockJenkins {
   def getPluginManager() {
     return this.pluginManager
   }
+
+  def getItemByFullName(String fullName) {
+    return fullName
+  }
 }
