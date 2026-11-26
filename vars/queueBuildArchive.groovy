@@ -18,6 +18,10 @@ def call(Map params = [:]) {
     return
   }
 
+  if (!Jenkins.instance.getItemByFullName(archiveJob.substring(1))) {
+    return
+  }
+
   if (!env.BUILD_URL || !env.JOB_NAME || !env.BUILD_NUMBER) {
     echo "Skipping build archive because Jenkins build metadata is incomplete"
     return
