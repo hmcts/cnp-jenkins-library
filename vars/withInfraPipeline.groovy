@@ -49,6 +49,7 @@ def call(String product, String component = null, Closure body) {
       env.BUILD_AGENT_TYPE = agentType
       env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
       dockerAgentSetup()
+      configureGithubAppSSHAuthOverride()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
@@ -149,6 +150,7 @@ def call(String product, String component = null, Closure body) {
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      reportInsecureInterpolation()
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
         deleteDir()

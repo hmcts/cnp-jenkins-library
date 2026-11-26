@@ -23,9 +23,9 @@ def call(type, String product, String component, String environment, String subs
 
 def call(type, String product, String component, String environment, String subscription, String deploymentTargets, Closure body) {
   def pipelineTypes = [
-    java  : new SpringBootPipelineType(this, product, component),
-    nodejs: new NodePipelineType(this, product, component),
-    angular: new AngularPipelineType(this, product, component),
+    java  : new SpringBootPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    nodejs: new NodePipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
+    angular: new AngularPipelineType(this, product, component, { secrets, keyVaultBody -> withAzureKeyvault(secrets, keyVaultBody) }),
     ruby: new RubyPipelineType(this, product, component),
     python: new PythonPipelineType(this, product, component)
   ]
@@ -82,6 +82,7 @@ def call(type, String product, String component, String environment, String subs
       env.BUILD_AGENT_TYPE = agentType
       env.DEPLOYMENT_ENVIRONMENT = primaryEnvironment
       dockerAgentSetup()
+      configureGithubAppSSHAuthOverride()
       env.PATH = "$env.PATH:/usr/local/bin"
 
       stageWithAgent('Checkout', product) {
@@ -122,6 +123,7 @@ def call(type, String product, String component, String environment, String subs
       metricsPublisher.publish('Pipeline Failed')
       throw err
     } finally {
+      reportInsecureInterpolation()
       notifyPipelineDeprecations(slackChannel, metricsPublisher)
       if (env.KEEP_DIR_FOR_DEBUGGING != "true") {
         deleteDir()

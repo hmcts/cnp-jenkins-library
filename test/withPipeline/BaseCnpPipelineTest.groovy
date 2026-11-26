@@ -20,6 +20,32 @@ import static uk.gov.hmcts.contino.ProjectSource.projectSource
 
 abstract class BaseCnpPipelineTest extends BasePipelineTest {
 
+  private static class WithCredentialsMock {
+    def call(List bindings, Closure body) {
+      body.call()
+    }
+
+    def call(Map arguments, Closure body) {
+      body.call()
+    }
+  }
+
+  @Override
+  Object runScript(String scriptName) {
+     // Loading the script registers shared-library vars as allowed methods.
+     // Re-register these signatures so pipeline tests do not invoke the wrappers.
+    Script script = loadScript(scriptName)
+    def withCredentialsMock = new WithCredentialsMock()
+    helper.registerAllowedMethod('withCredentials', [List.class, Closure.class], withCredentialsMock.&call)
+    helper.registerAllowedMethod('withCredentials', [Map.class, Closure.class], withCredentialsMock.&call)
+    helper.registerAllowedMethod('credentials', [String.class], { String credentialId -> "stub-credential-${credentialId}" })
+    helper.registerAllowedMethod('withAzureKeyvault', [List.class, Closure.class], withCredentialsMock.&call)
+    helper.registerAllowedMethod('withAzureKeyvault', [Map.class, Closure.class], withCredentialsMock.&call)
+    helper.registerAllowedMethod('reportInsecureInterpolation', [], {})
+
+    return runScript(script)
+  }
+
   BaseCnpPipelineTest(String branchName, String jenkinsFile) {
     super.setUp()
 
@@ -63,6 +89,8 @@ abstract class BaseCnpPipelineTest extends BasePipelineTest {
     helper.registerAllowedMethod("withEnv", [List.class, Closure.class], { List variables, Closure body -> body.call() })
     helper.registerAllowedMethod("ansiColor", [String.class, Closure.class], null)
     helper.registerAllowedMethod("withCredentials", [LinkedHashMap, Closure.class], null)
+    helper.registerAllowedMethod("withCredentials", [List, Closure.class], { List bindings, Closure body -> body.call() })
+    helper.registerAllowedMethod("credentials", [String.class], { String id -> "stub-credential-${id}" })
     helper.registerAllowedMethod("azureServicePrincipal", [LinkedHashMap], null)
     helper.registerAllowedMethod("usernamePassword", [LinkedHashMap], null)
     helper.registerAllowedMethod('fileExists', [String.class], { c -> c == 'localPath/infrastructure' || c == 'Dockerfile' || c.startsWith('charts') || c == '.nvmrc' })

@@ -5,8 +5,12 @@ class AngularBuilder extends AbstractBuilder {
   YarnBuilder builder
 
   AngularBuilder(steps) {
+    this(steps, { secrets, body -> steps.withAzureKeyvault(secrets, body) })
+  }
+
+  AngularBuilder(steps, Closure withAzureKeyvaultStep) {
     super(steps)
-    this.builder = new YarnBuilder(steps)
+    this.builder = new YarnBuilder(steps, withAzureKeyvaultStep)
   }
 
   @Override

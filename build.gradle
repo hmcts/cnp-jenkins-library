@@ -1,3 +1,12 @@
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.expr.GStringExpression
+import org.codehaus.groovy.ast.expr.PropertyExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.control.CompilePhase
+import org.codehaus.groovy.control.SourceUnit
+
 plugins {
   id 'groovy'
 }
@@ -89,3 +98,64 @@ sourceSets {
     }
   }
 }
+
+def pipelineSourceFiles = fileTree(projectDir) {
+  include 'src/**/*.groovy'
+  include 'vars/**/*.groovy'
+}
+
+tasks.register('lintInsecureSecretInterpolation') {
+  group = 'verification'
+  description = 'Fails when credential-bound values are Groovy-interpolated into sensitive Pipeline steps.'
+  inputs.files(pipelineSourceFiles)
+
+  doLast {
+    def bindingVariablePattern = ~/(?:envVariable|passwordVariable|usernameVariable|variable|keyFileVariable)\s*:\s*['"]([A-Z][A-Z0-9_]*)['"]/
+    def credentialsAssignmentPattern = ~/(?:def|String)?\s*([A-Z][A-Z0-9_]*)\s*=\s*(?:steps\.)?credentials\s*\(/
+    def sensitiveVariables = [] as Set
+
+    pipelineSourceFiles.files.each { sourceFile ->
+      sourceFile.text.eachMatch(bindingVariablePattern) { match ->
+        sensitiveVariables << match[1]
+      }
+      sourceFile.text.eachMatch(credentialsAssignmentPattern) { match ->
+        sensitiveVariables << match[1]
+      }
+    }
+
+    def violations = []
+    pipelineSourceFiles.files.each { sourceFile ->
+      def visitor = new ClassCodeVisitorSupport() {
+        @Override
+        protected SourceUnit getSourceUnit() {
+          null
+        }
+
+        @Override
+        void visitGStringExpression(GStringExpression expression) {
+          expression.values.each { value ->
+            def variableName = value instanceof PropertyExpression ? value.propertyAsString :
+              value instanceof VariableExpression ? value.name : null
+            if (variableName in sensitiveVariables) {
+              violations << "${project.relativePath(sourceFile)}:${expression.lineNumber}: insecure interpolation of ${variableName}"
+            }
+          }
+          super.visitGStringExpression(expression)
+        }
+      }
+      new AstBuilder().buildFromString(CompilePhase.CONVERSION, false, sourceFile.text).each { node ->
+        if (node instanceof ClassNode) {
+          node.visitContents(visitor)
+        } else {
+          node.visit(visitor)
+        }
+      }
+    }
+
+    if (!violations.empty) {
+      throw new GradleException("Insecure credential interpolation found:\n${violations.join('\n')}")
+    }
+  }
+}
+
+check.dependsOn(tasks.named('lintInsecureSecretInterpolation'))
