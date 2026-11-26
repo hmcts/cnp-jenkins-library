@@ -62,7 +62,7 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
             .contains('module.db.azurerm_postgresql_flexible_server.db', 'GP_Standard_D2s_v3', 'June 2027', 'https://example.com/upgrade')
         assertThat(messages.first()).contains('GP_Standard_D2s_v3', 'June 2027')
         assertThat(WarningCollector.getSlackWarningMessage().blocks.first().text.text)
-            .contains('Environment: stg', 'Affected Terraform resources (address and SKU):', 'GP_Standard_D2s_v3', 'June 2027')
+            .contains('Environment: stg', 'affected Terraform resources (address and SKU):', 'GP_Standard_D2s_v3', 'June 2027')
         assertThat(commands).contains('rm -f check-deprecated-postgres-sku.sh')
         assertThat(commands).contains("./check-deprecated-postgres-sku.sh tfplan 'v3'")
     }
@@ -77,17 +77,17 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
     }
 
     @Test
-    void 'labels warnings from separate environments without repeating the renewal date'() {
-        affectedResources = 'module.db.azurerm_postgresql_flexible_server.db\tGP_Standard_D2s_v3'
+    void 'combines affected environments in one warning'() {
+        affectedResources = 'module.stg.server\tGP_Standard_D2s_v3'
         script.call(binding.env.GIT_URL, 'stg')
+        affectedResources = 'module.prod.server\tGP_Standard_D4s_v3'
         script.call(binding.env.GIT_URL, 'prod')
 
         def warnings = WarningCollector.getSlackWarningMessage().blocks.collect { it.text.text }
-        assertThat(warnings).hasSize(2)
-        assertThat(warnings[0]).contains('Environment: stg').doesNotContain('Environment: prod')
-        assertThat(warnings[1]).contains('Environment: prod').doesNotContain('Environment: stg')
-        warnings.each { warning ->
-            assertThat(warning.count('June 2027')).isEqualTo(1)
-        }
+        assertThat(WarningCollector.pipelineWarnings).hasSize(1)
+        assertThat(warnings).hasSize(1)
+        assertThat(warnings[0]).contains('Environment: stg', 'module.stg.server', 'GP_Standard_D2s_v3',
+            'Environment: prod', 'module.prod.server', 'GP_Standard_D4s_v3')
+        assertThat(warnings[0].count('June 2027')).isEqualTo(1)
     }
 }
