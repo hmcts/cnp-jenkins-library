@@ -184,6 +184,60 @@ class Acr extends Az {
     }
   }
 
+  Map buildCandidate(dockerImage, String additionalArgs, Map identity) {
+    if (!(identity.sourceCommit ==~ /[a-f0-9]{40}/) || identity.sourceCommit == '0' * 40 ||
+        !(identity.sourceTree ==~ /[a-f0-9]{40}/) || identity.sourceTree == '0' * 40 ||
+        !identity.producerJob || identity.producerJob.toString().trim() != identity.producerJob ||
+        identity.producerJob.toString().find(/[\p{Cc}]/) || !(identity.producerBuild ==~ /[1-9][0-9]*/) ||
+        !(identity.invocationId ==~ /[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}/)) {
+      throw new IllegalArgumentException('A candidate requires full source and producer identity')
+    }
+    def repository = dockerImage.getRepositoryName()
+    def registry = getHostname()
+    validateImageLocation(registry, repository)
+    def buildTag = "candidate-${identity.invocationId}".toString()
+    def metadataArgs = [BUILD_SOURCE_COMMIT: identity.sourceCommit, BUILD_SOURCE_TREE: identity.sourceTree,
+                        BUILD_PRODUCER_JOB: identity.producerJob, BUILD_PRODUCER_BUILD: identity.producerBuild,
+                        BUILD_INVOCATION_ID: identity.invocationId].collect { key, value ->
+      " --build-arg ${key}=${shellQuote(value.toString())}"
+    }.join('')
+    build(dockerImage, additionalArgs + " -t ${repository}:${buildTag}" + metadataArgs)
+    def digest = getImageDigest("${repository}:${buildTag}")
+    validateImageReference(registry, repository, digest)
+    def imageReference = "${registry}/${repository}@${digest}".toString()
+    login()
+    localSteps.sh(script: "docker pull ${imageReference}")
+    def inspection = localSteps.readJSON(text: localSteps.sh(
+      script: "docker image inspect ${imageReference} --format '{{json .}}'", returnStdout: true))
+    if (!inspection.RepoDigests?.contains(imageReference) || inspection.Os != 'linux' ||
+        !(inspection.Architecture in ['amd64', 'arm64']) || !(inspection.Id ==~ /sha256:[a-f0-9]{64}/) ||
+        (inspection.Variant && !(inspection.Variant ==~ /[a-z0-9]+/))) {
+      throw new IllegalStateException('Cannot establish candidate digest and actual platform')
+    }
+    def platform = "${inspection.Os}/${inspection.Architecture}".toString()
+    return new LinkedHashMap(identity) + [schemaVersion: 1, registry: registry, repository: repository,
+      digest: digest, imageReference: imageReference, buildTag: buildTag, platform: platform,
+      imageConfigDigest: inspection.Id]
+  }
+
+  private static String shellQuote(String value) {
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+  }
+
+  private static void validateImageLocation(registry, repository) {
+    if (!(registry ==~ /[a-z0-9]+(?:[.-][a-z0-9]+)*\.azurecr\.io/) ||
+        !(repository ==~ /[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)*/)) {
+      throw new IllegalArgumentException('Invalid immutable registry or repository')
+    }
+  }
+
+  private static void validateImageReference(registry, repository, digest) {
+    validateImageLocation(registry, repository)
+    if (!(digest ==~ /sha256:[a-f0-9]{64}/)) {
+      throw new IllegalArgumentException('Invalid immutable digest')
+    }
+  }
+
   // ==================== Private Helper Methods ====================
 
   /**
@@ -597,6 +651,21 @@ class Acr extends Az {
       // Need to use the secondary registry's hostname in the source
       def secondaryBaseTag = baseTag.replace("${registryName}.azurecr.io", "${secondaryRegistryName}.azurecr.io")
       this.az "acr import --force -n ${secondaryRegistryName} -g ${secondaryResourceGroup} --subscription ${secondaryRegistrySubscription} --source ${secondaryBaseTag} -t ${additionalTag}"?.trim()
+    }
+  }
+
+  def retagForStage(stage, dockerImage, Map candidate) {
+    validateImageReference(candidate.registry, candidate.repository, candidate.digest)
+    def source = "${candidate.registry}/${candidate.repository}@${candidate.digest}".toString()
+    if (candidate.repository != dockerImage.getRepositoryName() || candidate.registry != getHostname() ||
+        candidate.imageReference != source) {
+      throw new IllegalArgumentException('Immutable candidate does not match the target registry and repository')
+    }
+    def additionalTag = dockerImage.getShortName(stage)
+    this.az "acr import --force -n ${registryName} -g ${resourceGroup} --subscription ${registrySubscription} --source ${source} -t ${additionalTag}"
+    if (isDualPublishModeEnabled()) {
+      // Both destinations receive the verified content, never the independently built secondary image.
+      this.az "acr import --force -n ${secondaryRegistryName} -g ${secondaryResourceGroup} --subscription ${secondaryRegistrySubscription} --source ${source} -t ${additionalTag}"
     }
   }
 
