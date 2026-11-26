@@ -28,10 +28,12 @@ class warnAboutDeprecatedPostgresqlVersionTest extends BasePipelineTest {
         helper.registerAllowedMethod('httpRequest', [Map.class], { [content: 'deprecations'] })
         helper.registerAllowedMethod('readYaml', [Map.class], { Map arguments ->
             [
-                postgresql_server_version: [
-                    version: '15',
-                    date_deadline: LocalDate.now().plusDays(10).toString(),
-                    message: 'PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later.'
+                database: [
+                    postgresql: [
+                        version: '15',
+                        date_deadline: LocalDate.now().plusDays(10).toString(),
+                        message: 'PostgreSQL 14 and below are deprecated. Please upgrade to PostgreSQL 15 or later.'
+                    ]
                 ]
             ]
         })
@@ -41,7 +43,7 @@ class warnAboutDeprecatedPostgresqlVersionTest extends BasePipelineTest {
             shellCommands << command
         })
         helper.registerAllowedMethod('sh', [Map.class], { Map arguments ->
-            shellCommands << arguments.script
+            shellCommands << arguments.script.toString()
             detectedVersions
         })
 

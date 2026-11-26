@@ -6,7 +6,7 @@ import java.time.LocalDate
 def call() {
   def deprecation = new DeprecationConfig(this)
     .getDeprecationConfig(env.GIT_URL)
-    .postgresql_server_version
+    .database.postgresql
 
   writeFile file: 'check-deprecated-postgresql-version.sh',
     text: libraryResource('uk/gov/hmcts/infrastructure/check-deprecated-postgresql-version.sh')
