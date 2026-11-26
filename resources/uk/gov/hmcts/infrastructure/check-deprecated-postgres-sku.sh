@@ -10,30 +10,19 @@ fi
 generation="${deprecated_sku:1}"
 
 postgres_resources=$(terraform show -json "$plan_file" | jq -r '
-  if has("resource_changes") and (.resource_changes | type) != "array" then
-    error("Terraform plan resource_changes is not an array")
-  else
-    (.resource_changes // [])[]
-    | select(.mode == "managed" and .type == "azurerm_postgresql_flexible_server")
-    | .address as $address
-    | .change as $change
-    | [
-        (if $change.before != null and $change.before.sku_name != null
-         then [$address, "current", $change.before.sku_name] else empty end),
-        (if $change.after != null and $change.after.sku_name != null
-         then [$address, "planned", $change.after.sku_name] else empty end),
-        (if $change.after != null and
-            ($change.after_unknown.sku_name == true or $change.after.sku_name == null)
-         then [$address, "unknown", "unknown"] else empty end)
-      ][]
-    | @tsv
-  end')
+  .planned_values.root_module
+  | [.. | objects
+    | select(.mode? == "managed" and .type? == "azurerm_postgresql_flexible_server")
+    | [(.address // "unknown"), (.values.sku_name // "unknown")]
+    | @tsv]
+  | .[]')
 
-while IFS=$'\t' read -r address state sku; do
+while IFS=$'\t' read -r address sku; do
   [[ -n "$address" ]] || continue
-  if [[ "$state" == "unknown" ]]; then
-    printf 'WARNING: Planned PostgreSQL SKU is unknown for %s; it cannot be checked yet.\n' "$address" >&2
+  if [[ "$sku" == "unknown" ]]; then
+    printf 'Unable to determine PostgreSQL SKU for Terraform resource %s\n' "$address" >&2
+    exit 2
   elif [[ "$sku" =~ _[vV]${generation}$ ]]; then
-    printf '%s\t%s\t%s\n' "$address" "$state" "$sku"
+    printf '%s\t%s\n' "$address" "$sku"
   fi
 done <<< "$postgres_resources"

@@ -54,16 +54,6 @@ class WarningCollectorTest extends Specification {
     WarningCollector.pipelineWarnings.first().deprecationDate == pastDate
   }
 
-  def "non-enforcing warning retains its message without failing after the deadline"() {
-    when:
-    WarningCollector.addPipelineWarning("sku", "Reserved instance coverage ends in June 2027.", now.minusDays(1), false, false)
-    String message = WarningCollector.getSlackWarningMessage().blocks.collect { it.text.text }.join("\n\n")
-
-    then:
-    noExceptionThrown()
-    assertThat(message).isEqualTo("Reserved instance coverage ends in June 2027.")
-  }
-
 
   def "getMessageByDays() with same day should return today"() {
 

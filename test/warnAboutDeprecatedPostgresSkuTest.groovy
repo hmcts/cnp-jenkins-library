@@ -6,13 +6,13 @@ import uk.gov.hmcts.pipeline.SlackBlockMessage
 import uk.gov.hmcts.pipeline.deprecation.WarningCollector
 
 import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.assertThatThrownBy
 
 class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
     def script
     String affectedResources = ''
     List<String> messages = []
     List<String> commands = []
-    int jqStatus = 0
     boolean configAvailable = true
 
     @Override
@@ -37,7 +37,7 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
         helper.registerAllowedMethod('sh', [String.class], { String command -> commands << command; 0 })
         helper.registerAllowedMethod('sh', [Map.class], { Map arguments ->
             commands << arguments.script.toString()
-            arguments.returnStdout ? affectedResources : jqStatus
+            affectedResources
         })
         script = loadScript('vars/warnAboutDeprecatedPostgresSku.groovy')
     }
@@ -51,33 +51,28 @@ class warnAboutDeprecatedPostgresSkuTest extends BasePipelineTest {
 
     @Test
     void 'includes resource SKU deadline and guidance in a non-enforcing warning'() {
-        affectedResources = 'module.db.azurerm_postgresql_flexible_server.db\tcurrent\tGP_Standard_D2s_v3'
+        affectedResources = 'module.db.azurerm_postgresql_flexible_server.db\tGP_Standard_D2s_v3'
         script.call()
 
         assertThat(WarningCollector.pipelineWarnings).hasSize(1)
         def warning = WarningCollector.pipelineWarnings.first()
         assertThat(warning.warningKey).isEqualTo('deprecated_postgresql_v3_sku')
-        assertThat(warning.includeDeadlineMessage).isFalse()
+        assertThat(warning.deprecationDate).isNull()
         assertThat(warning.warningMessage)
             .contains('module.db.azurerm_postgresql_flexible_server.db', 'GP_Standard_D2s_v3', 'June 2027', 'https://example.com/upgrade')
         assertThat(messages.first()).contains('GP_Standard_D2s_v3', 'June 2027')
+        assertThat(WarningCollector.getSlackWarningMessage().blocks.first().text.text)
+            .contains('Affected Terraform resources (address and SKU):', 'GP_Standard_D2s_v3', 'June 2027')
         assertThat(commands).contains('rm -f check-deprecated-postgres-sku.sh')
         assertThat(commands).contains("./check-deprecated-postgres-sku.sh tfplan 'v3'")
     }
 
     @Test
-    void 'reports missing configuration without failing the pipeline'() {
+    void 'fails explicitly when the check is not configured'() {
         configAvailable = false
-        script.call()
-        assertThat(messages).anyMatch { it.contains('configuration') && it.contains('could not run') }
-        assertThat(WarningCollector.pipelineWarnings).isEmpty()
-    }
-
-    @Test
-    void 'reports missing jq without failing the pipeline'() {
-        jqStatus = 1
-        script.call()
-        assertThat(messages).anyMatch { it.contains('jq') && it.contains('could not run') }
+        assertThatThrownBy { script.call() }
+            .isInstanceOf(IllegalStateException)
+            .hasMessageContaining('Missing database.postgresql_v3_sku')
         assertThat(WarningCollector.pipelineWarnings).isEmpty()
     }
 }

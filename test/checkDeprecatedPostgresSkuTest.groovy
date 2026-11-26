@@ -9,10 +9,12 @@ class checkDeprecatedPostgresSkuTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder()
 
-    private Map runCheck(List changes, String generation = 'v3') {
+    private Map runCheck(List resources, String generation = 'v3') {
         File directory = temporaryFolder.newFolder()
         File plan = new File(directory, 'plan.json')
-        plan.text = JsonOutput.toJson(changes == null ? [:] : [resource_changes: changes])
+        plan.text = JsonOutput.toJson([planned_values: [root_module: [
+            child_modules: [[address: 'module.db', resources: resources ?: []]]
+        ]]])
         File terraform = new File(directory, 'terraform')
         terraform.text = '#!/bin/sh\ncat "$3"\n'
         assert terraform.setExecutable(true)
@@ -27,38 +29,31 @@ class checkDeprecatedPostgresSkuTest {
         [status: status, stdout: stdout, stderr: stderr]
     }
 
-    private Map server(String address, String before, String after, boolean unknown = false) {
+    private Map server(String address, String sku) {
         [
             address: address,
             mode: 'managed',
             type: 'azurerm_postgresql_flexible_server',
-            change: [
-                before: before == null ? null : [sku_name: before],
-                after: [sku_name: after],
-                after_unknown: [sku_name: unknown]
-            ]
+            values: [sku_name: sku]
         ]
     }
 
     @Test
-    void 'finds current and planned v3 SKUs but excludes v5 and other resources'() {
+    void 'finds planned v3 SKUs in modules but excludes v5 and other resources'() {
         def result = runCheck([
-            server('module.migration.server', 'GP_Standard_D2s_v3', 'GP_Standard_D2ds_v5'),
-            server('module.new.server', null, 'GP_Standard_D4s_v3'),
-            server('module.v5.server', 'GP_Standard_D2ds_v5', 'GP_Standard_D2ds_v5'),
-            [address: 'other', mode: 'managed', type: 'other', change: [after: [sku_name: 'GP_Standard_D2s_v3']]]
+            server('module.new.server', 'GP_Standard_D4s_v3'),
+            server('module.v5.server', 'GP_Standard_D2ds_v5'),
+            [address: 'other', mode: 'managed', type: 'other', values: [sku_name: 'GP_Standard_D2s_v3']]
         ])
         assertThat(result.status).isEqualTo(0)
-        assertThat(result.stdout).contains(
-            'module.migration.server\tcurrent\tGP_Standard_D2s_v3',
-            'module.new.server\tplanned\tGP_Standard_D4s_v3'
-        ).doesNotContain('module.v5.server', 'other')
+        assertThat(result.stdout).contains('module.new.server\tGP_Standard_D4s_v3')
+            .doesNotContain('module.v5.server', 'other')
     }
 
     @Test
     void 'reports unknown planned SKU without claiming it is v3'() {
-        def result = runCheck([server('module.unknown.server', null, null, true)])
-        assertThat(result.status).isEqualTo(0)
+        def result = runCheck([server('module.unknown.server', null)])
+        assertThat(result.status).isEqualTo(2)
         assertThat(result.stdout).isEmpty()
         assertThat(result.stderr).contains('unknown', 'module.unknown.server')
     }
@@ -72,7 +67,7 @@ class checkDeprecatedPostgresSkuTest {
 
     @Test
     void 'uses the configured SKU generation and rejects invalid values'() {
-        def result = runCheck([server('module.v5.server', null, 'GP_Standard_D2ds_v5')], 'v5')
+        def result = runCheck([server('module.v5.server', 'GP_Standard_D2ds_v5')], 'v5')
         assertThat(result.status).isEqualTo(0)
         assertThat(result.stdout).contains('module.v5.server', 'GP_Standard_D2ds_v5')
         def invalid = runCheck([], 'v3; echo unsafe')
